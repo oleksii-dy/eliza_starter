@@ -4,9 +4,12 @@
  */
 
 import { NextRequest } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { withMiddleware } from '@/lib/domains/generation/api/middleware';
 import { batchGenerateHandler } from '@/lib/domains/generation/api/handlers/batch';
 
-export async function handlePOST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   return withMiddleware(req, batchGenerateHandler);
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

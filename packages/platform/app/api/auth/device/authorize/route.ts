@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { deviceFlowService } from '@/lib/auth/device-flow';
 import {
   rateLimitRepository,
@@ -21,7 +22,7 @@ interface AuthorizeBody {
   };
 }
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const body = (await request.json()) as AuthorizeBody;
     const { user_code, authorize, user } = body;
@@ -184,3 +185,5 @@ export async function handlePOST(request: NextRequest) {
     );
   }
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

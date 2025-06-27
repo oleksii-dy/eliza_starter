@@ -76,7 +76,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     }: InputProps,
     ref: ForwardedRef<HTMLInputElement>,
   ) => {
-    if (variant == 'unstyled' || type == 'file') {
+    if (variant === 'unstyled' || type === 'file') {
       return (
         <input
           disabled={disabled}
@@ -96,7 +96,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       );
     }
 
-    if (variant == 'textarea') {
+    if (variant === 'textarea') {
       const Label = ({
         htmlFor,
         label,

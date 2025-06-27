@@ -69,7 +69,7 @@ export default function VideoGenerationPage() {
   });
 
   const handleGenerate = async () => {
-    if (!prompt.trim()) return;
+    if (!prompt.trim()) {return;}
 
     setIsGenerating(true);
 
@@ -79,7 +79,7 @@ export default function VideoGenerationPage() {
         id: `vid_${Date.now()}`,
         videoUrl: '',
         thumbnailUrl: 'https://picsum.photos/400/225',
-        prompt: prompt,
+        prompt,
         model: settings.model,
         timestamp: new Date(),
         duration: settings.duration,
@@ -97,11 +97,11 @@ export default function VideoGenerationPage() {
         prev.map((result) =>
           result.id === processingResult.id
             ? {
-                ...result,
-                status: 'completed' as const,
-                videoUrl: `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`,
-                thumbnailUrl: 'https://picsum.photos/seed/video/400/225',
-              }
+              ...result,
+              status: 'completed' as const,
+              videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+              thumbnailUrl: 'https://picsum.photos/seed/video/400/225',
+            }
             : result,
         ),
       );
@@ -113,7 +113,7 @@ export default function VideoGenerationPage() {
   };
 
   const handleDownload = async (videoUrl: string, filename: string) => {
-    if (!videoUrl) return;
+    if (!videoUrl) {return;}
 
     try {
       const a = document.createElement('a');
@@ -259,7 +259,7 @@ export default function VideoGenerationPage() {
                     onChange={(e) =>
                       setSettings((prev) => ({
                         ...prev,
-                        duration: parseInt(e.target.value),
+                        duration: parseInt(e.target.value, 10),
                       }))
                     }
                     className="rounded-lg border border-stroke-weak p-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
@@ -457,7 +457,7 @@ export default function VideoGenerationPage() {
                 onChange={(e) =>
                   setSettings((prev) => ({
                     ...prev,
-                    fps: parseInt(e.target.value),
+                    fps: parseInt(e.target.value, 10),
                   }))
                 }
                 className="w-full rounded-lg border border-stroke-weak p-2 focus:outline-none focus:ring-2 focus:ring-purple-500"

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { getServerSession } from '@/lib/auth/config';
 import { authOptions } from '@/lib/auth/config';
 import { getSql } from '@/lib/database';
 import { E2BContainerService } from '@/lib/autocoder/e2b-container-service';
 
-export async function handlePOST(
+async function handlePOST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -189,3 +190,5 @@ export async function handlePOST(
     );
   }
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

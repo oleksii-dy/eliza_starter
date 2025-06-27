@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { ContainerMonitoringService } from '@/lib/services/container-monitoring';
 import { auth } from '@/lib/auth';
 import { getDatabase } from '@/lib/database';
@@ -10,7 +11,7 @@ import { eq, and, gte, desc, sum } from 'drizzle-orm';
 
 const monitoringService = new ContainerMonitoringService();
 
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -163,12 +164,12 @@ export async function handleGET(request: NextRequest) {
   }
 
   function calculateAverageUptime(containers: any[]): number {
-    if (containers.length === 0) return 0;
+    if (containers.length === 0) {return 0;}
 
     const runningContainers = containers.filter(
       (c) => c.status === 'running' && c.startedAt,
     );
-    if (runningContainers.length === 0) return 0;
+    if (runningContainers.length === 0) {return 0;}
 
     const now = Date.now();
     const totalUptime = runningContainers.reduce((sum, container) => {
@@ -181,7 +182,7 @@ export async function handleGET(request: NextRequest) {
   }
 
   function calculateErrorRate(healthSummary: any): number {
-    if (healthSummary.total === 0) return 0;
+    if (healthSummary.total === 0) {return 0;}
     return (healthSummary.unhealthy / healthSummary.total) * 100;
   }
 
@@ -230,3 +231,5 @@ export async function handleGET(request: NextRequest) {
     return recommendations;
   }
 }
+
+export const { GET } = wrapHandlers({ handleGET });

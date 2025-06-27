@@ -52,7 +52,7 @@
     "clean": "rm -rf dist && rm -rf .turbo",
     "lint": "eslint src --fix && prettier --write ./src",
     "typecheck": "tsc --noEmit",
-    "test": "bun test src/"
+    "test": "bun test"
   },
   "peerDependencies": {
     "typescript": "5.8.3",

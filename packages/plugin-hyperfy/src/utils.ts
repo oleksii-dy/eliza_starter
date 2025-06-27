@@ -246,7 +246,7 @@ export function parseHyperfyWorldUrl(url: string): string | null {
     // For custom domains, the entire domain might be the world ID
     return urlObj.hostname;
   } catch (error) {
-    console.error('Invalid Hyperfy world URL:', error);
+    console.error('Invalid Hyperfy world URL');
     return null;
   }
 }

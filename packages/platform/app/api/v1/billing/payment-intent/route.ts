@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { z } from 'zod';
 import {
   createPaymentIntent,
@@ -12,7 +13,7 @@ const createPaymentIntentSchema = z.object({
   currency: z.string().optional().default('usd'),
 });
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const { user, organization } = await authenticateUser(request);
     if (!user || !organization) {
@@ -83,3 +84,5 @@ export async function handlePOST(request: NextRequest) {
     );
   }
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

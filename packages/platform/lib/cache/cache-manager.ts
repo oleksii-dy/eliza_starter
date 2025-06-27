@@ -1,9 +1,9 @@
 /**
  * Advanced Cache Manager
- * 
+ *
  * Provides high-level caching abstractions with multiple cache layers,
  * automatic invalidation, and intelligent cache warming strategies.
- * 
+ *
  * Uses adapter pattern to support both Redis (production) and Database (local)
  * cache backends with automatic fallback and consistent API.
  */
@@ -73,21 +73,21 @@ export interface CacheLayerConfig {
 
 /**
  * Multi-layer Cache Manager
- * 
+ *
  * Provides L1 (in-memory) + L2 (Redis/Database) caching with intelligent
  * adapter selection based on environment and configuration.
  */
 export class CacheManager {
   private static instance: CacheManager;
   private l1Cache = new Map<string, CacheEntry>(); // In-memory L1 cache
-  private l2Adapter: CacheAdapter; // Redis or Database adapter
+  private l2Adapter!: CacheAdapter; // Redis or Database adapter - initialized in initializeAdapter()
   private config: CacheConfig;
   private accessPatterns = new Map<string, number[]>();
   private tagToKeys = new Map<string, Set<string>>();
   private initPromise: Promise<void> | null = null;
   private cleanupTimer: NodeJS.Timeout | null = null;
   private warmupTimer: NodeJS.Timeout | null = null;
-  
+
   static getInstance(config?: Partial<CacheConfig>): CacheManager {
     if (!CacheManager.instance) {
       CacheManager.instance = new CacheManager(config);
@@ -117,7 +117,7 @@ export class CacheManager {
   private async initializeAdapter(): Promise<void> {
     try {
       const adapterType = this.determineAdapter();
-      
+
       if (adapterType === 'redis') {
         this.l2Adapter = new RedisCacheAdapter(
           this.config.redis || this.getDefaultRedisConfig(),
@@ -143,7 +143,7 @@ export class CacheManager {
       }
     } catch (error) {
       logger.error('Failed to initialize cache adapter', error as Error);
-      
+
       // Fallback to database adapter
       this.l2Adapter = new DatabaseCacheAdapter({
         namespace: 'cache',
@@ -160,16 +160,16 @@ export class CacheManager {
     if (this.config.adapter === 'redis') {
       return 'redis';
     }
-    
+
     if (this.config.adapter === 'database') {
       return 'database';
     }
-    
+
     // Auto mode: use Redis in production, Database in development
     if (process.env.NODE_ENV === 'production' && process.env.REDIS_URL) {
       return 'redis';
     }
-    
+
     return 'database';
   }
 
@@ -178,12 +178,12 @@ export class CacheManager {
    */
   private getDefaultRedisConfig(): RedisConfig {
     const redisUrl = process.env.REDIS_URL;
-    
+
     if (redisUrl) {
       const url = new URL(redisUrl);
       return {
         host: url.hostname,
-        port: parseInt(url.port) || 6379,
+        port: parseInt(url.port, 10) || 6379,
         password: url.password,
         username: url.username,
         tls: url.protocol === 'rediss:',
@@ -198,7 +198,7 @@ export class CacheManager {
         commandTimeout: 5000,
       };
     }
-    
+
     // Default local Redis configuration
     return {
       host: 'localhost',
@@ -228,12 +228,12 @@ export class CacheManager {
    * Get value from cache with fallback strategy
    */
   async get<T = any>(
-    key: string, 
+    key: string,
     fallback?: () => Promise<T>,
     options: CacheOptions & { tags?: string[]; warmup?: boolean } = {}
   ): Promise<T | null> {
     const startTime = Date.now();
-    
+
     try {
       // Try L1 cache first
       const l1Entry = this.l1Cache.get(key);
@@ -241,7 +241,7 @@ export class CacheManager {
         this.updateAccessPattern(key);
         l1Entry.accessedAt = Date.now();
         l1Entry.accessCount++;
-        
+
         logger.debug('Cache hit (L1)', { key, accessCount: l1Entry.accessCount });
         return l1Entry.value;
       }
@@ -258,7 +258,7 @@ export class CacheManager {
         // Store in L1 cache for faster access
         this.setL1Cache(key, value, options);
         this.updateAccessPattern(key);
-        
+
         logger.debug('Cache hit (L2)', { key });
         return value;
       }
@@ -267,11 +267,11 @@ export class CacheManager {
       if (fallback) {
         logger.debug('Cache miss, executing fallback', { key });
         value = await fallback();
-        
+
         if (value !== null && value !== undefined) {
           await this.set(key, value, options);
         }
-        
+
         return value;
       }
 
@@ -279,7 +279,7 @@ export class CacheManager {
       return null;
     } catch (error) {
       logger.error('Cache get error', error as Error, { key });
-      
+
       // If cache fails and we have a fallback, use it
       if (fallback) {
         try {
@@ -289,7 +289,7 @@ export class CacheManager {
           return null;
         }
       }
-      
+
       return null;
     } finally {
       const duration = Date.now() - startTime;
@@ -303,14 +303,14 @@ export class CacheManager {
    * Set value in cache with multi-layer storage
    */
   async set<T = any>(
-    key: string, 
-    value: T, 
+    key: string,
+    value: T,
     options: CacheOptions & { tags?: string[]; priority?: number } = {}
   ): Promise<boolean> {
     try {
       const ttl = options.ttl || this.config.defaultTTL;
       const tags = options.tags || [];
-      
+
       // Store in L2 cache (Redis/Database)
       await this.ensureInitialized();
       const l2Success = await this.l2Adapter.set(key, value, {
@@ -323,10 +323,10 @@ export class CacheManager {
 
       // Store in L1 cache
       this.setL1Cache(key, value, { ...options, ttl });
-      
+
       // Update tag mappings
       this.updateTagMappings(key, tags);
-      
+
       logger.debug('Cache set', { key, ttl, tags, l2Success });
       return l2Success;
     } catch (error) {
@@ -342,14 +342,14 @@ export class CacheManager {
     try {
       // Remove from L1 cache
       this.l1Cache.delete(key);
-      
+
       // Remove from L2 cache
       await this.ensureInitialized();
       const l2Success = await this.l2Adapter.delete(key);
-      
+
       // Clean up tag mappings
       this.cleanupTagMappings(key);
-      
+
       logger.debug('Cache delete', { key, l2Success });
       return l2Success;
     } catch (error) {
@@ -364,14 +364,14 @@ export class CacheManager {
   async invalidateByTag(tag: string): Promise<number> {
     try {
       await this.ensureInitialized();
-      
+
       // Use adapter's built-in tag invalidation if available
       const l2Deleted = await this.l2Adapter.invalidateByTags([tag]);
-      
+
       // Also invalidate from L1 cache
       const keys = this.tagToKeys.get(tag);
       let l1Deleted = 0;
-      
+
       if (keys && keys.size > 0) {
         for (const key of keys) {
           if (this.l1Cache.has(key)) {
@@ -397,10 +397,10 @@ export class CacheManager {
   async invalidateByTags(tags: string[]): Promise<number> {
     try {
       await this.ensureInitialized();
-      
+
       // Use adapter's built-in tag invalidation
       const l2Deleted = await this.l2Adapter.invalidateByTags(tags);
-      
+
       // Also invalidate from L1 cache
       let l1Deleted = 0;
       for (const tag of tags) {
@@ -432,7 +432,7 @@ export class CacheManager {
     try {
       const regex = new RegExp(pattern);
       const keysToDelete: string[] = [];
-      
+
       // Find matching keys in L1 cache
       for (const key of this.l1Cache.keys()) {
         if (regex.test(key)) {
@@ -443,7 +443,7 @@ export class CacheManager {
       let deletedCount = 0;
       for (const key of keysToDelete) {
         const success = await this.delete(key);
-        if (success) deletedCount++;
+        if (success) {deletedCount++;}
       }
 
       logger.info('Cache invalidation by pattern', { pattern, deletedCount });
@@ -459,19 +459,19 @@ export class CacheManager {
    */
   async warmup(queries: CacheWarmupQuery[] = []): Promise<void> {
     const allQueries = [...(this.config.warmupQueries || []), ...queries];
-    
+
     logger.info('Starting cache warmup', { queryCount: allQueries.length });
-    
+
     const promises = allQueries.map(async (query) => {
       try {
         const startTime = Date.now();
         const value = await query.query();
-        
+
         if (value !== null && value !== undefined) {
           await this.set(query.key, value, { ttl: query.ttl });
-          logger.debug('Cache warmup success', { 
-            key: query.key, 
-            duration: Date.now() - startTime 
+          logger.debug('Cache warmup success', {
+            key: query.key,
+            duration: Date.now() - startTime
           });
         }
       } catch (error) {
@@ -488,13 +488,13 @@ export class CacheManager {
    */
   async getStats(): Promise<CacheManagerStats> {
     await this.ensureInitialized();
-    
+
     const l1Stats = this.getL1Stats();
     const l2Health = await this.l2Adapter.healthCheck();
     const l2Stats = this.l2Adapter.getStats();
-    
+
     const adapterType = this.l2Adapter instanceof RedisCacheAdapter ? 'redis' : 'database';
-    
+
     return {
       adapter: adapterType,
       l1: l1Stats,
@@ -517,14 +517,14 @@ export class CacheManager {
   private calculateCombinedHitRate(l1Stats: any, l2Stats: any): number {
     const totalHits = l1Stats.hits + (l2Stats.hits || 0);
     const totalRequests = l1Stats.requests + (l2Stats.hits + l2Stats.misses || 0);
-    
+
     return totalRequests > 0 ? (totalHits / totalRequests) * 100 : 0;
   }
 
   /**
    * Create cache wrapper for functions
    */
-  wrap<T extends (...args: any[]) => Promise<any>>(
+  wrap<T extends(...args: any[]) => Promise<any>>(
     fn: T,
     options: {
       keyGenerator?: (...args: Parameters<T>) => string;
@@ -532,13 +532,13 @@ export class CacheManager {
       tags?: string[];
     } = {}
   ): T {
-    const keyGenerator = options.keyGenerator || ((...args) => 
+    const keyGenerator = options.keyGenerator || ((...args) =>
       `fn:${fn.name}:${JSON.stringify(args)}`
     );
 
     return (async (...args: Parameters<T>) => {
       const key = keyGenerator(...args);
-      
+
       return await this.get(
         key,
         () => fn(...args),
@@ -556,7 +556,7 @@ export class CacheManager {
   async mget(keys: string[]): Promise<Map<string, any>> {
     const result = new Map<string, any>();
     const missedKeys: string[] = [];
-    
+
     // Check L1 cache first
     for (const key of keys) {
       const l1Entry = this.l1Cache.get(key);
@@ -573,7 +573,7 @@ export class CacheManager {
     if (missedKeys.length > 0) {
       await this.ensureInitialized();
       const l2Result = await this.l2Adapter.mget(missedKeys);
-      
+
       for (const [key, value] of l2Result.found.entries()) {
         result.set(key, value);
         this.setL1Cache(key, value, {});
@@ -656,14 +656,14 @@ export class CacheManager {
   private updateAccessPattern(key: string): void {
     const now = Date.now();
     const pattern = this.accessPatterns.get(key) || [];
-    
+
     pattern.push(now);
-    
+
     // Keep only last 10 access times
     if (pattern.length > 10) {
       pattern.splice(0, pattern.length - 10);
     }
-    
+
     this.accessPatterns.set(key, pattern);
   }
 
@@ -696,10 +696,10 @@ export class CacheManager {
   private getL1Stats() {
     let hits = 0;
     let totalAccess = 0;
-    
+
     for (const entry of this.l1Cache.values()) {
       totalAccess += entry.accessCount;
-      if (entry.accessCount > 1) hits += entry.accessCount - 1;
+      if (entry.accessCount > 1) {hits += entry.accessCount - 1;}
     }
 
     return {
@@ -732,22 +732,22 @@ export class CacheManager {
     if (process.env.NODE_ENV === 'test') {
       return;
     }
-    
+
     this.cleanupTimer = setInterval(() => {
       const now = Date.now();
       const expiredKeys: string[] = [];
-      
+
       for (const [key, entry] of this.l1Cache.entries()) {
         if (!this.isEntryValid(entry)) {
           expiredKeys.push(key);
         }
       }
-      
+
       for (const key of expiredKeys) {
         this.l1Cache.delete(key);
         this.cleanupTagMappings(key);
       }
-      
+
       if (expiredKeys.length > 0) {
         logger.debug('Cleaned up expired cache entries', { count: expiredKeys.length });
       }
@@ -762,7 +762,7 @@ export class CacheManager {
     if (process.env.NODE_ENV === 'test') {
       return;
     }
-    
+
     // Simple implementation - in production, use a proper scheduler like node-cron
     this.warmupTimer = setInterval(async () => {
       const warmupQueries = this.config.warmupQueries || [];
@@ -779,7 +779,7 @@ export class CacheManager {
     this.l1Cache.clear();
     this.accessPatterns.clear();
     this.tagToKeys.clear();
-    
+
     await this.ensureInitialized();
     await this.l2Adapter.clear();
   }
@@ -793,16 +793,16 @@ export class CacheManager {
       clearInterval(this.cleanupTimer);
       this.cleanupTimer = null;
     }
-    
+
     if (this.warmupTimer) {
       clearInterval(this.warmupTimer);
       this.warmupTimer = null;
     }
-    
+
     if (this.l2Adapter) {
       await this.l2Adapter.close();
     }
-    
+
     this.l1Cache.clear();
     this.accessPatterns.clear();
     this.tagToKeys.clear();
@@ -812,7 +812,7 @@ export class CacheManager {
    * Get adapter type for debugging
    */
   getAdapterType(): 'redis' | 'database' | 'unknown' {
-    if (!this.l2Adapter) return 'unknown';
+    if (!this.l2Adapter) {return 'unknown';}
     return this.l2Adapter instanceof RedisCacheAdapter ? 'redis' : 'database';
   }
 
@@ -822,7 +822,7 @@ export class CacheManager {
   async refresh<T>(key: string, fallback: () => Promise<T>, options?: CacheOptions & { tags?: string[] }): Promise<T | null> {
     // Remove from both cache layers
     await this.delete(key);
-    
+
     // Fetch fresh data
     return await this.get(key, fallback, options);
   }

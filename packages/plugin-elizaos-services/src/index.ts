@@ -41,7 +41,7 @@ import { ElizaOSServicesTestSuite } from './tests';
 import { RealIntegrationTestSuite } from './tests/real-integration.test';
 import { StorageIntegrationTestSuite } from './tests/storage-integration.test';
 import { ValidationSummaryTestSuite } from './tests/validation-summary.test';
-import { sandboxPlugin as _sandboxPlugin } from './sandbox/index.js';
+import { sandboxPlugin as _sandboxPlugin } from './sandbox/index';
 import {
   getAvailableProvider,
   getProviderApiKey,
@@ -54,7 +54,7 @@ import {
   authPluginIntegration,
   QuickAuthSetup,
   AuthStatusChecker,
-} from './auth';
+} from './auth/index';
 
 /**
  * Configuration schema for ElizaOS Services plugin
@@ -968,6 +968,6 @@ export {
   AgentAuthService,
   AuthHelper,
   CLIAuthCommands,
-} from './auth';
+} from './auth/index.ts';
 
 export default elizaOSServicesPlugin;

@@ -279,7 +279,7 @@ export class ContainerMonitoringService {
           .where(eq(hostedContainers.id, container.containerId))
           .limit(1);
 
-        if (!containers[0]) continue;
+        if (!containers[0]) {continue;}
 
         const containerData = containers[0];
 

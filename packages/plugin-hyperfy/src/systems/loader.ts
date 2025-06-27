@@ -10,6 +10,7 @@ import { PuppeteerManager } from '../managers/puppeteer-manager.js';
 import { resolveUrl } from '../utils.js';
 import { AgentAvatar } from './avatar.js';
 import type { HyperfyWorld } from '../types/hyperfy.js';
+import { logger } from '@elizaos/core';
 
 // import { VRMLoaderPlugin } from "@pixiv/three-vrm";
 // --- Mock Browser Environment for Loaders ---
@@ -81,9 +82,9 @@ export class AgentLoader implements HyperfySystem {
     //     this.gltfLoader.register(parser => new VRMLoaderPlugin(parser, {
     //         autoUpdateHumanBones: false
     //     }));
-    //     console.log("[AgentLoader] VRMLoaderPlugin registered.");
+    //     logger.info("[AgentLoader] VRMLoaderPlugin registered.");
     // } catch (vrmError) {
-    //     console.error("[AgentLoader] Warning: Failed to register VRMLoaderPlugin. VRM-specific features might be unavailable.", vrmError);
+    //     logger.error("[AgentLoader] Warning: Failed to register VRMLoaderPlugin. VRM-specific features might be unavailable.", vrmError);
     // }
     // ---------------------------------------
   }
@@ -95,7 +96,7 @@ export class AgentLoader implements HyperfySystem {
   execPreload() {
     // No-op for agent
     // ClientNetwork calls this after snapshot, so it must exist.
-    console.log('[AgentLoader] execPreload called (No-op).');
+    logger.info('[AgentLoader] execPreload called (No-op).');
   }
   // ---------------------------
 
@@ -121,7 +122,7 @@ export class AgentLoader implements HyperfySystem {
 
     if (!resolvedUrl) {
       const error = new Error(`[AgentLoader] Failed to resolve URL: ${url}`);
-      console.error(error.message);
+      logger.error(error.message);
       throw error;
     }
 
@@ -147,7 +148,7 @@ export class AgentLoader implements HyperfySystem {
           );
 
           if (isForbidden) {
-            console.warn('[ScriptLoader] Skipping script: disallowed type used\n');
+            logger.warn('[ScriptLoader] Skipping script: disallowed type used\n');
             return;
           }
 
@@ -156,12 +157,12 @@ export class AgentLoader implements HyperfySystem {
           return script;
         }
 
-        console.warn(`[AgentLoader] Unsupported type in load(): ${type}`);
+        logger.warn(`[AgentLoader] Unsupported type in load(): ${type}`);
         return null;
       })
       .catch((error) => {
         this.promises.delete(key);
-        console.error(`[AgentLoader] Failed to load ${type} from ${resolvedUrl}`, error);
+        logger.error(`[AgentLoader] Failed to load ${type} from ${resolvedUrl}`, error);
         throw error;
       });
 

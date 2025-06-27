@@ -487,7 +487,7 @@ export class ContainerHostingService {
         .where(eq(hostedContainers.id, containerId))
         .limit(1);
 
-      if (!containers[0]) return;
+      if (!containers[0]) {return;}
 
       const container = containers[0];
 
@@ -500,7 +500,7 @@ export class ContainerHostingService {
         : Date.now();
       const hoursUsed = (endTime - startTime) / (1000 * 60 * 60);
 
-      if (hoursUsed <= 0) return;
+      if (hoursUsed <= 0) {return;}
 
       const billedCost = parseFloat(container.billedCostPerHour) * hoursUsed;
       const creatorRevenue = billedCost * this.CREATOR_SHARE;

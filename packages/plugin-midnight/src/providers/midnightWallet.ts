@@ -6,8 +6,8 @@ import {
   type State,
   logger,
 } from '@elizaos/core';
-import { MidnightNetworkService } from '../services/MidnightNetworkService.js';
-import { PaymentService } from '../services/PaymentService.js';
+import { MidnightNetworkService } from '../services/MidnightNetworkService';
+import { PaymentService } from '../services/PaymentService';
 
 /**
  * Provider for Midnight Network wallet information and balance

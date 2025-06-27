@@ -81,7 +81,7 @@ class RateLimiter {
     if (!entry || now > entry.resetTime) {
       entry = {
         count: 0,
-        resetTime: resetTime,
+        resetTime,
         firstRequestTime: now,
       };
       this.store.set(key, entry);
@@ -108,7 +108,7 @@ class RateLimiter {
     totalKeys: number;
     oldestEntry: number;
     newestEntry: number;
-  } {
+    } {
     const now = Date.now();
     let oldest = now;
     let newest = 0;
@@ -259,9 +259,7 @@ export class WebhookRateLimiter {
   }> {
     const ip = request.headers.get('x-forwarded-for') || 'unknown';
     const signature = request.headers.get('stripe-signature');
-    const contentLength = parseInt(
-      request.headers.get('content-length') || '0',
-    );
+    const contentLength = parseInt(request.headers.get('content-length') || '0', 10);
 
     // Check for missing signature
     if (!signature) {
@@ -328,7 +326,7 @@ export class WebhookRateLimiter {
  * Utility function to apply rate limiting to API routes
  */
 export function withRateLimit(config: RateLimitConfig) {
-  return function <T extends any[], R>(
+  return function <T extends any[], R> (
     handler: (...args: T) => Promise<NextResponse<R>>,
   ) {
     return async (...args: T): Promise<NextResponse<R>> => {

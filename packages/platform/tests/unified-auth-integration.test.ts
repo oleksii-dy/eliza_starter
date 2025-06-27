@@ -72,7 +72,7 @@ describe('Unified Authentication Integration', () => {
 
       expect(result.success).toBe(true);
       expect(global.window.location.href).toBe(
-        'http://localhost:3333/api/auth/social/google?platform=web&return_to=%2Fdashboard&session_id=test-session',
+        '/api/auth/social/google?platform=web&return_to=%2Fdashboard&session_id=test-session',
       );
     });
 
@@ -222,6 +222,7 @@ describe('Unified Authentication Integration', () => {
           invoke: mock(),
         },
         writable: true,
+        configurable: true,
       });
       const authModule = await import('../src/lib/unified-auth');
       const tauriAuth = authModule.unifiedAuth;
@@ -252,6 +253,7 @@ describe('Unified Authentication Integration', () => {
       Object.defineProperty(global.window, '__TAURI__', {
         value: {},
         writable: true,
+        configurable: true,
       });
 
       // The auth service should still work even without Tauri APIs
@@ -265,13 +267,29 @@ describe('Unified Authentication Integration', () => {
 
   describe('Error Handling', () => {
     test('should handle network failures gracefully', async () => {
+      // Mock Tauri environment to trigger fetch call
+      Object.defineProperty(global.window, '__TAURI__', {
+        value: {
+          invoke: mock(),
+        },
+        writable: true,
+        configurable: true,
+      });
+
       // Mock network failure
       const fetchMock = global.fetch as any;
       fetchMock.mockRejectedValue(new Error('Network error') as any);
 
-      const result = await unifiedAuth.startOAuthFlow('google');
+      // Re-import to get new instance with Tauri environment
+      const authModule = await import('../src/lib/unified-auth');
+      const tauriAuth = authModule.unifiedAuth;
+
+      const result = await tauriAuth.startOAuthFlow('google');
       expect(result.success).toBe(false);
       expect(result.error).toContain('Failed to open OAuth flow');
+
+      // Cleanup
+      delete (global.window as any).__TAURI__;
     });
 
     test('should handle invalid JSON in localStorage', async () => {
@@ -354,15 +372,24 @@ describe('Unified Authentication Integration', () => {
     });
 
     test('should generate correct OAuth URLs', async () => {
+      // Ensure clean environment (no Tauri)
+      if ('__TAURI__' in global.window) {
+        delete (global.window as any).__TAURI__;
+      }
+
       global.window.location.href = '';
 
-      await unifiedAuth.startOAuthFlow('github', {
+      // Re-import to get fresh instance without Tauri
+      const authModule = await import('../src/lib/unified-auth');
+      const webAuth = authModule.unifiedAuth;
+
+      await webAuth.startOAuthFlow('github', {
         returnTo: '/profile',
         sessionId: 'session-456',
       });
 
       expect(global.window.location.href).toBe(
-        'http://localhost:3333/api/auth/social/github?platform=web&return_to=%2Fprofile&session_id=session-456',
+        '/api/auth/social/github?platform=web&return_to=%2Fprofile&session_id=session-456',
       );
     });
   });

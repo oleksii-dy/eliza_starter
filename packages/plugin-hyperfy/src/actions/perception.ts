@@ -163,13 +163,7 @@ export const hyperfyScenePerceptionAction: Action = {
     return !!service && service.isConnected() && !!service.getWorld();
   },
 
-  handler: async (
-    runtime: IAgentRuntime,
-    message: Memory,
-    state?: State,
-    _options?: {},
-    callback?: HandlerCallback
-  ): Promise<ActionResult> => {
+  handler: async (runtime: IAgentRuntime, message: Memory, state?: State, _options?: {}, callback?: HandlerCallback): Promise<ActionResult> => {
     const service = runtime.getService<HyperfyService>(HyperfyService.serviceName);
     const world = service?.getWorld();
     const puppeteerManager = service?.getPuppeteerManager();

@@ -128,7 +128,7 @@ export class DeviceCodeRepository {
       .where(eq(deviceCodes.userCode, userCode))
       .limit(1);
 
-    if (!result) return null;
+    if (!result) {return null;}
 
     return {
       ...result.deviceCode,
@@ -153,7 +153,7 @@ export class DeviceCodeRepository {
       .where(eq(deviceCodes.deviceCode, deviceCode))
       .limit(1);
 
-    if (!result) return null;
+    if (!result) {return null;}
 
     return {
       ...result.deviceCode,

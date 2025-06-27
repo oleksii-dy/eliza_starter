@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { WebSocketServer, WebSocket } from 'ws';
 import { IncomingMessage } from 'http';
 import { parse } from 'url';
@@ -46,7 +47,7 @@ class AutocoderWebSocketServer {
   }
 
   async initialize(server: any): Promise<void> {
-    if (this.wss) return;
+    if (this.wss) {return;}
 
     this.wss = new WebSocketServer({
       server,
@@ -116,7 +117,7 @@ class AutocoderWebSocketServer {
 
   private async handleMessage(clientId: string, data: Buffer): Promise<void> {
     const client = this.clients.get(clientId);
-    if (!client) return;
+    if (!client) {return;}
 
     try {
       const message: WebSocketMessage = JSON.parse(data.toString());
@@ -528,7 +529,7 @@ What would you like to do next?`;
     client: WebSocketClient,
     message: WebSocketMessage,
   ): Promise<void> {
-    if (!message.projectId) return;
+    if (!message.projectId) {return;}
 
     client.subscribedProjects.add(message.projectId);
 
@@ -547,7 +548,7 @@ What would you like to do next?`;
     client: WebSocketClient,
     message: WebSocketMessage,
   ): Promise<void> {
-    if (!message.projectId) return;
+    if (!message.projectId) {return;}
 
     client.subscribedProjects.delete(message.projectId);
 
@@ -665,7 +666,7 @@ What would you like to do next?`;
 }
 
 // Export for Next.js API route
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   return NextResponse.json(
     {
       error: 'WebSocket endpoint requires WebSocket upgrade',
@@ -686,3 +687,5 @@ function initializeWebSocketServer(): AutocoderWebSocketServer {
 
 // Export class for use in other modules (but not as route export)
 export type { AutocoderWebSocketServer };
+
+export const { GET } = wrapHandlers({ handleGET });

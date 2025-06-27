@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { z } from 'zod';
 
 // Use dynamic imports to avoid database connection during build
@@ -14,7 +15,7 @@ const loginSchema = z.object({
   password: z.string(),
 });
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     // During build time, return a stub response to prevent database access
     if (process.env.NEXT_PHASE === 'phase-production-build') {
@@ -101,3 +102,5 @@ export async function handlePOST(request: NextRequest) {
     );
   }
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

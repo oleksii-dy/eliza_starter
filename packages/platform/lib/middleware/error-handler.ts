@@ -258,7 +258,7 @@ export function withValidation<T extends z.ZodType>(
 // ============================================================================
 
 export function withSizeLimit(maxSizeBytes: number = 1024 * 1024) {
-  return function <T>(handler: AsyncHandler<T>): AsyncHandler<T> {
+  return function <T> (handler: AsyncHandler<T>): AsyncHandler<T> {
     return withErrorHandling(
       async (request: NextRequest, context): Promise<NextResponse<T>> => {
         const contentLength = request.headers.get('content-length');
@@ -289,7 +289,7 @@ interface RateLimitConfig {
 export function withRateLimit(config: RateLimitConfig) {
   const requests = new Map<string, { count: number; resetTime: number }>();
 
-  return function <T>(handler: AsyncHandler<T>): AsyncHandler<T> {
+  return function <T> (handler: AsyncHandler<T>): AsyncHandler<T> {
     return withErrorHandling(
       async (request: NextRequest, context): Promise<NextResponse<T>> => {
         const key =

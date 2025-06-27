@@ -453,9 +453,9 @@ export class CharacterChatService {
       // Query agents table for characters
       const agentResults = userId
         ? await db
-            .select()
-            .from(agents)
-            .where(eq(agents.createdByUserId, userId))
+          .select()
+          .from(agents)
+          .where(eq(agents.createdByUserId, userId))
         : await db.select().from(agents);
 
       // Extract character data from agents
@@ -502,7 +502,7 @@ export class CharacterChatService {
       id: sessionId,
       organizationId: authContext.organizationId, // Use proper organization from auth context
       agentId: characterId,
-      userId: userId,
+      userId,
       title: `Chat with ${character.name}`,
       context: {
         summary: `Starting conversation with ${character.name}`,
@@ -685,7 +685,7 @@ export class CharacterChatService {
 
     // Add style guidelines from character
     if (character.style) {
-      prompt += `## Style Guidelines\n`;
+      prompt += '## Style Guidelines\n';
       if (character.style.all && character.style.all.length > 0) {
         prompt += `- General style: ${character.style.all.join(', ')}\n`;
       }
@@ -696,7 +696,7 @@ export class CharacterChatService {
 
     // Add message examples from character
     if (character.messageExamples && character.messageExamples.length > 0) {
-      prompt += `\n## Example Interactions\n`;
+      prompt += '\n## Example Interactions\n';
       character.messageExamples.slice(0, 2).forEach((example) => {
         example.forEach((msg) => {
           prompt += `${msg.name}: ${msg.content.text}\n`;
@@ -706,7 +706,7 @@ export class CharacterChatService {
     }
 
     // Add conversation context
-    prompt += `## Current Conversation\n`;
+    prompt += '## Current Conversation\n';
     recentMessages.forEach((msg) => {
       const role = msg.role === 'user' ? 'User' : character.name;
       prompt += `${role}: ${msg.content}\n`;
@@ -728,7 +728,7 @@ export class CharacterChatService {
       : character.bio;
     const style = this.buildStyleGuidance(character, request.response_style);
 
-    let prompt = `# Character: ${character.name}
+    const prompt = `# Character: ${character.name}
 
 ## Bio
 ${bio}
@@ -1074,8 +1074,8 @@ ${character.name}:`;
     let weight = 0;
 
     words.forEach((word) => {
-      if (positiveWords.includes(word)) weight += 0.3;
-      if (negativeWords.includes(word)) weight -= 0.3;
+      if (positiveWords.includes(word)) {weight += 0.3;}
+      if (negativeWords.includes(word)) {weight -= 0.3;}
     });
 
     return Math.max(-1, Math.min(1, weight));
@@ -1092,7 +1092,7 @@ ${character.name}:`;
 
     // Update mood based on conversation
     const emotionalWeight = this.analyzeEmotionalWeight(
-      request.message + ' ' + response,
+      `${request.message} ${response}`,
     );
     if (Math.abs(emotionalWeight) > 0.3) {
       const moodShift = emotionalWeight > 0 ? 'cheerful' : 'contemplative';
@@ -1198,7 +1198,7 @@ ${character.name}:`;
   }
 
   private getRandomFromArray<T>(array?: T[]): T | undefined {
-    if (!array || array.length === 0) return undefined;
+    if (!array || array.length === 0) {return undefined;}
     return array[Math.floor(Math.random() * array.length)];
   }
 
@@ -1241,7 +1241,7 @@ ${character.name}:`;
     };
 
     let healthyRuntimes = 0;
-    let totalRuntimes = this.runtimeCache.size;
+    const totalRuntimes = this.runtimeCache.size;
 
     // Check health of cached runtimes
     for (const [cacheKey, runtime] of this.runtimeCache.entries()) {

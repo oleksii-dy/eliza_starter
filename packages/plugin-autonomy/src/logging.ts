@@ -14,6 +14,8 @@ export interface LoggerConfig {
   enableStructured: boolean;
 }
 
+type LogData = Record<string, unknown>;
+
 export class AutonomyLogger {
   private config: LoggerConfig;
   private runtime: IAgentRuntime;
@@ -140,7 +142,7 @@ export class AutonomyLogger {
   private async log(
     level: LogLevel,
     message: string,
-    data?: any,
+    data?: LogData,
     error?: Error,
     phase?: OODAPhase
   ): Promise<void> {
@@ -210,54 +212,54 @@ export class AutonomyLogger {
   }
 
   // Public logging methods
-  debug(message: string, data?: any, phase?: OODAPhase): void {
+  debug(message: string, data?: LogData, phase?: OODAPhase): void {
     this.log(LogLevel.DEBUG, message, data, undefined, phase);
   }
 
-  info(message: string, data?: any, phase?: OODAPhase): void {
+  info(message: string, data?: LogData, phase?: OODAPhase): void {
     this.log(LogLevel.INFO, message, data, undefined, phase);
   }
 
-  warn(message: string, data?: any, phase?: OODAPhase): void {
+  warn(message: string, data?: LogData, phase?: OODAPhase): void {
     this.log(LogLevel.WARN, message, data, undefined, phase);
   }
 
-  error(message: string, error?: Error, data?: any, phase?: OODAPhase): void {
+  error(message: string, error?: Error, data?: LogData, phase?: OODAPhase): void {
     this.log(LogLevel.ERROR, message, data, error, phase);
   }
 
-  fatal(message: string, error?: Error, data?: any, phase?: OODAPhase): void {
+  fatal(message: string, error?: Error, data?: LogData, phase?: OODAPhase): void {
     this.log(LogLevel.FATAL, message, data, error, phase);
   }
 
   // Phase-specific logging helpers
-  observing(message: string, data?: any): void {
+  observing(message: string, data?: LogData): void {
     this.info(message, data, OODAPhase.OBSERVING);
   }
 
-  orienting(message: string, data?: any): void {
+  orienting(message: string, data?: LogData): void {
     this.info(message, data, OODAPhase.ORIENTING);
   }
 
-  deciding(message: string, data?: any): void {
+  deciding(message: string, data?: LogData): void {
     this.info(message, data, OODAPhase.DECIDING);
   }
 
-  acting(message: string, data?: any): void {
+  acting(message: string, data?: LogData): void {
     this.info(message, data, OODAPhase.ACTING);
   }
 
-  reflecting(message: string, data?: any): void {
+  reflecting(message: string, data?: LogData): void {
     this.info(message, data, OODAPhase.REFLECTING);
   }
 
   // Metrics logging
-  logMetrics(metrics: any): void {
+  logMetrics(metrics: LogData): void {
     this.info('Loop metrics', metrics);
   }
 
   // Action logging
-  logAction(action: string, result: any, duration: number): void {
+  logAction(action: string, result: unknown, duration: number): void {
     this.info(`Action completed: ${action}`, {
       action,
       result,
@@ -266,7 +268,7 @@ export class AutonomyLogger {
   }
 
   // Error logging with context
-  logError(error: Error, context: any): void {
+  logError(error: Error, context: LogData & { phase?: string }): void {
     this.error(`Error in ${context.phase || 'unknown'} phase`, error, context);
   }
 

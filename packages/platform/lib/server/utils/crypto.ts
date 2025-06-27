@@ -12,7 +12,7 @@ export function generateApiKey(): {
   key: string;
   hash: string;
   prefix: string;
-} {
+  } {
   // Generate 32 bytes of random data
   const keyBytes = randomBytes(32);
   const keyHex = keyBytes.toString('hex');
@@ -21,7 +21,7 @@ export function generateApiKey(): {
   const key = `pk_${keyHex}`;
 
   // Hash the key for storage
-  const hash = createHash('sha256').update(key).digest('hex');
+  const hash = createHash('sha256').update(key).digest('hex') as string;
 
   // Create preview (first 8 and last 4 characters)
   const prefix = `pk_${'*'.repeat(8)}...${'*'.repeat(4)}`;
@@ -33,7 +33,7 @@ export function generateApiKey(): {
  * Hash an API key for comparison
  */
 export function hashApiKey(key: string): string {
-  return createHash('sha256').update(key).digest('hex');
+  return createHash('sha256').update(key).digest('hex') as string;
 }
 
 /**

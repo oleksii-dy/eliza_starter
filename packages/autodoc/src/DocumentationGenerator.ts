@@ -18,6 +18,15 @@ import type {
 } from './types/index.js';
 
 /**
+ * Interface representing the GitHub API response for file contents
+ */
+interface GitHubFileContent {
+  content: string;
+  encoding: string;
+  [key: string]: unknown;
+}
+
+/**
  * Class representing a Documentation Generator.
  *
  */
@@ -320,7 +329,7 @@ export class DocumentationGenerator {
   private async getFileContent(contentsUrl: string): Promise<string> {
     try {
       const response = await fetch(contentsUrl);
-      const data = await response.json();
+      const data = (await response.json()) as GitHubFileContent;
       return Buffer.from(data.content, 'base64').toString('utf-8');
     } catch {
       console.error('Error fetching file content from GitHub API, ensure the PR has been merged');

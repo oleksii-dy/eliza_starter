@@ -1,6 +1,6 @@
 import { Entity } from '../../core/entities/Entity'
 import type { World } from '../../types/index.js'
-import type { Component } from '../types.js'
+import type { Component } from '../types/index.js'
 
 /**
  * RPG-specific entity that extends the base Entity class

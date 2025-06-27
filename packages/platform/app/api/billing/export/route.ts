@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { sessionService } from '@/lib/auth/session';
 import { getCreditTransactions } from '@/lib/server/services/billing-service';
 import { z } from 'zod';
@@ -22,7 +23,7 @@ const exportSchema = z.object({
   limit: z.number().max(1000).default(1000),
 });
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     // Get user session
     const session = await sessionService.getSessionFromCookies();
@@ -118,3 +119,5 @@ function generateCSV(transactions: any[]): string {
 
   return csvContent;
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

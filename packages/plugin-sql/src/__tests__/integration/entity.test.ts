@@ -1,13 +1,13 @@
 import { AgentRuntime, type Entity, type UUID } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
-import { PgDatabaseAdapter } from '../../pg/adapter';
+
 import { PgAdapter } from '../../pg/adapter';
 import { entityTable } from '../../schema';
 import { createIsolatedTestDatabase } from '../test-helpers';
 
 describe('Entity Integration Tests', () => {
-  let adapter: PgAdapter | PgDatabaseAdapter;
+  let adapter: PgAdapter;
   let runtime: AgentRuntime;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;
@@ -18,7 +18,7 @@ describe('Entity Integration Tests', () => {
     runtime = setup.runtime;
     cleanup = setup.cleanup;
     testAgentId = setup.testAgentId;
-  }, 30000);
+  });
 
   afterAll(async () => {
     if (cleanup) {

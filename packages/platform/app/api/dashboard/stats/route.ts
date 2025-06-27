@@ -3,6 +3,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { authService } from '@/lib/auth/session';
 import { getDatabase } from '@/lib/database';
 import {
@@ -18,7 +19,7 @@ export const runtime = 'nodejs';
 /**
  * GET /api/dashboard/stats - Get dashboard statistics
  */
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     // Get current user session
     const user = await authService.getCurrentUser();
@@ -110,3 +111,5 @@ export async function handleGET(request: NextRequest) {
     );
   }
 }
+
+export const { GET } = wrapHandlers({ handleGET });

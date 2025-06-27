@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { existsSync } from 'fs';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 
 const CLIENT_DIST_PATH = join(process.cwd(), 'public', 'client-static');
 
@@ -34,7 +35,7 @@ function getMimeType(filePath: string): string {
   return mimeTypes[ext || ''] || 'application/octet-stream';
 }
 
-export async function handleGET(
+async function handleGET(
   request: NextRequest,
   props: { params: Promise<{ path?: string[] }> },
 ) {
@@ -96,3 +97,5 @@ export async function handleGET(
     return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
+
+export const { GET } = wrapHandlers({ handleGET });

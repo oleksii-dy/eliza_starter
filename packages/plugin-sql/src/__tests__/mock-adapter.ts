@@ -1,6 +1,5 @@
 import type {
   Agent,
-  Cache,
   Component,
   Entity,
   IDatabaseAdapter,
@@ -16,6 +15,9 @@ import type {
  * Mock database adapter for testing that provides in-memory functionality
  */
 export class MockDatabaseAdapter implements IDatabaseAdapter {
+  // Required properties
+  public db: any = {}; // Mock database instance
+  
   // In-memory storage
   private entities = new Map<UUID, Entity>();
   private memories = new Map<UUID, Memory>();
@@ -31,6 +33,18 @@ export class MockDatabaseAdapter implements IDatabaseAdapter {
 
   async init(): Promise<void> {
     // No initialization needed for mock
+  }
+
+  async initialize(): Promise<void> {
+    // Mock implementation
+  }
+
+  async runMigrations(): Promise<void> {
+    // Mock implementation
+  }
+
+  async getConnection(): Promise<any> {
+    return this.db;
   }
 
   async isReady(): Promise<boolean> {
@@ -98,25 +112,27 @@ export class MockDatabaseAdapter implements IDatabaseAdapter {
     return this.getEntityByIds(participantEntityIds);
   }
 
-  // Memory operations
-  async createMemory(memory: Memory, tableName?: string): Promise<UUID> {
-    const id = memory.id || (`memory-${Date.now()}-${Math.random()}` as UUID);
-    this.memories.set(id, { ...memory, id });
-    return id;
-  }
+  // Memory operations - legacy method kept for compatibility
 
   async getMemory(id: UUID): Promise<Memory | null> {
     return this.memories.get(id) || null;
   }
 
   async getMemories(params: {
-    roomId: UUID;
+    entityId?: UUID;
+    agentId?: UUID;
     count?: number;
     unique?: boolean;
-    tableName?: string;
+    tableName: string;
+    start?: number;
+    end?: number;
+    roomId?: UUID;
+    worldId?: UUID;
   }): Promise<Memory[]> {
     const memories = Array.from(this.memories.values())
-      .filter((m) => m.roomId === params.roomId)
+      .filter((m) => !params.roomId || m.roomId === params.roomId)
+      .filter((m) => !params.entityId || m.entityId === params.entityId)
+      .filter((m) => !params.agentId || m.agentId === params.agentId)
       .slice(0, params.count || 100);
     return params.unique
       ? memories.filter(
@@ -125,40 +141,24 @@ export class MockDatabaseAdapter implements IDatabaseAdapter {
       : memories;
   }
 
-  async searchMemories(params: {
-    embedding: number[];
-    roomId?: UUID;
-    count?: number;
-    match_threshold?: number;
-  }): Promise<Memory[]> {
-    // Simple text-based search for mock
-    return Array.from(this.memories.values())
-      .filter((m) => !params.roomId || m.roomId === params.roomId)
-      .slice(0, params.count || 10);
-  }
+  // Search memories method moved to end of class
 
-  async updateMemory(memory: Memory): Promise<void> {
-    if (memory.id && this.memories.has(memory.id)) {
-      this.memories.set(memory.id, memory);
+  async updateMemory(memory: Partial<Memory> & { id: UUID; metadata?: any }): Promise<boolean> {
+    if (this.memories.has(memory.id)) {
+      const existingMemory = this.memories.get(memory.id)!;
+      this.memories.set(memory.id, { ...existingMemory, ...memory });
+      return true;
     }
+    return false;
   }
 
-  async deleteMemory(id: UUID): Promise<boolean> {
-    return this.memories.delete(id);
+  async deleteMemory(memoryId: UUID): Promise<void> {
+    this.memories.delete(memoryId);
   }
 
-  async deleteAllMemories(roomId: UUID, tableName?: string): Promise<void> {
-    for (const [id, memory] of this.memories) {
-      if (memory.roomId === roomId) {
-        this.memories.delete(id);
-      }
-    }
-  }
+  // Delete all memories method moved to end of class
 
-  async countMemories(roomId: UUID, unique?: boolean): Promise<number> {
-    const memories = await this.getMemories({ roomId, unique });
-    return memories.length;
-  }
+  // Count memories method moved to end of class
 
   // Relationship operations
   async createRelationship(relationship: Relationship): Promise<boolean> {
@@ -215,8 +215,8 @@ export class MockDatabaseAdapter implements IDatabaseAdapter {
     }
   }
 
-  async deleteRoom(id: UUID): Promise<boolean> {
-    return this.rooms.delete(id);
+  async deleteRoom(roomId: UUID): Promise<void> {
+    this.rooms.delete(roomId);
   }
 
   // Participant operations
@@ -243,13 +243,11 @@ export class MockDatabaseAdapter implements IDatabaseAdapter {
       .map((p) => p.roomId);
   }
 
-  async getParticipantUserState(): Promise<string | null> {
+  async getParticipantUserState(roomId: UUID, entityId: UUID): Promise<'FOLLOWED' | 'MUTED' | null> {
     return null; // Mock implementation
   }
 
-  async setParticipantUserState(): Promise<void> {
-    // Mock implementation
-  }
+  // setParticipantUserState method moved to end of class
 
   // Component operations
   async createComponent(component: Component): Promise<boolean> {
@@ -274,14 +272,13 @@ export class MockDatabaseAdapter implements IDatabaseAdapter {
     }
   }
 
-  async deleteComponent(id: UUID): Promise<boolean> {
+  async deleteComponent(componentId: UUID): Promise<void> {
     for (const [key, component] of this.components) {
-      if (component.id === id) {
+      if (component.id === componentId) {
         this.components.delete(key);
-        return true;
+        break;
       }
     }
-    return false;
   }
 
   // World operations
@@ -305,8 +302,8 @@ export class MockDatabaseAdapter implements IDatabaseAdapter {
     }
   }
 
-  async removeWorld(id: UUID): Promise<boolean> {
-    return this.worlds.delete(id);
+  async removeWorld(id: UUID): Promise<void> {
+    this.worlds.delete(id);
   }
 
   // Task operations
@@ -320,7 +317,7 @@ export class MockDatabaseAdapter implements IDatabaseAdapter {
     return this.tasks.get(id) || null;
   }
 
-  async getTasks(params: { roomId?: UUID; tags?: string[] }): Promise<Task[]> {
+  async getTasks(params: { roomId?: UUID; tags?: string[]; entityId?: UUID }): Promise<Task[]> {
     return Array.from(this.tasks.values()).filter((task) => {
       const matchesRoom = !params.roomId || task.roomId === params.roomId;
       const matchesTags = !params.tags || params.tags.some((tag) => task.tags.includes(tag));
@@ -335,8 +332,12 @@ export class MockDatabaseAdapter implements IDatabaseAdapter {
     }
   }
 
-  async deleteTask(id: UUID): Promise<boolean> {
-    return this.tasks.delete(id);
+  async deleteTask(id: UUID): Promise<void> {
+    this.tasks.delete(id);
+  }
+
+  async getTasksByName(name: string): Promise<Task[]> {
+    return Array.from(this.tasks.values()).filter((task) => task.name === name);
   }
 
   // Cache operations
@@ -345,8 +346,8 @@ export class MockDatabaseAdapter implements IDatabaseAdapter {
     return true;
   }
 
-  async getCache<T>(key: string): Promise<T | null> {
-    return this.cache.get(key) || null;
+  async getCache<T>(key: string): Promise<T | undefined> {
+    return this.cache.get(key);
   }
 
   async deleteCache(key: string): Promise<boolean> {
@@ -378,11 +379,153 @@ export class MockDatabaseAdapter implements IDatabaseAdapter {
     return 'mock-world-id' as UUID;
   }
 
-  async addParticipantsRoom(): Promise<boolean> {
-    return true;
-  }
+  // addParticipantsRoom method moved to end of class
 
   async getMemoriesByRoomIds(): Promise<Memory[]> {
     return [];
+  }
+
+  // Missing required methods
+  async searchMemories(params: {
+    embedding: number[];
+    match_threshold?: number;
+    count?: number;
+    unique?: boolean;
+    tableName: string;
+    query?: string;
+    roomId?: UUID;
+    worldId?: UUID;
+    entityId?: UUID;
+  }): Promise<Memory[]> {
+    // Simple text-based search for mock
+    return Array.from(this.memories.values())
+      .filter((m) => !params.roomId || m.roomId === params.roomId)
+      .slice(0, params.count || 10);
+  }
+
+  async createMemory(memory: Memory, tableName: string, unique?: boolean): Promise<UUID> {
+    const id = memory.id || (`memory-${Date.now()}-${Math.random()}` as UUID);
+    this.memories.set(id, { ...memory, id });
+    return id;
+  }
+
+  async deleteAllMemories(roomId: UUID, tableName: string): Promise<void> {
+    for (const [id, memory] of this.memories) {
+      if (memory.roomId === roomId) {
+        this.memories.delete(id);
+      }
+    }
+  }
+
+  async getMemoryById(id: UUID): Promise<Memory | null> {
+    return this.memories.get(id) || null;
+  }
+
+  async getMemoriesByIds(ids: UUID[], tableName?: string): Promise<Memory[]> {
+    return ids.map(id => this.memories.get(id)).filter(Boolean) as Memory[];
+  }
+
+  async countMemories(roomId: UUID, unique?: boolean, tableName?: string): Promise<number> {
+    return Array.from(this.memories.values()).filter(m => m.roomId === roomId).length;
+  }
+
+  async getWorlds(params: {
+    agentId: UUID;
+    serverId?: string;
+    name?: string;
+    activeOnly?: boolean;
+    limit?: number;
+    offset?: number;
+    orderBy?: 'name' | 'createdAt' | 'lastActivityAt';
+    orderDirection?: 'asc' | 'desc';
+  }): Promise<World[]> {
+    return Array.from(this.worlds.values()).filter(w => w.agentId === params.agentId);
+  }
+
+  async getRoomsByIds(roomIds: UUID[]): Promise<Room[] | null> {
+    return roomIds.map(id => this.rooms.get(id)).filter(Boolean) as Room[];
+  }
+
+  async createRooms(rooms: Room[]): Promise<UUID[]> {
+    return Promise.all(rooms.map(room => this.createRoom(room)));
+  }
+
+  async deleteRoomsByWorldId(worldId: UUID): Promise<void> {
+    for (const [id, room] of this.rooms) {
+      if (room.worldId === worldId) {
+        this.rooms.delete(id);
+      }
+    }
+  }
+
+  async getRoomsForParticipants(userIds: UUID[]): Promise<UUID[]> {
+    return [];
+  }
+
+  async getRoomsByWorld(worldId: UUID): Promise<Room[]> {
+    return Array.from(this.rooms.values()).filter(r => r.worldId === worldId);
+  }
+
+  async getParticipantsForEntity(entityId: UUID): Promise<any[]> {
+    return [];
+  }
+
+  async addParticipantsRoom(entityIds: UUID[], roomId: UUID): Promise<boolean> {
+    return true;
+  }
+
+  async setParticipantUserState(roomId: UUID, entityId: UUID, state: 'FOLLOWED' | 'MUTED' | null): Promise<void> {
+    // Mock implementation
+  }
+
+  async getCachedEmbeddings(params: any): Promise<{ embedding: number[]; levenshtein_score: number }[]> {
+    return [];
+  }
+
+  async log(params: any): Promise<void> {
+    // Mock implementation
+  }
+
+  async getLogs(params: any): Promise<any[]> {
+    return [];
+  }
+
+  async deleteLog(logId: UUID): Promise<void> {
+    // Mock implementation
+  }
+
+  async deleteManyMemories(memoryIds: UUID[]): Promise<void> {
+    memoryIds.forEach(id => this.memories.delete(id));
+  }
+
+  async getMemoriesByWorldId(params: {
+    worldId: UUID;
+    count?: number;
+    tableName?: string;
+  }): Promise<Memory[]> {
+    return Array.from(this.memories.values())
+      .filter(m => m.worldId === params.worldId)
+      .slice(0, params.count || 100);
+  }
+
+  // Missing Agent methods
+  async getAgent(id: UUID): Promise<Agent | null> {
+    return null; // Mock implementation
+  }
+
+  async createAgent(agent: Partial<Agent>): Promise<boolean> {
+    return true;
+  }
+
+  async updateAgent(agentId: UUID, agent: Partial<Agent>): Promise<boolean> {
+    return true;
+  }
+
+  async deleteAgent(agentId: UUID): Promise<boolean> {
+    return true;
+  }
+
+  async getEntitiesByIds(ids: UUID[]): Promise<Entity[]> {
+    return ids.map(id => this.entities.get(id)).filter(Boolean) as Entity[];
   }
 }

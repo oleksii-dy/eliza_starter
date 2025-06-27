@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { RevenueSharing } from '@/lib/services/revenue-sharing';
 import { auth } from '@/lib/auth';
 import { getDatabase } from '@/lib/database';
@@ -7,7 +8,7 @@ import { eq } from 'drizzle-orm';
 
 const revenueService = new RevenueSharing();
 
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -38,7 +39,7 @@ export async function handleGET(request: NextRequest) {
   }
 }
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -138,3 +139,5 @@ export async function handlePOST(request: NextRequest) {
     );
   }
 }
+
+export const { GET, POST } = wrapHandlers({ handleGET, handlePOST });

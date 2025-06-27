@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { MarketplaceService } from '@/lib/services/marketplace';
 import { auth } from '@/lib/auth';
 import { getDatabase } from '@/lib/database';
@@ -11,7 +12,7 @@ import { eq, and, desc } from 'drizzle-orm';
 
 const marketplaceService = new MarketplaceService();
 
-export async function handleGET(
+async function handleGET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -19,8 +20,8 @@ export async function handleGET(
     const resolvedParams = await params;
     const assetId = resolvedParams.id;
     const url = new URL(request.url);
-    const limit = parseInt(url.searchParams.get('limit') || '10');
-    const offset = parseInt(url.searchParams.get('offset') || '0');
+    const limit = parseInt(url.searchParams.get('limit') || '10', 10);
+    const offset = parseInt(url.searchParams.get('offset') || '0', 10);
 
     const db = await getDatabase();
 
@@ -75,7 +76,7 @@ export async function handleGET(
   }
 }
 
-export async function handlePOST(
+async function handlePOST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -117,7 +118,7 @@ export async function handlePOST(
       session.user.id,
       session.organizationId,
       {
-        rating: parseInt(reviewData.rating),
+        rating: parseInt(reviewData.rating, 10),
         title: reviewData.title,
         review: reviewData.review,
       },
@@ -138,3 +139,5 @@ export async function handlePOST(
     );
   }
 }
+
+export const { GET, POST } = wrapHandlers({ handleGET, handlePOST });

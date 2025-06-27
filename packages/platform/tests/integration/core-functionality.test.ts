@@ -3,7 +3,7 @@
  * Tests platform functionality without ElizaOS runtime dependencies
  */
 
-import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
+import { describe, test, expect, beforeAll, afterAll, vi } from 'vitest';
 import { v4 as uuidv4 } from 'uuid';
 
 // Import specific services that don't depend on ElizaOS core
@@ -29,9 +29,9 @@ let database: any;
 const TEST_USER_EMAIL = 'core-test@example.com';
 
 // Mock authentication for tests
-jest.mock('../../lib/auth/session', () => ({
+vi.mock('../../lib/auth/session', () => ({
   authService: {
-    getCurrentUser: jest.fn(() =>
+    getCurrentUser: vi.fn(() =>
       Promise.resolve({
         id: TEST_USER_ID,
         organizationId: TEST_ORG_ID,

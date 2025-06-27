@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { MarketplaceService } from '@/lib/services/marketplace';
 import { auth } from '@/lib/auth';
 import { CreateAssetRequest } from '@/lib/services/marketplace';
 
 const marketplaceService = new MarketplaceService();
 
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -32,8 +33,8 @@ export async function handleGET(request: NextRequest) {
       searchQuery: url.searchParams.get('q') || undefined,
       sortBy: (url.searchParams.get('sortBy') as any) || 'created',
       sortOrder: (url.searchParams.get('sortOrder') as any) || 'desc',
-      limit: parseInt(url.searchParams.get('limit') || '20'),
-      offset: parseInt(url.searchParams.get('offset') || '0'),
+      limit: parseInt(url.searchParams.get('limit') || '20', 10),
+      offset: parseInt(url.searchParams.get('offset') || '0', 10),
       rating: url.searchParams.get('rating')
         ? parseFloat(url.searchParams.get('rating')!)
         : undefined,
@@ -58,7 +59,7 @@ export async function handleGET(request: NextRequest) {
   }
 }
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -119,3 +120,5 @@ export async function handlePOST(request: NextRequest) {
     );
   }
 }
+
+export const { GET, POST } = wrapHandlers({ handleGET, handlePOST });

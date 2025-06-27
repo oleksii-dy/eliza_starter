@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { anonymousSessionRepo } from '@/lib/database/repositories/anonymous-session';
 import type { SessionData } from '@/lib/database/repositories/anonymous-session';
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const sessionData: SessionData = await request.json();
 
@@ -37,7 +38,7 @@ export async function handlePOST(request: NextRequest) {
   }
 }
 
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     const sessionId = request.nextUrl.searchParams.get('sessionId');
 
@@ -113,3 +114,5 @@ if (typeof setInterval !== 'undefined') {
     60 * 60 * 1000,
   ); // Run every hour
 }
+
+export const { POST, GET } = wrapHandlers({ handlePOST, handleGET });

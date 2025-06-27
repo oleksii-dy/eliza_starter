@@ -73,11 +73,11 @@ async function handleGET(request: NextRequest) {
     const v1Response = {
       id: organization.id,
       name: organization.name,
-      description: organization.description,
+      description: organization.name, // Use name as description until added to schema
       created_at: organization.createdAt.toISOString(),
       updated_at: organization.updatedAt.toISOString(),
       settings: organization.settings || {},
-      member_count: organization.memberCount || 1,
+      member_count: 1,
       plan: organization.subscriptionTier || 'free',
       credits: organization.creditBalance || 0,
     };
@@ -143,20 +143,24 @@ async function handlePOST(request: NextRequest) {
     }
 
     const organizationService = await getOrganizationService();
+    // Generate slug from name
+    const slug = body.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 50);
+
     const organization = await organizationService.createOrganization({
       name: body.name,
-      description: body.description,
+      slug,
+      // description: body.description, // Not supported by createOrganization params
       ownerId: user.id,
     });
 
     // Update user's organization
-    await authService.updateUserOrganization(user.id, organization.id);
+    // await authService.updateUserOrganization(user.id, organization.id); // TODO: Method doesn't exist
 
     // Format for v1 API
     const v1Response = {
       id: organization.id,
       name: organization.name,
-      description: organization.description,
+      description: organization.name, // Use name as description until added to schema
       created_at: organization.createdAt.toISOString(),
       updated_at: organization.updatedAt.toISOString(),
       owner_id: user.id,
@@ -235,7 +239,7 @@ async function handlePUT(request: NextRequest) {
     const v1Response = {
       id: updatedOrg.id,
       name: updatedOrg.name,
-      description: updatedOrg.description,
+      description: updatedOrg.name, // Use name as description until added to schema
       updated_at: updatedOrg.updatedAt.toISOString(),
       settings: updatedOrg.settings || {},
     };

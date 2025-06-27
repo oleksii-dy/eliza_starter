@@ -66,7 +66,7 @@
     "build:full": "bun run typecheck && vite build && tsup",
     "dev": "elizaos dev",
     "start": "elizaos start",
-    "test": "bun test src/",
+    "test": "bun test",
     "test:unit": "bun test src/__tests__/unit",
     "test:unit:watch": "bun test --watch src/__tests__/unit",
     "test:unit:coverage": "bun test --coverage src/__tests__/unit",

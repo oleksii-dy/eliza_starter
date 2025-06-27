@@ -18,18 +18,23 @@ interface MockFunction<T = any> {
 import { reflectionEvaluator } from '../reflection';
 import { createMockRuntime, createMockMemory, createMockState } from '../../__tests__/test-utils';
 
+// Import the actual functions we need to reference
+import * as CoreModule from '@elizaos/core';
+
 // Mock the core functions that are causing timeouts
 bunMock.module('@elizaos/core', () => {
-  const mockGetEntityDetails = bunMock(() => Promise.resolve({
-    entities: [
-      { id: 'entity-1' as UUID, names: ['User 1'], metadata: {} },
-      { id: 'test-agent' as UUID, names: ['Test Agent'], metadata: {} },
-    ],
-    rooms: [{ id: 'room-1' as UUID, name: 'Test Room' }],
-  }));
+  const mockGetEntityDetails = bunMock(() =>
+    Promise.resolve({
+      entities: [
+        { id: 'entity-1' as UUID, names: ['User 1'], metadata: {} },
+        { id: 'test-agent' as UUID, names: ['Test Agent'], metadata: {} },
+      ],
+      rooms: [{ id: 'room-1' as UUID, name: 'Test Room' }],
+    })
+  );
 
   return {
-    ...require('@elizaos/core'),
+    ...CoreModule,
     getEntityDetails: mockGetEntityDetails,
     logger: {
       log: bunMock(),
@@ -79,7 +84,7 @@ const createReflectionMockRuntime = (): IAgentRuntime => {
       ],
       relationships: [],
     }),
-    addEmbeddingToMemory: mock().mockImplementation((memory) => ({
+    addEmbeddingToMemory: mock().mockImplementation((memory: Memory) => ({
       ...memory,
       id: `fact-${Date.now()}`,
     })),

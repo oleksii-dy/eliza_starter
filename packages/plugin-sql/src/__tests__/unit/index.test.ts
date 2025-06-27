@@ -1,4 +1,5 @@
 import { expect } from 'bun:test';
+import type { UUID } from '@elizaos/core';
 import { createUnitTest } from '../test-utils';
 
 // Import the plugin exports
@@ -42,18 +43,21 @@ testSuite.addTest<TestContext>('should create adapter with postgres config', asy
     postgresUrl: 'postgresql://localhost:5432/test',
   };
 
-  const adapter = await createDatabaseAdapter(config, context.agentId);
+  const adapter = await createDatabaseAdapter(config, context.agentId as UUID);
   expect(adapter).toBeDefined();
   expect(adapter.constructor.name).toBe('PgAdapter');
 });
 
-testSuite.addTest<TestContext>('should require postgres config when no environment variables are set', async (context) => {
-  const config = {};
+testSuite.addTest<TestContext>(
+  'should require postgres config when no environment variables are set',
+  async (context) => {
+    const config = { postgresUrl: '' };
 
-  try {
-    await createDatabaseAdapter(config, context.agentId);
-    expect(false).toBe(true); // Should not reach here
-  } catch (error) {
-    expect(error.message).toContain('PostgreSQL connection string');
+    try {
+      await createDatabaseAdapter(config, context.agentId as UUID);
+      expect(false).toBe(true); // Should not reach here
+    } catch (error) {
+      expect((error as Error).message).toContain('PostgreSQL connection string');
+    }
   }
-});
+);

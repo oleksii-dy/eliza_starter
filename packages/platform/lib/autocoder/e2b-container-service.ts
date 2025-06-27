@@ -471,7 +471,7 @@ print(f"✅ Uploaded {filename}")
       return {
         success: !error,
         output: error || output,
-        error: error,
+        error,
       };
     } catch (error) {
       const errorMessage = `Failed to execute command: ${error instanceof Error ? error.message : String(error)}`;
@@ -519,7 +519,7 @@ print(f"✅ Uploaded {filename}")
   }
 
   private async setupEnvironment(session: ContainerSession): Promise<void> {
-    if (!session.interpreter) return;
+    if (!session.interpreter) {return;}
 
     // Set up Node.js and TypeScript environment
     await session.interpreter.notebook.execCell({
@@ -554,7 +554,7 @@ print("✅ Working directory set up at /workspace")
     session: ContainerSession,
     files: Record<string, string>,
   ): Promise<void> {
-    if (!session.interpreter) return;
+    if (!session.interpreter) {return;}
 
     for (const [filename, content] of Object.entries(files)) {
       // Create directory structure if needed
@@ -582,7 +582,7 @@ print(f"✅ Uploaded {filename}")
   }
 
   private async collectArtifacts(session: ContainerSession): Promise<any> {
-    if (!session.interpreter) return {};
+    if (!session.interpreter) {return {};}
 
     try {
       // Collect built files

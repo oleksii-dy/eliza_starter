@@ -1,7 +1,7 @@
 import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { _getAgentKitActions, createAgentKitActionsFromService } from '../../actions';
 import { createMockRuntime, createMockMemory, createMockState } from '../test-utils';
-import type { IAgentRuntime } from '../../types/core.d';
+import type { IAgentRuntime } from '@elizaos/core';
 
 describe('AgentKit Actions', () => {
   let mockRuntime: IAgentRuntime;

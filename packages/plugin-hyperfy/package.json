@@ -42,6 +42,8 @@
   "dependencies": {
     "@elizaos/core": "workspace:*",
     "@elizaos/hyperfy": "workspace:*",
+    "@elizaos/plugin-bootstrap": "1.0.12",
+    "@elizaos/plugin-openai": "1.0.6",
     "@tanstack/react-query": "^5.80.7",
     "@types/lodash-es": "^4.17.12",
     "clsx": "^2.1.1",
@@ -76,7 +78,7 @@
     "clean": "rm -rf dist && rm -rf .turbo",
     "lint": "eslint src --fix && prettier --write ./src",
     "typecheck": "tsc --noEmit",
-    "test": "bun test src/",
+    "test": "bun test",
     "scenario:explore": "node scripts/run-autonomous-exploration.js",
     "scenario:explore:observe": "node scripts/run-autonomous-exploration.js --observe",
     "scenario:explore:quick": "elizaos scenario run scenarios/hyperfy-autonomous-exploration.ts"

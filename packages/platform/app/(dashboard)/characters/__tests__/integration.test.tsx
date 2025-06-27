@@ -251,16 +251,16 @@ describe('Character System Integration', () => {
               characters:
                 lastSearchQuery === 'assistant'
                   ? [
-                      {
-                        id: 'char-1',
-                        name: 'Assistant Bot',
-                        slug: 'assistant-bot',
-                        characterConfig: { bio: 'I help with tasks' },
-                        visibility: 'public',
-                        totalConversations: 5,
-                        isActive: true,
-                      },
-                    ]
+                    {
+                      id: 'char-1',
+                      name: 'Assistant Bot',
+                      slug: 'assistant-bot',
+                      characterConfig: { bio: 'I help with tasks' },
+                      visibility: 'public',
+                      totalConversations: 5,
+                      isActive: true,
+                    },
+                  ]
                   : [],
               stats: {
                 totalCharacters: lastSearchQuery === 'assistant' ? 1 : 0,

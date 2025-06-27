@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { MarketplaceBillingService } from '@/lib/billing/marketplace-billing-service';
 import { getCreditBalance } from '@/lib/server/services/billing-service';
 import { auth } from '@/lib/auth';
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -106,3 +107,5 @@ export async function handlePOST(request: NextRequest) {
     );
   }
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

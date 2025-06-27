@@ -12,8 +12,8 @@ const getApiKeyService = () =>
   import('@/lib/api-keys/service').then((m) => m.apiKeyService);
 const getAuthService = () =>
   import('@/lib/auth/session').then((m) => m.authService);
-const getPermissionService = () =>
-  import('@/lib/auth/permissions').then((m) => m.permissionService);
+const getPermissions = () =>
+  import('@/lib/auth/permissions');
 
 interface RouteParams {
   params: {
@@ -33,12 +33,8 @@ async function handleGET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Check permissions
-    const permissionService = await getPermissionService();
-    const canViewApiKeys = await permissionService.hasPermission(
-      user.id,
-      'api_keys:read',
-    );
-    if (!canViewApiKeys) {
+    const permissions = await getPermissions();
+    if (!permissions.hasPermission(user.role as any, 'api_keys', 'read')) {
       return NextResponse.json(
         { error: 'Insufficient permissions' },
         { status: 403 },
@@ -46,7 +42,7 @@ async function handleGET(request: NextRequest, { params }: RouteParams) {
     }
 
     const apiKeyService = await getApiKeyService();
-    const apiKey = await apiKeyService.getApiKey(
+    const apiKey = await apiKeyService.getApiKeyById(
       user.organizationId,
       params.id,
     );
@@ -60,11 +56,10 @@ async function handleGET(request: NextRequest, { params }: RouteParams) {
       id: apiKey.id,
       name: apiKey.name,
       description: apiKey.description,
-      scopes: apiKey.scopes,
+      permissions: apiKey.permissions,
       lastUsedAt: apiKey.lastUsedAt,
       expiresAt: apiKey.expiresAt,
       createdAt: apiKey.createdAt,
-      createdBy: apiKey.createdBy,
       isActive: apiKey.isActive,
       usageCount: apiKey.usageCount,
       keyPreview: apiKey.keyPrefix || '...****',
@@ -92,12 +87,8 @@ async function handlePUT(request: NextRequest, { params }: RouteParams) {
     }
 
     // Check permissions
-    const permissionService = await getPermissionService();
-    const canUpdateApiKeys = await permissionService.hasPermission(
-      user.id,
-      'api_keys:write',
-    );
-    if (!canUpdateApiKeys) {
+    const permissions = await getPermissions();
+    if (!permissions.hasPermission(user.role as any, 'api_keys', 'update')) {
       return NextResponse.json(
         { error: 'Insufficient permissions' },
         { status: 403 },
@@ -138,7 +129,7 @@ async function handlePUT(request: NextRequest, { params }: RouteParams) {
       id: updatedKey.id,
       name: updatedKey.name,
       description: updatedKey.description,
-      scopes: updatedKey.scopes,
+      permissions: updatedKey.permissions,
       isActive: updatedKey.isActive,
       updatedAt: updatedKey.updatedAt,
     };
@@ -165,12 +156,8 @@ async function handleDELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     // Check permissions
-    const permissionService = await getPermissionService();
-    const canDeleteApiKeys = await permissionService.hasPermission(
-      user.id,
-      'api_keys:delete',
-    );
-    if (!canDeleteApiKeys) {
+    const permissions = await getPermissions();
+    if (!permissions.hasPermission(user.role as any, 'api_keys', 'delete')) {
       return NextResponse.json(
         { error: 'Insufficient permissions' },
         { status: 403 },

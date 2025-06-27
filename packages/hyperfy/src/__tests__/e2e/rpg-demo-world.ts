@@ -1,35 +1,35 @@
-import { RPGEntity } from '../../rpg/entities/RPGEntity'
-import { CombatSystem } from '../../rpg/systems/CombatSystem'
-import { InventorySystem } from '../../rpg/systems/InventorySystem'
-import { LootSystem } from '../../rpg/systems/LootSystem'
-import { NPCSystem } from '../../rpg/systems/NPCSystem'
-import { SpawningSystem } from '../../rpg/systems/SpawningSystem'
-import { CombatStyle, SpawnerType, Vector3 } from '../../rpg/types'
-import { World } from '../../types'
+import { RPGEntity } from '../../rpg/entities/RPGEntity';
+import { CombatSystem } from '../../rpg/systems/CombatSystem';
+import { InventorySystem } from '../../rpg/systems/InventorySystem';
+import { LootSystem } from '../../rpg/systems/LootSystem';
+import { NPCSystem } from '../../rpg/systems/NPCSystem';
+import { SpawningSystem } from '../../rpg/systems/SpawningSystem';
+import { CombatStyle, SpawnerType, Vector3 } from '../../rpg/types';
+import { World } from '../../types';
 
 /**
  * Demo world setup for E2E testing
  * Creates a small world with various NPCs, mobs, and interactive elements
  */
 export class RPGDemoWorld {
-  private world: World
+  private world: World;
   private systems: {
     npc: NPCSystem
     combat: CombatSystem
     inventory: InventorySystem
     loot: LootSystem
     spawning: SpawningSystem
-  }
+  };
 
   constructor(world: World) {
-    this.world = world
+    this.world = world;
     this.systems = {
       npc: new NPCSystem(world),
       combat: new CombatSystem(world),
       inventory: new InventorySystem(world),
       loot: new LootSystem(world),
       spawning: new SpawningSystem(world),
-    }
+    };
   }
 
   /**
@@ -37,14 +37,14 @@ export class RPGDemoWorld {
    */
   async initialize(): Promise<void> {
     // Initialize systems in order
-    await this.systems.combat.init({})
-    await this.systems.inventory.init({})
-    await this.systems.loot.init({})
-    await this.systems.npc.init({})
-    await this.systems.spawning.init({})
+    await this.systems.combat.init({});
+    await this.systems.inventory.init({});
+    await this.systems.loot.init({});
+    await this.systems.npc.init({});
+    await this.systems.spawning.init({});
 
     // Setup spawn points
-    this.setupSpawnPoints()
+    this.setupSpawnPoints();
   }
 
   /**
@@ -63,13 +63,13 @@ export class RPGDemoWorld {
         maxHeight: 0,
         isValidPosition: () => true,
         getRandomPosition() {
-          const angle = Math.random() * Math.PI * 2
-          const r = Math.random() * this.radius!
+          const angle = Math.random() * Math.PI * 2;
+          const r = Math.random() * this.radius!;
           return {
             x: 10 + Math.cos(angle) * r,
             y: 0,
             z: 10 + Math.sin(angle) * r,
-          }
+          };
         },
       },
       entityDefinitions: [
@@ -79,7 +79,7 @@ export class RPGDemoWorld {
       respawnTime: 10000, // 10 seconds
       activationRange: 20,
       deactivationRange: 30,
-    })
+    });
 
     // Guard patrol area
     this.systems.spawning.registerSpawner({
@@ -92,7 +92,7 @@ export class RPGDemoWorld {
       respawnTime: 30000, // 30 seconds
       activationRange: 15,
       deactivationRange: 25,
-    })
+    });
 
     // Boss spawn (conditional)
     this.systems.spawning.registerSpawner({
@@ -109,10 +109,10 @@ export class RPGDemoWorld {
         minPlayers: 1,
         timeOfDay: { start: 0, end: 24 }, // Always
       },
-    })
+    });
 
     // Static NPCs (non-spawner)
-    this.spawnStaticNPCs()
+    this.spawnStaticNPCs();
   }
 
   /**
@@ -120,17 +120,17 @@ export class RPGDemoWorld {
    */
   private spawnStaticNPCs(): void {
     // Spawn shopkeeper
-    this.systems.npc.spawnNPC(1, { x: 0, y: 0, z: 0 })
+    this.systems.npc.spawnNPC(1, { x: 0, y: 0, z: 0 });
 
     // Spawn quest giver
-    this.systems.npc.spawnNPC(100, { x: 5, y: 0, z: 0 })
+    this.systems.npc.spawnNPC(100, { x: 5, y: 0, z: 0 });
   }
 
   /**
    * Get all systems for testing
    */
   getSystems() {
-    return this.systems
+    return this.systems;
   }
 
   /**
@@ -138,19 +138,19 @@ export class RPGDemoWorld {
    */
   update(_delta: number): void {
     // Update in correct order
-    this.systems.spawning.fixedUpdate(_delta)
-    this.systems.npc.update(_delta)
-    this.systems.combat.fixedUpdate(_delta)
-    this.systems.combat.update(_delta)
-    this.systems.loot.update(_delta)
+    this.systems.spawning.fixedUpdate(_delta);
+    this.systems.npc.update(_delta);
+    this.systems.combat.fixedUpdate(_delta);
+    this.systems.combat.update(_delta);
+    this.systems.loot.update(_delta);
   }
 
   /**
    * Create test scenarios
    */
   createScenarios() {
-    const world = this.world
-    const systems = this.systems
+    const world = this.world;
+    const systems = this.systems;
 
     return {
       /**
@@ -160,9 +160,9 @@ export class RPGDemoWorld {
         const player = new RPGEntity(world, 'player', {
           id: `player-${Date.now()}`,
           position,
-        })
+        });
 
-        world.entities.items.set(player.data.id, player as any)
+        world.entities.items.set(player.data.id, player as any);
 
         // Add stats component
         player.addComponent('stats', {
@@ -192,7 +192,7 @@ export class RPGDemoWorld {
           },
           combatLevel: 3,
           totalLevel: 7,
-        })
+        });
 
         // Add combat component
         player.addComponent('combat', {
@@ -212,7 +212,7 @@ export class RPGDemoWorld {
             ranged: false,
             magic: false,
           },
-        })
+        });
 
         // Add movement component
         player.addComponent('movement', {
@@ -229,54 +229,54 @@ export class RPGDemoWorld {
           teleportDestination: null,
           teleportTime: 0,
           teleportAnimation: '',
-        })
+        });
 
         // Initialize inventory
-        const initMethod = (systems.inventory as any).createInventory || (systems.inventory as any).initializeInventory
+        const initMethod = (systems.inventory as any).createInventory || (systems.inventory as any).initializeInventory;
         if (initMethod) {
-          initMethod.call(systems.inventory, player.data.id)
+          initMethod.call(systems.inventory, player.data.id);
         }
 
-        return player
+        return player;
       },
 
       /**
        * Trigger combat between two entities
        */
       startCombat: (attackerId: string, targetId: string) => {
-        return systems.combat.initiateAttack(attackerId, targetId)
+        return systems.combat.initiateAttack(attackerId, targetId);
       },
 
       /**
        * Give item to entity
        */
       giveItem: (entityId: string, itemId: number, quantity: number = 1) => {
-        return systems.inventory.addItem(entityId, itemId, quantity)
+        return systems.inventory.addItem(entityId, itemId, quantity);
       },
 
       /**
        * Spawn specific NPC at location
        */
       spawnNPC: (npcId: number, position: Vector3) => {
-        return systems.npc.spawnNPC(npcId, position)
+        return systems.npc.spawnNPC(npcId, position);
       },
 
       /**
        * Kill entity instantly (for testing death/loot)
        */
       killEntity: (entityId: string) => {
-        const entity = world.entities.items.get(entityId) as any
+        const entity = world.entities.items.get(entityId) as any;
         if (entity) {
-          const stats = entity.getComponent('stats') as any
+          const stats = entity.getComponent('stats') as any;
           if (stats && stats.hitpoints) {
-            stats.hitpoints.current = 0
+            stats.hitpoints.current = 0;
             world.events.emit('entity:death', {
               entityId,
               killerId: 'test',
-            })
+            });
           }
         }
       },
-    }
+    };
   }
 }

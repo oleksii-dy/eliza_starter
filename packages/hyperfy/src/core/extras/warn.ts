@@ -1,8 +1,8 @@
-const warned = new Set<string>()
+const warned = new Set<string>();
 export function warn(str: string): void {
   if (warned.has(str)) {
-    return
+    return;
   }
-  console.warn(str)
-  warned.add(str)
+  console.warn(str);
+  warned.add(str);
 }

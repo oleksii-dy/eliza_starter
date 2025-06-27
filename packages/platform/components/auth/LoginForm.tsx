@@ -63,7 +63,7 @@ export function LoginForm({ onSuccess, showRegister = true }: LoginFormProps) {
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    if (error) setError(null);
+    if (error) {setError(null);}
   };
 
   return (

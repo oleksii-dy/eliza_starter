@@ -60,7 +60,10 @@ describe('IGNORE Action', () => {
         responses as any
       );
 
-      expect(result).toBe(true);
+      expect(result).toBeDefined();
+      expect(result).toHaveProperty('text', '');
+      expect(result).toHaveProperty('values', { ignored: true, reason: 'conversation_ended_or_inappropriate' });
+      expect(result).toHaveProperty('data', { action: 'IGNORE', hasResponse: true });
       expect(mockCallback).toHaveBeenCalledWith(responses[0].content);
     });
 
@@ -73,7 +76,10 @@ describe('IGNORE Action', () => {
         mockCallback
       );
 
-      expect(result).toBe(true);
+      expect(result).toBeDefined();
+      expect(result).toHaveProperty('text', '');
+      expect(result).toHaveProperty('values', { ignored: true, reason: 'conversation_ended_or_inappropriate' });
+      expect(result).toHaveProperty('data', { action: 'IGNORE', hasResponse: false });
       expect(mockCallback).not.toHaveBeenCalled();
     });
 
@@ -89,7 +95,10 @@ describe('IGNORE Action', () => {
         responses as any
       );
 
-      expect(result).toBe(true);
+      expect(result).toBeDefined();
+      expect(result).toHaveProperty('text', '');
+      expect(result).toHaveProperty('values', { ignored: true, reason: 'conversation_ended_or_inappropriate' });
+      expect(result).toHaveProperty('data', { action: 'IGNORE', hasResponse: false });
       expect(mockCallback).not.toHaveBeenCalled();
     });
 
@@ -112,7 +121,10 @@ describe('IGNORE Action', () => {
         responses as any
       );
 
-      expect(result).toBe(true);
+      expect(result).toBeDefined();
+      expect(result).toHaveProperty('text', '');
+      expect(result).toHaveProperty('values', { ignored: true, reason: 'conversation_ended_or_inappropriate' });
+      expect(result).toHaveProperty('data', { action: 'IGNORE', hasResponse: true });
     });
 
     it('should handle multiple responses by using the first one', async () => {
@@ -142,7 +154,10 @@ describe('IGNORE Action', () => {
         responses as any
       );
 
-      expect(result).toBe(true);
+      expect(result).toBeDefined();
+      expect(result).toHaveProperty('text', '');
+      expect(result).toHaveProperty('values', { ignored: true, reason: 'conversation_ended_or_inappropriate' });
+      expect(result).toHaveProperty('data', { action: 'IGNORE', hasResponse: true });
       expect(mockCallback).toHaveBeenCalledTimes(1);
       expect(mockCallback).toHaveBeenCalledWith(responses[0].content);
     });

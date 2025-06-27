@@ -126,7 +126,7 @@ export default class AutonomousService extends Service {
     await this.runtime.emitEvent(EventType.AUTO_MESSAGE_RECEIVED, {
       runtime: this.runtime,
       message: newMessage,
-      callback: (content: any) => {
+      callback: (content: unknown) => {
         console.log('AUTO_MESSAGE_RECEIVED:\n', content);
       },
       onComplete: () => {

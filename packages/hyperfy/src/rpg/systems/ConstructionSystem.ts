@@ -141,6 +141,9 @@ interface ConstructionComponent extends Component {
 }
 
 export class ConstructionSystem extends System {
+  name = 'ConstructionSystem'
+  enabled = true
+
   private houses: Map<string, PlayerHouse> = new Map()
   private playerHouses: Map<string, string> = new Map() // playerId -> houseId
   private furnitureDefinitions: Map<string, Furniture> = new Map()

@@ -85,7 +85,7 @@ export default function TextGenerationPage() {
   });
 
   const handleGenerate = async () => {
-    if (!prompt.trim()) return;
+    if (!prompt.trim()) {return;}
 
     setIsGenerating(true);
 
@@ -385,7 +385,7 @@ export default function TextGenerationPage() {
                 onChange={(e) =>
                   setSettings((prev) => ({
                     ...prev,
-                    maxTokens: parseInt(e.target.value),
+                    maxTokens: parseInt(e.target.value, 10),
                   }))
                 }
                 className="w-full rounded-lg border border-stroke-weak p-2 focus:outline-none focus:ring-2 focus:ring-purple-500"

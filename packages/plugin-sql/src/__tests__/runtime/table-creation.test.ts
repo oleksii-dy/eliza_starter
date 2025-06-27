@@ -86,11 +86,8 @@ describe.skip('SQL Plugin Runtime Table Creation Tests', () => {
       const testDbPath = await dbManager.createTestDb('table-creation');
 
       // Create a manager with valid configuration
-      const manager = new PgManager({ dataDir: testDbPath });
+      const manager = new PgManager({ connectionString: testDbPath });
       activeManagers.push(manager);
-
-      // Initialize the manager first
-      await manager.initialize();
 
       const adapter = new PgAdapter(testAgentId, manager);
 

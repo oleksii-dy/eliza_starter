@@ -2,18 +2,14 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig({
   entry: ['src/index.ts'],
-  format: ['esm'],
+  format: ['cjs', 'esm'],
   dts: true,
   clean: true,
-  splitting: false,
   sourcemap: true,
-  minify: false,
-  platform: 'node',
-  target: 'es2020',
-  outDir: 'dist',
+  splitting: false,
   skipNodeModulesBundle: true,
-  external: ['@elizaos/core', '@elizaos/cli'],
-  banner: {
-    js: `import { createRequire } from 'module'; const require = createRequire(import.meta.url);`,
-  },
-});
+  shims: true,
+  external: ['@elizaos/core', '@phala/dstack-sdk', 'viem', '@solana/web3.js', 'crypto'],
+  outDir: 'dist',
+  tsconfig: 'tsconfig.build.json',
+}); 

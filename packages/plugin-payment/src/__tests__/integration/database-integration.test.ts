@@ -35,7 +35,7 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)('Database Integration Tests', ()
         console.log(`Created table: ${table.name}`);
       } catch (error) {
         // Table might already exist, continue
-        console.log(`Table ${table.name} already exists or error: ${error.message}`);
+        console.log(`Table ${table.name} already exists or error: ${(error as Error).message}`);
       }
     }
   });
@@ -61,14 +61,14 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)('Database Integration Tests', ()
         payerId: asUUID('00000000-0000-0000-0000-000000000002'),
         recipientId: asUUID('00000000-0000-0000-0000-000000000003'),
         agentId: asUUID('00000000-0000-0000-0000-000000000004'),
-        amount: '1000000', // Store as string to avoid precision issues
+        amount: BigInt('1000000'), // Use bigint as required by schema
+        currency: 'USDC',
         method: PaymentMethod.USDC_ETH,
         status: PaymentStatus.COMPLETED,
         transactionHash: '0x1234567890abcdef',
-        recipientAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f7E123',
+        toAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f7E123',
         metadata: { test: true },
         createdAt: new Date(),
-        updatedAt: new Date(),
       };
 
       // Insert transaction
@@ -83,7 +83,7 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)('Database Integration Tests', ()
 
       expect(retrieved).toHaveLength(1);
       expect(retrieved[0].id).toBe(transaction.id);
-      expect(retrieved[0].amount).toBe(transaction.amount);
+      expect(BigInt(retrieved[0].amount)).toBe(transaction.amount);
       expect(retrieved[0].status).toBe(transaction.status);
       expect(retrieved[0].metadata).toEqual(transaction.metadata);
     });
@@ -96,11 +96,11 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)('Database Integration Tests', ()
         id: transactionId,
         payerId: asUUID('00000000-0000-0000-0000-000000000002'),
         agentId: asUUID('00000000-0000-0000-0000-000000000004'),
-        amount: '1000000',
+        amount: BigInt('1000000'),
+        currency: 'USDC',
         method: PaymentMethod.USDC_ETH,
         status: PaymentStatus.PROCESSING,
         createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       // Simulate concurrent updates
@@ -152,7 +152,9 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)('Database Integration Tests', ()
         .where(eq(userWallets.id, wallet.id))
         .limit(1);
 
-      const decryptedKey = decrypt(retrieved[0].encryptedPrivateKey, encryptionKey);
+      const decryptedKey = retrieved[0].encryptedPrivateKey
+        ? decrypt(retrieved[0].encryptedPrivateKey, encryptionKey)
+        : null;
       expect(decryptedKey).toBe(privateKey);
     });
 
@@ -192,26 +194,23 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)('Database Integration Tests', ()
       const today = new Date().toISOString().split('T')[0];
 
       // Record multiple transactions
-      const amounts = [100, 250, 150]; // $5.00 total
+      const amounts = ['100.00', '250.00', '150.00']; // $5.00 total
 
       for (const amount of amounts) {
         await db
           .insert(dailySpending)
           .values({
-            id: asUUID(`00000000-0000-0000-0000-${Date.now()}`),
             userId,
-            agentId,
             date: today,
             totalSpentUsd: amount,
             transactionCount: 1,
-            lastTransactionAt: new Date(),
           })
           .onConflictDoUpdate({
-            target: [dailySpending.userId, dailySpending.agentId, dailySpending.date],
+            target: [dailySpending.userId, dailySpending.date],
             set: {
               totalSpentUsd: amount,
               transactionCount: 1,
-              lastTransactionAt: new Date(),
+              updatedAt: new Date(),
             },
           });
       }
@@ -224,7 +223,7 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)('Database Integration Tests', ()
         .limit(1);
 
       expect(spending).toHaveLength(1);
-      expect(spending[0].totalSpentUsd).toBe(150); // Last update
+      expect(spending[0].totalSpentUsd).toBe('150.00'); // Last update
     });
 
     it('should reset daily spending at midnight', async () => {
@@ -238,24 +237,18 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)('Database Integration Tests', ()
 
       // Add yesterday's spending
       await db.insert(dailySpending).values({
-        id: asUUID('00000000-0000-0000-0000-000000000001'),
         userId,
-        agentId,
         date: yesterdayStr,
-        totalSpentUsd: 500,
+        totalSpentUsd: '500.00',
         transactionCount: 5,
-        lastTransactionAt: yesterday,
       });
 
       // Add today's spending
       await db.insert(dailySpending).values({
-        id: asUUID('00000000-0000-0000-0000-000000000002'),
         userId,
-        agentId,
         date: todayStr,
-        totalSpentUsd: 100,
+        totalSpentUsd: '100.00',
         transactionCount: 1,
-        lastTransactionAt: new Date(),
       });
 
       // Query today's spending only
@@ -265,19 +258,19 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)('Database Integration Tests', ()
         .where(and(eq(dailySpending.userId, userId), eq(dailySpending.date, todayStr)));
 
       expect(todaySpending).toHaveLength(1);
-      expect(todaySpending[0].totalSpentUsd).toBe(100);
+      expect(todaySpending[0].totalSpentUsd).toBe('100.00');
     });
   });
 
   describe('Price Cache', () => {
     it('should cache and expire token prices', async () => {
       const tokenPrice = {
-        id: asUUID('00000000-0000-0000-0000-000000000001'),
         tokenAddress: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
         network: 'ethereum',
         symbol: 'USDC',
-        priceUsd: 1.0,
-        lastUpdated: new Date(),
+        priceUsd: '1.00000000',
+        source: 'coingecko',
+        createdAt: new Date(),
         expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
       };
 
@@ -296,13 +289,18 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)('Database Integration Tests', ()
         );
 
       expect(validPrices).toHaveLength(1);
-      expect(validPrices[0].priceUsd).toBe(1.0);
+      expect(validPrices[0].priceUsd).toBe('1.00000000');
 
       // Simulate expired price
       await db
         .update(priceCache)
         .set({ expiresAt: new Date(Date.now() - 1000) })
-        .where(eq(priceCache.id, tokenPrice.id));
+        .where(
+          and(
+            eq(priceCache.tokenAddress, tokenPrice.tokenAddress),
+            eq(priceCache.network, tokenPrice.network)
+          )
+        );
 
       const expiredPrices = await db
         .select()
@@ -324,11 +322,11 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)('Database Integration Tests', ()
         id: asUUID('00000000-0000-0000-0000-000000000001'),
         userId: asUUID('00000000-0000-0000-0000-000000000002'),
         agentId: asUUID('00000000-0000-0000-0000-000000000003'),
-        actionName: 'research',
-        amount: '1000000',
+        amount: BigInt('1000000'),
         method: PaymentMethod.USDC_ETH,
         requiresConfirmation: true,
         metadata: {
+          actionName: 'research',
           verificationCode: '123456',
           expiresAt: Date.now() + 5 * 60 * 1000,
         },
@@ -344,7 +342,6 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)('Database Integration Tests', ()
         .update(paymentRequests)
         .set({
           transactionId,
-          processedAt: new Date(),
         })
         .where(eq(paymentRequests.id, request.id));
 
@@ -356,7 +353,6 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)('Database Integration Tests', ()
         .limit(1);
 
       expect(updated[0].transactionId).toBe(transactionId);
-      expect(updated[0].processedAt).toBeTruthy();
     });
   });
 });

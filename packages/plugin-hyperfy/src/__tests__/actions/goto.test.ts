@@ -178,7 +178,7 @@ describe('HYPERFY_GOTO_ENTITY Action', () => {
         throw new Error('Examples should be defined');
       }
 
-      hyperfyGotoEntityAction.examples.forEach((example) => {
+      hyperfyGotoEntityAction.examples.forEach((example: any) => {
         expect(Array.isArray(example)).toBe(true);
         expect(example.length).toBe(2);
 

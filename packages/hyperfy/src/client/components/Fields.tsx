@@ -1,13 +1,13 @@
 // import { ChevronLeftIcon, ChevronRightIcon, Loader2Icon, XIcon } from 'lucide-react'
-import { useContext, useEffect, useMemo, useRef, useState } from 'react'
-import { Curve } from '../../core/extras/Curve'
-import { downloadFile } from '../../core/extras/downloadFile'
-import { hashFile } from '../../core/utils-client'
-import { CurvePane } from './CurvePane'
-import { CurvePreview } from './CurvePreview'
-import { HintContext } from './Hint'
-import { Portal } from './Portal'
-import { useUpdate } from './useUpdate'
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { Curve } from '../../core/extras/Curve';
+import { downloadFile } from '../../core/extras/downloadFile';
+import { hashFile } from '../../core/utils-client';
+import { CurvePane } from './CurvePane';
+import { CurvePreview } from './CurvePreview';
+import { HintContext } from './Hint';
+import { Portal } from './Portal';
+import { useUpdate } from './useUpdate';
 
 interface FieldTextProps {
   label: string
@@ -18,11 +18,11 @@ interface FieldTextProps {
 }
 
 export function FieldText({ label, hint, placeholder, value, onChange }: FieldTextProps) {
-  const hintContext = useContext(HintContext)
-  const setHint = hintContext?.setHint
+  const hintContext = useContext(HintContext);
+  const setHint = hintContext?.setHint;
   return (
     <label
-      className='field field-text'
+      className="field field-text"
       style={{
         display: 'block',
         margin: '0 0 0.5rem',
@@ -32,7 +32,7 @@ export function FieldText({ label, hint, placeholder, value, onChange }: FieldTe
       onPointerLeave={() => hint && setHint?.(null)}
     >
       <div
-        className='field-label'
+        className="field-label"
         style={{
           fontSize: '0.8125rem',
           margin: '0 0 0.375rem',
@@ -43,7 +43,7 @@ export function FieldText({ label, hint, placeholder, value, onChange }: FieldTe
         {label}
       </div>
       <input
-        type='text'
+        type="text"
         placeholder={placeholder}
         value={value}
         onChange={e => onChange(e.target.value)}
@@ -58,32 +58,32 @@ export function FieldText({ label, hint, placeholder, value, onChange }: FieldTe
         }}
         onKeyDown={e => {
           if (e.code === 'Escape') {
-            const target = e.target as HTMLInputElement
-            target.blur()
+            const target = e.target as HTMLInputElement;
+            target.blur();
           }
         }}
         onMouseEnter={e => {
           ;(e.target as HTMLInputElement).style.background = 'rgba(255, 255, 255, 0.1)'
-          ;(e.target as HTMLInputElement).style.borderColor = 'rgba(255, 255, 255, 0.2)'
+          ;(e.target as HTMLInputElement).style.borderColor = 'rgba(255, 255, 255, 0.2)';
         }}
         onMouseLeave={e => {
           if (document.activeElement !== e.target) {
             ;(e.target as HTMLInputElement).style.background = 'rgba(255, 255, 255, 0.05)'
-            ;(e.target as HTMLInputElement).style.borderColor = 'rgba(255, 255, 255, 0.1)'
+            ;(e.target as HTMLInputElement).style.borderColor = 'rgba(255, 255, 255, 0.1)';
           }
         }}
         onFocus={e => {
           ;(e.target as HTMLInputElement).style.background = 'rgba(255, 255, 255, 0.1)'
-          ;(e.target as HTMLInputElement).style.borderColor = 'rgba(255, 255, 255, 0.3)'
+          ;(e.target as HTMLInputElement).style.borderColor = 'rgba(255, 255, 255, 0.3)';
         }}
         onBlur={e => {
           ;(e.target as HTMLInputElement).style.background = 'rgba(255, 255, 255, 0.05)'
-          ;(e.target as HTMLInputElement).style.borderColor = 'rgba(255, 255, 255, 0.1)'
+          ;(e.target as HTMLInputElement).style.borderColor = 'rgba(255, 255, 255, 0.1)';
           // ...
         }}
       />
     </label>
-  )
+  );
 }
 
 interface FieldTextareaProps {
@@ -95,30 +95,30 @@ interface FieldTextareaProps {
 }
 
 export function FieldTextarea({ label, hint, placeholder, value, onChange }: FieldTextareaProps) {
-  const hintContext = useContext(HintContext)
-  const setHint = hintContext?.setHint
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+  const hintContext = useContext(HintContext);
+  const setHint = hintContext?.setHint;
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   useEffect(() => {
-    const textarea = textareaRef.current
+    const textarea = textareaRef.current;
     if (!textarea) {
-      return
+      return;
     }
     function update() {
       if (!textarea) {
-        return
+        return;
       }
-      textarea.style.height = 'auto'
-      textarea.style.height = `${textarea.scrollHeight}px`
+      textarea.style.height = 'auto';
+      textarea.style.height = `${textarea.scrollHeight}px`;
     }
-    update()
-    textarea.addEventListener('input', update)
+    update();
+    textarea.addEventListener('input', update);
     return () => {
-      textarea.removeEventListener('input', update)
-    }
-  }, [])
+      textarea.removeEventListener('input', update);
+    };
+  }, []);
   return (
     <label
-      className='field field-textarea'
+      className="field field-textarea"
       style={{
         display: 'block',
         margin: '0 0 0.5rem',
@@ -128,7 +128,7 @@ export function FieldTextarea({ label, hint, placeholder, value, onChange }: Fie
       onPointerLeave={() => hint && setHint?.(null)}
     >
       <div
-        className='field-label'
+        className="field-label"
         style={{
           fontSize: '0.8125rem',
           margin: '0 0 0.375rem',
@@ -156,32 +156,32 @@ export function FieldTextarea({ label, hint, placeholder, value, onChange }: Fie
         }}
         onKeyDown={e => {
           if (e.code === 'Escape') {
-            const target = e.target as HTMLTextAreaElement
-            target.blur()
+            const target = e.target as HTMLTextAreaElement;
+            target.blur();
           }
         }}
         onMouseEnter={e => {
           ;(e.target as HTMLTextAreaElement).style.background = 'rgba(255, 255, 255, 0.1)'
-          ;(e.target as HTMLTextAreaElement).style.borderColor = 'rgba(255, 255, 255, 0.2)'
+          ;(e.target as HTMLTextAreaElement).style.borderColor = 'rgba(255, 255, 255, 0.2)';
         }}
         onMouseLeave={e => {
           if (document.activeElement !== e.target) {
             ;(e.target as HTMLTextAreaElement).style.background = 'rgba(255, 255, 255, 0.05)'
-            ;(e.target as HTMLTextAreaElement).style.borderColor = 'rgba(255, 255, 255, 0.1)'
+            ;(e.target as HTMLTextAreaElement).style.borderColor = 'rgba(255, 255, 255, 0.1)';
           }
         }}
         onFocus={e => {
           ;(e.target as HTMLTextAreaElement).style.background = 'rgba(255, 255, 255, 0.1)'
-          ;(e.target as HTMLTextAreaElement).style.borderColor = 'rgba(255, 255, 255, 0.3)'
+          ;(e.target as HTMLTextAreaElement).style.borderColor = 'rgba(255, 255, 255, 0.3)';
         }}
         onBlur={e => {
           ;(e.target as HTMLTextAreaElement).style.background = 'rgba(255, 255, 255, 0.05)'
-          ;(e.target as HTMLTextAreaElement).style.borderColor = 'rgba(255, 255, 255, 0.1)'
+          ;(e.target as HTMLTextAreaElement).style.borderColor = 'rgba(255, 255, 255, 0.1)';
           // ...
         }}
       />
     </label>
-  )
+  );
 }
 
 interface SwitchOption {
@@ -198,28 +198,28 @@ interface FieldSwitchProps {
 }
 
 export function FieldSwitch({ label, hint, options, value, onChange }: FieldSwitchProps) {
-  const hintContext = useContext(HintContext)
-  const setHint = hintContext?.setHint
-  const idx = options.findIndex((o: SwitchOption) => o.value === value)
+  const hintContext = useContext(HintContext);
+  const setHint = hintContext?.setHint;
+  const idx = options.findIndex((o: SwitchOption) => o.value === value);
   const prev = () => {
-    const newIdx = idx - 1
+    const newIdx = idx - 1;
     if (newIdx < 0) {
-      onChange(options[options.length - 1].value)
+      onChange(options[options.length - 1].value);
     } else {
-      onChange(options[newIdx].value)
+      onChange(options[newIdx].value);
     }
-  }
+  };
   const next = () => {
-    const newIdx = idx + 1
+    const newIdx = idx + 1;
     if (newIdx >= options.length) {
-      onChange(options[0].value)
+      onChange(options[0].value);
     } else {
-      onChange(options[newIdx].value)
+      onChange(options[newIdx].value);
     }
-  }
+  };
   return (
     <div
-      className='field field-switch'
+      className="field field-switch"
       style={{
         margin: '0 0 0.5rem',
       }}
@@ -227,7 +227,7 @@ export function FieldSwitch({ label, hint, options, value, onChange }: FieldSwit
       onPointerLeave={() => hint && setHint?.(null)}
     >
       <div
-        className='field-label'
+        className="field-label"
         style={{
           fontSize: '0.8125rem',
           margin: '0 0 0.375rem',
@@ -238,7 +238,7 @@ export function FieldSwitch({ label, hint, options, value, onChange }: FieldSwit
         {label}
       </div>
       <div
-        className='field-switch-control'
+        className="field-switch-control"
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -247,7 +247,7 @@ export function FieldSwitch({ label, hint, options, value, onChange }: FieldSwit
         }}
       >
         <div
-          className='field-switch-btn'
+          className="field-switch-btn"
           style={{
             width: '1.5rem',
             height: '1.5rem',
@@ -262,17 +262,17 @@ export function FieldSwitch({ label, hint, options, value, onChange }: FieldSwit
           onClick={prev}
           onMouseEnter={e => {
             ;(e.target as HTMLDivElement).style.background = 'rgba(255, 255, 255, 0.1)'
-            ;(e.target as HTMLDivElement).style.borderColor = 'rgba(255, 255, 255, 0.2)'
+            ;(e.target as HTMLDivElement).style.borderColor = 'rgba(255, 255, 255, 0.2)';
           }}
           onMouseLeave={e => {
             ;(e.target as HTMLDivElement).style.background = 'rgba(255, 255, 255, 0.05)'
-            ;(e.target as HTMLDivElement).style.borderColor = 'rgba(255, 255, 255, 0.1)'
+            ;(e.target as HTMLDivElement).style.borderColor = 'rgba(255, 255, 255, 0.1)';
           }}
         >
           ‹
         </div>
         <div
-          className='field-switch-value'
+          className="field-switch-value"
           style={{
             flex: 1,
             textAlign: 'center',
@@ -281,7 +281,7 @@ export function FieldSwitch({ label, hint, options, value, onChange }: FieldSwit
           {options[idx]?.label || ''}
         </div>
         <div
-          className='field-switch-btn'
+          className="field-switch-btn"
           style={{
             width: '1.5rem',
             height: '1.5rem',
@@ -296,18 +296,18 @@ export function FieldSwitch({ label, hint, options, value, onChange }: FieldSwit
           onClick={next}
           onMouseEnter={e => {
             ;(e.target as HTMLDivElement).style.background = 'rgba(255, 255, 255, 0.1)'
-            ;(e.target as HTMLDivElement).style.borderColor = 'rgba(255, 255, 255, 0.2)'
+            ;(e.target as HTMLDivElement).style.borderColor = 'rgba(255, 255, 255, 0.2)';
           }}
           onMouseLeave={e => {
             ;(e.target as HTMLDivElement).style.background = 'rgba(255, 255, 255, 0.05)'
-            ;(e.target as HTMLDivElement).style.borderColor = 'rgba(255, 255, 255, 0.1)'
+            ;(e.target as HTMLDivElement).style.borderColor = 'rgba(255, 255, 255, 0.1)';
           }}
         >
           ›
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 interface FieldToggleProps {
@@ -331,7 +331,7 @@ export function FieldToggle({ label, hint, trueLabel = 'Yes', falseLabel = 'No',
       value={value}
       onChange={onChange}
     />
-  )
+  );
 }
 
 interface FieldRangeProps {
@@ -346,88 +346,88 @@ interface FieldRangeProps {
 }
 
 export function FieldRange({ label, hint, min = 0, max = 1, step = 0.05, instant, value, onChange }: FieldRangeProps) {
-  const hintContext = useContext(HintContext)
-  const setHint = hintContext?.setHint
-  const trackRef = useRef<HTMLDivElement | null>(null)
+  const hintContext = useContext(HintContext);
+  const setHint = hintContext?.setHint;
+  const trackRef = useRef<HTMLDivElement | null>(null);
   if (value === undefined || value === null) {
-    value = 0
+    value = 0;
   }
-  const [local, setLocal] = useState(value)
-  const [sliding, setSliding] = useState(false)
+  const [local, setLocal] = useState(value);
+  const [sliding, setSliding] = useState(false);
   useEffect(() => {
     if (!sliding && local !== value) {
-      setLocal(value)
+      setLocal(value);
     }
-  }, [sliding, value, local])
+  }, [sliding, value, local]);
   useEffect(() => {
-    const track = trackRef.current
+    const track = trackRef.current;
     if (!track) {
-      return
+      return;
     }
     function calculateValueFromPointer(e: PointerEvent, trackElement: HTMLElement) {
-      const rect = trackElement.getBoundingClientRect()
-      const position = (e.clientX - rect.left) / rect.width
-      const rawValue = min + position * (max - min)
+      const rect = trackElement.getBoundingClientRect();
+      const position = (e.clientX - rect.left) / rect.width;
+      const rawValue = min + position * (max - min);
       // Round to nearest step
-      const steppedValue = Math.round(rawValue / step) * step
+      const steppedValue = Math.round(rawValue / step) * step;
       // Clamp between min and max
-      return Math.max(min, Math.min(max, steppedValue))
+      return Math.max(min, Math.min(max, steppedValue));
     }
-    let sliding = false
+    let sliding = false;
     function onPointerDown(e: PointerEvent) {
-      sliding = true
-      setSliding(true)
-      const newValue = calculateValueFromPointer(e, e.currentTarget as HTMLElement)
-      setLocal(newValue)
+      sliding = true;
+      setSliding(true);
+      const newValue = calculateValueFromPointer(e, e.currentTarget as HTMLElement);
+      setLocal(newValue);
       if (instant) {
-        onChange(newValue)
+        onChange(newValue);
       }
-      ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+      ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     }
     function onPointerMove(e: PointerEvent) {
       if (!sliding) {
-        return
+        return;
       }
-      const newValue = calculateValueFromPointer(e, e.currentTarget as HTMLElement)
-      setLocal(newValue)
+      const newValue = calculateValueFromPointer(e, e.currentTarget as HTMLElement);
+      setLocal(newValue);
       if (instant) {
-        onChange(newValue)
+        onChange(newValue);
       }
     }
     function onPointerUp(e: PointerEvent) {
       if (!sliding) {
-        return
+        return;
       }
-      sliding = false
-      setSliding(false)
-      const finalValue = calculateValueFromPointer(e, e.currentTarget as HTMLElement)
-      setLocal(finalValue)
+      sliding = false;
+      setSliding(false);
+      const finalValue = calculateValueFromPointer(e, e.currentTarget as HTMLElement);
+      setLocal(finalValue);
       onChange(finalValue)
-      ;(e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId)
+      ;(e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
     }
-    track.addEventListener('pointerdown', onPointerDown)
-    track.addEventListener('pointermove', onPointerMove)
-    track.addEventListener('pointerup', onPointerUp)
+    track.addEventListener('pointerdown', onPointerDown);
+    track.addEventListener('pointermove', onPointerMove);
+    track.addEventListener('pointerup', onPointerUp);
     return () => {
-      track.removeEventListener('pointerdown', onPointerDown)
-      track.removeEventListener('pointermove', onPointerMove)
-      track.removeEventListener('pointerup', onPointerUp)
-    }
-  }, [min, max, step, instant, onChange])
-  const barWidthPercentage = `${((local - min) / (max - min)) * 100}`
+      track.removeEventListener('pointerdown', onPointerDown);
+      track.removeEventListener('pointermove', onPointerMove);
+      track.removeEventListener('pointerup', onPointerUp);
+    };
+  }, [min, max, step, instant, onChange]);
+  const barWidthPercentage = `${((local - min) / (max - min)) * 100}`;
   const text = useMemo(() => {
-    const num = local
-    const decimalDigits = (num.toString().split('.')[1] || '').length
+    const num = local;
+    const decimalDigits = (num.toString().split('.')[1] || '').length;
     if (decimalDigits <= 2) {
-      return num.toString()
+      return num.toString();
     }
-    return num.toFixed(2)
-  }, [local])
-  const [isHovered, setIsHovered] = useState(false)
+    return num.toFixed(2);
+  }, [local]);
+  const [isHovered, setIsHovered] = useState(false);
 
   return (
     <div
-      className='fieldrange'
+      className="fieldrange"
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -437,19 +437,19 @@ export function FieldRange({ label, hint, min = 0, max = 1, step = 0.05, instant
       }}
       onPointerEnter={() => {
         if (hint) {
-          setHint?.(hint)
+          setHint?.(hint);
         }
-        setIsHovered(true)
+        setIsHovered(true);
       }}
       onPointerLeave={() => {
         if (hint) {
-          setHint?.(null)
+          setHint?.(null);
         }
-        setIsHovered(false)
+        setIsHovered(false);
       }}
     >
       <div
-        className='fieldrange-label'
+        className="fieldrange-label"
         style={{
           flex: 1,
           whiteSpace: 'nowrap',
@@ -463,7 +463,7 @@ export function FieldRange({ label, hint, min = 0, max = 1, step = 0.05, instant
         {label}
       </div>
       <div
-        className='fieldrange-text'
+        className="fieldrange-text"
         style={{
           fontSize: '0.7rem',
           fontWeight: 500,
@@ -475,7 +475,7 @@ export function FieldRange({ label, hint, min = 0, max = 1, step = 0.05, instant
         {text}
       </div>
       <div
-        className='fieldrange-track'
+        className="fieldrange-track"
         ref={trackRef}
         style={{
           width: '7rem',
@@ -489,7 +489,7 @@ export function FieldRange({ label, hint, min = 0, max = 1, step = 0.05, instant
         }}
       >
         <div
-          className='fieldrange-bar'
+          className="fieldrange-bar"
           style={{
             backgroundColor: 'white',
             borderRadius: '0.1rem',
@@ -498,7 +498,7 @@ export function FieldRange({ label, hint, min = 0, max = 1, step = 0.05, instant
         />
       </div>
     </div>
-  )
+  );
 }
 
 export const fileKinds = {
@@ -550,7 +550,7 @@ export const fileKinds = {
     exts: ['mp3'],
     placeholder: 'mp3',
   },
-}
+};
 
 interface FieldFileProps {
   world: any
@@ -568,74 +568,74 @@ interface LoadingFile {
 }
 
 export function FieldFile({ world, label, hint, kind: kindName, value, onChange }: FieldFileProps) {
-  const hintContext = useContext(HintContext)
-  const setHint = hintContext?.setHint
-  const nRef = useRef(0)
-  const update = useUpdate()
-  const [loading, setLoading] = useState<LoadingFile | null>(null)
-  const kind = fileKinds[kindName]
+  const hintContext = useContext(HintContext);
+  const setHint = hintContext?.setHint;
+  const nRef = useRef(0);
+  const update = useUpdate();
+  const [loading, setLoading] = useState<LoadingFile | null>(null);
+  const kind = fileKinds[kindName];
   if (!kind) {
-    return null
+    return null;
   } // invalid?
   const set = async e => {
     // trigger input rebuild
-    const n = ++nRef.current
-    update()
+    const n = ++nRef.current;
+    update();
     // get file
-    const file = e.target.files[0]
+    const file = e.target.files[0];
     if (!file) {
-      return
+      return;
     }
     // check ext
-    const ext = file.name.split('.').pop().toLowerCase()
+    const ext = file.name.split('.').pop().toLowerCase();
     if (!kind.exts.includes(ext)) {
-      return console.error(`attempted invalid file extension for ${kindName}: ${ext}`)
+      return console.error(`attempted invalid file extension for ${kindName}: ${ext}`);
     }
     // immutable hash the file
-    const hash = await hashFile(file)
+    const hash = await hashFile(file);
     // use hash as glb filename
-    const filename = `${hash}.${ext}`
+    const filename = `${hash}.${ext}`;
     // canonical url to this file
-    const url = `asset://${filename}`
+    const url = `asset://${filename}`;
     // show loading
     const newValue: LoadingFile = {
       type: kind.type,
       name: file.name,
       url,
-    }
-    setLoading(newValue)
+    };
+    setLoading(newValue);
     // upload file
-    await world.network.upload(file)
+    await world.network.upload(file);
     // ignore if new value/upload
     if (nRef.current !== n) {
-      return
+      return;
     }
     // cache file locally so this client can insta-load it
-    world.loader.insert(kind.type, url, file)
+    world.loader.insert(kind.type, url, file);
     // apply!
-    setLoading(null)
-    onChange(newValue)
-  }
+    setLoading(null);
+    onChange(newValue);
+  };
   const remove = e => {
-    e.preventDefault()
-    e.stopPropagation()
-    onChange(null)
-  }
+    e.preventDefault();
+    e.stopPropagation();
+    onChange(null);
+  };
   const handleDownload = e => {
     if (e.shiftKey && value?.url) {
-      e.preventDefault()
-      const file = world.loader.getFile(value.url, value.name)
+      e.preventDefault();
+      const file = world.loader.getFile(value.url, value.name);
       if (!file) {
-        return
+        return;
       }
-      downloadFile(file)
+      downloadFile(file);
     }
-  }
-  const n = nRef.current
-  const name = loading?.name || value?.name
+  };
+  const n = nRef.current;
+  const name = loading?.name || value?.name;
   return (
     <label
-      className='fieldfile'
+      className="fieldfile"
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -648,7 +648,7 @@ export function FieldFile({ world, label, hint, kind: kindName, value, onChange 
       onClick={handleDownload}
     >
       <div
-        className='fieldfile-label'
+        className="fieldfile-label"
         style={{
           flex: 1,
           whiteSpace: 'nowrap',
@@ -663,7 +663,7 @@ export function FieldFile({ world, label, hint, kind: kindName, value, onChange 
       </div>
       {!value && !loading && (
         <div
-          className='fieldfile-placeholder'
+          className="fieldfile-placeholder"
           style={{
             color: 'rgba(255, 255, 255, 0.3)',
           }}
@@ -673,7 +673,7 @@ export function FieldFile({ world, label, hint, kind: kindName, value, onChange 
       )}
       {name && (
         <div
-          className='fieldfile-name'
+          className="fieldfile-name"
           style={{
             fontSize: '0.9375rem',
             textAlign: 'right',
@@ -688,7 +688,7 @@ export function FieldFile({ world, label, hint, kind: kindName, value, onChange 
       )}
       {value && !loading && (
         <div
-          className='fieldfile-x'
+          className="fieldfile-x"
           style={{
             lineHeight: 0,
             margin: '0 -0.2rem 0 0.3rem',
@@ -696,10 +696,10 @@ export function FieldFile({ world, label, hint, kind: kindName, value, onChange 
           }}
           onClick={remove}
           onMouseEnter={e => {
-            ;(e.target as HTMLDivElement).style.color = 'white'
+            ;(e.target as HTMLDivElement).style.color = 'white';
           }}
           onMouseLeave={e => {
-            ;(e.target as HTMLDivElement).style.color = 'rgba(255, 255, 255, 0.3)'
+            ;(e.target as HTMLDivElement).style.color = 'rgba(255, 255, 255, 0.3)';
           }}
         >
           ×
@@ -707,7 +707,7 @@ export function FieldFile({ world, label, hint, kind: kindName, value, onChange 
       )}
       {loading && (
         <div
-          className='fieldfile-loading'
+          className="fieldfile-loading"
           style={{
             margin: '0 -0.1rem 0 0.3rem',
             display: 'flex',
@@ -718,9 +718,9 @@ export function FieldFile({ world, label, hint, kind: kindName, value, onChange 
           ⟳
         </div>
       )}
-      <input key={n} type='file' onChange={set} accept={kind.accept} />
+      <input key={n} type="file" onChange={set} accept={kind.accept} />
     </label>
-  )
+  );
 }
 
 interface FieldNumberProps {
@@ -746,42 +746,42 @@ export function FieldNumber({
   value,
   onChange,
 }: FieldNumberProps) {
-  const hintContext = useContext(HintContext)
-  const setHint = hintContext?.setHint
+  const hintContext = useContext(HintContext);
+  const setHint = hintContext?.setHint;
   if (value === undefined || value === null) {
-    value = 0
+    value = 0;
   }
-  const [local, setLocal] = useState(value.toFixed(dp))
-  const [focused, setFocused] = useState(false)
+  const [local, setLocal] = useState(value.toFixed(dp));
+  const [focused, setFocused] = useState(false);
   useEffect(() => {
     if (!focused && local !== value.toFixed(dp)) {
-      setLocal(value.toFixed(dp))
+      setLocal(value.toFixed(dp));
     }
-  }, [focused, value, local, dp])
+  }, [focused, value, local, dp]);
   const setTo = (str: string) => {
     // try parse math
-    let num
+    let num;
     try {
       // Parse numeric expression safely - simple arithmetic only
-      num = parseFloat(str)
+      num = parseFloat(str);
       if (typeof num !== 'number') {
-        throw new Error('input number parse fail')
+        throw new Error('input number parse fail');
       }
     } catch (err) {
-      console.error(err)
-      num = value // revert back to original
+      console.error(err);
+      num = value; // revert back to original
     }
     if (num < min || num > max) {
-      num = value
+      num = value;
     }
-    setLocal(num.toFixed(dp))
-    onChange(+num.toFixed(dp))
-  }
-  const [isHovered, setIsHovered] = useState(false)
+    setLocal(num.toFixed(dp));
+    onChange(+num.toFixed(dp));
+  };
+  const [isHovered, setIsHovered] = useState(false);
 
   return (
     <label
-      className='fieldnumber'
+      className="fieldnumber"
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -792,19 +792,19 @@ export function FieldNumber({
       }}
       onPointerEnter={() => {
         if (hint) {
-          setHint?.(hint)
+          setHint?.(hint);
         }
-        setIsHovered(true)
+        setIsHovered(true);
       }}
       onPointerLeave={() => {
         if (hint) {
-          setHint?.(null)
+          setHint?.(null);
         }
-        setIsHovered(false)
+        setIsHovered(false);
       }}
     >
       <div
-        className='fieldnumber-label'
+        className="fieldnumber-label"
         style={{
           width: '9.4rem',
           flexShrink: 0,
@@ -818,13 +818,13 @@ export function FieldNumber({
         {label}
       </div>
       <div
-        className='fieldnumber-field'
+        className="fieldnumber-field"
         style={{
           flex: 1,
         }}
       >
         <input
-          type='text'
+          type="text"
           value={local}
           onChange={e => setLocal(e.target.value)}
           style={{
@@ -841,35 +841,35 @@ export function FieldNumber({
           onKeyDown={e => {
             if (e.code === 'Enter') {
               e.preventDefault()
-              ;(e.target as HTMLInputElement).blur()
+              ;(e.target as HTMLInputElement).blur();
             }
             if (e.code === 'ArrowUp') {
-              const amount = e.shiftKey ? bigStep : step
-              setTo((value + amount).toString())
+              const amount = e.shiftKey ? bigStep : step;
+              setTo((value + amount).toString());
             }
             if (e.code === 'ArrowDown') {
-              const amount = e.shiftKey ? bigStep : step
-              setTo((value - amount).toString())
+              const amount = e.shiftKey ? bigStep : step;
+              setTo((value - amount).toString());
             }
           }}
           onFocus={e => {
-            setFocused(true)
-            e.target.select()
+            setFocused(true);
+            e.target.select();
           }}
           onBlur={_e => {
-            setFocused(false)
+            setFocused(false);
             // if blank, set back to original
             if (local === '') {
-              setLocal(value.toFixed(dp))
-              return
+              setLocal(value.toFixed(dp));
+              return;
             }
             // otherwise run through pipeline
-            setTo(local)
+            setTo(local);
           }}
         />
       </div>
     </label>
-  )
+  );
 }
 
 interface FieldVec3Props {
@@ -895,51 +895,51 @@ export function FieldVec3({
   value,
   onChange,
 }: FieldVec3Props) {
-  const hintContext = useContext(HintContext)
-  const setHint = hintContext?.setHint
-  const valueX = value?.[0] || 0
-  const valueY = value?.[1] || 0
-  const valueZ = value?.[2] || 0
-  const [localX, setLocalX] = useState(valueX.toFixed(dp))
-  const [localY, setLocalY] = useState(valueY.toFixed(dp))
-  const [localZ, setLocalZ] = useState(valueZ.toFixed(dp))
-  const [focused, setFocused] = useState(false)
+  const hintContext = useContext(HintContext);
+  const setHint = hintContext?.setHint;
+  const valueX = value?.[0] || 0;
+  const valueY = value?.[1] || 0;
+  const valueZ = value?.[2] || 0;
+  const [localX, setLocalX] = useState(valueX.toFixed(dp));
+  const [localY, setLocalY] = useState(valueY.toFixed(dp));
+  const [localZ, setLocalZ] = useState(valueZ.toFixed(dp));
+  const [focused, setFocused] = useState(false);
   useEffect(() => {
     if (!focused) {
       if (localX !== valueX.toFixed(dp)) {
-        setLocalX(valueX.toFixed(dp))
+        setLocalX(valueX.toFixed(dp));
       }
       if (localY !== valueY.toFixed(dp)) {
-        setLocalY(valueY.toFixed(dp))
+        setLocalY(valueY.toFixed(dp));
       }
       if (localZ !== valueZ.toFixed(dp)) {
-        setLocalZ(valueZ.toFixed(dp))
+        setLocalZ(valueZ.toFixed(dp));
       }
     }
-  }, [focused, valueX, valueY, valueZ, localX, localY, localZ, dp])
+  }, [focused, valueX, valueY, valueZ, localX, localY, localZ, dp]);
   const parseStr = (str: string) => {
     // try parse math
-    let num
+    let num;
     try {
       // Parse numeric expression safely - simple arithmetic only
-      num = parseFloat(str)
+      num = parseFloat(str);
       if (typeof num !== 'number') {
-        throw new Error('input number parse fail')
+        throw new Error('input number parse fail');
       }
     } catch (err) {
-      console.error(err)
-      num = 0 // default to 0
+      console.error(err);
+      num = 0; // default to 0
     }
     if (num < min || num > max) {
-      num = 0
+      num = 0;
     }
-    return num
-  }
-  const [isHovered, setIsHovered] = useState(false)
+    return num;
+  };
+  const [isHovered, setIsHovered] = useState(false);
 
   return (
     <label
-      className='fieldvec3'
+      className="fieldvec3"
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -950,19 +950,19 @@ export function FieldVec3({
       }}
       onPointerEnter={() => {
         if (hint) {
-          setHint?.(hint)
+          setHint?.(hint);
         }
-        setIsHovered(true)
+        setIsHovered(true);
       }}
       onPointerLeave={() => {
         if (hint) {
-          setHint?.(null)
+          setHint?.(null);
         }
-        setIsHovered(false)
+        setIsHovered(false);
       }}
     >
       <div
-        className='fieldvec3-label'
+        className="fieldvec3-label"
         style={{
           width: '9.4rem',
           flexShrink: 0,
@@ -976,7 +976,7 @@ export function FieldVec3({
         {label}
       </div>
       <div
-        className='fieldvec3-field'
+        className="fieldvec3-field"
         style={{
           flex: 1,
           display: 'flex',
@@ -985,7 +985,7 @@ export function FieldVec3({
         }}
       >
         <input
-          type='text'
+          type="text"
           value={localX}
           onChange={e => setLocalX(e.target.value)}
           style={{
@@ -1002,40 +1002,40 @@ export function FieldVec3({
           onKeyDown={e => {
             if (e.code === 'Enter') {
               e.preventDefault()
-              ;(e.target as HTMLInputElement).blur()
+              ;(e.target as HTMLInputElement).blur();
             }
             if (e.code === 'ArrowUp') {
-              const amount = e.shiftKey ? bigStep : step
-              const num = parseStr((valueX + amount).toString())
-              setLocalX(num.toFixed(dp))
-              onChange([+num.toFixed(dp), valueY, valueZ])
+              const amount = e.shiftKey ? bigStep : step;
+              const num = parseStr((valueX + amount).toString());
+              setLocalX(num.toFixed(dp));
+              onChange([+num.toFixed(dp), valueY, valueZ]);
             }
             if (e.code === 'ArrowDown') {
-              const amount = e.shiftKey ? bigStep : step
-              const num = parseStr((valueX - amount).toString())
-              setLocalX(num.toFixed(dp))
-              onChange([+num.toFixed(dp), valueY, valueZ])
+              const amount = e.shiftKey ? bigStep : step;
+              const num = parseStr((valueX - amount).toString());
+              setLocalX(num.toFixed(dp));
+              onChange([+num.toFixed(dp), valueY, valueZ]);
             }
           }}
           onFocus={e => {
-            setFocused(true)
-            e.target.select()
+            setFocused(true);
+            e.target.select();
           }}
           onBlur={_e => {
-            setFocused(false)
+            setFocused(false);
             // if blank, set back to original
             if (localX === '') {
-              setLocalX(valueX.toFixed(dp))
-              return
+              setLocalX(valueX.toFixed(dp));
+              return;
             }
             // otherwise run through pipeline
-            const num = parseStr(localX)
-            setLocalX(num.toFixed(dp))
-            onChange([+num.toFixed(dp), valueY, valueZ])
+            const num = parseStr(localX);
+            setLocalX(num.toFixed(dp));
+            onChange([+num.toFixed(dp), valueY, valueZ]);
           }}
         />
         <input
-          type='text'
+          type="text"
           value={localY}
           onChange={e => setLocalY(e.target.value)}
           style={{
@@ -1052,40 +1052,40 @@ export function FieldVec3({
           onKeyDown={e => {
             if (e.code === 'Enter') {
               e.preventDefault()
-              ;(e.target as HTMLInputElement).blur()
+              ;(e.target as HTMLInputElement).blur();
             }
             if (e.code === 'ArrowUp') {
-              const amount = e.shiftKey ? bigStep : step
-              const num = parseStr((valueY + amount).toString())
-              setLocalY(num.toFixed(dp))
-              onChange([valueX, +num.toFixed(dp), valueZ])
+              const amount = e.shiftKey ? bigStep : step;
+              const num = parseStr((valueY + amount).toString());
+              setLocalY(num.toFixed(dp));
+              onChange([valueX, +num.toFixed(dp), valueZ]);
             }
             if (e.code === 'ArrowDown') {
-              const amount = e.shiftKey ? bigStep : step
-              const num = parseStr((valueY - amount).toString())
-              setLocalY(num.toFixed(dp))
-              onChange([valueX, +num.toFixed(dp), valueZ])
+              const amount = e.shiftKey ? bigStep : step;
+              const num = parseStr((valueY - amount).toString());
+              setLocalY(num.toFixed(dp));
+              onChange([valueX, +num.toFixed(dp), valueZ]);
             }
           }}
           onFocus={e => {
-            setFocused(true)
-            e.target.select()
+            setFocused(true);
+            e.target.select();
           }}
           onBlur={_e => {
-            setFocused(false)
+            setFocused(false);
             // if blank, set back to original
             if (localY === '') {
-              setLocalY(valueY.toFixed(dp))
-              return
+              setLocalY(valueY.toFixed(dp));
+              return;
             }
             // otherwise run through pipeline
-            const num = parseStr(localY)
-            setLocalY(num.toFixed(dp))
-            onChange([valueX, +num.toFixed(dp), valueZ])
+            const num = parseStr(localY);
+            setLocalY(num.toFixed(dp));
+            onChange([valueX, +num.toFixed(dp), valueZ]);
           }}
         />
         <input
-          type='text'
+          type="text"
           value={localZ}
           onChange={e => setLocalZ(e.target.value)}
           style={{
@@ -1102,41 +1102,41 @@ export function FieldVec3({
           onKeyDown={e => {
             if (e.code === 'Enter') {
               e.preventDefault()
-              ;(e.target as HTMLInputElement).blur()
+              ;(e.target as HTMLInputElement).blur();
             }
             if (e.code === 'ArrowUp') {
-              const amount = e.shiftKey ? bigStep : step
-              const num = parseStr((valueZ + amount).toString())
-              setLocalZ(num.toFixed(dp))
-              onChange([valueX, valueY, +num.toFixed(dp)])
+              const amount = e.shiftKey ? bigStep : step;
+              const num = parseStr((valueZ + amount).toString());
+              setLocalZ(num.toFixed(dp));
+              onChange([valueX, valueY, +num.toFixed(dp)]);
             }
             if (e.code === 'ArrowDown') {
-              const amount = e.shiftKey ? bigStep : step
-              const num = parseStr((valueZ - amount).toString())
-              setLocalZ(num.toFixed(dp))
-              onChange([valueX, valueY, +num.toFixed(dp)])
+              const amount = e.shiftKey ? bigStep : step;
+              const num = parseStr((valueZ - amount).toString());
+              setLocalZ(num.toFixed(dp));
+              onChange([valueX, valueY, +num.toFixed(dp)]);
             }
           }}
           onFocus={e => {
-            setFocused(true)
-            e.target.select()
+            setFocused(true);
+            e.target.select();
           }}
           onBlur={_e => {
-            setFocused(false)
+            setFocused(false);
             // if blank, set back to original
             if (localZ === '') {
-              setLocalZ(valueZ.toFixed(dp))
-              return
+              setLocalZ(valueZ.toFixed(dp));
+              return;
             }
             // otherwise run through pipeline
-            const num = parseStr(localZ)
-            setLocalZ(num.toFixed(dp))
-            onChange([valueX, valueY, +num.toFixed(dp)])
+            const num = parseStr(localZ);
+            setLocalZ(num.toFixed(dp));
+            onChange([valueX, valueY, +num.toFixed(dp)]);
           }}
         />
       </div>
     </label>
-  )
+  );
 }
 
 interface FieldCurveProps {
@@ -1152,22 +1152,22 @@ interface FieldCurveProps {
 }
 
 export function FieldCurve({ label, hint, x, xRange, y, yMin, yMax, value, onChange }: FieldCurveProps) {
-  const hintContext = useContext(HintContext)
-  const setHint = hintContext?.setHint
-  const curve = useMemo(() => new Curve().deserialize(value || '0,0.5,0,0|1,0.5,0,0'), [value])
-  const [edit, setEdit] = useState<any>(false)
-  const [isHovered, setIsHovered] = useState(false)
+  const hintContext = useContext(HintContext);
+  const setHint = hintContext?.setHint;
+  const curve = useMemo(() => new Curve().deserialize(value || '0,0.5,0,0|1,0.5,0,0'), [value]);
+  const [edit, setEdit] = useState<any>(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   return (
     <div
-      className='fieldcurve'
+      className="fieldcurve"
       style={{
         cursor: 'pointer',
         backgroundColor: isHovered ? 'rgba(255, 255, 255, 0.03)' : 'transparent',
       }}
     >
       <div
-        className='fieldcurve-control'
+        className="fieldcurve-control"
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -1176,26 +1176,26 @@ export function FieldCurve({ label, hint, x, xRange, y, yMin, yMax, value, onCha
         }}
         onClick={() => {
           if (edit) {
-            setEdit(null)
+            setEdit(null);
           } else {
-            setEdit(curve.clone())
+            setEdit(curve.clone());
           }
         }}
         onPointerEnter={() => {
           if (hint) {
-            setHint?.(hint)
+            setHint?.(hint);
           }
-          setIsHovered(true)
+          setIsHovered(true);
         }}
         onPointerLeave={() => {
           if (hint) {
-            setHint?.(null)
+            setHint?.(null);
           }
-          setIsHovered(false)
+          setIsHovered(false);
         }}
       >
         <div
-          className='fieldcurve-label'
+          className="fieldcurve-label"
           style={{
             flex: 1,
             whiteSpace: 'nowrap',
@@ -1209,7 +1209,7 @@ export function FieldCurve({ label, hint, x, xRange, y, yMin, yMax, value, onCha
           {label}
         </div>
         <div
-          className='fieldcurve-curve'
+          className="fieldcurve-curve"
           style={{
             width: '6rem',
             height: '1.2rem',
@@ -1229,17 +1229,17 @@ export function FieldCurve({ label, hint, x, xRange, y, yMin, yMax, value, onCha
             yMin={yMin}
             yMax={yMax}
             onCommit={() => {
-              onChange((edit as Curve).serialize())
-              setEdit(null)
+              onChange((edit as Curve).serialize());
+              setEdit(null);
             }}
             onCancel={() => {
-              setEdit(null)
+              setEdit(null);
             }}
           />
         </Portal>
       )}
     </div>
-  )
+  );
 }
 
 interface FieldBtnProps {
@@ -1251,13 +1251,13 @@ interface FieldBtnProps {
 }
 
 export function FieldBtn({ label, note, hint, nav, onClick }: FieldBtnProps) {
-  const hintContext = useContext(HintContext)
-  const setHint = hintContext?.setHint
-  const [isHovered, setIsHovered] = useState(false)
+  const hintContext = useContext(HintContext);
+  const setHint = hintContext?.setHint;
+  const [isHovered, setIsHovered] = useState(false);
 
   return (
     <div
-      className='fieldbtn'
+      className="fieldbtn"
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -1268,20 +1268,20 @@ export function FieldBtn({ label, note, hint, nav, onClick }: FieldBtnProps) {
       }}
       onPointerEnter={() => {
         if (hint) {
-          setHint?.(hint)
+          setHint?.(hint);
         }
-        setIsHovered(true)
+        setIsHovered(true);
       }}
       onPointerLeave={() => {
         if (hint) {
-          setHint?.(null)
+          setHint?.(null);
         }
-        setIsHovered(false)
+        setIsHovered(false);
       }}
       onClick={onClick}
     >
       <div
-        className='fieldbtn-label'
+        className="fieldbtn-label"
         style={{
           flex: 1,
           whiteSpace: 'nowrap',
@@ -1295,7 +1295,7 @@ export function FieldBtn({ label, note, hint, nav, onClick }: FieldBtnProps) {
       </div>
       {note && (
         <div
-          className='fieldbtn-note'
+          className="fieldbtn-note"
           style={{
             fontSize: '0.9375rem',
             color: 'rgba(255, 255, 255, 0.4)',
@@ -1306,5 +1306,5 @@ export function FieldBtn({ label, note, hint, nav, onClick }: FieldBtnProps) {
       )}
       {nav && <span style={{ fontSize: '1.5rem' }}>›</span>}
     </div>
-  )
+  );
 }

@@ -1,4 +1,4 @@
-import type { THREE } from '../core/extras/three'
+import type { THREE } from '../core/extras/three';
 
 // Core World Types
 export interface WorldOptions {
@@ -83,6 +83,9 @@ export interface World {
   // System access methods
   getSystem<T extends System>(name: string): T | undefined
   getSystemByType<T extends System>(constructor: new (world: World) => T): T | undefined
+  
+  // Entity access methods
+  getEntityById(id: string): any | null
 
   // Add graphics property
   graphics?: {

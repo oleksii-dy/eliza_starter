@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { auth } from '@/lib/auth';
 
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     const authData = await auth();
 
@@ -29,3 +30,5 @@ export async function handleGET(request: NextRequest) {
     );
   }
 }
+
+export const { GET } = wrapHandlers({ handleGET });

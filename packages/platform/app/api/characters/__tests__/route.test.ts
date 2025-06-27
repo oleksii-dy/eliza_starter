@@ -388,8 +388,8 @@ describe('/api/characters', () => {
         .map(
           (_, i) =>
             `This is knowledge item ${i} with some substantial content that makes it larger. ` +
-            `Adding more text to reach the target size for testing large character files. ` +
-            `This should be enough content to make each knowledge item fairly substantial.`,
+            'Adding more text to reach the target size for testing large character files. ' +
+            'This should be enough content to make each knowledge item fairly substantial.',
         );
 
       const largeMessageExamples = Array(500)

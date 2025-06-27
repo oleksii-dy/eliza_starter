@@ -206,8 +206,16 @@ describe('Real Action Chaining Integration', () => {
     runtime = await createRealTestRuntime({
       enableLLM: false,
       enablePlanning: true,
-      logLevel: 'error',
     });
+
+    // Mock the logger to suppress error logs during tests
+    (runtime as any).logger = {
+      debug: () => {},
+      info: () => {},
+      warn: () => {},
+      error: () => {},
+      log: () => {},
+    };
 
     // Register chainable actions
     chainableActions.forEach((action) => runtime.registerAction(action));

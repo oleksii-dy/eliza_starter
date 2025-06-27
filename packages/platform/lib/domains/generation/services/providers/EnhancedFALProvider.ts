@@ -378,7 +378,7 @@ export class EnhancedFALProvider extends BaseGenerationProvider {
     try {
       const response = await fetch(url, { method: 'HEAD' });
       const contentLength = response.headers.get('content-length');
-      return contentLength ? parseInt(contentLength) : 1048576; // Default 1MB
+      return contentLength ? parseInt(contentLength, 10) : 1048576; // Default 1MB
     } catch {
       return 1048576; // Default 1MB if can't determine
     }

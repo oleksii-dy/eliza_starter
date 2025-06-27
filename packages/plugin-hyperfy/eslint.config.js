@@ -9,6 +9,11 @@ export default [
         // Browser/DOM globals needed by Hyperfy
         HTMLLabelElement: 'readonly',
         crypto: 'readonly',
+        
+        // Cypress globals
+        cy: 'readonly',
+        Cypress: 'readonly',
+        React: 'readonly',
         TextEncoder: 'readonly',
         FileReader: 'readonly',
         ReadableStream: 'readonly',

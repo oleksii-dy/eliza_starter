@@ -1,6 +1,6 @@
 import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { createMockRuntime, createMockWallet as _createMockWallet } from '../../test-utils';
-import type { IAgentRuntime } from '../../../types/core.d';
+import type { IAgentRuntime } from '@elizaos/core';
 import type { CustodialWallet as _CustodialWallet } from '../../../types/wallet';
 
 // Mock the WalletRepository module

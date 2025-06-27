@@ -1,6 +1,6 @@
 // import { ChevronDownIcon, UploadIcon } from 'lucide-react'
-import { useRef, useState } from 'react'
-import { cls } from './cls'
+import { useRef, useState } from 'react';
+import { cls } from './cls';
 
 interface InputTextProps {
   label?: string
@@ -12,10 +12,10 @@ interface InputTextProps {
 
 export function InputText({ label, value, onChange, placeholder, disabled }: InputTextProps) {
   return (
-    <div className='inputtext' style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+    <div className="inputtext" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
       {label && <label style={{ fontSize: '0.875rem', fontWeight: '500' }}>{label}</label>}
       <input
-        type='text'
+        type="text"
         value={value || ''}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
@@ -32,7 +32,7 @@ export function InputText({ label, value, onChange, placeholder, disabled }: Inp
         }}
       />
     </div>
-  )
+  );
 }
 
 interface InputTextareaProps {
@@ -46,7 +46,7 @@ interface InputTextareaProps {
 
 export function InputTextarea({ label, value, onChange, placeholder, disabled, rows = 3 }: InputTextareaProps) {
   return (
-    <div className='inputtextarea' style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+    <div className="inputtextarea" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
       {label && <label style={{ fontSize: '0.875rem', fontWeight: '500' }}>{label}</label>}
       <textarea
         value={value || ''}
@@ -68,7 +68,7 @@ export function InputTextarea({ label, value, onChange, placeholder, disabled, r
         }}
       />
     </div>
-  )
+  );
 }
 
 interface InputNumberProps {
@@ -83,10 +83,10 @@ interface InputNumberProps {
 
 export function InputNumber({ label, value, onChange, min, max, step = 1, disabled }: InputNumberProps) {
   return (
-    <div className='inputnumber' style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+    <div className="inputnumber" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
       {label && <label style={{ fontSize: '0.875rem', fontWeight: '500' }}>{label}</label>}
       <input
-        type='number'
+        type="number"
         value={value || 0}
         onChange={e => onChange(parseFloat(e.target.value) || 0)}
         min={min}
@@ -105,7 +105,7 @@ export function InputNumber({ label, value, onChange, min, max, step = 1, disabl
         }}
       />
     </div>
-  )
+  );
 }
 
 interface InputRangeProps {
@@ -120,7 +120,7 @@ interface InputRangeProps {
 
 export function InputRange({ label, value, onChange, min = 0, max = 100, step = 1, disabled }: InputRangeProps) {
   return (
-    <div className='inputrange' style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+    <div className="inputrange" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
       <style>{`
         .inputrange-slider {
           -webkit-appearance: none;
@@ -155,8 +155,8 @@ export function InputRange({ label, value, onChange, min = 0, max = 100, step = 
         </div>
       )}
       <input
-        type='range'
-        className='inputrange-slider'
+        type="range"
+        className="inputrange-slider"
         value={value || 0}
         onChange={e => onChange(parseFloat(e.target.value) || 0)}
         min={min}
@@ -165,7 +165,7 @@ export function InputRange({ label, value, onChange, min = 0, max = 100, step = 
         disabled={disabled}
       />
     </div>
-  )
+  );
 }
 
 interface InputSwitchProps {
@@ -177,7 +177,7 @@ interface InputSwitchProps {
 
 export function InputSwitch({ label, value, onChange, disabled }: InputSwitchProps) {
   return (
-    <div className='inputswitch' style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+    <div className="inputswitch" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
       <style>{`
         .inputswitch-toggle {
           position: relative;
@@ -205,13 +205,13 @@ export function InputSwitch({ label, value, onChange, disabled }: InputSwitchPro
         }
       `}</style>
       <div
-        className='inputswitch-toggle'
+        className="inputswitch-toggle"
         onClick={() => !disabled && onChange(!value)}
         style={{ pointerEvents: disabled ? 'none' : 'auto' }}
       />
       {label && <label style={{ fontSize: '0.875rem', fontWeight: '500' }}>{label}</label>}
     </div>
-  )
+  );
 }
 
 interface InputDropdownProps {
@@ -223,10 +223,10 @@ interface InputDropdownProps {
 }
 
 export function InputDropdown({ label, value, onChange, options, disabled }: InputDropdownProps) {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className='inputdropdown' style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+    <div className="inputdropdown" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
       <style>{`
         .inputdropdown-list {
           position: absolute;
@@ -284,14 +284,14 @@ export function InputDropdown({ label, value, onChange, options, disabled }: Inp
           </span>
         </div>
         {isOpen && (
-          <div className='inputdropdown-list'>
+          <div className="inputdropdown-list">
             {options.map(option => (
               <div
                 key={option.value}
                 className={cls('inputdropdown-option', { selected: option.value === value })}
                 onClick={() => {
-                  onChange(option.value)
-                  setIsOpen(false)
+                  onChange(option.value);
+                  setIsOpen(false);
                 }}
               >
                 {option.label}
@@ -301,7 +301,7 @@ export function InputDropdown({ label, value, onChange, options, disabled }: Inp
         )}
       </div>
     </div>
-  )
+  );
 }
 
 export const fileKinds = {
@@ -353,7 +353,7 @@ export const fileKinds = {
     exts: ['js', 'mjs', 'ts'],
     placeholder: '.js / .mjs / .ts',
   },
-}
+};
 
 interface InputFileProps {
   label?: string
@@ -365,18 +365,18 @@ interface InputFileProps {
 }
 
 export function InputFile({ label, value, onChange, accept, disabled, placeholder }: InputFileProps) {
-  const fileRef = useRef<HTMLInputElement | null>(null)
+  const fileRef = useRef<HTMLInputElement | null>(null);
 
   return (
-    <div className='inputfile' style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+    <div className="inputfile" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
       {label && <label style={{ fontSize: '0.875rem', fontWeight: '500' }}>{label}</label>}
       <input
         ref={fileRef}
-        type='file'
+        type="file"
         accept={accept}
         onChange={e => {
-          const file = e.target.files?.[0] || null
-          onChange(file)
+          const file = e.target.files?.[0] || null;
+          onChange(file);
         }}
         disabled={disabled}
         style={{ display: 'none' }}
@@ -401,5 +401,5 @@ export function InputFile({ label, value, onChange, accept, disabled, placeholde
         <span>{value ? value.name : placeholder || 'Choose file...'}</span>
       </div>
     </div>
-  )
+  );
 }

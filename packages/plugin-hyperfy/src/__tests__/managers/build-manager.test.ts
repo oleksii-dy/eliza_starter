@@ -102,8 +102,10 @@ describe('BuildManager', () => {
     });
 
     it('should handle missing entity', async () => {
-      await expect(buildManager.duplicate('non-existent')).resolves.not.toThrow();
-      // Method returns void, so we just verify it doesn't throw
+      // Just call the method and ensure it doesn't throw
+      await buildManager.duplicate('non-existent');
+      // If we get here, the test passes
+      expect(true).toBe(true);
     });
 
     it('should duplicate unique blueprints', async () => {
@@ -146,16 +148,17 @@ describe('BuildManager', () => {
     });
 
     it('should handle missing entity gracefully', async () => {
-      await expect(buildManager.translate('non-existent', [0, 0, 0])).resolves.not.toThrow();
+      // Just call the method and ensure it doesn't throw
+      await buildManager.translate('non-existent', [0, 0, 0]);
+      expect(true).toBe(true);
     });
   });
 
   describe('importEntity', () => {
     it('should handle import entity method', async () => {
       // Test that the method exists and can be called
-      await expect(
-        buildManager.importEntity('https://example.com/model.glb', [0, 0], 'Test Model')
-      ).resolves.not.toThrow();
+      await buildManager.importEntity('https://example.com/model.glb', [0, 0], 'Test Model');
+      expect(true).toBe(true);
     });
   });
 

@@ -3,6 +3,8 @@
  * Provides consistent error handling across the platform
  */
 
+import { NextResponse } from 'next/server';
+
 // Base error classes
 export class AppError extends Error {
   public readonly statusCode: number;
@@ -184,11 +186,11 @@ export function createErrorResponse(
 }
 
 // Error handler for Next.js API routes
-export function handleApiError(error: unknown): Response {
+export function handleApiError(error: unknown): NextResponse {
   console.error('API Error:', error);
 
   if (error instanceof AppError) {
-    return Response.json(createErrorResponse(error), {
+    return NextResponse.json(createErrorResponse(error), {
       status: error.statusCode,
     });
   }
@@ -197,7 +199,7 @@ export function handleApiError(error: unknown): Response {
   if (error instanceof Error) {
     // JWT errors
     if (error.name === 'JWSInvalid' || error.name === 'JWTExpired') {
-      return Response.json(
+      return NextResponse.json(
         createErrorResponse(
           new AuthenticationError('Invalid or expired token', 'TOKEN_INVALID'),
         ),
@@ -210,7 +212,7 @@ export function handleApiError(error: unknown): Response {
       error.message.includes('database') ||
       error.message.includes('connection')
     ) {
-      return Response.json(
+      return NextResponse.json(
         createErrorResponse(new DatabaseError('Database connection failed')),
         { status: 500 },
       );
@@ -226,7 +228,7 @@ export function handleApiError(error: unknown): Response {
         : 'Unknown error',
   );
 
-  return Response.json(createErrorResponse(genericError), { status: 500 });
+  return NextResponse.json(createErrorResponse(genericError), { status: 500 });
 }
 
 // Async error wrapper for API routes
@@ -252,7 +254,7 @@ export function isRetryableError(error: AppError): boolean {
 export function getErrorSeverity(
   error: AppError,
 ): 'low' | 'medium' | 'high' | 'critical' {
-  if (error.statusCode >= 500) return 'critical';
-  if (error.statusCode >= 400) return 'medium';
+  if (error.statusCode >= 500) {return 'critical';}
+  if (error.statusCode >= 400) {return 'medium';}
   return 'low';
 }

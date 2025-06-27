@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { db } from '@/lib/api/database';
 import { hashPassword, createJWT } from '@/lib/api/auth';
 import { z } from 'zod';
@@ -9,7 +10,7 @@ const registerSchema = z.object({
   name: z.string().min(1),
 });
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const body = await request.json();
 
@@ -78,3 +79,5 @@ export async function handlePOST(request: NextRequest) {
     );
   }
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

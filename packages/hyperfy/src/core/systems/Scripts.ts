@@ -1,17 +1,17 @@
-import { System } from './System.js'
-import { THREE } from '../extras/three.js'
-import { DEG2RAD, RAD2DEG } from '../extras/general.js'
-import { clamp, num, uuid } from '../utils.js'
-import { LerpVector3 } from '../extras/LerpVector3.js'
-import { LerpQuaternion } from '../extras/LerpQuaternion.js'
-import { Curve } from '../extras/Curve.js'
-import { prng } from '../extras/prng.js'
-import { BufferedLerpVector3 } from '../extras/BufferedLerpVector3.js'
-import { BufferedLerpQuaternion } from '../extras/BufferedLerpQuaternion.js'
-import type { World } from '../../types/index.js'
+import { System } from './System.js';
+import { THREE } from '../extras/three.js';
+import { DEG2RAD, RAD2DEG } from '../extras/general.js';
+import { clamp, num, uuid } from '../utils.js';
+import { LerpVector3 } from '../extras/LerpVector3.js';
+import { LerpQuaternion } from '../extras/LerpQuaternion.js';
+import { Curve } from '../extras/Curve.js';
+import { prng } from '../extras/prng.js';
+import { BufferedLerpVector3 } from '../extras/BufferedLerpVector3.js';
+import { BufferedLerpQuaternion } from '../extras/BufferedLerpQuaternion.js';
+import type { World } from '../../types/index.js';
 
 // SES global Compartment - available after lockdown()
-declare const Compartment: any
+declare const Compartment: any;
 
 /**
  * Script System
@@ -27,18 +27,18 @@ export interface ScriptResult {
 }
 
 export class Scripts extends System {
-  private compartment: any
+  private compartment: any;
 
   constructor(world: World) {
-    super(world)
+    super(world);
 
     // Check if Compartment is available (SES needs to be initialized)
     if (typeof Compartment === 'undefined') {
       // Only warn on server side where scripts are expected to be sandboxed
       if (typeof window === 'undefined') {
-        console.warn('Scripts system: Compartment not available. SES may not be initialized.')
+        console.warn('Scripts system: Compartment not available. SES may not be initialized.');
       }
-      return
+      return;
     }
 
     this.compartment = new Compartment({
@@ -79,40 +79,41 @@ export class Scripts extends System {
       RAD2DEG,
       uuid,
       // pause: () => this.world.pause(),
-    })
+    });
   }
 
   evaluate(code: string): ScriptResult {
     if (!this.compartment) {
       // Fallback to unsafe evaluation on client side
-      console.warn('Scripts: Using unsafe evaluation (no SES sandbox)')
+      console.warn('Scripts: Using unsafe evaluation (no SES sandbox)');
       return {
         exec: (...args: any[]) => {
           // Create a basic evaluation context
-          const wrappedCode = wrapRawCode(code)
-          const evalFunc = new Function(`return ${wrappedCode}`)()
-          return evalFunc(...args)
+          const wrappedCode = wrapRawCode(code);
+          // eslint-disable-next-line no-new-func
+          const evalFunc = new Function(`return ${wrappedCode}`)();
+          return evalFunc(...args);
         },
         code,
-      }
+      };
     }
 
-    let value: ((...args: any[]) => any) | undefined
+    let value: ((...args: any[]) => any) | undefined;
 
     const result: ScriptResult = {
       exec: (...args: any[]) => {
         if (!value) {
-          value = this.compartment.evaluate(wrapRawCode(code))
+          value = this.compartment.evaluate(wrapRawCode(code));
         }
         if (!value) {
-          throw new Error('Failed to evaluate script')
+          throw new Error('Failed to evaluate script');
         }
-        return value(...args)
+        return value(...args);
       },
       code,
-    }
+    };
 
-    return result
+    return result;
   }
 }
 
@@ -126,5 +127,5 @@ function wrapRawCode(code: string): string {
       ${code}
     }
   })()
-  `
+  `;
 }

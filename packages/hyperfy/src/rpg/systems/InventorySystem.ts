@@ -43,7 +43,7 @@ export class InventorySystem extends System {
     this.world.events.on('entity:created', (event: any) => {
       const entity = this.getEntity(event.entityId)
       if (entity && this.shouldHaveInventory(entity)) {
-        this.createInventory(event.entityId)
+        this.createInventoryInternal(event.entityId)
       }
     })
 
@@ -107,7 +107,7 @@ export class InventorySystem extends System {
   }
 
   /**
-   * Remove item from inventory
+   * Remove item from inventory by slot
    */
   removeItem(entityId: string, slot: number, quantity?: number): ItemStack | null {
     const inventory = this.inventories.get(entityId)
@@ -154,6 +154,80 @@ export class InventorySystem extends System {
         quantity: removeQuantity,
       }
     }
+  }
+
+  /**
+   * Remove item from inventory by item ID and quantity
+   */
+  removeItemById(entityId: string, itemId: number, quantity: number): boolean {
+    const inventory = this.inventories.get(entityId)
+    if (!inventory) {
+      return false
+    }
+
+    let remainingToRemove = quantity
+
+    for (let i = 0; i < inventory.items.length && remainingToRemove > 0; i++) {
+      const item = inventory.items[i]
+      if (item && item.itemId === itemId) {
+        const toRemove = Math.min(item.quantity, remainingToRemove)
+        
+        if (toRemove === item.quantity) {
+          // Remove entire stack
+          inventory.items[i] = null
+        } else {
+          // Reduce quantity
+          item.quantity -= toRemove
+        }
+        
+        remainingToRemove -= toRemove
+        
+        this.world.events.emit('inventory:item-removed', {
+          entityId,
+          itemId: item.itemId,
+          quantity: toRemove,
+          slot: i,
+        })
+      }
+    }
+
+    this.updateWeight(inventory)
+    this.syncInventory(entityId)
+
+    return remainingToRemove === 0
+  }
+
+  /**
+   * Get the total quantity of a specific item in inventory
+   */
+  getItemQuantity(entityId: string, itemId: number): number {
+    const inventory = this.inventories.get(entityId)
+    if (!inventory) {
+      // Try getting from entity component as fallback
+      const entity = this.getEntity(entityId)
+      if (entity) {
+        const entityInventory = entity.getComponent<InventoryComponent>('inventory')
+        if (entityInventory) {
+          let totalQuantity = 0
+          for (const item of entityInventory.items) {
+            if (item && item.itemId === itemId) {
+              totalQuantity += item.quantity
+            }
+          }
+          return totalQuantity
+        }
+      }
+      return 0
+    }
+
+    let totalQuantity = 0
+    for (const item of inventory.items) {
+      if (item && item.itemId === itemId) {
+        totalQuantity += item.quantity
+      }
+    }
+
+    return totalQuantity
   }
 
   /**
@@ -387,7 +461,7 @@ export class InventorySystem extends System {
   /**
    * Create inventory for entity (private helper)
    */
-  private createInventory(entityId: string): void {
+  private createInventoryInternal(entityId: string): void {
     const entity = this.world.entities.get(entityId)
     if (!entity) {
       return
@@ -532,6 +606,14 @@ export class InventorySystem extends System {
       targetId: entityId,
       message,
     })
+  }
+
+  /**
+   * Public method to create inventory for an entity
+   */
+  public createInventory(entityId: string): InventoryComponent | null {
+    this.createInventoryInternal(entityId)
+    return this.inventories.get(entityId) || null
   }
 
   /**

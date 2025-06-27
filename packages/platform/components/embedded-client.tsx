@@ -154,7 +154,11 @@ export function EmbeddedClientGui({
 
   const reloadClient = () => {
     if (iframeRef.current) {
-      iframeRef.current.src = iframeRef.current.src;
+      // Force reload by creating a new src with timestamp
+      const currentSrc = iframeRef.current.src;
+      const url = new URL(currentSrc);
+      url.searchParams.set('_t', Date.now().toString());
+      iframeRef.current.src = url.toString();
       setClientState({
         isLoaded: false,
         isReady: false,

@@ -1,7 +1,7 @@
 // Core type definitions used throughout the codebase
 
-import { Object3D, Material } from 'three'
-import type { World, Entity } from './index'
+import { Object3D, Material } from 'three';
+import type { World, Entity } from './index';
 
 // Extend existing types with additional properties
 declare module './index' {
@@ -56,9 +56,9 @@ declare global {
     preview?: any
   }
 
-  const world: World
+  const world: World;
   // __dirname and __filename are already defined in node types
-  const PHYSX: any
+  const PHYSX: any;
 }
 
 // Utility types
@@ -293,4 +293,4 @@ declare module 'three' {
   }
 }
 
-export {} // Make this a module
+export {}; // Make this a module

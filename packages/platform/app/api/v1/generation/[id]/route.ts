@@ -5,13 +5,14 @@
  */
 
 import { NextRequest } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { withMiddleware } from '@/lib/domains/generation/api/middleware';
 import {
   getGenerationHandler,
   cancelGenerationHandler,
 } from '@/lib/domains/generation/api/handlers/generate';
 
-export async function handleGET(
+async function handleGET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -30,3 +31,5 @@ export async function DELETE(
     return cancelGenerationHandler(request, { params: resolvedParams });
   });
 }
+
+export const { GET } = wrapHandlers({ handleGET });

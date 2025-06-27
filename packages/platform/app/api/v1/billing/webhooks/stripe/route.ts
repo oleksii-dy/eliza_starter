@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import Stripe from 'stripe';
 import { addCredits } from '@/lib/server/services/billing-service';
 import { loadConfig } from '@/lib/server/utils/config';
@@ -10,7 +11,7 @@ const stripe = new Stripe(config.stripe.secretKey, {
 
 const endpointSecret = config.stripe.webhookSecret;
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   const body = await request.text();
   const signature = request.headers.get('stripe-signature');
 
@@ -131,3 +132,5 @@ async function handleSubscriptionChange(
     status: subscription.status,
   });
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

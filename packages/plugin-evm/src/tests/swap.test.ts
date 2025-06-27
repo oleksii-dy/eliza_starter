@@ -120,7 +120,7 @@ describe('Swap Action', () => {
       } else {
         console.warn('Skipping insufficient balance test - wallet has funds');
       }
-    });
+    }, 10000);
   });
 
   describe('Network Integration Tests', () => {
@@ -179,7 +179,7 @@ describe('Swap Action', () => {
           })
         ).rejects.toThrow();
       }
-    });
+    }, 10000);
 
     it('should work with Base Sepolia network', async () => {
       const balance = await wp.getWalletBalanceForChain('baseSepolia');

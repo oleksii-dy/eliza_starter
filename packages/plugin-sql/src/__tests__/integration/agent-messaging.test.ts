@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
-import { AgentRuntime, type Memory, type UUID } from '@elizaos/core';
+import { AgentRuntime, ChannelType, type Memory, type UUID } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import { createIsolatedTestDatabase } from '../test-helpers';
 import type { PgAdapter } from '../../pg/adapter';
@@ -24,13 +24,13 @@ describe('Agent Messaging with PostgreSQL', () => {
     roomId = uuidv4() as UUID;
     userId = uuidv4() as UUID;
 
-    await adapter.createRoom({
+    await adapter.createRooms([{
       id: roomId,
       name: 'Test Chat Room',
       agentId: testAgentId,
       source: 'test',
-      type: 'dm',
-    });
+      type: ChannelType.DM,
+    }]);
 
     await adapter.createEntities([
       {
@@ -40,7 +40,7 @@ describe('Agent Messaging with PostgreSQL', () => {
         metadata: { type: 'user' },
       },
     ]);
-  }, 30000);
+  });
 
   afterAll(async () => {
     if (cleanup) {
@@ -110,7 +110,7 @@ describe('Agent Messaging with PostgreSQL', () => {
     expect(conversation[0].content.text).toContain('Hello agent');
     expect(conversation[1].entityId).toBe(testAgentId);
     expect(conversation[1].content.text).toContain('happy to help');
-    expect(conversation[1].content.inReplyTo).toBe(userMessage.id);
+    expect(conversation[1].content.inReplyTo).toBe(userMessage.id!);
 
     console.log('[Test] Agent response stored successfully');
   });
@@ -118,13 +118,13 @@ describe('Agent Messaging with PostgreSQL', () => {
   it('should handle multiple back-and-forth messages', async () => {
     const conversationRoomId = uuidv4() as UUID;
 
-    await adapter.createRoom({
+    await adapter.createRooms([{
       id: conversationRoomId,
       name: 'Conversation Room',
       agentId: testAgentId,
       source: 'test',
-      type: 'dm',
-    });
+      type: ChannelType.DM,
+    }]);
 
     // Create a conversation
     const messages = [
@@ -180,13 +180,13 @@ describe('Agent Messaging with PostgreSQL', () => {
   it('should handle sudden shutdown and restart', async () => {
     const testRoomId = uuidv4() as UUID;
 
-    await adapter.createRoom({
+    await adapter.createRooms([{
       id: testRoomId,
       name: 'Shutdown Test Room',
       agentId: testAgentId,
       source: 'test',
-      type: 'dm',
-    });
+      type: ChannelType.DM,
+    }]);
 
     // Store a message before shutdown
     const messageBeforeShutdown: Memory = {
@@ -256,16 +256,16 @@ describe('Agent Messaging with PostgreSQL', () => {
   it('should handle rapid message sending', async () => {
     const rapidRoomId = uuidv4() as UUID;
 
-    await adapter.createRoom({
+    await adapter.createRooms([{
       id: rapidRoomId,
       name: 'Rapid Messages Room',
       agentId: testAgentId,
       source: 'test',
-      type: 'dm',
-    });
+      type: ChannelType.DM,
+    }]);
 
     // Send 10 messages rapidly
-    const messagePromises = [];
+    const messagePromises: Promise<UUID>[] = [];
     for (let i = 0; i < 10; i++) {
       const message: Memory = {
         id: uuidv4() as UUID,
@@ -305,13 +305,13 @@ describe('Agent Messaging with PostgreSQL', () => {
   it('should properly manage message search and retrieval', async () => {
     const searchRoomId = uuidv4() as UUID;
 
-    await adapter.createRoom({
+    await adapter.createRooms([{
       id: searchRoomId,
       name: 'Search Test Room',
       agentId: testAgentId,
       source: 'test',
-      type: 'dm',
-    });
+      type: ChannelType.DM,
+    }]);
 
     // Create messages with different content
     const testMessages = [

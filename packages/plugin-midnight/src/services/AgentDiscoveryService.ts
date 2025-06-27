@@ -7,8 +7,8 @@ import {
   type AgentService,
   type MidnightActionResult,
   MidnightNetworkError,
-} from '../types/index.js';
-import { MidnightNetworkService } from './MidnightNetworkService.js';
+} from '../types/index';
+import { MidnightNetworkService } from './MidnightNetworkService';
 
 /**
  * Service for discovering and managing agent profiles on the Midnight Network

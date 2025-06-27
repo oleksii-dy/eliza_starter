@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { sessionService } from '@/lib/auth/session';
 import { getDatabase } from '@/lib/database';
 import { messages, conversations, agents } from '@/lib/database/schema';
@@ -37,7 +38,7 @@ const createMessageSchema = z.object({
 });
 
 // GET /api/v1/messages - Get user's messages with proper scoping
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     // Authenticate user
     const session = await sessionService.getSessionFromCookies();
@@ -146,7 +147,7 @@ export async function handleGET(request: NextRequest) {
 }
 
 // POST /api/v1/messages - Create a new message with proper scoping
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     // Authenticate user
     const session = await sessionService.getSessionFromCookies();
@@ -244,3 +245,5 @@ export async function handlePOST(request: NextRequest) {
     );
   }
 }
+
+export const { GET, POST } = wrapHandlers({ handleGET, handlePOST });

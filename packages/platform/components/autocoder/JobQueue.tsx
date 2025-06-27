@@ -64,7 +64,7 @@ export function JobQueue({
 
   const getBuildProgress = (project: Project, logs: BuildLog[]): number => {
     const projectLogs = logs.filter((log: any) => log.projectId === project.id);
-    if (projectLogs.length === 0) return 0;
+    if (projectLogs.length === 0) {return 0;}
 
     // Mock progress calculation based on log patterns
     const steps = [
@@ -88,7 +88,7 @@ export function JobQueue({
     const projectLogs = buildLogs.filter(
       (log: any) => log.projectId === projectId,
     );
-    if (projectLogs.length === 0) return 'Initializing...';
+    if (projectLogs.length === 0) {return 'Initializing...';}
 
     const latest = projectLogs[projectLogs.length - 1];
     return latest.message;
@@ -96,9 +96,9 @@ export function JobQueue({
 
   const queueJobs = createQueueJobs();
   const filteredJobs = queueJobs.filter((job) => {
-    if (filter === 'all') return true;
-    if (filter === 'building') return job.project.status === 'building';
-    if (filter === 'testing') return job.project.status === 'testing';
+    if (filter === 'all') {return true;}
+    if (filter === 'building') {return job.project.status === 'building';}
+    if (filter === 'testing') {return job.project.status === 'testing';}
     return false;
   });
 

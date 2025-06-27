@@ -32,7 +32,7 @@ async function handleGET(request: NextRequest, { params }: RouteParams) {
     }
 
     const agentService = await getAgentService();
-    const agent = await agentService.getAgent(user.organizationId, params.id);
+    const agent = await agentService.getAgentById(user.organizationId, params.id);
 
     if (!agent) {
       return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
@@ -96,7 +96,7 @@ async function handlePUT(request: NextRequest, { params }: RouteParams) {
     const agentService = await getAgentService();
 
     // Verify agent exists and user has permission
-    const existingAgent = await agentService.getAgent(
+    const existingAgent = await agentService.getAgentById(
       user.organizationId,
       params.id,
     );
@@ -106,7 +106,7 @@ async function handlePUT(request: NextRequest, { params }: RouteParams) {
     }
 
     // Check if user can update this agent
-    if (existingAgent.createdBy !== user.id && user.role !== 'admin') {
+    if (existingAgent.createdByUserId !== user.id && user.role !== 'admin') {
       return NextResponse.json(
         { error: 'You can only update agents you created' },
         { status: 403 },
@@ -148,7 +148,7 @@ async function handleDELETE(request: NextRequest, { params }: RouteParams) {
     const agentService = await getAgentService();
 
     // Verify agent exists and user has permission
-    const existingAgent = await agentService.getAgent(
+    const existingAgent = await agentService.getAgentById(
       user.organizationId,
       params.id,
     );
@@ -158,7 +158,7 @@ async function handleDELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     // Check if user can delete this agent
-    if (existingAgent.createdBy !== user.id && user.role !== 'admin') {
+    if (existingAgent.createdByUserId !== user.id && user.role !== 'admin') {
       return NextResponse.json(
         { error: 'You can only delete agents you created' },
         { status: 403 },
@@ -166,12 +166,13 @@ async function handleDELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     // Check if agent is currently running
-    if (existingAgent.status === 'active') {
-      return NextResponse.json(
-        { error: 'Cannot delete an active agent. Stop it first.' },
-        { status: 400 },
-      );
-    }
+    // TODO: Once deploymentStatus is added to schema, check if agent is deployed
+    // if (existingAgent.deploymentStatus === 'deployed') {
+    //   return NextResponse.json(
+    //     { error: 'Cannot delete a deployed agent. Stop it first.' },
+    //     { status: 400 },
+    //   );
+    // }
 
     // Delete the agent
     await agentService.deleteAgent(user.organizationId, params.id);

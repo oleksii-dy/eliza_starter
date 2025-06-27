@@ -441,7 +441,7 @@ export class ElevenLabsProvider extends BaseGenerationProvider {
     // Handle rate limiting
     if (response.status === 429) {
       const retryAfter = response.headers.get('Retry-After');
-      const delay = retryAfter ? parseInt(retryAfter) * 1000 : 5000;
+      const delay = retryAfter ? parseInt(retryAfter, 10) * 1000 : 5000;
 
       await new Promise((resolve) => setTimeout(resolve, delay));
       return this.makeRequest(endpoint, options);

@@ -389,7 +389,7 @@ Return only the code without explanation unless specifically requested.`;
   // Mock methods (would be replaced with actual OpenAI SDK calls)
   private async mockChatCompletion(params: any): Promise<any> {
     return {
-      id: 'chatcmpl-' + Date.now(),
+      id: `chatcmpl-${Date.now()}`,
       object: 'chat.completion',
       created: Date.now(),
       model: params.model,

@@ -1,7 +1,7 @@
+import { mock } from 'bun:test';
 import type { IAgentRuntime, Memory, State, UUID, Task } from '@elizaos/core';
 import { createMockRuntime as createCoreMockRuntime } from '@elizaos/core/test-utils';
 import { v4 as uuidv4 } from 'uuid';
-import { mock } from 'bun:test';
 
 /**
  * Creates a comprehensive mock of the IAgentRuntime interface with sensible defaults

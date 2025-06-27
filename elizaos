@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Simple elizaos CLI wrapper
+exec bun run "$(dirname "$0")/packages/cli/src/index.ts" "$@" 

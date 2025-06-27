@@ -43,19 +43,13 @@ export const hyperfyUseItemAction: Action = {
     const world = service?.getWorld();
     return !!service && service.isConnected() && !!world?.controls && !!world?.actions;
   },
-  handler: async (
-    runtime: IAgentRuntime,
-    message: Memory,
-    _state?: State,
-    options?: { entityId?: string },
-    callback?: HandlerCallback
-  ): Promise<ActionResult> => {
+  handler: async (runtime: IAgentRuntime, message: Memory, _state?: State, options?: { entityId?: string }, callback?: HandlerCallback): Promise<ActionResult> => {
     const service = runtime.getService<HyperfyService>(HyperfyService.serviceName);
     const world = service?.getWorld();
     const controls = world?.controls as unknown as AgentControls;
     const actions = world?.actions as unknown as AgentActions | undefined;
 
-    if (!service || !world || !actions) {
+    if (!service || !world || !actions || !callback) {
       logger.error(
         '[USE Action] Hyperfy service, world, or actions not found for HYPERFY_USE_ITEM action.'
       );

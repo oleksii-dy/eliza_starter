@@ -5,6 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { deviceFlowService } from '@/lib/auth/device-flow';
 import { oauthClientRepository } from '@/lib/database/repositories/oauth-client';
 import {
@@ -12,7 +13,7 @@ import {
   RateLimitRepository,
 } from '@/lib/database/repositories/rate-limit';
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const body = await request.json();
     const { client_id, scope = 'read write' } = body;
@@ -139,3 +140,5 @@ export async function handlePOST(request: NextRequest) {
     );
   }
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

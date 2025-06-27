@@ -74,7 +74,7 @@
     "clean": "rm -rf dist && rm -rf .turbo",
     "lint": "eslint src --fix && prettier --write ./src",
     "typecheck": "tsc --noEmit",
-    "test": "bun test src/",
+    "test": "bun test",
     "benchmarks": "bun ./scripts/run-benchmarks.ts",
     "swe-bench:comprehensive": "bun ./scripts/run-swe-bench-comprehensive.ts",
     "swe-bench:real": "bun ./scripts/run-swe-bench-real.ts",

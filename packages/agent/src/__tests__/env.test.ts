@@ -16,7 +16,9 @@ describe('Build and Runtime Environment', () => {
       expect(packageJson.scripts.build).toContain('build.ts');
       expect(packageJson.scripts.typecheck).toBeDefined();
     } catch (error) {
-      throw new Error(`Build configuration check failed: ${error.message}`);
+      throw new Error(
+        `Build configuration check failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   });
 
@@ -27,7 +29,9 @@ describe('Build and Runtime Environment', () => {
       expect(core).toBeDefined();
       expect(core.AgentRuntime).toBeDefined();
     } catch (error) {
-      throw new Error(`Missing required dependency: ${error.message}`);
+      throw new Error(
+        `Missing required dependency: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   });
 
@@ -37,7 +41,9 @@ describe('Build and Runtime Environment', () => {
       expect(mainModule.character).toBeDefined();
       expect(mainModule.character.name).toBe('Eliza');
     } catch (error) {
-      throw new Error(`Module export test failed: ${error.message}`);
+      throw new Error(
+        `Module export test failed: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   });
 });

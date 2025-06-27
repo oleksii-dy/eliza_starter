@@ -4,27 +4,27 @@
  */
 
 // Check if we're in a Node.js environment
-const isNode = typeof process !== 'undefined' && process.versions && process.versions.node
+const isNode = typeof process !== 'undefined' && process.versions && process.versions.node;
 
 // Helper to safely access environment variables
 function getEnvVar(key: string, defaultValue?: string): string | undefined {
   // In Vite/browser environment, use import.meta.env
   if (typeof import.meta?.env !== 'undefined') {
-    const value = import.meta.env[key]
+    const value = import.meta.env[key];
     if (value !== undefined) {
-      return value
+      return value;
     }
   }
 
   // In Node.js environment, fall back to process.env
   if (isNode && typeof process.env !== 'undefined') {
-    const value = process.env[key]
+    const value = process.env[key];
     if (value !== undefined) {
-      return value
+      return value;
     }
   }
 
-  return defaultValue
+  return defaultValue;
 }
 
 // Environment detection
@@ -84,20 +84,20 @@ export const ENV = {
 
   // Get all public environment variables
   getPublicVars: (): Record<string, string> => {
-    const publicVars: Record<string, string> = {}
-    const envVars = isNode ? process.env : import.meta.env
+    const publicVars: Record<string, string> = {};
+    const envVars = isNode ? process.env : import.meta.env;
 
     if (envVars) {
       for (const [key, value] of Object.entries(envVars)) {
         if (key.startsWith('PUBLIC_') && typeof value === 'string') {
-          publicVars[key] = value
+          publicVars[key] = value;
         }
       }
     }
 
-    return publicVars
+    return publicVars;
   },
-}
+};
 
 // Export type for TypeScript
 export type EnvironmentVariables = typeof ENV

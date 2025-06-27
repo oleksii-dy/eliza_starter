@@ -77,6 +77,40 @@ declare global {
        * Use dev login to authenticate
        */
       devLogin(): Chainable<void>;
+
+      /**
+       * Create autocoder project with specified parameters
+       */
+      createAutocoderProject(config: {
+        name: string;
+        description: string;
+        type: 'trading' | 'defi' | 'nft' | 'dao' | 'general';
+        complexity?: 'simple' | 'moderate' | 'advanced';
+      }): Chainable<void>;
+
+      /**
+       * Mock workflow bridge analysis
+       */
+      mockWorkflowBridge(analysis: {
+        intent: string;
+        confidence: number;
+        shouldTransition: boolean;
+      }): Chainable<void>;
+
+      /**
+       * Wait for build completion
+       */
+      waitForBuildCompletion(projectId: string): Chainable<void>;
+
+      /**
+       * Verify project quality metrics
+       */
+      verifyQualityMetrics(expectedMetrics: {
+        codeQuality?: number;
+        testCoverage?: number;
+        security?: number;
+        documentation?: number;
+      }): Chainable<void>;
     }
   }
 }
@@ -206,6 +240,10 @@ Cypress.Commands.add('visitAuthenticated', (url: string) => {
 
 // Improved dev login command
 Cypress.Commands.add('devLogin', () => {
+  // Clear any existing auth state first
+  cy.clearCookies();
+  cy.clearLocalStorage();
+  
   // Set authentication cookie AND localStorage for full compatibility
   cy.setCookie('auth-token', 'dev-auth-token-123');
   
@@ -371,6 +409,137 @@ Cypress.Commands.add('cleanupTestData', () => {
       'X-Test-Mode': 'true',
     },
   });
+});
+
+// Autocoder-specific Commands
+Cypress.Commands.add('createAutocoderProject', (config) => {
+  const projectId = `project-${Date.now()}`;
+  
+  // Mock project creation API
+  cy.intercept('POST', '/api/autocoder/projects', {
+    statusCode: 201,
+    body: {
+      success: true,
+      data: {
+        id: projectId,
+        name: config.name,
+        description: config.description,
+        type: config.type,
+        complexity: config.complexity || 'moderate',
+        status: 'initializing',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    },
+  }).as('createAutocoderProject');
+
+  // Fill out project creation form
+  cy.get('[data-cy="project-name-input"]').type(config.name);
+  cy.get('[data-cy="project-description-input"]').type(config.description);
+  cy.get('[data-cy="project-type-select"]').select(config.type);
+  
+  if (config.complexity) {
+    cy.get('[data-cy="complexity-select"]').select(config.complexity);
+  }
+  
+  cy.get('[data-cy="create-project-btn"]').click();
+  cy.wait('@createAutocoderProject');
+  
+  // Store project ID for later use
+  cy.wrap(projectId).as('currentProjectId');
+});
+
+Cypress.Commands.add('mockWorkflowBridge', (analysis) => {
+  cy.intercept('POST', '/api/autocoder/workflow-bridge/analyze', {
+    statusCode: 200,
+    body: {
+      success: true,
+      data: {
+        analysis: {
+          intent: analysis.intent,
+          confidence: analysis.confidence,
+          projectType: analysis.intent === 'project_request' ? 'trading' : 'general',
+          complexity: analysis.confidence > 0.8 ? 'advanced' : 'moderate',
+          extractedRequirements: [
+            'Real-time data processing',
+            'Advanced algorithms',
+            'Risk management',
+          ],
+          suggestedActions: [
+            'Research market data sources',
+            'Design algorithm architecture',
+            'Implement risk controls',
+          ],
+        },
+        transitionDecision: {
+          shouldTransition: analysis.shouldTransition,
+          reason: analysis.shouldTransition
+            ? 'Strong project indicators detected'
+            : 'Insufficient clarity for transition',
+          recommendedWorkflow: analysis.shouldTransition
+            ? 'autocoder_session'
+            : 'continue_chat',
+          confidence: analysis.confidence,
+        },
+      },
+    },
+  }).as('workflowBridgeAnalysis');
+});
+
+Cypress.Commands.add('waitForBuildCompletion', (projectId) => {
+  // Mock build status progression
+  let callCount = 0;
+  cy.intercept('GET', `/api/autocoder/projects/${projectId}/build/*/status`, (req) => {
+    callCount++;
+    const progress = Math.min(callCount * 25, 100);
+    const status = progress === 100 ? 'completed' : 'building';
+    
+    req.reply({
+      statusCode: 200,
+      body: {
+        success: true,
+        data: {
+          buildId: 'build-123',
+          status,
+          progress,
+          currentStep: progress < 100 ? 'Generating code...' : 'Build completed',
+          artifacts: progress === 100 ? [
+            'src/main.ts',
+            'src/utils.ts',
+            'tests/main.test.ts',
+          ] : [],
+        },
+      },
+    });
+  }).as('buildStatus');
+
+  // Wait for completion
+  cy.waitUntil(() => 
+    cy.request('GET', `/api/autocoder/projects/${projectId}/build/build-123/status`)
+      .then(response => response.body.data.status === 'completed'),
+    {
+      timeout: 30000,
+      interval: 1000,
+    }
+  );
+});
+
+Cypress.Commands.add('verifyQualityMetrics', (expectedMetrics) => {
+  if (expectedMetrics.codeQuality) {
+    cy.contains(`Code Quality: ${expectedMetrics.codeQuality}%`).should('be.visible');
+  }
+  
+  if (expectedMetrics.testCoverage) {
+    cy.contains(`Test Coverage: ${expectedMetrics.testCoverage}%`).should('be.visible');
+  }
+  
+  if (expectedMetrics.security) {
+    cy.contains(`Security: ${expectedMetrics.security}%`).should('be.visible');
+  }
+  
+  if (expectedMetrics.documentation) {
+    cy.contains(`Documentation: ${expectedMetrics.documentation}%`).should('be.visible');
+  }
 });
 
 // Export to make TypeScript happy

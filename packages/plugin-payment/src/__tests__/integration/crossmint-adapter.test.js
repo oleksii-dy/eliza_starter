@@ -572,11 +572,13 @@ const MockCrossMintUniversalWalletService = /** @class */ (function () {
       });
     }); });
     (0, bun_test_1.it)('should create wallet with proper metadata', () => { return __awaiter(void 0, void 0, void 0, function () {
-      let spy;
+      let spy, originalCreateWallet;
       return __generator(this, (_a) => {
         switch (_a.label) {
           case 0:
-            spy = bun_test_1.mock.spyOn(mockWalletService, 'createWallet');
+            originalCreateWallet = mockWalletService.createWallet;
+            spy = (0, bun_test_1.mock)(mockWalletService.createWallet.bind(mockWalletService));
+            mockWalletService.createWallet = spy;
             return [4 /*yield*/, adapter.createWallet()];
           case 1:
             _a.sent();
@@ -589,6 +591,8 @@ const MockCrossMintUniversalWalletService = /** @class */ (function () {
                 createdAt: bun_test_1.expect.any(String),
               }),
             }));
+            // Restore original method
+            mockWalletService.createWallet = originalCreateWallet;
             return [2];
         }
       });
@@ -747,7 +751,7 @@ const MockCrossMintUniversalWalletService = /** @class */ (function () {
       });
     }); });
     (0, bun_test_1.it)('should use correct token addresses for different networks', () => { return __awaiter(void 0, void 0, void 0, function () {
-      let fromAddress, toAddress, amount, spy;
+      let fromAddress, toAddress, amount, spy, originalTransfer;
       return __generator(this, (_a) => {
         switch (_a.label) {
           case 0:
@@ -761,32 +765,40 @@ const MockCrossMintUniversalWalletService = /** @class */ (function () {
             fromAddress = '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD3e';
             toAddress = '0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199';
             amount = BigInt('1000000');
-            spy = bun_test_1.mock.spyOn(mockWalletService, 'transfer');
+            originalTransfer = mockWalletService.transfer;
+            spy = (0, bun_test_1.mock)(mockWalletService.transfer.bind(mockWalletService));
+            mockWalletService.transfer = spy;
             return [4 /*yield*/, adapter.sendTransaction(fromAddress, toAddress, amount, types_1.PaymentMethod.USDC_ETH)];
           case 1:
             _a.sent();
             (0, bun_test_1.expect)(spy).toHaveBeenCalledWith(bun_test_1.expect.objectContaining({
               tokenAddress: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // Mainnet USDC
             }));
+            // Restore original method
+            mockWalletService.transfer = originalTransfer;
             return [2];
         }
       });
     }); });
     (0, bun_test_1.it)('should use testnet addresses in sandbox mode', () => { return __awaiter(void 0, void 0, void 0, function () {
-      let fromAddress, toAddress, amount, spy;
+      let fromAddress, toAddress, amount, spy, originalTransfer2;
       return __generator(this, (_a) => {
         switch (_a.label) {
           case 0:
             fromAddress = '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD3e';
             toAddress = '0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199';
             amount = BigInt('1000000');
-            spy = bun_test_1.mock.spyOn(mockWalletService, 'transfer');
+            originalTransfer2 = mockWalletService.transfer;
+            spy = (0, bun_test_1.mock)(mockWalletService.transfer.bind(mockWalletService));
+            mockWalletService.transfer = spy;
             return [4 /*yield*/, adapter.sendTransaction(fromAddress, toAddress, amount, types_1.PaymentMethod.USDC_ETH)];
           case 1:
             _a.sent();
             (0, bun_test_1.expect)(spy).toHaveBeenCalledWith(bun_test_1.expect.objectContaining({
               tokenAddress: '0x07865c6E87B9F70255377e024ace6630C1Eaa37F', // Goerli USDC
             }));
+            // Restore original method
+            mockWalletService.transfer = originalTransfer2;
             return [2];
         }
       });

@@ -10,7 +10,7 @@ import {
   beforeAll,
   afterAll,
   beforeEach,
-} from '@jest/globals';
+} from 'vitest';
 import { db, getDatabase } from '@/lib/database';
 import {
   organizations,

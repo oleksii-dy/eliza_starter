@@ -135,7 +135,7 @@ describe('ElizaOS Platform Runtime Integration', () => {
       id: crypto.randomUUID() as UUID,
       agentId: agentId as UUID,
       entityId: testUserId as UUID,
-      roomId: roomId,
+      roomId,
       content: {
         text: 'Hello, how are you today?',
         source: 'user',
@@ -153,7 +153,7 @@ describe('ElizaOS Platform Runtime Integration', () => {
 
     // Verify conversation history is created
     const conversationHistory = await agentRuntime.getMemories({
-      roomId: roomId,
+      roomId,
       count: 10,
       tableName: 'memories',
     });
@@ -202,7 +202,7 @@ describe('ElizaOS Platform Runtime Integration', () => {
         id: crypto.randomUUID() as UUID,
         agentId: agentId as UUID,
         entityId: testUserId as UUID,
-        roomId: roomId,
+        roomId,
         content: memoryData.content,
         embedding: memoryData.embedding,
         unique: false,
@@ -213,7 +213,7 @@ describe('ElizaOS Platform Runtime Integration', () => {
     // Search for programming-related memories
     const searchResults = await agentRuntime.searchMemories({
       embedding: [0.8, 0.2, 0.1, 0.9, 0.3], // Similar to programming memory
-      roomId: roomId,
+      roomId,
       match_threshold: 0.1,
       count: 5,
       tableName: 'memories',
@@ -258,7 +258,7 @@ describe('ElizaOS Platform Runtime Integration', () => {
       id: crypto.randomUUID() as UUID,
       agentId: agentId1 as UUID,
       entityId: testUserId as UUID,
-      roomId: roomId,
+      roomId,
       content: { text: 'Org 1 secret data' },
       unique: false,
     };
@@ -267,7 +267,7 @@ describe('ElizaOS Platform Runtime Integration', () => {
 
     // Try to access from second organization (should be isolated)
     const org2Memories = await runtime2.getMemories({
-      roomId: roomId,
+      roomId,
       count: 10,
       tableName: 'memories',
     });

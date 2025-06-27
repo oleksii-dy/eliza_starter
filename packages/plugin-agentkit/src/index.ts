@@ -4,7 +4,7 @@ import { walletProvider } from './provider';
 import { _getAgentKitActions, createAgentKitActionsFromService } from './actions';
 import { custodialWalletActions } from './actions/custodial-wallet';
 import { custodialWalletRoutes } from './api/walletRoutes';
-import type { Plugin, IAgentRuntime } from './types/core';
+import type { Plugin, IAgentRuntime } from '@elizaos/core';
 import { AgentKitTestSuite } from './__tests__/e2e/agentkit.test';
 import { CustodialWalletTestSuite } from './__tests__/e2e/custodial-wallet.test';
 import { AgentKitUserScenariosTestSuite } from './__tests__/e2e/user-scenarios.test';

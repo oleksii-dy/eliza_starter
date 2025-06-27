@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { getDatabase } from '@/lib/database';
 import { marketplaceAssets } from '@/lib/database/marketplace-schema';
 import { eq, and, sql, desc } from 'drizzle-orm';
 
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     const db = await getDatabase();
 
@@ -124,3 +125,5 @@ export async function handleGET(request: NextRequest) {
     );
   }
 }
+
+export const { GET } = wrapHandlers({ handleGET });

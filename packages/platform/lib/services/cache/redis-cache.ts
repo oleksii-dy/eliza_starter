@@ -138,10 +138,10 @@ export class RedisCacheService implements ICacheService {
 
   async mget(keys: string[]): Promise<(string | null)[]> {
     try {
-      if (keys.length === 0) return [];
+      if (keys.length === 0) {return [];}
       return await this.client.mget(...keys);
     } catch (error) {
-      throw new CacheError(`Failed to mget keys`, error as Error);
+      throw new CacheError('Failed to mget keys', error as Error);
     }
   }
 
@@ -149,7 +149,7 @@ export class RedisCacheService implements ICacheService {
     entries: Array<{ key: string; value: string; ttl?: number }>,
   ): Promise<void> {
     try {
-      if (entries.length === 0) return;
+      if (entries.length === 0) {return;}
 
       const multi = this.client.multi();
 

@@ -43,9 +43,9 @@ export enum CookingMethod {
 export interface CookingRecipe {
   id: string
   name: string
-  rawItemId: string
-  cookedItemId: string
-  burntItemId: string
+  rawItemId: number
+  cookedItemId: number
+  burntItemId: number
   levelRequired: number
   experience: number
   cookingTime: number // milliseconds
@@ -83,7 +83,7 @@ export class CookingSystem extends System {
     this.initializeRecipes()
   }
 
-  async initialize(): Promise<void> {
+  async init(_options: any): Promise<void> {
     console.log('[CookingSystem] Initializing...')
 
     // Listen for cooking events
@@ -96,14 +96,19 @@ export class CookingSystem extends System {
     console.log('[CookingSystem] Initialized with cooking recipes')
   }
 
+  // Keep backwards compatibility
+  async initialize(): Promise<void> {
+    return this.init({})
+  }
+
   private initializeRecipes(): void {
     // Fish cooking recipes
     this.addCookingRecipe({
       id: 'cook_shrimp',
       name: 'Cooked Shrimp',
-      rawItemId: 'raw_shrimp',
-      cookedItemId: 'cooked_shrimp',
-      burntItemId: 'burnt_shrimp',
+      rawItemId: 317, // Raw Shrimp
+      cookedItemId: 315, // Shrimps (cooked)
+      burntItemId: 323, // Burnt Shrimp
       levelRequired: 1,
       experience: 30,
       cookingTime: 3000,
@@ -120,9 +125,9 @@ export class CookingSystem extends System {
     this.addCookingRecipe({
       id: 'cook_sardine',
       name: 'Cooked Sardine',
-      rawItemId: 'raw_sardine',
-      cookedItemId: 'cooked_sardine',
-      burntItemId: 'burnt_sardine',
+      rawItemId: 327, // Raw Sardine
+      cookedItemId: 325, // Sardine (cooked)
+      burntItemId: 369, // Burnt Sardine
       levelRequired: 5,
       experience: 40,
       cookingTime: 3000,
@@ -139,9 +144,9 @@ export class CookingSystem extends System {
     this.addCookingRecipe({
       id: 'cook_trout',
       name: 'Cooked Trout',
-      rawItemId: 'raw_trout',
-      cookedItemId: 'cooked_trout',
-      burntItemId: 'burnt_trout',
+      rawItemId: 335, // Raw Trout
+      cookedItemId: 333, // Trout (cooked)
+      burntItemId: 343, // Burnt Trout
       levelRequired: 15,
       experience: 70,
       cookingTime: 3500,
@@ -158,9 +163,9 @@ export class CookingSystem extends System {
     this.addCookingRecipe({
       id: 'cook_salmon',
       name: 'Cooked Salmon',
-      rawItemId: 'raw_salmon',
-      cookedItemId: 'cooked_salmon',
-      burntItemId: 'burnt_salmon',
+      rawItemId: 341, // Raw Salmon (need to add to ItemRegistry)
+      cookedItemId: 339, // Cooked Salmon (need to add to ItemRegistry)
+      burntItemId: 347, // Burnt Salmon (need to add to ItemRegistry)
       levelRequired: 25,
       experience: 90,
       cookingTime: 3500,
@@ -177,9 +182,9 @@ export class CookingSystem extends System {
     this.addCookingRecipe({
       id: 'cook_tuna',
       name: 'Cooked Tuna',
-      rawItemId: 'raw_tuna',
-      cookedItemId: 'cooked_tuna',
-      burntItemId: 'burnt_tuna',
+      rawItemId: 359, // Raw Tuna (need to add to ItemRegistry)
+      cookedItemId: 361, // Cooked Tuna (need to add to ItemRegistry)
+      burntItemId: 367, // Burnt Tuna (need to add to ItemRegistry)
       levelRequired: 30,
       experience: 100,
       cookingTime: 4000,
@@ -196,9 +201,9 @@ export class CookingSystem extends System {
     this.addCookingRecipe({
       id: 'cook_lobster',
       name: 'Cooked Lobster',
-      rawItemId: 'raw_lobster',
-      cookedItemId: 'cooked_lobster',
-      burntItemId: 'burnt_lobster',
+      rawItemId: 377, // Raw Lobster (need to add to ItemRegistry)
+      cookedItemId: 379, // Cooked Lobster (need to add to ItemRegistry)
+      burntItemId: 381, // Burnt Lobster (need to add to ItemRegistry)
       levelRequired: 40,
       experience: 120,
       cookingTime: 4500,
@@ -215,9 +220,9 @@ export class CookingSystem extends System {
     this.addCookingRecipe({
       id: 'cook_swordfish',
       name: 'Cooked Swordfish',
-      rawItemId: 'raw_swordfish',
-      cookedItemId: 'cooked_swordfish',
-      burntItemId: 'burnt_swordfish',
+      rawItemId: 371, // Raw Swordfish (need to add to ItemRegistry)
+      cookedItemId: 373, // Cooked Swordfish (need to add to ItemRegistry)
+      burntItemId: 375, // Burnt Swordfish (need to add to ItemRegistry)
       levelRequired: 45,
       experience: 140,
       cookingTime: 5000,
@@ -234,9 +239,9 @@ export class CookingSystem extends System {
     this.addCookingRecipe({
       id: 'cook_shark',
       name: 'Cooked Shark',
-      rawItemId: 'raw_shark',
-      cookedItemId: 'cooked_shark',
-      burntItemId: 'burnt_shark',
+      rawItemId: 383, // Raw Shark (need to add to ItemRegistry)
+      cookedItemId: 385, // Cooked Shark (need to add to ItemRegistry)
+      burntItemId: 387, // Burnt Shark (need to add to ItemRegistry)
       levelRequired: 80,
       experience: 210,
       cookingTime: 6000,
@@ -254,9 +259,9 @@ export class CookingSystem extends System {
     this.addCookingRecipe({
       id: 'cook_chicken',
       name: 'Cooked Chicken',
-      rawItemId: 'raw_chicken',
-      cookedItemId: 'cooked_chicken',
-      burntItemId: 'burnt_chicken',
+      rawItemId: 2138, // Raw Chicken (need to add to ItemRegistry)
+      cookedItemId: 2140, // Cooked Chicken (need to add to ItemRegistry)
+      burntItemId: 2142, // Burnt Chicken (need to add to ItemRegistry)
       levelRequired: 1,
       experience: 30,
       cookingTime: 3000,
@@ -273,9 +278,9 @@ export class CookingSystem extends System {
     this.addCookingRecipe({
       id: 'cook_beef',
       name: 'Cooked Beef',
-      rawItemId: 'raw_beef',
-      cookedItemId: 'cooked_beef',
-      burntItemId: 'burnt_beef',
+      rawItemId: 2132, // Raw Beef (need to add to ItemRegistry)
+      cookedItemId: 2134, // Cooked Beef (need to add to ItemRegistry)
+      burntItemId: 2146, // Burnt Beef (need to add to ItemRegistry)
       levelRequired: 1,
       experience: 30,
       cookingTime: 3000,
@@ -293,9 +298,9 @@ export class CookingSystem extends System {
     this.addCookingRecipe({
       id: 'bake_bread',
       name: 'Bread',
-      rawItemId: 'bread_dough',
-      cookedItemId: 'bread',
-      burntItemId: 'burnt_bread',
+      rawItemId: 2307, // Bread Dough (need to add to ItemRegistry)
+      cookedItemId: 2309, // Bread (need to add to ItemRegistry)
+      burntItemId: 2311, // Burnt Bread (need to add to ItemRegistry)
       levelRequired: 1,
       experience: 40,
       cookingTime: 4000,
@@ -312,9 +317,9 @@ export class CookingSystem extends System {
     this.addCookingRecipe({
       id: 'bake_cake',
       name: 'Cake',
-      rawItemId: 'cake_mixture',
-      cookedItemId: 'cake',
-      burntItemId: 'burnt_cake',
+      rawItemId: 1889, // Cake Mixture (need to add to ItemRegistry)
+      cookedItemId: 1891, // Cake (need to add to ItemRegistry)
+      burntItemId: 1893, // Burnt Cake (need to add to ItemRegistry)
       levelRequired: 40,
       experience: 180,
       cookingTime: 6000,
@@ -332,9 +337,9 @@ export class CookingSystem extends System {
     this.addCookingRecipe({
       id: 'cook_stew',
       name: 'Stew',
-      rawItemId: 'stew_ingredients',
-      cookedItemId: 'stew',
-      burntItemId: 'burnt_stew',
+      rawItemId: 2003, // Stew Ingredients (need to add to ItemRegistry)
+      cookedItemId: 2005, // Stew (need to add to ItemRegistry)
+      burntItemId: 2007, // Burnt Stew (need to add to ItemRegistry)
       levelRequired: 25,
       experience: 117,
       cookingTime: 8000,
@@ -371,7 +376,7 @@ export class CookingSystem extends System {
       nearOven: false,
     }
 
-    entity.addComponent(cookingComponent)
+    entity.addComponent('cooking', cookingComponent)
     return cookingComponent
   }
 
@@ -447,7 +452,11 @@ export class CookingSystem extends System {
     const entity = this.world.getEntityById(playerId)
     const recipe = this.cookingRecipes.get(recipeId)
 
-    if (!entity || !recipe) {
+    if (!entity) {
+      return false
+    }
+    
+    if (!recipe) {
       return false
     }
 
@@ -484,9 +493,20 @@ export class CookingSystem extends System {
 
     // Check inventory for raw ingredients
     if (!this.hasRequiredIngredients(playerId, recipe, quantity)) {
+      // Get item name from inventory system
+      const inventorySystem = this.world.systems.find(s => s.constructor.name === 'InventorySystem')
+      let itemName = `${recipe.rawItemId}` // Fallback to ID
+      
+      if (inventorySystem) {
+        const itemDef = (inventorySystem as any).itemRegistry?.get(recipe.rawItemId)
+        if (itemDef) {
+          itemName = itemDef.name
+        }
+      }
+      
       this.world.events.emit('cooking:error', {
         playerId,
-        message: `You need ${quantity} ${recipe.rawItemId} to cook.`,
+        message: `You need ${quantity} ${itemName} to cook.`,
       })
       return false
     }
@@ -648,8 +668,9 @@ export class CookingSystem extends System {
     if (!inventorySystem) {
       return false
     }
-
-    return (inventorySystem as any).getItemQuantity(playerId, recipe.rawItemId) >= quantity
+    
+    const itemQuantity = (inventorySystem as any).getItemQuantity(playerId, recipe.rawItemId)
+    return itemQuantity >= quantity
   }
 
   private consumeIngredients(playerId: string, recipe: CookingRecipe, quantity: number): void {
@@ -658,7 +679,7 @@ export class CookingSystem extends System {
       return
     }
 
-    ;(inventorySystem as any).removeItem(playerId, recipe.rawItemId, quantity)
+    ;(inventorySystem as any).removeItemById(playerId, recipe.rawItemId, quantity)
   }
 
   private getAvailableCookingRecipes(playerId: string, cookingMethod: CookingMethod): CookingRecipe[] {
@@ -724,9 +745,13 @@ export class CookingSystem extends System {
     const skillsSystem = this.world.systems.find(s => s.constructor.name === 'EnhancedSkillsSystem')
     const cookingLevel = skillsSystem ? (skillsSystem as any).getSkillLevel(playerId, SkillType.COOKING) : 1
 
+    console.log(`[CookingSystem] calculateSuccessRate: playerId=${playerId}, recipeId=${recipeId}, cookingLevel=${cookingLevel}, baseRate=${recipe.baseSuccessRate}, levelRequired=${recipe.levelRequired}`)
+
     const levelsAboveRequired = Math.max(0, cookingLevel - recipe.levelRequired)
     let successRate = recipe.baseSuccessRate + levelsAboveRequired * recipe.successRateIncrease
     successRate = Math.min(successRate, recipe.maxSuccessRate)
+
+    console.log(`[CookingSystem] levelsAboveRequired=${levelsAboveRequired}, successRate before bonuses=${successRate}`)
 
     // Apply cooking method bonuses
     if (cookingMethod === CookingMethod.RANGE) {
@@ -735,7 +760,9 @@ export class CookingSystem extends System {
       successRate += 0.03
     }
 
-    return Math.min(successRate, 1.0)
+    const finalRate = Math.min(successRate, 1.0)
+    console.log(`[CookingSystem] finalRate=${finalRate}`)
+    return finalRate
   }
 
   update(deltaTime: number): void {

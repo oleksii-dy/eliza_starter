@@ -1,6 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import { MessagingService } from '../../services/MessagingService';
 import { ApiClientConfig } from '../../types/base';
+import { Message } from '../../types/messaging';
+import { UUID } from '@elizaos/core';
+
+// Test UUIDs
+const TEST_AGENT_ID = '550e8400-e29b-41d4-a716-446655440001' as UUID;
+const TEST_CHANNEL_ID = '550e8400-e29b-41d4-a716-446655440002' as UUID;
+const TEST_MESSAGE_ID = '550e8400-e29b-41d4-a716-446655440003' as UUID;
 
 describe('MessagingService', () => {
   let messagingService: MessagingService;
@@ -50,14 +57,21 @@ describe('MessagingService', () => {
 
   describe('submitMessage', () => {
     const mockParams = {
-      agentId: 'agent-123' as any,
-      channelId: 'channel-456' as any,
+      agentId: TEST_AGENT_ID,
+      channelId: TEST_CHANNEL_ID,
       content: 'Test message',
       metadata: { source: 'test' },
     };
 
     it('should submit message successfully', async () => {
-      const mockResponse = { id: 'msg-789', content: 'Test message' };
+      const mockResponse: Message = { 
+        id: TEST_MESSAGE_ID, 
+        channelId: TEST_CHANNEL_ID,
+        authorId: TEST_AGENT_ID,
+        content: 'Test message',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
       (messagingService as any).post.mockResolvedValue(mockResponse);
 
       const result = await messagingService.submitMessage(mockParams);

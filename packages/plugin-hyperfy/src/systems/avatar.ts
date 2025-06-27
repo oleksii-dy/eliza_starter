@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { logger } from '@elizaos/core';
+
 // Create a base Node class since @elizaos/hyperfy is not available
 class Node extends THREE.Object3D {
   ctx: any;
@@ -75,17 +77,17 @@ export class AgentAvatar extends Node {
 
     // --- Proxy Load (No-op) ---
     if (!this.proxy) {
-      console.log('[AgentAvatar] Proxy not available, skipping proxy load.');
+      logger.info('[AgentAvatar] Proxy not available, skipping proxy load.');
     } else {
       // Proxy loading logic if proxy were available
-      // console.log('[AgentAvatar] Loading proxy model:', this.proxy);
+      // logger.info('[AgentAvatar] Loading proxy model:', this.proxy);
     }
     // --- End Proxy Load ---
 
     if (this.ctx.player) {
       await this.updatePlayer(this.ctx.player);
     } else {
-      console.warn('[AgentAvatar] No player in context at init.');
+      logger.warn('[AgentAvatar] No player in context at init.');
     }
   }
 
@@ -95,24 +97,24 @@ export class AgentAvatar extends Node {
     // --- Data-driven Model Update (Partial) ---
     // This is simplified without actual model loading and mixer setup
     if (this.ctx.entity && (this.ctx.entity as any).data) {
-      console.log(
+      logger.info(
         '[AgentAvatar] Entity avatar URL:',
         (this.ctx.entity as any).data.avatarUrl || 'none'
       );
     }
 
     if (this.ctx.world && this.ctx.world.gltf) {
-      console.log('[AgentAvatar] Default world avatar available.');
+      logger.info('[AgentAvatar] Default world avatar available.');
     }
 
-    console.log('[AgentAvatar] Skipping actual model/mixer setup (not implemented).');
+    logger.info('[AgentAvatar] Skipping actual model/mixer setup (not implemented).');
     // --- End Model Update ---
 
     // --- Name Tag Update (Partial) ---
     if (this.nametag) {
       this.nametag.text = player.data.name;
     } else {
-      console.log('[AgentAvatar] Nametag not available, skipping update.');
+      logger.info('[AgentAvatar] Nametag not available, skipping update.');
     }
     this.setDirty();
     // --- End Name Tag Update ---
@@ -176,11 +178,11 @@ export class AgentAvatar extends Node {
       return;
     }
 
-    console.log('[AgentAvatar] Updating emote:', emote);
+    logger.info('[AgentAvatar] Updating emote:', emote);
 
     const factory = this.proxy?.emoteFactories?.get(emote);
     if (!factory) {
-      console.warn('[AgentAvatar] Emote factory not found for:', emote);
+      logger.warn('[AgentAvatar] Emote factory not found for:', emote);
       return;
     }
 

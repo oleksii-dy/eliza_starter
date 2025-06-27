@@ -1,4 +1,4 @@
-import { type Route, type IAgentRuntime, logger, asUUID, type UUID } from '../types/core.d';
+import { type Route, type IAgentRuntime, logger, asUUID, type UUID } from '@elizaos/core';
 import type { CustodialWalletService } from '../services/CustodialWalletService';
 import { HighValueTransactionValidator } from '../trust/trustIntegration';
 import type { CustodialWallet } from '../types/wallet';
@@ -206,7 +206,7 @@ export const custodialWalletRoutes: Route[] = [
           worldId: worldId ? asUUID(worldId) : undefined,
           ownerId: asUUID(ownerId),
           purpose,
-          trustLevel: typeof trustLevel === 'string' ? parseInt(trustLevel) : trustLevel || 50,
+          trustLevel: typeof trustLevel === 'string' ? parseInt(trustLevel, 10) : trustLevel || 50,
           isPool: isPool || false,
           maxBalance: maxBalance
             ? typeof maxBalance === 'string'
@@ -616,7 +616,7 @@ export const custodialWalletRoutes: Route[] = [
                      WHERE wallet_id = ? 
                      ORDER BY created_at DESC 
                      LIMIT ? OFFSET ?`,
-          [walletId, Number.parseInt(limit as string), Number.parseInt(offset as string)]
+          [walletId, Number.parseInt(limit as string, 10), Number.parseInt(offset as string, 10)]
         );
 
         const totalCount = await db.query(
@@ -629,8 +629,8 @@ export const custodialWalletRoutes: Route[] = [
           transactions: transactions || [],
           pagination: {
             total: (totalCount?.[0] as DatabaseCountResult)?.count || 0,
-            limit: Number.parseInt(limit as string),
-            offset: Number.parseInt(offset as string),
+            limit: Number.parseInt(limit as string, 10),
+            offset: Number.parseInt(offset as string, 10),
           },
         });
       } catch (error) {

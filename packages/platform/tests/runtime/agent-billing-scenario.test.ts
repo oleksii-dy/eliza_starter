@@ -19,7 +19,7 @@ import {
   getCreditBalance,
 } from '@/lib/server/services/billing-service';
 import { trackUsage } from '@/lib/server/services/usage-tracking-service';
-import { beforeAll, beforeEach, describe, expect, test } from '@jest/globals';
+import { beforeAll, beforeEach, describe, expect, test } from 'vitest';
 import { eq, sql } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 

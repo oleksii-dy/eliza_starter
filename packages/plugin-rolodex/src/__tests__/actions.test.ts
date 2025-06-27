@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, mock } from 'bun:test';
 
 // Mock composePromptFromState before importing actions
-mock.module('@elizaos/core').mockImplementation(async () => {
+mock.module('@elizaos/core', async () => {
   const actual = await import('@elizaos/core');
   return {
     ...actual,

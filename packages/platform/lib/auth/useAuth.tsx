@@ -82,10 +82,10 @@ function useStandaloneAuth(): AuthContextType {
           role: userData.role,
           organization: userData.organization
             ? {
-                id: userData.organization.id,
-                name: userData.organization.name,
-                slug: userData.organization.slug,
-              }
+              id: userData.organization.id,
+              name: userData.organization.name,
+              slug: userData.organization.slug,
+            }
             : undefined,
         });
 

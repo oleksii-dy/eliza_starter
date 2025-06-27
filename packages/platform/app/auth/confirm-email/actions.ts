@@ -38,20 +38,16 @@ export async function confirmEmail(token: string) {
 export async function handleResendEmail() {
   'use server';
 
-  try {
-    const cookieStore = await cookies();
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/auth/resend-email`,
-      {},
-      {
-        withCredentials: true,
-        headers: {
-          Cookie: `auth-token=${cookieStore.get('auth-token')?.value}`,
-        },
+  const cookieStore = await cookies();
+  const response = await axios.post(
+    `${process.env.NEXT_PUBLIC_API_URL}/auth/resend-email`,
+    {},
+    {
+      withCredentials: true,
+      headers: {
+        Cookie: `auth-token=${cookieStore.get('auth-token')?.value}`,
       },
-    );
-    return response.data;
-  } catch (error) {
-    throw error;
-  }
+    },
+  );
+  return response.data;
 }

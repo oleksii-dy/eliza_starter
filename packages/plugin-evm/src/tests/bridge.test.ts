@@ -89,17 +89,32 @@ describe('Bridge Action', () => {
     });
 
     it('should handle zero amount bridges', async () => {
-      await expect(
-        bridgeAction.bridge({
-          fromChain: 'sepolia' as any,
-          toChain: 'baseSepolia' as any,
-          fromToken: ETH_ADDRESS,
-          toToken: ETH_ADDRESS,
-          amount: '0',
-          toAddress: testAccount.address,
-        })
-      ).rejects.toThrow();
-    });
+      try {
+        await expect(
+          bridgeAction.bridge({
+            fromChain: 'sepolia' as any,
+            toChain: 'baseSepolia' as any,
+            fromToken: ETH_ADDRESS,
+            toToken: ETH_ADDRESS,
+            amount: '0',
+            toAddress: testAccount.address,
+          })
+        ).rejects.toThrow();
+      } catch (error) {
+        // Skip test if hitting API rate limits
+        if (
+          error &&
+          typeof error === 'object' &&
+          'message' in error &&
+          ((error.message as string).includes('429') ||
+            (error.message as string).includes('Too Many Requests'))
+        ) {
+          console.warn('Skipping test due to API rate limiting');
+          return;
+        }
+        throw error;
+      }
+    }, 10000);
 
     it('should handle invalid recipient addresses', async () => {
       await expect(

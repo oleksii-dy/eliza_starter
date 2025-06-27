@@ -86,7 +86,7 @@ export class BackgroundJobsService {
     services: {
       containerMonitoring: boolean;
     };
-  } {
+    } {
     return {
       isRunning: this.isRunning,
       services: {

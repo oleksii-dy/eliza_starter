@@ -114,9 +114,38 @@ async function main() {
   for (const cmd of commands) {
     try {
       const commandModule = await import(cmd.path);
-      const command =
-        commandModule.default || commandModule[cmd.name] || commandModule[`${cmd.name}Command`];
-      if (command) {
+      
+      // Try multiple ways to find the command export
+      let command = null;
+      
+      // First, check for default export
+      if (commandModule.default) {
+        command = commandModule.default;
+      }
+      // Then check for named export matching the command name
+      else if (commandModule[cmd.name]) {
+        command = commandModule[cmd.name];
+      }
+      // Check for Command suffix
+      else if (commandModule[`${cmd.name}Command`]) {
+        command = commandModule[`${cmd.name}Command`];
+      }
+      // For specific commands, check alternative names
+      else if (cmd.name === 'auth' && commandModule.auth_default) {
+        command = commandModule.auth_default;
+      }
+      else if (cmd.name === 'plugins' && commandModule.addPlugin) {
+        // For plugins command, we might need to construct the command
+        // This is a special case where the module exports actions instead of a command
+        continue; // Skip for now, will need special handling
+      }
+      else if (cmd.name === 'env' && commandModule.editEnvVars) {
+        // Similar to plugins, env might export functions instead of a command
+        continue; // Skip for now
+      }
+      
+      if (command && typeof command === 'object' && command._name) {
+        // It's a Commander command object
         program.addCommand(command);
       }
     } catch (error) {

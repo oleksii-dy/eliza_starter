@@ -1,4 +1,4 @@
-import type { TestSuite, IAgentRuntime } from '../../types/core';
+import type { TestSuite, IAgentRuntime } from '@elizaos/core';
 
 /**
  * Comprehensive user request scenarios covering explicit commands and implicit inference

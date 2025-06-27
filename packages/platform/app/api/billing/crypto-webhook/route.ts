@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { headers } from 'next/headers';
 import Stripe from 'stripe';
 import { loadConfig } from '@/lib/server/utils/config';
@@ -17,7 +18,7 @@ const stripe = new Stripe(config.stripe.secretKey, {
 // This should be set in your environment variables
 const webhookSecret = process.env.STRIPE_CRYPTO_WEBHOOK_SECRET;
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const body = await request.text();
     const headersList = await headers();
@@ -118,3 +119,5 @@ export async function handlePOST(request: NextRequest) {
     );
   }
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

@@ -55,7 +55,7 @@ export class SerialProtocol {
 
       logger.info(`[SerialProtocol] Connected to ${this.portPath} at ${this.baudRate} baud`);
     } catch (_error) {
-      logger._error('[SerialProtocol] Failed to connect:', _error);
+      logger.error('[SerialProtocol] Failed to connect:', _error);
       throw _error;
     }
   }

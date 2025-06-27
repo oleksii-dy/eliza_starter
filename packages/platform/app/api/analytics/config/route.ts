@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 
 // Use dynamic imports to avoid database connection during build
 const getSessionService = () =>
@@ -8,7 +9,7 @@ const getInferenceAnalytics = () =>
     (m) => m.inferenceAnalytics,
   );
 
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     // During build time, return a stub response to prevent database access
     if (process.env.NEXT_PHASE === 'phase-production-build') {
@@ -47,7 +48,7 @@ export async function handleGET(request: NextRequest) {
   }
 }
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     // During build time, return a stub response to prevent database access
     if (process.env.NEXT_PHASE === 'phase-production-build') {
@@ -101,3 +102,5 @@ export async function handlePOST(request: NextRequest) {
     );
   }
 }
+
+export const { GET, POST } = wrapHandlers({ handleGET, handlePOST });

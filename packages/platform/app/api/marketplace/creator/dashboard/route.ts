@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { MarketplaceService } from '@/lib/services/marketplace';
 import { auth } from '@/lib/auth';
 
 const marketplaceService = new MarketplaceService();
 
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -29,3 +30,5 @@ export async function handleGET(request: NextRequest) {
     );
   }
 }
+
+export const { GET } = wrapHandlers({ handleGET });

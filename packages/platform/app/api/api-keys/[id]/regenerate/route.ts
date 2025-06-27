@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { sessionService } from '@/lib/auth/session';
 import { getDatabase } from '@/lib/database';
 import { apiKeys } from '@/lib/database/schema';
@@ -18,15 +19,15 @@ function generateApiKey(): string {
 }
 
 function hashApiKey(apiKey: string): string {
-  return createHash('sha256').update(apiKey).digest('hex');
+  return createHash('sha256').update(apiKey).digest('hex') as string;
 }
 
 function getKeyPrefix(apiKey: string): string {
-  return apiKey.substring(0, 8) + '...';
+  return `${apiKey.substring(0, 8)}...`;
 }
 
 // POST /api/api-keys/[id]/regenerate - Regenerate API key
-export async function handlePOST(
+async function handlePOST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -104,3 +105,5 @@ export async function handlePOST(
     );
   }
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

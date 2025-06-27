@@ -56,7 +56,7 @@ export const playerEmotes: EmoteDefinition[] = [
   },
   {
     name: 'crawl',
-    path: '/emotes/emote-crawling.glb',
+    path: '/public/emotes/emote-crawling.glb',
     duration: 4000,
     description: 'Crawling on ground',
     loop: true,

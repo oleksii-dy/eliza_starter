@@ -9,8 +9,6 @@ import { validateUuid as _validateUuid } from '../utils';
 import { v4 as uuidv4 } from 'uuid';
 import { generateApiKey, isValidApiKeyFormat as _isValidApiKeyFormat } from './ApiKeyAuth';
 import { sha1 } from 'js-sha1';
-// Use dynamic import for crypto to avoid bundling issues
-// crypto is only used in test environments
 
 export interface User {
   id: UUID;

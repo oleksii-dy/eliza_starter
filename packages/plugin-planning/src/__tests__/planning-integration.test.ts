@@ -64,50 +64,50 @@ describe('Planning Integration Tests', () => {
   describe('Simple Planning', () => {
     it('should create simple plans for basic tasks', async () => {
       const message = createMockMemory({
-        content: { text: 'Send an email to John about the meeting' },
+        text: 'Send an email to John about the meeting',
       });
       const state = createMockState();
 
       const plan = await planningService.createSimplePlan(mockRuntime, message, state);
 
       expect(plan).toBeDefined();
-      expect(plan.goal).toBe('Execute actions: SEND_EMAIL');
-      expect(plan.steps).toHaveLength(1);
-      expect(plan.steps[0].actionName).toBe('SEND_EMAIL');
+      expect(plan?.goal).toBe('Execute actions: SEND_EMAIL');
+      expect(plan?.steps).toHaveLength(1);
+      expect(plan?.steps[0].actionName).toBe('SEND_EMAIL');
     });
 
     it('should handle complex requests with multi-step planning', async () => {
       const message = createMockMemory({
-        content: { text: 'Research the weather, then send a summary to the team' },
+        text: 'Research the weather, then send a summary to the team',
       });
       const state = createMockState();
 
       const plan = await planningService.createSimplePlan(mockRuntime, message, state);
 
       expect(plan).toBeDefined();
-      expect(plan.steps.length).toBe(2); // SEARCH and REPLY actions
-      expect(plan.steps.some((step) => step.actionName === 'SEARCH')).toBe(true);
-      expect(plan.steps.some((step) => step.actionName === 'REPLY')).toBe(true);
+      expect(plan?.steps.length).toBe(2); // SEARCH and REPLY actions
+      expect(plan?.steps.some((step) => step.actionName === 'SEARCH')).toBe(true);
+      expect(plan?.steps.some((step) => step.actionName === 'REPLY')).toBe(true);
     });
 
     it('should create conservative plans when uncertain', async () => {
       const message = createMockMemory({
-        content: { text: 'Do something interesting' },
+        text: 'Do something interesting',
       });
       const state = createMockState();
 
       const plan = await planningService.createSimplePlan(mockRuntime, message, state);
 
       expect(plan).toBeDefined();
-      expect(plan.steps).toHaveLength(1);
-      expect(plan.steps[0].actionName).toBe('REPLY');
+      expect(plan?.steps).toHaveLength(1);
+      expect(plan?.steps[0].actionName).toBe('REPLY');
     });
   });
 
   describe('Comprehensive Planning', () => {
     it('should create detailed plans with context and constraints', async () => {
       const message = createMockMemory({
-        content: { text: 'Plan a project timeline for the new feature' },
+        text: 'Plan a project timeline for the new feature',
       });
       const state = createMockState();
 
@@ -149,7 +149,7 @@ describe('Planning Integration Tests', () => {
 
     it('should respect execution model preferences', async () => {
       const message = createMockMemory({
-        content: { text: 'Process multiple tasks simultaneously' },
+        text: 'Process multiple tasks simultaneously',
       });
       const state = createMockState();
 
@@ -178,7 +178,7 @@ describe('Planning Integration Tests', () => {
 
     it('should handle DAG execution model for complex dependencies', async () => {
       const message = createMockMemory({
-        content: { text: 'Coordinate dependent tasks with prerequisites' },
+        text: 'Coordinate dependent tasks with prerequisites',
       });
       const state = createMockState();
 
@@ -211,7 +211,7 @@ describe('Planning Integration Tests', () => {
   describe('Plan Execution', () => {
     it('should execute sequential plans correctly', async () => {
       const message = createMockMemory({
-        content: { text: 'Execute test plan' },
+        text: 'Execute test plan',
       });
 
       // Add specific REPLY and THINK actions to mockRuntime for this test
@@ -291,7 +291,7 @@ describe('Planning Integration Tests', () => {
 
     it('should handle execution errors gracefully', async () => {
       const message = createMockMemory({
-        content: { text: 'Execute failing plan' },
+        text: 'Execute failing plan',
       });
 
       const plan: ActionPlan = {
@@ -336,7 +336,7 @@ describe('Planning Integration Tests', () => {
 
     it('should maintain working memory across steps', async () => {
       const message = createMockMemory({
-        content: { text: 'Test working memory' },
+        text: 'Test working memory',
       });
 
       const plan: ActionPlan = {
@@ -635,7 +635,7 @@ describe('Planning Integration Tests', () => {
 
     it('should handle malformed planning context', async () => {
       const message = createMockMemory({
-        content: { text: 'Test malformed context' },
+        text: 'Test malformed context',
       });
       const state = createMockState();
 
@@ -678,7 +678,7 @@ describe('Planning Integration Tests', () => {
           message,
           state
         )
-      ).rejects.toThrow('Model service unavailable');
+      ).rejects.toThrow('Failed to create comprehensive plan: Model service unavailable');
     });
   });
 

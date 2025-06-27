@@ -12,6 +12,8 @@ import { AgentStartOptions } from '../types';
 import { loadEnvConfig } from '../utils/config-utils';
 import { resolvePluginDependencies } from '../utils/dependency-resolver';
 import { isValidPluginShape, loadAndPreparePlugin } from '../utils/plugin-utils';
+import { applyAdapterPatch, patchRuntimeAdapter } from '@/src/utils/adapter-patch';
+import { runDatabaseMigrations } from '@/src/utils/database-migration';
 
 /**
  * Start an agent with the given configuration
@@ -26,6 +28,9 @@ export async function startAgent(
   options: AgentStartOptions = {}
 ): Promise<IAgentRuntime> {
   character.id ??= stringToUuid(character.name);
+
+  // Apply the adapter patch early
+  applyAdapterPatch();
 
   const loadedPlugins = new Map<string, Plugin>();
   // Dynamically import SQL plugin to avoid early schema loading
@@ -80,6 +85,9 @@ export async function startAgent(
 
   const runtime = new AgentRuntime(runtimeOptions);
 
+  // Apply runtime adapter patch as a fallback
+  patchRuntimeAdapter(runtime);
+
   const initWrapper = async (runtime: IAgentRuntime) => {
     if (init) {
       await init(runtime);
@@ -92,6 +100,25 @@ export async function startAgent(
 
   try {
     logger.info('Running plugin migrations...');
+
+    // Run database migrations first to ensure vector columns exist
+    const adapter = (runtime as any).databaseAdapter || (runtime as any).adapter;
+    if (adapter) {
+      logger.info('Running database migrations to ensure vector columns exist...');
+      const manager = adapter.manager || adapter;
+      
+      if (manager && manager.query) {
+        try {
+          await runDatabaseMigrations(manager);
+          logger.info('Database migrations completed successfully');
+        } catch (migrationError) {
+          logger.error('Database migration failed:', migrationError);
+          // Continue anyway as the columns might already exist
+        }
+      } else {
+        logger.warn('No database manager available for migrations');
+      }
+    }
 
     // Create a mapping of loaded plugin names to requested plugin names
     const pluginNameMap = new Map<string, string>();

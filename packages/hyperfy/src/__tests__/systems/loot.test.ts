@@ -1,16 +1,16 @@
-import { describe, it, expect, beforeEach } from 'bun:test'
-import { mock, spyOn } from 'bun:test'
-import { LootSystem } from '../../rpg/systems/LootSystem'
-import { RPGEntity } from '../../rpg/entities/RPGEntity'
-import { MockWorld } from '../test-world-factory'
-import type { LootTable, LootEntry, ItemDrop, NPCComponent, StatsComponent } from '../../rpg/types'
+import { describe, it, expect, beforeEach } from 'bun:test';
+import { mock, spyOn } from 'bun:test';
+import { LootSystem } from '../../rpg/systems/LootSystem';
+import { RPGEntity } from '../../rpg/entities/RPGEntity';
+import { MockWorld } from '../test-world-factory';
+import type { LootTable, LootEntry, ItemDrop, NPCComponent, StatsComponent } from '../../rpg/types';
 
 describe('LootSystem', () => {
-  let world: MockWorld
-  let lootSystem: LootSystem
-  let goblin: RPGEntity
-  let dragon: RPGEntity
-  let player: RPGEntity
+  let world: MockWorld;
+  let lootSystem: LootSystem;
+  let goblin: RPGEntity;
+  let dragon: RPGEntity;
+  let player: RPGEntity;
 
   // Mock loot tables
   const goblinLootTable: LootTable = {
@@ -42,7 +42,7 @@ describe('LootSystem', () => {
     ],
     rareTableAccess: 0.01, // 1% chance to access rare drop table
     maxDrops: 3,
-  }
+  };
 
   const dragonLootTable: LootTable = {
     id: 'dragon_drops',
@@ -76,7 +76,7 @@ describe('LootSystem', () => {
     ],
     rareTableAccess: 0.05, // 5% chance
     maxDrops: 5,
-  }
+  };
 
   const rareDropTable: LootTable = {
     id: 'rare_drop_table',
@@ -111,11 +111,11 @@ describe('LootSystem', () => {
     ],
     rareTableAccess: 0,
     maxDrops: 1,
-  }
+  };
 
   beforeEach(async () => {
-    world = new MockWorld()
-    lootSystem = new LootSystem(world as any)
+    world = new MockWorld();
+    lootSystem = new LootSystem(world as any);
 
     // Initialize the system
     await lootSystem.init({})
@@ -123,32 +123,32 @@ describe('LootSystem', () => {
     // Register loot tables
     ;(lootSystem as any).registerLootTable(goblinLootTable)
     ;(lootSystem as any).registerLootTable(dragonLootTable)
-    ;(lootSystem as any).registerRareDropTable(rareDropTable)
+    ;(lootSystem as any).registerRareDropTable(rareDropTable);
 
     // Create NPCs
     goblin = new RPGEntity(world as any, 'npc', {
       id: 'goblin-1',
       name: 'Goblin',
       position: { x: 10, y: 0, z: 10 },
-    })
+    });
 
     dragon = new RPGEntity(world as any, 'npc', {
       id: 'dragon-1',
       name: 'Green Dragon',
       position: { x: 50, y: 0, z: 50 },
-    })
+    });
 
     // Create player
     player = new RPGEntity(world as any, 'player', {
       id: 'player-1',
       name: 'Test Player',
       position: { x: 0, y: 0, z: 0 },
-    })
+    });
 
     // Add entities to world
-    world.entities.items.set(goblin.data.id, goblin)
-    world.entities.items.set(dragon.data.id, dragon)
-    world.entities.items.set(player.data.id, player)
+    world.entities.items.set(goblin.data.id, goblin);
+    world.entities.items.set(dragon.data.id, dragon);
+    world.entities.items.set(player.data.id, player);
 
     // Add NPC components
     const goblinNPC: NPCComponent = {
@@ -180,7 +180,7 @@ describe('LootSystem', () => {
       lootTable: 'goblin_drops',
       currentTarget: null,
       lastInteraction: 0,
-    }
+    };
 
     const dragonNPC: NPCComponent = {
       type: 'npc',
@@ -211,10 +211,10 @@ describe('LootSystem', () => {
       lootTable: 'dragon_drops',
       currentTarget: null,
       lastInteraction: 0,
-    }
+    };
 
-    goblin.addComponent('npc', goblinNPC)
-    dragon.addComponent('npc', dragonNPC)
+    goblin.addComponent('npc', goblinNPC);
+    dragon.addComponent('npc', dragonNPC);
 
     // Add stats components
     const goblinStats: StatsComponent = {
@@ -246,78 +246,78 @@ describe('LootSystem', () => {
       },
       combatLevel: 2,
       totalLevel: 7,
-    }
+    };
 
-    goblin.addComponent('stats', goblinStats)
-  })
+    goblin.addComponent('stats', goblinStats);
+  });
 
   describe('initialization', () => {
     it('should register loot tables', () => {
-      expect((lootSystem as any).lootTables.has('goblin_drops')).toBe(true)
-      expect((lootSystem as any).lootTables.has('dragon_drops')).toBe(true)
-      expect((lootSystem as any).rareDropTable).toBeDefined()
-    })
-  })
+      expect((lootSystem as any).lootTables.has('goblin_drops')).toBe(true);
+      expect((lootSystem as any).lootTables.has('dragon_drops')).toBe(true);
+      expect((lootSystem as any).rareDropTable).toBeDefined();
+    });
+  });
 
   describe('drop generation', () => {
     it('should always include guaranteed drops', () => {
-      const drops = lootSystem.generateDrops(goblin.data.id)
+      const drops = lootSystem.generateDrops(goblin.data.id);
 
       // Should always have bones
-      const bones = drops.find(drop => drop.itemId === 526)
-      expect(bones).toBeDefined()
-      expect(bones?.quantity).toBe(1)
-    })
+      const bones = drops.find(drop => drop.itemId === 526);
+      expect(bones).toBeDefined();
+      expect(bones?.quantity).toBe(1);
+    });
 
     it('should generate random drops from common table', () => {
       // Mock random to ensure we get drops
-      const randomSpy = spyOn(Math, 'random')
-      randomSpy.mockReturnValueOnce(0.5) // For drop roll
-      randomSpy.mockReturnValueOnce(0.1) // For item selection (coins)
-      randomSpy.mockReturnValueOnce(0.5) // For quantity
+      const randomSpy = spyOn(Math, 'random');
+      randomSpy.mockReturnValueOnce(0.5); // For drop roll
+      randomSpy.mockReturnValueOnce(0.1); // For item selection (coins)
+      randomSpy.mockReturnValueOnce(0.5); // For quantity
 
-      const drops = lootSystem.generateDrops(goblin.data.id)
+      const drops = lootSystem.generateDrops(goblin.data.id);
 
       // Should have bones + at least one other drop
-      expect(drops.length).toBeGreaterThanOrEqual(2)
+      expect(drops.length).toBeGreaterThanOrEqual(2);
 
       // Check for coins
-      const coins = drops.find(drop => drop.itemId === 995)
+      const coins = drops.find(drop => drop.itemId === 995);
       if (coins) {
-        expect(coins.quantity).toBeGreaterThanOrEqual(1)
-        expect(coins.quantity).toBeLessThanOrEqual(5)
+        expect(coins.quantity).toBeGreaterThanOrEqual(1);
+        expect(coins.quantity).toBeLessThanOrEqual(5);
       }
 
-      randomSpy.mockReset()
-    })
+      randomSpy.mockReset();
+    });
 
     it('should respect max drops limit', () => {
       // Mock random to always generate drops
-      const randomSpy = spyOn(Math, 'random').mockReturnValue(0.1)
+      const randomSpy = spyOn(Math, 'random').mockReturnValue(0.1);
 
-      const drops = lootSystem.generateDrops(goblin.data.id)
+      const drops = lootSystem.generateDrops(goblin.data.id);
 
       // Should not exceed max drops (3) + always drops (1)
-      expect(drops.length).toBeLessThanOrEqual(4)
+      expect(drops.length).toBeLessThanOrEqual(4);
 
-      randomSpy.mockReset()
-    })
+      randomSpy.mockReset();
+    });
 
     it('should handle rare drop table access', () => {
       // Mock random to trigger rare drop table
-      const randomSpy = spyOn(Math, 'random')
-      randomSpy.mockReturnValueOnce(0.005) // 0.5% - should trigger rare table for goblin
-      randomSpy.mockReturnValueOnce(0.1) // Select from rare table
+      const randomSpy = spyOn(Math, 'random');
+      randomSpy.mockReturnValueOnce(0.005); // 0.5% - should trigger rare table for goblin
+      randomSpy.mockReturnValueOnce(0.1); // Select from rare table
 
-      const drops = lootSystem.generateDrops(goblin.data.id)
+      const drops = lootSystem.generateDrops(goblin.data.id);
 
       // Should have a drop from rare table
-      const rareDropIds = [985, 987, 1623, 1621, 1619, 1617, 1631, 2577]
-      const hasRareDrop = drops.some(drop => rareDropIds.includes(drop.itemId))
-      expect(hasRareDrop).toBe(true)
+      const rareDropIds = [985, 987, 1623, 1621, 1619, 1617, 1631, 2577];
+      const hasRareDrop = drops.some(drop => rareDropIds.includes(drop.itemId));
+      expect(hasRareDrop).toBe(true);
 
-      randomSpy.mockReset()
-    })
+      randomSpy.mockReset();
+    });
 
     it('should handle NPCs without loot tables', () => {
       // Create NPC without loot table
@@ -325,131 +325,131 @@ describe('LootSystem', () => {
         id: 'npc-no-loot',
         name: 'No Loot NPC',
         position: { x: 0, y: 0, z: 0 },
-      })
+      });
 
       npc.addComponent('npc', {
         type: 'npc',
         npcId: 999,
         name: 'No Loot NPC',
-      } as NPCComponent)
+      } as NPCComponent);
 
-      world.entities.items.set(npc.data.id, npc)
+      world.entities.items.set(npc.data.id, npc);
 
-      const drops = lootSystem.generateDrops(npc.data.id)
-      expect(drops).toEqual([])
-    })
-  })
+      const drops = lootSystem.generateDrops(npc.data.id);
+      expect(drops).toEqual([]);
+    });
+  });
 
   describe('drop spawning', () => {
     it('should create item drop entities on death', () => {
-      const eventSpy = spyOn(world.events, 'emit')
+      const eventSpy = spyOn(world.events, 'emit');
 
       // Kill goblin
       world.events.emit('entity:death', {
         entityId: goblin.data.id,
         killerId: player.data.id,
-      })
+      });
 
       // Should emit drop creation events
-      const dropEvents = eventSpy.mock.calls.filter(call => call[0] === 'loot:dropped')
-      expect(dropEvents.length).toBeGreaterThan(0)
+      const dropEvents = eventSpy.mock.calls.filter(call => call[0] === 'loot:dropped');
+      expect(dropEvents.length).toBeGreaterThan(0);
 
       // Check drop has correct properties
-      const dropEvent = dropEvents[0]?.[1]
+      const dropEvent = dropEvents[0]?.[1];
       if (dropEvent) {
-        expect(dropEvent).toHaveProperty('position')
-        expect(dropEvent).toHaveProperty('itemId')
-        expect(dropEvent).toHaveProperty('quantity')
-        expect(dropEvent).toHaveProperty('owner', player.data.id)
+        expect(dropEvent).toHaveProperty('position');
+        expect(dropEvent).toHaveProperty('itemId');
+        expect(dropEvent).toHaveProperty('quantity');
+        expect(dropEvent).toHaveProperty('owner', player.data.id);
       }
-    })
+    });
 
     it('should randomize drop positions', () => {
-      const eventSpy = spyOn(world.events, 'emit')
+      const eventSpy = spyOn(world.events, 'emit');
 
       // Mock random for multiple drops with different values for positions
-      const randomSpy = spyOn(Math, 'random')
+      const randomSpy = spyOn(Math, 'random');
 
       // Dragon has 2 always drops + potentially more
       // Mock values for drop generation
-      randomSpy.mockReturnValueOnce(0.1) // For rare table check
-      randomSpy.mockReturnValueOnce(0.1) // For first common drop
-      randomSpy.mockReturnValueOnce(0.1) // For item selection
-      randomSpy.mockReturnValueOnce(0.5) // For quantity
+      randomSpy.mockReturnValueOnce(0.1); // For rare table check
+      randomSpy.mockReturnValueOnce(0.1); // For first common drop
+      randomSpy.mockReturnValueOnce(0.1); // For item selection
+      randomSpy.mockReturnValueOnce(0.5); // For quantity
 
       // Mock values for position randomization
-      randomSpy.mockReturnValueOnce(0.2) // First drop x position
-      randomSpy.mockReturnValueOnce(0.3) // First drop z position
-      randomSpy.mockReturnValueOnce(0.7) // Second drop x position
-      randomSpy.mockReturnValueOnce(0.8) // Second drop z position
-      randomSpy.mockReturnValueOnce(0.4) // Third drop x position
-      randomSpy.mockReturnValueOnce(0.6) // Third drop z position
+      randomSpy.mockReturnValueOnce(0.2); // First drop x position
+      randomSpy.mockReturnValueOnce(0.3); // First drop z position
+      randomSpy.mockReturnValueOnce(0.7); // Second drop x position
+      randomSpy.mockReturnValueOnce(0.8); // Second drop z position
+      randomSpy.mockReturnValueOnce(0.4); // Third drop x position
+      randomSpy.mockReturnValueOnce(0.6); // Third drop z position
 
       // Kill dragon (multiple drops)
       world.events.emit('entity:death', {
         entityId: dragon.data.id,
         killerId: player.data.id,
-      })
+      });
 
       // Get all drop positions
-      const dropEvents = eventSpy.mock.calls.filter(call => call[0] === 'loot:dropped')
-      const positions = dropEvents.map(event => (event[1] as any).position)
+      const dropEvents = eventSpy.mock.calls.filter(call => call[0] === 'loot:dropped');
+      const positions = dropEvents.map(event => (event[1] as any).position);
 
       // Positions should be slightly different
       if (positions.length > 1) {
-        const allSame = positions.every(pos => pos.x === positions[0].x && pos.z === positions[0].z)
-        expect(allSame).toBe(false)
+        const allSame = positions.every(pos => pos.x === positions[0].x && pos.z === positions[0].z);
+        expect(allSame).toBe(false);
       }
 
-      randomSpy.mockReset()
-    })
+      randomSpy.mockReset();
+    });
 
     it('should set ownership timer for drops', () => {
-      const eventSpy = spyOn(world.events, 'emit')
+      const eventSpy = spyOn(world.events, 'emit');
 
       // Kill goblin
       world.events.emit('entity:death', {
         entityId: goblin.data.id,
         killerId: player.data.id,
-      })
+      });
 
       // Check ownership timer
-      const dropEvent = eventSpy.mock.calls.find(call => call[0] === 'loot:dropped')?.[1]
+      const dropEvent = eventSpy.mock.calls.find(call => call[0] === 'loot:dropped')?.[1];
       if (dropEvent) {
-        expect((dropEvent as any).ownershipTimer).toBe(60000) // 1 minute
-        expect((dropEvent as any).despawnTimer).toBe(180000) // 3 minutes
+        expect((dropEvent as any).ownershipTimer).toBe(60000); // 1 minute
+        expect((dropEvent as any).despawnTimer).toBe(180000); // 3 minutes
       }
-    })
-  })
+    });
+  });
 
   describe('drop tables', () => {
     it('should calculate drop weights correctly', () => {
-      const table = goblinLootTable
-      const totalWeight = (table.commonDrops || []).reduce((sum, drop) => sum + drop.weight, 0)
-      expect(totalWeight).toBe(80) // 50 + 20 + 10
-    })
+      const table = goblinLootTable;
+      const totalWeight = (table.commonDrops || []).reduce((sum, drop) => sum + drop.weight, 0);
+      expect(totalWeight).toBe(80); // 50 + 20 + 10
+    });
 
     it('should handle quantity ranges', () => {
       // Mock random for quantity
-      const randomSpy = spyOn(Math, 'random')
-      randomSpy.mockReturnValueOnce(0.5) // For drop roll
-      randomSpy.mockReturnValueOnce(0.1) // For item selection (coins)
-      randomSpy.mockReturnValueOnce(0.0) // Min quantity
+      const randomSpy = spyOn(Math, 'random');
+      randomSpy.mockReturnValueOnce(0.5); // For drop roll
+      randomSpy.mockReturnValueOnce(0.1); // For item selection (coins)
+      randomSpy.mockReturnValueOnce(0.0); // Min quantity
 
-      const drops1 = lootSystem.generateDrops(goblin.data.id)
-      const coins1 = drops1.find(drop => drop.itemId === 995)
-      expect(coins1?.quantity).toBe(1) // Min
+      const drops1 = lootSystem.generateDrops(goblin.data.id);
+      const coins1 = drops1.find(drop => drop.itemId === 995);
+      expect(coins1?.quantity).toBe(1); // Min
 
-      randomSpy.mockReturnValueOnce(0.5) // For drop roll
-      randomSpy.mockReturnValueOnce(0.1) // For item selection (coins)
-      randomSpy.mockReturnValueOnce(1.0) // Max quantity
+      randomSpy.mockReturnValueOnce(0.5); // For drop roll
+      randomSpy.mockReturnValueOnce(0.1); // For item selection (coins)
+      randomSpy.mockReturnValueOnce(1.0); // Max quantity
 
-      const drops2 = lootSystem.generateDrops(goblin.data.id)
-      const coins2 = drops2.find(drop => drop.itemId === 995)
-      expect(coins2?.quantity).toBe(5) // Max
+      const drops2 = lootSystem.generateDrops(goblin.data.id);
+      const coins2 = drops2.find(drop => drop.itemId === 995);
+      expect(coins2?.quantity).toBe(5); // Max
 
-      randomSpy.mockReset()
-    })
+      randomSpy.mockReset();
+    });
 
     it('should handle noted drops', () => {
       // Add noted drop to table
@@ -458,30 +458,30 @@ describe('LootSystem', () => {
         commonDrops: [{ itemId: 995, quantity: { min: 100, max: 200 }, weight: 50, noted: true }],
       }
 
-      ;(lootSystem as any).registerLootTable(notedTable)
+      ;(lootSystem as any).registerLootTable(notedTable);
 
       // Mock to get the noted drop
-      const randomSpy = spyOn(Math, 'random').mockReturnValue(0.1)
+      const randomSpy = spyOn(Math, 'random').mockReturnValue(0.1);
 
-      const drops = lootSystem.generateDrops(goblin.data.id)
-      const notedDrop = drops.find(drop => drop.itemId === 995)
-      expect(notedDrop?.noted).toBe(true)
+      const drops = lootSystem.generateDrops(goblin.data.id);
+      const notedDrop = drops.find(drop => drop.itemId === 995);
+      expect(notedDrop?.noted).toBe(true);
 
-      randomSpy.mockReset()
-    })
-  })
+      randomSpy.mockReset();
+    });
+  });
 
   describe('drop value calculation', () => {
     it('should calculate total drop value', () => {
       const drops: ItemDrop[] = [
         { itemId: 995, quantity: 100 }, // 100 coins
         { itemId: 1203, quantity: 1 }, // Iron dagger (value depends on item registry)
-      ]
+      ];
 
-      const value = (lootSystem as any).calculateDropValue(drops)
-      expect(value).toBeGreaterThanOrEqual(100) // At least the coin value
-    })
-  })
+      const value = (lootSystem as any).calculateDropValue(drops);
+      expect(value).toBeGreaterThanOrEqual(100); // At least the coin value
+    });
+  });
 
   describe('edge cases', () => {
     it('should handle empty loot tables', () => {
@@ -499,46 +499,46 @@ describe('LootSystem', () => {
         maxDrops: 0,
       }
 
-      ;(lootSystem as any).registerLootTable(emptyTable)
+      ;(lootSystem as any).registerLootTable(emptyTable);
 
       // Create NPC with empty table
       const npc = new RPGEntity(world as any, 'npc', {
         id: 'empty-npc',
         name: 'Empty NPC',
         position: { x: 0, y: 0, z: 0 },
-      })
+      });
 
       npc.addComponent('npc', {
         type: 'npc',
         lootTable: 'empty_table',
-      } as NPCComponent)
+      } as NPCComponent);
 
-      world.entities.items.set(npc.data.id, npc)
+      world.entities.items.set(npc.data.id, npc);
 
-      const drops = lootSystem.generateDrops(npc.data.id)
-      expect(drops).toEqual([])
-    })
+      const drops = lootSystem.generateDrops(npc.data.id);
+      expect(drops).toEqual([]);
+    });
 
     it('should handle invalid entity IDs', () => {
-      const drops = lootSystem.generateDrops('invalid-id')
-      expect(drops).toEqual([])
-    })
+      const drops = lootSystem.generateDrops('invalid-id');
+      expect(drops).toEqual([]);
+    });
 
     it('should handle NPCs dying without killers', () => {
-      const eventSpy = spyOn(world.events, 'emit')
+      const eventSpy = spyOn(world.events, 'emit');
 
       // Kill goblin without killer (environmental death)
       world.events.emit('entity:death', {
         entityId: goblin.data.id,
         killerId: null,
-      })
+      });
 
       // Should still drop items but without owner
-      const dropEvent = eventSpy.mock.calls.find(call => call[0] === 'loot:dropped')?.[1]
+      const dropEvent = eventSpy.mock.calls.find(call => call[0] === 'loot:dropped')?.[1];
       if (dropEvent) {
-        expect((dropEvent as any).owner).toBeNull()
-        expect((dropEvent as any).ownershipTimer).toBe(0)
+        expect((dropEvent as any).owner).toBeNull();
+        expect((dropEvent as any).ownershipTimer).toBe(0);
       }
-    })
-  })
-})
+    });
+  });
+});

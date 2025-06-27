@@ -10,7 +10,7 @@ const createCoreMockRuntime = (overrides: any = {}) => ({
   composeState: overrides.composeState || (() => Promise.resolve({})),
   getMemories: overrides.getMemories || (() => Promise.resolve([])),
   createMemory: overrides.createMemory || (() => Promise.resolve()),
-  ...overrides
+  ...overrides,
 });
 
 const createCoreMockMemory = (overrides: any = {}) => ({
@@ -19,12 +19,12 @@ const createCoreMockMemory = (overrides: any = {}) => ({
   roomId: 'test-room-id',
   content: { text: 'test message' },
   createdAt: Date.now(),
-  ...overrides
+  ...overrides,
 });
 
 const createCoreMockState = (overrides: any = {}) => ({
   text: 'test state',
-  ...overrides
+  ...overrides,
 });
 
 /**

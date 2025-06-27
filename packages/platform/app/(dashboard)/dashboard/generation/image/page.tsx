@@ -107,7 +107,7 @@ export default function ImageGenerationPage() {
   });
 
   const handleGenerate = async () => {
-    if (!prompt.trim()) return;
+    if (!prompt.trim()) {return;}
 
     setIsGenerating(true);
 
@@ -300,7 +300,7 @@ export default function ImageGenerationPage() {
                     onChange={(e) =>
                       setSettings((prev) => ({
                         ...prev,
-                        numImages: parseInt(e.target.value),
+                        numImages: parseInt(e.target.value, 10),
                       }))
                     }
                     className="rounded-lg border border-stroke-weak p-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
@@ -494,7 +494,7 @@ export default function ImageGenerationPage() {
                 onChange={(e) =>
                   setSettings((prev) => ({
                     ...prev,
-                    steps: parseInt(e.target.value),
+                    steps: parseInt(e.target.value, 10),
                   }))
                 }
                 className="w-full rounded-lg border border-stroke-weak p-2 focus:outline-none focus:ring-2 focus:ring-purple-500"

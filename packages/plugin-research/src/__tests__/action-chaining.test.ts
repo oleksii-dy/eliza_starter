@@ -20,21 +20,27 @@ import { v4 as uuidv4 } from 'uuid';
 
 // Simplified TestSuite implementation for local use
 class TestSuite {
-  constructor(private name: string, private config: any) {}
-  
+  constructor(
+    private name: string,
+    private config: any
+  ) {}
+
   addTest(test: any) {
     it(test.name, async () => {
       const context = this.config.beforeEach ? this.config.beforeEach() : {};
       await test.fn(context);
     });
   }
-  
+
   run() {
     // No-op, bun:test handles execution
   }
 }
 
-const createUnitTest = (config: { name: string; fn: (context?: any) => Promise<void> | void }) => config;
+const createUnitTest = (config: {
+  name: string;
+  fn: (context?: any) => Promise<void> | void;
+}) => config;
 
 // Extract individual actions from the array
 const researchAction = researchActions.find(
@@ -196,14 +202,17 @@ function createTestMemory(content: any): Memory {
 }
 
 describe('Action Chaining Integration Tests', () => {
-  const actionChainingTestSuite = new TestSuite('Action Chaining Integration Tests', {
-    beforeEach: () => {
-      return {
-        createSimpleRuntime,
-        createTestMemory,
-      };
-    },
-  });
+  const actionChainingTestSuite = new TestSuite(
+    'Action Chaining Integration Tests',
+    {
+      beforeEach: () => {
+        return {
+          createSimpleRuntime,
+          createTestMemory,
+        };
+      },
+    }
+  );
 
   actionChainingTestSuite.addTest(
     createUnitTest({
@@ -492,9 +501,9 @@ describe('Action Chaining Integration Tests', () => {
         expect(await researchAction.validate(runtimeNoService, message)).toBe(
           false
         );
-        expect(await checkStatusAction.validate(runtimeNoService, message)).toBe(
-          false
-        );
+        expect(
+          await checkStatusAction.validate(runtimeNoService, message)
+        ).toBe(false);
         expect(
           await pauseResearchAction.validate(runtimeNoService, message)
         ).toBe(false);

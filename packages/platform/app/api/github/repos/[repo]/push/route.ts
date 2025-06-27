@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { getServerSession, authOptions } from '@/lib/auth/auth-config';
 import { GitHubService } from '@/lib/services/github-service';
 import { getSql } from '@/lib/database';
 
-export async function handlePOST(
+async function handlePOST(
   request: NextRequest,
   { params }: { params: Promise<{ repo: string }> },
 ) {
@@ -184,3 +185,5 @@ async function getUserGitHubToken(userId: string): Promise<string | null> {
     return null;
   }
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

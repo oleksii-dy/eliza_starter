@@ -122,7 +122,7 @@ class StorageManager {
           path.join(process.cwd(), 'data', 'storage'),
         baseUrl: process.env.STORAGE_BASE_URL || '/storage',
         maxFileSize: process.env.STORAGE_MAX_FILE_SIZE
-          ? parseInt(process.env.STORAGE_MAX_FILE_SIZE)
+          ? parseInt(process.env.STORAGE_MAX_FILE_SIZE, 10)
           : 100 * 1024 * 1024,
       },
     };

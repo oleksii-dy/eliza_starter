@@ -79,7 +79,7 @@ export const db = {
     },
     findByEmail: async (email: string): Promise<User | null> => {
       for (const user of Array.from(users.values())) {
-        if (user.email === email) return user;
+        if (user.email === email) {return user;}
       }
       return null;
     },
@@ -88,7 +88,7 @@ export const db = {
     },
     update: async (id: string, data: Partial<User>): Promise<User | null> => {
       const user = users.get(id);
-      if (!user) return null;
+      if (!user) {return null;}
       const updated = { ...user, ...data, updatedAt: new Date() };
       users.set(id, updated);
       return updated;
@@ -107,14 +107,14 @@ export const db = {
     },
     findByKey: async (key: string): Promise<ApiKey | null> => {
       for (const apiKey of Array.from(apiKeys.values())) {
-        if (apiKey.key === key) return apiKey;
+        if (apiKey.key === key) {return apiKey;}
       }
       return null;
     },
     findByUserId: async (userId: string): Promise<ApiKey[]> => {
       const userKeys: ApiKey[] = [];
       for (const apiKey of Array.from(apiKeys.values())) {
-        if (apiKey.userId === userId) userKeys.push(apiKey);
+        if (apiKey.userId === userId) {userKeys.push(apiKey);}
       }
       return userKeys;
     },
@@ -147,7 +147,7 @@ export const db = {
     findByOwnerId: async (ownerId: string): Promise<Organization[]> => {
       const userOrgs: Organization[] = [];
       for (const org of Array.from(organizations.values())) {
-        if (org.ownerId === ownerId) userOrgs.push(org);
+        if (org.ownerId === ownerId) {userOrgs.push(org);}
       }
       return userOrgs;
     },
@@ -156,7 +156,7 @@ export const db = {
   subscriptions: {
     findByUserId: async (userId: string): Promise<Subscription | null> => {
       for (const sub of Array.from(subscriptions.values())) {
-        if (sub.userId === userId) return sub;
+        if (sub.userId === userId) {return sub;}
       }
       return null;
     },

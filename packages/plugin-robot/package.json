@@ -91,7 +91,7 @@
     "clean": "rm -rf dist && rm -rf .turbo",
     "lint": "eslint src --fix && prettier --write ./src",
     "typecheck": "tsc --noEmit",
-    "test": "bun test src/",
+    "test": "bun test",
     "test:e2e:pipeline": "bash scripts/run-e2e-tests.sh",
     "test:capture": "bun run src/tests/e2e/run-capture-log.ts",
     "demo": "tsx scripts/demo-robot-control.ts",

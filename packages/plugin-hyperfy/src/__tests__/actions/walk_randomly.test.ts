@@ -195,7 +195,7 @@ describe('HYPERFY_WALK_RANDOMLY Action', () => {
     });
 
     it('should have properly formatted examples', () => {
-      hyperfyWalkRandomlyAction.examples!.forEach((example) => {
+      hyperfyWalkRandomlyAction.examples!.forEach((example: any) => {
         expect(Array.isArray(example)).toBe(true);
         expect(example.length).toBe(2);
 

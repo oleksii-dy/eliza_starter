@@ -3,6 +3,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { z } from 'zod';
 
 // Use dynamic imports to avoid database connection during build
@@ -43,7 +44,7 @@ const updateCharacterSchema = z.object({
 /**
  * GET /api/characters/[id] - Get character by ID
  */
-export async function handleGET(
+async function handleGET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -257,3 +258,5 @@ export async function DELETE(
     );
   }
 }
+
+export const { GET } = wrapHandlers({ handleGET });

@@ -416,7 +416,9 @@ export function parseAmountSafe(value: unknown): TokenAmount | null {
     if (typeof value === 'string' || typeof value === 'number' || isBigInt(value)) {
       return asTokenAmount(value);
     }
-  } catch {}
+  } catch (error) {
+    console.debug('Token amount conversion failed:', error);
+  }
   return null;
 }
 

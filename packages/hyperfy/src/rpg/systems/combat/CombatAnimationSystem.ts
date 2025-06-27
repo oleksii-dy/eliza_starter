@@ -6,7 +6,7 @@
 import { System } from '../../../core/systems/System'
 import type { World, Entity } from '../../../types'
 import { THREE } from '../../../core/extras/three'
-import { COMBAT_ANIMATIONS, AnimationDefinition, CombatStyle, WeaponType } from './CombatDefinitions'
+import { COMBAT_ANIMATIONS, AnimationDefinition, AnimationFrame, CombatStyle, WeaponType } from './CombatDefinitions'
 
 interface ActiveAnimation {
   id: string
@@ -617,14 +617,14 @@ export class CombatAnimationSystem extends System {
     }
 
     // Find current frame
-    let currentFrame = null
-    let nextFrame = null
+    let currentFrame: AnimationFrame | null = null
+    let nextFrame: AnimationFrame | null = null
 
     for (let i = 0; i < animationDef.frames.length; i++) {
       const frame = animationDef.frames[i]
       if (frame.time <= elapsed) {
         currentFrame = frame
-        nextFrame = animationDef.frames[i + 1] || frame
+        nextFrame = animationDef.frames[i + 1] || null
       } else {
         break
       }

@@ -80,16 +80,21 @@ describe('McpViewer', () => {
   });
 
   it('should fetch and display servers', async () => {
-    let getAllByText: any;
+    let container: any;
     await act(async () => {
       const result = render(<McpViewer agentId="test-agent" />);
-      getAllByText = result.getAllByText;
+      container = result.container;
     });
 
     await waitFor(
       () => {
-        expect(getAllByText('test-server-1').length).toBeGreaterThan(0);
-        expect(getAllByText('test-server-2').length).toBeGreaterThan(0);
+        const serverItems = container.querySelectorAll('.server-item');
+        expect(serverItems.length).toBe(2);
+        
+        const serverNames = container.querySelectorAll('.server-name');
+        const serverNameTexts = Array.from(serverNames).map((el: any) => el.textContent);
+        expect(serverNameTexts).toContain('test-server-1');
+        expect(serverNameTexts).toContain('test-server-2');
       },
       { timeout: 3000 }
     );
@@ -98,23 +103,26 @@ describe('McpViewer', () => {
   });
 
   it('should display connection statistics', async () => {
-    let getAllByText: any;
+    let container: any;
     await act(async () => {
       const result = render(<McpViewer agentId="test-agent" />);
-      getAllByText = result.getAllByText;
+      container = result.container;
     });
 
     await waitFor(
       () => {
-        // Use getAllByText since elements appear multiple times
-        const totals = getAllByText('Total');
-        expect(totals.length).toBeGreaterThan(0);
-        const twos = getAllByText('2');
-        expect(twos.length).toBeGreaterThan(0);
-        const connected = getAllByText('Connected');
-        expect(connected.length).toBeGreaterThan(0);
-        const ones = getAllByText('1');
-        expect(ones.length).toBeGreaterThan(0);
+        const statsSection = container.querySelector('.connection-stats');
+        expect(statsSection).not.toBeNull();
+        
+        const statLabels = container.querySelectorAll('.stat-label');
+        const labelTexts = Array.from(statLabels).map((el: any) => el.textContent);
+        expect(labelTexts).toContain('Total');
+        expect(labelTexts).toContain('Connected');
+        
+        const statValues = container.querySelectorAll('.stat-value');
+        const valueTexts = Array.from(statValues).map((el: any) => el.textContent?.trim());
+        expect(valueTexts).toContain('2');
+        expect(valueTexts).toContain('1');
       },
       { timeout: 3000 }
     );
@@ -123,21 +131,25 @@ describe('McpViewer', () => {
   it('should handle server selection', async () => {
     const user = userEvent.setup({ delay: null });
 
-    let getByText: any;
+    let container: any, getByText: any;
     await act(async () => {
       const result = render(<McpViewer agentId="test-agent" />);
+      container = result.container;
       getByText = result.getByText;
     });
 
     await waitFor(
       () => {
-        expect(getByText('test-server-1')).toBeInTheDocument();
+        const serverItems = container.querySelectorAll('.server-item');
+        expect(serverItems.length).toBe(2);
       },
       { timeout: 3000 }
     );
 
+    // Click on the first server
+    const firstServerItem = container.querySelector('.server-item');
     await act(async () => {
-      await user.click(getByText('test-server-1'));
+      await user.click(firstServerItem);
     });
 
     expect(getByText('Tools (2)')).toBeInTheDocument();
@@ -147,53 +159,75 @@ describe('McpViewer', () => {
   it('should switch between tools and resources tabs', async () => {
     const user = userEvent.setup({ delay: null });
 
-    let getByText: any;
+    let container: any;
     await act(async () => {
       const result = render(<McpViewer agentId="test-agent" />);
-      getByText = result.getByText;
+      container = result.container;
     });
 
     await waitFor(
       () => {
-        expect(getByText('test-server-1')).toBeInTheDocument();
+        const serverItems = container.querySelectorAll('.server-item');
+        expect(serverItems.length).toBe(2);
       },
       { timeout: 3000 }
     );
 
+    // Click on the first server
+    const firstServerItem = container.querySelector('.server-item');
     await act(async () => {
-      await user.click(getByText('test-server-1'));
+      await user.click(firstServerItem);
     });
 
     // Tools tab should be active by default
-    expect(getByText('tool1')).toBeInTheDocument();
-    expect(getByText('tool2')).toBeInTheDocument();
+    await waitFor(() => {
+      const toolItems = container.querySelectorAll('.tool-item');
+      expect(toolItems.length).toBe(2);
+      
+      const toolNames = container.querySelectorAll('.tool-name');
+      const toolNameTexts = Array.from(toolNames).map((el: any) => el.textContent);
+      expect(toolNameTexts).toContain('tool1');
+      expect(toolNameTexts).toContain('tool2');
+    }, { timeout: 3000 });
 
-    // Switch to resources tab
+    // Switch to resources tab - use class selector instead of text
     await act(async () => {
-      await user.click(getByText('Resources (1)'));
+      const tabButtons = container.querySelectorAll('.tab');
+      const resourcesTab = Array.from(tabButtons).find((button: any) => 
+        button.textContent?.includes('Resources')
+      );
+      if (resourcesTab) {
+        await user.click(resourcesTab);
+      }
     });
 
-    expect(getByText('Resource 1')).toBeInTheDocument();
+    // Verify resource is displayed
+    await waitFor(() => {
+      const resourceNames = container.querySelectorAll('.resource-name');
+      const resourceNameTexts = Array.from(resourceNames).map((el: any) => el.textContent);
+      expect(resourceNameTexts).toContain('Resource 1');
+    }, { timeout: 3000 });
   });
 
   it('should handle reconnection', async () => {
     const user = userEvent.setup({ delay: null });
 
-    let getByText: any, getAllByText: any;
+    let container: any;
     await act(async () => {
       const result = render(<McpViewer agentId="test-agent" />);
-      getByText = result.getByText;
-      getAllByText = result.getAllByText;
+      container = result.container;
     });
 
     await waitFor(
       () => {
-        expect(getByText('test-server-2')).toBeInTheDocument();
+        const serverItems = container.querySelectorAll('.server-item');
+        expect(serverItems.length).toBe(2);
       },
       { timeout: 3000 }
     );
 
-    const reconnectButton = getAllByText('Reconnect')[0];
+    const reconnectButton = container.querySelector('.reconnect-btn');
+    expect(reconnectButton).not.toBeNull();
 
     await act(async () => {
       await user.click(reconnectButton);
@@ -221,23 +255,37 @@ describe('McpViewer', () => {
       });
     });
 
-    let getByText: any, getByPlaceholderText: any;
+    let container: any, getByText: any, getByPlaceholderText: any;
     await act(async () => {
       const result = render(<McpViewer agentId="test-agent" />);
+      container = result.container;
       getByText = result.getByText;
       getByPlaceholderText = result.getByPlaceholderText;
     });
 
     await waitFor(
       () => {
-        expect(getByText('test-server-1')).toBeInTheDocument();
+        const serverItems = container.querySelectorAll('.server-item');
+        expect(serverItems.length).toBe(2);
       },
       { timeout: 3000 }
     );
 
+    // Click on the first server
+    const firstServerItem = container.querySelector('.server-item');
     await act(async () => {
-      await user.click(getByText('test-server-1'));
-      await user.click(getByText('tool2'));
+      await user.click(firstServerItem);
+    });
+    
+    // Wait for tools to load and click on the second tool
+    await waitFor(() => {
+      const toolItems = container.querySelectorAll('.tool-item');
+      expect(toolItems.length).toBe(2);
+    }, { timeout: 3000 });
+
+    const secondToolItem = container.querySelectorAll('.tool-item')[1];
+    await act(async () => {
+      await user.click(secondToolItem);
     });
 
     const input = getByPlaceholderText('arg1');
@@ -276,23 +324,49 @@ describe('McpViewer', () => {
       });
     });
 
-    let getByText: any;
+    let container: any, getByText: any;
     await act(async () => {
       const result = render(<McpViewer agentId="test-agent" />);
+      container = result.container;
       getByText = result.getByText;
     });
 
     await waitFor(
       () => {
-        expect(getByText('test-server-1')).toBeInTheDocument();
+        const serverItems = container.querySelectorAll('.server-item');
+        expect(serverItems.length).toBe(2);
       },
       { timeout: 3000 }
     );
 
+    // Click on the first server
+    const firstServerItem = container.querySelector('.server-item');
     await act(async () => {
-      await user.click(getByText('test-server-1'));
-      await user.click(getByText('Resources (1)'));
-      await user.click(getByText('Resource 1'));
+      await user.click(firstServerItem);
+    });
+    
+    // Switch to resources tab using class selector
+    await act(async () => {
+      const tabButtons = container.querySelectorAll('.tab');
+      const resourcesTab = Array.from(tabButtons).find((button: any) => 
+        button.textContent?.includes('Resources')
+      );
+      if (resourcesTab) {
+        await user.click(resourcesTab);
+      }
+    });
+    
+    // Click on the first resource using class selector
+    await act(async () => {
+      await waitFor(() => {
+        const resourceItems = container.querySelectorAll('.resource-item');
+        expect(resourceItems.length).toBeGreaterThan(0);
+      });
+      
+      const firstResourceItem = container.querySelector('.resource-item');
+      if (firstResourceItem) {
+        await user.click(firstResourceItem);
+      }
     });
 
     await waitFor(
@@ -324,22 +398,26 @@ describe('McpViewer', () => {
   });
 
   it('should display empty state when no server is selected', async () => {
-    let getByText: any;
+    let container: any, getByText: any;
     await act(async () => {
       const result = render(<McpViewer agentId="test-agent" />);
+      container = result.container;
       getByText = result.getByText;
     });
 
     // Wait for servers to load
     await waitFor(
       () => {
-        expect(getByText('test-server-1')).toBeInTheDocument();
+        const serverItems = container.querySelectorAll('.server-item');
+        expect(serverItems.length).toBe(2);
       },
       { timeout: 3000 }
     );
 
     // The empty state message should be visible when no server is selected
-    expect(getByText('Select a server to view its tools and resources')).toBeInTheDocument();
+    const emptyState = container.querySelector('.mcp-empty');
+    expect(emptyState).not.toBeNull();
+    expect(emptyState.textContent).toContain('Select a server to view its tools and resources');
   });
 
   it('should handle empty servers list', async () => {

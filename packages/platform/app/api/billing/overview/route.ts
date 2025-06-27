@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { authService } from '@/lib/auth/session';
 import {
   getCreditBalance,
@@ -12,7 +13,7 @@ import {
 import { getDatabase, organizations } from '@/lib/database';
 import { eq } from 'drizzle-orm';
 
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     // Get current user session
     const user = await authService.getCurrentUser();
@@ -91,3 +92,5 @@ export async function handleGET(request: NextRequest) {
     );
   }
 }
+
+export const { GET } = wrapHandlers({ handleGET });

@@ -63,7 +63,7 @@ describe('Base Adapter Comprehensive Tests', () => {
         metadata: { type: 'test' },
       },
     ]);
-  }, 30000);
+  });
 
   afterAll(async () => {
     if (cleanup) {

@@ -3,13 +3,13 @@ import type { UUID } from '@elizaos/core';
 // Extend the core service types with autonomous service
 declare module '@elizaos/core' {
   interface ServiceTypeRegistry {
-    AUTONOMOUS: 'autonomous';
+    AUTONOMOUS: 'AUTONOMOUS';
   }
 }
 
 // Export service type constant
 export const AutonomousServiceType = {
-  AUTONOMOUS: 'autonomous' as const,
+  AUTONOMOUS: 'AUTONOMOUS' as const,
 } satisfies Partial<import('@elizaos/core').ServiceTypeRegistry>;
 
 export enum EventType {
@@ -42,7 +42,7 @@ export interface Observation {
   timestamp: number;
   type: ObservationType;
   source: string;
-  data: any;
+  data: unknown;
   relevance: number;
 }
 
@@ -133,7 +133,7 @@ export interface ActionExecution {
   startTime: number;
   endTime?: number;
   status: ActionStatus;
-  result?: any;
+  result?: unknown;
   error?: Error;
   resourcesUsed: ResourceUsage;
 }
@@ -154,7 +154,7 @@ export interface LogEntry {
   level: LogLevel;
   phase: OODAPhase;
   message: string;
-  data?: any;
+  data?: unknown;
   error?: Error;
 }
 

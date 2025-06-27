@@ -3,6 +3,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
+
 // Use dynamic imports to avoid database connection during build
 const getAgentService = () =>
   import('@/lib/agents/service').then((m) => m.agentService);
@@ -12,7 +14,7 @@ const getAuthService = () =>
 /**
  * POST /api/agents/[id]/deploy - Deploy an agent (start runtime)
  */
-export async function handlePOST(
+async function handlePOST(
   request: NextRequest,
   props: { params: Promise<{ id: string }> },
 ) {
@@ -84,3 +86,5 @@ export async function handlePOST(
     );
   }
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

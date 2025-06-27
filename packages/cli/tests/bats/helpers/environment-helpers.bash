@@ -196,7 +196,7 @@ create_test_project_with_agents() {
   "main": "./src/index.js",
   "scripts": {
     "start": "elizaos start",
-    "test": "elizaos test"
+    "test": "bun test & elizaos test"
   },
   "dependencies": {
     "@elizaos/core": "latest",

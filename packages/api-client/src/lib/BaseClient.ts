@@ -100,9 +100,9 @@ export abstract class BaseApiClient {
           'error' in data
             ? data.error
             : {
-              code: 'UNKNOWN_ERROR',
-              message: 'An unknown error occurred',
-            };
+                code: 'UNKNOWN_ERROR',
+                message: 'An unknown error occurred',
+              };
         throw new ApiError(error.code, error.message, error.details, response.status);
       }
 

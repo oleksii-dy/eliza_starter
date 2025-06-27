@@ -1,5 +1,5 @@
-import { System } from './System.js'
-import type { World, Events as IEvents } from '../../types/index.js'
+import { System } from './System.js';
+import type { World, Events as IEvents } from '../../types/index.js';
 
 type EventCallback = (data?: any, extra?: any) => void
 
@@ -11,61 +11,61 @@ type EventCallback = (data?: any, extra?: any) => void
  *
  */
 export class Events extends System implements IEvents {
-  private eventListeners: Map<string | symbol, Set<EventCallback>>
+  private eventListeners: Map<string | symbol, Set<EventCallback>>;
 
   constructor(world: World) {
-    super(world)
-    this.eventListeners = new Map()
+    super(world);
+    this.eventListeners = new Map();
   }
 
   emit<T extends string | symbol>(event: T, ...args: any[]): boolean {
     // Extract data and extra from args for backward compatibility
-    const [data, extra] = args
-    const callbacks = this.eventListeners.get(event)
+    const [data, extra] = args;
+    const callbacks = this.eventListeners.get(event);
     if (!callbacks) {
-      return false
+      return false;
     }
 
     for (const callback of callbacks) {
       try {
-        callback(data, extra)
+        callback(data, extra);
       } catch (err) {
-        console.error(`Error in event listener for '${String(event)}':`, err)
+        console.error(`Error in event listener for '${String(event)}':`, err);
       }
     }
-    return true
+    return true;
   }
 
   on<T extends string | symbol>(event: T, fn: (...args: any[]) => void, context?: any): this {
     if (!this.eventListeners.has(event)) {
-      this.eventListeners.set(event, new Set())
+      this.eventListeners.set(event, new Set());
     }
     // Wrap the function to handle the context if provided
-    const handler = context ? fn.bind(context) : fn
-    this.eventListeners.get(event)!.add(handler)
-    return this
+    const handler = context ? fn.bind(context) : fn;
+    this.eventListeners.get(event)!.add(handler);
+    return this;
   }
 
   off<T extends string | symbol>(event: T, fn?: (...args: any[]) => void, _context?: any, _once?: boolean): this {
     if (!fn) {
       // Remove all listeners for this event
-      this.eventListeners.delete(event)
-      return this
+      this.eventListeners.delete(event);
+      return this;
     }
 
-    const callbacks = this.eventListeners.get(event)
+    const callbacks = this.eventListeners.get(event);
     if (callbacks) {
       // If context was provided, we need to find the bound version
       // For simplicity, just remove the function as-is
-      callbacks.delete(fn)
+      callbacks.delete(fn);
       if (callbacks.size === 0) {
-        this.eventListeners.delete(event)
+        this.eventListeners.delete(event);
       }
     }
-    return this
+    return this;
   }
 
   override destroy(): void {
-    this.eventListeners.clear()
+    this.eventListeners.clear();
   }
 }

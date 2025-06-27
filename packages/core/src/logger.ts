@@ -1,394 +1,249 @@
-import pino, { type DestinationStream, type LogFn } from 'pino';
-import { Sentry } from './sentry/instrument';
+/**
+ * Simple cross-platform logger that works in both Node.js and browsers
+ */
 
-// Local utility function to avoid circular dependency
-function parseBooleanFromText(value: string | undefined | null): boolean {
-  if (!value) {
-    return false;
-  }
-  const normalized = value.toLowerCase().trim();
-  return normalized === 'true' || normalized === '1' || normalized === 'yes' || normalized === 'on';
+// Type declaration for browser window
+declare const window: { localStorage?: Storage } | undefined;
+
+// Log levels
+export enum LogLevel {
+  TRACE = 10,
+  DEBUG = 20,
+  SUCCESS = 27,
+  PROGRESS = 28,
+  LOG = 29,
+  INFO = 30,
+  WARN = 40,
+  ERROR = 50,
+  FATAL = 60,
 }
 
-/**
- * Interface representing a log entry.
- * @property {number} [time] - The timestamp of the log entry.
- * @property {unknown} [key] - Additional properties that can be added to the log entry.
- */
-/**
- * Interface representing a log entry.
- * @typedef {Object} LogEntry
- * @property {number} [time] - The time the log entry was created.
- * @property {string} key - The key for the log entry.
- * @property {unknown} value - The value associated with the key in the log entry.
- */
+// Level names for display
+const levelNames: Record<number, string> = {
+  10: 'TRACE',
+  20: 'DEBUG',
+  27: 'SUCCESS',
+  28: 'PROGRESS',
+  29: 'LOG',
+  30: 'INFO',
+  40: 'WARN',
+  50: 'ERROR',
+  60: 'FATAL',
+};
+
+// Color codes for different levels (ANSI codes for terminal, ignored in browser)
+const levelColors: Record<number, string> = {
+  10: '\x1b[90m',     // TRACE - gray
+  20: '\x1b[35m',     // DEBUG - magenta
+  27: '\x1b[92m',     // SUCCESS - bright green
+  28: '\x1b[36m',     // PROGRESS - cyan
+  29: '\x1b[32m',     // LOG - green
+  30: '\x1b[34m',     // INFO - blue
+  40: '\x1b[33m',     // WARN - yellow
+  50: '\x1b[31m',     // ERROR - red
+  60: '\x1b[91m',     // FATAL - bright red
+};
+
+const RESET = '\x1b[0m';
+
 interface LogEntry {
-  time?: number;
-  [key: string]: unknown;
+  time: number;
+  level: number;
+  msg: string;
+  [key: string]: any;
 }
 
-// Custom destination that maintains recent logs in memory
-/**
- * Class representing an in-memory destination stream for logging.
- * Implements DestinationStream interface with proper Node.js stream compatibility.
- */
-class InMemoryDestination implements DestinationStream {
+export class Logger {
+  private level: LogLevel = LogLevel.INFO;
   private logs: LogEntry[] = [];
-  private maxLogs = 1000; // Keep last 1000 logs
-  private stream: DestinationStream | null;
-
-  // Add required stream properties
-  public readonly writable = true;
-  public readonly readable = false;
-
-  /**
-   * Constructor for creating a new instance of the class.
-   * @param {DestinationStream|null} stream - The stream to assign to the instance. Can be null.
-   */
-  constructor(stream: DestinationStream | null) {
-    this.stream = stream;
+  private maxLogs = 1000;
+  private useColors = true;
+  
+  constructor() {
+    // Set log level from environment
+    if (typeof process !== 'undefined' && process.env) {
+      const envLevel = process.env.LOG_LEVEL?.toLowerCase();
+      if (envLevel === 'trace') this.level = LogLevel.TRACE;
+      else if (envLevel === 'debug') this.level = LogLevel.DEBUG;
+      else if (envLevel === 'info') this.level = LogLevel.INFO;
+      else if (envLevel === 'warn') this.level = LogLevel.WARN;
+      else if (envLevel === 'error') this.level = LogLevel.ERROR;
+      else if (envLevel === 'fatal') this.level = LogLevel.FATAL;
+      
+      // Check if we should use colors
+      this.useColors = process.env.NO_COLOR !== '1' && process.env.FORCE_COLOR !== '0';
+    }
+    
+    // In browser, check localStorage for log level
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const storedLevel = window.localStorage.getItem('LOG_LEVEL');
+      if (storedLevel) {
+        const level = parseInt(storedLevel);
+        if (!isNaN(level)) this.level = level;
+      }
+    }
   }
-
-  /**
-   * Writes a log entry to the memory buffer and forwards it to the pretty print stream if available.
-   *
-   * @param {string | LogEntry} data - The data to be written, which can be either a string or a LogEntry object.
-   * @returns {boolean} Returns true indicating the write was successful
-   */
-  write(data: string | LogEntry): boolean {
-    try {
-      // Parse the log entry if it's a string
-      let logEntry: LogEntry;
-      let stringData: string;
-
-      if (typeof data === 'string') {
-        stringData = data;
-        try {
-          logEntry = JSON.parse(data);
-        } catch (_e) {
-          // If it's not valid JSON, just pass it through
-          if (this.stream && typeof this.stream.write === 'function') {
-            this.stream.write(data);
-          }
-          return true;
-        }
-      } else {
-        logEntry = data;
-        stringData = JSON.stringify(data);
-      }
-
-      // Add timestamp if not present
-      if (!logEntry.time) {
-        logEntry.time = Date.now();
-      }
-
-      // Filter out service registration logs unless in debug mode
-      const isDebugMode = (process?.env?.LOG_LEVEL || '').toLowerCase() === 'debug';
-      const isLoggingDiagnostic = Boolean(process?.env?.LOG_DIAGNOSTIC);
-
-      if (isLoggingDiagnostic) {
-        // When diagnostic mode is on, add a marker to every log to see what's being processed
-        logEntry.diagnostic = true;
-      }
-
-      if (!isDebugMode) {
-        // Check if this is a service or agent log that we want to filter
-        if (logEntry.agentName && logEntry.agentId) {
-          const msg = logEntry.msg || '';
-          // Filter only service/agent registration logs, not all agent logs
-          if (
-            typeof msg === 'string' &&
-            (msg.includes('registered successfully') ||
-              msg.includes('Registering') ||
-              msg.includes('Success:') ||
-              msg.includes('linked to') ||
-              msg.includes('Started'))
-          ) {
-            if (isLoggingDiagnostic) {
-              console.error('Filtered log:', stringData);
-            }
-            // This is a service registration/agent log, skip it
-            return true;
-          }
+  
+  private shouldLog(level: LogLevel): boolean {
+    return level >= this.level;
+  }
+  
+  private formatMessage(level: LogLevel, message: string, data?: any): string {
+    const timestamp = new Date().toISOString();
+    const levelName = levelNames[level] || 'UNKNOWN';
+    
+    let formatted = `${timestamp} [${levelName}] ${message}`;
+    
+    if (data && Object.keys(data).length > 0) {
+      formatted += ' ' + JSON.stringify(data);
+    }
+    
+    // Add colors if in terminal
+    if (this.useColors && typeof process !== 'undefined') {
+      const color = levelColors[level] || '';
+      formatted = `${color}${formatted}${RESET}`;
+    }
+    
+    return formatted;
+  }
+  
+  private writeLog(level: LogLevel, message: string, ...args: any[]): void {
+    if (!this.shouldLog(level)) return;
+    
+    // Extract data object if provided
+    let data: any = {};
+    const messageParts: string[] = [message];
+    
+    for (const arg of args) {
+      if (typeof arg === 'string') {
+        messageParts.push(arg);
+      } else if (typeof arg === 'object' && arg !== null) {
+        if (arg instanceof Error) {
+          data.error = {
+            message: arg.message,
+            stack: arg.stack,
+          };
+        } else {
+          Object.assign(data, arg);
         }
       }
-
-      // Add to memory buffer
-      this.logs.push(logEntry);
-
-      // Maintain buffer size
-      if (this.logs.length > this.maxLogs) {
-        this.logs.shift();
-      }
-
-      // Forward to pretty print stream if available
-      if (this.stream && typeof this.stream.write === 'function') {
-        this.stream.write(stringData);
-      }
-
-      return true;
-    } catch (error) {
-      // Fail silently for logging to avoid infinite loops
-      console.error('Logger write error:', error);
-      return false;
+    }
+    
+    const fullMessage = messageParts.join(' ');
+    const logEntry: LogEntry = {
+      time: Date.now(),
+      level,
+      msg: fullMessage,
+      ...data,
+    };
+    
+    // Store in memory
+    this.logs.push(logEntry);
+    if (this.logs.length > this.maxLogs) {
+      this.logs.shift();
+    }
+    
+    // Output to console
+    const formatted = this.formatMessage(level, fullMessage, Object.keys(data).length > 0 ? data : undefined);
+    
+    if (level >= LogLevel.ERROR) {
+      console.error(formatted);
+    } else if (level >= LogLevel.WARN) {
+      console.warn(formatted);
+    } else {
+      console.log(formatted);
     }
   }
-
-  /**
-   * End method required by stream interface
-   */
-  end(): void {
-    if (this.stream && typeof (this.stream as any).end === 'function') {
-      (this.stream as any).end();
+  
+  // Log methods
+  trace(message: string, ...args: any[]): void {
+    this.writeLog(LogLevel.TRACE, message, ...args);
+  }
+  
+  debug(message: string, ...args: any[]): void {
+    this.writeLog(LogLevel.DEBUG, message, ...args);
+  }
+  
+  success(message: string, ...args: any[]): void {
+    this.writeLog(LogLevel.SUCCESS, message, ...args);
+  }
+  
+  progress(message: string, ...args: any[]): void {
+    this.writeLog(LogLevel.PROGRESS, message, ...args);
+  }
+  
+  log(message: string, ...args: any[]): void {
+    this.writeLog(LogLevel.LOG, message, ...args);
+  }
+  
+  info(message: string, ...args: any[]): void {
+    this.writeLog(LogLevel.INFO, message, ...args);
+  }
+  
+  warn(message: string, ...args: any[]): void {
+    this.writeLog(LogLevel.WARN, message, ...args);
+  }
+  
+  error(message: string | Error, ...args: any[]): void {
+    if (message instanceof Error) {
+      this.writeLog(LogLevel.ERROR, message.message, message, ...args);
+    } else {
+      this.writeLog(LogLevel.ERROR, message, ...args);
     }
   }
-
-  /**
-   * Destroy method required by stream interface
-   */
-  destroy(): void {
-    if (this.stream && typeof (this.stream as any).destroy === 'function') {
-      (this.stream as any).destroy();
-    }
+  
+  fatal(message: string, ...args: any[]): void {
+    this.writeLog(LogLevel.FATAL, message, ...args);
   }
-
-  /**
-   * Retrieves the recent logs from the system.
-   *
-   * @returns {LogEntry[]} An array of LogEntry objects representing the recent logs.
-   */
+  
+  // Get recent logs
   recentLogs(): LogEntry[] {
-    return this.logs;
+    return [...this.logs];
   }
-
-  /**
-   * Clears all logs from memory.
-   *
-   * @returns {void}
-   */
+  
+  // Clear logs
   clear(): void {
     this.logs = [];
   }
+  
+  // Set log level
+  setLevel(level: LogLevel): void {
+    this.level = level;
+  }
+  
+  // Get current log level
+  getLevel(): LogLevel {
+    return this.level;
+  }
 }
 
-const customLevels: Record<string, number> = {
-  fatal: 60,
-  error: 50,
-  warn: 40,
-  info: 30,
-  log: 29,
-  progress: 28,
-  success: 27,
-  debug: 20,
-  trace: 10,
-};
+// Create singleton logger instance
+export const logger = new Logger();
 
-const raw = parseBooleanFromText(process?.env?.LOG_JSON_FORMAT) || false;
-
-// Set default log level to info to allow regular logs, but still filter service logs
-const isDebugMode = (process?.env?.LOG_LEVEL || '').toLowerCase() === 'debug';
-const effectiveLogLevel = isDebugMode ? 'debug' : process?.env?.DEFAULT_LOG_LEVEL || 'info';
-
-// Create a function to generate the pretty configuration
-// Commented out - not currently used
-// const createPrettyConfig = () => ({
-//   colorize: true,
-//   translateTime: 'yyyy-mm-dd HH:MM:ss',
-//   ignore: 'pid,hostname',
-//   levelColors: {
-//     60: 'red', // fatal
-//     50: 'red', // error
-//     40: 'yellow', // warn
-//     30: 'blue', // info
-//     29: 'green', // log
-//     28: 'cyan', // progress
-//     27: 'greenBright', // success
-//     20: 'magenta', // debug
-//     10: 'grey', // trace
-//     '*': 'white', // default for any unspecified level
-//   },
-//   customPrettifiers: {
-//     level: (inputData: any) => {
-//       let level;
-//       if (typeof inputData === 'object' && inputData !== null) {
-//         level = inputData.level || inputData.value;
-//       } else {
-//         level = inputData;
-//       }
-
-//       const levelNames: Record<number, string> = {
-//         10: 'TRACE',
-//         20: 'DEBUG',
-//         27: 'SUCCESS',
-//         28: 'PROGRESS',
-//         29: 'LOG',
-//         30: 'INFO',
-//         40: 'WARN',
-//         50: 'ERROR',
-//         60: 'FATAL',
-//       };
-
-//       if (typeof level === 'number') {
-//         return levelNames[level] || `LEVEL${level}`;
-//       }
-
-//       if (level === undefined || level === null) {
-//         return 'UNKNOWN';
-//       }
-
-//       return String(level).toUpperCase();
-//     },
-//     // Add a custom prettifier for error messages
-//     msg: (msg: string | object) => {
-//       // If msg is an object, convert to string first
-//       const msgStr = typeof msg === 'string' ? msg : JSON.stringify(msg);
-//       // Replace "ERROR (TypeError):" pattern with just "ERROR:"
-//       return msgStr.replace(/ERROR \([^)]+\):/g, 'ERROR:');
-//     },
-//   },
-//   messageFormat: '{msg}',
-// });
-
-// Commented out unused stream creation
-// const _createStream = async () => {
-//   if (raw) {
-//     return undefined;
-//   }
-//   // dynamically import pretty to avoid importing it in the browser
-//   const pretty = await import('pino-pretty');
-//   return pretty.default(createPrettyConfig());
-// };
-
-// Create options with appropriate level
-const options = {
-  level: effectiveLogLevel, // Use more restrictive level unless in debug mode
-  customLevels,
-  hooks: {
-    logMethod(inputArgs: [string | Record<string, unknown>, ...unknown[]], method: LogFn): void {
-      const [arg1, ...rest] = inputArgs;
-      if (typeof process !== 'undefined' && process.env?.SENTRY_LOGGING !== 'false') {
-        if (arg1 instanceof Error) {
-          Sentry.captureException(arg1);
-        } else {
-          for (const item of rest) {
-            if (item instanceof Error) {
-              Sentry.captureException(item);
-            }
-          }
-        }
-      }
-
-      const formatError = (err: Error) => ({
-        message: `(${err.name}) ${err.message}`,
-        stack: err.stack?.split('\n').map((line) => line.trim()),
-      });
-
-      if (typeof arg1 === 'object') {
-        if (arg1 instanceof Error) {
-          // When arg1 is an Error, format it and log with message
-          const errorContext = { error: formatError(arg1) };
-          const messageParts = rest.map((arg) =>
-            typeof arg === 'string' ? arg : JSON.stringify(arg)
-          );
-          const message = messageParts.join(' ') || 'Error occurred';
-          // Call the method directly instead of using apply
-          (method as any).call(this, errorContext, message);
-        } else {
-          // When arg1 is a regular object, use it as context
-          const messageParts = rest.map((arg) =>
-            typeof arg === 'string' ? arg : JSON.stringify(arg)
-          );
-          const message = messageParts.join(' ');
-          if (message) {
-            // Call with object first, then message
-            (method as any).call(this, arg1, message);
-          } else {
-            // If no message, just log the object as a string
-            (method as any).call(this, JSON.stringify(arg1));
-          }
-        }
-      } else {
-        // When arg1 is a string, it's the message
-        const context: Record<string, unknown> = {};
-        const messageParts: string[] = [arg1 as string];
-
-        // Process rest arguments
-        for (const arg of rest) {
-          if (arg instanceof Error) {
-            context.error = formatError(arg);
-          } else if (typeof arg === 'string') {
-            messageParts.push(arg);
-          } else if (typeof arg === 'object' && arg !== null) {
-            Object.assign(context, arg);
-          }
-        }
-
-        const message = messageParts.join(' ');
-
-        // Only include context if it has properties
-        if (Object.keys(context).length > 0) {
-          (method as any).call(this, context, message);
-        } else {
-          (method as any).call(this, message);
-        }
-      }
-    },
-  },
-};
-
-// allow runtime logger to inherent options set here
-const createLogger = (bindings: any | boolean = false) => {
-  const opts: any = { ...options }; // shallow copy
+// Create logger factory function for compatibility
+export function createLogger(bindings?: any): Logger {
+  const newLogger = new Logger();
   if (bindings) {
-    //opts.level = process.env.LOG_LEVEL || 'info'
-    opts.base = bindings; // shallow change
-    opts.transport = {
-      target: 'pino-pretty', // this is just a string, not a dynamic import
-      options: {
-        colorize: true,
-        translateTime: 'SYS:standard',
-        ignore: 'pid,hostname',
-      },
-    };
-  }
-  const logger = pino(opts);
-  return logger;
-};
-
-// Create basic logger initially
-let logger = pino(options);
-// Add type for logger with clear method
-interface LoggerWithClear extends pino.Logger {
-  clear: () => void;
-}
-
-// Enhance logger with custom destination in Node.js environment
-if (typeof process !== 'undefined') {
-  // Create the destination with in-memory logging
-  const stream: DestinationStream | null = null;
-
-  if (!raw && typeof process !== 'undefined' && process.versions?.node) {
-    // Skip pino-pretty in browser environments
-    // In Node.js, stream will remain null if pino-pretty is not available
-  }
-
-  // Always create destination, even if stream is null (raw mode or fallback)
-  const destination = new InMemoryDestination(stream);
-  logger = pino(options, destination);
-  (logger as any)[Symbol.for('pino-destination')] = destination;
-
-  // Add clear method to logger
-  (logger as any as LoggerWithClear).clear = () => {
-    const dest = (logger as any)[Symbol.for('pino-destination')];
-    if (dest instanceof InMemoryDestination) {
-      dest.clear();
+    // In the simple logger, we'll just add bindings to all log methods
+    // This is a simplified approach
+    const methods: Array<keyof Logger> = ['trace', 'debug', 'success', 'progress', 'log', 'info', 'warn', 'error', 'fatal'];
+    
+    for (const method of methods) {
+      const original = (newLogger as any)[method].bind(newLogger);
+      (newLogger as any)[method] = function(message: string, ...args: any[]) {
+        // Merge bindings into the first data argument
+        if (args.length > 0 && typeof args[0] === 'object' && args[0] !== null && !(args[0] instanceof Error)) {
+          args[0] = { ...bindings, ...args[0] };
+        } else {
+          args.unshift(bindings);
+        }
+        original(message, ...args);
+      };
     }
-  };
+  }
+  return newLogger;
 }
 
-export { createLogger, logger };
-
-// for backward compatibility
+// For backward compatibility
 export const elizaLogger = logger;
-
-export default logger;
+export default logger; 

@@ -176,7 +176,7 @@ describe('Debug Memory Operations', () => {
       agentId,
       roomId,
       content: { text: 'Unique memory 1', type: 'unique' },
-      embedding: null,
+      embedding: undefined,
       unique: true,
       createdAt: Date.now(),
     };
@@ -187,7 +187,7 @@ describe('Debug Memory Operations', () => {
       agentId,
       roomId,
       content: { text: 'Unique memory 2', type: 'unique' },
-      embedding: null,
+      embedding: undefined,
       unique: true,
       createdAt: Date.now() + 1,
     };
@@ -201,6 +201,7 @@ describe('Debug Memory Operations', () => {
       roomId,
       count: 10,
       unique: true,
+      tableName: 'memories',
     });
 
     expect(uniqueMemories.length).toBe(2);

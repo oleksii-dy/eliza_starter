@@ -648,10 +648,10 @@ export class CryptoWalletService {
   ): Promise<boolean> {
     try {
       const chain = this.chains.get(topUpRequest.chain_id);
-      if (!chain) return false;
+      if (!chain) {return false;}
 
       const provider = this.providers.get(topUpRequest.chain_id);
-      if (!provider) return false;
+      if (!provider) {return false;}
 
       // Get recent transactions for the wallet address
       const latestBlock = await provider.getBlockNumber();

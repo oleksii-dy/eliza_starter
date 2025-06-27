@@ -159,11 +159,11 @@ export async function hyperfyMessageReceivedHandler({
 
         const responseMessages = responseContent
           ? // @ts-ignore - Callback type issue
-            await callback({
-              ...responseContent,
-              // @ts-ignore - Type safety
-              roomId: message?.roomId,
-            })
+          await callback({
+            ...responseContent,
+            // @ts-ignore - Type safety
+            roomId: message?.roomId,
+          })
           : [];
 
         // Clean up the response tracking

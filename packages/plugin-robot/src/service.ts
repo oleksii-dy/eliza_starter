@@ -242,7 +242,7 @@ export class VisionService extends Service {
       // Start processing based on mode
       this.startProcessing();
     } catch (_error) {
-      logger._error('[VisionService] Failed to initialize:', _error);
+      logger.error('[VisionService] Failed to initialize:', _error);
     }
   }
 
@@ -268,7 +268,7 @@ export class VisionService extends Service {
 
       logger.info('[VisionService] Screen vision initialized');
     } catch (_error) {
-      logger._error('[VisionService] Failed to initialize screen vision:', _error);
+      logger.error('[VisionService] Failed to initialize screen vision:', _error);
     }
   }
 
@@ -324,7 +324,7 @@ export class VisionService extends Service {
         'ms'
       );
     } catch (_error) {
-      logger._error('[VisionService] Failed to initialize audio capture:', _error);
+      logger.error('[VisionService] Failed to initialize audio capture:', _error);
       // Don't fail the whole service if audio fails
     }
   }
@@ -359,7 +359,7 @@ export class VisionService extends Service {
         try {
           await this.captureAndProcessFrame();
         } catch (_error) {
-          logger._error('[VisionService] Frame processing _error:', _error);
+          logger.error('[VisionService] Frame processing _error:', _error);
         }
         this.isProcessing = false;
       }
@@ -391,7 +391,7 @@ export class VisionService extends Service {
 
       this.lastFrame = frame;
     } catch (_error) {
-      logger._error('[VisionService] Error capturing frame:', _error);
+      logger.error('[VisionService] Error capturing frame:', _error);
     }
   }
 
@@ -678,7 +678,7 @@ export class VisionService extends Service {
         }
       }
     } catch (_error) {
-      logger._error('[VisionService] Failed to update scene description:', _error);
+      logger.error('[VisionService] Failed to update scene description:', _error);
     }
   }
 
@@ -700,7 +700,7 @@ export class VisionService extends Service {
 
       return textResult as string;
     } catch (_error) {
-      logger._error('[VisionService] VLM description failed:', _error);
+      logger.error('[VisionService] VLM description failed:', _error);
       return 'Unable to describe scene';
     }
   }
@@ -918,7 +918,7 @@ export class VisionService extends Service {
         try {
           await this.captureAndProcessScreen();
         } catch (_error) {
-          logger._error('[VisionService] Screen processing _error:', _error);
+          logger.error('[VisionService] Screen processing _error:', _error);
         }
         this.isProcessingScreen = false;
       }
@@ -943,7 +943,7 @@ export class VisionService extends Service {
       // Update enhanced scene description
       await this.updateEnhancedSceneDescription();
     } catch (_error) {
-      logger._error('[VisionService] Error capturing screen:', _error);
+      logger.error('[VisionService] Error capturing screen:', _error);
     }
   }
 
@@ -975,7 +975,7 @@ export class VisionService extends Service {
         }));
       }
     } catch (_error) {
-      logger._error('[VisionService] Error analyzing tile:', _error);
+      logger.error('[VisionService] Error analyzing tile:', _error);
     }
 
     return analysis;
@@ -1210,7 +1210,7 @@ export class VisionService extends Service {
       // Use first available camera
       return this.createCameraDevice(cameras[0]);
     } catch (_error) {
-      logger._error('[VisionService] Error finding camera:', _error);
+      logger.error('[VisionService] Error finding camera:', _error);
       return null;
     }
   }
@@ -1281,7 +1281,7 @@ export class VisionService extends Service {
 
       return [];
     } catch (_error) {
-      logger._error('[VisionService] Error listing cameras:', _error);
+      logger.error('[VisionService] Error listing cameras:', _error);
       return [];
     }
   }
@@ -1359,7 +1359,7 @@ export class VisionService extends Service {
     try {
       return await this.camera.capture();
     } catch (_error) {
-      logger._error('[VisionService] Failed to capture image:', _error);
+      logger.error('[VisionService] Failed to capture image:', _error);
       return null;
     }
   }

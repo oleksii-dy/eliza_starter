@@ -12,8 +12,8 @@ import {
   asUUID,
   findEntityByName,
 } from '@elizaos/core';
-import { PaymentService } from '../services/PaymentService.js';
-import { MidnightNetworkError } from '../types/index.js';
+import { PaymentService } from '../services/PaymentService';
+import { MidnightNetworkError } from '../types/index';
 
 export const requestPaymentAction: Action = {
   name: 'REQUEST_PAYMENT',

@@ -257,8 +257,8 @@ export class MarketplaceService {
 
       if (filters.searchQuery) {
         conditions.push(
-          sql`(${marketplaceAssets.name} ILIKE ${'%' + filters.searchQuery + '%'} OR 
-               ${marketplaceAssets.description} ILIKE ${'%' + filters.searchQuery + '%'})`,
+          sql`(${marketplaceAssets.name} ILIKE ${`%${filters.searchQuery}%`} OR 
+               ${marketplaceAssets.description} ILIKE ${`%${filters.searchQuery}%`})`,
         );
       }
 

@@ -1,19 +1,19 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { NetworkMessagingService } from '../services/NetworkMessagingService.js';
-import { MidnightNetworkService } from '../services/MidnightNetworkService.js';
-import { proofGenerator } from '../utils/proofGenerator.js';
-import { createTestRuntime } from './test-utils.js';
+import { NetworkMessagingService } from '../services/NetworkMessagingService';
+import { MidnightNetworkService } from '../services/MidnightNetworkService';
+import { proofGenerator } from '../utils/proofGenerator';
+import { createTestRuntime } from './test-utils';
 import type { IAgentRuntime } from '@elizaos/core';
 
 /**
  * Network Messaging Tests - Verify Real Network Communication
  * Tests actual network messaging functionality vs simulation
- * 
+ *
  * NOTE: These tests are skipped by default because they require:
  * - Running Midnight Network infrastructure (indexer, node, proof server)
  * - Valid network connectivity
  * - Proper wallet/mnemonic configuration
- * 
+ *
  * To run these tests, remove the .skip and ensure external services are available.
  */
 describe.skip('Network Messaging Service - Real Network Verification', () => {
@@ -23,7 +23,8 @@ describe.skip('Network Messaging Service - Real Network Verification', () => {
 
   beforeEach(async () => {
     // Set up environment variables for midnight service
-    process.env.MIDNIGHT_WALLET_MNEMONIC = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about';
+    process.env.MIDNIGHT_WALLET_MNEMONIC =
+      'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about';
     process.env.MIDNIGHT_NETWORK_URL = 'https://rpc.testnet.midnight.network';
     process.env.MIDNIGHT_INDEXER_URL = 'http://localhost:8080';
     process.env.MIDNIGHT_INDEXER_WS_URL = 'ws://localhost:8080';
@@ -49,7 +50,7 @@ describe.skip('Network Messaging Service - Real Network Verification', () => {
     if (midnightService) {
       await midnightService.stop();
     }
-    
+
     // Clean up environment variables
     delete process.env.MIDNIGHT_WALLET_MNEMONIC;
     delete process.env.MIDNIGHT_NETWORK_URL;

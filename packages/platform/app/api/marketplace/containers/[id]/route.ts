@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { ContainerHostingService } from '@/lib/services/container-hosting';
 import { auth } from '@/lib/auth';
 
 const containerService = new ContainerHostingService();
 
-export async function handleGET(
+async function handleGET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -72,3 +73,5 @@ export async function DELETE(
     );
   }
 }
+
+export const { GET } = wrapHandlers({ handleGET });

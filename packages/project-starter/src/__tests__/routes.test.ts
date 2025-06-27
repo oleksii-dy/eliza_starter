@@ -27,11 +27,33 @@ describe('Plugin Routes', () => {
       const helloWorldRoute = plugin.routes.find((route) => route.path === '/helloworld');
 
       if (helloWorldRoute && helloWorldRoute.handler) {
-        // Create mock request and response objects
-        const mockReq = {};
+        // Create mock request and response objects with proper typing
+        const mockReq = {
+          method: 'GET',
+          url: '/helloworld',
+          path: '/helloworld',
+          query: {},
+          params: {},
+          body: {},
+          headers: {},
+          ip: '127.0.0.1',
+          user: undefined,
+          session: undefined,
+        } as any;
         const mockRes = {
           json: mock(),
-        };
+          statusCode: 200,
+          status: mock(),
+          send: mock(),
+          end: mock(),
+          writeHead: mock(),
+          setHeader: mock(),
+          getHeader: mock(),
+          removeHeader: mock(),
+          write: mock(),
+          on: mock(),
+          once: mock(),
+        } as any;
 
         // Mock runtime object as third parameter
 

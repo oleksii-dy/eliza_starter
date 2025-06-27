@@ -11,7 +11,7 @@ let isInitialized = false;
 let initPromise: Promise<void> | null = null;
 
 async function ensureDatabaseInitialized() {
-  if (isInitialized) return;
+  if (isInitialized) {return;}
 
   if (!initPromise) {
     initPromise = getDatabaseClientAsync()

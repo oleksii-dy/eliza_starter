@@ -349,7 +349,7 @@ export class GoogleVeoProvider extends BaseGenerationProvider {
     }
 
     if (request.seed_image_url) {
-      prompt += ` using the reference image`;
+      prompt += ' using the reference image';
     }
 
     return prompt;

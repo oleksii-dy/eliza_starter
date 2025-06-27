@@ -58,6 +58,85 @@ async function build() {
     '(() => { throw new Error("createRequire not available in browser"); })('
   );
 
+  // Handle __require calls for Node.js built-in modules
+  const nodeModules = [
+    'os',
+    'path',
+    'fs',
+    'url',
+    'util',
+    'stream',
+    'buffer',
+    'events',
+    'net',
+    'http',
+    'https',
+    'child_process',
+    'cluster',
+    'dns',
+    'readline',
+    'zlib',
+    'vm',
+  ];
+  const usedNodeModules = new Set<string>();
+
+  // First, collect all the node modules that are being required
+  nodeModules.forEach((moduleName) => {
+    if (content.includes(`__require("node:${moduleName}")`)) {
+      usedNodeModules.add(moduleName);
+    }
+  });
+
+  // Check for existing imports
+  const existingImports = new Map<string, string>();
+
+
+
+  // Check for other node module imports
+  nodeModules.forEach((moduleName) => {
+    const importMatch = content.match(
+      new RegExp(`import\\s+(\\w+)\\s+from\\s+["'](?:node:)?${moduleName}["'];?`)
+    );
+    if (importMatch) {
+      existingImports.set(moduleName, importMatch[1]);
+    }
+  });
+
+  // Add imports for used modules that don't already have imports
+  const importsToAdd: string[] = [];
+  usedNodeModules.forEach((moduleName) => {
+    if (!existingImports.has(moduleName)) {
+      importsToAdd.push(`import ${moduleName} from 'node:${moduleName}';`);
+      existingImports.set(moduleName, moduleName);
+    }
+  });
+
+  // Add the imports at the top of the file
+  if (importsToAdd.length > 0) {
+    const importStatement = importsToAdd.join('\n') + '\n';
+    const firstImportMatch = content.match(/^import\s+.+$/m);
+    if (firstImportMatch) {
+      const insertIndex = firstImportMatch.index! + firstImportMatch[0].length;
+      content = content.slice(0, insertIndex) + '\n' + importStatement + content.slice(insertIndex);
+    } else {
+      content = importStatement + content;
+    }
+  }
+
+  // Replace __require calls with the appropriate module references
+  existingImports.forEach((varName, moduleName) => {
+    content = content.replace(
+      new RegExp(`__require\\(["']node:${moduleName}["']\\)`, 'g'),
+      varName
+    );
+  });
+
+  // Handle any remaining __require calls by replacing them with dynamic imports or throwing errors
+  content = content.replace(
+    /__require\(/g,
+    '((m) => { throw new Error(`Dynamic require of ${m} is not supported in ESM`); })('
+  );
+
   // Remove handlebars require.extensions code
   content = content.replace(
     /if\s*\(\s*__require\.extensions\s*\)\s*{[^}]*__require\.extensions\[["']\.handlebars["']\][^}]*}/g,
@@ -73,23 +152,23 @@ async function build() {
     await $`tsc --project tsconfig.build.json`;
     console.log('✅ Individual TypeScript declarations generated');
 
-    // Bundle declarations to match the bundled JS structure
-    console.log('🔧 Bundling TypeScript declarations...');
-    await $`npx dts-bundle-generator -o dist/index.d.ts src/index.ts --no-check --export-referenced-types false --umd-module-name ElizaCore`;
+    // Instead of using dts-bundle-generator which has issues with external types,
+    // we'll just ensure the main index.d.ts exists
+    const indexDtsPath = join(import.meta.dir, 'dist/index.d.ts');
+    const srcIndexDtsPath = join(import.meta.dir, 'dist/index.d.ts');
 
-    // Also bundle test-utils declarations
-    if (
-      await fs
-        .access(join(import.meta.dir, 'src/test-utils/index.ts'))
-        .then(() => true)
-        .catch(() => false)
-    ) {
-      await $`npx dts-bundle-generator -o dist/test-utils/index.d.ts src/test-utils/index.ts --no-check --export-referenced-types false --umd-module-name ElizaCoreTestUtils`;
+    // Check if index.d.ts was generated
+    try {
+      await fs.access(indexDtsPath);
+      console.log('✅ TypeScript declarations available at dist/index.d.ts');
+    } catch {
+      console.warn('⚠️ Main index.d.ts not found, build may have issues');
     }
 
-    console.log('✅ Bundled TypeScript declarations generated');
+    console.log('✅ TypeScript declarations completed');
   } catch (error) {
     console.warn('⚠️ TypeScript declaration generation had issues, but continuing...');
+    console.warn(error);
   }
 
   console.log('✅ Build complete!');

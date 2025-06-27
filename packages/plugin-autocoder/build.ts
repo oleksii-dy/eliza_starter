@@ -38,15 +38,21 @@ async function build() {
 
   // Copy main declaration file to expected location (always attempt)
   try {
-    const sourcePath = 'dist/plugin-autocoder/src/index.d.ts';
+    const sourcePath = 'dist/index.d.ts';
     const targetPath = 'dist/index.d.ts';
 
     if (existsSync(sourcePath)) {
-      const content = readFileSync(sourcePath, 'utf8');
-      writeFileSync(targetPath, content);
-      console.log('✅ Main declaration file copied to dist/index.d.ts');
+      console.log('✅ Declaration file already in correct location');
     } else {
-      console.warn('⚠️ Source declaration file not found, skipping copy');
+      // Try alternative path if the main path doesn't exist
+      const altSourcePath = 'dist/src/index.d.ts';
+      if (existsSync(altSourcePath)) {
+        const content = readFileSync(altSourcePath, 'utf8');
+        writeFileSync(targetPath, content);
+        console.log('✅ Main declaration file copied to dist/index.d.ts');
+      } else {
+        console.warn('⚠️ Declaration file not found at expected locations');
+      }
     }
   } catch (copyError) {
     console.warn('⚠️ Failed to copy main declaration file:', copyError);

@@ -62,8 +62,8 @@ export function AccountDeletionModal({
 
   const permanentDeletionDate = user?.deleted_at
     ? new Date(
-        new Date(user.deleted_at).getTime() + 30 * 24 * 60 * 60 * 1000,
-      ).toLocaleString()
+      new Date(user.deleted_at).getTime() + 30 * 24 * 60 * 60 * 1000,
+    ).toLocaleString()
     : '';
 
   return (

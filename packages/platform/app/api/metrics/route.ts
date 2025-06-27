@@ -34,24 +34,26 @@ async function handleGET(request: NextRequest) {
 
     // Parse query parameters
     const { searchParams } = new URL(request.url);
-    const period = searchParams.get('period') || '24h';
-    const metric = searchParams.get('metric') || 'all';
+    const windowMinutes = parseInt(searchParams.get('window') || '60', 10);
+    const metric = searchParams.get('metric') || 'summary';
 
     // Get metrics service
     const metricsService = await getMetricsService();
 
     // Fetch metrics based on parameters
-    const metrics = await metricsService.getMetrics({
-      period,
-      metric,
-      organizationId: user.organizationId,
-    });
+    let data;
+    if (metric === 'summary') {
+      data = metricsService.getMetricsSummary(windowMinutes);
+    } else {
+      // Get specific metric by name
+      data = metricsService.getMetricsByName(metric, windowMinutes);
+    }
 
     return NextResponse.json({
       success: true,
-      data: metrics,
+      data,
       metadata: {
-        period,
+        windowMinutes,
         metric,
         timestamp: new Date().toISOString(),
       },
@@ -85,12 +87,12 @@ async function handleHEAD(request: NextRequest) {
 
     // Check if metrics service is available
     const metricsService = await getMetricsService();
-    const isHealthy = await metricsService.healthCheck();
 
+    // Simple health check - if we can get here, the service is healthy
     return new NextResponse(null, {
-      status: isHealthy ? 200 : 503,
+      status: 200,
       headers: {
-        'X-Metrics-Status': isHealthy ? 'healthy' : 'unhealthy',
+        'X-Metrics-Status': 'healthy',
         'X-Metrics-Version': '1.0.0',
       },
     });

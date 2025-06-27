@@ -54,6 +54,11 @@ export class TodoDataService {
     tags?: string[];
   }): Promise<UUID> {
     try {
+      // Check if database is available
+      if (!this.runtime.db) {
+        throw new Error('Database not available in runtime');
+      }
+      
       const { db } = this.runtime;
 
       // Create the todo
@@ -101,6 +106,12 @@ export class TodoDataService {
    */
   async getTodo(todoId: UUID): Promise<TodoData | null> {
     try {
+      // Check if database is available
+      if (!this.runtime.db) {
+        logger.warn('Database not available in runtime, returning null');
+        return null;
+      }
+      
       const { db } = this.runtime;
 
       const [todo] = await db.select().from(todosTable).where(eq(todosTable.id, todoId)).limit(1);
@@ -139,6 +150,12 @@ export class TodoDataService {
     limit?: number;
   }): Promise<TodoData[]> {
     try {
+      // Check if database is available
+      if (!this.runtime.db) {
+        logger.warn('Database not available in runtime, returning empty array');
+        return [];
+      }
+      
       const { db } = this.runtime;
 
       let query = db.select().from(todosTable);
@@ -224,6 +241,12 @@ export class TodoDataService {
     }
   ): Promise<boolean> {
     try {
+      // Check if database is available
+      if (!this.runtime.db) {
+        logger.warn('Database not available in runtime, cannot update todo');
+        return false;
+      }
+      
       const { db } = this.runtime;
 
       const updateData: any = {
@@ -245,6 +268,12 @@ export class TodoDataService {
    */
   async deleteTodo(todoId: UUID): Promise<boolean> {
     try {
+      // Check if database is available
+      if (!this.runtime.db) {
+        logger.warn('Database not available in runtime, cannot delete todo');
+        return false;
+      }
+      
       const { db } = this.runtime;
 
       await db.delete(todosTable).where(eq(todosTable.id, todoId));
@@ -262,6 +291,12 @@ export class TodoDataService {
    */
   async addTags(todoId: UUID, tags: string[]): Promise<boolean> {
     try {
+      // Check if database is available
+      if (!this.runtime.db) {
+        logger.warn('Database not available in runtime, cannot add tags');
+        return false;
+      }
+      
       const { db } = this.runtime;
 
       // Filter out existing tags
@@ -294,6 +329,12 @@ export class TodoDataService {
    */
   async removeTags(todoId: UUID, tags: string[]): Promise<boolean> {
     try {
+      // Check if database is available
+      if (!this.runtime.db) {
+        logger.warn('Database not available in runtime, cannot remove tags');
+        return false;
+      }
+      
       const { db } = this.runtime;
 
       await db
@@ -322,6 +363,12 @@ export class TodoDataService {
     entityId?: UUID;
   }): Promise<TodoData[]> {
     try {
+      // Check if database is available
+      if (!this.runtime.db) {
+        logger.warn('Database not available in runtime, returning empty array');
+        return [];
+      }
+      
       const { db } = this.runtime;
 
       const conditions: any[] = [
@@ -384,6 +431,12 @@ export class TodoDataService {
     entityId?: UUID;
   }): Promise<number> {
     try {
+      // Check if database is available
+      if (!this.runtime.db) {
+        logger.warn('Database not available in runtime, cannot reset daily todos');
+        return 0;
+      }
+      
       const { db } = this.runtime;
 
       const conditions: any[] = [eq(todosTable.type, 'daily'), eq(todosTable.isCompleted, true)];

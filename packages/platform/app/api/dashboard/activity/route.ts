@@ -3,6 +3,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { authService } from '@/lib/auth/session';
 import { getDatabase } from '@/lib/database';
 import { users, agents, userSessions } from '@/lib/database';
@@ -13,7 +14,7 @@ export const runtime = 'nodejs';
 /**
  * GET /api/dashboard/activity - Get recent dashboard activity
  */
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     // Get current user session
     const user = await authService.getCurrentUser();
@@ -33,7 +34,7 @@ export async function handleGET(request: NextRequest) {
 
     // Get limit from query params
     const url = new URL(request.url);
-    const limit = parseInt(url.searchParams.get('limit') || '10');
+    const limit = parseInt(url.searchParams.get('limit') || '10', 10);
 
     // For now, create some sample activity based on recent data
     const recentActivity = [];
@@ -167,3 +168,5 @@ function getTimeAgo(date: Date): string {
     return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
   }
 }
+
+export const { GET } = wrapHandlers({ handleGET });

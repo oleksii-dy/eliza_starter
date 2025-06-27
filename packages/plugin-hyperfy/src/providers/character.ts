@@ -27,9 +27,9 @@ export const characterProvider: Provider = {
     // Handle bio (string or random selection from array)
     const bioText = Array.isArray(character.bio)
       ? character.bio
-          .sort(() => 0.5 - Math.random())
-          .slice(0, 10)
-          .join(' ')
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 10)
+        .join(' ')
       : character.bio || '';
 
     const bio = addHeader(`# About ${character.name}`, bioText);
@@ -52,19 +52,19 @@ export const characterProvider: Provider = {
     const topics =
       character.topics && character.topics.length > 0
         ? `${character.name} is also interested in ${character.topics
-            .filter((topic) => topic !== topicString)
-            .sort(() => 0.5 - Math.random())
-            .slice(0, 5)
-            .map((topic, index, array) => {
-              if (index === array.length - 2) {
-                return `${topic} and `;
-              }
-              if (index === array.length - 1) {
-                return topic;
-              }
-              return `${topic}, `;
-            })
-            .join('')}`
+          .filter((topic) => topic !== topicString)
+          .sort(() => 0.5 - Math.random())
+          .slice(0, 5)
+          .map((topic, index, array) => {
+            if (index === array.length - 2) {
+              return `${topic} and `;
+            }
+            if (index === array.length - 1) {
+              return topic;
+            }
+            return `${topic}, `;
+          })
+          .join('')}`
         : '';
 
     const topicsList = topics;
@@ -134,8 +134,8 @@ export const characterProvider: Provider = {
 
     // Style directions
     const postDirections =
-      (character?.style?.all && character.style.all.length > 0) ||
-      (character?.style?.post && character.style.post.length > 0)
+      (character?.style?.all && character.style?.all?.length > 0) ||
+      (character?.style?.post && character.style?.post?.length > 0)
         ? addHeader(
             `# Post Directions for ${character.name}`,
             (() => {
@@ -147,8 +147,8 @@ export const characterProvider: Provider = {
         : '';
 
     const messageDirections =
-      (character?.style?.all && character.style.all.length > 0) ||
-      (character?.style?.chat && character.style.chat.length > 0)
+      (character?.style?.all && character.style?.all?.length > 0) ||
+      (character?.style?.chat && character.style?.chat?.length > 0)
         ? addHeader(
             `# Message Directions for ${character.name}`,
             (() => {

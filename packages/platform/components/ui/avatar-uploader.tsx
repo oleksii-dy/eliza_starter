@@ -46,6 +46,7 @@ export default function AvatarUploader({
     });
   const removeFile = () => {
     if (
+      // eslint-disable-next-line no-alert
       window.confirm('Are you sure you want to remove this profile picture?')
     ) {
       if (file) {

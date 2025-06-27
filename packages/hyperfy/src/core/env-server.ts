@@ -5,7 +5,7 @@
 
 // Ensure we're in a Node.js environment
 if (typeof process === 'undefined' || !process.versions?.node) {
-  throw new Error('env-server.ts can only be imported in Node.js environments')
+  throw new Error('env-server.ts can only be imported in Node.js environments');
 }
 
 // Server-only sensitive environment variables
@@ -18,4 +18,4 @@ export const ENV_SERVER = {
   LIVEKIT_API_SECRET: process.env.LIVEKIT_API_SECRET,
 
   // Add any other server-only secrets here
-}
+};

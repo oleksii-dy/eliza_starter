@@ -3,35 +3,35 @@ import { type IAgentRuntime, logger } from '@elizaos/core';
 import { z } from 'zod';
 
 // Services
-import { MidnightNetworkService } from './services/MidnightNetworkService.js';
-import { SecureMessagingService } from './services/SecureMessagingService.js';
-import { NetworkMessagingService } from './services/NetworkMessagingService.js';
-import { CostTrackingService } from './services/CostTrackingService.js';
-import { PaymentService } from './services/PaymentService.js';
-import { AgentDiscoveryService } from './services/AgentDiscoveryService.js';
+import { MidnightNetworkService } from './services/MidnightNetworkService';
+import { SecureMessagingService } from './services/SecureMessagingService';
+import { NetworkMessagingService } from './services/NetworkMessagingService';
+import { CostTrackingService } from './services/CostTrackingService';
+import { PaymentService } from './services/PaymentService';
+import { AgentDiscoveryService } from './services/AgentDiscoveryService';
 
 // Actions
-import { sendSecureMessageAction } from './actions/sendSecureMessage.js';
-import { sendGroupMessage } from './actions/sendGroupMessage.js';
-import { shareSecretAction } from './actions/shareSecret.js';
-import { verifySecretsAction } from './actions/verifySecrets.js';
-import { createChatRoomAction } from './actions/createChatRoom.js';
-import { joinChatRoomAction } from './actions/joinChatRoom.js';
-import { sendPaymentAction } from './actions/sendPayment.js';
-import { requestPaymentAction } from './actions/requestPayment.js';
-import { discoverAgentsAction } from './actions/discoverAgents.js';
+import { sendSecureMessageAction } from './actions/sendSecureMessage';
+import { sendGroupMessage } from './actions/sendGroupMessage';
+import { shareSecretAction } from './actions/shareSecret';
+import { verifySecretsAction } from './actions/verifySecrets';
+import { createChatRoomAction } from './actions/createChatRoom';
+import { joinChatRoomAction } from './actions/joinChatRoom';
+import { sendPaymentAction } from './actions/sendPayment';
+import { requestPaymentAction } from './actions/requestPayment';
+import { discoverAgentsAction } from './actions/discoverAgents';
 
 // Providers
-import { midnightWalletProvider } from './providers/midnightWallet.js';
-import { networkStateProvider } from './providers/networkState.js';
-import { chatRoomProvider } from './providers/chatRoom.js';
-import { secretMessageProvider } from './providers/secretMessage.js';
+import { midnightWalletProvider } from './providers/midnightWallet';
+import { networkStateProvider } from './providers/networkState';
+import { chatRoomProvider } from './providers/chatRoom';
+import { secretMessageProvider } from './providers/secretMessage';
 
 // Test suites
-import { MidnightNetworkTestSuite } from './tests/index.js';
+import { MidnightNetworkTestSuite } from './tests/index';
 
 // Scenarios
-import { midnightNetworkScenarios } from '../scenarios/index.js';
+import { midnightNetworkScenarios } from '../scenarios/index';
 
 /**
  * Configuration schema for the Midnight Network plugin
@@ -196,8 +196,8 @@ export const midnightPlugin: Plugin = {
 export default midnightPlugin;
 
 // Re-export key types and utilities
-export * from './types/index.js';
-export * from './utils/index.js';
+export * from './types/index';
+export * from './utils/index';
 export {
   MidnightNetworkService,
   SecureMessagingService,

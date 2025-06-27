@@ -9,6 +9,7 @@ import {
 } from '@elizaos/core';
 import { createMockRuntime, createTestMemory } from './helpers/test-runtime';
 import { PaymentService } from '../services/PaymentService';
+import { PriceOracleService } from '../services/PriceOracleService';
 import { researchAction } from '../actions/researchAction';
 import { PaymentMethod, PaymentStatus } from '../types';
 import { paymentPlugin } from '../index';

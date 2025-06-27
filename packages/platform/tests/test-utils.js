@@ -307,8 +307,8 @@ jest.mock(
         return ((params.tokens || 1000) * 0.002) / 1000;
       }),
       calculateStorageCost: jest.fn().mockImplementation((params) => {
-        if (params.operation === 'upload') return 0.01;
-        if (params.operation === 'storage') return 0.02; // Match test expectation for GB-month
+        if (params.operation === 'upload') {return 0.01;}
+        if (params.operation === 'storage') {return 0.02;} // Match test expectation for GB-month
         return 0.01;
       }),
       deductCreditsForUsage: jest

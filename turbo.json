@@ -6,8 +6,13 @@
       "env": ["LOG_LEVEL"],
       "outputs": ["dist/**"]
     },
+    "@elizaos/hyperfy#build": {
+      "dependsOn": ["^build"],
+      "env": ["LOG_LEVEL"],
+      "outputs": []
+    },
     "lint": {
-      "outputs": [".eslintcache"]
+      "outputs": []
     },
     "format": {
       "outputs": []
@@ -26,8 +31,10 @@
     },
     "test": {
       "dependsOn": ["^build"],
-      "outputs": ["coverage/**"],
-      "inputs": ["src/**/*.ts", "src/**/*.js", "__tests__/**/*", "*.test.*"]
+      "outputs": [],
+      "inputs": ["src/**/*.ts", "src/**/*.js", "__tests__/**/*", "*.test.*"],
+      "env": ["NODE_ENV", "LOG_LEVEL"],
+      "cache": false
     },
     "migrate": {
       "dependsOn": ["@elizaos/core#build"],

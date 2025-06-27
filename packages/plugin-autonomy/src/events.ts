@@ -603,7 +603,7 @@ const messageReceivedHandler = async ({
           duration: Date.now() - startTime,
           source: 'messageHandler',
         });
-      } catch (error: any) {
+      } catch (error) {
         console.error('error is', error);
         // Emit run ended event with error
         await runtime.emitEvent(EventType.RUN_ENDED, {
@@ -616,7 +616,7 @@ const messageReceivedHandler = async ({
           status: 'error',
           endTime: Date.now(),
           duration: Date.now() - startTime,
-          error: error.message,
+          error: error instanceof Error ? error.message : String(error),
           source: 'messageHandler',
         });
       }
@@ -646,8 +646,8 @@ const reactionReceivedHandler = async ({
 }) => {
   try {
     await runtime.createMemory(message, 'messages');
-  } catch (error: any) {
-    if (error.code === '23505') {
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === '23505') {
       logger.warn('[Message Handling] Duplicate reaction memory, skipping');
       return;
     }
@@ -803,9 +803,9 @@ const postGeneratedHandler = async ({
 
   // get twitterUserName
   const entity = await runtime.getEntityById(runtime.agentId);
-  if ((entity?.metadata?.twitter as any)?.userName || entity?.metadata?.userName) {
-    state.values.twitterUserName =
-      (entity?.metadata?.twitter as any)?.userName || entity?.metadata?.userName;
+  const twitterMetadata = entity?.metadata?.twitter as { userName?: string } | undefined;
+  if (twitterMetadata?.userName || entity?.metadata?.userName) {
+    state.values.twitterUserName = twitterMetadata?.userName || entity?.metadata?.userName;
   }
 
   const prompt = composePromptFromState({
@@ -913,7 +913,12 @@ const postGeneratedHandler = async ({
   // }
 
   // have we posted it before?
-  const RM = state.providerData?.find((pd: any) => pd.providerName === 'RECENT_MESSAGES');
+  const RM = state.providerData?.find(
+    (pd: {
+      providerName: string;
+      data: { recentMessages: Array<{ content: { text: string } }> };
+    }) => pd.providerName === 'RECENT_MESSAGES'
+  );
   if (RM) {
     for (const m of RM.data.recentMessages) {
       if (cleanedText === m.content.text) {
@@ -1114,7 +1119,6 @@ const handleServerSync = async ({
 const controlMessageHandler = async ({
   runtime,
   message,
-  source,
 }: {
   runtime: IAgentRuntime;
   message: {
@@ -1125,7 +1129,6 @@ const controlMessageHandler = async ({
     };
     roomId: UUID;
   };
-  source: string;
 }) => {
   try {
     logger.debug(
@@ -1146,7 +1149,7 @@ const controlMessageHandler = async ({
       const websocketService = runtime.getService(websocketServiceName);
       if (websocketService && 'sendMessage' in websocketService) {
         // Send the control message through the WebSocket service
-        await (websocketService as any).sendMessage({
+        await (websocketService as { sendMessage: (msg: unknown) => Promise<void> }).sendMessage({
           type: 'controlMessage',
           payload: {
             action: message.payload.action,
@@ -1297,8 +1300,10 @@ export const events = {
           await payload.runtime.updateEntity(entity);
         }
         logger.info(`[Message Handling] User ${payload.entityId} left world ${payload.worldId}`);
-      } catch (error: any) {
-        logger.error(`[Message Handling] Error handling user left: ${error.message}`);
+      } catch (error) {
+        logger.error(
+          `[Message Handling] Error handling user left: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
     },
   ],

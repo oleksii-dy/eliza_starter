@@ -518,8 +518,8 @@ export default function AgentsPage() {
         {(() => {
           const filteredAgents = agents.filter((agent) => {
             if (viewFilter === 'agents')
-              return agent.type === 'agent' || !agent.type;
-            if (viewFilter === 'characters') return agent.type === 'character';
+            {return agent.type === 'agent' || !agent.type;}
+            if (viewFilter === 'characters') {return agent.type === 'character';}
             return true; // 'all'
           });
 

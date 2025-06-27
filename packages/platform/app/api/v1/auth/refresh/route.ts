@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { z } from 'zod';
 import { verifyJWT, createTokenPair } from '@/lib/server/utils/jwt';
 import { SessionManager } from '@/lib/server/auth/session';
@@ -10,7 +11,7 @@ const refreshSchema = z.object({
   refreshToken: z.string(),
 });
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const config = loadConfig();
     const sessionManager = new SessionManager();
@@ -139,3 +140,5 @@ export async function handlePOST(request: NextRequest) {
     return NextResponse.json(response, { status: 401 });
   }
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

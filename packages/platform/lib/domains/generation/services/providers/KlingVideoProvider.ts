@@ -317,10 +317,10 @@ export class KlingVideoProvider extends BaseGenerationProvider {
 
     // Add time for advanced features
     let complexityMultiplier = 1;
-    if (request.physics_simulation) complexityMultiplier += 0.5;
-    if (request.camera_controls) complexityMultiplier += 0.3;
-    if (request.motion_brush_controls?.length) complexityMultiplier += 0.4;
-    if (request.image_to_video) complexityMultiplier += 0.2;
+    if (request.physics_simulation) {complexityMultiplier += 0.5;}
+    if (request.camera_controls) {complexityMultiplier += 0.3;}
+    if (request.motion_brush_controls?.length) {complexityMultiplier += 0.4;}
+    if (request.image_to_video) {complexityMultiplier += 0.2;}
 
     return Math.ceil(baseTime * durationMultiplier * complexityMultiplier);
   }

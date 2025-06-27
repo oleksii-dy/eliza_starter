@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { z } from 'zod';
 import Anthropic from '@anthropic-ai/sdk';
 import {
@@ -31,7 +32,7 @@ const ANTHROPIC_PRICING = {
   'claude-3-haiku-20240307': { input: 0.00025, output: 0.00125 },
 } as const;
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     // Extract API key from Authorization header
     const authHeader = request.headers.get('authorization');
@@ -211,3 +212,5 @@ export async function handlePOST(request: NextRequest) {
     );
   }
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

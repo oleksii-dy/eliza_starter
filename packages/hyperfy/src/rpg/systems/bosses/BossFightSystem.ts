@@ -240,8 +240,11 @@ export class BossFightSystem extends System {
       }
     }
 
-    // Check if we can start the fight
-    if (instance.players.length >= instance.minPlayers && instance.state === BossInstanceState.WAITING) {
+    // Check if we can start the fight (only for multi-player bosses or when explicitly requested)
+    // For testing, we keep single-player bosses in WAITING state until explicitly started
+    if (instance.players.length >= instance.minPlayers && 
+        instance.state === BossInstanceState.WAITING &&
+        instance.minPlayers > 1) {
       this.startInstanceCountdown(instance)
     }
 
@@ -998,7 +1001,10 @@ export class BossFightSystem extends System {
 
   public getActiveBossFights(): BossInstance[] {
     return Array.from(this.instances.values()).filter(
-      instance => instance.state === BossInstanceState.ACTIVE || instance.state === BossInstanceState.WAITING
+      instance => 
+        instance.state === BossInstanceState.ACTIVE || 
+        instance.state === BossInstanceState.WAITING ||
+        instance.state === BossInstanceState.STARTING
     )
   }
 

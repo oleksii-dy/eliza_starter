@@ -3,7 +3,7 @@
  * Tests service function integration without requiring live database
  */
 
-import { describe, test, expect } from '@jest/globals';
+import { describe, test, expect } from 'vitest';
 import { v4 as uuidv4 } from 'uuid';
 
 describe('Service Integration Validation', () => {

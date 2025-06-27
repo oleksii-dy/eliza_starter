@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { getServerSession, authOptions } from '@/lib/auth/auth-config';
 import { getDatabase, getSql } from '@/lib/database';
 import { GitHubService } from '@/lib/services/github-service';
@@ -18,13 +19,13 @@ interface PublishPluginRequest {
   build: any;
 }
 
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const query = searchParams.get('query') || '';
     const tags = searchParams.get('tags')?.split(',').filter(Boolean) || [];
-    const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
-    const offset = Math.max(parseInt(searchParams.get('offset') || '0'), 0);
+    const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
+    const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10), 0);
     const sortBy = searchParams.get('sortBy') || 'updated_at';
     const sortOrder = searchParams.get('sortOrder') === 'asc' ? 'ASC' : 'DESC';
     const publicOnly = searchParams.get('publicOnly') !== 'false';
@@ -85,7 +86,7 @@ export async function handleGET(request: NextRequest) {
       db.query(searchQuery, queryParams),
     ]);
 
-    const total = parseInt(countResult[0]?.total || '0');
+    const total = parseInt(countResult[0]?.total || '0', 10);
     const plugins = searchResult.map((plugin: any) => ({
       id: plugin.id,
       name: plugin.name,
@@ -121,7 +122,7 @@ export async function handleGET(request: NextRequest) {
   }
 }
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -311,3 +312,5 @@ export async function handlePOST(request: NextRequest) {
     );
   }
 }
+
+export const { GET, POST } = wrapHandlers({ handleGET, handlePOST });

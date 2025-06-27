@@ -117,7 +117,7 @@ export class MessagingContract {
     privateState: AgentPrivateState
   ): UnprovenTransaction {
     // Generate random nonce for encryption
-    // eslint-disable-next-line no-undef
+
     const nonce = Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString('hex');
 
     // Convert UUIDs to AgentId format

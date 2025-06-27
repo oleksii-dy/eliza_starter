@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { sessionService } from '@/lib/auth/session';
 import Stripe from 'stripe';
 import { loadConfig } from '@/lib/server/utils/config';
@@ -30,7 +31,7 @@ const checkoutSchema = z.object({
   metadata: z.record(z.string()).optional(),
 });
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     // Check if Stripe is configured
     if (!stripe) {
@@ -89,3 +90,5 @@ export async function handlePOST(request: NextRequest) {
     );
   }
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

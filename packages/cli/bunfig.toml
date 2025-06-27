@@ -1,0 +1,6 @@
+[test]
+preload = ["./tests/global-setup.ts", "./tests/setup.ts"]
+
+# Disable coverage for integration tests by default
+coverage = false
+coverageSkipTestFiles = true 

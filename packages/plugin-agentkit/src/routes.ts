@@ -1,5 +1,5 @@
-import type { Route, UUID, State, Memory } from './types/core';
-import { stringToUuid } from './types/core';
+import type { Route, UUID, State, Memory } from '@elizaos/core';
+import { stringToUuid } from '@elizaos/core';
 import type { AgentKitService } from './services/AgentKitService';
 import { custodialWalletRoutes } from './api/walletRoutes';
 

@@ -36,8 +36,21 @@ export const autonomousWorldProvider: Provider = {
       }
 
       // Get world and room information
-      let world: any = null;
-      let room: any = null;
+      let world: {
+        id: UUID;
+        name?: string;
+        serverId?: string;
+        agentId?: UUID;
+        [key: string]: unknown;
+      } | null = null;
+      let room: {
+        id: UUID;
+        name?: string;
+        type?: string;
+        worldId?: UUID;
+        source?: string;
+        [key: string]: unknown;
+      } | null = null;
 
       try {
         if (typeof runtime.getWorld === 'function') {
@@ -150,8 +163,43 @@ export const worldProvider: Provider = {
       }
 
       // Get current context from the service
-      const context = (oodaService as any).currentContext;
-      const goals = (oodaService as any).goals || [];
+      const context = (
+        oodaService as unknown as {
+          currentContext?: {
+            phase?: string;
+            runId?: string;
+            startTime?: number;
+            observations?: Array<{ type: string; source: string; relevance: number }>;
+            actions?: Array<{ status: string }>;
+            errors?: unknown[];
+            orientation?: {
+              resourceStatus?: {
+                cpu: number;
+                memory: number;
+                taskSlots: { used: number; total: number };
+              };
+              environmentalFactors?: Array<{
+                type: string;
+                description: string;
+                impact: number;
+                timestamp: number;
+              }>;
+            };
+            metrics?: {
+              cycleTime: number;
+              actionSuccessRate: number;
+              errorRate: number;
+              resourceEfficiency: number;
+            };
+          };
+          goals?: unknown[];
+        }
+      ).currentContext;
+      const goals = ((oodaService as unknown as { goals?: unknown[] }).goals || []) as Array<{
+        description: string;
+        progress: number;
+        priority: number;
+      }>;
 
       if (!context) {
         return {
@@ -168,15 +216,14 @@ export const worldProvider: Provider = {
       const observationCount = context.observations?.length || 0;
       const recentObservations = context.observations?.slice(-3) || [];
       const actionCount = context.actions?.length || 0;
-      const runningActions =
-        context.actions?.filter((a: any) => a.status === 'running').length || 0;
+      const runningActions = context.actions?.filter((a) => a.status === 'running').length || 0;
       const errorCount = context.errors?.length || 0;
 
       // Build dynamic context text
       const contextParts = [
         `Current OODA Phase: ${context.phase}`,
         `Run ID: ${context.runId}`,
-        `Active for: ${formatDuration(Date.now() - context.startTime)}`,
+        `Active for: ${formatDuration(Date.now() - (context.startTime || Date.now()))}`,
         '',
         'System Status:',
         `- ${observationCount} observations collected`,
@@ -197,7 +244,7 @@ export const worldProvider: Provider = {
 
       if (goals.length > 0) {
         contextParts.push('', 'Active Goals:');
-        goals.forEach((goal: any) => {
+        goals.forEach((goal: { description: string; progress: number }) => {
           contextParts.push(
             `- ${goal.description} (Progress: ${(goal.progress * 100).toFixed(0)}%)`
           );
@@ -206,7 +253,7 @@ export const worldProvider: Provider = {
 
       if (recentObservations.length > 0) {
         contextParts.push('', 'Recent Observations:');
-        recentObservations.forEach((obs: any) => {
+        recentObservations.forEach((obs) => {
           contextParts.push(
             `- ${obs.type} from ${obs.source} (relevance: ${(obs.relevance * 100).toFixed(0)}%)`
           );
@@ -232,12 +279,12 @@ export const worldProvider: Provider = {
           oodaRunning: true,
           currentPhase: context.phase,
           runId: context.runId,
-          uptime: Date.now() - context.startTime,
+          uptime: Date.now() - (context.startTime || Date.now()),
           observationCount,
           actionCount,
           runningActions,
           errorCount,
-          goals: goals.map((g: any) => ({
+          goals: goals.map((g: { description: string; progress: number; priority: number }) => ({
             description: g.description,
             progress: g.progress,
             priority: g.priority,

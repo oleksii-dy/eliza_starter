@@ -4,7 +4,7 @@ import { getServerSession, authOptions } from '@/lib/auth/config';
 export const runtime = 'nodejs';
 
 // Import the mock files database
-let filesDB: any[] = [];
+const filesDB: any[] = [];
 
 export async function DELETE(
   request: NextRequest,

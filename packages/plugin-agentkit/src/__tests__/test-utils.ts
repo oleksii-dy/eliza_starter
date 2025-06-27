@@ -1,7 +1,7 @@
 import { mock, beforeEach, afterEach } from 'bun:test';
 import type { IAgentRuntime as _CoreIAgentRuntime, Memory, State, UUID } from '@elizaos/core';
 import type { CustodialWallet } from '../types/wallet';
-import type { IAgentRuntime } from '../types/core.d';
+import type { IAgentRuntime } from '@elizaos/core';
 
 /**
  * Create a mock runtime for agentkit tests
@@ -72,10 +72,10 @@ export function createMockRuntime(overrides: any = {}): IAgentRuntime {
       warn: mock(),
       debug: mock(),
     },
-
-    // Apply overrides
-    ...overrides,
   };
+
+  // Apply overrides AFTER setting up defaults
+  Object.assign(baseRuntime, overrides);
 
   return baseRuntime as IAgentRuntime;
 }
@@ -153,10 +153,7 @@ export class TestSuite {
     this.afterEachFn = fn;
   }
 
-  addTest<T = any>(
-    name: string,
-    fn: (context: T) => Promise<void> | void
-  ): void {
+  addTest<T = any>(name: string, fn: (context: T) => Promise<void> | void): void {
     this.tests.push({ name, fn });
   }
 
@@ -192,12 +189,12 @@ export class TestSuite {
 // Helper function to create a TestSuite
 export function createUnitTest(name: string): TestSuite {
   const testSuite = new TestSuite(name);
-  
+
   // Auto-run the test suite
   setTimeout(() => {
     testSuite.run();
   }, 0);
-  
+
   return testSuite;
 }
 

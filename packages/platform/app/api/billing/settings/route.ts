@@ -8,10 +8,12 @@ import { z } from 'zod';
 import { wrapHandlers } from '@/lib/api/route-wrapper';
 
 // Use dynamic imports to avoid database connection during build
-const getBillingService = () =>
-  import('@/lib/server/services/billing-service').then((m) => m.billingService);
 const getAuthService = () =>
   import('@/lib/auth/session').then((m) => m.authService);
+const getDatabase = () =>
+  import('@/lib/database').then((m) => m.getDatabase);
+const getSchemas = () =>
+  import('@/lib/database/schema').then((m) => m);
 
 // Validation schema for billing settings update
 const updateBillingSettingsSchema = z.object({
@@ -62,17 +64,32 @@ async function handleGET(request: NextRequest) {
       );
     }
 
-    // Get billing service
-    const billingService = await getBillingService();
+    // Get organization data
+    const db = await (await getDatabase())();
+    const { organizations } = await getSchemas();
+    const { eq } = await import('drizzle-orm');
 
-    // Get billing settings
-    const settings = await billingService.getBillingSettings(
-      user.organizationId,
-    );
+    const [organization] = await db
+      .select({
+        billingEmail: organizations.billingEmail,
+        stripeCustomerId: organizations.stripeCustomerId,
+      })
+      .from(organizations)
+      .where(eq(organizations.id, user.organizationId))
+      .limit(1);
 
+    // Return current billing settings (simplified)
     return NextResponse.json({
       success: true,
-      data: settings,
+      data: {
+        billingEmail: organization?.billingEmail || user.email,
+        hasPaymentMethod: !!organization?.stripeCustomerId,
+        notifications: {
+          lowCredits: true,
+          transactions: true,
+          invoices: true,
+        },
+      },
     });
   } catch (error) {
     console.error('Error fetching billing settings:', error);
@@ -128,18 +145,28 @@ async function handlePUT(request: NextRequest) {
       );
     }
 
-    // Get billing service
-    const billingService = await getBillingService();
+    // Update organization with new billing email if provided
+    if (validation.data.billingEmail) {
+      const db = await (await getDatabase())();
+      const { organizations } = await getSchemas();
+      const { eq } = await import('drizzle-orm');
 
-    // Update billing settings
-    const updatedSettings = await billingService.updateBillingSettings(
-      user.organizationId,
-      validation.data,
-    );
+      await db
+        .update(organizations)
+        .set({
+          billingEmail: validation.data.billingEmail,
+          updatedAt: new Date(),
+        })
+        .where(eq(organizations.id, user.organizationId));
+    }
 
+    // Return updated settings (simplified)
     return NextResponse.json({
       success: true,
-      data: updatedSettings,
+      data: {
+        billingEmail: validation.data.billingEmail || user.email,
+        message: 'Billing settings updated successfully',
+      },
     });
   } catch (error) {
     console.error('Error updating billing settings:', error);

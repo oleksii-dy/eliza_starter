@@ -2,7 +2,7 @@
 
 // CSM (Cascaded Shadow Maps)
 declare module '*/csm/CSM.js' {
-  import { Object3D, Vector3, Camera } from 'three'
+  import { Object3D, Vector3, Camera } from 'three';
 
   export class CSM {
     constructor(data: {
@@ -15,8 +15,8 @@ declare module '*/csm/CSM.js' {
       camera?: Camera
     })
 
-    fade: boolean
-    helper: any
+    fade: boolean;
+    helper: any;
 
     update(): void
     updateFrustums(): void
@@ -27,7 +27,7 @@ declare module '*/csm/CSM.js' {
 
 // GLTF Loader
 declare module '*/gltfloader/GLTFLoader.js' {
-  import { Loader, LoadingManager, Group, Camera, AnimationClip } from 'three'
+  import { Loader, LoadingManager, Group, Camera, AnimationClip } from 'three';
 
   export class GLTFLoader extends Loader {
     constructor(manager?: LoadingManager)
@@ -87,13 +87,13 @@ declare module '*/stats-gl/index.js' {
     end(): void
     update(): void
 
-    dom: HTMLElement
+    dom: HTMLElement;
   }
 }
 
 // Three Custom Shader Material
 declare module '*/three-custom-shader-material/index.js' {
-  import { Material, IUniform } from 'three'
+  import { Material, IUniform } from 'three';
 
   export default class CustomShaderMaterial extends Material {
     constructor(options: {
@@ -109,25 +109,25 @@ declare module '*/three-custom-shader-material/index.js' {
 
 // Three VRM
 declare module '*/three-vrm/index.js' {
-  import { Group, Object3D, Material, Vector3 } from 'three'
+  import { Group, Object3D, Material, Vector3 } from 'three';
 
   export class VRM {
-    scene: Group
-    humanoid: VRMHumanoid
-    expressionManager?: VRMExpressionManager
-    firstPerson?: VRMFirstPerson
-    lookAt?: VRMLookAt
-    meta?: VRMMeta
-    materials?: Material[]
-    springBoneManager?: VRMSpringBoneManager
-    nodeConstraintManager?: any
+    scene: Group;
+    humanoid: VRMHumanoid;
+    expressionManager?: VRMExpressionManager;
+    firstPerson?: VRMFirstPerson;
+    lookAt?: VRMLookAt;
+    meta?: VRMMeta;
+    materials?: Material[];
+    springBoneManager?: VRMSpringBoneManager;
+    nodeConstraintManager?: any;
 
     update(deltaTime: number): void
   }
 
   export class VRMHumanoid {
-    humanBones: VRMHumanBones
-    restPose: VRMPose
+    humanBones: VRMHumanBones;
+    restPose: VRMPose;
 
     getBone(name: VRMHumanBoneName): VRMHumanBone | undefined
     getBoneNode(name: VRMHumanBoneName): Object3D | undefined
@@ -179,8 +179,8 @@ declare module '*/three-vrm/index.js' {
     | 'rightToes'
 
   export class VRMExpressionManager {
-    expressions: VRMExpression[]
-    expressionMap: { [name: string]: VRMExpression }
+    expressions: VRMExpression[];
+    expressionMap: { [name: string]: VRMExpression };
 
     getValue(name: string): number
     setValue(name: string, value: number): void
@@ -200,7 +200,7 @@ declare module '*/three-vrm/index.js' {
   }
 
   export class VRMFirstPerson {
-    meshAnnotations: VRMFirstPersonMeshAnnotation[]
+    meshAnnotations: VRMFirstPersonMeshAnnotation[];
   }
 
   export interface VRMFirstPersonMeshAnnotation {
@@ -209,8 +209,8 @@ declare module '*/three-vrm/index.js' {
   }
 
   export class VRMLookAt {
-    target?: Object3D
-    autoUpdate: boolean
+    target?: Object3D;
+    autoUpdate: boolean;
 
     getLookAtWorldDirection(target: Vector3): Vector3
     lookAt(position: Vector3): void
@@ -241,8 +241,8 @@ declare module '*/three-vrm/index.js' {
   }
 
   export class VRMSpringBoneManager {
-    joints: VRMSpringBoneJoint[]
-    colliderGroups: VRMSpringBoneColliderGroup[]
+    joints: VRMSpringBoneJoint[];
+    colliderGroups: VRMSpringBoneColliderGroup[];
 
     setCenter(root: Object3D | null): void
     update(_delta: number): void

@@ -485,10 +485,10 @@ export default function ApiKeysPage() {
                       )}
                       {apiKey.expiresAt &&
                         new Date(apiKey.expiresAt) < new Date() && (
-                          <span className="inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-800">
+                        <span className="inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-800">
                             Expired
-                          </span>
-                        )}
+                        </span>
+                      )}
                     </div>
 
                     {apiKey.description && (

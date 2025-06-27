@@ -6,174 +6,182 @@ import type {
   E2BExecutionResult,
   E2BSandboxHandle,
 } from '../types.js';
+import { ErrorInstrumentation } from '../utils/errorInstrumentation.js';
 
+/**
+ * Production E2B Service for secure code execution
+ */
 export class E2BService extends Service implements E2BServiceType {
   static serviceName = 'e2b';
-  static readonly serviceType = 'e2b' as const;
+  static serviceType = 'e2b';
 
-  private activeSandboxes: Map<string, { sandbox: Sandbox; handle: E2BSandboxHandle }> = new Map();
-  private defaultSandbox?: Sandbox;
-  private apiKey?: string;
+  private sandboxes: Map<
+    string,
+    {
+      sandbox: Sandbox;
+      handle: E2BSandboxHandle;
+    }
+  > = new Map();
 
-  capabilityDescription =
-    'Provides secure code execution in isolated E2B sandboxes with full language support';
+  private apiKey: string | null = null;
+  private defaultTimeout = 300000; // 5 minutes
+  private maxSandboxes = 10;
+  private cleanupInterval: NodeJS.Timeout | null = null;
 
-  constructor(runtime?: IAgentRuntime) {
+  get capabilityDescription(): string {
+    return 'E2B service for secure cloud-based code execution with sandbox isolation';
+  }
+
+  constructor(runtime: IAgentRuntime) {
     super(runtime);
-    this.apiKey = runtime?.getSetting('E2B_API_KEY') || process.env.E2B_API_KEY;
+    this.apiKey = runtime.getSetting('E2B_API_KEY') || null;
   }
 
   static async start(runtime: IAgentRuntime): Promise<E2BService> {
     const service = new E2BService(runtime);
     await service.initialize();
-    elizaLogger.info('E2BService started successfully');
     return service;
   }
 
-  private async initialize(): Promise<void> {
+  async initialize(): Promise<void> {
     try {
-      // Test E2B connectivity by creating a test sandbox
-      if (this.apiKey) {
-        elizaLogger.info('Initializing E2B service with API key');
-        const testSandbox = await Sandbox.create({
-          apiKey: this.apiKey,
-          timeoutMs: 30000,
-        });
+      elizaLogger.info('Initializing E2B service');
 
-        // Test basic functionality
-        const result = await testSandbox.runCode('print("E2B service initialized successfully")');
-        elizaLogger.info('E2B connectivity test passed', { result: result.text });
-
-        // Keep this as default sandbox for quick operations
-        this.defaultSandbox = testSandbox;
-
-        // Add to active sandboxes
-        this.activeSandboxes.set(testSandbox.sandboxId, {
-          sandbox: testSandbox,
-          handle: {
-            sandboxId: testSandbox.sandboxId,
-            isActive: true,
-            createdAt: new Date(),
-            lastActivity: new Date(),
-            template: 'base',
-          },
-        });
-      } else {
-        elizaLogger.warn('E2B_API_KEY not provided, creating local sandbox');
-        // Try to create without API key (local mode)
-        const localSandbox = await Sandbox.create({
-          timeoutMs: 30000,
-        });
-
-        const result = await localSandbox.runCode('print("E2B local service initialized")');
-        elizaLogger.info('E2B local connectivity test passed', { result: result.text });
-
-        this.defaultSandbox = localSandbox;
-
-        this.activeSandboxes.set(localSandbox.sandboxId, {
-          sandbox: localSandbox,
-          handle: {
-            sandboxId: localSandbox.sandboxId,
-            isActive: true,
-            createdAt: new Date(),
-            lastActivity: new Date(),
-            template: 'base',
-          },
-        });
+      if (!this.apiKey) {
+        throw new Error('E2B_API_KEY not configured');
       }
+
+      // Verify API key by creating a test sandbox
+      const testSandboxId = await this.createSandbox({
+        timeoutMs: 60000,
+        metadata: { purpose: 'initialization-test' },
+      });
+
+      // Clean up test sandbox
+      await this.killSandbox(testSandboxId);
+
+      // Start cleanup interval for inactive sandboxes
+      this.startCleanupInterval();
+
+      elizaLogger.info('E2B service initialized successfully');
+
+      ErrorInstrumentation.logMetrics('E2BService', 'initialize', {
+        sandboxCount: this.sandboxes.size,
+        serviceReady: true,
+      });
     } catch (error) {
-      elizaLogger.error('Failed to initialize E2B service', { error: error.message });
-      throw error;
+      elizaLogger.error('Failed to initialize E2B service', error);
+      throw ErrorInstrumentation.instrumentError(error, {
+        service: 'E2BService',
+        operation: 'initialize',
+      });
     }
   }
 
   async stop(): Promise<void> {
-    elizaLogger.info('Stopping E2B service');
+    try {
+      elizaLogger.info('Stopping E2B service');
 
-    // Kill all active sandboxes
-    const killPromises = Array.from(this.activeSandboxes.entries()).map(
-      async ([sandboxId, { sandbox }]) => {
-        try {
-          await sandbox.kill();
-          elizaLogger.info('Killed sandbox', { sandboxId });
-        } catch (error) {
-          elizaLogger.error('Failed to kill sandbox', { sandboxId, error: error.message });
-        }
+      // Stop cleanup interval
+      if (this.cleanupInterval) {
+        clearInterval(this.cleanupInterval);
+        this.cleanupInterval = null;
       }
-    );
 
-    await Promise.allSettled(killPromises);
-    this.activeSandboxes.clear();
-    this.defaultSandbox = undefined;
+      // Kill all active sandboxes
+      const sandboxIds = Array.from(this.sandboxes.keys());
+      await Promise.all(sandboxIds.map((id) => this.killSandbox(id)));
 
-    elizaLogger.info('E2B service stopped');
+      elizaLogger.info('E2B service stopped');
+    } catch (error) {
+      elizaLogger.error('Error stopping E2B service', error);
+    }
   }
 
-  async executeCode(code: string, language: string = 'python'): Promise<E2BExecutionResult> {
-    if (!this.defaultSandbox) {
-      throw new Error('No active sandbox available for code execution');
-    }
-
+  async executeCode(code: string, language = 'python'): Promise<E2BExecutionResult> {
     try {
-      elizaLogger.debug('Executing code in E2B sandbox', {
-        sandboxId: this.defaultSandbox.sandboxId,
-        language,
-        codeLength: code.length,
-      });
+      elizaLogger.debug('Executing code', { language, codeLength: code.length });
 
-      // Update last activity
-      const sandboxData = this.activeSandboxes.get(this.defaultSandbox.sandboxId);
-      if (sandboxData) {
-        sandboxData.handle.lastActivity = new Date();
+      // Get or create a default sandbox
+      let sandboxId = this.getDefaultSandboxId();
+      if (!sandboxId) {
+        sandboxId = await this.createSandbox({
+          metadata: { purpose: 'code-execution', language },
+        });
       }
 
-      const execution = await this.defaultSandbox.runCode(code, {
+      const sandboxData = this.sandboxes.get(sandboxId);
+      if (!sandboxData) {
+        throw new Error('Sandbox not found');
+      }
+
+      const startTime = Date.now();
+
+      // Execute code in sandbox
+      const result = await sandboxData.sandbox.runCode(code);
+
+      const executionTime = Date.now() - startTime;
+
+      // Update last activity
+      sandboxData.handle.lastActivity = new Date();
+
+      ErrorInstrumentation.logMetrics('E2BService', 'executeCode', {
         language,
-        timeoutMs: 30000,
-      });
-
-      const result: E2BExecutionResult = {
-        text: execution.text,
-        results: execution.results.map((r) => r.toJSON()),
-        logs: execution.logs,
-        error: execution.error
-          ? {
-              name: execution.error.name,
-              value: execution.error.value,
-              traceback: execution.error.traceback,
-            }
-          : undefined,
-        executionCount: execution.executionCount,
-      };
-
-      elizaLogger.debug('Code execution completed', {
-        sandboxId: this.defaultSandbox.sandboxId,
-        hasResult: !!result.text,
+        codeLength: code.length,
+        executionTime,
         hasError: !!result.error,
+        sandboxId,
       });
 
-      return result;
+      return {
+        text: result.text,
+        results: result.results || [],
+        logs: {
+          stdout: result.logs?.stdout || [],
+          stderr: result.logs?.stderr || [],
+        },
+        error: result.error,
+        executionCount: result.executionCount || 1,
+        executionTime,
+        sandboxId,
+        language,
+      };
     } catch (error) {
-      elizaLogger.error('Code execution failed', { error: error.message });
-      throw error;
+      elizaLogger.error('Failed to execute code', error);
+      throw ErrorInstrumentation.instrumentError(error, {
+        service: 'E2BService',
+        operation: 'executeCode',
+        metadata: { language, codeLength: code.length },
+      });
     }
   }
 
   async createSandbox(opts: E2BSandboxOptions = {}): Promise<string> {
     try {
-      elizaLogger.info('Creating new E2B sandbox', { opts });
-
-      const createOpts: any = {
-        timeoutMs: opts.timeoutMs || 300000,
-        metadata: opts.metadata,
-        envs: opts.envs,
-      };
-
-      if (this.apiKey) {
-        createOpts.apiKey = this.apiKey;
+      // Check sandbox limit
+      if (this.sandboxes.size >= this.maxSandboxes) {
+        await this.cleanupInactiveSandboxes();
+        if (this.sandboxes.size >= this.maxSandboxes) {
+          throw new Error(`Maximum sandbox limit (${this.maxSandboxes}) reached`);
+        }
       }
 
-      const sandbox = await Sandbox.create(createOpts);
+      elizaLogger.info('Creating new sandbox', opts);
+
+      const sandboxOptions: any = {
+        apiKey: this.apiKey,
+        timeout: opts.timeoutMs || this.defaultTimeout,
+      };
+
+      if (opts.template) {
+        sandboxOptions.template = opts.template;
+      }
+
+      if (opts.envs) {
+        sandboxOptions.envs = opts.envs;
+      }
+
+      const sandbox = await Sandbox.create(sandboxOptions);
 
       const handle: E2BSandboxHandle = {
         sandboxId: sandbox.sandboxId,
@@ -184,124 +192,147 @@ export class E2BService extends Service implements E2BServiceType {
         template: opts.template || 'base',
       };
 
-      this.activeSandboxes.set(sandbox.sandboxId, { sandbox, handle });
+      this.sandboxes.set(sandbox.sandboxId, { sandbox, handle });
 
-      elizaLogger.info('E2B sandbox created', { sandboxId: sandbox.sandboxId });
+      elizaLogger.info('Sandbox created successfully', { sandboxId: sandbox.sandboxId });
+
       return sandbox.sandboxId;
     } catch (error) {
-      elizaLogger.error('Failed to create E2B sandbox', { error: error.message });
-      throw error;
+      elizaLogger.error('Failed to create sandbox', error);
+      throw ErrorInstrumentation.instrumentError(error, {
+        service: 'E2BService',
+        operation: 'createSandbox',
+        metadata: opts,
+      });
     }
   }
 
   async killSandbox(sandboxId: string): Promise<void> {
-    const sandboxData = this.activeSandboxes.get(sandboxId);
-
-    if (!sandboxData) {
-      elizaLogger.warn('Attempted to kill non-existent sandbox', { sandboxId });
-      return;
-    }
-
     try {
-      elizaLogger.info('Killing E2B sandbox', { sandboxId });
+      const sandboxData = this.sandboxes.get(sandboxId);
+      if (!sandboxData) {
+        elizaLogger.warn('Attempted to kill non-existent sandbox', { sandboxId });
+        return;
+      }
+
+      elizaLogger.info('Killing sandbox', { sandboxId });
 
       await sandboxData.sandbox.kill();
       sandboxData.handle.isActive = false;
-      this.activeSandboxes.delete(sandboxId);
+      this.sandboxes.delete(sandboxId);
 
-      // If this was the default sandbox, try to create a new one
-      if (this.defaultSandbox?.sandboxId === sandboxId) {
-        this.defaultSandbox = undefined;
-        try {
-          await this.createDefaultSandbox();
-        } catch (error) {
-          elizaLogger.error('Failed to create replacement default sandbox', {
-            error: error.message,
-          });
-        }
-      }
-
-      elizaLogger.info('E2B sandbox killed', { sandboxId });
+      elizaLogger.info('Sandbox killed successfully', { sandboxId });
     } catch (error) {
-      elizaLogger.error('Failed to kill E2B sandbox', { sandboxId, error: error.message });
-      throw error;
-    }
-  }
-
-  private async createDefaultSandbox(): Promise<void> {
-    const sandboxId = await this.createSandbox();
-    const sandboxData = this.activeSandboxes.get(sandboxId);
-    if (sandboxData) {
-      this.defaultSandbox = sandboxData.sandbox;
+      elizaLogger.error('Failed to kill sandbox', error);
+      this.sandboxes.delete(sandboxId); // Remove from map even if kill fails
     }
   }
 
   getSandbox(sandboxId: string): E2BSandboxHandle | null {
-    const sandboxData = this.activeSandboxes.get(sandboxId);
+    const sandboxData = this.sandboxes.get(sandboxId);
     return sandboxData?.handle || null;
   }
 
   listSandboxes(): E2BSandboxHandle[] {
-    return Array.from(this.activeSandboxes.values()).map((data) => data.handle);
+    return Array.from(this.sandboxes.values()).map((data) => data.handle);
   }
 
-  // Additional utility methods
   async writeFileToSandbox(sandboxId: string, path: string, content: string): Promise<void> {
-    const sandboxData = this.activeSandboxes.get(sandboxId);
-
-    if (!sandboxData) {
-      throw new Error(`Sandbox ${sandboxId} not found`);
-    }
-
     try {
-      await sandboxData.sandbox.files.write(path, content);
+      const sandboxData = this.sandboxes.get(sandboxId);
+      if (!sandboxData) {
+        throw new Error(`Sandbox ${sandboxId} not found`);
+      }
+
+      // Use code execution to write file
+      const code = `
+with open("${path}", "w") as f:
+    f.write("""${content}""")
+`;
+      await sandboxData.sandbox.runCode(code);
       sandboxData.handle.lastActivity = new Date();
+
       elizaLogger.debug('File written to sandbox', { sandboxId, path, size: content.length });
     } catch (error) {
-      elizaLogger.error('Failed to write file to sandbox', {
-        sandboxId,
-        path,
-        error: error.message,
-      });
+      elizaLogger.error('Failed to write file to sandbox', error);
       throw error;
     }
   }
 
   async readFileFromSandbox(sandboxId: string, path: string): Promise<string> {
-    const sandboxData = this.activeSandboxes.get(sandboxId);
-
-    if (!sandboxData) {
-      throw new Error(`Sandbox ${sandboxId} not found`);
-    }
-
     try {
-      const content = await sandboxData.sandbox.files.read(path);
+      const sandboxData = this.sandboxes.get(sandboxId);
+      if (!sandboxData) {
+        throw new Error(`Sandbox ${sandboxId} not found`);
+      }
+
+      // Use code execution to read file
+      const code = `
+with open("${path}", "r") as f:
+    content = f.read()
+print(content)
+`;
+      const result = await sandboxData.sandbox.runCode(code);
+      const content = result.logs?.stdout?.join('\n') || '';
       sandboxData.handle.lastActivity = new Date();
+
       elizaLogger.debug('File read from sandbox', { sandboxId, path, size: content.length });
       return content;
     } catch (error) {
-      elizaLogger.error('Failed to read file from sandbox', {
-        sandboxId,
-        path,
-        error: error.message,
-      });
+      elizaLogger.error('Failed to read file from sandbox', error);
       throw error;
     }
   }
 
   async isHealthy(): Promise<boolean> {
     try {
-      if (!this.defaultSandbox) {
+      // Check if we have API key
+      if (!this.apiKey) {
         return false;
       }
 
-      const result = await this.defaultSandbox.runCode('print("health_check")', {
-        timeoutMs: 5000,
-      });
-
-      return result.text?.includes('health_check') || false;
-    } catch {
+      // Check if we can list sandboxes
+      this.listSandboxes();
+      return true;
+    } catch (error) {
+      elizaLogger.error('Health check failed', error);
       return false;
+    }
+  }
+
+  private getDefaultSandboxId(): string | null {
+    const activeSandboxes = this.listSandboxes().filter((s) => s.isActive);
+    return activeSandboxes.length > 0 ? activeSandboxes[0].sandboxId : null;
+  }
+
+  private startCleanupInterval(): void {
+    // Clean up inactive sandboxes every 5 minutes
+    this.cleanupInterval = setInterval(
+      () => {
+        this.cleanupInactiveSandboxes().catch((error) => {
+          elizaLogger.error('Failed to cleanup inactive sandboxes', error);
+        });
+      },
+      5 * 60 * 1000
+    );
+  }
+
+  private async cleanupInactiveSandboxes(): Promise<void> {
+    const now = Date.now();
+    const inactivityThreshold = 10 * 60 * 1000; // 10 minutes
+
+    const sandboxesToCleanup: string[] = [];
+
+    for (const [sandboxId, data] of this.sandboxes) {
+      const lastActivityTime = data.handle.lastActivity.getTime();
+      if (now - lastActivityTime > inactivityThreshold) {
+        sandboxesToCleanup.push(sandboxId);
+      }
+    }
+
+    if (sandboxesToCleanup.length > 0) {
+      elizaLogger.info('Cleaning up inactive sandboxes', { count: sandboxesToCleanup.length });
+      await Promise.all(sandboxesToCleanup.map((id) => this.killSandbox(id)));
     }
   }
 }

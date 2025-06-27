@@ -176,10 +176,12 @@ class RPGScenarioRunner {
         case '-l':
           this.listScenarios();
           process.exit(0);
+          break;
         default:
           if (!arg.startsWith('-')) {
             config.scenarios.push(arg);
           }
+          break;
       }
     }
 
@@ -294,7 +296,7 @@ EXAMPLES:
           console.log('✅ Hyperfy server already running');
           return;
         }
-      } catch (error) {
+      } catch (_error) {
         // Not running, need to start it
       }
 
@@ -327,7 +329,7 @@ EXAMPLES:
           throw new Error('Hyperfy server not responding');
         }
         console.log('✅ Hyperfy server verified running');
-      } catch (error) {
+      } catch (_error) {
         throw new Error('Failed to verify Hyperfy server startup');
       }
     } catch (error) {

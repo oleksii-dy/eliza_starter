@@ -155,14 +155,14 @@ export class UserRepository {
     const finalQuery =
       conditions.length > 0
         ? baseQuery
-            .where(and(...conditions))
-            .orderBy(sortOrder === 'desc' ? desc(sortCol) : asc(sortCol))
-            .limit(limit)
-            .offset(offset)
+          .where(and(...conditions))
+          .orderBy(sortOrder === 'desc' ? desc(sortCol) : asc(sortCol))
+          .limit(limit)
+          .offset(offset)
         : baseQuery
-            .orderBy(sortOrder === 'desc' ? desc(sortCol) : asc(sortCol))
-            .limit(limit)
-            .offset(offset);
+          .orderBy(sortOrder === 'desc' ? desc(sortCol) : asc(sortCol))
+          .limit(limit)
+          .offset(offset);
 
     return finalQuery;
   }

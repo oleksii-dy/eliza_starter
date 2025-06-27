@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { addCredits } from '@/lib/server/services/billing-service';
 import { loadConfig } from '@/lib/server/utils/config';
 import { WebhookDeduplicationService } from '@/lib/billing/webhook-deduplication';
@@ -24,7 +25,7 @@ const stripe = new Stripe(config.stripe.secretKey, {
   apiVersion: '2025-02-24.acacia',
 });
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   const startTime = Date.now();
 
   try {
@@ -424,3 +425,5 @@ async function handleSubscriptionTierChange(
     // Don't throw error here as it's not critical for webhook success
   }
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

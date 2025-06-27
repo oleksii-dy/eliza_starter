@@ -15,9 +15,6 @@ import {
 } from '@elizaos/core';
 import { rolodexPlugin } from '../index';
 
-// Import sql plugin to get database adapter
-// import sqlPlugin from '@elizaos/plugin-sql';
-
 // Test character configuration
 const testCharacter: Character = {
   name: 'Test Agent',
@@ -39,18 +36,30 @@ export interface TestRuntimeOptions {
 
 /**
  * Creates a real runtime instance for testing
+ * Note: This is only used for unit tests. E2E tests use the ElizaOS test runner
+ * which properly handles plugin dependencies including SQL plugin.
  */
 export async function createTestRuntime(options: TestRuntimeOptions = {}): Promise<IAgentRuntime> {
   const testName = options.testName || `rolodex-test-${Date.now()}`;
+
+  // Set required environment variables for tests
+  if (!process.env.SECRET_SALT) {
+    process.env.SECRET_SALT = 'test-secret-salt-for-unit-tests-only-do-not-use-in-production';
+  }
 
   // Merge character options
   const character: Character = {
     ...testCharacter,
     ...options.character,
     id: options.character?.id || stringToUuid(`test-agent-${testName}`),
+    settings: {
+      ...testCharacter.settings,
+      ...options.character?.settings,
+    },
   };
 
   // Create runtime with rolodex plugin
+  // Note: For proper database support, use the E2E test framework instead
   const runtime = new AgentRuntime({
     character,
     plugins: [rolodexPlugin, ...(options.plugins || [])],

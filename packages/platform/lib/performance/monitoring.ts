@@ -1,6 +1,6 @@
 /**
  * Application Performance Monitoring (APM)
- * 
+ *
  * Provides comprehensive performance monitoring, profiling,
  * and optimization recommendations for the platform.
  */
@@ -126,7 +126,7 @@ export class PerformanceMonitor {
 
       // Override res.end to capture response metrics
       const originalEnd = res.end;
-      res.end = function(chunk: any, encoding: any) {
+      res.end = function (chunk: any, encoding: any) {
         const responseTime = Date.now() - startTime;
         const statusCode = res.statusCode;
         const isError = statusCode >= 400;
@@ -140,7 +140,7 @@ export class PerformanceMonitor {
 
         metrics.responseTimes.push(responseTime);
         metrics.lastAccess = new Date();
-        if (isError) metrics.errors++;
+        if (isError) {metrics.errors++;}
 
         // Keep only last 1000 response times per endpoint
         if (metrics.responseTimes.length > 1000) {
@@ -165,7 +165,7 @@ export class PerformanceMonitor {
 
         getInstance().recordMetric({
           name: 'http_response_size',
-          value: parseInt(res.get('content-length') || '0'),
+          value: parseInt(res.get('content-length', 10) || '0'),
           unit: 'bytes',
           timestamp: new Date(),
           tags: { method, path },
@@ -186,12 +186,12 @@ export class PerformanceMonitor {
   /**
    * Profile function execution
    */
-  profile<T extends (...args: any[]) => any>(
+  profile<T extends(...args: any[]) => any>(
     fn: T,
     name?: string
   ): T {
     const functionName = name || fn.name || 'anonymous';
-    
+
     return ((...args: Parameters<T>) => {
       const startTime = Date.now();
       const startMemory = process.memoryUsage().heapUsed;
@@ -257,8 +257,8 @@ export class PerformanceMonitor {
     for (const [endpoint, data] of this.endpointMetrics.entries()) {
       const [method, path] = endpoint.split(':');
       const responseTimes = data.responseTimes;
-      
-      if (responseTimes.length === 0) continue;
+
+      if (responseTimes.length === 0) {continue;}
 
       responseTimes.sort((a, b) => a - b);
       const avg = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
@@ -293,7 +293,7 @@ export class PerformanceMonitor {
   getSystemMetrics(): SystemMetrics {
     const memUsage = process.memoryUsage();
     const cpuUsage = process.cpuUsage();
-    
+
     return {
       cpuUsage: (cpuUsage.user + cpuUsage.system) / 1000000, // Convert to seconds
       memoryUsage: (memUsage.rss / memUsage.heapTotal) * 100,
@@ -332,10 +332,10 @@ export class PerformanceMonitor {
    */
   addAlertRule(rule: AlertRule): void {
     this.alertRules.push(rule);
-    logger.info('Alert rule added', { 
-      id: rule.id, 
-      name: rule.name, 
-      severity: rule.severity 
+    logger.info('Alert rule added', {
+      id: rule.id,
+      name: rule.name,
+      severity: rule.severity
     });
   }
 
@@ -409,7 +409,7 @@ export class PerformanceMonitor {
     const memoryDelta = process.memoryUsage().heapUsed - startMemory;
 
     this.recordMetric({
-      name: `function_duration`,
+      name: 'function_duration',
       value: duration,
       unit: 'ms',
       timestamp: new Date(),
@@ -417,7 +417,7 @@ export class PerformanceMonitor {
     });
 
     this.recordMetric({
-      name: `function_memory`,
+      name: 'function_memory',
       value: memoryDelta,
       unit: 'bytes',
       timestamp: new Date(),
@@ -481,9 +481,9 @@ export class PerformanceMonitor {
    * Start collecting system metrics
    */
   private startMetricsCollection(): void {
-    const collectMetrics = () => {
+    const collectMetrics = async () => {
       const systemMetrics = this.getSystemMetrics();
-      
+
       // Record system metrics
       this.recordMetric({
         name: 'cpu_usage',
@@ -507,7 +507,7 @@ export class PerformanceMonitor {
       });
 
       // Record cache metrics
-      const cacheStats = cacheManager.getStats();
+      const cacheStats = await cacheManager.getStats();
       this.recordMetric({
         name: 'cache_hit_rate',
         value: cacheStats.combined.hitRate,
@@ -544,15 +544,15 @@ export class PerformanceMonitor {
     setInterval(() => {
       const cutoff = Date.now() - (this.metricsRetentionHours * 60 * 60 * 1000);
       this.metrics = this.metrics.filter(m => m.timestamp.getTime() > cutoff);
-      
+
       // Clean up endpoint metrics
       for (const [endpoint, data] of this.endpointMetrics.entries()) {
         if (Date.now() - data.lastAccess.getTime() > cutoff) {
           this.endpointMetrics.delete(endpoint);
         }
       }
-      
-      logger.debug('Metrics cleanup completed', { 
+
+      logger.debug('Metrics cleanup completed', {
         totalMetrics: this.metrics.length,
         totalEndpoints: this.endpointMetrics.size,
       });
@@ -565,7 +565,7 @@ export class PerformanceMonitor {
   private startAlertEvaluation(): void {
     setInterval(() => {
       for (const rule of this.alertRules) {
-        if (!rule.enabled) continue;
+        if (!rule.enabled) {continue;}
         this.evaluateAlertRule(rule);
       }
     }, 30000); // Evaluate every 30 seconds
@@ -577,19 +577,19 @@ export class PerformanceMonitor {
   private evaluateAlertRule(rule: AlertRule): void {
     const now = Date.now();
     const cutoff = now - (rule.duration * 1000);
-    
+
     const relevantMetrics = this.metrics.filter(
       m => m.name === rule.metric && m.timestamp.getTime() > cutoff
     );
 
-    if (relevantMetrics.length === 0) return;
+    if (relevantMetrics.length === 0) {return;}
 
     const values = relevantMetrics.map(m => m.value);
     const currentValue = this.getAggregatedValue(values, rule.metric);
-    
+
     const isTriggered = this.evaluateCondition(
-      currentValue, 
-      rule.operator, 
+      currentValue,
+      rule.operator,
       rule.threshold
     );
 
@@ -698,7 +698,7 @@ export class PerformanceMonitor {
    * Get aggregated value for metric type
    */
   private getAggregatedValue(values: number[], metricName: string): number {
-    if (values.length === 0) return 0;
+    if (values.length === 0) {return 0;}
 
     // Different aggregation strategies based on metric type
     if (metricName.includes('rate') || metricName.includes('percentage')) {
@@ -722,7 +722,7 @@ export class PerformanceMonitor {
    * Calculate average from array of numbers
    */
   private calculateAverage(values: number[]): number {
-    if (values.length === 0) return 0;
+    if (values.length === 0) {return 0;}
     return values.reduce((a, b) => a + b, 0) / values.length;
   }
 
@@ -731,7 +731,7 @@ export class PerformanceMonitor {
    */
   private calculateErrorRate(metrics: PerformanceMetric[]): number {
     const requests = metrics.filter(m => m.name === 'http_request_duration');
-    if (requests.length === 0) return 0;
+    if (requests.length === 0) {return 0;}
 
     const errors = requests.filter(m => m.tags?.error === 'true');
     return (errors.length / requests.length) * 100;
@@ -751,11 +751,11 @@ export class PerformanceMonitor {
   /**
    * Generate performance recommendations
    */
-  private generateRecommendations(): string[] {
+  private async generateRecommendations(): Promise<string[]> {
     const recommendations: string[] = [];
     const systemMetrics = this.getSystemMetrics();
     const endpointMetrics = this.getEndpointMetrics();
-    const cacheStats = cacheManager.getStats();
+    const cacheStats = await cacheManager.getStats();
 
     // Memory recommendations
     if (systemMetrics.memoryUsage > 80) {

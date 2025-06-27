@@ -11,7 +11,7 @@ import {
   createMockState as _createMockState,
 } from '../../test-utils';
 import type { Memory, State, UUID, HandlerCallback } from '@elizaos/core';
-import type { IAgentRuntime } from '../../../types/core.d';
+import type { IAgentRuntime } from '@elizaos/core';
 import type { CustodialWallet } from '../../../types/wallet';
 
 describe('Custodial Wallet Actions', () => {

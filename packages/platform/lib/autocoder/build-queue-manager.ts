@@ -147,9 +147,9 @@ export class BuildQueueManager extends EventEmitter {
     const avgQueueWaitTime =
       queuedJobs.length > 0
         ? queuedJobs.reduce(
-            (sum, job) => sum + (Date.now() - job.queuedAt.getTime()),
-            0,
-          ) / queuedJobs.length
+          (sum, job) => sum + (Date.now() - job.queuedAt.getTime()),
+          0,
+        ) / queuedJobs.length
         : 0;
 
     return {
@@ -370,7 +370,7 @@ export class BuildQueueManager extends EventEmitter {
 
   async getEstimatedWaitTime(jobId: string): Promise<number> {
     const position = this.getQueuePosition(jobId);
-    if (position === 0) return 0;
+    if (position === 0) {return 0;}
 
     // Estimate based on average processing time and queue position
     const stats = await this.getQueueStatus();

@@ -164,7 +164,7 @@ export abstract class BaseGenerationProvider {
     maxAttempts?: number,
   ): Promise<T> {
     const attempts = maxAttempts || this.config.retryAttempts || 3;
-    let lastError: Error;
+    let lastError: Error = new Error('No attempts were made');
 
     for (let attempt = 1; attempt <= attempts; attempt++) {
       try {
@@ -182,7 +182,7 @@ export abstract class BaseGenerationProvider {
       }
     }
 
-    throw lastError!;
+    throw lastError;
   }
 
   /**

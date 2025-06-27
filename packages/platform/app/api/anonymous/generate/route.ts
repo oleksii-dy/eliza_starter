@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { chatService } from '@/lib/services/chat-service';
 import { anonymousSessionRepo } from '@/lib/database/repositories/anonymous-session';
 
@@ -18,7 +19,7 @@ interface GeneratedAsset {
   downloadUrl?: string;
 }
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const body: GenerationRequest = await request.json();
     const { type, requirements, userContext, sessionId } = body;
@@ -44,7 +45,7 @@ export async function handlePOST(request: NextRequest) {
       },
     });
 
-    return new Response(stream, {
+    return new NextResponse(stream, {
       headers: {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
@@ -154,3 +155,5 @@ function buildDescriptionFromRequirements(
 
   return description;
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

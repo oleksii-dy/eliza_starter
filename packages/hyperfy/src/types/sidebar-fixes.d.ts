@@ -16,7 +16,7 @@ declare module '../../core/storage' {
         get(key: string, defaultValue?: any): any
         set(key: string, value: any): void
       }
-    | undefined
+    | undefined;
 }
 
 // Add missing properties to fields

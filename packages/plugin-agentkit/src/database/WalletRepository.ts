@@ -1,4 +1,4 @@
-import { type IAgentRuntime, type UUID, elizaLogger, asUUID } from '../types/core.d';
+import { type IAgentRuntime, type UUID, elizaLogger, asUUID } from '@elizaos/core';
 import type { CustodialWallet, WalletTransaction, WalletPermission } from '../types/wallet';
 
 // Database adapter interface
@@ -562,8 +562,8 @@ export class WalletRepository {
       metadata: row.metadata
         ? JSON.parse(row.metadata)
         : {
-            trustLevel: row.required_trust_level,
-          },
+          trustLevel: row.required_trust_level,
+        },
     };
   }
 }

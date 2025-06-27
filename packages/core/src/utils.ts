@@ -1,11 +1,9 @@
 import handlebars from 'handlebars';
 import { sha1 } from 'js-sha1';
-import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
-
 import { names, uniqueNamesGenerator } from 'unique-names-generator';
 import { z } from 'zod';
 
-import logger from './logger';
+import { logger } from './logger';
 import type { Content, Entity, IAgentRuntime, Memory, State, TemplateType } from './types';
 import { ModelType, UUID, ContentType } from './types';
 
@@ -270,8 +268,8 @@ export const formatMessages = ({
       const attachmentString =
         attachments && attachments.length > 0
           ? ` (Attachments: ${attachments
-            .map((media) => `[${media.id} - ${media.title} (${media.url})]`)
-            .join(', ')})`
+              .map((media) => `[${media.id} - ${media.title} (${media.url})]`)
+              .join(', ')})`
           : null;
 
       const messageTime = new Date(message.createdAt ?? Date.now());
@@ -292,8 +290,8 @@ export const formatMessages = ({
       const actionString =
         messageActions && messageActions.length > 0
           ? `${
-            textString ? '' : timestampString
-          } (${formattedName}'s actions: ${messageActions.join(', ')})`
+              textString ? '' : timestampString
+            } (${formattedName}'s actions: ${messageActions.join(', ')})`
           : null;
 
       // for each thought, action, text or attachment, add a new line, with text first, then thought, then action, then attachment
@@ -519,12 +517,83 @@ export function truncateToCompleteSentence(text: string, maxLength: number): str
   return `${hardTruncated}...`;
 }
 
+/**
+ * Simple text splitter that doesn't require langchain
+ * Splits text into chunks of specified size with overlap
+ */
+class SimpleTextSplitter {
+  private chunkSize: number;
+  private chunkOverlap: number;
+
+  constructor({ chunkSize, chunkOverlap }: { chunkSize: number; chunkOverlap: number }) {
+    this.chunkSize = chunkSize;
+    this.chunkOverlap = chunkOverlap;
+  }
+
+  async splitText(text: string): Promise<string[]> {
+    if (!text || text.length === 0) {
+      return [];
+    }
+
+    // If text is smaller than chunk size, return as is
+    if (text.length <= this.chunkSize) {
+      return [text];
+    }
+
+    const chunks: string[] = [];
+    let start = 0;
+
+    while (start < text.length) {
+      let end = start + this.chunkSize;
+
+      // If this is not the last chunk, try to break at a sentence or word boundary
+      if (end < text.length) {
+        // First, try to find a sentence boundary (., !, ?)
+        const sentenceEnd = text.lastIndexOf('.', end);
+        const exclamationEnd = text.lastIndexOf('!', end);
+        const questionEnd = text.lastIndexOf('?', end);
+
+        const sentenceBoundary = Math.max(
+          sentenceEnd > start ? sentenceEnd + 1 : -1,
+          exclamationEnd > start ? exclamationEnd + 1 : -1,
+          questionEnd > start ? questionEnd + 1 : -1
+        );
+
+        if (sentenceBoundary > start && sentenceBoundary <= end) {
+          end = sentenceBoundary;
+        } else {
+          // If no sentence boundary, try to find a word boundary
+          const wordBoundary = text.lastIndexOf(' ', end);
+          if (wordBoundary > start) {
+            end = wordBoundary;
+          }
+        }
+      }
+
+      const chunk = text.slice(start, end).trim();
+      if (chunk.length > 0) {
+        chunks.push(chunk);
+      }
+
+      // Move start position, accounting for overlap
+      start = end - this.chunkOverlap;
+
+      // Ensure we make progress to avoid infinite loops
+      if (start <= 0 && chunks.length > 0) {
+        start = end;
+      }
+    }
+
+    return chunks;
+  }
+}
+
 export async function splitChunks(content: string, chunkSize = 512, bleed = 20): Promise<string[]> {
   logger.debug('[splitChunks] Starting text split');
 
   const characterstoTokens = 3.5;
 
-  const textSplitter = new RecursiveCharacterTextSplitter({
+  const textSplitter = new SimpleTextSplitter({
     chunkSize: Number(Math.floor(chunkSize * characterstoTokens)),
     chunkOverlap: Number(Math.floor(bleed * characterstoTokens)),
   });

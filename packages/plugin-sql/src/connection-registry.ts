@@ -109,7 +109,7 @@ class DatabaseConnectionRegistry {
     logger.info('[ConnectionRegistry] Cleaning up all connections...');
 
     // Close all adapters
-    for (const [agentId, adapter] of this.adapters) {
+    for (const [agentId, adapter] of Array.from(this.adapters)) {
       try {
         await adapter.close();
         logger.debug(`[ConnectionRegistry] Closed adapter for agent: ${agentId}`);
@@ -119,7 +119,7 @@ class DatabaseConnectionRegistry {
     }
 
     // Close all PostgreSQL managers
-    for (const [key, manager] of this.postgresManagers) {
+    for (const [key, manager] of Array.from(this.postgresManagers)) {
       try {
         await manager.close();
         logger.debug(`[ConnectionRegistry] Closed PostgreSQL manager: ${key}`);

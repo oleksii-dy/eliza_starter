@@ -5,7 +5,6 @@
 import { drizzle as drizzlePostgres } from 'drizzle-orm/postgres-js';
 import { drizzle as drizzlePglite } from 'drizzle-orm/pglite';
 import postgres from 'postgres';
-// @ts-ignore - TypeScript has issues with PGlite module resolution
 import { PGlite } from '@electric-sql/pglite';
 import * as schema from './schema';
 
@@ -164,7 +163,7 @@ function createPostgresConnection(
   // Parse connection config from environment or parameters
   const dbConfig = {
     host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT || '5432'),
+    port: parseInt(process.env.DB_PORT || '5432', 10),
     user: process.env.DB_USER || 'postgres',
     password:
       process.env.DB_PASSWORD ||
@@ -182,8 +181,8 @@ function createPostgresConnection(
       })(),
     database: process.env.DB_NAME || 'elizaos_platform',
     ssl: process.env.DB_SSL === 'true',
-    maxConnections: parseInt(process.env.DB_MAX_CONNECTIONS || '20'),
-    idleTimeout: parseInt(process.env.DB_IDLE_TIMEOUT || '30'),
+    maxConnections: parseInt(process.env.DB_MAX_CONNECTIONS || '20', 10),
+    idleTimeout: parseInt(process.env.DB_IDLE_TIMEOUT || '30', 10),
     ...config,
   };
 

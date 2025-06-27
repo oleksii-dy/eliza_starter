@@ -240,13 +240,15 @@ describe('PR and Branch Management Tests', () => {
     const tempRuntime = {
       ...mockRuntime,
       getSetting: mock((key: string) => {
-        if (key === 'GITHUB_TOKEN') return 'test-token';
+        if (key === 'GITHUB_TOKEN') {
+          return 'test-token';
+        }
         return null;
       }),
     };
-    
+
     githubService = new GitHubService(tempRuntime);
-    
+
     // After creation, replace the octokit instance with our mock
     (githubService as any).octokit = mockOctokit;
   });

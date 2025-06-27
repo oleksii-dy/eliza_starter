@@ -330,7 +330,10 @@ export class SecureKeyManager extends Service {
         `);
         logger.info('SecureKeyManager: Database tables initialized');
       } catch (error) {
-        logger.warn('SecureKeyManager: Failed to initialize database tables, using memory-only storage:', error);
+        logger.warn(
+          'SecureKeyManager: Failed to initialize database tables, using memory-only storage:',
+          error
+        );
       }
     } else {
       logger.warn('SecureKeyManager: No database adapter available, using memory-only storage');

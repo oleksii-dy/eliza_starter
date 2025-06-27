@@ -94,7 +94,7 @@ describe('Agent Management', () => {
       // Verify sorting order
       let previousInteractions = Infinity;
       cy.get('[data-cy="agent-interactions"]').each(($el) => {
-        const interactions = parseInt($el.text().replace(/,/g, ''));
+        const interactions = parseInt($el.text(, 10).replace(/,/g, ''));
         expect(interactions).to.be.at.most(previousInteractions);
         previousInteractions = interactions;
       });

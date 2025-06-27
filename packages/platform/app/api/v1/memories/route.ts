@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { sessionService } from '@/lib/auth/session';
 import { getDatabase } from '@/lib/database';
 import { memories, agents } from '@/lib/database/schema';
@@ -42,7 +43,7 @@ const createMemorySchema = z.object({
 // searchMemoriesSchema moved to /api/v1/memories/search/route.ts
 
 // GET /api/v1/memories - Get agent memories with user isolation
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     // Authenticate user
     const session = await sessionService.getSessionFromCookies();
@@ -182,7 +183,7 @@ export async function handleGET(request: NextRequest) {
 }
 
 // POST /api/v1/memories - Create a new memory with proper scoping
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     // Authenticate user
     const session = await sessionService.getSessionFromCookies();
@@ -265,3 +266,5 @@ export async function handlePOST(request: NextRequest) {
 }
 
 // Search functionality moved to /api/v1/memories/search/route.ts
+
+export const { GET, POST } = wrapHandlers({ handleGET, handlePOST });

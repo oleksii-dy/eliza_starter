@@ -3,7 +3,7 @@
  * Basic test to verify the adapter compiles and can be instantiated
  */
 
-import { describe, test, expect } from '@jest/globals';
+import { describe, test, expect } from 'vitest';
 
 // Mock the ElizaOS types for testing
 type UUID = `${string}-${string}-${string}-${string}-${string}`;

@@ -150,12 +150,12 @@ export async function getUsageStatistics(
     .orderBy(desc(count()));
 
   return {
-    totalRequests: parseInt(statsResult?.totalRequests || '0'),
+    totalRequests: parseInt(statsResult?.totalRequests || '0', 10),
     successfulRequests:
-      parseInt(statsResult?.totalRequests || '0') -
-      parseInt(failedResult?.failedRequests || '0'),
-    failedRequests: parseInt(failedResult?.failedRequests || '0'),
-    totalTokens: parseInt(statsResult?.totalTokens || '0'),
+      parseInt(statsResult?.totalRequests || '0', 10) -
+      parseInt(failedResult?.failedRequests || '0', 10),
+    failedRequests: parseInt(failedResult?.failedRequests || '0', 10),
+    totalTokens: parseInt(statsResult?.totalTokens || '0', 10),
     totalCost: parseFloat(statsResult?.totalCost || '0'),
     averageLatency: parseFloat(statsResult?.averageLatency || '0'),
     breakdown: breakdownResults.map(
@@ -168,8 +168,8 @@ export async function getUsageStatistics(
       }) => ({
         provider: result.provider,
         model: result.model,
-        requests: parseInt(result.requests),
-        tokens: parseInt(result.tokens || '0'),
+        requests: parseInt(result.requests, 10),
+        tokens: parseInt(result.tokens || '0', 10),
         cost: parseFloat(result.cost || '0'),
       }),
     ),
@@ -267,11 +267,11 @@ export async function getUsageTimeSeries(
     ),
     requests: timeSeriesResults.map(
       (result: { timestamp: Date; requests: any; tokens: any; cost: any }) =>
-        parseInt(result.requests),
+        parseInt(result.requests, 10),
     ),
     tokens: timeSeriesResults.map(
       (result: { timestamp: Date; requests: any; tokens: any; cost: any }) =>
-        parseInt(result.tokens || '0'),
+        parseInt(result.tokens || '0', 10),
     ),
     costs: timeSeriesResults.map(
       (result: { timestamp: Date; requests: any; tokens: any; cost: any }) =>
@@ -311,7 +311,7 @@ export async function getRateLimitStatus(
   // This would need to be implemented based on your API key schema
   const defaultLimit = 100; // Fallback limit
 
-  const requestCount = parseInt(result?.requestCount || '0');
+  const requestCount = parseInt(result?.requestCount || '0', 10);
 
   return {
     requestCount,

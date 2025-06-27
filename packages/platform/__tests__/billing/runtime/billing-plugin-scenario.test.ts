@@ -8,7 +8,7 @@
  */
 
 /* TEMPORARILY DISABLED - Interface compatibility issues
-import { describe, test, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
+import { describe, test, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { RuntimeTestHarness } from '@elizaos/core/test-utils';
 import type { IAgentRuntime, Character, Plugin } from '@elizaos/core';
 import { stringToUuid } from '@elizaos/core';

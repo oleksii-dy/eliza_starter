@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { getServerSession, authOptions } from '@/lib/auth/config';
 import { z } from 'zod';
 import { randomBytes } from 'crypto';
@@ -6,14 +7,14 @@ import { randomBytes } from 'crypto';
 export const runtime = 'nodejs';
 
 // Mock database - in a real app, this would be a proper database
-let webhooksDB: any[] = [];
+const webhooksDB: any[] = [];
 
 const createWebhookSchema = z.object({
   url: z.string().url('Invalid URL format'),
   events: z.array(z.string()).min(1, 'At least one event must be selected'),
 });
 
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.organizationId) {
@@ -43,7 +44,7 @@ export async function handleGET(request: NextRequest) {
   }
 }
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.organizationId) {
@@ -98,3 +99,5 @@ export async function handlePOST(request: NextRequest) {
     );
   }
 }
+
+export const { GET, POST } = wrapHandlers({ handleGET, handlePOST });

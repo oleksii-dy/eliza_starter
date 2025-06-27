@@ -64,7 +64,7 @@ class OfflineCapableApiClient {
 
   private getFromCache<T>(key: string): T | null {
     const entry = this.cache.get(key);
-    if (!entry) return null;
+    if (!entry) {return null;}
 
     if (Date.now() > entry.expires) {
       this.cache.delete(key);
@@ -233,7 +233,7 @@ class OfflineCapableApiClient {
       if (typeof window !== 'undefined' && '__TAURI__' in window) {
         // Dynamic import for Tauri - only load when needed
         try {
-          // @ts-ignore - Tauri API only available in Tauri builds
+          // @ts-expect-error - Tauri API only available in Tauri builds
           const { invoke } = await import('@tauri-apps/api/tauri');
           await invoke('store_auth_token', { token });
         } catch (tauriError) {
@@ -258,7 +258,7 @@ class OfflineCapableApiClient {
 
       if (typeof window !== 'undefined' && '__TAURI__' in window) {
         try {
-          // @ts-ignore - Tauri API only available in Tauri builds
+          // @ts-expect-error - Tauri API only available in Tauri builds
           const { invoke } = await import('@tauri-apps/api/tauri');
           token = await invoke('get_auth_token');
         } catch (tauriError) {
@@ -288,7 +288,7 @@ class OfflineCapableApiClient {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('elizaos_auth_token');
       if ('__TAURI__' in window) {
-        // @ts-ignore - Tauri API only available in Tauri builds
+        // @ts-expect-error - Tauri API only available in Tauri builds
         import('@tauri-apps/api/tauri')
           .then(({ invoke }) => {
             invoke('clear_auth_token').catch(() => {});

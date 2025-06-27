@@ -37,7 +37,7 @@ export const HyperfyRealWorldTestSuite: TestSuite = {
      */
     {
       name: 'hyperfy_real_world_connection',
-      fn: async (runtime) => {
+      fn: async (runtime: IAgentRuntime) => {
         console.log('Testing real world connection...');
 
         const service = runtime.getService('hyperfy') as HyperfyService;
@@ -98,7 +98,7 @@ export const HyperfyRealWorldTestSuite: TestSuite = {
      */
     {
       name: 'hyperfy_real_chat_system',
-      fn: async (runtime) => {
+      fn: async (runtime: IAgentRuntime) => {
         console.log('Testing real chat system...');
 
         const service = runtime.getService('hyperfy') as HyperfyService;
@@ -119,7 +119,7 @@ export const HyperfyRealWorldTestSuite: TestSuite = {
 
           // Subscribe to chat messages
           let messageReceived = false;
-          const unsubscribe = world.chat.subscribe((messages) => {
+          const unsubscribe = world.chat.subscribe((messages: any[]) => {
             console.log(`Chat updated: ${messages.length} total messages`);
             if (messages.length > 0) {
               messageReceived = true;
@@ -142,7 +142,7 @@ export const HyperfyRealWorldTestSuite: TestSuite = {
           await wait(1000);
 
           // Check if message was added
-          const foundMessage = world.chat.msgs.find((m) => m.id === testMessage.id);
+          const foundMessage = world.chat.msgs.find((m: any) => m.id === testMessage.id);
           if (!foundMessage) {
             throw new Error('Test message not found in chat history');
           }
@@ -163,7 +163,7 @@ export const HyperfyRealWorldTestSuite: TestSuite = {
      */
     {
       name: 'hyperfy_real_entity_system',
-      fn: async (runtime) => {
+      fn: async (runtime: IAgentRuntime) => {
         console.log('Testing real entity system...');
 
         const service = runtime.getService('hyperfy') as HyperfyService;
@@ -191,7 +191,7 @@ export const HyperfyRealWorldTestSuite: TestSuite = {
 
           // List some entities
           let entityCount = 0;
-          world.entities.items.forEach((entity, id) => {
+          world.entities.items.forEach((entity: any, id: string) => {
             if (entityCount < 5) {
               console.log(
                 `  Entity ${id}: ${entity.data.name || 'Unnamed'} (type: ${entity.data.type || 'unknown'})`
@@ -217,7 +217,7 @@ export const HyperfyRealWorldTestSuite: TestSuite = {
      */
     {
       name: 'hyperfy_real_action_system',
-      fn: async (runtime) => {
+      fn: async (runtime: IAgentRuntime) => {
         console.log('Testing real action system...');
 
         const service = runtime.getService('hyperfy') as HyperfyService;
@@ -272,7 +272,7 @@ export const HyperfyRealWorldTestSuite: TestSuite = {
      */
     {
       name: 'hyperfy_real_movement_system',
-      fn: async (runtime) => {
+      fn: async (runtime: IAgentRuntime) => {
         console.log('Testing real movement system...');
 
         const service = runtime.getService('hyperfy') as HyperfyService;
@@ -353,7 +353,7 @@ export const HyperfyRealWorldTestSuite: TestSuite = {
      */
     {
       name: 'hyperfy_real_event_system',
-      fn: async (runtime) => {
+      fn: async (runtime: IAgentRuntime) => {
         console.log('Testing real event system...');
 
         const service = runtime.getService('hyperfy') as HyperfyService;
@@ -376,17 +376,17 @@ export const HyperfyRealWorldTestSuite: TestSuite = {
           const receivedEvents: string[] = [];
 
           // Subscribe to various events
-          world.events.on('chat', (data) => {
+          world.events.on('chat', (data: any) => {
             receivedEvents.push('chat');
             console.log('Received chat event:', data);
           });
 
-          world.events.on('playerJoined', (data) => {
+          world.events.on('playerJoined', (data: any) => {
             receivedEvents.push('playerJoined');
             console.log('Received playerJoined event:', data);
           });
 
-          world.events.on('entityAdded', (data) => {
+          world.events.on('entityAdded', (data: any) => {
             receivedEvents.push('entityAdded');
             console.log('Received entityAdded event:', data);
           });
@@ -424,7 +424,7 @@ export const HyperfyRealWorldTestSuite: TestSuite = {
      */
     {
       name: 'hyperfy_real_network_communication',
-      fn: async (runtime) => {
+      fn: async (runtime: IAgentRuntime) => {
         console.log('Testing real network communication...');
 
         const service = runtime.getService('hyperfy') as HyperfyService;

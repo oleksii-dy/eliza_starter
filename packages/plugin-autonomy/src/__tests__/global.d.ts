@@ -1,5 +1,5 @@
 declare global {
-  let testHarness: any;
+  let testHarness: { cleanup: () => Promise<void> } | undefined;
 }
 
 export {};

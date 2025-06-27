@@ -6,9 +6,9 @@ import {
   type State,
   logger,
 } from '@elizaos/core';
-import { SecureMessagingService } from '../services/SecureMessagingService.js';
-import { PaymentService } from '../services/PaymentService.js';
-import { type ChatRoom, type PaymentRequest as MidnightPaymentRequest } from '../types/index.js';
+import { SecureMessagingService } from '../services/SecureMessagingService';
+import { PaymentService } from '../services/PaymentService';
+import { type ChatRoom, type PaymentRequest as MidnightPaymentRequest } from '../types/index';
 
 /**
  * Provider for chat room information, recent messages, and pending payment requests

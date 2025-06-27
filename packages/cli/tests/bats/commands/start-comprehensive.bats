@@ -272,7 +272,7 @@ EOF
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsup",
-    "test": "elizaos test",
+    "test": "bun test & elizaos test",
     "example": "elizaos start --character examples/character.json"
   },
   "dependencies": {

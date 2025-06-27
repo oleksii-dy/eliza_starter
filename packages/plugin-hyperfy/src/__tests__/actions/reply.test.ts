@@ -217,7 +217,7 @@ describe('REPLY Action', () => {
     });
 
     it('should have properly formatted examples', () => {
-      replyAction.examples!.forEach((example) => {
+      replyAction.examples!.forEach((example: any) => {
         expect(Array.isArray(example)).toBe(true);
         expect(example.length).toBe(2);
 

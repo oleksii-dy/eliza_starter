@@ -1,6 +1,6 @@
 /**
  * Redis Cache Adapter
- * 
+ *
  * Implements caching using Redis for production environments.
  * Provides high-performance caching with advanced Redis features
  * like pub/sub, lua scripts, and clustering support.
@@ -16,15 +16,15 @@ export interface RedisConfig {
   db?: number;
   username?: string;
   tls?: boolean;
-  maxRetries: number;
-  retryDelayOnFailover: number;
-  enableReadyCheck: boolean;
-  maxRetriesPerRequest: number;
-  lazyConnect: boolean;
-  keepAlive: number;
-  family: number;
-  connectTimeout: number;
-  commandTimeout: number;
+  maxRetries?: number;
+  retryDelayOnFailover?: number;
+  enableReadyCheck?: boolean;
+  maxRetriesPerRequest?: number;
+  lazyConnect?: boolean;
+  keepAlive?: number;
+  family?: number;
+  connectTimeout?: number;
+  commandTimeout?: number;
   keyPrefix?: string;
   clusterMode?: boolean;
   clusterNodes?: Array<{ host: string; port: number }>;
@@ -44,7 +44,7 @@ export class RedisCacheAdapter extends CacheAdapter {
   } = {}) {
     super(options);
     this.config = {
-      maxRetries: 3,
+      // Default values
       retryDelayOnFailover: 100,
       enableReadyCheck: true,
       maxRetriesPerRequest: 3,
@@ -53,9 +53,10 @@ export class RedisCacheAdapter extends CacheAdapter {
       family: 4,
       connectTimeout: 10000,
       commandTimeout: 5000,
+      // Override with provided config
       ...config,
     };
-    
+
     this.initializeConnection();
   }
 
@@ -84,7 +85,6 @@ export class RedisCacheAdapter extends CacheAdapter {
             username: this.config.username,
             db: this.config.db || 0,
             maxRetriesPerRequest: this.config.maxRetriesPerRequest,
-            retryDelayOnFailover: this.config.retryDelayOnFailover,
             enableReadyCheck: this.config.enableReadyCheck,
             lazyConnect: this.config.lazyConnect,
             keepAlive: this.config.keepAlive,
@@ -96,23 +96,42 @@ export class RedisCacheAdapter extends CacheAdapter {
         });
       } else {
         // Single Redis instance
-        this.redis = new Redis({
+        const redisOptions: any = {
           host: this.config.host,
           port: this.config.port,
           password: this.config.password,
           username: this.config.username,
           db: this.config.db || 0,
-          tls: this.config.tls,
-          maxRetriesPerRequest: this.config.maxRetriesPerRequest,
-          retryDelayOnFailover: this.config.retryDelayOnFailover,
-          enableReadyCheck: this.config.enableReadyCheck,
-          lazyConnect: this.config.lazyConnect,
-          keepAlive: this.config.keepAlive,
-          family: this.config.family,
-          connectTimeout: this.config.connectTimeout,
-          commandTimeout: this.config.commandTimeout,
           keyPrefix: this.config.keyPrefix || `${this.namespace}:`,
-        });
+        };
+
+        // Add optional properties if they exist
+        if (this.config.tls !== undefined) {
+          redisOptions.tls = this.config.tls === true ? {} : undefined;
+        }
+        if (this.config.maxRetriesPerRequest !== undefined) {
+          redisOptions.maxRetriesPerRequest = this.config.maxRetriesPerRequest;
+        }
+        if (this.config.enableReadyCheck !== undefined) {
+          redisOptions.enableReadyCheck = this.config.enableReadyCheck;
+        }
+        if (this.config.lazyConnect !== undefined) {
+          redisOptions.lazyConnect = this.config.lazyConnect;
+        }
+        if (this.config.keepAlive !== undefined) {
+          redisOptions.keepAlive = this.config.keepAlive;
+        }
+        if (this.config.family !== undefined) {
+          redisOptions.family = this.config.family;
+        }
+        if (this.config.connectTimeout !== undefined) {
+          redisOptions.connectTimeout = this.config.connectTimeout;
+        }
+        if (this.config.commandTimeout !== undefined) {
+          redisOptions.commandTimeout = this.config.commandTimeout;
+        }
+
+        this.redis = new Redis(redisOptions);
       }
 
       // Set up event handlers
@@ -197,7 +216,7 @@ export class RedisCacheAdapter extends CacheAdapter {
     try {
       this.scriptShas.set('increment', await this.redis.script('LOAD', incrementScript));
       this.scriptShas.set('invalidateTags', await this.redis.script('LOAD', invalidateTagsScript));
-      
+
       logger.debug('Lua scripts loaded', { count: this.scriptShas.size });
     } catch (error) {
       logger.error('Failed to load Lua scripts', error as Error);
@@ -253,7 +272,7 @@ export class RedisCacheAdapter extends CacheAdapter {
     try {
       const fullKey = this.buildKey(key, options?.namespace);
       const ttl = this.calculateTTL(options);
-      
+
       let serializedValue = this.serialize(value, options);
 
       // Compress if requested
@@ -281,13 +300,13 @@ export class RedisCacheAdapter extends CacheAdapter {
 
   private async setTags(key: string, tags: string[]): Promise<void> {
     const pipeline = this.redis.pipeline();
-    
+
     for (const tag of tags) {
       const tagKey = `tags:${tag}`;
       pipeline.sadd(tagKey, key);
       pipeline.expire(tagKey, 86400); // Tags expire in 24 hours
     }
-    
+
     await pipeline.exec();
   }
 
@@ -301,13 +320,13 @@ export class RedisCacheAdapter extends CacheAdapter {
     try {
       const fullKey = this.buildKey(key);
       const result = await this.redis.del(fullKey);
-      
+
       const deleted = result > 0;
       if (deleted) {
         this.updateStats('delete');
         this.stats.totalKeys = Math.max(0, this.stats.totalKeys - 1);
       }
-      
+
       return deleted;
     } catch (error) {
       this.updateStats('error');
@@ -360,11 +379,11 @@ export class RedisCacheAdapter extends CacheAdapter {
     try {
       const fullKey = this.buildKey(key);
       const sha = this.scriptShas.get('increment');
-      
+
       if (sha) {
         // Use Lua script for atomic increment with TTL
         const result = await this.redis.evalsha(sha, 1, fullKey, by, this.defaultTTL);
-        return parseInt(result);
+        return parseInt(result, 10);
       } else {
         // Fallback to regular increment
         const result = await this.redis.incrby(fullKey, by);
@@ -426,7 +445,7 @@ export class RedisCacheAdapter extends CacheAdapter {
    * Set multiple keys at once
    */
   async mset(entries: Array<{ key: string; value: any; options?: CacheOptions }>): Promise<number> {
-    if (entries.length === 0) return 0;
+    if (entries.length === 0) {return 0;}
 
     await this.ensureConnected();
 
@@ -463,7 +482,7 @@ export class RedisCacheAdapter extends CacheAdapter {
       await pipeline.exec();
       this.stats.sets += successCount;
       this.stats.totalKeys += successCount;
-      
+
       return successCount;
     } catch (error) {
       this.updateStats('error');
@@ -476,7 +495,7 @@ export class RedisCacheAdapter extends CacheAdapter {
    * Delete multiple keys at once
    */
   async mdel(keys: string[]): Promise<number> {
-    if (keys.length === 0) return 0;
+    if (keys.length === 0) {return 0;}
 
     await this.ensureConnected();
 
@@ -487,10 +506,10 @@ export class RedisCacheAdapter extends CacheAdapter {
       });
 
       const result = await this.redis.del(...fullKeys);
-      
+
       this.stats.deletes += result;
       this.stats.totalKeys = Math.max(0, this.stats.totalKeys - result);
-      
+
       return result;
     } catch (error) {
       this.updateStats('error');
@@ -508,10 +527,10 @@ export class RedisCacheAdapter extends CacheAdapter {
     try {
       const fullPattern = this.buildKey(pattern);
       const keys = await this.redis.keys(fullPattern);
-      
+
       // Remove namespace prefix from returned keys
       const prefix = this.config.keyPrefix || `${this.namespace}:`;
-      return keys.map((key: string) => 
+      return keys.map((key: string) =>
         key.startsWith(prefix) ? key.slice(prefix.length) : key
       );
     } catch (error) {
@@ -524,41 +543,41 @@ export class RedisCacheAdapter extends CacheAdapter {
    * Invalidate cache entries by tags
    */
   async invalidateByTags(tags: string[]): Promise<number> {
-    if (tags.length === 0) return 0;
+    if (tags.length === 0) {return 0;}
 
     await this.ensureConnected();
 
     try {
       const sha = this.scriptShas.get('invalidateTags');
-      
+
       if (sha) {
         // Use Lua script for atomic operation
         const result = await this.redis.evalsha(sha, 0, ...tags);
-        const deletedCount = parseInt(result);
-        
+        const deletedCount = parseInt(result, 10);
+
         this.stats.deletes += deletedCount;
         this.stats.totalKeys = Math.max(0, this.stats.totalKeys - deletedCount);
-        
+
         logger.debug('Cache invalidated by tags', { tags, deletedCount });
         return deletedCount;
       } else {
         // Fallback implementation
         let totalDeleted = 0;
-        
+
         for (const tag of tags) {
           const tagKey = `tags:${tag}`;
           const keys = await this.redis.smembers(tagKey);
-          
+
           if (keys.length > 0) {
             const deleted = await this.redis.del(...keys);
             await this.redis.del(tagKey);
             totalDeleted += deleted;
           }
         }
-        
+
         this.stats.deletes += totalDeleted;
         this.stats.totalKeys = Math.max(0, this.stats.totalKeys - totalDeleted);
-        
+
         return totalDeleted;
       }
     } catch (error) {
@@ -576,11 +595,11 @@ export class RedisCacheAdapter extends CacheAdapter {
     try {
       const pattern = this.buildKey('*');
       const keys = await this.redis.keys(pattern);
-      
+
       if (keys.length > 0) {
         await this.redis.del(...keys);
       }
-      
+
       this.stats.totalKeys = 0;
       logger.debug('Redis cache cleared', { namespace: this.namespace, deletedKeys: keys.length });
     } catch (error) {
@@ -594,17 +613,17 @@ export class RedisCacheAdapter extends CacheAdapter {
    */
   async healthCheck(): Promise<{ healthy: boolean; latency?: number; error?: string }> {
     const startTime = Date.now();
-    
+
     try {
       await this.ensureConnected();
       await this.redis.ping();
       const latency = Date.now() - startTime;
-      
+
       return { healthy: true, latency };
     } catch (error) {
-      return { 
-        healthy: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      return {
+        healthy: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
   }
@@ -618,15 +637,15 @@ export class RedisCacheAdapter extends CacheAdapter {
         await this.subscriber.quit();
         this.subscriber = null;
       }
-      
+
       if (this.redis) {
         await this.redis.quit();
         this.redis = null;
       }
-      
+
       this.isConnected = false;
       this.connectionPromise = null;
-      
+
       logger.debug('Redis cache adapter closed');
     } catch (error) {
       logger.error('Error closing Redis connections', error as Error);
@@ -660,11 +679,11 @@ export class RedisCacheAdapter extends CacheAdapter {
 
       return {
         version: stats.redis_version || 'unknown',
-        usedMemory: parseInt(stats.used_memory || '0'),
-        connectedClients: parseInt(stats.connected_clients || '0'),
-        totalCommandsProcessed: parseInt(stats.total_commands_processed || '0'),
-        keyspaceHits: parseInt(stats.keyspace_hits || '0'),
-        keyspaceMisses: parseInt(stats.keyspace_misses || '0'),
+        usedMemory: parseInt(stats.used_memory || '0', 10),
+        connectedClients: parseInt(stats.connected_clients || '0', 10),
+        totalCommandsProcessed: parseInt(stats.total_commands_processed || '0', 10),
+        keyspaceHits: parseInt(stats.keyspace_hits || '0', 10),
+        keyspaceMisses: parseInt(stats.keyspace_misses || '0', 10),
       };
     } catch (error) {
       logger.error('Failed to get Redis info', error as Error);

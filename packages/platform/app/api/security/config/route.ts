@@ -14,10 +14,10 @@ import {
   AuditSeverity,
 } from '@/lib/security/audit-logger';
 
-const sql = getSql();
-
 async function handleGET(request: NextRequest) {
   try {
+    const sql = getSql();
+    
     // Verify authentication and admin access
     const session = await sessionService.getSessionFromCookies();
     if (!session || !session.isAdmin) {
@@ -38,11 +38,11 @@ async function handleGET(request: NextRequest) {
     const params = [session.organizationId];
 
     if (configType) {
-      query += ` AND config_type = $2`;
+      query += ' AND config_type = $2';
       params.push(configType);
     }
 
-    query += ` ORDER BY config_type`;
+    query += ' ORDER BY config_type';
 
     const result = await sql.query(query, params);
 
@@ -79,6 +79,8 @@ async function handleGET(request: NextRequest) {
 
 async function handlePOST(request: NextRequest) {
   try {
+    const sql = getSql();
+    
     // Verify authentication and admin access
     const session = await sessionService.getSessionFromCookies();
     if (!session || !session.isAdmin) {
@@ -169,7 +171,9 @@ async function handlePOST(request: NextRequest) {
         action: 'security_config_updated',
       },
       metadata: {
-        ipAddress: request.ip,
+        ipAddress: request.headers.get('x-forwarded-for') ||
+                  request.headers.get('x-real-ip') ||
+                  'unknown',
         userAgent: request.headers.get('user-agent') || undefined,
         source: 'api',
         timestamp: new Date(),
@@ -203,6 +207,8 @@ async function handlePOST(request: NextRequest) {
 
 async function handleDELETE(request: NextRequest) {
   try {
+    const sql = getSql();
+    
     // Verify authentication and admin access
     const session = await sessionService.getSessionFromCookies();
     if (!session || !session.isAdmin) {
@@ -249,7 +255,9 @@ async function handleDELETE(request: NextRequest) {
         action: 'security_config_deleted',
       },
       metadata: {
-        ipAddress: request.ip,
+        ipAddress: request.headers.get('x-forwarded-for') ||
+                  request.headers.get('x-real-ip') ||
+                  'unknown',
         userAgent: request.headers.get('user-agent') || undefined,
         source: 'api',
         timestamp: new Date(),

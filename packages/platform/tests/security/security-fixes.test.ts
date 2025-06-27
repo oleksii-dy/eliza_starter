@@ -3,7 +3,7 @@
  * Validates that critical security vulnerabilities have been fixed
  */
 
-import { describe, test, expect } from '@jest/globals';
+import { describe, test, expect } from 'vitest';
 import { NextRequest } from 'next/server';
 import {
   sanitizeHtml,

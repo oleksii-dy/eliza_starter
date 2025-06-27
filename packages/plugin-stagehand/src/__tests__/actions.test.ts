@@ -420,8 +420,15 @@ describe('BROWSER_FORWARD action', () => {
 
       const message = createMockMemory();
 
-      const result = await forwardAction.handler(mockRuntime, message as Memory, {} as State, {}, mockCallback, []);
-      
+      const result = await forwardAction.handler(
+        mockRuntime,
+        message as Memory,
+        {} as State,
+        {},
+        mockCallback,
+        []
+      );
+
       expect(result.text).toContain('No active browser session');
       expect(result.data?.error).toBe('no_session');
       expect(result.values?.success).toBe(false);
@@ -433,7 +440,14 @@ describe('BROWSER_FORWARD action', () => {
 
       const message = createMockMemory();
 
-      const result = await forwardAction.handler(mockRuntime, message as Memory, {} as State, {}, mockCallback, []);
+      const result = await forwardAction.handler(
+        mockRuntime,
+        message as Memory,
+        {} as State,
+        {},
+        mockCallback,
+        []
+      );
 
       expect(result.text).toBe('Failed to navigate forward');
       expect(result.values?.success).toBe(false);
@@ -511,8 +525,15 @@ describe('BROWSER_REFRESH action', () => {
 
       const message = createMockMemory();
 
-      const result = await refreshAction.handler(mockRuntime, message as Memory, {} as State, {}, mockCallback, []);
-      
+      const result = await refreshAction.handler(
+        mockRuntime,
+        message as Memory,
+        {} as State,
+        {},
+        mockCallback,
+        []
+      );
+
       expect(result.text).toContain('No active browser session');
       expect(result.data?.error).toBe('no_session');
       expect(result.values?.success).toBe(false);

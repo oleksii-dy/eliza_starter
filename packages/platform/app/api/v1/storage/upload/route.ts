@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import {
   S3Client,
   PutObjectCommand,
@@ -31,7 +32,7 @@ const R2_PRICING = {
   egressPerGB: 0.0, // Free egress to internet
 };
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     // Extract API key from Authorization header
     const authHeader = request.headers.get('authorization');
@@ -240,3 +241,5 @@ export async function handlePOST(request: NextRequest) {
     );
   }
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { sessionService } from '@/lib/auth/session';
 import { inferenceAnalytics } from '@/lib/services/inference-analytics';
 
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     const session = await sessionService.getSessionFromCookies();
     if (!session) {
@@ -13,8 +14,8 @@ export async function handleGET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '50');
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = parseInt(searchParams.get('limit') || '50', 10);
     const provider = searchParams.get('provider') || undefined;
     const model = searchParams.get('model') || undefined;
     const status = searchParams.get('status') || undefined;
@@ -51,3 +52,5 @@ export async function handleGET(request: NextRequest) {
     );
   }
 }
+
+export const { GET } = wrapHandlers({ handleGET });

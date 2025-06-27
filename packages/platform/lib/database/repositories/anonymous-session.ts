@@ -192,13 +192,13 @@ export class AnonymousSessionRepository {
         const session = AnonymousSessionRepository.testSessions.get(sessionId);
         if (session) {
           // Apply updates to the stored session
-          if (updates.chatHistory) session.chatHistory = updates.chatHistory;
+          if (updates.chatHistory) {session.chatHistory = updates.chatHistory;}
           if (updates.workflowProgress)
-            session.workflowProgress = updates.workflowProgress;
+          {session.workflowProgress = updates.workflowProgress;}
           if (updates.userPreferences)
-            session.userPreferences = updates.userPreferences;
+          {session.userPreferences = updates.userPreferences;}
           if (updates.generatedContent)
-            session.generatedContent = updates.generatedContent;
+          {session.generatedContent = updates.generatedContent;}
           session.lastActivity = new Date();
 
           console.log(`✅ Mock session updated for testing: ${sessionId}`);
@@ -372,7 +372,7 @@ export class AnonymousSessionRepository {
           preferences: session.userPreferences,
           migration: {
             lastMigration: {
-              sessionId: sessionId,
+              sessionId,
               migratedAt: new Date(),
               preservedAssets: session.generatedContent.length,
               chatMessages: session.chatHistory.length,

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { WorkOSAuthService } from '@/lib/auth/workos';
 
 type SocialProvider = 'google' | 'github' | 'discord' | 'twitter' | 'microsoft';
@@ -41,7 +42,7 @@ function getRedirectUri(request: NextRequest): string {
   return `${baseUrl}/auth/callback`;
 }
 
-export async function handleGET(
+async function handleGET(
   request: NextRequest,
   { params }: { params: Promise<{ provider: string }> },
 ) {
@@ -114,7 +115,7 @@ export async function handleGET(
 }
 
 // Handle POST for programmatic social auth (for API usage)
-export async function handlePOST(
+async function handlePOST(
   request: NextRequest,
   { params }: { params: Promise<{ provider: string }> },
 ) {
@@ -179,3 +180,5 @@ export async function handlePOST(
     );
   }
 }
+
+export const { GET, POST } = wrapHandlers({ handleGET, handlePOST });

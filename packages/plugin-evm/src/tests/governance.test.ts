@@ -363,11 +363,11 @@ describe('Governance Actions', () => {
         const gasPrice = await publicClient.getGasPrice();
 
         // Estimate gas for a complex execution (multiple targets)
-        const estimatedGas = 500000n; // Typical governor execution
+        const estimatedGas = BigInt(500000); // Typical governor execution
         const estimatedCost = gasPrice * estimatedGas;
 
-        console.log(`Estimated execution cost: ${estimatedCost / 10n ** 18n} ETH`);
-        expect(estimatedCost).toBeGreaterThan(0n);
+        console.log(`Estimated execution cost: ${estimatedCost / BigInt(Math.pow(10, 18))} ETH`);
+        expect(estimatedCost).toBeGreaterThan(BigInt(0));
       });
     });
   });

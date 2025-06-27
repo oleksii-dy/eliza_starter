@@ -6,7 +6,7 @@ import {
   logger,
   asUUID,
 } from '@elizaos/core';
-import { CostTrackingService } from '../services/CostTrackingService.js';
+import { CostTrackingService } from '../services/CostTrackingService';
 
 /**
  * Action for verifying that secret messages have been received and stored in memory

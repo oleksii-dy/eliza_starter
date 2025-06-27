@@ -42,7 +42,15 @@ describe('E2B Plugin Production Validation', () => {
       const fs = await import('fs');
       const path = await import('path');
 
-      const servicePath = path.join(__dirname, '..', '..', '..', 'src', 'services', 'ImprovedE2BService.ts');
+      const servicePath = path.join(
+        __dirname,
+        '..',
+        '..',
+        '..',
+        'src',
+        'services',
+        'ImprovedE2BService.ts'
+      );
       expect(fs.existsSync(servicePath)).toBe(true);
 
       const serviceContent = fs.readFileSync(servicePath, 'utf8');

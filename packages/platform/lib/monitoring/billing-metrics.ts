@@ -59,7 +59,7 @@ export class BillingMetricsCollector {
   ): Promise<BillingMetrics> {
     const cacheKey = `billing-metrics-${startDate.getTime()}-${endDate.getTime()}-${organizationId || 'all'}`;
     const cached = this.getCachedData(cacheKey);
-    if (cached) return cached;
+    if (cached) {return cached;}
 
     const db = getDatabase();
 
@@ -483,7 +483,7 @@ export class BillingMetricsCollector {
     current: number,
     previous: number,
   ): number {
-    if (previous === 0) return current > 0 ? 100 : 0;
+    if (previous === 0) {return current > 0 ? 100 : 0;}
     return ((current - previous) / previous) * 100;
   }
 

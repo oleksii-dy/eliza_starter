@@ -3,10 +3,138 @@ import { RobotService } from '../../services/robot-service';
 import type { IAgentRuntime } from '@elizaos/core';
 import { RobotMode, RobotStatus } from '../../types';
 
+// Mock ROS2Bridge to prevent real WebSocket connections
+mock.module('../../communication/ros2-bridge', () => ({
+  ROS2Bridge: class MockROS2Bridge {
+    private connected = false;
+    private eventHandlers: Map<string, Function[]> = new Map();
+
+    constructor(config: any) {
+      // Mock constructor
+    }
+
+    async connect(): Promise<void> {
+      this.connected = true;
+      // Simulate successful connection
+      this.emit('connection');
+
+      // Simulate initial joint states after connection
+      setTimeout(() => {
+        this.emit('jointStates', [
+          { name: 'head_yaw', position: 0, velocity: 0, effort: 0 },
+          { name: 'head_pitch', position: 0, velocity: 0, effort: 0 },
+          { name: 'left_shoulder_pitch', position: 0, velocity: 0, effort: 0 },
+          { name: 'left_shoulder_roll', position: 0, velocity: 0, effort: 0 },
+          { name: 'left_elbow_pitch', position: 0, velocity: 0, effort: 0 },
+          { name: 'left_wrist_yaw', position: 0, velocity: 0, effort: 0 },
+          { name: 'left_wrist_pitch', position: 0, velocity: 0, effort: 0 },
+          { name: 'left_gripper', position: 0, velocity: 0, effort: 0 },
+          { name: 'right_shoulder_pitch', position: 0, velocity: 0, effort: 0 },
+          { name: 'right_shoulder_roll', position: 0, velocity: 0, effort: 0 },
+          { name: 'right_elbow_pitch', position: 0, velocity: 0, effort: 0 },
+          { name: 'right_wrist_yaw', position: 0, velocity: 0, effort: 0 },
+          { name: 'right_wrist_pitch', position: 0, velocity: 0, effort: 0 },
+          { name: 'right_gripper', position: 0, velocity: 0, effort: 0 },
+          { name: 'left_hip_yaw', position: 0, velocity: 0, effort: 0 },
+          { name: 'left_hip_roll', position: 0, velocity: 0, effort: 0 },
+          { name: 'left_hip_pitch', position: 0, velocity: 0, effort: 0 },
+          { name: 'left_knee_pitch', position: 0, velocity: 0, effort: 0 },
+          { name: 'left_ankle_pitch', position: 0, velocity: 0, effort: 0 },
+          { name: 'left_ankle_roll', position: 0, velocity: 0, effort: 0 },
+          { name: 'right_hip_yaw', position: 0, velocity: 0, effort: 0 },
+          { name: 'right_hip_roll', position: 0, velocity: 0, effort: 0 },
+          { name: 'right_hip_pitch', position: 0, velocity: 0, effort: 0 },
+          { name: 'right_knee_pitch', position: 0, velocity: 0, effort: 0 },
+          { name: 'right_ankle_pitch', position: 0, velocity: 0, effort: 0 },
+          { name: 'right_ankle_roll', position: 0, velocity: 0, effort: 0 },
+        ]);
+      }, 10);
+      return Promise.resolve();
+    }
+
+    async disconnect(): Promise<void> {
+      this.connected = false;
+      this.emit('disconnected');
+    }
+
+    isConnected(): boolean {
+      return this.connected;
+    }
+
+    on(event: string, handler: Function): void {
+      if (!this.eventHandlers.has(event)) {
+        this.eventHandlers.set(event, []);
+      }
+      this.eventHandlers.get(event)!.push(handler);
+    }
+
+    emit(event: string, ...args: any[]): void {
+      const handlers = this.eventHandlers.get(event);
+      if (handlers) {
+        handlers.forEach((handler) => handler(...args));
+      }
+    }
+
+    async sendJointCommand(joints: any, duration: number): Promise<void> {
+      // Mock implementation
+      return Promise.resolve();
+    }
+
+    async sendEmergencyStop(stop: boolean): Promise<void> {
+      // Mock implementation
+      return Promise.resolve();
+    }
+  },
+}));
+
+// Mock SerialProtocol to prevent real serial connections
+mock.module('../../communication/serial-protocol', () => ({
+  SerialProtocol: class MockSerialProtocol {
+    private ready = false;
+
+    constructor(port: string, baudRate: number) {
+      // Mock constructor
+    }
+
+    async connect(): Promise<void> {
+      this.ready = true;
+      return Promise.resolve();
+    }
+
+    async disconnect(): Promise<void> {
+      this.ready = false;
+      return Promise.resolve();
+    }
+
+    isReady(): boolean {
+      return this.ready;
+    }
+
+    async enableServo(id: number): Promise<void> {
+      return Promise.resolve();
+    }
+
+    async disableServo(id: number): Promise<void> {
+      return Promise.resolve();
+    }
+
+    async moveServo(id: number, position: number): Promise<void> {
+      return Promise.resolve();
+    }
+
+    async readServoPosition(id: number): Promise<number> {
+      return Promise.resolve(500); // Return middle position
+    }
+  },
+}));
+
 // Simplified TestSuite implementation for local use
 class TestSuite {
-  constructor(private name: string, private config: any) {}
-  
+  constructor(
+    private name: string,
+    private config: any
+  ) {}
+
   addTest(test: any) {
     it(test.name, async () => {
       const context = this.config.beforeEach ? await this.config.beforeEach() : {};
@@ -19,13 +147,14 @@ class TestSuite {
       }
     });
   }
-  
+
   run() {
     // No-op, bun:test handles execution
   }
 }
 
-const createUnitTest = (config: { name: string; fn: (context?: any) => Promise<void> | void }) => config;
+const createUnitTest = (config: { name: string; fn: (context?: any) => Promise<void> | void }) =>
+  config;
 
 // Mock runtime helper
 function createMockRuntime(overrides: any = {}): IAgentRuntime {
@@ -99,9 +228,9 @@ describe('RobotService', () => {
       fn: async ({ mockRuntime }) => {
         const startedService = await RobotService.start(mockRuntime);
         const service = startedService as RobotService;
-        
+
         expect(service).toBeInstanceOf(RobotService);
-        
+
         // Cleanup
         await service.stop();
       },
@@ -205,8 +334,8 @@ describe('RobotService', () => {
     createUnitTest({
       name: 'should accept valid joint movements',
       fn: async ({ service }) => {
-        await expect(service.moveJoint('head_yaw', 0.5)).resolves.not.toThrow();
-        await expect(service.moveJoint('left_shoulder_pitch', 1.0)).resolves.not.toThrow();
+        await expect(async () => await service.moveJoint('head_yaw', 0.5)).not.toThrow();
+        await expect(async () => await service.moveJoint('left_shoulder_pitch', 1.0)).not.toThrow();
       },
     })
   );
@@ -312,7 +441,7 @@ describe('RobotService', () => {
           },
         };
 
-        await expect(service.moveToPose(pose)).resolves.not.toThrow();
+        await expect(async () => await service.moveToPose(pose)).not.toThrow();
       },
     })
   );
@@ -337,7 +466,7 @@ describe('RobotService', () => {
         await service.setMode(RobotMode.MANUAL);
 
         // Then execute it
-        await expect(service.executeMotion('custom_motion')).resolves.not.toThrow();
+        await expect(async () => await service.executeMotion('custom_motion')).not.toThrow();
       },
     })
   );
@@ -474,7 +603,7 @@ describe('RobotService', () => {
         const startedService = await RobotService.start(mockRuntime);
         const service = startedService as RobotService;
 
-        await expect(service.stop()).resolves.not.toThrow();
+        await expect(async () => await service.stop()).not.toThrow();
       },
     })
   );
@@ -487,7 +616,7 @@ describe('RobotService', () => {
         const service = startedService as RobotService;
 
         await service.stop();
-        await expect(service.stop()).resolves.not.toThrow();
+        await expect(async () => await service.stop()).not.toThrow();
       },
     })
   );

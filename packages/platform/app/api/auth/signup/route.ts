@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { getDatabase } from '@/lib/database';
 import { users, organizations, userSessions } from '@/lib/database/schema';
 import { eq } from 'drizzle-orm';
@@ -14,7 +15,7 @@ const signupSchema = z.object({
   password: z.string().min(8).optional(), // Optional for dev mode
 });
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const body = await request.json();
 
@@ -167,3 +168,5 @@ export async function handlePOST(request: NextRequest) {
     );
   }
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

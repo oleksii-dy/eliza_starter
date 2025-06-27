@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { MarketplaceService } from '@/lib/services/marketplace';
 import { auth } from '@/lib/auth';
 import { getDatabase } from '@/lib/database';
@@ -7,7 +8,7 @@ import { eq, and } from 'drizzle-orm';
 
 const marketplaceService = new MarketplaceService();
 
-export async function handleGET(
+async function handleGET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -214,3 +215,5 @@ export async function DELETE(
     );
   }
 }
+
+export const { GET } = wrapHandlers({ handleGET });

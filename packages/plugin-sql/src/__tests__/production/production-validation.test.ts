@@ -34,7 +34,7 @@ describe('SQL Plugin Production Validation', () => {
   beforeAll(async () => {
     console.log('[PRODUCTION VALIDATION] Setting up production test environment...');
 
-    const setup = await createIsolatedTestDatabase(`production_validation_${Date.now()}`, []);
+    const setup = await createIsolatedTestDatabase(`production_validation_${Date.now()}`);
 
     adapter = setup.adapter;
     runtime = setup.runtime;
@@ -44,7 +44,7 @@ describe('SQL Plugin Production Validation', () => {
     // Detect database type
     console.log('[PRODUCTION VALIDATION] Using PostgreSQL database');
     console.log('[PRODUCTION VALIDATION] Production test environment ready');
-  }, 60000); // Extended timeout for production setup
+  }); // Extended timeout for production setup
 
   afterAll(async () => {
     console.log('[PRODUCTION VALIDATION] Cleaning up production test environment...');
@@ -371,7 +371,7 @@ describe('SQL Plugin Production Validation', () => {
       expect(heapIncreaseMB).toBeLessThan(200);
 
       // Verify all data was created correctly
-      const entities = await runtime.getEntityByIds(
+      const entities = await adapter.getEntitiesByIds(
         Array.from({ length: Math.min(entityCount, 100) }, () => uuidv4() as UUID)
       );
 

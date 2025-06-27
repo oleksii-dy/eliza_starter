@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { getServerSession, authOptions } from '@/lib/auth/config';
 import { randomBytes } from 'crypto';
 
@@ -7,7 +8,7 @@ export const runtime = 'nodejs';
 // Mock storage for demo purposes - in a real app, this would be actual file storage
 const filesDB: any[] = [];
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.organizationId) {
@@ -76,3 +77,5 @@ export async function handlePOST(request: NextRequest) {
 }
 
 // Note: In a real app, this would use a proper database or file storage service
+
+export const { POST } = wrapHandlers({ handlePOST });

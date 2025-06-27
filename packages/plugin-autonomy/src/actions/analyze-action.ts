@@ -37,7 +37,7 @@ export const analyzeDataAction: Action = {
     runtime: IAgentRuntime,
     message: Memory,
     state?: State,
-    options?: any,
+    options?: { [key: string]: unknown },
     callback?: HandlerCallback
   ): Promise<ActionResult> => {
     if (!callback) {
@@ -85,7 +85,7 @@ export const analyzeDataAction: Action = {
         files: [] as string[],
         languages: new Set<string>(),
         frameworks: new Set<string>(),
-        dependencies: {} as Record<string, any>,
+        dependencies: {} as Record<string, string>,
         structure: {} as Record<string, number>,
         insights: [] as string[],
       };

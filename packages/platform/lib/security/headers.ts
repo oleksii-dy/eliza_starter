@@ -1,6 +1,6 @@
 /**
  * Advanced Security Headers Middleware
- * 
+ *
  * Implements comprehensive security headers to protect against common web vulnerabilities
  * including XSS, CSRF, clickjacking, and other security threats.
  */
@@ -16,7 +16,7 @@ export interface SecurityHeadersConfig {
     reportOnly?: boolean;
     reportUri?: string;
   };
-  
+
   // HTTP Strict Transport Security
   hsts?: {
     enabled: boolean;
@@ -24,22 +24,22 @@ export interface SecurityHeadersConfig {
     includeSubDomains?: boolean;
     preload?: boolean;
   };
-  
+
   // X-Frame-Options
   frameOptions?: 'DENY' | 'SAMEORIGIN' | 'ALLOW-FROM' | false;
-  
+
   // X-Content-Type-Options
   noSniff?: boolean;
-  
+
   // X-XSS-Protection
   xssProtection?: boolean;
-  
+
   // Referrer Policy
   referrerPolicy?: string;
-  
+
   // Permissions Policy
   permissionsPolicy?: Record<string, string[]>;
-  
+
   // Custom headers
   customHeaders?: Record<string, string>;
 }
@@ -208,16 +208,16 @@ export class SecurityHeaders {
    * Apply Content Security Policy
    */
   private applyCsp(response: NextResponse): void {
-    if (!this.config.csp?.directives) return;
+    if (!this.config.csp?.directives) {return;}
 
     const directives = Object.entries(this.config.csp.directives)
       .map(([directive, values]) => {
-        if (values.length === 0) return directive;
+        if (values.length === 0) {return directive;}
         return `${directive} ${values.join(' ')}`;
       })
       .join('; ');
 
-    const headerName = this.config.csp.reportOnly 
+    const headerName = this.config.csp.reportOnly
       ? 'Content-Security-Policy-Report-Only'
       : 'Content-Security-Policy';
 
@@ -233,14 +233,14 @@ export class SecurityHeaders {
    * Apply HTTP Strict Transport Security
    */
   private applyHsts(response: NextResponse): void {
-    if (!this.config.hsts) return;
+    if (!this.config.hsts) {return;}
 
     let hstsValue = `max-age=${this.config.hsts.maxAge || 31536000}`;
-    
+
     if (this.config.hsts.includeSubDomains) {
       hstsValue += '; includeSubDomains';
     }
-    
+
     if (this.config.hsts.preload) {
       hstsValue += '; preload';
     }
@@ -252,11 +252,11 @@ export class SecurityHeaders {
    * Apply Permissions Policy
    */
   private applyPermissionsPolicy(response: NextResponse): void {
-    if (!this.config.permissionsPolicy) return;
+    if (!this.config.permissionsPolicy) {return;}
 
     const policies = Object.entries(this.config.permissionsPolicy)
       .map(([directive, values]) => {
-        if (values.length === 0) return `${directive}=()`;
+        if (values.length === 0) {return `${directive}=()`;}
         return `${directive}=(${values.join(' ')})`;
       })
       .join(', ');
@@ -268,7 +268,7 @@ export class SecurityHeaders {
    * Check if request is secure (HTTPS)
    */
   private isSecureRequest(request: NextRequest): boolean {
-    return request.url.startsWith('https://') || 
+    return request.url.startsWith('https://') ||
            request.headers.get('x-forwarded-proto') === 'https';
   }
 
@@ -276,11 +276,11 @@ export class SecurityHeaders {
    * Merge configuration objects
    */
   private mergeConfig(
-    defaultConfig: SecurityHeadersConfig, 
+    defaultConfig: SecurityHeadersConfig,
     userConfig: Partial<SecurityHeadersConfig>
   ): SecurityHeadersConfig {
     const merged = { ...defaultConfig };
-    
+
     if (userConfig.csp) {
       merged.csp = {
         ...defaultConfig.csp,
@@ -328,7 +328,7 @@ export class SecurityHeaders {
    */
   static createMiddleware(config?: Partial<SecurityHeadersConfig>) {
     const headers = new SecurityHeaders(config);
-    
+
     return function securityHeadersMiddleware(request: NextRequest) {
       const response = NextResponse.next();
       return headers.apply(request, response);
@@ -340,16 +340,16 @@ export class SecurityHeaders {
    */
   static createApiWrapper(config?: Partial<SecurityHeadersConfig>) {
     const headers = new SecurityHeaders(config);
-    
-    return function withSecurityHeaders<T extends (...args: any[]) => any>(handler: T): T {
+
+    return function withSecurityHeaders<T extends(...args: any[]) => any>(handler: T): T {
       return (async (...args: Parameters<T>) => {
         const [request] = args;
         const result = await handler(...args);
-        
+
         if (result instanceof NextResponse) {
           return headers.apply(request, result);
         }
-        
+
         return result;
       }) as T;
     };
@@ -369,7 +369,7 @@ export class SecurityHeaders {
     ];
 
     const errors: string[] = [];
-    
+
     Object.keys(directives).forEach(directive => {
       if (!validDirectives.includes(directive)) {
         errors.push(`Invalid CSP directive: ${directive}`);
@@ -385,11 +385,13 @@ export class SecurityHeaders {
   static async handleCspReport(request: NextRequest): Promise<NextResponse> {
     try {
       const report = await request.json();
-      
+
       logger.warn('CSP Violation Report', {
         report,
         userAgent: request.headers.get('user-agent'),
-        ip: request.ip,
+        ip: request.headers.get('x-forwarded-for') ||
+            request.headers.get('x-real-ip') ||
+            'unknown',
         timestamp: new Date().toISOString(),
       });
 

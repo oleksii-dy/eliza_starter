@@ -198,7 +198,7 @@ export function validateContentType(contentType: string | null): boolean {
     'multipart/form-data',
   ];
 
-  if (!contentType) return false;
+  if (!contentType) {return false;}
 
   return allowedTypes.some((type) => contentType.includes(type));
 }

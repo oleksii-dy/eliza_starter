@@ -52,7 +52,7 @@ export async function generateHandler(req: NextRequest): Promise<NextResponse> {
     request.organizationId = organizationId;
 
     // Add default values for required fields if missing
-    if (!request.priority) request.priority = 'normal';
+    if (!request.priority) {request.priority = 'normal';}
 
     // Initialize services
     const storage = await getStorageManager();

@@ -1,4 +1,4 @@
-import type { UUID } from '../types/core.d';
+import type { UUID } from '@elizaos/core';
 
 /**
  * Wallet permission types

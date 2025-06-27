@@ -5,6 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { sessionService } from '@/lib/auth/session';
 import { createStripeCustomer } from '@/lib/server/services/billing-service';
 import { getDatabase } from '@/lib/database';
@@ -27,7 +28,7 @@ const cryptoOnrampSchema = z.object({
   cancelUrl: z.string().url(),
 });
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     // Get user session
     const session = await sessionService.getSessionFromCookies();
@@ -118,3 +119,5 @@ export async function handlePOST(request: NextRequest) {
     );
   }
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

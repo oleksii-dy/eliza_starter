@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { authService, sessionService } from '@/lib/auth/session';
 import { cookies } from 'next/headers';
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     // Get current access token from cookies to destroy session
     const cookieStore = await cookies();
@@ -32,3 +33,5 @@ export async function handlePOST(request: NextRequest) {
     );
   }
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

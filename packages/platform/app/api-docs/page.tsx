@@ -21,8 +21,8 @@ export default function ApiDocsPage() {
     // Load saved tokens from localStorage
     const savedApiKey = localStorage.getItem('api-test-key');
     const savedToken = localStorage.getItem('api-test-token');
-    if (savedApiKey) setApiKey(savedApiKey);
-    if (savedToken) setBearerToken(savedToken);
+    if (savedApiKey) {setApiKey(savedApiKey);}
+    if (savedToken) {setBearerToken(savedToken);}
   }, []);
 
   const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,15 +51,18 @@ export default function ApiDocsPage() {
       if (data.success) {
         setBearerToken(data.data.token);
         localStorage.setItem('api-test-token', data.data.token);
-        alert('Login successful! Token saved.');
+        console.log('Login successful! Token saved.');
+        // TODO: Show success toast notification
       } else {
-        alert('Login failed: ' + data.error);
+        console.error(`Login failed: ${data.error}`);
+        // TODO: Show error toast notification
       }
     } catch (error) {
-      alert(
-        'Login error: ' +
-          (error instanceof Error ? error.message : 'Unknown error'),
+      console.error(
+        `Login error: ${
+          error instanceof Error ? error.message : 'Unknown error'}`,
       );
+      // TODO: Show error toast notification
     }
   };
 

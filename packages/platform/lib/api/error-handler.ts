@@ -249,7 +249,7 @@ export class ApiErrorHandler {
   private static sanitizeErrorDetails(
     details?: Record<string, any>,
   ): Record<string, any> | undefined {
-    if (!details) return undefined;
+    if (!details) {return undefined;}
 
     const sanitized: Record<string, any> = {};
 

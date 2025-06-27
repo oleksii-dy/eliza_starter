@@ -87,7 +87,7 @@ function sanitizeForLogging(input: string): string {
   return sanitized;
 }
 
-function sanitizeError(error: unknown): any {
+function sanitizeError(error: unknown): string {
   const errorMsg = error instanceof Error ? error.message : String(error);
   return sanitizeForLogging(errorMsg);
 }
@@ -451,7 +451,7 @@ export const browseWebAction: Action = {
     runtime: IAgentRuntime,
     message: Memory,
     state?: State,
-    options?: any,
+    options?: { [key: string]: unknown },
     callback?: HandlerCallback
   ): Promise<ActionResult> => {
     if (!callback) {

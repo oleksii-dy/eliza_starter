@@ -3,7 +3,7 @@
  * Basic test to verify billing and configuration systems work without mocking
  */
 
-import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, test, expect, beforeEach, afterEach } from 'vitest';
 import {
   addCredits,
   deductCredits,
@@ -172,7 +172,7 @@ describe('Simple Runtime Integration', () => {
         await new Promise((resolve) => setTimeout(resolve, 100));
 
         const checkBalance = await getCreditBalance(testOrgId);
-        if (checkBalance === 0) break;
+        if (checkBalance === 0) {break;}
 
         console.warn(
           `Attempt ${i + 1}: Balance still ${checkBalance}, retrying...`,

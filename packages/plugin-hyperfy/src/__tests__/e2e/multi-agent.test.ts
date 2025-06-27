@@ -119,7 +119,7 @@ export class MultiAgentE2ETestSuite implements TestSuite {
 
         // Test perception
         const perceptionAction = hyperfyPlugin.actions?.find(
-          (a) => a.name === 'HYPERFY_SCENE_PERCEPTION'
+          (a: any) => a.name === 'HYPERFY_SCENE_PERCEPTION'
         );
 
         if (!perceptionAction) {

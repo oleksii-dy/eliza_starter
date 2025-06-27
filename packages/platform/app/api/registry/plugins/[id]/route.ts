@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { getServerSession, authOptions } from '@/lib/auth/auth-config';
 import { getSql } from '@/lib/database';
 
-export async function handleGET(
+async function handleGET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -145,7 +146,7 @@ export async function PATCH(
       );
     }
 
-    updateFields.push(`updated_at = NOW()`);
+    updateFields.push('updated_at = NOW()');
     updateValues.push(pluginId);
 
     const query = `
@@ -229,3 +230,5 @@ export async function DELETE(
     );
   }
 }
+
+export const { GET } = wrapHandlers({ handleGET });

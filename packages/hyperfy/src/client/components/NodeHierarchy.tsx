@@ -8,45 +8,45 @@ import {
   LayersIcon,
   MagnetIcon,
   PersonStandingIcon,
-} from 'lucide-react'
-import React, { useEffect, useMemo, useState } from 'react'
-import { cls } from './cls'
+} from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { cls } from './cls';
 
 export function NodeHierarchy({ app }) {
-  const [selectedNode, setSelectedNode] = useState<any>(null)
-  const rootNode = useMemo(() => app.getNodes(), [])
+  const [selectedNode, setSelectedNode] = useState<any>(null);
+  const rootNode = useMemo(() => app.getNodes(), []);
 
   useEffect(() => {
     if (rootNode && !selectedNode) {
-      setSelectedNode(rootNode)
+      setSelectedNode(rootNode);
     }
-  }, [rootNode])
+  }, [rootNode]);
 
   // Helper function to safely get vector string
   const getVectorString = vec => {
     if (!vec || typeof vec.x !== 'number') {
-      return null
+      return null;
     }
-    return `${vec.x.toFixed(2)}, ${vec.y.toFixed(2)}, ${vec.z.toFixed(2)}`
-  }
+    return `${vec.x.toFixed(2)}, ${vec.y.toFixed(2)}, ${vec.z.toFixed(2)}`;
+  };
 
   // Helper function to safely check if a property exists
   const hasProperty = (obj, prop) => {
     try {
-      return obj && typeof obj[prop] !== 'undefined'
+      return obj && typeof obj[prop] !== 'undefined';
     } catch (_err) {
-      return false
+      return false;
     }
-  }
+  };
 
   const renderHierarchy = (nodes, depth, selectedNode, setSelectedNode) => {
     return nodes.map(node => {
       if (!node) {
-        return null
+        return null;
       }
 
-      const isSelected = selectedNode && selectedNode.id === node.id
-      const nodeIcon = getNodeIcon(node.constructor.name)
+      const isSelected = selectedNode && selectedNode.id === node.id;
+      const nodeIcon = getNodeIcon(node.constructor.name);
 
       return (
         <div key={node.id || node.name}>
@@ -59,39 +59,39 @@ export function NodeHierarchy({ app }) {
             <span>{node.name || node.constructor.name}</span>
           </div>
           {node.children && node.children.length > 0 && (
-            <div className='nodehierarchy-item-indent'>
+            <div className="nodehierarchy-item-indent">
               {renderHierarchy(node.children, depth + 1, selectedNode, setSelectedNode)}
             </div>
           )}
         </div>
-      )
-    })
-  }
+      );
+    });
+  };
 
   const getNodeIcon = nodeName => {
     switch (nodeName) {
       case 'Group':
-        return <FolderIcon size={16} />
+        return <FolderIcon size={16} />;
       case 'Mesh':
-        return <BoxIcon size={16} />
+        return <BoxIcon size={16} />;
       case 'Collider':
-        return <MagnetIcon size={16} />
+        return <MagnetIcon size={16} />;
       case 'RigidBody':
-        return <DumbbellIcon size={16} />
+        return <DumbbellIcon size={16} />;
       case 'Avatar':
-        return <PersonStandingIcon size={16} />
+        return <PersonStandingIcon size={16} />;
       case 'LOD':
-        return <LayersIcon size={16} />
+        return <LayersIcon size={16} />;
       case 'Anchor':
-        return <BlendIcon size={16} />
+        return <BlendIcon size={16} />;
       default:
-        return <CircleIcon size={16} />
+        return <CircleIcon size={16} />;
     }
-  }
+  };
 
   return (
     <div
-      className='nodehierarchy noscrollbar'
+      className="nodehierarchy noscrollbar"
       style={{
         flex: 1,
         display: 'flex',
@@ -165,11 +165,11 @@ export function NodeHierarchy({ app }) {
           cursor: pointer;
         }
       `}</style>
-      <div className='nodehierarchy-tree'>
+      <div className="nodehierarchy-tree">
         {rootNode ? (
           renderHierarchy([rootNode], 0, selectedNode, setSelectedNode)
         ) : (
-          <div className='nodehierarchy-empty'>
+          <div className="nodehierarchy-empty">
             <LayersIcon size={24} />
             <div>No nodes found</div>
           </div>
@@ -177,32 +177,32 @@ export function NodeHierarchy({ app }) {
       </div>
 
       {selectedNode && (
-        <div className='nodehierarchy-details'>
-          <HierarchyDetail label='ID' value={selectedNode.id} copy />
-          <HierarchyDetail label='Name' value={selectedNode.name} copy={false} />
+        <div className="nodehierarchy-details">
+          <HierarchyDetail label="ID" value={selectedNode.id} copy />
+          <HierarchyDetail label="Name" value={selectedNode.name} copy={false} />
 
           {/* Position */}
           {hasProperty(selectedNode, 'position') && getVectorString(selectedNode.position) && (
-            <HierarchyDetail label='Position' value={getVectorString(selectedNode.position)} copy={false} />
+            <HierarchyDetail label="Position" value={getVectorString(selectedNode.position)} copy={false} />
           )}
 
           {/* Rotation */}
           {hasProperty(selectedNode, 'rotation') && getVectorString(selectedNode.rotation) && (
-            <HierarchyDetail label='Rotation' value={getVectorString(selectedNode.rotation)} copy={false} />
+            <HierarchyDetail label="Rotation" value={getVectorString(selectedNode.rotation)} copy={false} />
           )}
 
           {/* Scale */}
           {hasProperty(selectedNode, 'scale') && getVectorString(selectedNode.scale) && (
-            <HierarchyDetail label='Scale' value={getVectorString(selectedNode.scale)} copy={false} />
+            <HierarchyDetail label="Scale" value={getVectorString(selectedNode.scale)} copy={false} />
           )}
 
           {/* Material */}
           {hasProperty(selectedNode, 'material') && selectedNode.material && (
             <>
-              <HierarchyDetail label='Material' value={selectedNode.material.type || 'Standard'} copy={false} />
+              <HierarchyDetail label="Material" value={selectedNode.material.type || 'Standard'} copy={false} />
               {hasProperty(selectedNode.material, 'color') && selectedNode.material.color && (
                 <HierarchyDetail
-                  label='Color'
+                  label="Color"
                   value={
                     selectedNode.material.color.getHexString
                       ? `#${selectedNode.material.color.getHexString()}`
@@ -216,29 +216,29 @@ export function NodeHierarchy({ app }) {
 
           {/* Geometry */}
           {hasProperty(selectedNode, 'geometry') && selectedNode.geometry && (
-            <HierarchyDetail label='Geometry' value={selectedNode.geometry.type || 'Custom'} copy={false} />
+            <HierarchyDetail label="Geometry" value={selectedNode.geometry.type || 'Custom'} copy={false} />
           )}
         </div>
       )}
     </div>
-  )
+  );
 }
 
 function HierarchyDetail({ label, value, copy }) {
   const handleCopy = copy
     ? (e: React.MouseEvent<HTMLDivElement>) => {
-        e.preventDefault()
-        navigator.clipboard.writeText(value)
-      }
-    : undefined
+      e.preventDefault();
+      navigator.clipboard.writeText(value);
+    }
+    : undefined;
   return (
-    <div className='nodehierarchy-detail'>
-      <div className='nodehierarchy-detail-label'>{label}</div>
+    <div className="nodehierarchy-detail">
+      <div className="nodehierarchy-detail-label">{label}</div>
       <div className={cls('nodehierarchy-detail-value', { copy })} onClick={handleCopy}>
         {value}
       </div>
     </div>
-  )
+  );
 }
 
 const nodeIcons = {
@@ -250,16 +250,16 @@ const nodeIcons = {
   lod: EyeIcon,
   avatar: PersonStandingIcon,
   snap: MagnetIcon,
-}
+};
 
 function _renderHierarchy(nodes, depth = 0, selectedNode, setSelectedNode) {
   if (!Array.isArray(nodes)) {
-    return null
+    return null;
   }
 
   return nodes.map(node => {
     if (!node) {
-      return null
+      return null;
     }
 
     // Skip the root node but show its children
@@ -268,10 +268,10 @@ function _renderHierarchy(nodes, depth = 0, selectedNode, setSelectedNode) {
     // }
 
     // Safely get children
-    const children = node.children || []
-    const hasChildren = Array.isArray(children) && children.length > 0
-    const isSelected = selectedNode?.id === node.id
-    const Icon = nodeIcons[node.name] || nodeIcons.default
+    const children = node.children || [];
+    const hasChildren = Array.isArray(children) && children.length > 0;
+    const isSelected = selectedNode?.id === node.id;
+    const Icon = nodeIcons[node.name] || nodeIcons.default;
 
     return (
       <div key={node.id}>
@@ -288,6 +288,6 @@ function _renderHierarchy(nodes, depth = 0, selectedNode, setSelectedNode) {
         </div>
         {hasChildren && _renderHierarchy(children, depth + 1, selectedNode, setSelectedNode)}
       </div>
-    )
-  })
+    );
+  });
 }

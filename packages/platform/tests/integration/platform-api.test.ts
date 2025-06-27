@@ -3,7 +3,7 @@
  * Tests core platform functionality without ElizaOS runtime dependencies
  */
 
-import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
+import { describe, test, expect, beforeAll, afterAll, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { getDatabase, initializeDbProxy } from '../../lib/database';
@@ -14,9 +14,9 @@ const TEST_USER_ID = uuidv4();
 const TEST_USER_EMAIL = 'test@example.com';
 
 // Mock authentication for tests
-jest.mock('../../lib/auth/session', () => ({
+vi.mock('../../lib/auth/session', () => ({
   authService: {
-    getCurrentUser: jest.fn(() =>
+    getCurrentUser: vi.fn(() =>
       Promise.resolve({
         id: TEST_USER_ID,
         organizationId: TEST_ORG_ID,
@@ -28,12 +28,12 @@ jest.mock('../../lib/auth/session', () => ({
 }));
 
 // Mock ElizaOS imports to avoid ES module issues in Jest
-jest.mock('@elizaos/core', () => ({
+vi.mock('@elizaos/core', () => ({
   logger: {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
   },
 }));
 
@@ -132,8 +132,8 @@ describe('Platform API Tests', () => {
         // Direct validation logic test
         const validateCharacterConfig = (character: Record<string, any>) => {
           const errors: string[] = [];
-          if (!character.name) errors.push('Character name is required');
-          if (!character.bio) errors.push('Character bio is required');
+          if (!character.name) {errors.push('Character name is required');}
+          if (!character.bio) {errors.push('Character bio is required');}
           return { isValid: errors.length === 0, errors };
         };
 

@@ -1,7 +1,7 @@
-import fs from 'fs-extra'
-import path from 'path'
+import fs from 'fs-extra';
+import path from 'path';
 // import { importApp } from '../core/extras/appTools';
-import { isArray } from 'lodash-es'
+import { isArray } from 'lodash-es';
 
 interface CollectionOptions {
   collectionsDir: string
@@ -9,36 +9,36 @@ interface CollectionOptions {
 }
 
 export async function initCollections({ collectionsDir, assetsDir: _assetsDir }: CollectionOptions) {
-  const collections: any[] = []
-  const dirs = await fs.readdir(collectionsDir)
+  const collections: any[] = [];
+  const dirs = await fs.readdir(collectionsDir);
   for (const dir of dirs) {
-    const dirPath = path.join(collectionsDir, dir)
-    const stat = await fs.stat(dirPath)
+    const dirPath = path.join(collectionsDir, dir);
+    const stat = await fs.stat(dirPath);
     if (!stat.isDirectory()) {
-      continue
+      continue;
     }
-    const manifestPath = path.join(dirPath, 'manifest.json')
+    const manifestPath = path.join(dirPath, 'manifest.json');
     if (!(await fs.exists(manifestPath))) {
-      continue
+      continue;
     }
-    const manifest = await fs.readJson(manifestPath)
+    const manifest = await fs.readJson(manifestPath);
     if (!isArray(manifest.items)) {
-      continue
+      continue;
     }
     for (const item of manifest.items) {
       if (!item.file) {
-        continue
+        continue;
       }
-      const filePath = path.join(dirPath, item.file)
-      const fileData = await fs.readFile(filePath, 'utf8')
-      const data = JSON.parse(fileData)
+      const filePath = path.join(dirPath, item.file);
+      const fileData = await fs.readFile(filePath, 'utf8');
+      const data = JSON.parse(fileData);
       const collection = {
         name: dir,
         type: data.type,
         data,
-      }
-      collections.push(collection)
+      };
+      collections.push(collection);
     }
   }
-  return collections
+  return collections;
 }

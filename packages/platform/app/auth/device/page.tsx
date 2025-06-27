@@ -36,7 +36,7 @@ function DeviceAuthContent() {
       // Generate mock device codes for testing
       const mockCodes = ['ABCD-EFGH', '1234-5678', 'TEST-CODE'];
       const randomCode = mockCodes[Math.floor(Math.random() * mockCodes.length)];
-      
+
       // Add some indicators this is a test page
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get('test') === 'true') {

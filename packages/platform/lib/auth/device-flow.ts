@@ -30,7 +30,7 @@ export function generateUserCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // No confusing chars
   let code = '';
   for (let i = 0; i < 8; i++) {
-    if (i === 4) code += '-';
+    if (i === 4) {code += '-';}
     code += chars[Math.floor(Math.random() * chars.length)];
   }
   return code;
@@ -215,7 +215,7 @@ export const deviceFlowService = new DeviceFlowService();
 export const deviceCodes = {
   get: async (deviceCode: string) => {
     const result = await deviceCodeRepository.getByDeviceCode(deviceCode);
-    if (!result) return null;
+    if (!result) {return null;}
 
     return {
       user_code: result.userCode,
@@ -227,13 +227,13 @@ export const deviceCodes = {
       authorization:
         result.isAuthorized && result.accessToken
           ? {
-              access_token: result.accessToken,
-              user: {
-                id: result.authorizedByUserId || 'unknown',
-                name: 'Device User',
-                email: 'device@example.com',
-              },
-            }
+            access_token: result.accessToken,
+            user: {
+              id: result.authorizedByUserId || 'unknown',
+              name: 'Device User',
+              email: 'device@example.com',
+            },
+          }
           : undefined,
     };
   },

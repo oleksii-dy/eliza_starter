@@ -1,6 +1,6 @@
 import type { IAgentRuntime, Character } from '@elizaos/core';
 import { RuntimeTestHarness } from '@elizaos/core/test-utils';
-import { midnightPlugin } from '../index.js';
+import { midnightPlugin } from '../index';
 import * as dotenv from 'dotenv';
 // import * as fs from 'fs';
 // import * as path from 'path';

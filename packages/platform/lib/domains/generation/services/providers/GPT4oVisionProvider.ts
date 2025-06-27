@@ -494,12 +494,12 @@ export class GPT4oVisionProvider extends BaseGenerationProvider {
   }
 
   private async estimateImageSize(url?: string): Promise<number> {
-    if (!url) return 1024 * 1024; // 1MB default
+    if (!url) {return 1024 * 1024;} // 1MB default
 
     try {
       const response = await fetch(url, { method: 'HEAD' });
       const contentLength = response.headers.get('content-length');
-      return contentLength ? parseInt(contentLength) : 1024 * 1024;
+      return contentLength ? parseInt(contentLength, 10) : 1024 * 1024;
     } catch {
       return 1024 * 1024; // Default 1MB if can't determine
     }

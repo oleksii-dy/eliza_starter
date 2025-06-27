@@ -109,7 +109,7 @@ export const manageSecretAction: Action = {
       };
 
       let result: string;
-      let success: boolean;
+      let _success: boolean;
 
       switch (params.operation) {
         case 'get': {
@@ -123,7 +123,7 @@ export const manageSecretAction: Action = {
           } else {
             result = `Retrieved secret "${params.key}": ${value.substring(0, 4)}...`;
           }
-          success = !!value;
+          _success = !!value;
           break;
         }
 

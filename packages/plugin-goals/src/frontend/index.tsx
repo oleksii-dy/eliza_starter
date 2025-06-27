@@ -749,14 +749,14 @@ function App() {
                       <CardContent className="space-y-1 p-2 pt-1">
                         {room.tasks.filter((task) => !task.tags?.includes('completed')).length >
                         0 ? (
-                          room.tasks
-                            .filter((task) => !task.tags?.includes('completed'))
-                            .map((task) => <TaskItem key={task.id} task={task} />)
-                        ) : (
-                          <p className="text-muted-foreground text-xs px-2 py-1">
+                            room.tasks
+                              .filter((task) => !task.tags?.includes('completed'))
+                              .map((task) => <TaskItem key={task.id} task={task} />)
+                          ) : (
+                            <p className="text-muted-foreground text-xs px-2 py-1">
                             No pending tasks in this room.
-                          </p>
-                        )}
+                            </p>
+                          )}
                         {room.tasks.some((task) => task.tags?.includes('completed')) && (
                           <>
                             <Separator className="my-2" />

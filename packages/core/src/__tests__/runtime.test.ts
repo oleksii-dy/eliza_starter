@@ -87,9 +87,7 @@ const mockDatabaseAdapter: IDatabaseAdapter = {
   getLogs: mock().mockResolvedValue([]),
   deleteLog: mock().mockResolvedValue(undefined),
   removeWorld: mock().mockResolvedValue(undefined),
-  deleteRoomsByWorldId(_worldId: UUID): Promise<void> {
-    throw new Error('Function not implemented.');
-  },
+  deleteRoomsByWorldId: mock().mockResolvedValue(undefined),
   getMemoriesByWorldId(_params: {
     worldId: UUID;
     count?: number;
@@ -180,6 +178,15 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
       adapter: mockDatabaseAdapter, // Correct way to pass adapter
       // No plugins passed here by default, tests can pass them if needed
     });
+
+    // Mock the logger to suppress error logs during tests
+    runtime.logger = {
+      debug: mock(),
+      info: mock(),
+      warn: mock(),
+      error: mock(),
+      log: mock(),
+    } as any;
   });
 
   it('should construct without errors', () => {

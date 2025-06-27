@@ -1,5 +1,5 @@
-import { type IAgentRuntime, type Memory, type State, UUID } from '@elizaos/core';
-import { describe, it, expect, mock, beforeEach, afterEach } from 'bun:test';
+import { type IAgentRuntime, type Memory, type State, UUID, type TestSuite } from '@elizaos/core';
+import { hyperfyPlugin } from '../../index';
 
 /**
  * Hyperfy Plugin E2E Test Suite
@@ -14,11 +14,6 @@ interface TestCase {
   fn: (runtime: IAgentRuntime) => Promise<void> | void;
 }
 
-interface TestSuite {
-  name: string;
-  tests: TestCase[];
-}
-
 export const HyperfyIntegrationTestSuite: TestSuite = {
   name: 'hyperfy_integration_test_suite',
 
@@ -29,7 +24,7 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
      */
     {
       name: 'hyperfy_service_initialization',
-      fn: async (runtime) => {
+      fn: async (runtime: IAgentRuntime) => {
         const service = runtime.getService('hyperfy');
 
         if (!service) {
@@ -51,7 +46,7 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
      */
     {
       name: 'hyperfy_world_connection_mock',
-      fn: async (runtime) => {
+      fn: async (runtime: IAgentRuntime) => {
         const service = runtime.getService('hyperfy') as any;
 
         if (!service) {
@@ -81,7 +76,7 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
      */
     {
       name: 'hyperfy_movement_actions',
-      fn: async (runtime) => {
+      fn: async (runtime: IAgentRuntime) => {
         const movementActions = [
           'HYPERFY_GOTO_ENTITY',
           'HYPERFY_WALK_RANDOMLY',
@@ -89,7 +84,7 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
         ];
 
         for (const actionName of movementActions) {
-          const action = runtime.actions.find((a) => a.name === actionName);
+          const action = runtime.actions.find((a: any) => a.name === actionName);
 
           if (!action) {
             throw new Error(`Movement action ${actionName} not found`);
@@ -111,8 +106,8 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
      */
     {
       name: 'hyperfy_perception_action',
-      fn: async (runtime) => {
-        const perceptionAction = runtime.actions.find((a) => a.name === 'HYPERFY_SCENE_PERCEPTION');
+      fn: async (runtime: IAgentRuntime) => {
+        const perceptionAction = runtime.actions.find((a: any) => a.name === 'HYPERFY_SCENE_PERCEPTION');
 
         if (!perceptionAction) {
           throw new Error('Scene perception action not found');
@@ -150,8 +145,8 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
      */
     {
       name: 'hyperfy_emote_system',
-      fn: async (runtime) => {
-        const emoteProvider = runtime.providers.find((p) => p.name === 'HYPERFY_EMOTE_LIST');
+      fn: async (runtime: IAgentRuntime) => {
+        const emoteProvider = runtime.providers.find((p: any) => p.name === 'HYPERFY_EMOTE_LIST');
 
         if (!emoteProvider) {
           throw new Error('Emote provider not found');
@@ -204,8 +199,8 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
      */
     {
       name: 'hyperfy_world_state_provider',
-      fn: async (runtime) => {
-        const worldProvider = runtime.providers.find((p) => p.name === 'HYPERFY_WORLD_STATE');
+      fn: async (runtime: IAgentRuntime) => {
+        const worldProvider = runtime.providers.find((p: any) => p.name === 'HYPERFY_WORLD_STATE');
 
         if (!worldProvider) {
           throw new Error('World state provider not found');
@@ -248,8 +243,8 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
      */
     {
       name: 'hyperfy_build_actions',
-      fn: async (runtime) => {
-        const buildAction = runtime.actions.find((a) => a.name === 'HYPERFY_EDIT_ENTITY');
+      fn: async (runtime: IAgentRuntime) => {
+        const buildAction = runtime.actions.find((a: any) => a.name === 'HYPERFY_EDIT_ENTITY');
 
         if (!buildAction) {
           throw new Error('Build action not found');
@@ -273,7 +268,7 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
      */
     {
       name: 'hyperfy_message_handling',
-      fn: async (runtime) => {
+      fn: async (runtime: IAgentRuntime) => {
         // Check for message handler in events
         const events = runtime.events;
 
@@ -282,14 +277,14 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
         }
 
         // Verify REPLY action exists
-        const replyAction = runtime.actions.find((a) => a.name === 'REPLY');
+        const replyAction = runtime.actions.find((a: any) => a.name === 'REPLY');
 
         if (!replyAction) {
           throw new Error('REPLY action not found');
         }
 
         // Verify IGNORE action exists
-        const ignoreAction = runtime.actions.find((a) => a.name === 'IGNORE');
+        const ignoreAction = runtime.actions.find((a: any) => a.name === 'IGNORE');
 
         if (!ignoreAction) {
           throw new Error('IGNORE action not found');
@@ -305,8 +300,8 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
      */
     {
       name: 'hyperfy_character_integration',
-      fn: async (runtime) => {
-        const characterProvider = runtime.providers.find((p) => p.name === 'CHARACTER');
+      fn: async (runtime: IAgentRuntime) => {
+        const characterProvider = runtime.providers.find((p: any) => p.name === 'CHARACTER');
 
         if (!characterProvider) {
           throw new Error('Character provider not found');
@@ -347,8 +342,8 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
      */
     {
       name: 'hyperfy_action_examples',
-      fn: async (runtime) => {
-        const hyperfyActions = runtime.actions.filter((a) => a.name.startsWith('HYPERFY_'));
+      fn: async (runtime: IAgentRuntime) => {
+        const hyperfyActions = runtime.actions.filter((a: any) => a.name.startsWith('HYPERFY_'));
 
         for (const action of hyperfyActions) {
           if (!action.examples || !Array.isArray(action.examples)) {
@@ -367,6 +362,26 @@ export const HyperfyIntegrationTestSuite: TestSuite = {
         }
 
         console.log(`✅ All ${hyperfyActions.length} Hyperfy actions have valid examples`);
+      },
+    },
+
+    /**
+     * Test 11: Agent handles basic world navigation
+     * Verifies that the agent can access world navigation data
+     */
+    {
+      name: 'Agent handles basic world navigation',
+      fn: async (runtime: IAgentRuntime) => {
+        const hyperfyService = runtime.getService('hyperfy') as any;
+        if (!hyperfyService) {
+          throw new Error('Hyperfy service not available');
+        }
+
+        // Just verify we can get the world without using it
+        const _world = hyperfyService.getWorld();
+        
+        // The test passes if we can get the world without errors
+        console.log('✅ Agent can access world navigation data');
       },
     },
   ],

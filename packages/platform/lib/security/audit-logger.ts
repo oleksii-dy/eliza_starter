@@ -1,12 +1,12 @@
 /**
  * Advanced Audit Logging System
- * 
+ *
  * Provides comprehensive audit trails for security events, user actions,
  * and system operations to ensure compliance and security monitoring.
  */
 
 import { logger } from '../logger';
-import { getSql } from '../database/sql';
+import { getSql } from '../database';
 import { SessionData } from '../auth/session';
 
 export enum AuditEventType {
@@ -18,7 +18,7 @@ export enum AuditEventType {
   SESSION_EXPIRED = 'auth.session.expired',
   DEVICE_AUTH_START = 'auth.device.start',
   DEVICE_AUTH_COMPLETE = 'auth.device.complete',
-  
+
   // User Management
   USER_CREATED = 'user.created',
   USER_UPDATED = 'user.updated',
@@ -26,7 +26,7 @@ export enum AuditEventType {
   USER_ROLE_CHANGED = 'user.role.changed',
   USER_ACTIVATED = 'user.activated',
   USER_DEACTIVATED = 'user.deactivated',
-  
+
   // Organization Management
   ORG_CREATED = 'org.created',
   ORG_UPDATED = 'org.updated',
@@ -34,31 +34,31 @@ export enum AuditEventType {
   ORG_MEMBER_ADDED = 'org.member.added',
   ORG_MEMBER_REMOVED = 'org.member.removed',
   ORG_SETTINGS_CHANGED = 'org.settings.changed',
-  
+
   // API Key Management
   API_KEY_CREATED = 'api_key.created',
   API_KEY_DELETED = 'api_key.deleted',
   API_KEY_USED = 'api_key.used',
   API_KEY_FAILED = 'api_key.failed',
-  
+
   // Data Access
   DATA_EXPORTED = 'data.exported',
   DATA_IMPORTED = 'data.imported',
   SENSITIVE_DATA_ACCESSED = 'data.sensitive.accessed',
-  
+
   // Security Events
   SUSPICIOUS_ACTIVITY = 'security.suspicious',
   RATE_LIMIT_EXCEEDED = 'security.rate_limit',
   INVALID_TOKEN = 'security.invalid_token',
   UNAUTHORIZED_ACCESS = 'security.unauthorized',
   PERMISSION_DENIED = 'security.permission_denied',
-  
+
   // System Events
   SYSTEM_ERROR = 'system.error',
   SYSTEM_MAINTENANCE = 'system.maintenance',
   BACKUP_CREATED = 'system.backup.created',
   BACKUP_RESTORED = 'system.backup.restored',
-  
+
   // Plugin/Agent Events
   AGENT_CREATED = 'agent.created',
   AGENT_UPDATED = 'agent.updated',
@@ -67,7 +67,7 @@ export enum AuditEventType {
   AGENT_STOPPED = 'agent.stopped',
   PLUGIN_INSTALLED = 'plugin.installed',
   PLUGIN_REMOVED = 'plugin.removed',
-  
+
   // Analytics Events
   ANALYTICS_ACCESSED = 'analytics.accessed',
   REPORT_GENERATED = 'report.generated',
@@ -118,13 +118,20 @@ export interface AuditQueryOptions {
  */
 export class AuditLogger {
   private static instance: AuditLogger;
-  private sql = getSql();
+  private sql: any = null;
 
   static getInstance(): AuditLogger {
     if (!AuditLogger.instance) {
       AuditLogger.instance = new AuditLogger();
     }
     return AuditLogger.instance;
+  }
+
+  private getSqlClient() {
+    if (!this.sql) {
+      this.sql = getSql();
+    }
+    return this.sql;
   }
 
   /**
@@ -157,7 +164,7 @@ export class AuditLogger {
 
       switch (auditEvent.severity) {
         case AuditSeverity.CRITICAL:
-          logger.error(`AUDIT [CRITICAL]: ${auditEvent.eventType}`, logData);
+          logger.error(`AUDIT [CRITICAL]: ${auditEvent.eventType}`, new Error('Audit event'), logData);
           break;
         case AuditSeverity.HIGH:
           logger.warn(`AUDIT [HIGH]: ${auditEvent.eventType}`, logData);
@@ -189,8 +196,8 @@ export class AuditLogger {
    */
   private async storeEvent(event: AuditEvent): Promise<void> {
     const eventId = crypto.randomUUID();
-    
-    await this.sql.query(`
+
+    await this.getSqlClient().query(`
       INSERT INTO audit_logs (
         id, event_type, severity, user_id, organization_id,
         entity_id, entity_type, details, metadata, created_at
@@ -222,7 +229,7 @@ export class AuditLogger {
       FROM audit_logs
       WHERE 1=1
     `;
-    
+
     const params: any[] = [];
     let paramIndex = 1;
 
@@ -272,13 +279,13 @@ export class AuditLogger {
       'SELECT id, event_type, severity, user_id, organization_id, entity_id, entity_type, details, metadata, created_at',
       'SELECT COUNT(*)'
     );
-    
-    const countResult = await this.sql.query(countQuery, params);
-    const total = parseInt(countResult[0]?.count || '0');
+
+    const countResult = await this.getSqlClient().query(countQuery, params);
+    const total = parseInt(countResult[0]?.count || '0', 10);
 
     // Add ordering and pagination
-    query += ` ORDER BY created_at DESC`;
-    
+    query += ' ORDER BY created_at DESC';
+
     if (options.limit) {
       query += ` LIMIT $${paramIndex++}`;
       params.push(options.limit);
@@ -289,8 +296,8 @@ export class AuditLogger {
       params.push(options.offset);
     }
 
-    const result = await this.sql.query(query, params);
-    
+    const result = await this.getSqlClient().query(query, params);
+
     const events: AuditEvent[] = result.map((row: any) => ({
       id: row.id,
       eventType: row.event_type,
@@ -324,7 +331,7 @@ export class AuditLogger {
 
       // TODO: Implement actual alerting mechanisms:
       // - Email notifications
-      // - Slack webhooks  
+      // - Slack webhooks
       // - PagerDuty integration
       // - SMS alerts
     } catch (error) {
@@ -444,13 +451,13 @@ export function createAuditMiddleware(eventType: AuditEventType, severity: Audit
   return function auditMiddleware(
     handler: (req: any, res: any) => Promise<any>
   ) {
-    return async function(req: any, res: any) {
+    return async function (req: any, res: any) {
       const auditLogger = AuditLogger.getInstance();
       const startTime = Date.now();
-      
+
       try {
         const result = await handler(req, res);
-        
+
         // Log successful operation
         await auditLogger.logEvent({
           eventType,
@@ -471,7 +478,7 @@ export function createAuditMiddleware(eventType: AuditEventType, severity: Audit
             timestamp: new Date(),
           },
         });
-        
+
         return result;
       } catch (error) {
         // Log failed operation
@@ -495,12 +502,21 @@ export function createAuditMiddleware(eventType: AuditEventType, severity: Audit
             timestamp: new Date(),
           },
         });
-        
+
         throw error;
       }
     };
   };
 }
 
-// Export singleton instance
-export const auditLogger = AuditLogger.getInstance();
+// Export singleton getter instead of instance to avoid early initialization
+export const auditLogger = {
+  logEvent: (event: Omit<AuditEvent, 'id' | 'metadata.timestamp'>) => AuditLogger.getInstance().logEvent(event),
+  queryEvents: (options: AuditQueryOptions = {}) => AuditLogger.getInstance().queryEvents(options),
+  logAuthSuccess: (userId: string, organizationId: string, metadata: any) => AuditLogger.getInstance().logAuthSuccess(userId, organizationId, metadata),
+  logAuthFailure: (email: string, reason: string, metadata: any) => AuditLogger.getInstance().logAuthFailure(email, reason, metadata),
+  logUnauthorizedAccess: (userId: string | undefined, resource: string, metadata: any) => AuditLogger.getInstance().logUnauthorizedAccess(userId, resource, metadata),
+  logSuspiciousActivity: (userId: string | undefined, activity: string, details: Record<string, any>, metadata: any) => AuditLogger.getInstance().logSuspiciousActivity(userId, activity, details, metadata),
+  logDataAccess: (userId: string, organizationId: string, dataType: string, entityId: string, metadata: any) => AuditLogger.getInstance().logDataAccess(userId, organizationId, dataType, entityId, metadata),
+  logRateLimitExceeded: (userId: string | undefined, endpoint: string, limit: number, metadata: any) => AuditLogger.getInstance().logRateLimitExceeded(userId, endpoint, limit, metadata),
+};

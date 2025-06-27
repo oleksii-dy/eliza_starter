@@ -63,7 +63,7 @@ export class SQLiteCacheService implements ICacheService {
         | { value: string; expires_at: number | null }
         | undefined;
 
-      if (!row) return null;
+      if (!row) {return null;}
       if (this.isExpired(row.expires_at)) {
         await this.del(key);
         return null;
@@ -196,10 +196,10 @@ export class SQLiteCacheService implements ICacheService {
   async rpop(list: string): Promise<string | null> {
     try {
       const current = await this.get(list);
-      if (!current) return null;
+      if (!current) {return null;}
 
       const array = JSON.parse(current);
-      if (array.length === 0) return null;
+      if (array.length === 0) {return null;}
 
       const value = array.pop();
       await this.set(list, JSON.stringify(array));
@@ -212,7 +212,7 @@ export class SQLiteCacheService implements ICacheService {
   async llen(list: string): Promise<number> {
     try {
       const current = await this.get(list);
-      if (!current) return 0;
+      if (!current) {return 0;}
       const array = JSON.parse(current);
       return array.length;
     } catch (error) {
@@ -244,8 +244,8 @@ export class SQLiteCacheService implements ICacheService {
       );
       const row = stmt.get(key) as { expires_at: number | null } | undefined;
 
-      if (!row) return -2; // Key doesn't exist
-      if (row.expires_at === null) return -1; // Key exists but has no TTL
+      if (!row) {return -2;} // Key doesn't exist
+      if (row.expires_at === null) {return -1;} // Key exists but has no TTL
 
       const remaining = Math.max(
         0,

@@ -21,6 +21,25 @@ import { type TrainingConfig } from '../types';
 import fs from 'fs/promises';
 import path from 'path';
 
+// Mock database adapter for testing
+const mockAdapter = {
+  db: {
+    all: async () => [],
+    get: async () => ({ count: 0 }),
+    prepare: () => ({ all: async () => [], get: async () => null, run: async () => ({ changes: 0, lastInsertRowid: 1 }) }),
+  },
+  getMemories: async () => [],
+  createMemory: async () => '1',
+  searchMemories: async () => [],
+  getCachedEmbeddings: async () => [],
+  getAgents: async () => [],
+  createAgent: async () => true,
+  getEntitiesByIds: async () => [],
+  createEntity: async () => true,
+  createEntities: async () => true,
+  init: async () => {},
+};
+
 // Test character configuration for runtime
 const testCharacterWithToken: Character = {
   name: 'HuggingFaceTestAgent',
@@ -70,13 +89,11 @@ describe('Real Runtime HuggingFace Client Integration Tests', () => {
       },
     };
 
-    // Create real AgentRuntime instance with minimal configuration
+    // Create real AgentRuntime instance with mock adapter
     runtime = new AgentRuntime({
       character: testCharacterWithPaths,
-      token: process.env.OPENAI_API_KEY || 'test-token',
-      modelName: 'gpt-4o-mini',
-      // Skip database adapter requirement for testing
-      databaseAdapter: null as any,
+      // Use mock adapter to avoid database timeout issues
+      adapter: mockAdapter as any,
     });
 
     await runtime.registerPlugin(trainingPlugin);
@@ -149,8 +166,7 @@ describe('Real Runtime HuggingFace Client Integration Tests', () => {
 
     const runtimeWithoutToken = new AgentRuntime({
       character: testCharacterWithoutToken,
-      token: process.env.OPENAI_API_KEY || 'test-token',
-      modelName: 'gpt-4o-mini',
+      adapter: mockAdapter as any,
     });
 
     await runtimeWithoutToken.registerPlugin(trainingPlugin);
@@ -198,7 +214,7 @@ describe('Real Runtime HuggingFace Client Integration Tests', () => {
       await huggingFaceClient.uploadDataset('/fake/path', invalidConfig);
       expect.unreachable('Should have thrown error for missing HuggingFace config');
     } catch (error) {
-      expect(error.message).toContain('Hugging Face configuration not provided');
+      expect((error as Error).message).toContain('Hugging Face configuration not provided');
     }
 
     elizaLogger.info('✅ Configuration validation working correctly with real runtime');
@@ -243,7 +259,7 @@ describe('Real Runtime HuggingFace Client Integration Tests', () => {
       await huggingFaceClient.uploadModel('/fake/model/path', validConfig);
       expect.unreachable('Should have thrown error for uninitialized API');
     } catch (error) {
-      expect(error.message).toContain('Hugging Face API not initialized');
+      expect((error as Error).message).toContain('Hugging Face API not initialized');
     }
 
     elizaLogger.info(
@@ -259,7 +275,7 @@ describe('Real Runtime HuggingFace Client Integration Tests', () => {
       await huggingFaceClient.downloadDataset('test-user/test-dataset', '/fake/path');
       expect.unreachable('Should have thrown error for uninitialized API');
     } catch (error) {
-      expect(error.message).toContain('Hugging Face API not initialized');
+      expect((error as Error).message).toContain('Hugging Face API not initialized');
     }
 
     // Test list models with uninitialized API
@@ -267,7 +283,7 @@ describe('Real Runtime HuggingFace Client Integration Tests', () => {
       await huggingFaceClient.listModels();
       expect.unreachable('Should have thrown error for uninitialized API');
     } catch (error) {
-      expect(error.message).toContain('Hugging Face API not initialized');
+      expect((error as Error).message).toContain('Hugging Face API not initialized');
     }
 
     elizaLogger.info('✅ Repository operations handle errors correctly with real runtime');

@@ -1,7 +1,7 @@
-import moment from 'moment'
-import type { World } from '../../types/index.js'
-import { uuid } from '../utils.js'
-import { System } from './System.js'
+import moment from 'moment';
+import type { World } from '../../types/index.js';
+import { uuid } from '../utils.js';
+import { System } from './System.js';
 
 /**
  * Chat System
@@ -12,7 +12,7 @@ import { System } from './System.js'
  *
  */
 
-const CHAT_MAX_MESSAGES = 50
+const CHAT_MAX_MESSAGES = 50;
 
 export interface ExtendedChatMessage {
   id: string
@@ -27,105 +27,105 @@ export interface ExtendedChatMessage {
 export type ChatListener = (messages: ExtendedChatMessage[]) => void
 
 export class Chat extends System {
-  msgs: ExtendedChatMessage[]
-  private chatListeners: Set<ChatListener>
+  msgs: ExtendedChatMessage[];
+  private chatListeners: Set<ChatListener>;
 
   constructor(world: World) {
-    super(world)
-    this.msgs = []
-    this.chatListeners = new Set()
+    super(world);
+    this.msgs = [];
+    this.chatListeners = new Set();
   }
 
   add(msg: ExtendedChatMessage, broadcast?: boolean): void {
     // add to chat messages
-    this.msgs = [...this.msgs, msg]
+    this.msgs = [...this.msgs, msg];
     if (this.msgs.length > CHAT_MAX_MESSAGES) {
-      this.msgs.shift()
+      this.msgs.shift();
     }
 
     // notify listeners
     Array.from(this.chatListeners).forEach(callback => {
-      callback(this.msgs)
-    })
+      callback(this.msgs);
+    });
 
     // trigger player chat animation if applicable
     if (msg.fromId) {
-      const player = this.world.entities.players?.get(msg.fromId)
+      const player = this.world.entities.players?.get(msg.fromId);
       if (player && (player as any).chat) {
-        ;(player as any).chat(msg.body)
+        ;(player as any).chat(msg.body);
       }
     }
 
     // emit chat event
-    const readOnly = Object.freeze({ ...msg })
-    this.world.events.emit('chat', readOnly)
+    const readOnly = Object.freeze({ ...msg });
+    this.world.events.emit('chat', readOnly);
 
     // maybe broadcast
     if (broadcast) {
-      const network = (this.world as any).network
+      const network = (this.world as any).network;
       if (network?.send) {
-        network.send('chatAdded', msg)
+        network.send('chatAdded', msg);
       }
     }
   }
 
   command(text: string): void {
-    const network = (this.world as any).network
+    const network = (this.world as any).network;
     if (!network || network.isServer) {
-      return
+      return;
     }
 
-    const playerId = network.id
+    const playerId = network.id;
     const args = text
       .slice(1)
       .split(' ')
       .map(str => str.trim())
-      .filter(str => !!str)
+      .filter(str => !!str);
 
-    const isAdminCommand = args[0] === 'admin'
+    const isAdminCommand = args[0] === 'admin';
 
     if (args[0] === 'stats') {
-      const prefs = (this.world as any).prefs
+      const prefs = (this.world as any).prefs;
       if (prefs?.setStats) {
-        prefs.setStats(!prefs.stats)
+        prefs.setStats(!prefs.stats);
       }
     }
 
     if (!isAdminCommand) {
-      this.world.events.emit('command', { playerId, args })
+      this.world.events.emit('command', { playerId, args });
     }
 
     if (network.send) {
-      network.send('command', args)
+      network.send('command', args);
     }
   }
 
   clear(broadcast?: boolean): void {
-    this.msgs = []
+    this.msgs = [];
 
     // notify listeners
     Array.from(this.chatListeners).forEach(callback => {
-      callback(this.msgs)
-    })
+      callback(this.msgs);
+    });
 
     if (broadcast) {
-      const network = (this.world as any).network
+      const network = (this.world as any).network;
       if (network?.send) {
-        network.send('chatCleared')
+        network.send('chatCleared');
       }
     }
   }
 
   send(text: string): ExtendedChatMessage | undefined {
     // only available as a client
-    const network = (this.world as any).network
+    const network = (this.world as any).network;
     if (!network || !network.isClient) {
-      return
+      return;
     }
 
-    const player = (this.world.entities as any).player
+    const player = (this.world.entities as any).player;
     if (!player) {
-      return
+      return;
     }
 
     const data: ExtendedChatMessage = {
@@ -136,36 +136,36 @@ export class Chat extends System {
       text, // for interface compatibility
       timestamp: Date.now(),
       createdAt: moment().toISOString(),
-    }
+    };
 
-    this.add(data, true)
-    return data
+    this.add(data, true);
+    return data;
   }
 
   serialize(): ExtendedChatMessage[] {
-    return this.msgs
+    return this.msgs;
   }
 
   deserialize(msgs: ExtendedChatMessage[]): void {
-    this.msgs = msgs
+    this.msgs = msgs;
 
     // notify listeners
     Array.from(this.chatListeners).forEach(callback => {
-      callback(msgs)
-    })
+      callback(msgs);
+    });
   }
 
   subscribe(callback: ChatListener): () => void {
-    this.chatListeners.add(callback)
-    callback(this.msgs)
+    this.chatListeners.add(callback);
+    callback(this.msgs);
 
     return () => {
-      this.chatListeners.delete(callback)
-    }
+      this.chatListeners.delete(callback);
+    };
   }
 
   override destroy(): void {
-    this.msgs = []
-    this.chatListeners.clear()
+    this.msgs = [];
+    this.chatListeners.clear();
   }
 }

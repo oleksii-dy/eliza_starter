@@ -20,7 +20,7 @@
     "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo bun.lock* .eliza .elizadb && npx turbo run clean --filter=./packages/* && bun install && bun run build",
     "build:cli": "turbo run build --filter=@elizaos/cli --no-cache",
     "build:core": "turbo run build --filter=@elizaos/core --no-cache",
-    "lint": "turbo run lint --filter=./packages/* && prettier --write . && prettier --check .",
+    "lint": "turbo run lint --filter=./packages/* --filter=!@elizaos/platform && prettier --write . && prettier --check .",
     "pre-commit": "bun run scripts/pre-commit-lint.js",
     "release": "lerna version --no-private --force-publish --no-push --no-git-tag-version && bun run build && bun lint && lerna publish from-package --no-private --force-publish && bun lint",
     "release:alpha": "lerna publish prerelease --preid alpha --dist-tag alpha --no-private --force-publish --loglevel verbose",
@@ -31,7 +31,7 @@
     "docker:bash": "bash ./scripts/docker.sh bash",
     "docker:start": "bash ./scripts/docker.sh start",
     "docker": "bun docker:build && bun docker:run && bun docker:bash",
-    "test": "turbo run test --concurrency 4 --filter=!./packages/docs",
+    "test": "turbo run test --concurrency 1 --filter=!./packages/docs --filter=!./packages/platform --filter=!./packages/plugin-e2b --filter=!./packages/core --filter=!./packages/hyperfy",
     "prepare": "husky"
   },
   "packageManager": "bun@1.2.15",

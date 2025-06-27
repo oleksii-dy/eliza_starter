@@ -482,7 +482,7 @@ export class ApiKeyService {
     // Calculate expiration time
     let expiresAt: Date | undefined;
     if (expiresIn) {
-      const hours = expiresIn.includes('h') ? parseInt(expiresIn) : 24;
+      const hours = expiresIn.includes('h') ? parseInt(expiresIn, 10) : 24;
       expiresAt = new Date(Date.now() + hours * 60 * 60 * 1000);
     }
 

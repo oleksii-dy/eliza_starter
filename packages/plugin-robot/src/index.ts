@@ -2,10 +2,10 @@
 import { type Plugin } from '@elizaos/core';
 
 // Services
-import { VisionService } from './service.js';
-import { RobotServiceV2 } from './services/robot-service-v2.js';
-import { SimulationService } from './services/simulation-service.js';
-import { RLService } from './services/rl-service.js';
+import { VisionService } from './service';
+import { RobotServiceV2 } from './services/robot-service-v2';
+import { SimulationService } from './services/simulation-service';
+import { RLService } from './services/rl-service';
 
 // Actions
 import {
@@ -13,22 +13,22 @@ import {
   captureImageAction,
   killAutonomousAction,
   setVisionModeAction,
-} from './action.js';
-import { nameEntityAction, identifyPersonAction, trackEntityAction } from './actions-enhanced.js';
-import { commandAction } from './actions/command-action.js';
-import { teachAction } from './actions/teach-action.js';
-import { gotoAction } from './actions/goto-action.js';
+} from './action';
+import { nameEntityAction, identifyPersonAction, trackEntityAction } from './actions-enhanced';
+import { commandAction } from './actions/command-action';
+import { teachAction } from './actions/teach-action';
+import { gotoAction } from './actions/goto-action';
 
 // Providers
-import { visionProvider } from './provider.js';
-import { visionEnhancedProvider } from './provider-enhanced.js';
-import { robotStateProvider } from './providers/state-provider.js';
+import { visionProvider } from './provider';
+import { visionEnhancedProvider } from './provider-enhanced';
+import { robotStateProvider } from './providers/state-provider';
 
 // Tests
 import { testSuites } from './tests/e2e/index';
 
 // Type augmentation
-import './types.js';
+import './types';
 
 export const robotPlugin: Plugin = {
   name: 'robot',
@@ -85,4 +85,4 @@ export const robotPlugin: Plugin = {
 export default robotPlugin;
 
 // Re-export types for convenience
-export * from './types.js';
+export * from './types';

@@ -8,7 +8,6 @@ import {
   logger,
   asUUID,
 } from '@elizaos/core';
-import { plugin as sqlPlugin } from '@elizaos/plugin-sql';
 import { selfModificationPlugin } from '../../index.js';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -65,10 +64,6 @@ export async function createRealTestRuntime(
     character: testCharacter,
     agentId: asUUID(uuidv4()),
   });
-
-  // Register real plugins (not mocks!)
-  await runtime.registerPlugin(sqlPlugin);
-  await runtime.registerPlugin(selfModificationPlugin);
 
   // Initialize runtime
   await runtime.initialize();

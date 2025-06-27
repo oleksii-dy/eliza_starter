@@ -57,7 +57,7 @@ export const setAdminAction: Action = {
     runtime: IAgentRuntime,
     message: Memory,
     state?: State,
-    options?: any,
+    options?: { [key: string]: unknown },
     callback?: HandlerCallback
   ) => {
     try {

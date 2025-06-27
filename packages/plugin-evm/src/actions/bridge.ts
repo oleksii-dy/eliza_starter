@@ -192,7 +192,7 @@ export class BridgeAction {
       },
 
       // Exchange rate update handler for better UX
-      // eslint-disable-next-line require-await
+
       acceptExchangeRateUpdateHook: async (params: {
         toToken: any;
         oldToAmount: string;
@@ -821,7 +821,7 @@ export const bridgeAction: Action = {
       };
     }
   },
-  // eslint-disable-next-line require-await
+
   validate: async (runtime: IAgentRuntime): Promise<boolean> => {
     const privateKey = runtime.getSetting('EVM_PRIVATE_KEY');
     return typeof privateKey === 'string' && privateKey.startsWith('0x');

@@ -2,23 +2,33 @@
 
 ## Overview
 
-This directory contains a comprehensive test suite for the Eliza Bootstrap Plugin. The tests cover all major components of the plugin including actions, providers, evaluators, services, and event handling logic.
+This directory contains a comprehensive test suite for the Eliza Bootstrap
+Plugin. The tests cover all major components of the plugin including actions,
+providers, evaluators, services, and event handling logic.
 
 ## Key Features
 
-1. **Standardized Test Utilities**: The `test-utils.ts` file provides the canonical foundation for all tests with robust mock factories and type definitions.
+1. **Standardized Test Utilities**: The `test-utils.ts` file provides the
+   canonical foundation for all tests with robust mock factories and type
+   definitions.
 
-2. **Reusable Test Setup**: The `setupActionTest()` function creates a standardized test environment with consistent mock objects across all test files.
+2. **Reusable Test Setup**: The `setupActionTest()` function creates a
+   standardized test environment with consistent mock objects across all test
+   files.
 
-3. **Comprehensive Coverage**: Tests cover actions, providers, evaluators, services, and event handling with proper error handling and edge cases.
+3. **Comprehensive Coverage**: Tests cover actions, providers, evaluators,
+   services, and event handling with proper error handling and edge cases.
 
-4. **Type Safety**: Strong typing with proper mocking of required interfaces ensures type safety throughout the test suite.
+4. **Type Safety**: Strong typing with proper mocking of required interfaces
+   ensures type safety throughout the test suite.
 
 ## Test Utilities
 
 The test suite includes a robust set of utilities in `test-utils.ts`:
 
-- `createMockRuntime()`: Creates a comprehensive mock of the `IAgentRuntime` interface. **This is the canonical implementation that should be used across the entire codebase.**
+- `createMockRuntime()`: Creates a comprehensive mock of the `IAgentRuntime`
+  interface. **This is the canonical implementation that should be used across
+  the entire codebase.**
 
 - `createMockMemory()`: Creates standardized mock Memory objects for testing.
 
@@ -26,19 +36,25 @@ The test suite includes a robust set of utilities in `test-utils.ts`:
 
 - `createMockService()`: Creates standardized mock Service objects for testing.
 
-- `setupActionTest()`: Creates a complete test environment with all necessary mocks for testing actions, providers, evaluators, and other components.
+- `setupActionTest()`: Creates a complete test environment with all necessary
+  mocks for testing actions, providers, evaluators, and other components.
 
 ## Best Practices
 
-1. **Use Standard Test Setup**: Always use `setupActionTest()` when possible for consistent test environments.
+1. **Use Standard Test Setup**: Always use `setupActionTest()` when possible for
+   consistent test environments.
 
-2. **Prefer Existing Mock Functions**: Use the exported mock creation functions rather than creating custom mocks.
+2. **Prefer Existing Mock Functions**: Use the exported mock creation functions
+   rather than creating custom mocks.
 
 3. **Type Safety**: Maintain strong typing with proper casting when necessary.
 
-4. **DRY Principle**: Avoid duplicating test setup logic - reuse the standard test setup functions.
+4. **DRY Principle**: Avoid duplicating test setup logic - reuse the standard
+   test setup functions.
 
-5. **Canonical Implementation**: The `createMockRuntime()` function in this directory is the canonical implementation and should be used across all packages.
+5. **Canonical Implementation**: The `createMockRuntime()` function in this
+   directory is the canonical implementation and should be used across all
+   packages.
 
 ## Usage
 

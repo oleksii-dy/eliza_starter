@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { getServerSession, authOptions } from '@/lib/auth/auth-config';
 import { getSql } from '@/lib/database';
 import { randomUUID } from 'crypto';
@@ -10,7 +11,7 @@ interface CreateProjectRequest {
   type: 'mcp' | 'plugin' | 'service';
 }
 
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     // For development and testing, provide mock data when database is not available
     if (process.env.NODE_ENV === 'development') {
@@ -157,7 +158,7 @@ export async function handleGET(request: NextRequest) {
   }
 }
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     // For development, provide mock project creation
     if (process.env.NODE_ENV === 'development') {
@@ -353,3 +354,5 @@ What would you like to build?`,
     console.error('Failed to initialize agent conversation:', error);
   }
 }
+
+export const { GET, POST } = wrapHandlers({ handleGET, handlePOST });

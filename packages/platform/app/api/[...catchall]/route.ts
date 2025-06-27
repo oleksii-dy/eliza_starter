@@ -189,7 +189,7 @@ async function handleClientApiCall(
 }
 
 // HTTP method handlers
-export async function handleGET(
+export async function GET(
   request: NextRequest,
   props: { params: Promise<{ catchall: string[] }> },
 ) {
@@ -197,7 +197,7 @@ export async function handleGET(
   return handleClientApiCall(request, params.catchall);
 }
 
-export async function handlePOST(
+export async function POST(
   request: NextRequest,
   props: { params: Promise<{ catchall: string[] }> },
 ) {

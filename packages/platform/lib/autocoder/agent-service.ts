@@ -1,5 +1,6 @@
-import { IAgentRuntime, ModelType, Memory, State } from '@elizaos/core';
+import { IAgentRuntime, ModelType, Memory, State, Character } from '@elizaos/core';
 import { createAgentRuntime } from '@/lib/agents/create-runtime';
+import { randomUUID } from 'crypto';
 
 interface ResearchRequest {
   projectType: string;
@@ -128,10 +129,14 @@ interface TestExecutionResult {
 
 export class AutocoderAgentService {
   private runtime: IAgentRuntime | null = null;
-  private agentCharacter = {
+  private agentId: string | null = null;
+  private isConnectedToServer = false;
+
+  private agentCharacter: Character = {
+    id: randomUUID(),
     name: 'Autocoder Agent',
     username: 'autocoder',
-    bio: 'Expert AI agent specialized in researching, planning, and generating high-quality plugins and applications',
+    bio: ['Expert AI agent specialized in researching, planning, and generating high-quality plugins and applications'],
     system: `You are an expert software development agent with deep knowledge of:
 - ElizaOS plugin architecture and development patterns
 - MCP (Model Context Protocol) server development
@@ -157,15 +162,377 @@ Always prioritize:
 - Performance optimization`,
     messageExamples: [],
     knowledge: [],
-    plugins: ['@elizaos/plugin-research', '@elizaos/plugin-autocoder'],
+    plugins: ['@elizaos/plugin-sql', '@elizaos/plugin-openai'],
+    settings: {
+      OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+      POSTGRES_URL: process.env.POSTGRES_URL,
+    },
   };
 
   async initialize(): Promise<void> {
     if (!this.runtime) {
-      this.runtime = await createAgentRuntime({
-        character: this.agentCharacter,
+      try {
+        // First try to connect to existing agent on agent server
+        await this.connectToAgentServer();
+
+        if (!this.isConnectedToServer) {
+          // Fallback to creating local runtime
+          console.log('Agent server not available, creating local runtime...');
+          this.runtime = await createAgentRuntime({
+            character: this.agentCharacter,
+          });
+          await this.runtime.initialize();
+          this.agentId = this.runtime.agentId;
+        }
+      } catch (error) {
+        console.warn('Failed to connect to agent server, using local runtime:', error);
+        // Create local runtime as fallback
+        this.runtime = await createAgentRuntime({
+          character: this.agentCharacter,
+        });
+        await this.runtime.initialize();
+        this.agentId = this.runtime.agentId;
+      }
+    }
+  }
+
+  /**
+   * Connect to existing agent running on agent server
+   */
+  private async connectToAgentServer(): Promise<void> {
+    try {
+      const agentServerUrl = process.env.AGENT_SERVER_URL || 'http://localhost:3000';
+
+      // Check if agent server is running
+      const healthResponse = await fetch(`${agentServerUrl}/api/runtime/health`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
-      await this.runtime.initialize();
+
+      if (!healthResponse.ok) {
+        throw new Error(`Agent server health check failed: ${healthResponse.status}`);
+      }
+
+      // List existing agents
+      const agentsResponse = await fetch(`${agentServerUrl}/api/agents`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!agentsResponse.ok) {
+        throw new Error(`Failed to list agents: ${agentsResponse.status}`);
+      }
+
+      const { data: agents } = await agentsResponse.json();
+
+      // Look for autocoder agent
+      let autocoderAgent = agents.find((agent: any) =>
+        agent.characterName === 'Autocoder Agent' ||
+        agent.name === 'Autocoder Agent'
+      );
+
+      if (!autocoderAgent) {
+        // Create new autocoder agent on server
+        autocoderAgent = await this.createAgentOnServer(agentServerUrl);
+      }
+
+      this.agentId = autocoderAgent.id;
+      this.isConnectedToServer = true;
+
+      // Create runtime wrapper that communicates with agent server
+      this.runtime = await this.createServerRuntimeWrapper(agentServerUrl, autocoderAgent.id);
+
+      console.log(`Connected to autocoder agent on server: ${autocoderAgent.id}`);
+    } catch (error) {
+      console.warn('Failed to connect to agent server:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create new autocoder agent on agent server
+   */
+  private async createAgentOnServer(serverUrl: string): Promise<any> {
+    const response = await fetch(`${serverUrl}/api/agents`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        characterJson: this.agentCharacter,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to create agent on server: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result.data;
+  }
+
+  /**
+   * Create runtime wrapper that communicates with agent server
+   */
+  private async createServerRuntimeWrapper(serverUrl: string, agentId: string): Promise<IAgentRuntime> {
+    const wrapper = {
+      agentId,
+      character: this.agentCharacter,
+
+      // Model usage through server API
+      useModel: async (modelType: string, params: any): Promise<any> => {
+        try {
+          const response = await fetch(`${serverUrl}/api/agents/${agentId}/model`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              modelType,
+              params,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`Model request failed: ${response.status}`);
+          }
+
+          const result = await response.json();
+          return result.response;
+        } catch (error) {
+          console.error('Server model request failed, using fallback:', error);
+          // Fallback to local model if available
+          const localRuntime = await createAgentRuntime({ character: this.agentCharacter });
+          return await localRuntime.useModel(modelType as any, params);
+        }
+      },
+
+      // Memory operations through server API
+      createMemory: async (memory: any, tableName?: string): Promise<void> => {
+        try {
+          await fetch(`${serverUrl}/api/agents/${agentId}/memories`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              memory,
+              tableName,
+            }),
+          });
+        } catch (error) {
+          console.warn('Failed to create memory on server:', error);
+        }
+      },
+
+      // Other essential runtime methods
+      getSetting: (key: string) => {
+        return this.agentCharacter.settings?.[key] || process.env[key];
+      },
+
+      logger: {
+        info: (message: string, ...args: any[]) => console.log(`[AutocoderAgent] ${message}`, ...args),
+        warn: (message: string, ...args: any[]) => console.warn(`[AutocoderAgent] ${message}`, ...args),
+        error: (message: string, ...args: any[]) => console.error(`[AutocoderAgent] ${message}`, ...args),
+        debug: (message: string, ...args: any[]) => console.debug(`[AutocoderAgent] ${message}`, ...args),
+      },
+
+      // Add other IAgentRuntime methods as needed
+    } as unknown as IAgentRuntime;
+
+    return wrapper;
+  }
+
+  /**
+   * Get the current agent ID
+   */
+  getAgentId(): string | null {
+    return this.agentId;
+  }
+
+  /**
+   * Check if connected to agent server
+   */
+  getIsConnectedToServer(): boolean {
+    return this.isConnectedToServer;
+  }
+
+  /**
+   * Process conversation message through agent
+   */
+  async processConversationMessage(
+    projectId: string,
+    message: string,
+    conversationHistory: Array<{ type: 'user' | 'agent'; message: string; timestamp: Date }>
+  ): Promise<string> {
+    await this.initialize();
+
+    if (!this.runtime) {
+      throw new Error('Runtime not initialized');
+    }
+
+    try {
+      // Build context from conversation history
+      const context = conversationHistory
+        .map(msg => `${msg.type === 'user' ? 'User' : 'Assistant'}: ${msg.message}`)
+        .join('\n');
+
+      const prompt = `Context:\n${context}\n\nUser: ${message}\n\nProvide a helpful response as an expert DeFi and autocoding assistant. Be conversational but technical when needed.`;
+
+      const response = await this.runtime.useModel(ModelType.TEXT_LARGE, {
+        prompt,
+        temperature: 0.7,
+        maxTokens: 500,
+      });
+
+      return response as string;
+    } catch (error) {
+      console.error('Failed to process conversation message:', error);
+      return "I'm sorry, I'm having trouble processing your message right now. Let me try to help you in another way.";
+    }
+  }
+
+  /**
+   * Analyze project requirements and generate next steps
+   */
+  async analyzeProjectRequirements(
+    projectId: string,
+    userPrompt: string,
+    projectType: string
+  ): Promise<{
+    analysis: string;
+    nextSteps: string[];
+    estimatedTime: string;
+    complexity: 'simple' | 'moderate' | 'advanced';
+  }> {
+    await this.initialize();
+
+    if (!this.runtime) {
+      throw new Error('Runtime not initialized');
+    }
+
+    try {
+      const prompt = `Analyze this project request and provide detailed analysis:
+
+Project: ${userPrompt}
+Type: ${projectType}
+
+Please provide:
+1. Technical analysis of requirements
+2. Specific next steps to implement
+3. Estimated timeline
+4. Complexity assessment (simple/moderate/advanced)
+
+Format as JSON with keys: analysis, nextSteps (array), estimatedTime, complexity`;
+
+      const response = await this.runtime.useModel(ModelType.TEXT_REASONING_LARGE, {
+        prompt,
+        temperature: 0.3,
+        maxTokens: 1000,
+      });
+
+      try {
+        const parsed = JSON.parse(response as string);
+        return {
+          analysis: parsed.analysis || 'Analysis unavailable',
+          nextSteps: parsed.nextSteps || ['Define requirements', 'Create architecture', 'Implement core features'],
+          estimatedTime: parsed.estimatedTime || '3-5 days',
+          complexity: parsed.complexity || 'moderate',
+        };
+      } catch (parseError) {
+        // Fallback response
+        return {
+          analysis: `This ${projectType} project involves ${userPrompt}. Based on the requirements, it will need careful planning and implementation.`,
+          nextSteps: [
+            'Research existing solutions and best practices',
+            'Design system architecture',
+            'Implement core functionality',
+            'Add testing and security features',
+            'Deploy and test thoroughly'
+          ],
+          estimatedTime: '3-5 days',
+          complexity: 'moderate',
+        };
+      }
+    } catch (error) {
+      console.error('Failed to analyze project requirements:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Generate project implementation suggestions
+   */
+  async generateImplementationSuggestions(
+    projectType: string,
+    features: string[],
+    constraints: string[]
+  ): Promise<{
+    recommendations: string[];
+    architecture: string;
+    risks: string[];
+    timeline: string;
+  }> {
+    await this.initialize();
+
+    if (!this.runtime) {
+      throw new Error('Runtime not initialized');
+    }
+
+    try {
+      const prompt = `Generate implementation recommendations for:
+
+Project Type: ${projectType}
+Features: ${features.join(', ')}
+Constraints: ${constraints.join(', ')}
+
+Provide:
+1. Specific technical recommendations
+2. Suggested architecture approach
+3. Key risks and mitigation strategies
+4. Realistic timeline
+
+Format as JSON with keys: recommendations (array), architecture (string), risks (array), timeline (string)`;
+
+      const response = await this.runtime.useModel(ModelType.TEXT_REASONING_LARGE, {
+        prompt,
+        temperature: 0.4,
+        maxTokens: 1200,
+      });
+
+      try {
+        const parsed = JSON.parse(response as string);
+        return {
+          recommendations: parsed.recommendations || ['Use established patterns', 'Implement proper error handling'],
+          architecture: parsed.architecture || 'Modular architecture with clear separation of concerns',
+          risks: parsed.risks || ['Technical complexity', 'Integration challenges'],
+          timeline: parsed.timeline || '1-2 weeks',
+        };
+      } catch (parseError) {
+        // Fallback response
+        return {
+          recommendations: [
+            'Use proven frameworks and libraries',
+            'Implement comprehensive testing',
+            'Follow security best practices',
+            'Plan for scalability from the start'
+          ],
+          architecture: 'Modular microservices architecture with clear API boundaries',
+          risks: [
+            'Technical complexity may exceed initial estimates',
+            'Third-party API integration challenges',
+            'Security vulnerabilities in smart contracts'
+          ],
+          timeline: '1-2 weeks depending on complexity',
+        };
+      }
+    } catch (error) {
+      console.error('Failed to generate implementation suggestions:', error);
+      throw error;
     }
   }
 
@@ -230,6 +597,149 @@ Format your response as structured JSON with the following schema:
           'Validate all user inputs',
           'Handle API rate limits properly',
         ],
+      };
+    }
+  }
+
+  /**
+   * Create GitHub repository for the project
+   */
+  async createGitHubRepository(data: {
+    projectId: string;
+    name: string;
+    description: string;
+    category: string;
+    specification: any;
+    githubToken?: string;
+  }): Promise<{ success: boolean; repository?: any; error?: string }> {
+    try {
+      if (!this.runtime) {
+        await this.initialize();
+      }
+
+      // Check if we're connected to server and can use the GitHub service
+      if (this.isConnectedToServer && this.runtime) {
+        const response = await this.runtime.useModel('TEXT_LARGE', {
+          prompt: `Create a GitHub repository for the autocoder project:
+
+Project: ${data.name}
+Description: ${data.description}
+Category: ${data.category}
+Project ID: ${data.projectId}
+
+Please create the repository with appropriate files and structure for a ${data.category} project.`,
+          temperature: 0.3,
+        });
+
+        return {
+          success: true,
+          repository: {
+            name: `${data.name.toLowerCase().replace(/\s+/g, '-')}-${data.projectId.slice(0, 8)}`,
+            description: `${data.description} - Generated by ElizaOS Autocoder`,
+            category: data.category,
+            status: 'pending_creation'
+          }
+        };
+      }
+
+      // Local fallback - provide guidance for manual repository creation
+      const repositoryGuidance = await this.runtime!.useModel('TEXT_LARGE', {
+        prompt: `Generate guidance for creating a GitHub repository for this autocoder project:
+
+Project: ${data.name}
+Description: ${data.description}
+Category: ${data.category}
+
+Provide step-by-step instructions for:
+1. Repository naming conventions
+2. Required files and structure
+3. Initial commit suggestions
+4. Branch strategy recommendations
+
+Format as helpful instructions for the user.`,
+        temperature: 0.3,
+      });
+
+      return {
+        success: true,
+        repository: {
+          guidance: repositoryGuidance,
+          recommendedName: `${data.name.toLowerCase().replace(/\s+/g, '-')}-${data.projectId.slice(0, 8)}`,
+          category: data.category,
+        }
+      };
+    } catch (error) {
+      console.error('Error creating GitHub repository plan:', error);
+      return {
+        success: false,
+        error: `Failed to create repository plan: ${error instanceof Error ? error.message : 'Unknown error'}`
+      };
+    }
+  }
+
+  /**
+   * Generate project files for GitHub repository
+   */
+  async generateProjectFiles(data: {
+    category: string;
+    specification: any;
+    includeTests?: boolean;
+    includeDocs?: boolean;
+  }): Promise<{ success: boolean; files?: Record<string, string>; error?: string }> {
+    try {
+      if (!this.runtime) {
+        await this.initialize();
+      }
+
+      const prompt = `Generate complete project files for a ${data.category} project with the following specification:
+
+${JSON.stringify(data.specification, null, 2)}
+
+Generate a complete file structure including:
+1. Main implementation files
+2. Configuration files (package.json, tsconfig.json, etc.)
+3. ${data.includeTests ? 'Comprehensive test files' : 'Basic test setup'}
+4. ${data.includeDocs ? 'Documentation and README' : 'Basic README'}
+5. CI/CD workflow files
+6. Environment and deployment configurations
+
+Provide the response as a JSON object with file paths as keys and file contents as values.
+Ensure all code is production-ready and follows best practices for ${data.category} projects.`;
+
+      const response = await this.runtime!.useModel('TEXT_LARGE', { prompt, temperature: 0.2 });
+
+      try {
+        // Try to parse as JSON
+        const files = JSON.parse(response);
+        return { success: true, files };
+      } catch (parseError) {
+        // If not valid JSON, provide as guidance
+        return {
+          success: true,
+          files: {
+            'GENERATION_GUIDE.md': response,
+            'package.json': JSON.stringify({
+              name: data.specification.name || 'autocoder-project',
+              version: '1.0.0',
+              description: data.specification.description || 'Generated by ElizaOS Autocoder',
+              main: 'src/index.ts',
+              scripts: {
+                build: 'tsc',
+                test: 'jest',
+                start: 'node dist/index.js',
+                dev: 'ts-node src/index.ts'
+              },
+              keywords: ['elizaos', 'autocoder', data.category],
+              license: 'MIT'
+            }, null, 2)
+          }
+        };
+      }
+    } catch (error) {
+      console.error('Error generating project files:', error);
+      return {
+        success: false,
+        error: `Failed to generate project files: ${error instanceof Error ? error.message : 'Unknown error'}`
       };
     }
   }
@@ -498,14 +1008,14 @@ Format as JSON with scores and detailed issue list.`;
 
       // Create a temporary session for testing
       const sessionId = await containerService.createSession(
-        'test-' + Date.now(),
+        `test-${Date.now()}`,
         'system',
       );
 
       try {
         // Execute tests in container
         const buildResult = await containerService.executeCodeBuild(sessionId, {
-          projectId: 'test-' + Date.now(),
+          projectId: `test-${Date.now()}`,
           userId: 'system',
           files: request.code.files,
           packageJson: request.code.packageJson,

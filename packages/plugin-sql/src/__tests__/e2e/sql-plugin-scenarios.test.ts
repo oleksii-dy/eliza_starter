@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import { AgentRuntime } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
-import type { UUID, IAgentRuntime, Memory, Character } from '@elizaos/core';
+import type { UUID, Memory, Character } from '@elizaos/core';
+import type { IAgentRuntime } from '@elizaos/core';
 import { createIsolatedTestDatabase } from '../test-helpers';
 import { mockCharacter } from '../fixtures';
 
@@ -21,7 +22,7 @@ describe('SQL Plugin E2E Scenarios', () => {
     console.log('[SCENARIO SETUP] Creating isolated test environment...');
 
     // Create isolated test database with runtime
-    const setup = await createIsolatedTestDatabase(`scenario_tests_${Date.now()}`, []);
+    const setup = await createIsolatedTestDatabase(`scenario_tests_${Date.now()}`);
 
     // Use the runtime, testAgentId, and cleanup from the setup
     runtime = setup.runtime;

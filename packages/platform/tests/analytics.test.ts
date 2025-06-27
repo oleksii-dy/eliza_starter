@@ -3,38 +3,38 @@
  * Test all analytics calculations and verify accuracy
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
 import { InferenceAnalyticsService } from '../lib/services/inference-analytics';
 
 // Mock the database
-jest.mock('../lib/database', () => ({
+vi.mock('../lib/database', () => ({
   db: {
-    insert: jest.fn(),
-    update: jest.fn(),
-    select: jest.fn().mockReturnValue({
-      from: jest.fn().mockReturnValue({
-        where: jest.fn().mockReturnValue({
-          limit: jest.fn().mockReturnValue(Promise.resolve([])),
+    insert: vi.fn(),
+    update: vi.fn(),
+    select: vi.fn().mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          limit: vi.fn().mockReturnValue(Promise.resolve([])),
         }),
       }),
     }),
-    from: jest.fn(),
-    where: jest.fn(),
-    orderBy: jest.fn(),
-    groupBy: jest.fn(),
-    limit: jest.fn(),
-    offset: jest.fn(),
+    from: vi.fn(),
+    where: vi.fn(),
+    orderBy: vi.fn(),
+    groupBy: vi.fn(),
+    limit: vi.fn(),
+    offset: vi.fn(),
   },
-  getDatabase: jest.fn().mockReturnValue({
-    select: jest.fn().mockReturnValue({
-      from: jest.fn().mockReturnValue({
-        where: jest.fn().mockReturnValue({
-          limit: jest.fn().mockReturnValue(Promise.resolve([])),
+  getDatabase: vi.fn().mockReturnValue({
+    select: vi.fn().mockReturnValue({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          limit: vi.fn().mockReturnValue(Promise.resolve([])),
         }),
       }),
     }),
   }),
-  initializeDbProxy: jest.fn(),
+  initializeDbProxy: vi.fn(),
 }));
 
 describe('InferenceAnalyticsService', () => {

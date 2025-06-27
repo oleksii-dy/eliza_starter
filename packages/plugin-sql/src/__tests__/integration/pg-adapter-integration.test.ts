@@ -179,13 +179,13 @@ describe('PostgreSQL Adapter Direct Integration Tests', () => {
         try {
           await db.execute(sql`SELECT * FROM non_existent_table`);
           // If we get here, the test should fail
-          expect.fail('Query should have thrown an error');
+          throw new Error('Query should have thrown an error');
         } catch (error) {
           // Expected error
           expect(error).toBeDefined();
           // The error message format is "Failed query: SELECT * FROM non_existent_table"
-          expect(error.message).toContain('Failed query');
-          expect(error.message).toContain('non_existent_table');
+          expect((error as Error).message).toContain('Failed query');
+          expect((error as Error).message).toContain('non_existent_table');
         }
       });
 

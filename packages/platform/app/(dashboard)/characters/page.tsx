@@ -51,9 +51,9 @@ export default function CharactersPage() {
   const fetchCharacters = useCallback(async () => {
     try {
       const params = new URLSearchParams();
-      if (searchQuery) params.append('search', searchQuery);
+      if (searchQuery) {params.append('search', searchQuery);}
       if (visibilityFilter !== 'all')
-        params.append('visibility', visibilityFilter);
+      {params.append('visibility', visibilityFilter);}
 
       const response = await fetch(`/api/characters?${params}`);
       const data = await response.json();

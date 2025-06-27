@@ -102,7 +102,7 @@ export const StarterPluginTestSuite: TestSuite = {
      */
     {
       name: 'example_test',
-      fn: async (runtime) => {
+      fn: async (runtime: any) => {
         // Test the character name
         if (runtime.character.name !== 'Eliza') {
           throw new Error(
@@ -153,7 +153,7 @@ export const StarterPluginTestSuite: TestSuite = {
      */
     {
       name: 'should_have_hello_world_action',
-      fn: async (runtime) => {
+      fn: async (runtime: any) => {
         // Access actions through runtime.actions instead of getPlugin
         const actionExists = runtime.actions?.some((a: any) => a.name === 'HELLO_WORLD');
         if (!actionExists) {
@@ -175,7 +175,7 @@ export const StarterPluginTestSuite: TestSuite = {
      */
     {
       name: 'hello_world_action_test',
-      fn: async (runtime) => {
+      fn: async (runtime: any) => {
         // Create a test message asking the agent to say hello
         const testMessage: Memory = {
           entityId: '12345678-1234-1234-1234-123456789012' as UUID,
@@ -243,7 +243,7 @@ export const StarterPluginTestSuite: TestSuite = {
      */
     {
       name: 'hello_world_provider_test',
-      fn: async (runtime) => {
+      fn: async (runtime: any) => {
         // Create a test message
         const testMessage: Memory = {
           entityId: '12345678-1234-1234-1234-123456789012' as UUID,
@@ -286,7 +286,7 @@ export const StarterPluginTestSuite: TestSuite = {
      */
     {
       name: 'starter_service_test',
-      fn: async (runtime) => {
+      fn: async (runtime: any) => {
         // Check if getService exists
         if (!runtime.getService) {
           throw new Error('Runtime does not have getService method');
@@ -341,7 +341,7 @@ export const StarterPluginTestSuite: TestSuite = {
      * ```typescript
      * {
      *   name: 'your_test_name',
-     *   fn: async (runtime) => {
+     *   fn: async (runtime: any) => {
      *     // Setup: Create any test data needed
      *
      *     // Action: Perform the operation you want to test

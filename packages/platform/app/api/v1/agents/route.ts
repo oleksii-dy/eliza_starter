@@ -43,7 +43,7 @@ async function handleGET(request: NextRequest) {
       id: agent.id,
       name: agent.name,
       description: agent.description,
-      status: agent.status || 'active',
+      status: 'active', // Default status until added to agent schema
       created_at: agent.createdAt.toISOString(),
       updated_at: agent.updatedAt.toISOString(),
     }));
@@ -118,7 +118,7 @@ async function handlePOST(request: NextRequest) {
       id: agent.id,
       name: agent.name,
       description: agent.description,
-      status: agent.status || 'active',
+      status: 'active', // Default status until added to agent schema
       created_at: agent.createdAt.toISOString(),
       updated_at: agent.updatedAt.toISOString(),
     };

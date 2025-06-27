@@ -109,19 +109,25 @@ export class PlanningService extends Service implements IPlanningService {
       } else {
         // Simple heuristic-based action selection based on message content
         const text = message.content.text?.toLowerCase() || '';
+        logger.debug(`[PlanningService] Analyzing text: "${text}"`);
         if (text.includes('email')) {
           actions = ['SEND_EMAIL'];
+          logger.debug('[PlanningService] Detected email action');
         } else if (
           text.includes('research') &&
           (text.includes('send') || text.includes('summary'))
         ) {
           actions = ['SEARCH', 'REPLY'];
+          logger.debug('[PlanningService] Detected research + send/summary actions');
         } else if (text.includes('search') || text.includes('find') || text.includes('research')) {
           actions = ['SEARCH'];
+          logger.debug('[PlanningService] Detected search action');
         } else if (text.includes('analyze')) {
           actions = ['THINK', 'REPLY'];
+          logger.debug('[PlanningService] Detected analyze actions');
         } else {
           actions = ['REPLY'];
+          logger.debug('[PlanningService] Defaulting to REPLY action');
         }
       }
 
@@ -131,16 +137,21 @@ export class PlanningService extends Service implements IPlanningService {
 
       // Create a simple sequential plan from the actions
       const planId = asUUID(uuidv4());
-      const steps: ActionStep[] = actions.map((actionName, index) => ({
-        id: asUUID(uuidv4()),
-        actionName,
-        parameters: {
-          message: responseContent?.text || message.content.text,
-          thought: responseContent?.thought,
-          providers: responseContent?.providers || [],
-        },
-        dependencies: index > 0 ? [asUUID(uuidv4())] : [],
-      }));
+      const stepIds: UUID[] = [];
+      const steps: ActionStep[] = actions.map((actionName, index) => {
+        const stepId = asUUID(uuidv4());
+        stepIds.push(stepId);
+        return {
+          id: stepId,
+          actionName,
+          parameters: {
+            message: responseContent?.text || message.content.text,
+            thought: responseContent?.thought,
+            providers: responseContent?.providers || [],
+          },
+          dependencies: index > 0 ? [stepIds[index - 1]] : [],
+        };
+      });
 
       const plan: ActionPlan = {
         id: planId,

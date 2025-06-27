@@ -1,15 +1,7 @@
-import { describe, expect, it, spyOn, beforeEach, afterAll, beforeAll, Mock } from 'bun:test';
-import { starterPlugin, StarterService } from '../index';
-import { createMockRuntime, setupLoggerSpies, MockRuntime } from './test-utils';
-import {
-  HandlerCallback,
-  IAgentRuntime,
-  Memory,
-  State,
-  UUID,
-  logger,
-  Service,
-} from '@elizaos/core';
+import { HandlerCallback, IAgentRuntime, Memory, State, UUID } from '@elizaos/core';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
+import { starterPlugin } from '../index';
+import { createMockRuntime, MockRuntime, setupLoggerSpies } from './test-utils';
 
 /**
  * Integration tests demonstrate how multiple components of the plugin work together.
@@ -40,16 +32,14 @@ describe('Integration: HelloWorld Action with StarterService', () => {
       stop: () => Promise.resolve(),
     };
 
-    // Create a mock runtime with a spied getService method
-    const getServiceImpl = (serviceType: string) => {
-      if (serviceType === 'starter') {
-        return mockService;
-      }
-      return null;
-    };
-
+    // Create a mock runtime with a custom getService method
     mockRuntime = createMockRuntime({
-      getService: getServiceImpl as Mock<(serviceType: string) => any>,
+      getService: (serviceType: string | any) => {
+        if (typeof serviceType === 'string' && serviceType === 'starter') {
+          return mockService;
+        }
+        return null;
+      },
     });
   });
 
@@ -116,9 +106,9 @@ describe('Integration: Plugin initialization and service registration', () => {
 
     // Create and install a mock registerService
     const registerServiceCalls: any[] = [];
-    mockRuntime.registerService = ((type: any, service: any) => {
-      registerServiceCalls.push({ type, service });
-    }) as Mock<(...args: any[]) => any>;
+    mockRuntime.registerService = async (service: any) => {
+      registerServiceCalls.push({ service });
+    };
 
     // Run a minimal simulation of the plugin initialization process
     if (starterPlugin.init) {

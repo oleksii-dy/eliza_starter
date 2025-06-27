@@ -5,8 +5,11 @@ import { TogetherAIClient } from '../lib/together-client.js';
 
 // Simplified TestSuite implementation for local use
 class TestSuite {
-  constructor(private name: string, private config: any) {}
-  
+  constructor(
+    private name: string,
+    private config: any
+  ) {}
+
   addTest(test: any) {
     it(test.name, async () => {
       const context = this.config.beforeEach ? await this.config.beforeEach() : {};
@@ -19,13 +22,14 @@ class TestSuite {
       }
     });
   }
-  
+
   run() {
     // No-op, bun:test handles execution
   }
 }
 
-const createUnitTest = (config: { name: string; fn: (context?: any) => Promise<void> | void }) => config;
+const createUnitTest = (config: { name: string; fn: (context?: any) => Promise<void> | void }) =>
+  config;
 
 describe('Complete Workflow Tests', () => {
   const testDataDir = './test-workflow-temp';

@@ -5,7 +5,7 @@
  * Focus on testing the actual AI integration without database dependencies.
  */
 
-import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { IAgentRuntime, Character } from '@elizaos/core';
 import {
   createTestRuntime,
@@ -117,7 +117,7 @@ describe('AI Service Runtime Integration Tests', () => {
 
       console.log(
         '✅ Real OpenAI response generated:',
-        response.content.substring(0, 100) + '...',
+        `${response.content.substring(0, 100)}...`,
       );
       console.log('✅ Suggestions provided:', response.suggestions!.length);
     });
@@ -409,7 +409,7 @@ describe('AI Service Runtime Integration Tests', () => {
         .join(' ')
         .toLowerCase();
       const messageText = response.content.toLowerCase();
-      const combinedText = suggestionsText + ' ' + messageText;
+      const combinedText = `${suggestionsText} ${messageText}`;
 
       const isRelevant =
         combinedText.includes('customer') ||

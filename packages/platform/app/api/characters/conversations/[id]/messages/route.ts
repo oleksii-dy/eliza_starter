@@ -3,6 +3,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { z } from 'zod';
 
 // Use dynamic imports to avoid database connection during build
@@ -22,7 +23,7 @@ const sendMessageSchema = z.object({
 /**
  * POST /api/characters/conversations/[id]/messages - Send message to character
  */
-export async function handlePOST(
+async function handlePOST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -304,3 +305,5 @@ function buildCharacterSystemPrompt(character: any): string {
 
   return prompt;
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

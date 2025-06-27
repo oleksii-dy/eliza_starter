@@ -13,10 +13,26 @@ const mock = () => {
   fn.calls = calls;
   fn._returnValue = undefined;
   fn._implementation = null;
-  fn.mockReturnValue = (value: any) => { fn._returnValue = value; fn._implementation = null; return fn; };
-  fn.mockResolvedValue = (value: any) => { fn._returnValue = Promise.resolve(value); fn._implementation = null; return fn; };
-  fn.mockRejectedValue = (error: any) => { fn._returnValue = Promise.reject(error); fn._implementation = null; return fn; };
-  fn.mockImplementation = (impl: any) => { fn._implementation = impl; fn._returnValue = undefined; return fn; };
+  fn.mockReturnValue = (value: any) => {
+    fn._returnValue = value;
+    fn._implementation = null;
+    return fn;
+  };
+  fn.mockResolvedValue = (value: any) => {
+    fn._returnValue = Promise.resolve(value);
+    fn._implementation = null;
+    return fn;
+  };
+  fn.mockRejectedValue = (error: any) => {
+    fn._returnValue = Promise.reject(error);
+    fn._implementation = null;
+    return fn;
+  };
+  fn.mockImplementation = (impl: any) => {
+    fn._implementation = impl;
+    fn._returnValue = undefined;
+    return fn;
+  };
   fn.mock = { calls, results: [] };
   return fn;
 };
@@ -35,7 +51,7 @@ describe('Ngrok Actions - Validation and Error Handling', () => {
 
   beforeEach(() => {
     mockTunnelService = new MockNgrokService({} as IAgentRuntime);
-    
+
     // Reset all mocks to default behavior
     mockTunnelService.startTunnel.mockResolvedValue('https://test.ngrok.io');
     mockTunnelService.stopTunnel.mockResolvedValue(undefined);
@@ -47,7 +63,7 @@ describe('Ngrok Actions - Validation and Error Handling', () => {
       startedAt: null,
       provider: 'ngrok',
     });
-    
+
     mockRuntime = createMockRuntime({
       getService: mock().mockImplementation((name: string) => {
         if (name === 'tunnel' || name === 'ngrok-tunnel') {
@@ -91,7 +107,7 @@ describe('Ngrok Actions - Validation and Error Handling', () => {
         getService: mock().mockReturnValue(null),
       });
       const memory = createMockMemory({
-        content: { text: 'start tunnel on port 8080' }
+        content: { text: 'start tunnel on port 8080' },
       });
 
       const result = await startTunnelAction.handler(
@@ -118,7 +134,7 @@ describe('Ngrok Actions - Validation and Error Handling', () => {
         useModel: mock().mockResolvedValue('{"port": -1}'),
       });
       const memory = createMockMemory({
-        content: { text: 'start tunnel on port -1' }
+        content: { text: 'start tunnel on port -1' },
       });
       mockTunnelService.startTunnel.mockResolvedValue('https://test.ngrok.io');
 
@@ -159,7 +175,7 @@ describe('Ngrok Actions - Validation and Error Handling', () => {
       const failingTunnelService = new MockNgrokService({} as IAgentRuntime);
       failingTunnelService.startTunnel.mockRejectedValue(new Error('Ngrok auth failed'));
       failingTunnelService.isActive.mockReturnValue(false);
-      
+
       const failingRuntime = createMockRuntime({
         getService: mock().mockImplementation((name: string) => {
           if (name === 'tunnel' || name === 'ngrok-tunnel') {
@@ -169,7 +185,7 @@ describe('Ngrok Actions - Validation and Error Handling', () => {
         }),
         useModel: mock().mockResolvedValue('{"port": 8080}'),
       });
-      
+
       mockMemory.content = { text: 'start tunnel on port 8080' };
 
       const result = await startTunnelAction.handler(
@@ -199,7 +215,7 @@ describe('Ngrok Actions - Validation and Error Handling', () => {
         startedAt: new Date(),
         provider: 'ngrok',
       });
-      
+
       const activeRuntime = createMockRuntime({
         getService: mock().mockImplementation((name: string) => {
           if (name === 'tunnel' || name === 'ngrok-tunnel') {
@@ -209,7 +225,7 @@ describe('Ngrok Actions - Validation and Error Handling', () => {
         }),
         useModel: mock().mockResolvedValue('{"port": 8080}'),
       });
-      
+
       mockMemory.content = { text: 'start tunnel on port 8080' };
 
       const result = await startTunnelAction.handler(
@@ -289,7 +305,7 @@ describe('Ngrok Actions - Validation and Error Handling', () => {
         provider: 'ngrok',
       });
       failingStopService.stopTunnel.mockRejectedValue(new Error('Stop failed'));
-      
+
       const failingStopRuntime = createMockRuntime({
         getService: mock().mockImplementation((name: string) => {
           if (name === 'tunnel' || name === 'ngrok-tunnel') {
@@ -347,7 +363,7 @@ describe('Ngrok Actions - Validation and Error Handling', () => {
         startedAt: startTime,
         provider: 'ngrok',
       });
-      
+
       const activeRuntime = createMockRuntime({
         getService: mock().mockImplementation((name: string) => {
           if (name === 'tunnel' || name === 'ngrok-tunnel') {

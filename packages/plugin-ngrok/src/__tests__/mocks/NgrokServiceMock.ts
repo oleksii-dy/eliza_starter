@@ -14,10 +14,26 @@ const mock = () => {
   fn.calls = calls;
   fn._returnValue = undefined;
   fn._implementation = null;
-  fn.mockReturnValue = (value: any) => { fn._returnValue = value; fn._implementation = null; return fn; };
-  fn.mockResolvedValue = (value: any) => { fn._returnValue = Promise.resolve(value); fn._implementation = null; return fn; };
-  fn.mockRejectedValue = (error: any) => { fn._returnValue = Promise.reject(error); fn._implementation = null; return fn; };
-  fn.mockImplementation = (impl: any) => { fn._implementation = impl; fn._returnValue = undefined; return fn; };
+  fn.mockReturnValue = (value: any) => {
+    fn._returnValue = value;
+    fn._implementation = null;
+    return fn;
+  };
+  fn.mockResolvedValue = (value: any) => {
+    fn._returnValue = Promise.resolve(value);
+    fn._implementation = null;
+    return fn;
+  };
+  fn.mockRejectedValue = (error: any) => {
+    fn._returnValue = Promise.reject(error);
+    fn._implementation = null;
+    return fn;
+  };
+  fn.mockImplementation = (impl: any) => {
+    fn._implementation = impl;
+    fn._returnValue = undefined;
+    return fn;
+  };
   fn.mock = { calls, results: [] };
   return fn;
 };

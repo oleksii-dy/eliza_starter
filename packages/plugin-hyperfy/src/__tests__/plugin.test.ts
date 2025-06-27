@@ -47,22 +47,26 @@ function createTestRuntime() {
     return null;
   };
 
-  return createMockRuntime({
+  const runtime = createMockRuntime({
     character: {
       name: 'Test Character',
+      bio: ['A test character for unit testing'],
       system: 'You are a helpful assistant for testing.',
       plugins: [],
       settings: {},
     },
     getSetting: (key: string) => null,
-    models: hyperfyPlugin.models,
     db: {
       get: async (key: string) => null,
       set: async (key: string, value: any) => true,
       delete: async (key: string) => true,
       getKeys: async (pattern: string) => [],
     },
-    getService: (serviceType: string) => {
+    getService: ((serviceTypeOrClass: any) => {
+      const serviceType = typeof serviceTypeOrClass === 'string'
+        ? serviceTypeOrClass
+        : (serviceTypeOrClass.serviceName || serviceTypeOrClass.name);
+
       // Log the service request for debugging
       logger.debug(`Requesting service: ${serviceType}`);
 
@@ -73,12 +77,18 @@ function createTestRuntime() {
       }
 
       return services.get(serviceType);
-    },
-    registerService: (serviceType: string, service: any) => {
-      logger.debug(`Registering service: ${serviceType}`);
-      services.set(serviceType, service);
+    }) as any,
+    registerService: async (serviceClass: any) => {
+      logger.debug(`Registering service: ${serviceClass.serviceName || serviceClass.name}`);
+      const instance = new serviceClass({} as any);
+      services.set(serviceClass.serviceName || serviceClass.name, instance);
     },
   });
+
+  // Expose services for testing
+  (runtime as any).testServices = services;
+  
+  return runtime;
 }
 
 describe('Plugin Configuration', () => {
@@ -159,7 +169,7 @@ describe('HyperfyService', () => {
 
     // Register a real service first
     const service = new HyperfyService(runtime as any);
-    runtime.registerService(HyperfyService.serviceName, service);
+    (runtime as any).testServices.set(HyperfyService.serviceName, service);
 
     // Spy on the real service's stop method
     const stopSpy = spyOn(service, 'stop');

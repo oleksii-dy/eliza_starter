@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
+import { vi } from 'vitest';
 import { expandTildePath, resolveEnvFile, resolvePgliteDir } from '../../utils';
 import * as path from 'path';
 import * as os from 'os';

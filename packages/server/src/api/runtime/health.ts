@@ -39,25 +39,32 @@ export function createHealthRouter(
 
   // Comprehensive health check
   router.get('/health', (_req, res) => {
-    logger.log({ apiRoute: '/health' }, 'Health check route hit');
-    const healthcheck = {
-      status: 'OK',
-      version: process.env.APP_VERSION || 'unknown',
-      timestamp: new Date().toISOString(),
-      dependencies: {
-        agents: agents.size > 0 ? 'healthy' : 'no_agents',
-      },
-    };
+    try {
+      // Log the access
+      logger.info('Health check route hit', { apiRoute: '/health' });
 
-    const statusCode = healthcheck.dependencies.agents === 'healthy' ? 200 : 503;
-    res.status(statusCode).json(healthcheck);
+      res.json({
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        memory: process.memoryUsage(),
+        pid: process.pid,
+        version: process.version,
+      });
+    } catch (error) {
+      logger.error('Health check failed:', error);
+      res.status(500).json({
+        status: 'error',
+        message: 'Health check failed',
+      });
+    }
   });
 
   // Server stop endpoint
   router.post('/stop', (_req, res) => {
-    logger.log({ apiRoute: '/stop' }, 'Server stopping...');
-    serverInstance?.stop(); // Use optional chaining in case server is undefined
+    logger.info('Server stopping...', { apiRoute: '/stop' });
     res.json({ message: 'Server stopping...' });
+    serverInstance?.stop();
   });
 
   return router;

@@ -3,6 +3,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { z } from 'zod';
 
 // Use dynamic imports to avoid database connection during build
@@ -19,7 +20,7 @@ const startConversationSchema = z.object({
 /**
  * GET /api/characters/[id]/conversations - Get user's conversations with character
  */
-export async function handleGET(
+async function handleGET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -43,8 +44,8 @@ export async function handleGET(
 
     // Parse query parameters
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const limit = parseInt(searchParams.get('limit') || '50', 10);
+    const offset = parseInt(searchParams.get('offset') || '0', 10);
 
     // Get character service
     const characterService = await getCharacterService();
@@ -93,7 +94,7 @@ export async function handleGET(
 /**
  * POST /api/characters/[id]/conversations - Start new conversation with character
  */
-export async function handlePOST(
+async function handlePOST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -177,3 +178,5 @@ export async function handlePOST(
     );
   }
 }
+
+export const { GET, POST } = wrapHandlers({ handleGET, handlePOST });

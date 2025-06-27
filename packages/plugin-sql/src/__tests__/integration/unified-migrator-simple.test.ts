@@ -55,8 +55,7 @@ describe('Unified Migrator - Simple Hello World Test', () => {
 
     // Create isolated test setup
     const { adapter, runtime, cleanup, testAgentId } = await createIsolatedTestDatabase(
-      'unified_migrator_simple',
-      [] // No extra plugins - we'll register tables manually
+      'unified_migrator_simple'
     );
 
     try {
@@ -131,8 +130,7 @@ describe('Unified Migrator - Simple Hello World Test', () => {
 
     // Create isolated test setup
     const { adapter, runtime, cleanup, testAgentId } = await createIsolatedTestDatabase(
-      'unified_migrator_with_core',
-      []
+      'unified_migrator_with_core'
     );
 
     try {

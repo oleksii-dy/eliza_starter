@@ -1,7 +1,6 @@
 import { AgentRuntime, stringToUuid, type Agent, type UUID } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
-import { PgDatabaseAdapter } from '../../pg/adapter';
 import { PgAdapter } from '../../pg/adapter';
 import { agentTable } from '../../schema';
 import { mockCharacter } from '../fixtures';
@@ -11,7 +10,7 @@ import { createIsolatedTestDatabase, createTestDatabase } from '../test-helpers'
 process.env.ELIZA_TESTING_PLUGIN = 'true';
 
 describe('Agent Integration Tests', () => {
-  let adapter: PgAdapter | PgDatabaseAdapter;
+  let adapter: PgAdapter;
   let runtime: AgentRuntime;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;
@@ -23,7 +22,7 @@ describe('Agent Integration Tests', () => {
     runtime = setup.runtime;
     cleanup = setup.cleanup;
     testAgentId = setup.testAgentId;
-  }, 30000);
+  });
 
   beforeEach(() => {
     // Reset test agent data before each test
@@ -291,7 +290,7 @@ describe('Agent Integration Tests', () => {
 
         // Verify the agent was updated
         const updatedAgent = await adapter.getAgent(newAgent.id);
-        expect(updatedAgent?.bio).toBe(updateData.bio);
+        expect(updatedAgent?.bio).toBe(updateData.bio!);
         expect(updatedAgent?.settings).toHaveProperty('updatedSetting', 'new value');
       });
 
@@ -395,8 +394,8 @@ describe('Agent Integration Tests', () => {
 
         // Verify the agent was updated correctly
         const updatedAgent = await adapter.getAgent(newAgent.id);
-        expect(updatedAgent?.bio).toBe(updateData.bio);
-        expect(updatedAgent?.username).toBe(updateData.username);
+        expect(updatedAgent?.bio).toBe(updateData.bio!);
+        expect(updatedAgent?.username).toBe(updateData.username!);
         expect(updatedAgent?.settings).toHaveProperty('initialSetting', 'should remain unchanged');
       });
 

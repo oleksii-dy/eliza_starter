@@ -3,7 +3,7 @@
  * Tests concurrent requests, rate limiting, and system behavior under load
  */
 
-import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
+import { describe, test, expect, beforeAll, afterAll } from 'vitest';
 // Use global fetch instead of node-fetch to avoid ES module issues
 
 const API_BASE_URL = process.env.API_BASE_URL || 'http://localhost:3333/api/v1';

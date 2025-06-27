@@ -478,8 +478,8 @@ export class AdvancedCombatSystem extends System {
     const attackerStats = this.getCombatStats(attacker)
     const defenderStats = this.getCombatStats(target)
 
-    const attackerEquipment = attacker.getComponent('equipment') as EquipmentComponent
-    const defenderEquipment = target.getComponent('equipment') as EquipmentComponent
+    const attackerEquipment = this.getEquipmentComponent(attacker)
+    const defenderEquipment = this.getEquipmentComponent(target)
 
     return calculateAccuracy(
       attackerStats,
@@ -492,7 +492,7 @@ export class AdvancedCombatSystem extends System {
 
   private calculateDamage(attacker: Entity, target: Entity, combatStyle: CombatStyle): number {
     const attackerStats = this.getCombatStats(attacker)
-    const attackerEquipment = attacker.getComponent('equipment') as EquipmentComponent
+    const attackerEquipment = this.getEquipmentComponent(attacker)
 
     return calculateMaxDamage(attackerStats, attackerEquipment?.bonuses, combatStyle)
   }
@@ -523,8 +523,30 @@ export class AdvancedCombatSystem extends System {
     }
   }
 
+  /**
+   * Safely get equipment component from entity
+   */
+  private getEquipmentComponent(entity: Entity): EquipmentComponent | null {
+    const component = entity.getComponent('equipment')
+    if (component && typeof component === 'object' && component.type === 'equipment') {
+      return component as unknown as EquipmentComponent
+    }
+    return null
+  }
+
+  /**
+   * Safely get movement component from entity
+   */
+  private getMovementComponent(entity: Entity): any {
+    const component = entity.getComponent('movement')
+    if (component && typeof component === 'object' && component.type === 'movement') {
+      return component
+    }
+    return null
+  }
+
   private getDefenderCombatStyle(defender: Entity): CombatStyle {
-    const equipment = defender.getComponent('equipment') as EquipmentComponent
+    const equipment = this.getEquipmentComponent(defender)
     const weapon = equipment?.slots['weapon']
 
     if (weapon && weapon.combatStyle) {
@@ -783,8 +805,11 @@ export class AdvancedCombatSystem extends System {
   }
 
   private getDistance(entity1: Entity, entity2: Entity): number {
-    const pos1 = entity1.getComponent('movement')?.position
-    const pos2 = entity2.getComponent('movement')?.position
+    const movement1 = this.getMovementComponent(entity1)
+    const movement2 = this.getMovementComponent(entity2)
+    
+    const pos1 = movement1?.position
+    const pos2 = movement2?.position
 
     if (!pos1 || !pos2) {
       return Infinity
@@ -824,10 +849,6 @@ export class AdvancedCombatSystem extends System {
     return entity ? (entity.getComponent('combat') as CombatComponent) : null
   }
 
-  public getEquipmentComponent(entityId: string): EquipmentComponent | null {
-    const entity = this.world.getEntityById(entityId)
-    return entity ? (entity.getComponent('equipment') as EquipmentComponent) : null
-  }
 
   update(deltaTime: number): void {
     // Regenerate special attack energy over time

@@ -1,5 +1,5 @@
 import { logger } from '@elizaos/core';
-import type { ZKProof, CircuitWitness } from '../types/index.js';
+import type { ZKProof, CircuitWitness } from '../types/index';
 
 /**
  * Utility functions for Midnight Network operations
@@ -240,7 +240,7 @@ export function createMockTxHash(): string {
 /**
  * Debounce function
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends(...args: any[]) => any>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
@@ -255,7 +255,7 @@ export function debounce<T extends (...args: any[]) => any>(
 /**
  * Throttle function
  */
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends(...args: any[]) => any>(
   func: T,
   limit: number
 ): (...args: Parameters<T>) => void {

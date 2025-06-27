@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, mock } from 'bun:test';
-import { PgDatabaseAdapter } from '../../../pg/adapter';
+
 
 // Mock the logger module
 mock.module('@elizaos/core', () => ({
@@ -13,9 +13,10 @@ mock.module('@elizaos/core', () => ({
 
 // Import after mocking
 import { logger } from '@elizaos/core';
+import { PgAdapter } from '../../../pg/adapter';
 
-describe('PgDatabaseAdapter', () => {
-  let adapter: PgDatabaseAdapter;
+describe('PgAdapter', () => {
+  let adapter: PgAdapter;
   let mockManager: any;
   const agentId = '00000000-0000-0000-0000-000000000000';
 
@@ -41,7 +42,7 @@ describe('PgDatabaseAdapter', () => {
       })),
     };
 
-    adapter = new PgDatabaseAdapter(agentId, mockManager);
+    adapter = new PgAdapter(agentId, mockManager);
   });
 
   describe('constructor', () => {
@@ -61,7 +62,7 @@ describe('PgDatabaseAdapter', () => {
       await adapter.runMigrations();
       // Should not throw and not do anything
       expect(logger.debug).toHaveBeenCalledWith(
-        'PgDatabaseAdapter: Migrations should be handled externally'
+        'PgAdapter: Migrations should be handled externally'
       );
     });
   });
@@ -70,7 +71,7 @@ describe('PgDatabaseAdapter', () => {
     it('should complete initialization', async () => {
       await adapter.init();
       expect(logger.debug).toHaveBeenCalledWith(
-        'PgDatabaseAdapter initialized, skipping automatic migrations.'
+        'PgAdapter initialized, skipping automatic migrations.'
       );
     });
   });

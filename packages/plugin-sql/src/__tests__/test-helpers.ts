@@ -1,9 +1,9 @@
 import type { Plugin, UUID } from '@elizaos/core';
 import { AgentRuntime, AgentStatus, stringToUuid } from '@elizaos/core';
 import { sql } from 'drizzle-orm';
-import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
 import { v4 } from 'uuid';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -25,7 +25,7 @@ import { mockCharacter } from './fixtures';
 export async function createTestDatabase(
   testAgentId: UUID,
   testPlugins: Plugin[] = []
-): Promise<{ adapter: PgAdapter; runtime: AgentRuntime; cleanup: () => Promise<void> }> {
+): Promise<{ adapter: PgAdapter; runtime: AgentRuntime; testAgentId: UUID; cleanup: () => Promise<void> }> {
   // Skip test if no PostgreSQL URL is provided
   if (!process.env.POSTGRES_URL && !process.env.TEST_POSTGRES_URL) {
     throw new Error(
@@ -51,9 +51,8 @@ export async function createTestDatabase(
   // Create AgentRuntime with the adapter
   const runtime = new AgentRuntime({
     agentId: testAgentId,
-    token: '',
     character: mockCharacter,
-    databaseAdapter: adapter,
+    adapter: adapter,
   });
 
   await runtime.initialize();
@@ -82,7 +81,7 @@ export async function createTestDatabase(
     }
   };
 
-  return { adapter, runtime, cleanup };
+  return { adapter, runtime, testAgentId, cleanup };
 }
 
 /**
@@ -91,7 +90,7 @@ export async function createTestDatabase(
  */
 export async function createIsolatedTestDatabase(
   testName: string
-): Promise<{ adapter: PgAdapter; cleanup: () => Promise<void> }> {
+): Promise<{ adapter: PgAdapter; runtime: AgentRuntime; testAgentId: UUID; cleanup: () => Promise<void> }> {
   // Skip test if no PostgreSQL URL is provided
   if (!process.env.POSTGRES_URL && !process.env.TEST_POSTGRES_URL) {
     throw new Error(
@@ -112,6 +111,15 @@ export async function createIsolatedTestDatabase(
   const adapter = new PgAdapter(testAgentId, manager);
   await adapter.init();
 
+  // Create AgentRuntime with the adapter
+  const runtime = new AgentRuntime({
+    agentId: testAgentId,
+    character: mockCharacter,
+    adapter: adapter,
+  });
+
+  await runtime.initialize();
+
   const cleanup = async () => {
     try {
       // Clean up test data
@@ -127,7 +135,7 @@ export async function createIsolatedTestDatabase(
     }
   };
 
-  return { adapter, cleanup };
+  return { adapter, runtime, testAgentId, cleanup };
 }
 
 /**

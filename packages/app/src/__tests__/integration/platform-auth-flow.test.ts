@@ -6,7 +6,7 @@
 import { describe, test, expect, beforeEach, afterEach, mock } from 'bun:test';
 
 // Create mocks for Tauri modules BEFORE any imports
-const mockInvoke = mock(() => Promise.resolve<any>(undefined));
+const mockInvoke = mock((_command?: string, _args?: any) => Promise.resolve<any>(undefined));
 const mockOpen = mock(() => Promise.resolve());
 const mockListen = mock(() => Promise.resolve(() => {}));
 
@@ -92,7 +92,8 @@ describe('Platform Authentication Flow Integration', () => {
         url: 'https://auth.google.com/oauth/authorize?client_id=test',
         headers: {
           get: (header: string) => {
-            if (header === 'location') return 'https://auth.google.com/oauth/authorize?client_id=test';
+            if (header === 'location')
+              return 'https://auth.google.com/oauth/authorize?client_id=test';
             return null;
           },
         },
@@ -139,28 +140,30 @@ describe('Platform Authentication Flow Integration', () => {
 
   test('should retrieve stored session data', async () => {
     // Create a new service with session data already mocked
-    mockInvoke.mockImplementation((command: string) => {
+    mockInvoke.mockImplementation((command?: string) => {
       if (command === 'get_auth_session') {
-        return Promise.resolve(JSON.stringify({
-          accessToken: mockSessionData.accessToken,
-          refreshToken: mockSessionData.refreshToken,
-          user: {
-            id: mockSessionData.userId,
-            email: mockSessionData.email,
-            role: mockSessionData.role,
-            organizationId: mockSessionData.organizationId,
-          },
-          expiresAt: Date.now() + 86400000, // 24 hours from now
-        }));
+        return Promise.resolve(
+          JSON.stringify({
+            accessToken: mockSessionData.accessToken,
+            refreshToken: mockSessionData.refreshToken,
+            user: {
+              id: mockSessionData.userId,
+              email: mockSessionData.email,
+              role: mockSessionData.role,
+              organizationId: mockSessionData.organizationId,
+            },
+            expiresAt: Date.now() + 86400000, // 24 hours from now
+          })
+        );
       }
       return Promise.resolve();
     });
 
     // Create a new auth service instance to trigger initialization with session data
     const newAuthService = new PlatformAuthService();
-    
+
     // Wait a bit for async initialization to complete
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 50));
 
     // Verify authentication state
     const authState = newAuthService.getState();
@@ -201,14 +204,16 @@ describe('Platform Authentication Flow Integration', () => {
 
   test('should refresh expired tokens', async () => {
     // First mock the stored session to have a refresh token
-    mockInvoke.mockImplementation((command: string) => {
+    mockInvoke.mockImplementation((command?: string) => {
       if (command === 'get_auth_session') {
-        return Promise.resolve(JSON.stringify({
-          accessToken: 'old-access-token',
-          refreshToken: 'old-refresh-token',
-          user: mockSessionData,
-          expiresAt: Date.now() - 1000, // Expired
-        }));
+        return Promise.resolve(
+          JSON.stringify({
+            accessToken: 'old-access-token',
+            refreshToken: 'old-refresh-token',
+            user: mockSessionData,
+            expiresAt: Date.now() - 1000, // Expired
+          })
+        );
       }
       if (command === 'store_auth_session') {
         return Promise.resolve();
@@ -290,7 +295,8 @@ describe('Platform Authentication Flow Integration', () => {
         url: 'https://auth.google.com/oauth/authorize?client_id=test',
         headers: {
           get: (header: string) => {
-            if (header === 'location') return 'https://auth.google.com/oauth/authorize?client_id=test';
+            if (header === 'location')
+              return 'https://auth.google.com/oauth/authorize?client_id=test';
             return null;
           },
         },
@@ -310,13 +316,14 @@ describe('Platform Authentication Flow Integration', () => {
       payload: 'elizaos://auth/callback?code=test-code&state=test-state',
     };
 
-    // Mock the platform session verification for OAuth completion
-    mockFetch.mockImplementation(() =>
+    // Mock the platform session verification for OAuth completion with proper type
+    const mockFetchSession = mock(() =>
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve({ session: mockSessionData }),
       })
     );
+    (globalThis as any).fetch = mockFetchSession;
 
     mockInvoke.mockImplementation(() => Promise.resolve());
 
@@ -359,6 +366,10 @@ describe('Platform Authentication Flow Integration', () => {
     const mockFetch = mock(() =>
       Promise.resolve({
         ok: true,
+        url: '', // Add url property
+        headers: {
+          get: () => null,
+        },
         json: () => Promise.resolve({ session: mockSessionData }),
       })
     );

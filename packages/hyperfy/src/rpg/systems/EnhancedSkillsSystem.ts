@@ -52,7 +52,7 @@ export class EnhancedSkillsSystem extends System {
     this.initializeSkillMilestones()
   }
 
-  async initialize(): Promise<void> {
+  async init(_options: any): Promise<void> {
     console.log('[EnhancedSkillsSystem] Initializing...')
 
     // Set up event listeners for resource harvesting
@@ -62,6 +62,11 @@ export class EnhancedSkillsSystem extends System {
     this.world.events.on('spell:cast', this.handleSpellCast.bind(this))
 
     console.log('[EnhancedSkillsSystem] Initialized')
+  }
+
+  // Keep backwards compatibility
+  async initialize(): Promise<void> {
+    return this.init({})
   }
 
   private initializeSkillMilestones(): void {
@@ -96,7 +101,7 @@ export class EnhancedSkillsSystem extends System {
       questPoints: 0,
     }
 
-    entity.addComponent(skillsComponent)
+    entity.addComponent('skills', skillsComponent)
     return skillsComponent
   }
 
@@ -441,8 +446,23 @@ export class EnhancedSkillsSystem extends System {
   }
 
   public getSkillLevel(entityId: string, skillType: SkillType): number {
+    console.log(`[EnhancedSkillsSystem] getSkillLevel: entityId=${entityId}, skillType=${skillType}`)
+    
     const skills = this.getPlayerSkills(entityId)
-    return skills ? skills.skills[skillType].level : 1
+    if (!skills) {
+      console.log(`[EnhancedSkillsSystem] getSkillLevel: no skills component found for entityId=${entityId}, defaulting to level 1`)
+      return 1
+    }
+    
+    const skill = skills.skills[skillType]
+    if (!skill) {
+      console.log(`[EnhancedSkillsSystem] getSkillLevel: skill ${skillType} not found for entityId=${entityId}, defaulting to level 1`)
+      return 1
+    }
+    
+    const level = skill.level
+    console.log(`[EnhancedSkillsSystem] getSkillLevel: returning level ${level} for skill ${skillType} of entityId=${entityId}`)
+    return level
   }
 
   public getSkillXP(entityId: string, skillType: SkillType): number {
@@ -488,6 +508,44 @@ export class EnhancedSkillsSystem extends System {
       skillType: action.skillType,
       actionName: action.actionName,
     })
+
+    return true
+  }
+
+  /**
+   * Set skill level directly (for testing purposes)
+   */
+  public setSkillLevel(entityId: string, skillType: SkillType, level: number): boolean {
+    console.log(`[EnhancedSkillsSystem] setSkillLevel: entityId=${entityId}, skillType=${skillType}, level=${level}`)
+    
+    const entity = this.world.getEntityById(entityId)
+    if (!entity) {
+      console.log(`[EnhancedSkillsSystem] setSkillLevel: entity not found for entityId=${entityId}`)
+      return false
+    }
+
+    const skillsComponent = entity.getComponent('skills') as SkillsComponent
+    if (!skillsComponent) {
+      console.log(`[EnhancedSkillsSystem] setSkillLevel: skills component not found for entityId=${entityId}`)
+      return false
+    }
+
+    const skill = skillsComponent.skills[skillType]
+    if (!skill) {
+      console.log(`[EnhancedSkillsSystem] setSkillLevel: skill ${skillType} not found for entityId=${entityId}`)
+      return false
+    }
+
+    // Set level and corresponding XP
+    skill.level = level
+    skill.xp = getXPForLevel(level)
+    skill.totalXp = skill.xp
+
+    console.log(`[EnhancedSkillsSystem] setSkillLevel: successfully set ${skillType} level to ${level} for entityId=${entityId}`)
+
+    // Update total level and combat level
+    skillsComponent.totalLevel = this.calculateTotalLevel(skillsComponent.skills)
+    skillsComponent.combatLevel = getCombatLevel(skillsComponent.skills)
 
     return true
   }

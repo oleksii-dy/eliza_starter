@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { deviceFlowService } from '@/lib/auth/device-flow';
 import { oauthClientRepository } from '@/lib/database/repositories/oauth-client';
 import {
@@ -11,7 +12,7 @@ import {
   RateLimitRepository,
 } from '@/lib/database/repositories/rate-limit';
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const body = await request.json();
     const { device_code, client_id, grant_type } = body;
@@ -153,3 +154,5 @@ function getErrorDescription(error?: string): string {
       return 'Unknown error occurred';
   }
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

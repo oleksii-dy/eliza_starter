@@ -37,10 +37,10 @@ async function handleGET(request: NextRequest) {
       entityId: searchParams.get('entityId') || undefined,
       entityType: searchParams.get('entityType') || undefined,
       limit: searchParams.get('limit')
-        ? parseInt(searchParams.get('limit')!)
+        ? parseInt(searchParams.get('limit')!, 10)
         : 50,
       offset: searchParams.get('offset')
-        ? parseInt(searchParams.get('offset')!)
+        ? parseInt(searchParams.get('offset')!, 10)
         : 0,
     };
 
@@ -130,7 +130,9 @@ async function handlePOST(request: NextRequest) {
       entityType,
       details,
       metadata: {
-        ipAddress: request.ip,
+        ipAddress: request.headers.get('x-forwarded-for') ||
+                  request.headers.get('x-real-ip') ||
+                  'unknown',
         userAgent: request.headers.get('user-agent') || undefined,
         source: 'api',
         timestamp: new Date(),

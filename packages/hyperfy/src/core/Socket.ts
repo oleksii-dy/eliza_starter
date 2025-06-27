@@ -1,4 +1,4 @@
-import { readPacket, writePacket } from './packets'
+import { readPacket, writePacket } from './packets';
 
 interface SocketOptions {
   id: string
@@ -8,43 +8,43 @@ interface SocketOptions {
 }
 
 export class Socket {
-  id: string
-  ws: any
-  network: any
-  player?: any
-  alive: boolean
-  closed: boolean
-  disconnected: boolean
+  id: string;
+  ws: any;
+  network: any;
+  player?: any;
+  alive: boolean;
+  closed: boolean;
+  disconnected: boolean;
 
   constructor({ id, ws, network, player }: SocketOptions) {
-    this.id = id
-    this.ws = ws
-    this.network = network
+    this.id = id;
+    this.ws = ws;
+    this.network = network;
 
-    this.player = player
+    this.player = player;
 
-    this.alive = true
-    this.closed = false
-    this.disconnected = false
+    this.alive = true;
+    this.closed = false;
+    this.disconnected = false;
 
-    this.ws.on('message', this.onMessage)
-    this.ws.on('pong', this.onPong)
-    this.ws.on('close', this.onClose)
+    this.ws.on('message', this.onMessage);
+    this.ws.on('pong', this.onPong);
+    this.ws.on('close', this.onClose);
   }
 
   send(name: string, data: any): void {
     // console.log('->', name, data)
-    const packet = writePacket(name, data)
-    this.ws.send(packet)
+    const packet = writePacket(name, data);
+    this.ws.send(packet);
   }
 
   sendPacket(packet: any): void {
-    this.ws.send(packet)
+    this.ws.send(packet);
   }
 
   ping(): void {
-    this.alive = false
-    this.ws.ping()
+    this.alive = false;
+    this.ws.ping();
   }
 
   // end(code) {
@@ -53,28 +53,28 @@ export class Socket {
   // }
 
   onPong = (): void => {
-    this.alive = true
-  }
+    this.alive = true;
+  };
 
   onMessage = (packet: any): void => {
-    const [method, data] = readPacket(packet)
-    this.network.enqueue(this, method, data)
+    const [method, data] = readPacket(packet);
+    this.network.enqueue(this, method, data);
     // console.log('<-', method, data)
-  }
+  };
 
   onClose = (e: any): void => {
-    this.closed = true
-    this.disconnect(e?.code)
-  }
+    this.closed = true;
+    this.disconnect(e?.code);
+  };
 
   disconnect(code?: any): void {
     if (!this.closed) {
-      return this.ws.terminate()
+      return this.ws.terminate();
     }
     if (this.disconnected) {
-      return
+      return;
     }
-    this.disconnected = true
-    this.network.onDisconnect(this, code)
+    this.disconnected = true;
+    this.network.onDisconnect(this, code);
   }
 }

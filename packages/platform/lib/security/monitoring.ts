@@ -1,11 +1,11 @@
 /**
  * Security Monitoring Service
- * 
+ *
  * Provides real-time security monitoring, threat detection,
  * and automated response capabilities for the platform.
  */
 
-import { getSql } from '../database/sql';
+import { getSql } from '../database';
 import { logger } from '../logger';
 import { auditLogger, AuditEventType, AuditSeverity } from './audit-logger';
 import { SessionData } from '../auth/session';
@@ -87,7 +87,7 @@ export interface ResponseActionConfig {
  */
 export class SecurityMonitoringService {
   private static instance: SecurityMonitoringService;
-  private sql = getSql();
+  private sql: any = null;
   private activeThreats = new Map<string, SecurityThreat>();
   private blockedIPs = new Set<string>();
   private suspendedUsers = new Set<string>();
@@ -100,8 +100,20 @@ export class SecurityMonitoringService {
     return SecurityMonitoringService.instance;
   }
 
+  private getSqlClient() {
+    if (!this.sql) {
+      this.sql = getSql();
+    }
+    return this.sql;
+  }
+
   constructor() {
     this.initializeDetectionRules();
+    // Delay monitoring start to avoid database access during build
+    if (typeof window === 'undefined' && process.env.NODE_ENV !== 'production') {
+      // Don't start monitoring during build
+      return;
+    }
     this.startMonitoring();
   }
 
@@ -208,7 +220,7 @@ export class SecurityMonitoringService {
    */
   private async runDetectionRules(): Promise<void> {
     for (const rule of this.detectionRules) {
-      if (!rule.enabled) continue;
+      if (!rule.enabled) {continue;}
 
       try {
         await this.runDetectionRule(rule);
@@ -245,7 +257,7 @@ export class SecurityMonitoringService {
     const { failedAttemptsThreshold, timeWindowMinutes } = rule.conditions;
     const windowStart = new Date(Date.now() - timeWindowMinutes * 60 * 1000);
 
-    const result = await this.sql.query(`
+    const result = await this.getSqlClient().query(`
       SELECT ip_address, COUNT(*) as attempt_count
       FROM failed_login_attempts 
       WHERE last_attempt >= $1
@@ -285,7 +297,7 @@ export class SecurityMonitoringService {
     const { distinctAccountsThreshold, timeWindowMinutes } = rule.conditions;
     const windowStart = new Date(Date.now() - timeWindowMinutes * 60 * 1000);
 
-    const result = await this.sql.query(`
+    const result = await this.getSqlClient().query(`
       SELECT ip_address, COUNT(DISTINCT email) as distinct_accounts
       FROM failed_login_attempts 
       WHERE last_attempt >= $1
@@ -327,7 +339,7 @@ export class SecurityMonitoringService {
     const { timeWindowHours } = rule.conditions;
     const windowStart = new Date(Date.now() - timeWindowHours * 60 * 60 * 1000);
 
-    const result = await this.sql.query(`
+    const result = await this.getSqlClient().query(`
       SELECT user_id, COUNT(DISTINCT ip_address) as ip_count
       FROM session_security 
       WHERE created_at >= $1
@@ -367,7 +379,7 @@ export class SecurityMonitoringService {
     const { requestsThreshold, timeWindowMinutes, errorRateThreshold } = rule.conditions;
     const windowStart = new Date(Date.now() - timeWindowMinutes * 60 * 1000);
 
-    const result = await this.sql.query(`
+    const result = await this.getSqlClient().query(`
       SELECT 
         ip_address,
         COUNT(*) as total_requests,
@@ -381,7 +393,7 @@ export class SecurityMonitoringService {
 
     for (const row of result) {
       const errorRate = row.error_requests / row.total_requests;
-      
+
       const threat: SecurityThreat = {
         id: `api-abuse-${row.ip_address}-${Date.now()}`,
         type: ThreatType.API_ABUSE,
@@ -392,9 +404,9 @@ export class SecurityMonitoringService {
             type: 'volume',
             value: row.total_requests.toString(),
             confidence: 85,
-            metadata: { 
+            metadata: {
               totalRequests: row.total_requests,
-              errorRate: errorRate,
+              errorRate,
             },
           },
         ],
@@ -504,7 +516,7 @@ export class SecurityMonitoringService {
     this.blockedIPs.add(ipAddress);
 
     // Store in database
-    await this.sql.query(`
+    await this.getSqlClient().query(`
       INSERT INTO security_events (
         event_type, severity, source_ip, details, created_at
       ) VALUES ($1, $2, $3, $4, NOW())
@@ -528,16 +540,16 @@ export class SecurityMonitoringService {
    */
   private async suspendUser(userId: string, parameters: Record<string, any>): Promise<void> {
     const duration = parameters.duration || 86400; // Default 24 hours
-    
+
     this.suspendedUsers.add(userId);
 
-    await this.sql.query(`
+    await this.getSqlClient().query(`
       UPDATE users 
       SET is_active = FALSE, 
           metadata = metadata || $1
       WHERE id = $2
     `, [
-      JSON.stringify({ 
+      JSON.stringify({
         suspendedAt: new Date().toISOString(),
         suspendedUntil: new Date(Date.now() + duration * 1000).toISOString(),
         suspensionReason: 'Automated security response',
@@ -548,7 +560,7 @@ export class SecurityMonitoringService {
     // Schedule reactivation
     setTimeout(async () => {
       this.suspendedUsers.delete(userId);
-      await this.sql.query(`
+      await this.getSqlClient().query(`
         UPDATE users 
         SET is_active = TRUE 
         WHERE id = $1
@@ -562,12 +574,12 @@ export class SecurityMonitoringService {
    * Require MFA for user
    */
   private async requireMFA(userId: string): Promise<void> {
-    await this.sql.query(`
+    await this.getSqlClient().query(`
       UPDATE users 
       SET metadata = metadata || $1
       WHERE id = $2
     `, [
-      JSON.stringify({ 
+      JSON.stringify({
         mfaRequired: true,
         mfaRequiredAt: new Date().toISOString(),
         mfaRequiredReason: 'Security anomaly detected',
@@ -583,27 +595,26 @@ export class SecurityMonitoringService {
    */
   private async alertAdmins(threat: SecurityThreat, parameters: Record<string, any>): Promise<void> {
     const severity = parameters.severity || 'medium';
-    
+
     // Log as critical audit event
     await auditLogger.logEvent({
       eventType: AuditEventType.SUSPICIOUS_ACTIVITY,
       severity: severity === 'critical' ? AuditSeverity.CRITICAL : AuditSeverity.HIGH,
+      userId: threat.affectedUsers?.[0],
       details: {
+        message: `Threat detected: ${threat.type} - ${threat.description}`,
         threatType: threat.type,
-        threatId: threat.id,
-        description: threat.description,
-        indicators: threat.indicators,
-        affectedUsers: threat.affectedUsers,
-        affectedIPs: threat.affectedIPs,
+        threatDescription: threat.description,
       },
       metadata: {
         source: 'security-monitoring',
         timestamp: new Date(),
+        ipAddress: threat.affectedIPs?.[0],
       },
     });
 
     // In production, this would send real alerts via email, Slack, etc.
-    logger.error('🚨 SECURITY ALERT 🚨', {
+    logger.error('🚨 SECURITY ALERT 🚨', new Error('Security threat detected'), {
       threatType: threat.type,
       severity: threat.severity,
       description: threat.description,
@@ -615,7 +626,7 @@ export class SecurityMonitoringService {
    * Log security event
    */
   private async logSecurityEvent(threat: SecurityThreat): Promise<void> {
-    await this.sql.query(`
+    await this.getSqlClient().query(`
       INSERT INTO security_events (
         event_type, severity, source_ip, user_id, details, created_at
       ) VALUES ($1, $2, $3, $4, $5, NOW())
@@ -640,9 +651,9 @@ export class SecurityMonitoringService {
     // Store threat details in audit logs
     await auditLogger.logEvent({
       eventType: AuditEventType.SUSPICIOUS_ACTIVITY,
-      severity: threat.severity === 'critical' ? AuditSeverity.CRITICAL : 
-               threat.severity === 'high' ? AuditSeverity.HIGH : 
-               threat.severity === 'medium' ? AuditSeverity.MEDIUM : AuditSeverity.LOW,
+      severity: threat.severity === 'critical' ? AuditSeverity.CRITICAL :
+        threat.severity === 'high' ? AuditSeverity.HIGH :
+          threat.severity === 'medium' ? AuditSeverity.MEDIUM : AuditSeverity.LOW,
       userId: threat.affectedUsers?.[0],
       details: {
         threatType: threat.type,
@@ -682,7 +693,7 @@ export class SecurityMonitoringService {
       criticalThreats: Array.from(this.activeThreats.values()).filter(t => t.severity === 'critical').length,
       threatsByType: threatCounts,
       failedLogins24h: failedLogins,
-      suspiciousSessions: suspiciousSessions,
+      suspiciousSessions,
       blockedIPs: this.blockedIPs.size,
       averageRiskScore: avgRiskScore,
     };
@@ -693,7 +704,7 @@ export class SecurityMonitoringService {
    */
   private getThreatCounts(): Record<ThreatType, number> {
     const counts = {} as Record<ThreatType, number>;
-    
+
     Object.values(ThreatType).forEach(type => {
       counts[type] = 0;
     });
@@ -709,39 +720,39 @@ export class SecurityMonitoringService {
    * Get failed logins count in last 24 hours
    */
   private async getFailedLoginsCount(): Promise<number> {
-    const result = await this.sql.query(`
+    const result = await this.getSqlClient().query(`
       SELECT COUNT(*) as count
       FROM failed_login_attempts 
       WHERE last_attempt > NOW() - INTERVAL '24 hours'
     `);
-    
-    return parseInt(result[0]?.count || '0');
+
+    return parseInt(result[0]?.count || '0', 10);
   }
 
   /**
    * Get suspicious sessions count
    */
   private async getSuspiciousSessionsCount(): Promise<number> {
-    const result = await this.sql.query(`
+    const result = await this.getSqlClient().query(`
       SELECT COUNT(*) as count
       FROM session_security 
       WHERE is_suspicious = TRUE
       AND created_at > NOW() - INTERVAL '24 hours'
     `);
-    
-    return parseInt(result[0]?.count || '0');
+
+    return parseInt(result[0]?.count || '0', 10);
   }
 
   /**
    * Get average risk score
    */
   private async getAverageRiskScore(): Promise<number> {
-    const result = await this.sql.query(`
+    const result = await this.getSqlClient().query(`
       SELECT AVG(risk_score) as avg_score
       FROM session_security 
       WHERE created_at > NOW() - INTERVAL '24 hours'
     `);
-    
+
     return parseFloat(result[0]?.avg_score || '0');
   }
 
@@ -764,8 +775,8 @@ export class SecurityMonitoringService {
    */
   private async cleanupOldData(): Promise<void> {
     try {
-      await this.sql.query('SELECT cleanup_old_audit_data()');
-      
+      await this.getSqlClient().query('SELECT cleanup_old_audit_data()');
+
       // Clean up old active threats
       const cutoff = Date.now() - 24 * 60 * 60 * 1000; // 24 hours
       for (const [id, threat] of this.activeThreats.entries()) {
@@ -773,7 +784,7 @@ export class SecurityMonitoringService {
           this.activeThreats.delete(id);
         }
       }
-      
+
       logger.debug('Security data cleanup completed');
     } catch (error) {
       logger.error('Failed to cleanup old security data', error as Error);
@@ -791,13 +802,13 @@ export class SecurityMonitoringService {
   ): Promise<void> {
     if (success) {
       // Clear any failed attempts for this email/IP
-      await this.sql.query(`
+      await this.getSqlClient().query(`
         DELETE FROM failed_login_attempts 
         WHERE email = $1 OR ip_address = $2
       `, [email, ipAddress]);
     } else {
       // Record failed attempt
-      await this.sql.query(`
+      await this.getSqlClient().query(`
         INSERT INTO failed_login_attempts (
           email, ip_address, user_agent, attempt_count, first_attempt, last_attempt
         ) VALUES ($1, $2, $3, 1, NOW(), NOW())
@@ -810,5 +821,11 @@ export class SecurityMonitoringService {
   }
 }
 
-// Export singleton instance
-export const securityMonitoring = SecurityMonitoringService.getInstance();
+// Export singleton getter instead of instance to avoid early initialization
+export const securityMonitoring = {
+  getSecurityMetrics: () => SecurityMonitoringService.getInstance().getSecurityMetrics(),
+  isIPBlocked: (ipAddress: string) => SecurityMonitoringService.getInstance().isIPBlocked(ipAddress),
+  isUserSuspended: (userId: string) => SecurityMonitoringService.getInstance().isUserSuspended(userId),
+  reportLoginAttempt: (email: string, success: boolean, ipAddress: string, userAgent?: string) => 
+    SecurityMonitoringService.getInstance().reportLoginAttempt(email, success, ipAddress, userAgent),
+};

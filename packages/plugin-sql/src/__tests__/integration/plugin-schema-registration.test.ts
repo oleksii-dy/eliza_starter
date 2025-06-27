@@ -16,7 +16,7 @@ describe('Plugin Schema Registration Tests', () => {
     adapter = setup.adapter;
     cleanup = setup.cleanup;
     testAgentId = setup.testAgentId;
-  }, 30000);
+  });
 
   afterAll(async () => {
     if (cleanup) {

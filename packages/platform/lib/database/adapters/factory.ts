@@ -117,7 +117,7 @@ export function createDatabaseAdapter(
         database: config.database || process.env.DB_NAME || 'elizaos_platform',
         ...config,
         host: config.host || process.env.DB_HOST || 'localhost',
-        port: config.port || parseInt(process.env.DB_PORT || '5432'),
+        port: config.port || parseInt(process.env.DB_PORT || '5432', 10),
         user: config.user || process.env.DB_USER || 'postgres',
         password: config.password || process.env.DB_PASSWORD || '',
         ssl: config.ssl ?? process.env.DB_SSL === 'true',

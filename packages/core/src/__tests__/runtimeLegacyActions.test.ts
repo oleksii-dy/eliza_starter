@@ -65,6 +65,15 @@ describe('Runtime - Legacy Action Return Values', () => {
       adapter: mockAdapter,
     });
 
+    // Mock the logger to suppress error logs during tests
+    runtime.logger = {
+      debug: mock(),
+      info: mock(),
+      warn: mock(),
+      error: mock(),
+      log: mock(),
+    } as any;
+
     // Create mock message
     mockMessage = {
       id: uuidv4() as UUID,

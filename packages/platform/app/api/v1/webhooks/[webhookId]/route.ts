@@ -5,7 +5,7 @@ import { z } from 'zod';
 export const runtime = 'nodejs';
 
 // Mock database - in a real app, this would be a proper database
-let webhooksDB: any[] = [];
+const webhooksDB: any[] = [];
 
 const updateWebhookSchema = z.object({
   active: z.boolean().optional(),

@@ -28,7 +28,7 @@ describe('Database Adapter Real Runtime Integration', () => {
     runtime = setup.runtime;
     cleanup = setup.cleanup;
     testAgentId = setup.testAgentId;
-  }, 30000);
+  });
 
   afterAll(async () => {
     if (cleanup) {
@@ -58,11 +58,11 @@ describe('Database Adapter Real Runtime Integration', () => {
       expect(created).toBe(true);
 
       // Retrieve through runtime
-      const retrieved = await runtime.getAgent(testAgent.id);
+      const retrieved = await runtime.getAgent(testAgent.id!);
       expect(retrieved).toBeDefined();
       expect(retrieved?.name).toBe(testAgent.name);
-      expect(retrieved?.plugins).toEqual(testAgent.plugins);
-      expect(retrieved?.settings).toEqual(testAgent.settings);
+      expect(retrieved?.plugins).toEqual(testAgent.plugins || []);
+      expect(retrieved?.settings).toEqual(testAgent.settings || {});
     });
 
     it('should handle agent creation failure with duplicate names', async () => {
@@ -101,8 +101,8 @@ describe('Database Adapter Real Runtime Integration', () => {
       expect(created2).toBe(false);
 
       // Verify only first agent exists
-      const retrieved1 = await runtime.getAgent(agent1.id);
-      const retrieved2 = await runtime.getAgent(agent2.id);
+      const retrieved1 = await runtime.getAgent(agent1.id!);
+      const retrieved2 = await runtime.getAgent(agent2.id!);
 
       expect(retrieved1).toBeDefined();
       expect(retrieved2).toBeNull();
@@ -504,9 +504,9 @@ describe('Database Adapter Real Runtime Integration', () => {
       expect(duration).toBeLessThan(5000);
 
       // Verify all entities were created
-      const entityIds = entities.map((e) => e.id);
+      const entityIds = entities.map((e) => e.id!).filter(Boolean);
       const retrieved = await runtime.getEntityByIds(entityIds);
-      expect(retrieved.length).toBe(numEntities);
+      expect(retrieved?.length || 0).toBe(numEntities);
     });
 
     it('should handle concurrent operations safely', async () => {

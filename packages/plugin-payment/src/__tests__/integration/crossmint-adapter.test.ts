@@ -172,7 +172,7 @@ describe('CrossmintAdapter Integration Tests', () => {
         };
         return settings[key];
       }),
-      getService: mock((name: string) => {
+      getService: ((name: string) => {
         if (name === 'real-crossmint') {
           return mockCrossmintService;
         }
@@ -180,7 +180,7 @@ describe('CrossmintAdapter Integration Tests', () => {
           return mockWalletService;
         }
         return null;
-      }),
+      }) as any,
     } as any;
 
     adapter = new CrossmintAdapter(runtime);
@@ -203,7 +203,7 @@ describe('CrossmintAdapter Integration Tests', () => {
     });
 
     it('should throw error if services are not available', async () => {
-      runtime.getService = mock(() => null);
+      runtime.getService = (() => null) as any;
 
       await expect(adapter.initialize()).rejects.toThrow(CrossmintAdapterError);
       await expect(adapter.initialize()).rejects.toThrow('No Crossmint services found');
@@ -212,12 +212,12 @@ describe('CrossmintAdapter Integration Tests', () => {
     it('should validate service interfaces correctly', async () => {
       // Test with incomplete service
       const incompleteService = { listWallets: () => {} };
-      runtime.getService = mock((name: string) => {
+      runtime.getService = ((name: string) => {
         if (name === 'real-crossmint') {
           return incompleteService;
         }
         return null;
-      });
+      }) as any;
 
       await expect(adapter.initialize()).rejects.toThrow('No Crossmint services found');
     });
@@ -397,7 +397,9 @@ describe('CrossmintAdapter Integration Tests', () => {
     });
 
     it('should create wallet with proper metadata', async () => {
-      const spy = mock.spyOn(mockWalletService, 'createWallet');
+      const originalCreateWallet = mockWalletService.createWallet;
+      const spy = mock(mockWalletService.createWallet.bind(mockWalletService));
+      mockWalletService.createWallet = spy;
 
       await adapter.createWallet();
 
@@ -412,6 +414,9 @@ describe('CrossmintAdapter Integration Tests', () => {
           }),
         })
       );
+
+      // Restore original method
+      mockWalletService.createWallet = originalCreateWallet;
     });
   });
 
@@ -552,7 +557,9 @@ describe('CrossmintAdapter Integration Tests', () => {
       const toAddress = '0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199';
       const amount = BigInt('1000000');
 
-      const spy = mock.spyOn(mockWalletService, 'transfer');
+      const originalTransfer = mockWalletService.transfer;
+      const spy = mock(mockWalletService.transfer.bind(mockWalletService));
+      mockWalletService.transfer = spy;
 
       await adapter.sendTransaction(fromAddress, toAddress, amount, PaymentMethod.USDC_ETH);
 
@@ -561,6 +568,9 @@ describe('CrossmintAdapter Integration Tests', () => {
           tokenAddress: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48', // Mainnet USDC
         })
       );
+
+      // Restore original method
+      mockWalletService.transfer = originalTransfer;
     });
 
     it('should use testnet addresses in sandbox mode', async () => {
@@ -568,15 +578,20 @@ describe('CrossmintAdapter Integration Tests', () => {
       const toAddress = '0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199';
       const amount = BigInt('1000000');
 
-      const spy = mock.spyOn(mockWalletService, 'transfer');
+      const originalTransfer2 = mockWalletService.transfer;
+      const spy2 = mock(mockWalletService.transfer.bind(mockWalletService));
+      mockWalletService.transfer = spy2;
 
       await adapter.sendTransaction(fromAddress, toAddress, amount, PaymentMethod.USDC_ETH);
 
-      expect(spy).toHaveBeenCalledWith(
+      expect(spy2).toHaveBeenCalledWith(
         expect.objectContaining({
           tokenAddress: '0x07865c6E87B9F70255377e024ace6630C1Eaa37F', // Goerli USDC
         })
       );
+
+      // Restore original method
+      mockWalletService.transfer = originalTransfer2;
     });
   });
 });

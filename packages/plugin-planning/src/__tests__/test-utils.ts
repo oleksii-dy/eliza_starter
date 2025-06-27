@@ -21,64 +21,60 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
       // Mock planning responses based on the prompt content
       const prompt = params.prompt || '';
 
-      // For email-related prompts
+      // Check if this is a comprehensive planning prompt (contains XML structure)
+      if (prompt.includes('<plan>') && prompt.includes('AVAILABLE ACTIONS:')) {
+        // Extract available actions from the prompt
+        const actionsMatch = prompt.match(/AVAILABLE ACTIONS:\s*([^\n]+)/);
+        const actions = actionsMatch
+          ? actionsMatch[1]
+              .split(',')
+              .map((a: string) => a.trim())
+              .filter(Boolean)
+          : ['REPLY'];
+
+        // Generate comprehensive plan with multiple steps
+        if (actions.length > 1) {
+          const steps = actions
+            .slice(0, 3)
+            .map(
+              (action: string, index: number) => `<step>
+<id>step_${index + 1}</id>
+<action>${action}</action>
+<parameters>{"param": "value_${index + 1}"}</parameters>
+<dependencies>${index > 0 ? `["step_${index}"]` : '[]'}</dependencies>
+<description>Execute ${action} action</description>
+</step>`
+            )
+            .join('\n');
+
+          // Extract goal from prompt
+          const goalMatch = prompt.match(/GOAL:\s*([^\n]+)/);
+          const goal = goalMatch
+            ? goalMatch[1].trim()
+            : 'Execute comprehensive plan with available actions';
+
+          return Promise.resolve(`<plan>
+<goal>${goal}</goal>
+<execution_model>${prompt.includes('parallel') ? 'parallel' : prompt.includes('dag') ? 'dag' : 'sequential'}</execution_model>
+<steps>
+${steps}
+</steps>
+<estimated_duration>15000</estimated_duration>
+</plan>`);
+        }
+      }
+
+      // Simple planning responses (no XML structure expected)
       if (prompt.includes('Send an email') || prompt.includes('email')) {
-        return Promise.resolve(
-          JSON.stringify({
-            goal: 'Execute actions: SEND_EMAIL',
-            steps: [
-              {
-                id: 'step-1',
-                actionName: 'SEND_EMAIL',
-                description: 'Send email to recipient',
-                dependencies: [],
-                estimatedDuration: 1000,
-              },
-            ],
-          })
-        );
+        return Promise.resolve('Send email action detected');
       }
 
-      // For research/search prompts
       if (prompt.includes('research') || prompt.includes('search')) {
-        return Promise.resolve(
-          JSON.stringify({
-            goal: 'Execute actions: SEARCH, REPLY',
-            steps: [
-              {
-                id: 'step-1',
-                actionName: 'SEARCH',
-                description: 'Search for information',
-                dependencies: [],
-                estimatedDuration: 2000,
-              },
-              {
-                id: 'step-2',
-                actionName: 'REPLY',
-                description: 'Reply with findings',
-                dependencies: ['step-1'],
-                estimatedDuration: 1000,
-              },
-            ],
-          })
-        );
+        return Promise.resolve('Research action detected');
       }
 
-      // Default response for other planning prompts
-      return Promise.resolve(
-        JSON.stringify({
-          goal: 'Execute actions: REPLY',
-          steps: [
-            {
-              id: 'step-1',
-              actionName: 'REPLY',
-              description: 'Provide response',
-              dependencies: [],
-              estimatedDuration: 500,
-            },
-          ],
-        })
-      );
+      // Default response
+      return Promise.resolve('Default action response');
     },
 
     // Planning-specific services
@@ -157,6 +153,29 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
       return services[name];
     },
 
+    // Default actions for validation
+    actions: [
+      {
+        name: 'REPLY',
+        description: 'Send a reply',
+        handler: async () => ({ text: 'Reply sent' }),
+        validate: async () => true,
+      },
+      {
+        name: 'SEND_EMAIL',
+        description: 'Send an email',
+        handler: async () => ({ text: 'Email sent' }),
+        validate: async () => true,
+      },
+      {
+        name: 'SEARCH',
+        description: 'Search for information',
+        handler: async () => ({ text: 'Search completed' }),
+        validate: async () => true,
+      },
+      ...(overrides.actions || []),
+    ],
+
     ...overrides,
   }) as any;
 }
@@ -185,17 +204,14 @@ export function createMockState(): State {
 
 export function createMockPlanningContext() {
   return {
-    planId: uuidv4(),
-    stepIndex: 0,
-    totalSteps: 3,
-    currentStep: {
-      id: 'step-1',
-      description: 'Initial step',
-      status: 'pending',
-    },
-    metadata: {},
-    resources: {},
-    capabilities: [],
+    goal: 'Test planning goal',
     constraints: [],
+    availableActions: ['REPLY', 'THINK', 'SEARCH'],
+    availableProviders: ['TIME', 'MEMORY'],
+    preferences: {
+      executionModel: 'sequential' as const,
+      maxSteps: 10,
+      timeoutMs: 30000,
+    },
   };
 }

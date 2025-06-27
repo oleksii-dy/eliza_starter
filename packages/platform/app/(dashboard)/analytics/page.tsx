@@ -207,8 +207,8 @@ export default function AnalyticsPage() {
   }
 
   function getTrendColor(change: number): string {
-    if (change > 0) return 'text-green-600';
-    if (change < 0) return 'text-red-600';
+    if (change > 0) {return 'text-green-600';}
+    if (change < 0) {return 'text-red-600';}
     return 'text-gray-400';
   }
 
@@ -488,8 +488,8 @@ export default function AnalyticsPage() {
                   >
                     {markupConfig
                       ? formatCurrency(
-                          model.spent * (markupConfig.markupPercentage / 120),
-                        )
+                        model.spent * (markupConfig.markupPercentage / 120),
+                      )
                       : 'N/A'}
                   </td>
                   <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">

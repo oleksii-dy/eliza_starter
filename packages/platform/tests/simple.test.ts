@@ -2,7 +2,7 @@
  * Simple test to verify Jest setup works
  */
 
-import { describe, test, expect } from '@jest/globals';
+import { describe, test, expect } from 'vitest';
 
 describe('Simple Test Suite', () => {
   test('should pass basic test', () => {

@@ -1,10 +1,10 @@
-import * as Nodes from '../nodes'
+import * as Nodes from '../nodes';
 
 export function createNode(name: string, data?: any): any {
-  const Node = (Nodes as any)[name]
+  const Node = (Nodes as any)[name];
   if (!Node) {
-    console.error('unknown node:', name)
+    console.error('unknown node:', name);
   }
-  const node = new Node(data)
-  return node
+  const node = new Node(data);
+  return node;
 }

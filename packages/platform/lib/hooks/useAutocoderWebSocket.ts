@@ -287,7 +287,7 @@ export function useAutocoderWebSocket(
 
   // Heartbeat to maintain connection
   useEffect(() => {
-    if (!isConnected) return;
+    if (!isConnected) {return;}
 
     const heartbeatInterval = setInterval(() => {
       if (wsRef.current?.readyState === WebSocket.OPEN) {

@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { authService } from '@/lib/auth/session';
 import { withModelUsageTracking } from '@/lib/billing/credit-middleware';
 import OpenAI from 'openai';
@@ -27,7 +28,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     // Get current user session
     const user = await authService.getCurrentUser();
@@ -148,3 +149,5 @@ async function handleChatRequest(
     );
   }
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

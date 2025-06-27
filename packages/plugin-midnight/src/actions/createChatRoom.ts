@@ -11,8 +11,8 @@ import {
   logger,
   asUUID,
 } from '@elizaos/core';
-import { SecureMessagingService } from '../services/SecureMessagingService.js';
-import { MidnightNetworkError } from '../types/index.js';
+import { SecureMessagingService } from '../services/SecureMessagingService';
+import { MidnightNetworkError } from '../types/index';
 
 export const createChatRoomAction: Action = {
   name: 'CREATE_CHAT_ROOM',

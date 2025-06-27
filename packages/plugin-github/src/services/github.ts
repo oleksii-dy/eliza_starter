@@ -1006,7 +1006,7 @@ export class GitHubService extends Service {
     limit: number;
     used: number;
     resource: string;
-  } {
+    } {
     const used = 5000 - this.rateLimitRemaining;
     return {
       remaining: this.rateLimitRemaining,
@@ -1026,7 +1026,7 @@ export class GitHubService extends Service {
     limit: number;
     used: number;
     resource: string;
-  } {
+    } {
     return this.getRateLimitStatus();
   }
 

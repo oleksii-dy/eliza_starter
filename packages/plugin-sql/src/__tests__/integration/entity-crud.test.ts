@@ -2,11 +2,11 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'bun:test'
 import { createIsolatedTestDatabase } from '../test-helpers';
 import { v4 as uuidv4 } from 'uuid';
 import type { Entity, UUID, AgentRuntime } from '@elizaos/core';
-import { PgDatabaseAdapter } from '../../pg/adapter';
+
 import { PgAdapter } from '../../pg/adapter';
 
 describe('Entity CRUD Operations', () => {
-  let adapter: PgAdapter | PgDatabaseAdapter;
+  let adapter: PgAdapter;
   let runtime: AgentRuntime;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;
@@ -17,7 +17,7 @@ describe('Entity CRUD Operations', () => {
     runtime = setup.runtime;
     cleanup = setup.cleanup;
     testAgentId = setup.testAgentId;
-  }, 30000);
+  });
 
   afterAll(async () => {
     if (cleanup) {
@@ -53,7 +53,7 @@ describe('Entity CRUD Operations', () => {
 
       const retrieved = await adapter.getEntitiesByIds([entity.id!]);
       expect(retrieved).toHaveLength(1);
-      expect(retrieved![0].id).toBe(entity.id);
+      expect(retrieved![0].id).toBe(entity.id!);
     });
 
     it('should update an entity', async () => {
@@ -197,7 +197,7 @@ describe('Entity CRUD Operations', () => {
       await adapter.createEntities([entity]);
 
       const retrieved = await adapter.getEntitiesByIds([entity.id!]);
-      expect(retrieved![0].metadata).toEqual(entity.metadata);
+      expect(retrieved![0].metadata).toEqual(entity.metadata!);
       expect((retrieved![0].metadata?.nested as any)?.array).toEqual([1, 2, 3]);
     });
 
@@ -335,7 +335,7 @@ describe('Entity CRUD Operations', () => {
       });
 
       expect(results).toHaveLength(1);
-      expect(results[0].id).toBe(entity.id);
+      expect(results[0].id).toBe(entity.id!);
     });
   });
 });

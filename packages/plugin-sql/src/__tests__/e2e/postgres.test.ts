@@ -42,7 +42,6 @@ describe('PostgreSQL E2E Tests', () => {
 
       await adapter.close();
       await manager.close();
-      await manager.close();
     });
 
     it('should get connection', async () => {
@@ -53,13 +52,12 @@ describe('PostgreSQL E2E Tests', () => {
 
       await adapter.close();
       await manager.close();
-      await manager.close();
     });
   });
 
   describe('Agent Operations', () => {
     it('should create and retrieve an agent', async () => {
-      const { adapter, agentId } = await createTestAdapter();
+      const { adapter, agentId, manager } = await createTestAdapter();
 
       const agent: Agent = {
         id: agentId,
@@ -81,14 +79,14 @@ describe('PostgreSQL E2E Tests', () => {
       const retrieved = await adapter.getAgent(agentId);
       expect(retrieved).toBeDefined();
       expect(retrieved?.name).toBe(agent.name);
-      expect(retrieved?.settings).toEqual(agent.settings);
+      expect(retrieved?.settings).toEqual(agent.settings || {});
 
       await adapter.close();
       await manager.close();
     });
 
     it('should update an agent', async () => {
-      const { adapter, agentId } = await createTestAdapter();
+      const { adapter, agentId, manager } = await createTestAdapter();
 
       const agent: Agent = {
         id: agentId,
@@ -119,7 +117,7 @@ describe('PostgreSQL E2E Tests', () => {
     });
 
     it('should delete an agent', async () => {
-      const { adapter, agentId } = await createTestAdapter();
+      const { adapter, agentId, manager } = await createTestAdapter();
 
       const agent: Agent = {
         id: agentId,
@@ -146,7 +144,7 @@ describe('PostgreSQL E2E Tests', () => {
 
   describe('Entity Operations', () => {
     it('should create and retrieve entities', async () => {
-      const { adapter, agentId } = await createTestAdapter();
+      const { adapter, agentId, manager } = await createTestAdapter();
 
       // Create agent first
       await adapter.createAgent({
@@ -191,7 +189,7 @@ describe('PostgreSQL E2E Tests', () => {
     });
 
     it('should update an entity', async () => {
-      const { adapter, agentId } = await createTestAdapter();
+      const { adapter, agentId, manager } = await createTestAdapter();
 
       // Create agent first
       await adapter.createAgent({
@@ -229,15 +227,17 @@ describe('PostgreSQL E2E Tests', () => {
   });
 
   describe('Memory Operations', () => {
-    let adapter: PgliteDatabaseAdapter;
+    let adapter: PgAdapter;
     let agentId: UUID;
     let roomId: UUID;
     let entityId: UUID;
+    let manager: PgManager;
 
     beforeEach(async () => {
       const result = await createTestAdapter();
       adapter = result.adapter;
       agentId = result.agentId;
+      manager = result.manager;
 
       // Create agent first
       await adapter.createAgent({
@@ -378,17 +378,19 @@ describe('PostgreSQL E2E Tests', () => {
   });
 
   describe('Component Operations', () => {
-    let adapter: PgliteDatabaseAdapter;
+    let adapter: PgAdapter;
     let agentId: UUID;
     let entityId: UUID;
     let roomId: UUID;
     let worldId: UUID;
     let sourceEntityId: UUID;
+    let manager: PgManager;
 
     beforeEach(async () => {
       const result = await createTestAdapter();
       adapter = result.adapter;
       agentId = result.agentId;
+      manager = result.manager;
 
       // Create agent first
       await adapter.createAgent({
@@ -527,7 +529,7 @@ describe('PostgreSQL E2E Tests', () => {
 
   describe('Transaction and Concurrency', () => {
     it('should handle concurrent operations', async () => {
-      const { adapter, agentId } = await createTestAdapter();
+      const { adapter, agentId, manager } = await createTestAdapter();
 
       // Create agent first
       await adapter.createAgent({
@@ -560,7 +562,7 @@ describe('PostgreSQL E2E Tests', () => {
     });
 
     it('should handle large batch operations', async () => {
-      const { adapter, agentId } = await createTestAdapter();
+      const { adapter, agentId, manager } = await createTestAdapter();
 
       // Create agent first
       await adapter.createAgent({
@@ -596,7 +598,7 @@ describe('PostgreSQL E2E Tests', () => {
 
   describe('Error Handling', () => {
     it('should handle duplicate agent creation', async () => {
-      const { adapter, agentId } = await createTestAdapter();
+      const { adapter, agentId, manager } = await createTestAdapter();
 
       const agent: Agent = {
         id: agentId,

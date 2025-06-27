@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { authService } from '@/lib/auth/session';
 import {
   addCredits,
@@ -23,7 +24,7 @@ const confirmPaymentSchema = z.object({
   amount: z.number().min(5).max(10000),
 });
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     // Get current user session
     const user = await authService.getCurrentUser();
@@ -117,3 +118,5 @@ export async function handlePOST(request: NextRequest) {
     );
   }
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

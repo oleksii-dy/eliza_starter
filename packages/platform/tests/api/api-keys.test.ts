@@ -10,7 +10,7 @@ import {
   beforeAll,
   afterAll,
   beforeEach,
-} from '@jest/globals';
+} from 'vitest';
 
 describe('API Keys API Integration', () => {
   const BASE_URL = 'http://localhost:3333/api/v1';

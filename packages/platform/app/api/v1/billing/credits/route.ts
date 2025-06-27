@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { z } from 'zod';
 import {
   getCreditBalance,
@@ -11,16 +12,16 @@ const getCreditsQuerySchema = z.object({
   limit: z
     .string()
     .optional()
-    .transform((val) => (val ? parseInt(val) : 50)),
+    .transform((val) => (val ? parseInt(val, 10) : 50)),
   offset: z
     .string()
     .optional()
-    .transform((val) => (val ? parseInt(val) : 0)),
+    .transform((val) => (val ? parseInt(val, 10) : 0)),
   type: z.string().optional(),
   period: z.enum(['day', 'week', 'month', 'year']).optional().default('month'),
 });
 
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     const authResult = await authenticateUser(request);
     if (!authResult.user || !authResult.organization) {
@@ -79,3 +80,5 @@ export async function handleGET(request: NextRequest) {
     );
   }
 }
+
+export const { GET } = wrapHandlers({ handleGET });

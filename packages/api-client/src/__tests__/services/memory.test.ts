@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, mock } from 'bun:test';
 import { MemoryService } from '../../services/MemoryService';
 import { ApiClientConfig } from '../../types/base';
+import { Memory, Room } from '../../types/memory';
 import { UUID } from '@elizaos/core';
 
 // Test UUIDs in proper format
@@ -59,8 +60,22 @@ describe('MemoryService', () => {
     it('should retrieve agent memories successfully', async () => {
       const mockMemories = {
         memories: [
-          { id: 'mem-1', content: 'Memory 1', timestamp: '2024-01-01T00:00:00Z' },
-          { id: 'mem-2', content: 'Memory 2', timestamp: '2024-01-02T00:00:00Z' },
+          { 
+            id: 'mem-1' as UUID, 
+            agentId: TEST_AGENT_ID,
+            type: 'message',
+            content: 'Memory 1', 
+            createdAt: new Date('2024-01-01T00:00:00Z'),
+            updatedAt: new Date('2024-01-01T00:00:00Z')
+          },
+          { 
+            id: 'mem-2' as UUID, 
+            agentId: TEST_AGENT_ID,
+            type: 'message',
+            content: 'Memory 2', 
+            createdAt: new Date('2024-01-02T00:00:00Z'),
+            updatedAt: new Date('2024-01-02T00:00:00Z')
+          },
         ],
       };
       (memoryService as any).get.mockResolvedValue(mockMemories);
@@ -76,7 +91,9 @@ describe('MemoryService', () => {
 
     it('should handle pagination parameters', async () => {
       const params = { limit: 10, offset: 20 };
-      (memoryService as any).get.mockResolvedValue({ memories: [] });
+      (memoryService as any).get.mockResolvedValue({ 
+        memories: [] as Memory[]
+      });
 
       await memoryService.getAgentMemories(TEST_AGENT_ID, params);
 
@@ -89,7 +106,16 @@ describe('MemoryService', () => {
 
   describe('getRoomMemories', () => {
     it('should retrieve room memories successfully', async () => {
-      const mockMemories = { memories: [{ id: 'mem-1', content: 'Room memory' }] };
+      const mockMemories = { 
+        memories: [{ 
+          id: 'mem-1' as UUID, 
+          agentId: TEST_AGENT_ID,
+          type: 'message',
+          content: 'Room memory',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        }] 
+      };
       (memoryService as any).get.mockResolvedValue(mockMemories);
 
       const result = await memoryService.getRoomMemories(TEST_AGENT_ID, TEST_ROOM_ID);
@@ -103,7 +129,7 @@ describe('MemoryService', () => {
 
     it('should handle memory parameters', async () => {
       const params = { limit: 5 };
-      (memoryService as any).get.mockResolvedValue({ memories: [] });
+      (memoryService as any).get.mockResolvedValue({ memories: [] as Memory[] });
 
       await memoryService.getRoomMemories(TEST_AGENT_ID, TEST_ROOM_ID, params);
 
@@ -118,7 +144,14 @@ describe('MemoryService', () => {
     const updateParams = { content: 'Updated memory content' };
 
     it('should update memory successfully', async () => {
-      const mockUpdatedMemory = { id: TEST_MEMORY_ID, content: 'Updated memory content' };
+      const mockUpdatedMemory = { 
+        id: TEST_MEMORY_ID, 
+        agentId: TEST_AGENT_ID,
+        type: 'message',
+        content: 'Updated memory content',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
       (memoryService as any).patch.mockResolvedValue(mockUpdatedMemory);
 
       const result = await memoryService.updateMemory(TEST_AGENT_ID, TEST_MEMORY_ID, updateParams);
@@ -163,8 +196,20 @@ describe('MemoryService', () => {
     it('should list agent rooms successfully', async () => {
       const mockRooms = {
         rooms: [
-          { id: 'room-1', name: 'Room 1' },
-          { id: 'room-2', name: 'Room 2' },
+          { 
+            id: 'room-1' as UUID, 
+            agentId: TEST_AGENT_ID,
+            name: 'Room 1',
+            createdAt: new Date(),
+            updatedAt: new Date()
+          },
+          { 
+            id: 'room-2' as UUID, 
+            agentId: TEST_AGENT_ID,
+            name: 'Room 2',
+            createdAt: new Date(),
+            updatedAt: new Date()
+          },
         ],
       };
       (memoryService as any).get.mockResolvedValue(mockRooms);
@@ -178,7 +223,14 @@ describe('MemoryService', () => {
 
   describe('getRoom', () => {
     it('should get room details successfully', async () => {
-      const mockRoom = { id: TEST_ROOM_ID, name: 'Test Room', description: 'A test room' };
+      const mockRoom = { 
+        id: TEST_ROOM_ID, 
+        agentId: TEST_AGENT_ID,
+        name: 'Test Room', 
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        metadata: { description: 'A test room' }
+      };
       (memoryService as any).get.mockResolvedValue(mockRoom);
 
       const result = await memoryService.getRoom(TEST_AGENT_ID, TEST_ROOM_ID);
@@ -194,7 +246,14 @@ describe('MemoryService', () => {
     const roomParams = { name: 'New Room', description: 'A new room' };
 
     it('should create room successfully', async () => {
-      const mockCreatedRoom = { id: 'room-new', ...roomParams };
+      const mockCreatedRoom = { 
+        id: 'room-new' as UUID, 
+        agentId: TEST_AGENT_ID,
+        name: roomParams.name,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        metadata: { description: roomParams.description }
+      };
       (memoryService as any).post.mockResolvedValue(mockCreatedRoom);
 
       const result = await memoryService.createRoom(TEST_AGENT_ID, roomParams);
@@ -208,7 +267,7 @@ describe('MemoryService', () => {
   });
 
   describe('createWorldFromServer', () => {
-    const worldParams = { name: 'New World', description: 'A new world' };
+    const worldParams = { serverId: TEST_SERVER_ID, name: 'New World', description: 'A new world' };
 
     it('should create world from server successfully', async () => {
       const mockResponse = { worldId: 'world-new' as UUID };

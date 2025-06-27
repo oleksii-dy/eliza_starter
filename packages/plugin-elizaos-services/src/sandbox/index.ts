@@ -4,11 +4,11 @@
  */
 
 import type { Plugin } from '@elizaos/core';
-import { SandboxManager } from './SandboxManager.js';
-import { MockSandboxManager } from './MockSandboxManager.js';
-import { WebSocketBridge } from './WebSocketBridge.js';
-import { spawnDevTeamAction } from './actions/spawnDevTeam.js';
-import { delegateTaskAction } from './actions/delegateTask.js';
+import { SandboxManager } from './SandboxManager.ts';
+import { MockSandboxManager } from './MockSandboxManager.ts';
+import { WebSocketBridge } from './WebSocketBridge.ts';
+import { spawnDevTeamAction } from './actions/spawnDevTeam.ts';
+import { delegateTaskAction } from './actions/delegateTask.ts';
 
 // Additional actions for sandbox management
 export const sandboxActions = [
@@ -73,15 +73,15 @@ export const sandboxPlugin: Plugin = {
 // Export everything for external use
 export { SandboxManager, WebSocketBridge, spawnDevTeamAction, delegateTaskAction };
 
-export type { SandboxEnvironment, AgentConfig, ProjectFile } from './SandboxManager.js';
+export type { SandboxEnvironment, AgentConfig, ProjectFile } from './SandboxManager';
 
-export type { BridgeConfig, RoomMessage } from './WebSocketBridge.js';
+export type { BridgeConfig, RoomMessage } from './WebSocketBridge';
 
 export type {
   ProjectSpecification,
   TaskAssignment,
   TaskDelegationRequest,
-} from './actions/spawnDevTeam.js';
+} from './actions/spawnDevTeam';
 
 // Default export
 export default sandboxPlugin;

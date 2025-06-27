@@ -5,7 +5,7 @@ import {
   type Memory,
   type State,
   type UUID,
-} from '../types/core.d';
+} from '@elizaos/core';
 import type { CustodialWalletService } from '../services/CustodialWalletService';
 
 /**
@@ -531,7 +531,7 @@ async function extractWalletParams(
   // Extract trust level
   const trustMatch = text.match(/trust\s+level\s+(\d+)/i);
   if (trustMatch) {
-    params.trustLevel = Number.parseInt(trustMatch[1]);
+    params.trustLevel = Number.parseInt(trustMatch[1], 10);
   }
 
   return params;

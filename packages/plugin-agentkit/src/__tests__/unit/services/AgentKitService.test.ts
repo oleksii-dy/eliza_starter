@@ -1,7 +1,7 @@
 import { describe, it, expect, mock, beforeEach, afterEach } from 'bun:test';
 import { AgentKitService } from '../../../services/AgentKitService';
 import { createMockRuntime } from '../../test-utils';
-import type { IAgentRuntime } from '../../../types/core.d';
+import type { IAgentRuntime } from '@elizaos/core';
 import { AgentKit as _AgentKit } from '@coinbase/agentkit';
 
 // Mock the fs module

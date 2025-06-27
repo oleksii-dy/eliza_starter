@@ -1,12 +1,12 @@
 /**
  * Advanced Rate Limiting System
- * 
+ *
  * Implements sophisticated rate limiting with multiple algorithms,
  * user-based limits, IP-based limits, and integration with audit logging.
  */
 
 import { NextRequest } from 'next/server';
-import { getSql } from '../database/sql';
+import { getSql } from '../database';
 import { logger } from '../logger';
 import { auditLogger, AuditEventType, AuditSeverity } from './audit-logger';
 
@@ -25,14 +25,14 @@ export interface RateLimitConfig {
   skipSuccessfulRequests?: boolean;
   skipFailedRequests?: boolean;
   onLimitReached?: (key: string, request: NextRequest) => void;
-  
+
   // Token bucket specific
   tokensPerInterval?: number;
   interval?: number;
-  
+
   // Sliding window specific
   precision?: number; // Number of sub-windows
-  
+
   // Global settings
   enabled?: boolean;
   whitelistedIPs?: string[];
@@ -85,10 +85,10 @@ export class MemoryRateLimitStore implements RateLimitStore {
 
   async increment(key: string, windowStart: number, ttl: number): Promise<number> {
     const existing = await this.get(key);
-    const newCount = existing && existing.windowStart === windowStart 
-      ? existing.count + 1 
+    const newCount = existing && existing.windowStart === windowStart
+      ? existing.count + 1
       : 1;
-    
+
     await this.set(key, { count: newCount, windowStart }, ttl);
     return newCount;
   }
@@ -140,10 +140,10 @@ export class RedisRateLimitStore implements RateLimitStore {
     try {
       const pipeline = this.redis.pipeline();
       const tempKey = `${key}:${windowStart}`;
-      
+
       pipeline.incr(tempKey);
       pipeline.expire(tempKey, Math.ceil(ttl / 1000));
-      
+
       const results = await pipeline.exec();
       return results[0][1];
     } catch (error) {
@@ -169,22 +169,23 @@ export class RateLimiter {
   private store: RateLimitStore;
 
   constructor(config: RateLimitConfig, store?: RateLimitStore) {
-    this.config = {
+    const defaults: Required<RateLimitConfig> = {
       algorithm: RateLimitAlgorithm.SLIDING_WINDOW,
       windowMs: 15 * 60 * 1000, // 15 minutes
       maxRequests: 100,
-      keyGenerator: this.defaultKeyGenerator,
+      keyGenerator: this.defaultKeyGenerator.bind(this),
       skipSuccessfulRequests: false,
       skipFailedRequests: false,
-      onLimitReached: this.defaultOnLimitReached,
+      onLimitReached: this.defaultOnLimitReached.bind(this),
       tokensPerInterval: 10,
       interval: 1000,
       precision: 10,
       enabled: true,
       whitelistedIPs: [],
       blacklistedIPs: [],
-      ...config,
     };
+
+    this.config = { ...defaults, ...config } as Required<RateLimitConfig>;
 
     this.store = store || new MemoryRateLimitStore();
   }
@@ -261,10 +262,10 @@ export class RateLimiter {
   private async fixedWindowCheck(key: string): Promise<RateLimitResult> {
     const now = Date.now();
     const windowStart = Math.floor(now / this.config.windowMs) * this.config.windowMs;
-    
+
     const count = await this.store.increment(key, windowStart, this.config.windowMs);
     const resetTime = new Date(windowStart + this.config.windowMs);
-    
+
     return {
       allowed: count <= this.config.maxRequests,
       remaining: Math.max(0, this.config.maxRequests - count),
@@ -282,30 +283,30 @@ export class RateLimiter {
     const windowSize = this.config.windowMs;
     const precision = this.config.precision;
     const subWindowSize = Math.floor(windowSize / precision);
-    
+
     // Calculate which sub-windows to check
     const currentSubWindow = Math.floor(now / subWindowSize);
     const windowStart = currentSubWindow - precision + 1;
-    
+
     let totalCount = 0;
     const promises: Promise<number>[] = [];
-    
+
     // Count requests in each sub-window
     for (let i = 0; i < precision; i++) {
       const subWindowKey = `${key}:${windowStart + i}`;
       promises.push(this.getSubWindowCount(subWindowKey, windowStart + i, subWindowSize));
     }
-    
+
     const counts = await Promise.all(promises);
     totalCount = counts.reduce((sum, count) => sum + count, 0);
-    
+
     // Increment current sub-window
     const currentKey = `${key}:${currentSubWindow}`;
     await this.store.increment(currentKey, currentSubWindow, windowSize);
     totalCount += 1;
-    
+
     const resetTime = new Date((currentSubWindow + 1) * subWindowSize);
-    
+
     return {
       allowed: totalCount <= this.config.maxRequests,
       remaining: Math.max(0, this.config.maxRequests - totalCount),
@@ -321,33 +322,33 @@ export class RateLimiter {
   private async tokenBucketCheck(key: string): Promise<RateLimitResult> {
     const now = Date.now();
     const data = await this.store.get(key);
-    
+
     let tokens = this.config.maxRequests;
     let lastRefill = now;
-    
+
     if (data && data.tokens !== undefined && data.lastRefill) {
       tokens = data.tokens;
       lastRefill = data.lastRefill;
-      
+
       // Refill tokens based on elapsed time
       const elapsed = now - lastRefill;
       const tokensToAdd = Math.floor(elapsed / this.config.interval) * this.config.tokensPerInterval;
       tokens = Math.min(this.config.maxRequests, tokens + tokensToAdd);
       lastRefill = now;
     }
-    
+
     const allowed = tokens > 0;
     if (allowed) {
       tokens -= 1;
     }
-    
+
     await this.store.set(key, {
       count: 0, // Not used for token bucket
       windowStart: now,
       tokens,
       lastRefill,
     }, this.config.windowMs);
-    
+
     return {
       allowed,
       remaining: tokens,
@@ -363,31 +364,31 @@ export class RateLimiter {
   private async leakyBucketCheck(key: string): Promise<RateLimitResult> {
     const now = Date.now();
     const data = await this.store.get(key);
-    
+
     let count = 0;
     let lastUpdate = now;
-    
+
     if (data) {
       count = data.count;
       lastUpdate = data.windowStart;
-      
+
       // Leak tokens based on elapsed time
       const elapsed = now - lastUpdate;
       const leakRate = this.config.tokensPerInterval / this.config.interval;
       const tokensToLeak = Math.floor(elapsed * leakRate);
       count = Math.max(0, count - tokensToLeak);
     }
-    
+
     const allowed = count < this.config.maxRequests;
     if (allowed) {
       count += 1;
     }
-    
+
     await this.store.set(key, {
       count,
       windowStart: now,
     }, this.config.windowMs);
-    
+
     return {
       allowed,
       remaining: Math.max(0, this.config.maxRequests - count),
@@ -424,13 +425,12 @@ export class RateLimiter {
   private getClientIP(request: NextRequest): string {
     const forwarded = request.headers.get('x-forwarded-for');
     const realIP = request.headers.get('x-real-ip');
-    const remoteAddr = request.ip;
-    
+
     if (forwarded) {
       return forwarded.split(',')[0].trim();
     }
-    
-    return realIP || remoteAddr || 'unknown';
+
+    return realIP || 'unknown';
   }
 
   /**
@@ -468,7 +468,7 @@ export class RateLimiter {
   ): Promise<void> {
     const ip = this.getClientIP(request);
     const path = new URL(request.url).pathname;
-    
+
     await auditLogger.logRateLimitExceeded(
       undefined, // No user ID for rate limit violations
       path,
@@ -512,7 +512,7 @@ export const rateLimitConfigs = {
     maxRequests: 5, // 5 login attempts per 15 minutes
     precision: 5,
   },
-  
+
   // API endpoints
   api: {
     algorithm: RateLimitAlgorithm.TOKEN_BUCKET,
@@ -521,7 +521,7 @@ export const rateLimitConfigs = {
     tokensPerInterval: 10,
     interval: 6000, // Refill 10 tokens every 6 seconds
   },
-  
+
   // File uploads
   upload: {
     algorithm: RateLimitAlgorithm.LEAKY_BUCKET,
@@ -530,14 +530,14 @@ export const rateLimitConfigs = {
     tokensPerInterval: 1,
     interval: 6000, // 1 upload every 6 seconds
   },
-  
+
   // Dashboard/UI
   dashboard: {
     algorithm: RateLimitAlgorithm.FIXED_WINDOW,
     windowMs: 60 * 1000, // 1 minute
     maxRequests: 60, // 60 requests per minute
   },
-  
+
   // Webhooks
   webhook: {
     algorithm: RateLimitAlgorithm.SLIDING_WINDOW,
@@ -555,10 +555,10 @@ export function createRateLimitMiddleware(
   store?: RateLimitStore
 ) {
   const limiter = new RateLimiter(config, store);
-  
+
   return async function rateLimitMiddleware(request: NextRequest) {
     const result = await limiter.checkLimit(request);
-    
+
     if (!result.allowed) {
       const response = new Response(
         JSON.stringify({
@@ -577,10 +577,10 @@ export function createRateLimitMiddleware(
           },
         }
       );
-      
+
       return response;
     }
-    
+
     // Add rate limit headers to successful responses
     const response = new Response(null, {
       headers: {
@@ -589,7 +589,7 @@ export function createRateLimitMiddleware(
         'X-RateLimit-Reset': result.resetTime.toISOString(),
       },
     });
-    
+
     return response;
   };
 }

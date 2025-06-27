@@ -1,4 +1,4 @@
-import type { Provider, IAgentRuntime, ProviderResult, Memory, State } from './types/core';
+import type { Provider, IAgentRuntime, ProviderResult, Memory, State } from '@elizaos/core';
 import type { AgentKitService } from './services/AgentKitService';
 
 export const walletProvider: Provider = {

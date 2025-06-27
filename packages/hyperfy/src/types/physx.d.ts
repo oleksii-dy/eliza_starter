@@ -1,7 +1,7 @@
 // PhysX Global Type Definitions
 
 declare global {
-  const PHYSX: any
+  const PHYSX: any;
   interface Window {
     PHYSX?: any
   }
@@ -10,4 +10,4 @@ declare global {
   }
 }
 
-export {}
+export {};

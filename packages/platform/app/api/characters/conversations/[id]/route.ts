@@ -3,6 +3,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 
 // Use dynamic imports to avoid database connection during build
 const getCharacterService = () =>
@@ -13,7 +14,7 @@ const getAuthService = () =>
 /**
  * GET /api/characters/conversations/[id] - Get conversation by ID
  */
-export async function handleGET(
+async function handleGET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -61,3 +62,5 @@ export async function handleGET(
     );
   }
 }
+
+export const { GET } = wrapHandlers({ handleGET });

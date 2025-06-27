@@ -9,13 +9,13 @@ import {
   expect,
   beforeAll,
   afterAll,
-  jest,
-} from '@jest/globals';
+  vi,
+} from 'vitest';
 
 // Helper function to create a properly typed fetch mock
 function createFetchMock() {
-  const mockFetch = jest.fn() as unknown as typeof fetch;
-  (mockFetch as any).preconnect = jest.fn();
+  const mockFetch = vi.fn() as unknown as typeof fetch;
+  (mockFetch as any).preconnect = vi.fn();
   return mockFetch;
 }
 
@@ -23,7 +23,7 @@ describe('Platform Integration', () => {
   describe('App Lander', () => {
     test('should render clean login interface', async () => {
       // Mock Next.js router
-      const mockPush = jest.fn();
+      const mockPush = vi.fn();
       const mockRouter = {
         push: mockPush,
         pathname: '/app-lander',
@@ -31,7 +31,7 @@ describe('Platform Integration', () => {
         asPath: '/app-lander',
       };
 
-      jest.doMock('next/navigation', () => ({
+      vi.doMock('next/navigation', () => ({
         useRouter: () => mockRouter,
       }));
 
@@ -42,20 +42,20 @@ describe('Platform Integration', () => {
         user: null,
         error: null,
         platform: 'web',
-        signInWithOAuth: jest.fn(),
-        signOut: jest.fn(),
-        refreshToken: jest.fn(),
-        getOAuthProviders: jest.fn().mockReturnValue([
+        signInWithOAuth: vi.fn(),
+        signOut: vi.fn(),
+        refreshToken: vi.fn(),
+        getOAuthProviders: vi.fn().mockReturnValue([
           { id: 'google', name: 'Google', icon: '🔵', color: '#4285f4' },
           { id: 'github', name: 'GitHub', icon: '⚫', color: '#24292e' },
           { id: 'discord', name: 'Discord', icon: '🟣', color: '#7289da' },
           { id: 'twitter', name: 'Twitter', icon: '🔵', color: '#1da1f2' },
-          { id: 'microsoft', name: 'Microsoft', icon: '��', color: '#0078d4' },
+          { id: 'microsoft', name: 'Microsoft', icon: '', color: '#0078d4' },
         ]),
-        waitForInit: (jest.fn() as any).mockResolvedValue(undefined),
+        waitForInit: (vi.fn() as any).mockResolvedValue(undefined),
       };
 
-      jest.doMock('../src/hooks/useIsomorphicAuth', () => ({
+      vi.doMock('../src/hooks/useIsomorphicAuth', () => ({
         useIsomorphicAuth: () => mockAuth,
       }));
 
@@ -65,20 +65,20 @@ describe('Platform Integration', () => {
     });
 
     test('should redirect authenticated users to dashboard', async () => {
-      const mockPush = jest.fn();
+      const mockPush = vi.fn();
       const mockRouter = { push: mockPush };
 
-      jest.doMock('next/navigation', () => ({
+      vi.doMock('next/navigation', () => ({
         useRouter: () => mockRouter,
       }));
 
       const mockAuth = {
         isAuthenticated: true,
         isLoading: false,
-        waitForInit: (jest.fn() as any).mockResolvedValue(undefined),
+        waitForInit: (vi.fn() as any).mockResolvedValue(undefined),
       };
 
-      jest.doMock('../src/hooks/useIsomorphicAuth', () => ({
+      vi.doMock('../src/hooks/useIsomorphicAuth', () => ({
         useIsomorphicAuth: () => mockAuth,
       }));
 
@@ -130,9 +130,9 @@ describe('Platform Integration', () => {
     test('should complete OAuth flow in Tauri environment', async () => {
       // Mock Tauri environment
       const mockTauri = {
-        invoke: (jest.fn() as any).mockResolvedValue(undefined),
-        listen: (jest.fn() as any).mockResolvedValue(() => {}),
-        emit: jest.fn(),
+        invoke: (vi.fn() as any).mockResolvedValue(undefined),
+        listen: (vi.fn() as any).mockResolvedValue(() => {}),
+        emit: vi.fn(),
       };
 
       global.window = {
@@ -171,9 +171,9 @@ describe('Platform Integration', () => {
   describe('Platform-Specific Behavior', () => {
     test('should use localStorage for web platform token storage', async () => {
       const mockLocalStorage = {
-        getItem: jest.fn(),
-        setItem: jest.fn(),
-        removeItem: jest.fn(),
+        getItem: vi.fn(),
+        setItem: vi.fn(),
+        removeItem: vi.fn(),
       };
 
       global.localStorage = mockLocalStorage as any;
@@ -192,7 +192,7 @@ describe('Platform Integration', () => {
 
     test('should use Tauri store for native app token storage', async () => {
       const mockTauri = {
-        invoke: (jest.fn() as any).mockResolvedValue(undefined),
+        invoke: (vi.fn() as any).mockResolvedValue(undefined),
       };
 
       global.window = { __TAURI__: mockTauri } as any;
@@ -296,7 +296,7 @@ describe('Platform Integration', () => {
       const { isomorphicAuth } = await import('../src/lib/isomorphic-auth');
       await isomorphicAuth.waitForInit();
 
-      const mockCallback = jest.fn();
+      const mockCallback = vi.fn();
       const unsubscribe = isomorphicAuth.subscribe(mockCallback);
 
       // Trigger state change
@@ -424,6 +424,6 @@ describe('Multi-Platform Build Verification', () => {
 
 // Cleanup after all tests
 afterAll(() => {
-  jest.clearAllMocks();
-  jest.restoreAllMocks();
+  vi.clearAllMocks();
+  vi.restoreAllMocks();
 });

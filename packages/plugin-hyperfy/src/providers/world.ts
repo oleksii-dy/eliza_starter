@@ -124,12 +124,12 @@ export const hyperfyProvider: Provider = {
 
       const equipText = currentAction
         ? (() => {
-            const entity = currentAction.ctx?.entity;
-            const label = currentAction._label ?? 'Unnamed Action';
-            const entityId = entity?.data?.id ?? 'unknown';
-            const entityName = entity?.blueprint?.name ?? 'Unnamed';
-            return `## Your Equipped Item or Action\nYou are currently using:\n- Action: ${label}, Entity Name: ${entityName}, Entity ID: ${entityId}`;
-          })()
+          const entity = currentAction.ctx?.entity;
+          const label = currentAction._label ?? 'Unnamed Action';
+          const entityId = entity?.data?.id ?? 'unknown';
+          const entityName = entity?.blueprint?.name ?? 'Unnamed';
+          return `## Your Equipped Item or Action\nYou are currently using:\n- Action: ${label}, Entity Name: ${entityName}, Entity ID: ${entityId}`;
+        })()
         : '## Your Equipped Item or Action\nYou are not currently performing or holding anything.';
 
       const { formattedHistory, lastResponseText, lastActions } =

@@ -13,6 +13,8 @@ import {
   type HandlerCallback,
   asUUID,
   type UUID,
+  ChannelType,
+  type Task,
 } from '@elizaos/core';
 import {
   type OODAContext,
@@ -30,6 +32,7 @@ import {
   type ResourceStatus,
   AutonomousServiceType,
   type ErrorContext,
+  type Learning,
 } from './types';
 import { getLogger, type AutonomyLogger } from './logging';
 
@@ -114,7 +117,7 @@ export class OODALoopService extends Service {
           name: 'Autonomous Operations',
           agentId: this.runtime.agentId,
           source: 'autonomous',
-          type: 'SELF' as any,
+          type: ChannelType.SELF,
           worldId: this.autonomousWorldId,
           metadata: {
             description: 'Room for autonomous agent thoughts and actions',
@@ -288,7 +291,7 @@ export class OODALoopService extends Service {
 
       // Calculate metrics
       this.currentContext.metrics = this.calculateMetrics();
-      this.logger.logMetrics(this.currentContext.metrics);
+      this.logger.logMetrics({ ...this.currentContext.metrics });
     } catch (error) {
       this.logger.error('OODA cycle error', error as Error, {
         phase: this.currentContext.phase,
@@ -459,7 +462,7 @@ export class OODALoopService extends Service {
     return observations;
   }
 
-  private calculateTaskRelevance(task: any): number {
+  private calculateTaskRelevance(task: Task): number {
     let relevance = 0.5;
 
     // Increase relevance for urgent tasks
@@ -474,11 +477,14 @@ export class OODALoopService extends Service {
     }
 
     // Recently created tasks are more relevant
-    const ageHours = (Date.now() - task.createdAt) / (1000 * 60 * 60);
-    if (ageHours < 1) {
-      relevance += 0.2;
-    } else if (ageHours < 24) {
-      relevance += 0.1;
+    const taskCreatedAt = (task as Task & { createdAt?: number }).createdAt;
+    if (taskCreatedAt) {
+      const ageHours = (Date.now() - taskCreatedAt) / (1000 * 60 * 60);
+      if (ageHours < 1) {
+        relevance += 0.2;
+      } else if (ageHours < 24) {
+        relevance += 0.1;
+      }
     }
 
     return Math.min(relevance, 1);
@@ -531,13 +537,15 @@ export class OODALoopService extends Service {
 
   private async getResourceStatus(): Promise<ResourceStatus> {
     // Try to get from resource monitor service
-    let resourceMonitor: any = null;
+    let resourceMonitor: Service | null = null;
     if (typeof this.runtime.getService === 'function') {
       resourceMonitor = this.runtime.getService('resource-monitor');
     }
 
     if (resourceMonitor && 'getResourceStatus' in resourceMonitor) {
-      const status = (resourceMonitor as any).getResourceStatus();
+      const status = (
+        resourceMonitor as { getResourceStatus: () => ResourceStatus }
+      ).getResourceStatus();
       // Update task slots based on current actions
       status.taskSlots = {
         used:
@@ -690,7 +698,10 @@ export class OODALoopService extends Service {
     // In a real implementation, this would use more sophisticated analysis
 
     const taskObs = observations.filter((o) => o.type === ObservationType.TASK_STATUS);
-    const completedTasks = taskObs.filter((o) => o.data.tags?.includes('completed'));
+    const completedTasks = taskObs.filter((o) => {
+      const taskData = o.data as Task;
+      return taskData.tags?.includes('completed');
+    });
 
     if (completedTasks.length > 0) {
       this.currentContext!.orientation.historicalContext.successPatterns.push(
@@ -700,7 +711,12 @@ export class OODALoopService extends Service {
 
     const errorObs = observations.filter((o) => o.type === ObservationType.ERROR_OCCURRED);
     if (errorObs.length > 0) {
-      const errorTypes = errorObs.map((o) => o.data.type).filter(Boolean);
+      const errorTypes = errorObs
+        .map((o) => {
+          const errorData = o.data as { type?: string };
+          return errorData.type;
+        })
+        .filter(Boolean);
       this.currentContext!.orientation.historicalContext.failurePatterns.push(
         `Encountered errors: ${errorTypes.join(', ')}`
       );
@@ -710,7 +726,10 @@ export class OODALoopService extends Service {
   private updateGoalPriorities(observations: Observation[]) {
     // Dynamically adjust goal priorities based on observations
     const taskObs = observations.filter((o) => o.type === ObservationType.TASK_STATUS);
-    const urgentTasks = taskObs.filter((o) => o.data.tags?.includes('urgent'));
+    const urgentTasks = taskObs.filter((o) => {
+      const taskData = o.data as Task;
+      return taskData.tags?.includes('urgent');
+    });
 
     if (urgentTasks.length > 0) {
       // Temporarily boost task completion goal
@@ -781,7 +800,7 @@ export class OODALoopService extends Service {
         prompt,
       });
 
-      this.logger.debug('Decision phase LLM response:', response);
+      this.logger.debug('Decision phase LLM response:', { response });
 
       // Parse XML response
       const parsedXml = parseKeyValueXml(response);
@@ -978,7 +997,7 @@ export class OODALoopService extends Service {
   }
 
   private async learnFromCycle(metrics: LoopMetrics): Promise<void> {
-    const learnings: any[] = [];
+    const learnings: Learning[] = [];
 
     // Learn from successful actions
     const successes = this.currentContext!.actions.filter(
@@ -987,15 +1006,25 @@ export class OODALoopService extends Service {
 
     for (const success of successes) {
       if (success.result) {
-        learnings.push({
-          id: generateId(),
+        const learning: Learning = {
+          id: asUUID(generateId()),
           timestamp: Date.now(),
-          situation: `Action ${success.actionName}`,
-          action: success.actionName,
+          context: {
+            goals: this.goals.map((g) => g.description),
+            environment: this.currentContext!.orientation.environmentalFactors.map(
+              (f) => f.description
+            ),
+            observations: this.currentContext!.observations.map((o) => `${o.type}: ${o.source}`),
+          },
           outcome: 'success',
-          lesson: `${success.actionName} succeeded with result`,
+          pattern: `${success.actionName} succeeded with expected results`,
           confidence: 0.8,
-        });
+          applicableConditions: [
+            `Action type: ${success.actionName}`,
+            `Resource usage: CPU ${success.resourcesUsed.cpuTime}ms`,
+          ],
+        };
+        learnings.push(learning);
       }
     }
 
@@ -1003,15 +1032,25 @@ export class OODALoopService extends Service {
     const failures = this.currentContext!.actions.filter((a) => a.status === ActionStatus.FAILED);
 
     for (const failure of failures) {
-      learnings.push({
-        id: generateId(),
+      const learning: Learning = {
+        id: asUUID(generateId()),
         timestamp: Date.now(),
-        situation: `Action ${failure.actionName}`,
-        action: failure.actionName,
+        context: {
+          goals: this.goals.map((g) => g.description),
+          environment: this.currentContext!.orientation.environmentalFactors.map(
+            (f) => f.description
+          ),
+          observations: this.currentContext!.observations.map((o) => `${o.type}: ${o.source}`),
+        },
         outcome: 'failure',
-        lesson: `${failure.actionName} failed: ${failure.error?.message || 'Unknown error'}`,
+        pattern: `${failure.actionName} failed: ${failure.error?.message || 'Unknown error'}`,
         confidence: 0.9,
-      });
+        applicableConditions: [
+          `Action type: ${failure.actionName}`,
+          `Error type: ${failure.error?.name || 'Unknown'}`,
+        ],
+      };
+      learnings.push(learning);
     }
 
     // Add learnings to historical context
@@ -1342,7 +1381,7 @@ export class OODALoopService extends Service {
         (m) =>
           m.content.text?.toLowerCase().includes('file') ||
           m.content.text?.toLowerCase().includes('report') ||
-          (m.content.data as any)?.filePath
+          (m.content.data as { filePath?: string })?.filePath
       );
 
       if (fileRelatedActivities.length > 0) {
@@ -1380,7 +1419,9 @@ export class OODALoopService extends Service {
       }
 
       const commandExecutions = recentMemories.filter(
-        (m) => (m.content.data as any)?.command || m.content.actions?.includes('EXECUTE_COMMAND')
+        (m) =>
+          (m.content.data as { command?: string })?.command ||
+          m.content.actions?.includes('EXECUTE_COMMAND')
       );
 
       if (commandExecutions.length > 0) {
@@ -1390,8 +1431,11 @@ export class OODALoopService extends Service {
           source: 'command_history',
           data: {
             recentCommands: commandExecutions.map((m) => ({
-              command: (m.content.data as any)?.command,
-              output: (m.content.data as any)?.output?.substring(0, 200),
+              command: (m.content.data as { command?: string; output?: string })?.command,
+              output: (m.content.data as { command?: string; output?: string })?.output?.substring(
+                0,
+                200
+              ),
               timestamp: m.createdAt,
             })),
           },
@@ -1410,12 +1454,14 @@ export class OODALoopService extends Service {
     const opportunities: string[] = [];
 
     // Check for web research opportunities
-    const hasQuestions = observations.some(
-      (o) =>
-        o.data?.text?.includes('?') ||
-        o.data?.text?.toLowerCase().includes('research') ||
-        o.data?.text?.toLowerCase().includes('find out')
-    );
+    const hasQuestions = observations.some((o) => {
+      const dataWithText = o.data as { text?: string };
+      return (
+        dataWithText.text?.includes('?') ||
+        dataWithText.text?.toLowerCase().includes('research') ||
+        dataWithText.text?.toLowerCase().includes('find out')
+      );
+    });
 
     if (hasQuestions) {
       opportunities.push('BROWSE_WEB: Research questions or gather information');
@@ -1424,12 +1470,14 @@ export class OODALoopService extends Service {
     }
 
     // Check for file creation opportunities
-    const needsDocumentation = observations.some(
-      (o) =>
-        o.data?.text?.toLowerCase().includes('document') ||
-        o.data?.text?.toLowerCase().includes('report') ||
-        o.data?.text?.toLowerCase().includes('save')
-    );
+    const needsDocumentation = observations.some((o) => {
+      const dataWithText = o.data as { text?: string };
+      return (
+        dataWithText.text?.toLowerCase().includes('document') ||
+        dataWithText.text?.toLowerCase().includes('report') ||
+        dataWithText.text?.toLowerCase().includes('save')
+      );
+    });
 
     if (needsDocumentation) {
       opportunities.push('FILE_OPERATION: Create documentation or reports');
@@ -1439,19 +1487,24 @@ export class OODALoopService extends Service {
 
     // Check for system monitoring opportunities
     const systemCheck = observations.find((o) => o.type === ObservationType.SYSTEM_STATE);
-    if (systemCheck && systemCheck.data.cpu > 70) {
-      opportunities.push('EXECUTE_COMMAND: Monitor system resources');
-      state.values.suggestedActions = state.values.suggestedActions || [];
-      state.values.suggestedActions.push('EXECUTE_COMMAND');
+    if (systemCheck) {
+      const systemData = systemCheck.data as { cpu?: number };
+      if (systemData.cpu && systemData.cpu > 70) {
+        opportunities.push('EXECUTE_COMMAND: Monitor system resources');
+        state.values.suggestedActions = state.values.suggestedActions || [];
+        state.values.suggestedActions.push('EXECUTE_COMMAND');
+      }
     }
 
     // Check for git opportunities
-    const hasCodeChanges = observations.some(
-      (o) =>
-        o.data?.text?.toLowerCase().includes('code') ||
-        o.data?.text?.toLowerCase().includes('repository') ||
-        o.data?.text?.toLowerCase().includes('commit')
-    );
+    const hasCodeChanges = observations.some((o) => {
+      const dataWithText = o.data as { text?: string };
+      return (
+        dataWithText.text?.toLowerCase().includes('code') ||
+        dataWithText.text?.toLowerCase().includes('repository') ||
+        dataWithText.text?.toLowerCase().includes('commit')
+      );
+    });
 
     if (hasCodeChanges) {
       opportunities.push('GIT_OPERATION: Manage code repository');
@@ -1460,12 +1513,14 @@ export class OODALoopService extends Service {
     }
 
     // Check for package management opportunities
-    const hasPackageNeeds = observations.some(
-      (o) =>
-        o.data?.text?.toLowerCase().includes('install') ||
-        o.data?.text?.toLowerCase().includes('package') ||
-        o.data?.text?.toLowerCase().includes('dependency')
-    );
+    const hasPackageNeeds = observations.some((o) => {
+      const dataWithText = o.data as { text?: string };
+      return (
+        dataWithText.text?.toLowerCase().includes('install') ||
+        dataWithText.text?.toLowerCase().includes('package') ||
+        dataWithText.text?.toLowerCase().includes('dependency')
+      );
+    });
 
     if (hasPackageNeeds) {
       opportunities.push('PACKAGE_MANAGEMENT: Manage dependencies');

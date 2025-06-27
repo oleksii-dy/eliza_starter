@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     const yamlPath = join(process.cwd(), 'lib', 'openapi-spec.yaml');
     const yamlContent = readFileSync(yamlPath, 'utf-8');
@@ -185,3 +186,5 @@ components:
     });
   }
 }
+
+export const { GET } = wrapHandlers({ handleGET });

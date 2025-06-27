@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { anonymousSessionRepo } from '@/lib/database/repositories/anonymous-session';
 import type { MigrationResult } from '@/lib/database/repositories/anonymous-session';
 
@@ -8,7 +9,7 @@ interface MigrationRequest {
   userEmail: string;
 }
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const body: MigrationRequest = await request.json();
     const { sessionId, userId, userEmail } = body;
@@ -37,7 +38,7 @@ export async function handlePOST(request: NextRequest) {
 }
 
 // Endpoint to get session statistics
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     const stats = await anonymousSessionRepo.getSessionStats();
     return NextResponse.json({ success: true, stats });
@@ -49,3 +50,5 @@ export async function handleGET(request: NextRequest) {
     );
   }
 }
+
+export const { POST, GET } = wrapHandlers({ handlePOST, handleGET });

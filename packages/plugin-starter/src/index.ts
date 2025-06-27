@@ -16,7 +16,96 @@ import {
   logger,
 } from '@elizaos/core';
 import { z } from 'zod';
-import { StarterPluginTestSuite } from './tests';
+// Direct inline test suite to avoid import issues
+const StarterPluginTestSuite = {
+  name: 'plugin_starter_test_suite',
+  description: 'E2E tests for the starter plugin',
+  tests: [
+    {
+      name: 'example_test',
+      fn: async (runtime: any) => {
+        if (runtime.character.name !== 'Eliza') {
+          throw new Error(
+            `Expected character name to be "Eliza" but got "${runtime.character.name}"`
+          );
+        }
+        if (!runtime.getService) {
+          throw new Error('Runtime does not have getService method');
+        }
+        let service =
+          runtime.getService('starter') ||
+          runtime.getService('_StarterService') ||
+          runtime.getService('StarterService');
+        if (!service && runtime.getAllServices) {
+          const allServices = runtime.getAllServices();
+          for (const [key, svc] of Object.entries(allServices || {})) {
+            if (key.toLowerCase().includes('starter')) {
+              service = svc;
+              break;
+            }
+          }
+        }
+        if (!service) {
+          const serviceList = runtime.getAllServices
+            ? Object.keys(runtime.getAllServices() || {})
+            : [];
+          throw new Error(
+            `Starter service not found. Available services: ${serviceList.join(', ') || 'none'}`
+          );
+        }
+      },
+    },
+    {
+      name: 'should_have_hello_world_action',
+      fn: async (runtime: any) => {
+        const actionExists = runtime.actions?.some((a: any) => a.name === 'HELLO_WORLD');
+        if (!actionExists) {
+          throw new Error('Hello world action not found in runtime actions');
+        }
+      },
+    },
+    {
+      name: 'hello_world_action_test',
+      fn: async (runtime: any) => {
+        const testMessage = {
+          entityId: '12345678-1234-1234-1234-123456789012',
+          roomId: '12345678-1234-1234-1234-123456789012',
+          content: {
+            text: 'Can you say hello?',
+            source: 'test',
+            actions: ['HELLO_WORLD'],
+          },
+        };
+        const testState = {
+          values: {},
+          data: {},
+          text: '',
+        };
+        let responseText = '';
+        let responseReceived = false;
+        const helloWorldAction = runtime.actions?.find((a: any) => a.name === 'HELLO_WORLD');
+        if (!helloWorldAction) {
+          throw new Error('Hello world action not found in runtime actions');
+        }
+        const callback = async (response: any) => {
+          responseReceived = true;
+          responseText = response.text || '';
+          if (!response.actions?.includes('HELLO_WORLD')) {
+            throw new Error('Response did not include HELLO_WORLD action');
+          }
+          return Promise.resolve([]);
+        };
+        await helloWorldAction.handler(runtime, testMessage, testState, {}, callback);
+        if (!responseReceived) {
+          throw new Error('Hello world action did not produce a response');
+        }
+        if (!responseText.toLowerCase().includes('hello world')) {
+          throw new Error(`Expected response to contain "hello world" but got: "${responseText}"`);
+        }
+      },
+    },
+  ],
+};
 
 /**
  * Defines the configuration schema for a plugin, including the validation rules for the plugin name.
@@ -286,28 +375,28 @@ export const starterPlugin: Plugin = {
       async (params) => {
         logger.debug('MESSAGE_RECEIVED event received');
         // print the keys
-        logger.debug(Object.keys(params));
+        logger.debug(`Event keys: ${Object.keys(params).join(', ')}`);
       },
     ],
     VOICE_MESSAGE_RECEIVED: [
       async (params) => {
         logger.debug('VOICE_MESSAGE_RECEIVED event received');
         // print the keys
-        logger.debug(Object.keys(params));
+        logger.debug(`Event keys: ${Object.keys(params).join(', ')}`);
       },
     ],
     WORLD_CONNECTED: [
       async (params) => {
         logger.debug('WORLD_CONNECTED event received');
         // print the keys
-        logger.debug(Object.keys(params));
+        logger.debug(`Event keys: ${Object.keys(params).join(', ')}`);
       },
     ],
     WORLD_JOINED: [
       async (params) => {
         logger.debug('WORLD_JOINED event received');
         // print the keys
-        logger.debug(Object.keys(params));
+        logger.debug(`Event keys: ${Object.keys(params).join(', ')}`);
       },
     ],
   },

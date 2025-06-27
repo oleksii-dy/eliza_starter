@@ -9,8 +9,8 @@ import {
   type State,
   logger,
 } from '@elizaos/core';
-import { AgentDiscoveryService } from '../services/AgentDiscoveryService.js';
-import { MidnightNetworkError } from '../types/index.js';
+import { AgentDiscoveryService } from '../services/AgentDiscoveryService';
+import { MidnightNetworkError } from '../types/index';
 
 export const discoverAgentsAction: Action = {
   name: 'DISCOVER_AGENTS',

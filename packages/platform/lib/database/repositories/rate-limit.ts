@@ -140,7 +140,7 @@ export class RateLimitRepository {
       .where(eq(rateLimits.limitKey, limitKey))
       .limit(1);
 
-    if (!existing) return null;
+    if (!existing) {return null;}
 
     const now = new Date();
 

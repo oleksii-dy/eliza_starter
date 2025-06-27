@@ -8,7 +8,7 @@ import {
 } from '@elizaos/core';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { sql } from 'drizzle-orm';
-import pgvector from 'pgvector';
+import * as pgvector from 'pgvector';
 import { BaseDrizzleAdapter } from '../base.js';
 import { DIMENSION_MAP, type EmbeddingDimensionColumn } from '../schema/embedding.js';
 import type { PgManager } from './manager.js';

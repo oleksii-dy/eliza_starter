@@ -11,14 +11,14 @@ import {
   type Content,
   type AgentRuntime,
 } from '@elizaos/core';
-import { PgDatabaseAdapter } from '../../pg/adapter';
+
 import { PgAdapter } from '../../pg/adapter';
 
 // Set test environment flag
 process.env.ELIZA_TESTING_PLUGIN = 'true';
 
 describe('Base Adapter Methods Integration Tests', () => {
-  let adapter: PgAdapter | PgDatabaseAdapter;
+  let adapter: PgAdapter;
   let runtime: AgentRuntime;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;
@@ -41,7 +41,7 @@ describe('Base Adapter Methods Integration Tests', () => {
         metadata: { type: 'test' },
       },
     ]);
-  }, 30000);
+  });
 
   afterAll(async () => {
     if (cleanup) {
@@ -231,7 +231,7 @@ describe('Base Adapter Methods Integration Tests', () => {
         agentId: testAgentId,
       });
       expect(retrieved.length).toBe(1);
-      expect(retrieved[0]?.id).toBe(entity.id);
+      expect(retrieved[0]?.id).toBe(entity.id!);
       expect(retrieved[0]?.metadata?.version).toBe(2);
     });
 

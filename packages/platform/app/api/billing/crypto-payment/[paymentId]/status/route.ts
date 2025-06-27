@@ -4,10 +4,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { sessionService } from '@/lib/auth/session';
 import { CryptoPaymentVerifier } from '@/lib/billing/crypto-payment-verifier';
 
-export async function handleGET(
+async function handleGET(
   request: NextRequest,
   { params }: { params: Promise<{ paymentId: string }> },
 ) {
@@ -35,3 +36,5 @@ export async function handleGET(
     );
   }
 }
+
+export const { GET } = wrapHandlers({ handleGET });

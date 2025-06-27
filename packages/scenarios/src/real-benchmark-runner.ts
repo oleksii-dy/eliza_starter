@@ -45,7 +45,7 @@ if (existsSync(envPath)) {
 }
 
 import { IAgentRuntime, Character, Plugin, Memory, UUID } from '@elizaos/core';
-import { RuntimeTestHarness } from '@elizaos/core/test-utils';
+import { RuntimeTestHarness } from './runtime-test-harness.js';
 import { loadAllScenarios } from './scenarios-loader.js';
 import type { Scenario } from './types.js';
 import { v4 as uuidv4 } from 'uuid';
@@ -310,41 +310,99 @@ export class RealBenchmarkRunner {
     process.env.NODE_ENV = 'test';
     process.env.ELIZA_ENV = 'test';
 
-    for (const actor of scenario.actors) {
-      // Create REAL character configuration
-      const character: Character = {
-        name: actor.name,
-        bio: [actor.bio || 'A test agent for benchmarking'],
-        system: actor.system || 'You are a helpful assistant.',
-        plugins: actor.plugins || [],
-        settings: {
-          ...this.options.apiKeys,
-          model: 'gpt-4',
-          temperature: 0.7,
-        },
-        messageExamples: [],
-        postExamples: [],
-        topics: ['testing'],
-        knowledge: [],
-      };
+    // Check if this is a payment scenario
+    const isPaymentScenario = scenario.category === 'payment' || 
+                            scenario.name.toLowerCase().includes('payment') ||
+                            scenario.actors.some(a => a.plugins?.includes('@elizaos/plugin-payment'));
 
-      // Let RuntimeTestHarness handle plugin loading
-      const runtimeConfig = {
-        character,
-        plugins: actor.plugins || [],
-        apiKeys: this.options.apiKeys,
-      };
+    // Use PaymentTestHarness for payment scenarios
+    if (isPaymentScenario) {
+      const { PaymentTestHarness } = await import('./payment-test-harness.js');
+      const paymentHarness = new PaymentTestHarness();
+      
+      console.log(chalk.blue('💳 Using PaymentTestHarness for payment scenario'));
 
-      const runtime = await this.testHarness.createTestRuntime(runtimeConfig);
+      for (const actor of scenario.actors) {
+        // Create REAL character configuration
+        const character: Character = {
+          name: actor.name,
+          bio: [actor.bio || 'A test agent for benchmarking'],
+          system: actor.system || 'You are a helpful assistant.',
+          plugins: actor.plugins || [],
+          settings: {
+            ...this.options.apiKeys,
+            model: 'gpt-4',
+            temperature: 0.7,
+          },
+          messageExamples: [],
+          postExamples: [],
+          topics: ['testing'],
+          knowledge: [],
+        };
 
-      runtimes.set(actor.id, runtime);
-      this.activeRuntimes.set(actor.id, runtime);
+        try {
+          const { runtime, cleanup } = await paymentHarness.createTestRuntime({
+            character,
+            plugins: actor.plugins || [],
+            apiKeys: this.options.apiKeys,
+          });
 
-      console.log(
-        chalk.blue(
-          `🤖 Created REAL runtime for ${actor.name} with plugins: ${(actor.plugins || []).join(', ') || 'none'}`
-        )
-      );
+          // Create mock payment state for test users
+          if (actor.role === 'assistant' || actor.role === 'observer') {
+            await paymentHarness.createMockPaymentState(runtime, actor.id, 3); // Low balance user
+          }
+
+          runtimes.set(actor.id, runtime);
+          this.activeRuntimes.set(actor.id, runtime);
+
+          console.log(
+            chalk.blue(
+              `🤖 Created REAL runtime for ${actor.name} with plugins: ${(actor.plugins || []).join(', ') || 'none'}`
+            )
+          );
+        } catch (error) {
+          console.error(chalk.red(`Failed to create runtime for ${actor.name}:`), error);
+          throw error;
+        }
+      }
+    } else {
+      // Use standard RuntimeTestHarness for non-payment scenarios
+      for (const actor of scenario.actors) {
+        // Create REAL character configuration
+        const character: Character = {
+          name: actor.name,
+          bio: [actor.bio || 'A test agent for benchmarking'],
+          system: actor.system || 'You are a helpful assistant.',
+          plugins: actor.plugins || [],
+          settings: {
+            ...this.options.apiKeys,
+            model: 'gpt-4',
+            temperature: 0.7,
+          },
+          messageExamples: [],
+          postExamples: [],
+          topics: ['testing'],
+          knowledge: [],
+        };
+
+        // Let RuntimeTestHarness handle plugin loading
+        const runtimeConfig = {
+          character,
+          plugins: actor.plugins || [],
+          apiKeys: this.options.apiKeys,
+        };
+
+        const runtime = await this.testHarness.createTestRuntime(runtimeConfig);
+
+        runtimes.set(actor.id, runtime);
+        this.activeRuntimes.set(actor.id, runtime);
+
+        console.log(
+          chalk.blue(
+            `🤖 Created REAL runtime for ${actor.name} with plugins: ${(actor.plugins || []).join(', ') || 'none'}`
+          )
+        );
+      }
     }
 
     return runtimes;
@@ -355,6 +413,9 @@ export class RealBenchmarkRunner {
     runtimes: Map<string, IAgentRuntime>,
     result: RealBenchmarkResult
   ): Promise<void> {
+    // Create a shared room for all agents to communicate in
+    const sharedRoomId = uuidv4() as UUID;
+    
     // Execute REAL conversation with REAL message processing
     for (const actor of scenario.actors) {
       const runtime = runtimes.get(actor.id);
@@ -362,19 +423,38 @@ export class RealBenchmarkRunner {
 
       for (const step of actor.script.steps) {
         if (step.type === 'message' && step.content) {
+          // Find the target runtime - if actor has role 'assistant' or 'user', 
+          // send to the subject agent
+          let targetRuntime = runtime;
+          let targetActor = actor;
+          
+          if (actor.role === 'assistant' || (actor.role as string) === 'user') {
+            // Find the subject agent to send the message to
+            const subjectActor = scenario.actors.find(a => a.role === 'subject');
+            if (subjectActor) {
+              const subjectRuntime = runtimes.get(subjectActor.id);
+              if (subjectRuntime) {
+                targetRuntime = subjectRuntime;
+                targetActor = subjectActor;
+              }
+            }
+          }
+          
+          if (!targetRuntime) continue;
+
           const message: Memory = {
             id: uuidv4() as UUID,
-            agentId: runtime.agentId,
-            roomId: uuidv4() as UUID,
+            agentId: targetRuntime.agentId,
+            roomId: sharedRoomId,
             content: { text: step.content },
-            entityId: runtime.agentId,
+            entityId: uuidv4() as UUID, // Create a unique entity ID for the sender
           };
 
           console.log(chalk.cyan(`📨 REAL message: ${actor.name}: ${step.content}`));
 
           // Process with REAL agent runtime
           const startTime = Date.now();
-          const response = await runtime.processMessage(message);
+          await targetRuntime.processMessage(message);
           const responseTime = Date.now() - startTime;
 
           // Track REAL metrics
@@ -391,17 +471,70 @@ export class RealBenchmarkRunner {
             },
           });
 
-          // Check if any actions were triggered
-          const memories = await runtime.getMemories({
-            roomId: message.roomId,
-            count: 10,
-            tableName: 'messages',
-          });
-          result.metrics.realMemoriesCreated += memories.length;
+          // Wait for agent to process and respond (with timeout)
+          let agentResponse = null;
+          let retries = 0;
+          const maxRetries = 30; // 30 seconds max wait
+          
+          while (!agentResponse && retries < maxRetries) {
+            await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second
+            
+            // Check if any actions were triggered
+            const memories = await targetRuntime.getMemories({
+              roomId: sharedRoomId,
+              count: 10,
+              tableName: 'messages',
+            });
+            
+            // Look for agent's response
+            agentResponse = memories.find(m => 
+              m.entityId === targetRuntime.agentId && 
+              m.id !== message.id &&
+              m.content.text && 
+              m.createdAt && m.createdAt > startTime
+            );
+            
+            if (agentResponse) {
+              result.metrics.realMemoriesCreated = memories.length;
+              
+              // Check if actions were triggered
+              if (agentResponse.content.actions && agentResponse.content.actions.length > 0) {
+                result.metrics.realActionsExecuted += agentResponse.content.actions.length;
+                const actionsTriggered = agentResponse.content.actions.join(', ');
+                if (result.transcript[result.transcript.length - 1]) {
+                  result.transcript[result.transcript.length - 1].metadata.actionTriggered = actionsTriggered;
+                }
+              }
+              
+              // Add agent response to transcript
+              result.transcript.push({
+                timestamp: Date.now(),
+                actorId: targetActor.id,
+                message: agentResponse.content.text || '',
+                metadata: {
+                  tokens: this.estimateTokens(agentResponse.content.text || ''),
+                  actionTriggered: agentResponse.content.actions?.join(', '),
+                },
+              });
+              
+              console.log(chalk.green(`🤖 Agent responded: ${(agentResponse.content.text || '').substring(0, 100)}...`));
+              if (agentResponse.content.actions && agentResponse.content.actions.length > 0) {
+                console.log(chalk.yellow(`   🎯 Actions triggered: ${agentResponse.content.actions.join(', ')}`));
+              }
+            }
+            
+            retries++;
+          }
+          
+          if (!agentResponse) {
+            console.log(chalk.yellow(`   ⚠️  No response from agent after ${maxRetries} seconds`));
+          }
 
           if (step.waitTime) {
             await new Promise((resolve) => setTimeout(resolve, step.waitTime));
           }
+        } else if (step.type === 'wait' && step.waitTime) {
+          await new Promise((resolve) => setTimeout(resolve, step.waitTime));
         }
       }
     }
@@ -419,6 +552,12 @@ export class RealBenchmarkRunner {
 
     // Use REAL LLM to evaluate the scenario results
     const transcriptText = result.transcript.map((t) => `${t.actorId}: ${t.message}`).join('\n');
+    
+    // Check if any actions were triggered
+    const actionsTriggered = result.transcript
+      .filter(t => t.metadata.actionTriggered)
+      .map(t => t.metadata.actionTriggered)
+      .filter(Boolean);
 
     const evaluationPrompt = `
 Evaluate this agent conversation benchmark:
@@ -429,12 +568,18 @@ Description: ${scenario.description}
 Transcript:
 ${transcriptText}
 
+Actions Triggered: ${actionsTriggered.length > 0 ? actionsTriggered.join(', ') : 'None'}
+
 Evaluation Criteria:
 ${scenario.verification.rules.map((r) => `- ${r.description}: ${r.config.criteria}`).join('\n')}
 
+Additional Context:
+- Total actions executed: ${result.metrics.realActionsExecuted}
+- Messages exchanged: ${result.transcript.length}
+
 Rate the following on a scale of 0.0 to 1.0:
 1. Response Quality: How relevant and helpful were the agent responses?
-2. Functional Correctness: Did the agents perform the expected tasks?
+2. Functional Correctness: Did the agents perform the expected tasks using the appropriate actions/plugins?
 3. Real-World Accuracy: Would this work in a real application?
 
 Respond with a JSON object:

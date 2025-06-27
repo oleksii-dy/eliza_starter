@@ -21,13 +21,7 @@ export const hyperfyUnuseItemAction: Action = {
     const world = service?.getWorld();
     return !!service && service.isConnected() && !!world?.actions;
   },
-  handler: async (
-    runtime: IAgentRuntime,
-    _message: Memory,
-    _state?: State,
-    _options?: {},
-    callback?: HandlerCallback
-  ): Promise<ActionResult> => {
+  handler: async (runtime: IAgentRuntime, _message: Memory, _state?: State, _options?: {}, callback?: HandlerCallback): Promise<ActionResult> => {
     const service = runtime.getService<HyperfyService>(HyperfyService.serviceName);
     const world = service?.getWorld();
     const actions = world?.actions as unknown as AgentActions | undefined;

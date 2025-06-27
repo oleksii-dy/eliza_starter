@@ -22,7 +22,7 @@ export function useAuth(): AuthState & {
     currentPassword: string,
     newPassword: string,
   ) => Promise<{ success: boolean; error?: string }>;
-} {
+  } {
   const [authState, setAuthState] = useState<AuthState>(auth.getAuthState());
 
   useEffect(() => {

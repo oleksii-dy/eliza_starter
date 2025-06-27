@@ -4,20 +4,28 @@
  */
 
 import { config } from 'dotenv';
-import path from 'path';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Load test environment variables
-const testEnvPath = path.resolve(process.cwd(), '.env.test');
+const testEnvPath = resolve(__dirname, '../../.env.test');
 config({ path: testEnvPath });
 
 // Load development environment as fallback
-const devEnvPath = path.resolve(process.cwd(), '.env.local');
+const devEnvPath = resolve(__dirname, '../../.env.local');
 config({ path: devEnvPath });
 
 // Runtime test environment defaults
 const runtimeTestDefaults = {
   NODE_ENV: 'test',
   RUNTIME_TEST_MODE: 'true',
+
+  // Authentication
+  JWT_SECRET: process.env.JWT_SECRET || 'test-jwt-secret-key-for-testing',
+  WORKOS_API_KEY: process.env.WORKOS_API_KEY || 'test-workos-api-key',
 
   // Database
   DATABASE_URL:
@@ -155,7 +163,7 @@ export const runtimeTestConfig = {
     url: process.env.NEXT_PUBLIC_APP_URL!,
   },
   test: {
-    timeout: parseInt(process.env.JEST_TIMEOUT || '60000'),
+    timeout: parseInt(process.env.JEST_TIMEOUT || '60000', 10),
     parallel: process.env.TEST_PARALLEL === 'true',
     verbose: process.env.VERBOSE_TESTS === 'true',
     isolation: process.env.RUNTIME_ISOLATION === 'true',

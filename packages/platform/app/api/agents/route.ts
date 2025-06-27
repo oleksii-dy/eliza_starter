@@ -32,8 +32,8 @@ async function handleGET(request: NextRequest) {
 
     // Parse query parameters
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const limit = parseInt(searchParams.get('limit') || '50', 10);
+    const offset = parseInt(searchParams.get('offset') || '0', 10);
     const search = searchParams.get('search') || undefined;
     const status = searchParams.get('status') || undefined;
     const visibility = searchParams.get('visibility') || undefined;

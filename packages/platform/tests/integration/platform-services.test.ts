@@ -10,7 +10,7 @@ import {
   beforeAll,
   afterAll,
   beforeEach,
-} from '@jest/globals';
+} from 'vitest';
 import { v4 as uuidv4 } from 'uuid';
 
 // Mock the database and services for testing

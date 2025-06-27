@@ -9,13 +9,13 @@ import {
 } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
-import { PgDatabaseAdapter } from '../../pg/adapter';
+
 import { PgAdapter } from '../../pg/adapter';
 import { tasksTable } from '../../schema';
 import { createIsolatedTestDatabase } from '../test-helpers';
 
 describe('Task Integration Tests', () => {
-  let adapter: PgAdapter | PgDatabaseAdapter;
+  let adapter: PgAdapter;
   let runtime: AgentRuntime;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;
@@ -61,7 +61,7 @@ describe('Task Integration Tests', () => {
     ]);
 
     await adapter.addParticipant(testEntityId, testRoomId);
-  }, 30000);
+  });
 
   afterAll(async () => {
     if (cleanup) {
@@ -196,7 +196,7 @@ describe('Task Integration Tests', () => {
 
       const filteredTasks = await adapter.getTasks({ roomId: roomId1, tags: ['urgent'] });
       expect(filteredTasks.length).toBe(1);
-      expect(filteredTasks[0].id).toBe(task1.id);
+      expect(filteredTasks[0].id).toBe(task1.id!);
     });
   });
 });

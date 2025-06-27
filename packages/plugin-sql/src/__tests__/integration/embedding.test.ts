@@ -9,14 +9,14 @@ import {
 } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
-import { PgDatabaseAdapter } from '../../pg/adapter';
+
 import { PgAdapter } from '../../pg/adapter';
 import { embeddingTable, memoryTable } from '../../schema';
 import { createIsolatedTestDatabase } from '../test-helpers';
 import { sql } from 'drizzle-orm';
 
 describe('Embedding Integration Tests', () => {
-  let adapter: PgAdapter | PgDatabaseAdapter;
+  let adapter: PgAdapter;
   let runtime: AgentRuntime;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;

@@ -80,8 +80,8 @@ describe('/api/characters/[id] - Large Character File Tests', () => {
         .map(
           (_, i) =>
             `Updated knowledge item ${i} with substantial content that makes it larger. ` +
-            `Adding more text to reach the target size for testing large character file updates. ` +
-            `This should be enough content to make each knowledge item fairly substantial.`,
+            'Adding more text to reach the target size for testing large character file updates. ' +
+            'This should be enough content to make each knowledge item fairly substantial.',
         );
 
       const largeMessageExamples = Array(500)
@@ -180,9 +180,9 @@ describe('/api/characters/[id] - Large Character File Tests', () => {
         .map(
           (_, i) =>
             `Extremely large knowledge item ${i} with very substantial content that makes it much larger. ` +
-            `Adding even more text to reach a very large target size for testing extremely large character file updates. ` +
-            `This should be enough content to make each knowledge item extremely substantial and comprehensive. ` +
-            `Additional padding text to increase the overall payload size significantly for stress testing purposes.`,
+            'Adding even more text to reach a very large target size for testing extremely large character file updates. ' +
+            'This should be enough content to make each knowledge item extremely substantial and comprehensive. ' +
+            'Additional padding text to increase the overall payload size significantly for stress testing purposes.',
         );
 
       const extremelyLargeMessageExamples = Array(800)

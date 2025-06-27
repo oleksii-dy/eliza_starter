@@ -140,7 +140,6 @@ class DemoBatchGeneration {
         this.updateSummary(results.summary, itemResults)
         
         if (CONFIG.ENABLE_VISUALIZATIONS) {
-          await this.generateItemVisualizationsOT.ENABLE_VISUALIZATIONS) {
           await this.generateItemVisualizations(itemResults)
         }
       }

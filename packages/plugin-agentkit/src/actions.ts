@@ -6,7 +6,7 @@ import {
   type Memory,
   type State,
   type ActionExample,
-} from './types/core';
+} from '@elizaos/core';
 
 import type { AgentKitService } from './services/AgentKitService';
 

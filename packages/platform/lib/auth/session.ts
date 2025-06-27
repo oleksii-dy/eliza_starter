@@ -695,7 +695,7 @@ export class AuthService {
     const user = await this.userRepo.getCurrent();
     await clearDatabaseContext();
 
-    if (!user) return null;
+    if (!user) {return null;}
 
     // Transform user to match expected type
     return {

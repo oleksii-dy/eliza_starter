@@ -824,7 +824,7 @@ export class GenerationQueueService extends EventEmitter {
     timeoutMs: number,
   ): Promise<void> {
     const worker = this.workers.get(workerId);
-    if (!worker) return;
+    if (!worker) {return;}
 
     const startTime = Date.now();
 

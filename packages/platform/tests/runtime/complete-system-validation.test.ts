@@ -3,11 +3,11 @@
  * End-to-end tests that validate the entire platform with real data flows
  */
 
-import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
+import { describe, test, expect, beforeAll, afterAll, vi } from 'vitest';
 
 // Mock HTTP responses for API testing
-const mockFetch = jest.fn() as any;
-mockFetch.preconnect = jest.fn();
+const mockFetch = vi.fn() as any;
+mockFetch.preconnect = vi.fn();
 global.fetch = mockFetch;
 
 // Mock realistic API responses

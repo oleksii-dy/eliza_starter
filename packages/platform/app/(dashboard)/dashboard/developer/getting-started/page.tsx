@@ -1,6 +1,6 @@
 /**
  * Developer Getting Started Page
- * 
+ *
  * Provides a comprehensive onboarding experience for new developers
  * using the ElizaOS Platform, including tutorials, examples, and setup guides.
  */
@@ -13,12 +13,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { 
-  CheckCircle, 
-  Circle, 
-  BookOpen, 
-  Code, 
-  Terminal, 
+import {
+  CheckCircle,
+  Circle,
+  BookOpen,
+  Code,
+  Terminal,
   Rocket,
   Download,
   ExternalLink,
@@ -308,7 +308,7 @@ class CustomMemoryManager extends MemoryManager {
         <p className="text-xl text-gray-600 mb-6">
           Welcome to ElizaOS! This guide will help you get started building AI agents and plugins.
         </p>
-        
+
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-blue-900">Your Progress</h3>
@@ -340,7 +340,7 @@ class CustomMemoryManager extends MemoryManager {
               <p className="text-gray-600">
                 Get up and running with ElizaOS in just a few minutes. Follow these commands to create your first agent.
               </p>
-              
+
               <div className="space-y-4">
                 {quickStartCommands.map((cmd, index) => (
                   <div key={index} className="border rounded-lg p-4">
@@ -395,13 +395,13 @@ class CustomMemoryManager extends MemoryManager {
                         <div
                           key={step.id}
                           className={`flex items-center gap-3 p-4 rounded-lg border transition-colors ${
-                            completedSteps.has(step.id) 
-                              ? 'bg-green-50 border-green-200' 
+                            completedSteps.has(step.id)
+                              ? 'bg-green-50 border-green-200'
                               : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
                           }`}
                           data-cy={`step-${step.id}`}
                         >
-                          <button 
+                          <button
                             onClick={() => toggleStep(step.id)}
                             className="flex-shrink-0"
                           >
@@ -411,7 +411,7 @@ class CustomMemoryManager extends MemoryManager {
                               <Circle className="w-6 h-6 text-gray-400" />
                             )}
                           </button>
-                          
+
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                               <h4 className="font-semibold text-gray-900">{step.title}</h4>
@@ -450,7 +450,7 @@ class CustomMemoryManager extends MemoryManager {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <p className="text-gray-600">{example.description}</p>
-                  
+
                   <div className="flex flex-wrap gap-2">
                     {example.tags.map(tag => (
                       <Badge key={tag} variant="outline" className="text-xs">
@@ -504,8 +504,8 @@ class CustomMemoryManager extends MemoryManager {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <a 
-                  href="/docs/api" 
+                <a
+                  href="/docs/api"
                   className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors"
                   data-cy="api-docs-link"
                 >
@@ -515,9 +515,9 @@ class CustomMemoryManager extends MemoryManager {
                   </div>
                   <ExternalLink className="w-4 h-4 text-gray-400" />
                 </a>
-                
-                <a 
-                  href="/docs/guides" 
+
+                <a
+                  href="/docs/guides"
                   className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors"
                 >
                   <div>
@@ -526,9 +526,9 @@ class CustomMemoryManager extends MemoryManager {
                   </div>
                   <ExternalLink className="w-4 h-4 text-gray-400" />
                 </a>
-                
-                <a 
-                  href="/docs/plugins" 
+
+                <a
+                  href="/docs/plugins"
                   className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors"
                 >
                   <div>
@@ -548,8 +548,8 @@ class CustomMemoryManager extends MemoryManager {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <a 
-                  href="https://github.com/elizaos/eliza" 
+                <a
+                  href="https://github.com/elizaos/eliza"
                   className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -561,9 +561,9 @@ class CustomMemoryManager extends MemoryManager {
                   </div>
                   <ExternalLink className="w-4 h-4 text-gray-400" />
                 </a>
-                
-                <a 
-                  href="https://discord.gg/elizaos" 
+
+                <a
+                  href="https://discord.gg/elizaos"
                   className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -574,9 +574,9 @@ class CustomMemoryManager extends MemoryManager {
                   </div>
                   <ExternalLink className="w-4 h-4 text-gray-400" />
                 </a>
-                
-                <a 
-                  href="/examples" 
+
+                <a
+                  href="/examples"
                   className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors"
                 >
                   <div>
@@ -601,7 +601,7 @@ class CustomMemoryManager extends MemoryManager {
                   <p className="text-sm text-gray-600 mb-2">Command-line interface for agent management</p>
                   <code className="text-xs bg-gray-100 px-2 py-1 rounded">npm install -g @elizaos/cli</code>
                 </div>
-                
+
                 <div className="p-3 rounded-lg border">
                   <h4 className="font-semibold">VS Code Extension</h4>
                   <p className="text-sm text-gray-600 mb-2">Syntax highlighting and debugging support</p>
@@ -628,7 +628,7 @@ class CustomMemoryManager extends MemoryManager {
                     Contact Support
                   </Button>
                 </div>
-                
+
                 <div className="p-3 rounded-lg border">
                   <h4 className="font-semibold">Bug Reports</h4>
                   <p className="text-sm text-gray-600 mb-2">Report bugs and request features</p>

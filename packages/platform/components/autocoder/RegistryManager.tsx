@@ -178,7 +178,7 @@ export function RegistryManager({ project, userId }: RegistryManagerProps) {
   };
 
   const unpublishFromRegistry = async () => {
-    if (!registryEntry) return;
+    if (!registryEntry) {return;}
 
     try {
       await fetch(`/api/registry/plugins/${registryEntry.id}`, {

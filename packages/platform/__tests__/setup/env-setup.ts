@@ -4,19 +4,27 @@
  */
 
 import { config } from 'dotenv';
-import path from 'path';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Load environment variables from .env.test if it exists
-const testEnvPath = path.resolve(process.cwd(), '.env.test');
+const testEnvPath = resolve(__dirname, '../../.env.test');
 config({ path: testEnvPath });
 
 // Load environment variables from .env.local as fallback
-const localEnvPath = path.resolve(process.cwd(), '.env.local');
+const localEnvPath = resolve(__dirname, '../../.env.local');
 config({ path: localEnvPath });
 
 // Set default test environment variables
 const testDefaults = {
   NODE_ENV: 'test',
+
+  // Authentication
+  JWT_SECRET: process.env.JWT_SECRET || 'test-jwt-secret-key-for-testing',
+  WORKOS_API_KEY: process.env.WORKOS_API_KEY || 'test-workos-api-key',
 
   // Database
   DATABASE_URL:
@@ -126,7 +134,7 @@ export const testConfig = {
     url: process.env.NEXT_PUBLIC_APP_URL!,
   },
   test: {
-    timeout: parseInt(process.env.JEST_TIMEOUT || '30000'),
+    timeout: parseInt(process.env.JEST_TIMEOUT || '30000', 10),
     parallel: process.env.TEST_PARALLEL === 'true',
     verbose: process.env.VERBOSE_TESTS === 'true',
   },

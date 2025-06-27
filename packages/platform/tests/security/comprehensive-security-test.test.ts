@@ -3,7 +3,7 @@
  * Tests security vulnerabilities, authentication, authorization, and data protection
  */
 
-import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, test, expect, beforeEach, afterEach } from 'vitest';
 import { authenticateUser } from '../../lib/server/auth/session';
 import { createTokenPair } from '../../lib/server/utils/jwt';
 import {

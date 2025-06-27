@@ -3,7 +3,7 @@
  * Real integration tests using actual ElizaOS runtime
  */
 
-import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
+import { describe, test, expect, beforeAll, afterAll } from 'vitest';
 import { agentService } from '../../lib/agents/service';
 import {
   getCreditBalance,

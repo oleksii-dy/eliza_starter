@@ -216,7 +216,7 @@ async function main() {
     if (arg === '--character' && args[i + 1]) {
       options.characterPath = args[++i];
     } else if (arg === '--port' && args[i + 1]) {
-      options.port = parseInt(args[++i]);
+      options.port = parseInt(args[++i], 10);
     } else if (arg === '--host' && args[i + 1]) {
       options.host = args[++i];
     } else if (arg === '--help') {

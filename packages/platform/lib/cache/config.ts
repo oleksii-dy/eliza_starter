@@ -1,6 +1,6 @@
 /**
  * Cache Configuration Module
- * 
+ *
  * Provides configuration utilities for cache adapters and manages
  * environment-specific cache settings and adapter selection.
  */
@@ -14,7 +14,7 @@ import { RedisConfig } from './adapters/redis';
 export interface CacheEnvironmentConfig {
   // Adapter selection
   adapter: 'redis' | 'database' | 'auto';
-  
+
   // Redis configuration
   redis?: {
     url?: string;
@@ -29,13 +29,13 @@ export interface CacheEnvironmentConfig {
       nodes?: Array<{ host: string; port: number }>;
     };
   };
-  
+
   // Database configuration
   database?: {
     tableName?: string;
     cleanupInterval?: number;
   };
-  
+
   // Performance settings
   performance?: {
     defaultTTL?: number;
@@ -43,7 +43,7 @@ export interface CacheEnvironmentConfig {
     enableCompression?: boolean;
     enableSerialization?: boolean;
   };
-  
+
   // Development settings
   development?: {
     enableDebugLogging?: boolean;
@@ -138,7 +138,7 @@ export class CacheConfigFactory {
    */
   private static determineAdapter(): 'redis' | 'database' | 'auto' {
     const configuredAdapter = process.env.CACHE_ADAPTER;
-    
+
     if (configuredAdapter === 'redis' || configuredAdapter === 'database') {
       return configuredAdapter;
     }
@@ -164,18 +164,18 @@ export class CacheConfigFactory {
    */
   private static shouldUseRedis(): boolean {
     const adapter = this.determineAdapter();
-    
+
     if (adapter === 'redis') {
       return true;
     }
-    
+
     if (adapter === 'database') {
       return false;
     }
-    
+
     // Auto mode
     return !!(
-      process.env.REDIS_URL && 
+      process.env.REDIS_URL &&
       process.env.NODE_ENV === 'production'
     );
   }
@@ -185,7 +185,7 @@ export class CacheConfigFactory {
    */
   private static getRedisConfig(): RedisConfig {
     const redisUrl = process.env.REDIS_URL;
-    
+
     if (redisUrl) {
       return this.parseRedisUrl(redisUrl);
     }
@@ -219,13 +219,13 @@ export class CacheConfigFactory {
   private static parseRedisUrl(url: string): RedisConfig {
     try {
       const parsed = new URL(url);
-      
+
       return {
         host: parsed.hostname,
-        port: parseInt(parsed.port) || 6379,
+        port: parseInt(parsed.port, 10) || 6379,
         password: parsed.password || undefined,
         username: parsed.username || undefined,
-        db: parsed.pathname ? parseInt(parsed.pathname.slice(1)) || 0 : 0,
+        db: parsed.pathname ? parseInt(parsed.pathname.slice(1, 10)) || 0 : 0,
         tls: parsed.protocol === 'rediss:',
         maxRetries: 3,
         retryDelayOnFailover: 100,
@@ -247,7 +247,7 @@ export class CacheConfigFactory {
    */
   private static parseClusterNodes(): Array<{ host: string; port: number }> | undefined {
     const nodesStr = process.env.REDIS_CLUSTER_NODES;
-    
+
     if (!nodesStr) {
       return undefined;
     }
@@ -257,7 +257,7 @@ export class CacheConfigFactory {
         const [host, port] = node.trim().split(':');
         return {
           host: host.trim(),
-          port: parseInt(port?.trim()) || 6379,
+          port: parseInt(port?.trim() || '6379', 10),
         };
       });
     } catch (error) {
@@ -270,9 +270,9 @@ export class CacheConfigFactory {
    */
   private static getEnvNumber(key: string, defaultValue: number): number {
     const value = process.env[key];
-    if (!value) return defaultValue;
-    
-    const parsed = parseInt(value);
+    if (!value) {return defaultValue;}
+
+    const parsed = parseInt(value, 10);
     return isNaN(parsed) ? defaultValue : parsed;
   }
 
@@ -281,8 +281,8 @@ export class CacheConfigFactory {
    */
   private static getEnvBoolean(key: string, defaultValue: boolean): boolean {
     const value = process.env[key];
-    if (!value) return defaultValue;
-    
+    if (!value) {return defaultValue;}
+
     return ['true', '1', 'yes', 'on'].includes(value.toLowerCase());
   }
 
@@ -291,8 +291,8 @@ export class CacheConfigFactory {
    */
   private static getEnvArray(key: string, defaultValue: string[]): string[] {
     const value = process.env[key];
-    if (!value) return defaultValue;
-    
+    if (!value) {return defaultValue;}
+
     return value.split(',').map(item => item.trim()).filter(Boolean);
   }
 }
@@ -369,7 +369,7 @@ export class CacheConfigValidator {
  */
 export function getCacheConfig(): CacheConfig {
   const env = process.env.NODE_ENV || 'development';
-  
+
   switch (env) {
     case 'production':
       return CacheConfigFactory.forProduction();
@@ -387,11 +387,11 @@ export function getCacheConfig(): CacheConfig {
 export function createCacheConfig(overrides: Partial<CacheConfig> = {}): CacheConfig {
   const baseConfig = getCacheConfig();
   const config = { ...baseConfig, ...overrides };
-  
+
   const validation = CacheConfigValidator.validate(config);
   if (!validation.valid) {
     throw new Error(`Invalid cache configuration: ${validation.errors.join(', ')}`);
   }
-  
+
   return config;
 }

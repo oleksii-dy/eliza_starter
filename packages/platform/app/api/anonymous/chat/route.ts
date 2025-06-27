@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { anonymousSessionRepo } from '@/lib/database/repositories/anonymous-session';
 import { chatService } from '@/lib/services/chat-service';
 import type { ChatMessage } from '@/lib/database/repositories/anonymous-session';
@@ -21,7 +22,7 @@ interface ChatResponse {
   nextStep?: string;
 }
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const body: ChatRequest = await request.json();
     const { sessionId, message, context } = body;
@@ -136,3 +137,5 @@ async function saveMessageToSession(
     // Don't throw - the conversation can continue even if persistence fails
   }
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

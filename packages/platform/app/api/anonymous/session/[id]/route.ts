@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 
 interface AnonymousSession {
   sessionId: string;
@@ -15,7 +16,7 @@ interface AnonymousSession {
 // In production, this would use Redis or a database
 const sessionStore = new Map<string, AnonymousSession>();
 
-export async function handleGET(
+async function handleGET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -133,3 +134,5 @@ export async function DELETE(
     );
   }
 }
+
+export const { GET } = wrapHandlers({ handleGET });

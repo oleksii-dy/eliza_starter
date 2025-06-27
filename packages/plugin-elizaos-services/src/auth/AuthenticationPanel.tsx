@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import type { AuthStatus, ApiKeyValidationResult } from './AuthenticationService.js';
+import type { AuthStatus, ApiKeyValidationResult } from './RealAuthenticationService';
 
 export interface AuthenticationPanelProps {
   runtime?: any; // IAgentRuntime type

@@ -6,7 +6,7 @@
  */
 
 // import type { Plugin, IAgentRuntime } from '@elizaos/core';
-import { midnightPlugin } from '../index.js';
+import { midnightPlugin } from '../index';
 import * as dotenv from 'dotenv';
 
 // Load test environment

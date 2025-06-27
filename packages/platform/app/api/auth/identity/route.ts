@@ -3,6 +3,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { authService } from '@/lib/auth/session';
 import { handleApiError, AuthenticationError } from '@/lib/errors';
 import { apiLogger } from '@/lib/logger';
@@ -13,7 +14,7 @@ export const runtime = 'nodejs';
 /**
  * GET /api/auth/identity - Get current user and organization information
  */
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   const startTime = Date.now();
 
   try {
@@ -98,3 +99,5 @@ export async function handleGET(request: NextRequest) {
     return handleApiError(error);
   }
 }
+
+export const { GET } = wrapHandlers({ handleGET });

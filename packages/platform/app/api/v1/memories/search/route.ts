@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { sessionService } from '@/lib/auth/session';
 import { getDatabase } from '@/lib/database';
 import { memories, agents } from '@/lib/database/schema';
@@ -14,7 +15,7 @@ const searchMemoriesSchema = z.object({
 });
 
 // POST /api/v1/memories/search - Search memories with vector similarity
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     // Authenticate user
     const session = await sessionService.getSessionFromCookies();
@@ -111,3 +112,5 @@ export async function handlePOST(request: NextRequest) {
     );
   }
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

@@ -1,8 +1,8 @@
 import { IAgentRuntime, logger, asUUID, type TestCase } from '@elizaos/core';
-import { MidnightNetworkService } from '../services/MidnightNetworkService.js';
-import { SecureMessagingService } from '../services/SecureMessagingService.js';
-import { PaymentService } from '../services/PaymentService.js';
-import { AgentDiscoveryService } from '../services/AgentDiscoveryService.js';
+import { MidnightNetworkService } from '../services/MidnightNetworkService';
+import { SecureMessagingService } from '../services/SecureMessagingService';
+import { PaymentService } from '../services/PaymentService';
+import { AgentDiscoveryService } from '../services/AgentDiscoveryService';
 
 /**
  * Comprehensive E2E test suite for Midnight Network plugin

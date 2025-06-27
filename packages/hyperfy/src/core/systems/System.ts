@@ -1,17 +1,17 @@
-import EventEmitter from 'eventemitter3'
+import EventEmitter from 'eventemitter3';
 
-import type { World, WorldOptions, System as ISystem } from '../../types/index.js'
+import type { World, WorldOptions, System as ISystem } from '../../types/index.js';
 
 /**
  * Base class for all game systems
  * Systems manage specific aspects of the game world (physics, rendering, entities, etc.)
  */
 export abstract class System extends EventEmitter implements ISystem {
-  world: World
+  world: World;
 
   constructor(world: World) {
-    super()
-    this.world = world
+    super();
+    this.world = world;
   }
 
   /**

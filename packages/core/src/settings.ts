@@ -1,7 +1,6 @@
-/// <reference path="./types/crypto-browserify.d.ts" />
-import crypto from 'crypto-browserify';
 import { createUniqueUuid } from './entities';
 import { logger } from './logger';
+import * as cryptoUtils from './utils/crypto';
 import type {
   Character,
   IAgentRuntime,
@@ -106,9 +105,8 @@ export function encryptStringValue(value: any, salt: string): any {
   const parts = value.split(':');
   if (parts.length === 2) {
     try {
-      // Try to parse the first part as hex to see if it's already encrypted
-      const possibleIv = Buffer.from(parts[0], 'hex');
-      if (possibleIv.length === 16) {
+      // Try to parse the first part as hex to see if it's already encrypted (32 chars = 16 bytes)
+      if (parts[0].length === 32 && /^[0-9a-fA-F]+$/.test(parts[0])) {
         // Value is likely already encrypted, return as is
         logger.debug('Value appears to be already encrypted, skipping re-encryption');
         return value;
@@ -118,17 +116,15 @@ export function encryptStringValue(value: any, salt: string): any {
     }
   }
 
-  // Create key and iv from the salt
-  const key = crypto.createHash('sha256').update(salt).digest().slice(0, 32);
-  const iv = crypto.randomBytes(16);
-
-  // Encrypt the value
-  const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
-  let encrypted = cipher.update(value, 'utf8', 'hex') as string;
-  encrypted += cipher.final('hex') as string;
-
-  // Store IV with the encrypted value so we can decrypt it later
-  return `${iv.toString('hex')}:${encrypted}`;
+  try {
+    // Encrypt using crypto-js
+    const result = cryptoUtils.encrypt(value, salt, salt);
+    return `${result.iv}:${result.encrypted}`;
+  } catch (error) {
+    logger.error(`Error encrypting value: ${error}`);
+    // Return original value on error
+    return value;
+  }
 }
 
 /**
@@ -165,25 +161,21 @@ export function decryptStringValue(value: any, salt: string): any {
       return value; // Return the original value without decryption
     }
 
-    const iv = Buffer.from(parts[0], 'hex');
-    const encrypted = parts[1];
+    const ivHex = parts[0];
+    const encryptedHex = parts[1];
 
-    // Verify IV length
-    if (iv.length !== 16) {
-      if (iv.length) {
-        logger.debug(`Invalid IV length (${iv.length}) - expected 16 bytes`);
-      }
+    // Verify IV length (32 chars = 16 bytes for AES)
+    if (ivHex.length !== 32 || !/^[0-9a-fA-F]+$/.test(ivHex)) {
       return value; // Return the original value without decryption
     }
 
-    // Create key from the salt
-    const key = crypto.createHash('sha256').update(salt).digest().slice(0, 32);
+    // Verify encrypted hex is valid hex
+    if (!/^[0-9a-fA-F]+$/.test(encryptedHex)) {
+      return value; // Return the original value if encrypted part is not valid hex
+    }
 
-    // Decrypt the value
-    const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8') as string;
-    decrypted += decipher.final('utf8') as string;
-
+    // Decrypt using crypto-js
+    const decrypted = cryptoUtils.decrypt(encryptedHex, ivHex, salt, salt);
     return decrypted;
   } catch (error) {
     logger.error(`Error decrypting value: ${error}`);

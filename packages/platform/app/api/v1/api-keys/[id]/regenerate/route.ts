@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { authService } from '@/lib/auth/session';
 import {
   getApiKeyById,
@@ -6,7 +7,7 @@ import {
 } from '@/lib/server/services/api-key-service';
 import { auditLog } from '@/lib/server/services/audit-service';
 
-export async function handlePOST(
+async function handlePOST(
   request: NextRequest,
   props: { params: Promise<{ id: string }> },
 ) {
@@ -69,3 +70,5 @@ export async function handlePOST(
     );
   }
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

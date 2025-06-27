@@ -21,31 +21,33 @@ import { createMockRuntime, createMockMemory, createMockState } from '../../__te
 
 const createRolesMockRuntime = (): IAgentRuntime => {
   const mockWorld = {
-    id: 'world-1' as UUID,
+    id: '00000000-0000-0000-0000-000000000001' as UUID,
     metadata: {
       roles: {
-        'entity-1': Role.ADMIN,
-        'entity-2': Role.NONE,
+        '11111111-1111-1111-1111-111111111111': Role.ADMIN,
+        '22222222-2222-2222-2222-222222222222': Role.NONE,
       },
     },
   };
 
   return createMockRuntime({
-    getSetting: mock().mockReturnValue('world-1'),
+    getSetting: mock().mockReturnValue('00000000-0000-0000-0000-000000000001'),
     getWorld: mock().mockResolvedValue(mockWorld),
     updateWorld: mock().mockResolvedValue(true),
     getEntitiesForRoom: mock().mockResolvedValue([
-      { id: 'entity-1', names: ['Alice'] },
-      { id: 'entity-2', names: ['Bob'] },
-      { id: 'target-entity', names: ['Charlie'] },
+      { id: '11111111-1111-1111-1111-111111111111', names: ['Alice'] },
+      { id: '22222222-2222-2222-2222-222222222222', names: ['Bob'] },
+      { id: '33333333-3333-3333-3333-333333333333', names: ['Charlie'] },
     ]),
-    useModel: mock().mockResolvedValue([{ entityId: 'target-entity', newRole: Role.ADMIN }]),
+    useModel: mock().mockResolvedValue([
+      { entityId: '33333333-3333-3333-3333-333333333333', newRole: Role.ADMIN },
+    ]),
   });
 };
 
 describe('updateRoleAction', () => {
   let runtime: IAgentRuntime;
-  const testEntityId = 'entity-1' as UUID;
+  const testEntityId = '11111111-1111-1111-1111-111111111111' as UUID;
 
   beforeEach(() => {
     runtime = createRolesMockRuntime();
@@ -91,9 +93,9 @@ describe('updateRoleAction', () => {
 
   it('should handle permission denial', async () => {
     // Set requester as NONE role (no permissions)
-    const mockWorld = await runtime.getWorld('world-1' as UUID);
+    const mockWorld = await runtime.getWorld('00000000-0000-0000-0000-000000000001' as UUID);
     if (mockWorld && mockWorld.metadata && mockWorld.metadata.roles) {
-      mockWorld.metadata.roles['entity-1'] = Role.NONE;
+      mockWorld.metadata.roles['11111111-1111-1111-1111-111111111111'] = Role.NONE;
     }
 
     const memory = createMockMemory('Make Charlie an admin', testEntityId);

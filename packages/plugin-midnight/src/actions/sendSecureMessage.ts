@@ -12,8 +12,8 @@ import {
   asUUID,
   findEntityByName,
 } from '@elizaos/core';
-import { SecureMessagingService } from '../services/SecureMessagingService.js';
-import { MidnightNetworkError } from '../types/index.js';
+import { SecureMessagingService } from '../services/SecureMessagingService';
+import { MidnightNetworkError } from '../types/index';
 
 /**
  * Action to send secure messages to other agents using Midnight Network's zero-knowledge capabilities

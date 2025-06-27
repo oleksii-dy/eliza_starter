@@ -5,7 +5,7 @@ import {
   type Project,
   type ProjectAgent,
 } from '@elizaos/core';
-import mrTeePlugin from './plugin';
+import teeStarterPlugin from './plugin';
 import { mrTeeCharacter } from './character';
 
 /**
@@ -23,7 +23,7 @@ const initCharacter = ({ runtime: _runtime }: { runtime: IAgentRuntime }) => {
 export const projectAgent: ProjectAgent = {
   character: mrTeeCharacter,
   init: async (runtime: IAgentRuntime) => await initCharacter({ runtime }),
-  plugins: [mrTeePlugin],
+  plugins: [teeStarterPlugin],
 };
 
 const project: Project = {

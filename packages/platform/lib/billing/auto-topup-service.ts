@@ -161,7 +161,7 @@ export class AutoTopUpService {
           organizationId: trigger.organizationId,
           type: 'auto_topup_failed',
           amount: '0',
-          description: `Auto top-up failed: No default payment method`,
+          description: 'Auto top-up failed: No default payment method',
           balanceAfter: trigger.currentBalance.toString(),
           metadata: {
             reason: 'no_payment_method',

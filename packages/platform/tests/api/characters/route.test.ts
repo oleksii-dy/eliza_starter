@@ -2,14 +2,7 @@
  * Characters API Routes Tests
  */
 
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-  jest,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 import { GET, POST } from '../../../app/api/characters/route';
 import {
@@ -19,18 +12,18 @@ import {
 } from '@/lib/test-utils';
 
 // Mock the auth service
-jest.mock('@/lib/auth/session', () => ({
+vi.mock('@/lib/auth/session', () => ({
   authService: {
-    getCurrentUser: jest.fn(),
+    getCurrentUser: vi.fn(),
   },
 }));
 
 // Mock the character service
-jest.mock('@/lib/characters/service', () => ({
+vi.mock('@/lib/characters/service', () => ({
   characterService: {
-    getCharacters: jest.fn(),
-    getCharacterStats: jest.fn(),
-    createCharacter: jest.fn(),
+    getCharacters: vi.fn(),
+    getCharacterStats: vi.fn(),
+    createCharacter: vi.fn(),
   },
 }));
 
@@ -59,7 +52,7 @@ describe('/api/characters', () => {
     };
 
     // Reset mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(async () => {
@@ -393,8 +386,8 @@ describe('/api/characters', () => {
         .map(
           (_, i) =>
             `This is knowledge item ${i} with some substantial content that makes it larger. ` +
-            `Adding more text to reach the target size for testing large character files. ` +
-            `This should be enough content to make each knowledge item fairly substantial.`,
+            'Adding more text to reach the target size for testing large character files. ' +
+            'This should be enough content to make each knowledge item fairly substantial.',
         );
 
       const largeMessageExamples = Array(500)

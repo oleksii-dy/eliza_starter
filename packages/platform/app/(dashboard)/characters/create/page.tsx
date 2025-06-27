@@ -138,11 +138,12 @@ export default function CreateCharacterPage() {
         router.push('/characters');
       } else {
         console.error('Error creating character:', data.error);
-        alert(data.error || 'Failed to create character');
+        console.error(data.error || 'Failed to create character');
+        // TODO: Show error toast notification
       }
     } catch (error) {
       console.error('Error creating character:', error);
-      alert('Failed to create character');
+      // TODO: Show error toast notification
     } finally {
       setLoading(false);
     }

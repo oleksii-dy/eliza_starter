@@ -1,7 +1,8 @@
 import PageTitle from '@/components/PageTitle';
 import ProfileOverlay from '@/components/ProfileOverlay';
 import { useAgentsWithDetails, useChannels, useServers } from '@/hooks/use-query-hooks';
-import { type Agent, type UUID, ChannelType as CoreChannelType } from '@elizaos/core';
+import { type UUID, ChannelType as CoreChannelType } from '@elizaos/core';
+import { type AgentWithStatus } from '@/types';
 import { Plus } from 'lucide-react';
 import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -30,7 +31,7 @@ export default function Home() {
 
   const [isOverlayOpen, setOverlayOpen] = useState(false);
   const [isGroupPanelOpen, setIsGroupPanelOpen] = useState(false);
-  const [selectedAgent, setSelectedAgent] = useState<Partial<Agent> | null>(null);
+  const [selectedAgent, setSelectedAgent] = useState<Partial<AgentWithStatus> | null>(null);
   const [selectedGroupId, setSelectedGroupId] = useState<UUID | null>(null);
 
   const closeOverlay = () => {
@@ -38,7 +39,7 @@ export default function Home() {
     setOverlayOpen(false);
   };
 
-  const handleNavigateToDm = async (agent: Agent) => {
+  const handleNavigateToDm = async (agent: Partial<AgentWithStatus>) => {
     if (!agent.id) {
       return;
     }

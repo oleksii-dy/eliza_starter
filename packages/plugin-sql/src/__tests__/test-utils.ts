@@ -32,7 +32,7 @@ export function createMockRuntime(settings: Record<string, any> = {}): any {
   return {
     agentId: settings.agentId || 'test-agent-id',
     getSetting: (key: string) => settings[key],
-    registerDatabaseAdapter: jest.fn ? jest.fn() : () => {},
+    registerDatabaseAdapter: () => {},
     services,
     adapter: null,
     databaseAdapter: null,
@@ -58,10 +58,7 @@ export class TestSuite {
     this.afterEachFn = fn;
   }
 
-  addTest<T = any>(
-    name: string,
-    fn: (context: T) => Promise<void> | void
-  ): void {
+  addTest<T = any>(name: string, fn: (context: T) => Promise<void> | void): void {
     this.tests.push({ name, fn });
   }
 
@@ -97,12 +94,12 @@ export class TestSuite {
 // Helper function to create a TestSuite
 export function createUnitTest(name: string): TestSuite {
   const testSuite = new TestSuite(name);
-  
+
   // Auto-run the test suite
   setTimeout(() => {
     testSuite.run();
   }, 0);
-  
+
   return testSuite;
 }
 

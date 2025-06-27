@@ -28,7 +28,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   // Update theme when changed
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted) {return;}
 
     localStorage.setItem('theme', theme);
 
@@ -45,7 +45,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   // Listen to system theme changes
   useEffect(() => {
-    if (!mounted || theme !== 'system') return;
+    if (!mounted || theme !== 'system') {return;}
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
@@ -59,7 +59,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   // Apply theme to document
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted) {return;}
 
     const root = document.documentElement;
 
@@ -74,10 +74,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const contextValue = mounted
     ? { theme, setTheme, resolvedTheme }
     : {
-        theme: 'system' as Theme,
-        setTheme: () => {},
-        resolvedTheme: 'dark' as const,
-      };
+      theme: 'system' as Theme,
+      setTheme: () => {},
+      resolvedTheme: 'dark' as const,
+    };
 
   return (
     <ThemeContext.Provider value={contextValue}>

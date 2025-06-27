@@ -36,7 +36,7 @@ export const autonomousFeedProvider: Provider = {
     const conversationLength = runtime.getConversationLength();
 
     // Parallelize initial data fetching operations including recentInteractions
-    let room: any = null;
+    let room: { id: UUID; name?: string } | null = null;
 
     const [entitiesData, recentMessagesData] = await Promise.all([
       getEntityDetails({ runtime, roomId: autonomousRoomId }),

@@ -247,14 +247,14 @@ export class WorkOSAuthService {
     organizationId: string,
   ): Promise<OrganizationMembership | null> {
     try {
-      const { data } = await (
+      const result = await (
         this.workos as any
       ).organizationMemberships?.listOrganizationMemberships({
         userId,
         organizationId,
       });
 
-      return data[0] || null;
+      return result?.data?.[0] || null;
     } catch (error) {
       console.error('Failed to get organization membership:', error);
       return null;

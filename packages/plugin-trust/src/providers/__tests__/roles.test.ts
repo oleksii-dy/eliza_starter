@@ -45,7 +45,9 @@ const createProviderRolesMockRuntime = (): IAgentRuntime => {
       serverId: 'server-1',
     }),
     getWorld: mock().mockResolvedValue(mockWorld),
-    getEntityById: mock().mockImplementation((id: string) => mockEntities[id]),
+    getEntityById: mock().mockImplementation(
+      (id: string) => mockEntities[id as keyof typeof mockEntities]
+    ),
   });
 };
 

@@ -10,8 +10,8 @@ import { codingChallengeScenario } from './coding-challenge.js';
 import { workflowPlanningScenario } from './workflow-planning.js';
 
 // Import plugin test scenarios
-import { pluginTestScenarios } from './plugin-tests/index.js';
-export { pluginTestScenarios } from './plugin-tests/index.js';
+import { pluginTestScenarios } from './plugin-scenarios/index.js';
+export { pluginTestScenarios } from './plugin-scenarios/index.js';
 
 // Import rolodex scenarios
 import {

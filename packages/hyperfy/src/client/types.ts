@@ -1,7 +1,7 @@
 // Type definitions for Hyperfy client components
 
 // import { ReactNode } from 'react';
-import { Object3D, Vector3 } from 'three'
+import { Object3D, Vector3 } from 'three';
 
 // Core types
 export interface World {

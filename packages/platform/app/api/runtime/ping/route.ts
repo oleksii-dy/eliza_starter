@@ -4,8 +4,9 @@
  */
 
 import { NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 
-export async function handleGET() {
+async function handleGET() {
   return NextResponse.json(
     {
       pong: true,
@@ -19,3 +20,5 @@ export async function handleGET() {
 export async function HEAD() {
   return new NextResponse(null, { status: 200 });
 }
+
+export const { GET } = wrapHandlers({ handleGET });

@@ -546,7 +546,7 @@ const messageReceivedHandler = async ({
 
             // without actions there can't be more than one message
             await callback(responseContent);
-            
+
             // Emit MESSAGE_SENT event for simple responses
             if (responseMessages.length > 0) {
               await runtime.emitEvent(EventType.MESSAGE_SENT, {
@@ -593,7 +593,7 @@ const messageReceivedHandler = async ({
                     );
                     await runtime.processActions(message, responseMessages, state, callback);
                   }
-                  
+
                   // Emit MESSAGE_SENT event for planned responses
                   if (responseMessages.length > 0) {
                     await runtime.emitEvent(EventType.MESSAGE_SENT, {
@@ -617,7 +617,7 @@ const messageReceivedHandler = async ({
               // No planning service available, use regular action processing
               await runtime.processActions(message, responseMessages, state, callback);
             }
-            
+
             // Emit MESSAGE_SENT event for complex responses
             if (responseMessages.length > 0) {
               await runtime.emitEvent(EventType.MESSAGE_SENT, {

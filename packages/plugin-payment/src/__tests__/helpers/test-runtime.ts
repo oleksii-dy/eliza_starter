@@ -277,13 +277,32 @@ export async function cleanupTestRuntime(runtime: IAgentRuntime): Promise<void> 
 }
 
 export function createTestMemory(overrides: Partial<Memory> = {}): Memory {
-  return createMockMemory({
+  const baseMemory = createMockMemory({
     content: {
       text: 'Test payment message',
       ...overrides.content,
     },
     ...overrides,
   });
+
+  // Generate proper UUIDs if they're not already valid
+  const toUUID = (value: any): UUID => {
+    if (!value) {return asUUID(stringToUuid(`default-${Date.now()}-${Math.random()}`));}
+    if (typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)) {
+      return asUUID(value);
+    }
+    return asUUID(stringToUuid(value));
+  };
+
+  // Cast the memory object to ensure UUID types
+  return {
+    ...baseMemory,
+    id: baseMemory.id ? toUUID(baseMemory.id) : undefined,
+    entityId: toUUID(baseMemory.entityId),
+    agentId: baseMemory.agentId ? toUUID(baseMemory.agentId) : undefined,
+    roomId: toUUID(baseMemory.roomId),
+    worldId: baseMemory.worldId ? toUUID(baseMemory.worldId) : undefined,
+  } as Memory;
 }
 
 export function createTestUserId(): UUID {

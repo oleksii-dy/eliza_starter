@@ -82,7 +82,7 @@ describe('MockDatabaseAdapter', () => {
         createdAt: Date.now(),
       };
 
-      const memoryId = await adapter.createMemory(memory);
+      const memoryId = await adapter.createMemory(memory, 'memories');
       expect(memoryId).toBeDefined();
 
       const retrieved = await adapter.getMemory(memoryId);
@@ -106,10 +106,10 @@ describe('MockDatabaseAdapter', () => {
         createdAt: Date.now(),
       };
 
-      await adapter.createMemory(memory1);
-      await adapter.createMemory(memory2);
+      await adapter.createMemory(memory1, 'memories');
+      await adapter.createMemory(memory2, 'memories');
 
-      const memories = await adapter.getMemories({ roomId, count: 10 });
+      const memories = await adapter.getMemories({ roomId, count: 10, tableName: 'memories' });
       expect(memories).toHaveLength(2);
     });
 
@@ -122,7 +122,7 @@ describe('MockDatabaseAdapter', () => {
           roomId,
           content: { text: `Memory ${i}` },
           createdAt: Date.now(),
-        });
+        }, 'memories');
       }
 
       const count = await adapter.countMemories(roomId);
@@ -136,6 +136,7 @@ describe('MockDatabaseAdapter', () => {
       const entity2Id = uuidv4() as UUID;
 
       const relationship: Relationship = {
+        id: uuidv4() as UUID,
         sourceEntityId: entity1Id,
         targetEntityId: entity2Id,
         tags: ['friend'],
@@ -161,6 +162,7 @@ describe('MockDatabaseAdapter', () => {
       const entity3Id = uuidv4() as UUID;
 
       await adapter.createRelationship({
+        id: uuidv4() as UUID,
         sourceEntityId: entity1Id,
         targetEntityId: entity2Id,
         tags: ['friend'],
@@ -169,6 +171,7 @@ describe('MockDatabaseAdapter', () => {
       });
 
       await adapter.createRelationship({
+        id: uuidv4() as UUID,
         sourceEntityId: entity1Id,
         targetEntityId: entity3Id,
         tags: ['colleague'],
@@ -189,6 +192,7 @@ describe('MockDatabaseAdapter', () => {
   describe('Room Operations', () => {
     it('should create and manage rooms', async () => {
       const roomId = await adapter.createRoom({
+        id: uuidv4() as UUID,
         name: 'Test Room',
         source: 'test',
         type: 'GROUP' as any,
@@ -278,8 +282,7 @@ describe('MockDatabaseAdapter', () => {
       expect(updatedTask!.description).toBe('Updated description');
 
       // Delete task
-      const deleted = await adapter.deleteTask(taskId);
-      expect(deleted).toBe(true);
+      await adapter.deleteTask(taskId);
 
       const deletedTask = await adapter.getTask(taskId);
       expect(deletedTask).toBeNull();

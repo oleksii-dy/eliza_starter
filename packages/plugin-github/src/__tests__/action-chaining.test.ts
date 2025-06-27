@@ -168,7 +168,7 @@ describe('Action Chaining: GitHub Plugin', () => {
       const searchAction = actions.find((a) => a.name === 'SEARCH_GITHUB_REPOSITORIES')!;
 
       const searchResult = (await searchAction.handler(
-        mockRuntime as IAgentRuntime,
+        mockRuntime as unknown as IAgentRuntime,
         createMemory('Search for TypeScript projects'),
         createState(),
         { query: 'language:typescript', per_page: 2 }
@@ -182,7 +182,7 @@ describe('Action Chaining: GitHub Plugin', () => {
       const getRepoAction = actions.find((a) => a.name === 'GET_GITHUB_REPOSITORY')!;
 
       const repoDetails = (await getRepoAction.handler(
-        mockRuntime as IAgentRuntime,
+        mockRuntime as unknown as IAgentRuntime,
         createMemory('Get details of the first repository'),
         createState(searchResult.data), // Pass the state from search
         { owner: 'user', repo: 'awesome-project' }
@@ -196,7 +196,7 @@ describe('Action Chaining: GitHub Plugin', () => {
       const listIssuesAction = actions.find((a) => a.name === 'LIST_GITHUB_ISSUES')!;
 
       const issuesList = (await listIssuesAction.handler(
-        mockRuntime as IAgentRuntime,
+        mockRuntime as unknown as IAgentRuntime,
         createMemory('List issues for the repository'),
         createState(repoDetails.data), // Pass the state from get repo
         { owner: 'user', repo: 'awesome-project' }
@@ -217,7 +217,7 @@ describe('Action Chaining: GitHub Plugin', () => {
       const rateLimitAction = actions.find((a) => a.name === 'GET_GITHUB_RATE_LIMIT')!;
 
       const rateLimitResult = (await rateLimitAction.handler(
-        mockRuntime as IAgentRuntime,
+        mockRuntime as unknown as IAgentRuntime,
         createMemory('Check rate limit'),
         createState(),
         {}
@@ -231,7 +231,7 @@ describe('Action Chaining: GitHub Plugin', () => {
         const searchIssuesAction = actions.find((a) => a.name === 'SEARCH_GITHUB_ISSUES')!;
 
         const searchResult = (await searchIssuesAction.handler(
-          mockRuntime as IAgentRuntime,
+          mockRuntime as unknown as IAgentRuntime,
           createMemory('Search for similar issues'),
           createState(rateLimitResult.data),
           { query: 'repo:user/awesome-project is:issue bug' }
@@ -244,7 +244,7 @@ describe('Action Chaining: GitHub Plugin', () => {
         const createIssueAction = actions.find((a) => a.name === 'CREATE_GITHUB_ISSUE')!;
 
         const createResult = (await createIssueAction.handler(
-          mockRuntime as IAgentRuntime,
+          mockRuntime as unknown as IAgentRuntime,
           createMemory('Create a new issue'),
           createState(searchResult.data),
           {
@@ -270,7 +270,7 @@ describe('Action Chaining: GitHub Plugin', () => {
       // Step 1: Get repository details
       const getRepoAction = actions.find((a) => a.name === 'GET_GITHUB_REPOSITORY')!;
       const repoResult = (await getRepoAction.handler(
-        mockRuntime as IAgentRuntime,
+        mockRuntime as unknown as IAgentRuntime,
         createMemory('Analyze repository user/awesome-project'),
         createState(),
         { owner: 'user', repo: 'awesome-project' },
@@ -283,7 +283,7 @@ describe('Action Chaining: GitHub Plugin', () => {
       // Step 2: List open issues
       const listIssuesAction = actions.find((a) => a.name === 'LIST_GITHUB_ISSUES')!;
       const issuesResult = (await listIssuesAction.handler(
-        mockRuntime as IAgentRuntime,
+        mockRuntime as unknown as IAgentRuntime,
         createMemory('Get open issues'),
         createState(repoResult.data), // Use the return value's data
         { owner: 'user', repo: 'awesome-project', state: 'open' },
@@ -296,7 +296,7 @@ describe('Action Chaining: GitHub Plugin', () => {
       // Step 3: List pull requests
       const listPRsAction = actions.find((a) => a.name === 'LIST_GITHUB_PULL_REQUESTS')!;
       const prsResult = (await listPRsAction.handler(
-        mockRuntime as IAgentRuntime,
+        mockRuntime as unknown as IAgentRuntime,
         createMemory('Get open pull requests'),
         createState(issuesResult.data), // Use the return value's data
         { owner: 'user', repo: 'awesome-project', state: 'open' },
@@ -309,7 +309,7 @@ describe('Action Chaining: GitHub Plugin', () => {
       // Step 4: Get activity log
       const activityAction = actions.find((a) => a.name === 'GET_GITHUB_ACTIVITY')!;
       const activityResult = (await activityAction.handler(
-        mockRuntime as IAgentRuntime,
+        mockRuntime as unknown as IAgentRuntime,
         createMemory('Get recent activity'),
         createState(prsResult.data), // Use the return value's data
         { limit: 10 },
@@ -349,7 +349,7 @@ describe('Action Chaining: GitHub Plugin', () => {
       let searchResult: any;
 
       await searchAction.handler(
-        mockRuntime as IAgentRuntime,
+        mockRuntime as unknown as IAgentRuntime,
         createMemory('Find popular repositories'),
         createState(),
         { query: 'stars:>500', per_page: 2 },
@@ -367,7 +367,7 @@ describe('Action Chaining: GitHub Plugin', () => {
           let prResult: any;
 
           await listPRsAction.handler(
-            mockRuntime as IAgentRuntime,
+            mockRuntime as unknown as IAgentRuntime,
             createMemory(`Check PRs for high-star repo ${repo.name}`),
             createState({ repository: repo }),
             { owner: repo.owner.login, repo: repo.name },
@@ -384,7 +384,7 @@ describe('Action Chaining: GitHub Plugin', () => {
           let issueResult: any;
 
           await listIssuesAction.handler(
-            mockRuntime as IAgentRuntime,
+            mockRuntime as unknown as IAgentRuntime,
             createMemory(`Check issues for repo ${repo.name}`),
             createState({ repository: repo }),
             { owner: repo.owner.login, repo: repo.name },
@@ -415,7 +415,7 @@ describe('Action Chaining: GitHub Plugin', () => {
 
       for (const query of queries) {
         await searchAction.handler(
-          mockRuntime as IAgentRuntime,
+          mockRuntime as unknown as IAgentRuntime,
           createMemory(`Search for ${query} repositories`),
           createState(accumulatedState),
           { query, per_page: 2 },

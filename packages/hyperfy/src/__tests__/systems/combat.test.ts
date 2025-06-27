@@ -1,22 +1,22 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
-import { createTestWorld, runWorldFor, runWorldUntil } from '../createTestWorld'
-import type { World } from '../../types'
-import { RPGEntity } from '../../rpg/entities/RPGEntity'
-import { CombatSystem } from '../../rpg/systems/CombatSystem'
-import { CombatStyle, AttackType } from '../../rpg/types'
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
+import { createTestWorld, runWorldFor, runWorldUntil } from '../createTestWorld';
+import type { World } from '../../types';
+import { RPGEntity } from '../../rpg/entities/RPGEntity';
+import { CombatSystem } from '../../rpg/systems/CombatSystem';
+import { CombatStyle, AttackType } from '../../rpg/types';
 
 describe('Combat System (Real World)', () => {
-  let world: World
-  let combat: CombatSystem
+  let world: World;
+  let combat: CombatSystem;
 
   beforeEach(async () => {
-    world = await createTestWorld({ enablePhysics: false })
-    combat = (world as any).combat
-  })
+    world = await createTestWorld({ enablePhysics: false });
+    combat = (world as any).combat;
+  });
 
   afterEach(() => {
-    world.destroy()
-  })
+    world.destroy();
+  });
 
   describe('Real Combat Flow', () => {
     it('should handle complete combat scenario with real entities', async () => {
@@ -25,7 +25,7 @@ describe('Combat System (Real World)', () => {
         id: 'player-1',
         name: 'TestPlayer',
         position: { x: 200, y: 0, z: 200 }, // Outside default safe zone
-      })
+      });
 
       const npc = new RPGEntity(world, 'npc', {
         id: 'npc-1',
@@ -35,7 +35,7 @@ describe('Combat System (Real World)', () => {
 
       // Add to world entities
       ;(world.entities as any).items.set(player.data.id, player)
-      ;(world.entities as any).items.set(npc.data.id, npc)
+      ;(world.entities as any).items.set(npc.data.id, npc);
 
       // Add realistic stats
       player.addComponent('stats', {
@@ -65,7 +65,7 @@ describe('Combat System (Real World)', () => {
         },
         combatLevel: 22,
         totalLevel: 58,
-      })
+      });
 
       npc.addComponent('stats', {
         type: 'stats',
@@ -94,7 +94,7 @@ describe('Combat System (Real World)', () => {
         },
         combatLevel: 2,
         totalLevel: 6,
-      })
+      });
 
       // Add combat components
       player.addComponent('combat', {
@@ -114,7 +114,7 @@ describe('Combat System (Real World)', () => {
           ranged: false,
           magic: false,
         },
-      })
+      });
 
       npc.addComponent('combat', {
         type: 'combat',
@@ -133,7 +133,7 @@ describe('Combat System (Real World)', () => {
           ranged: false,
           magic: false,
         },
-      })
+      });
 
       // Add inventory components (required for weapon checks)
       player.addComponent('inventory', {
@@ -170,7 +170,7 @@ describe('Combat System (Real World)', () => {
           magicDamage: 0,
           prayerBonus: 0,
         },
-      })
+      });
 
       npc.addComponent('inventory', {
         type: 'inventory',
@@ -206,7 +206,7 @@ describe('Combat System (Real World)', () => {
           magicDamage: 0,
           prayerBonus: 0,
         },
-      })
+      });
 
       // Add movement components for position
       player.addComponent('movement', {
@@ -223,7 +223,7 @@ describe('Combat System (Real World)', () => {
         teleportDestination: null,
         teleportTime: 0,
         teleportAnimation: '',
-      })
+      });
 
       npc.addComponent('movement', {
         type: 'movement',
@@ -239,70 +239,70 @@ describe('Combat System (Real World)', () => {
         teleportDestination: null,
         teleportTime: 0,
         teleportAnimation: '',
-      })
+      });
 
       // Track combat events
-      let combatStarted = false
-      let damageDealt = 0
-      let npcDied = false
+      let combatStarted = false;
+      let damageDealt = 0;
+      let npcDied = false;
 
       combat.on('combat:start', () => {
-        console.log('Combat start event fired!')
-        combatStarted = true
-      })
+        console.log('Combat start event fired!');
+        combatStarted = true;
+      });
 
       combat.on('combat:damage', (event: any) => {
-        console.log('Damage event:', event)
-        damageDealt += event.damage
-      })
+        console.log('Damage event:', event);
+        damageDealt += event.damage;
+      });
 
       combat.on('combat:hit', (event: any) => {
-        console.log('Hit event:', event)
-      })
+        console.log('Hit event:', event);
+      });
 
       combat.on('entity:death', (event: any) => {
         if (event.entityId === npc.data.id) {
-          npcDied = true
+          npcDied = true;
         }
-      })
+      });
 
       // Debug: Check if entities exist in world
-      console.log('Player in world:', world.entities.has(player.data.id))
-      console.log('NPC in world:', world.entities.has(npc.data.id))
-      console.log('Player stats:', player.getComponent('stats'))
-      console.log('NPC stats:', npc.getComponent('stats'))
+      console.log('Player in world:', world.entities.has(player.data.id));
+      console.log('NPC in world:', world.entities.has(npc.data.id));
+      console.log('Player stats:', player.getComponent('stats'));
+      console.log('NPC stats:', npc.getComponent('stats'));
 
       // Start combat
-      const result = combat.initiateAttack(player.data.id, npc.data.id)
-      console.log('Combat initiation result:', result)
-      expect(result).toBe(true)
-      expect(combatStarted).toBe(true)
+      const result = combat.initiateAttack(player.data.id, npc.data.id);
+      console.log('Combat initiation result:', result);
+      expect(result).toBe(true);
+      expect(combatStarted).toBe(true);
 
       // Run world for a short time to see if combat is working
-      await runWorldFor(world, 3000)
+      await runWorldFor(world, 3000);
 
       // Check if any damage was dealt
-      console.log('Damage dealt:', damageDealt)
-      console.log('NPC died:', npcDied)
+      console.log('Damage dealt:', damageDealt);
+      console.log('NPC died:', npcDied);
 
       // For now, just verify combat started
-      expect(damageDealt).toBeGreaterThan(0)
+      expect(damageDealt).toBeGreaterThan(0);
 
-      const npcStats = npc.getComponent('stats') as any
-      console.log('NPC HP after combat:', npcStats.hitpoints.current)
-    })
+      const npcStats = npc.getComponent('stats') as any;
+      console.log('NPC HP after combat:', npcStats.hitpoints.current);
+    });
 
     it('should calculate realistic damage', () => {
       // Create entities with known stats
       const attacker = new RPGEntity(world, 'player', {
         id: 'attacker',
         position: { x: 0, y: 0, z: 0 },
-      })
+      });
 
       const defender = new RPGEntity(world, 'player', {
         id: 'defender',
         position: { x: 1, y: 0, z: 0 },
-      })
+      });
 
       // Set up precise stats for testing
       attacker.addComponent('stats', {
@@ -332,7 +332,7 @@ describe('Combat System (Real World)', () => {
         },
         combatLevel: 126,
         totalLevel: 200,
-      })
+      });
 
       defender.addComponent('stats', {
         type: 'stats',
@@ -361,7 +361,7 @@ describe('Combat System (Real World)', () => {
         },
         combatLevel: 99,
         totalLevel: 100,
-      })
+      });
 
       attacker.addComponent('combat', {
         type: 'combat',
@@ -380,32 +380,32 @@ describe('Combat System (Real World)', () => {
           ranged: false,
           magic: false,
         },
-      })
+      });
 
       // Calculate hit
-      const hit = combat.calculateHit(attacker, defender)
+      const hit = combat.calculateHit(attacker, defender);
 
       // Verify hit properties
-      expect(hit).toBeDefined()
-      expect(hit.attackType).toBe(AttackType.MELEE)
-      expect(hit.damage).toBeGreaterThanOrEqual(0)
+      expect(hit).toBeDefined();
+      expect(hit.attackType).toBe(AttackType.MELEE);
+      expect(hit.damage).toBeGreaterThanOrEqual(0);
 
       // Max hit should be around 46-48 with these stats
       // But we might miss, so just verify it's not unreasonable
-      expect(hit.damage).toBeLessThanOrEqual(50)
-    })
+      expect(hit.damage).toBeLessThanOrEqual(50);
+    });
 
     it('should respect combat mechanics', async () => {
       // Test attack speed
       const player = new RPGEntity(world, 'player', {
         id: 'speed-test',
         position: { x: 0, y: 0, z: 0 },
-      })
+      });
 
       const dummy = new RPGEntity(world, 'npc', {
         id: 'dummy',
         position: { x: 1, y: 0, z: 0 },
-      })
+      });
 
       // Set up for speed test
       player.addComponent('stats', {
@@ -435,7 +435,7 @@ describe('Combat System (Real World)', () => {
         },
         combatLevel: 60,
         totalLevel: 153,
-      })
+      });
 
       dummy.addComponent('stats', {
         type: 'stats',
@@ -464,7 +464,7 @@ describe('Combat System (Real World)', () => {
         },
         combatLevel: 3,
         totalLevel: 6,
-      })
+      });
 
       player.addComponent('combat', {
         type: 'combat',
@@ -483,7 +483,7 @@ describe('Combat System (Real World)', () => {
           ranged: false,
           magic: false,
         },
-      })
+      });
 
       dummy.addComponent('combat', {
         type: 'combat',
@@ -502,7 +502,7 @@ describe('Combat System (Real World)', () => {
           ranged: false,
           magic: false,
         },
-      })
+      });
 
       player.addComponent('movement', {
         type: 'movement',
@@ -518,7 +518,7 @@ describe('Combat System (Real World)', () => {
         teleportDestination: null,
         teleportTime: 0,
         teleportAnimation: '',
-      })
+      });
 
       dummy.addComponent('movement', {
         type: 'movement',
@@ -536,23 +536,23 @@ describe('Combat System (Real World)', () => {
         teleportAnimation: '',
       })
       ;(world.entities as any).items.set(player.data.id, player)
-      ;(world.entities as any).items.set(dummy.data.id, dummy)
+      ;(world.entities as any).items.set(dummy.data.id, dummy);
 
-      let hitCount = 0
+      let hitCount = 0;
       world.events.on('combat:hit', () => {
-        hitCount++
-      })
+        hitCount++;
+      });
 
       // Start combat
-      combat.initiateAttack(player.data.id, dummy.data.id)
+      combat.initiateAttack(player.data.id, dummy.data.id);
 
       // Run for exactly 5 seconds
-      await runWorldFor(world, 5000)
+      await runWorldFor(world, 5000);
 
       // Should have hit 2-3 times (first hit immediate, then every 2.4s)
       // 0s, 2.4s, 4.8s = 3 hits maximum
-      expect(hitCount).toBeGreaterThanOrEqual(2)
-      expect(hitCount).toBeLessThanOrEqual(3)
-    })
-  })
-})
+      expect(hitCount).toBeGreaterThanOrEqual(2);
+      expect(hitCount).toBeLessThanOrEqual(3);
+    });
+  });
+});

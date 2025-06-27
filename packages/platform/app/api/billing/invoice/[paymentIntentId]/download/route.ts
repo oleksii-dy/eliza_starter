@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { sessionService } from '@/lib/auth/session';
 import { loadConfig } from '@/lib/server/utils/config';
 import Stripe from 'stripe';
@@ -13,7 +14,7 @@ const stripe = new Stripe(config.stripe.secretKey, {
   apiVersion: '2025-02-24.acacia',
 });
 
-export async function handleGET(
+async function handleGET(
   request: NextRequest,
   { params }: { params: Promise<{ paymentIntentId: string }> },
 ) {
@@ -74,3 +75,5 @@ export async function handleGET(
     );
   }
 }
+
+export const { GET } = wrapHandlers({ handleGET });

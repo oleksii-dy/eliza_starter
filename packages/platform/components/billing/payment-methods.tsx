@@ -122,6 +122,7 @@ export function PaymentMethods({ organizationId }: PaymentMethodsProps) {
   };
 
   const deletePaymentMethod = async (paymentMethodId: string) => {
+    // eslint-disable-next-line no-alert
     if (!confirm('Are you sure you want to delete this payment method?')) {
       return;
     }

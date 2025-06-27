@@ -23,13 +23,8 @@ export const hyperfyStopMovingAction: Action = {
     // Optional: Could check if getIsNavigating() or getIsPatrolling() is true
     return !!service && service.isConnected() && !!controls;
   },
-  handler: async (
-    runtime: IAgentRuntime,
-    _message: Memory,
-    _state?: State,
-    options?: { reason?: string }, // Optional reason for stopping
-    callback?: HandlerCallback
-  ): Promise<ActionResult> => {
+  handler: async (runtime: IAgentRuntime, _message: Memory, _state?: State, options?: { reason?: string }, // Optional reason for stopping
+    callback?: HandlerCallback): Promise<ActionResult> => {
     const service = runtime.getService<HyperfyService>(HyperfyService.serviceName);
     const controls = service?.getWorld()?.controls as unknown as AgentControls | undefined;
 

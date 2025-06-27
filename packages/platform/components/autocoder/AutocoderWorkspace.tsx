@@ -106,7 +106,7 @@ export function AutocoderWorkspace({ userId }: AutocoderWorkspaceProps) {
       const latestUpdate = projectUpdates[projectUpdates.length - 1];
       if (latestUpdate.projectId === activeProject?.id) {
         setActiveProject((prev) => {
-          if (!prev) return null;
+          if (!prev) {return null;}
 
           // Destructure updates and handle status separately
           const { status: newStatus, ...otherUpdates } = latestUpdate.updates;

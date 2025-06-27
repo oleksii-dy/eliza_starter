@@ -11,7 +11,6 @@ import { wrapHandlers } from '@/lib/api/route-wrapper';
 const getBillingService = () =>
   import('@/lib/server/services/billing-service').then((m) => ({
     createPaymentIntent: m.createPaymentIntent,
-    validatePaymentAmount: m.validatePaymentAmount,
   }));
 const getAuthService = () =>
   import('@/lib/auth/session').then((m) => m.authService);
@@ -65,12 +64,13 @@ async function handlePOST(request: NextRequest) {
     const { amount, credits, currency, metadata } = validation.data;
 
     // Get billing service
-    const { createPaymentIntent, validatePaymentAmount } =
-      await getBillingService();
+    const { createPaymentIntent } = await getBillingService();
 
-    // Validate the payment amount matches the credits
-    const isValid = await validatePaymentAmount(amount, credits);
-    if (!isValid) {
+    // Simple validation: ensure amount is reasonable for credits
+    // You can customize this logic based on your pricing model
+    const creditPrice = 1; // $1 per credit (100 cents)
+    const expectedAmount = credits * creditPrice * 100; // Convert to cents
+    if (amount !== expectedAmount) {
       return NextResponse.json(
         {
           success: false,
@@ -81,19 +81,11 @@ async function handlePOST(request: NextRequest) {
     }
 
     // Create payment intent
-    const paymentIntent = await createPaymentIntent({
-      userId: user.id,
-      organizationId: user.organizationId,
-      amount,
-      credits,
-      currency,
-      metadata: {
-        ...metadata,
-        userId: user.id,
-        organizationId: user.organizationId,
-        credits: credits.toString(),
-      },
-    });
+    const paymentIntent = await createPaymentIntent(
+      user.organizationId,
+      amount / 100, // Convert cents to dollars
+      currency
+    );
 
     // Return client secret for Stripe Elements
     return NextResponse.json({

@@ -2,29 +2,20 @@
  * Comprehensive tests for isomorphic authentication system
  */
 
-import {
-  describe,
-  test,
-  expect,
-  beforeEach,
-  afterEach,
-  jest,
-  beforeAll,
-  afterAll,
-} from '@jest/globals';
+import { describe, test, expect, beforeEach, afterEach, beforeAll, afterAll, vi } from 'vitest';
 
 // Mock browser globals
 const mockTauri = {
-  invoke: jest.fn(),
-  emit: jest.fn(),
-  listen: jest.fn(),
+  invoke: vi.fn(),
+  emit: vi.fn(),
+  listen: vi.fn(),
 };
 
 const mockLocalStorage = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
 };
 
 // Global setup for browser/Tauri environment simulation
@@ -34,11 +25,11 @@ global.window = {} as any;
 describe('Isomorphic Authentication System', () => {
   beforeAll(() => {
     // Reset all mocks
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     delete (global.window as any).__TAURI__;
   });
 
@@ -95,8 +86,8 @@ describe('Isomorphic Authentication System', () => {
     beforeEach(() => {
       delete (global.window as any).__TAURI__;
       global.window.location = { href: '' } as any;
-      const mockFetch = jest.fn() as any;
-      mockFetch.preconnect = jest.fn();
+      const mockFetch = vi.fn() as any;
+      mockFetch.preconnect = vi.fn();
       global.fetch = mockFetch;
     });
 
@@ -172,8 +163,8 @@ describe('Isomorphic Authentication System', () => {
             'https://auth.example.com/oauth/google?redirect_uri=elizaos://auth/callback',
         }),
       };
-      const mockFetch = jest.fn() as any;
-      mockFetch.preconnect = jest.fn();
+      const mockFetch = vi.fn() as any;
+      mockFetch.preconnect = vi.fn();
       mockFetch.mockResolvedValue(mockResponse);
       global.fetch = mockFetch;
 
@@ -356,8 +347,8 @@ describe('Isomorphic Authentication System', () => {
         ok: true,
         json: async () => ({ success: true, token: 'new_token_123' }),
       };
-      const mockFetch = jest.fn() as any;
-      mockFetch.preconnect = jest.fn();
+      const mockFetch = vi.fn() as any;
+      mockFetch.preconnect = vi.fn();
       mockFetch.mockResolvedValue(mockResponse);
       global.fetch = mockFetch;
 
@@ -380,8 +371,8 @@ describe('Isomorphic Authentication System', () => {
 
   describe('Error Handling', () => {
     test('should handle network errors gracefully', async () => {
-      const mockFetch = jest.fn() as any;
-      mockFetch.preconnect = jest.fn();
+      const mockFetch = vi.fn() as any;
+      mockFetch.preconnect = vi.fn();
       mockFetch.mockRejectedValue(new Error('Network error'));
       global.fetch = mockFetch;
 
@@ -412,7 +403,7 @@ describe('Isomorphic Authentication System', () => {
       const { isomorphicAuth } = await import('../src/lib/isomorphic-auth');
       await isomorphicAuth.waitForInit();
 
-      const mockCallback = jest.fn();
+      const mockCallback = vi.fn();
       const unsubscribe = isomorphicAuth.subscribe(mockCallback);
 
       // Trigger state change
@@ -428,12 +419,12 @@ describe('Isomorphic Authentication System', () => {
 
 describe('React Hook Integration', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('should provide authentication state through hook', async () => {
     // Mock React hooks
-    const mockUseState = jest.fn().mockReturnValue([
+    const mockUseState = vi.fn().mockReturnValue([
       {
         isAuthenticated: false,
         isLoading: false,
@@ -441,13 +432,13 @@ describe('React Hook Integration', () => {
         error: null,
         platform: 'web',
       },
-      jest.fn(),
+      vi.fn(),
     ]);
-    const mockUseEffect = jest.fn();
-    const mockUseCallback = jest.fn().mockImplementation((fn) => fn);
+    const mockUseEffect = vi.fn();
+    const mockUseCallback = vi.fn().mockImplementation((fn) => fn);
 
     // Mock React
-    jest.doMock('react', () => ({
+    vi.doMock('react', () => ({
       useState: mockUseState,
       useEffect: mockUseEffect,
       useCallback: mockUseCallback,

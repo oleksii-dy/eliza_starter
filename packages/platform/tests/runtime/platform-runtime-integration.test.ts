@@ -11,7 +11,7 @@ import {
   beforeAll,
   afterAll,
   beforeEach,
-} from '@jest/globals';
+} from 'vitest';
 import { db, getDatabase, initializeDbProxy } from '@/lib/database';
 import {
   organizations,

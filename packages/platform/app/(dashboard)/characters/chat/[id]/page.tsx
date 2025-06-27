@@ -111,7 +111,7 @@ export default function CharacterChatPage() {
   };
 
   const sendMessage = async () => {
-    if (!message.trim() || sending) return;
+    if (!message.trim() || sending) {return;}
 
     const messageContent = message.trim();
     setMessage('');

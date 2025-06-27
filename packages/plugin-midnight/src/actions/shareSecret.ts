@@ -6,9 +6,9 @@ import {
   logger,
   asUUID,
 } from '@elizaos/core';
-import { NetworkMessagingService } from '../services/NetworkMessagingService.js';
-import { CostTrackingService } from '../services/CostTrackingService.js';
-import { type MidnightActionResult } from '../types/index.js';
+import { NetworkMessagingService } from '../services/NetworkMessagingService';
+import { CostTrackingService } from '../services/CostTrackingService';
+import { type MidnightActionResult } from '../types/index';
 
 /**
  * Action for sharing secret messages with other agents using Midnight Network

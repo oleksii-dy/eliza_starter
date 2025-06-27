@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { sign } from 'jsonwebtoken';
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   // During build time, return a stub response to prevent database access
   if (
     process.env.NEXT_PHASE === 'phase-production-build' ||
@@ -131,3 +132,5 @@ export async function handlePOST(request: NextRequest) {
     );
   }
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

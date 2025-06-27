@@ -71,11 +71,11 @@ export class LocalStorageService implements IStorageService {
 
   private getMetadataPath(key: string): string {
     const sanitizedKey = key.replace(/\.\./g, '').replace(/^\/+/, '');
-    return path.join(this.rootPath, '.metadata', sanitizedKey + '.meta');
+    return path.join(this.rootPath, '.metadata', `${sanitizedKey}.meta`);
   }
 
   private generateEtag(data: Buffer): string {
-    return crypto.createHash('md5').update(data).digest('hex');
+    return crypto.createHash('md5').update(data).digest('hex') as string;
   }
 
   async upload(
@@ -132,7 +132,7 @@ export class LocalStorageService implements IStorageService {
         contentType,
       };
     } catch (error) {
-      if (error instanceof StorageError) throw error;
+      if (error instanceof StorageError) {throw error;}
       throw new StorageError(`Failed to upload file ${key}`, error as Error);
     }
   }
@@ -277,7 +277,7 @@ export class LocalStorageService implements IStorageService {
           const entries = await fs.readdir(dir, { withFileTypes: true });
 
           for (const entry of entries) {
-            if (entry.name === '.metadata') continue;
+            if (entry.name === '.metadata') {continue;}
 
             const fullPath = path.join(dir, entry.name);
             const relativePath = currentPrefix

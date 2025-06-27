@@ -11,7 +11,7 @@ import {
 import { hasStatusCode } from '@/lib/types/common';
 
 export function withMetrics<
-  T extends (...args: any[]) => Promise<NextResponse>,
+  T extends(...args: any[]) => Promise<NextResponse>,
 >(
   handler: T,
   options: {
@@ -54,7 +54,7 @@ export function withMetrics<
  */
 export function createMetricsMiddleware(routeName: string) {
   return function metricsMiddleware<
-    T extends (...args: any[]) => Promise<NextResponse>,
+    T extends(...args: any[]) => Promise<NextResponse>,
   >(handler: T): T {
     return withMetrics(handler, {
       path: routeName,

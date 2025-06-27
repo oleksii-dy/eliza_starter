@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { getServerSession, authOptions } from '@/lib/auth/auth-config';
 import { GitHubService } from '@/lib/services/github-service';
 import { getSql } from '@/lib/database';
 
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest): Promise<NextResponse> {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -54,7 +55,7 @@ export async function handleGET(request: NextRequest) {
   }
 }
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest): Promise<NextResponse> {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
@@ -196,3 +197,7 @@ async function getUserGitHubToken(userId: string): Promise<string | null> {
     return null;
   }
 }
+
+// Export the route handlers
+
+export const { GET, POST } = wrapHandlers({ handleGET, handlePOST });

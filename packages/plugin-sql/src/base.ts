@@ -1551,7 +1551,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
             return false;
           }
 
-          logger.debug(entities.length, 'Entities created successfully');
+          logger.debug(`${entities.length} entities created successfully`);
           return true;
         });
       } catch (error) {
@@ -3959,7 +3959,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
    */
   async createWorld(world: World): Promise<UUID> {
     return this.withDatabase(async () => {
-      const newWorldId = world.id || v4();
+      const newWorldId = world.id || (v4() as UUID);
       await this.db.insert(worldTable).values({
         id: newWorldId,
         name: world.name || '',
@@ -4813,7 +4813,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
       }
 
       // Filter out null/undefined userIds to prevent constraint violations
-      const validUserIds = userIds.filter((userId) => userId != null);
+      const validUserIds = userIds.filter((userId) => userId !== null);
 
       if (validUserIds.length === 0) {
         return;

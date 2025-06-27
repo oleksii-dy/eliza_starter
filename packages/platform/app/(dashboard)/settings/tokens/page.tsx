@@ -84,6 +84,7 @@ export default function TokensPage() {
   };
 
   const deleteApiKey = async (id: string) => {
+    // eslint-disable-next-line no-alert
     if (
       !confirm(
         'Are you sure you want to delete this API key? This action cannot be undone.',

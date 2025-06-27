@@ -1,10 +1,10 @@
-import { EffectComposer, EffectPass, RenderPass, SelectiveBloomEffect } from 'postprocessing'
-import { THREE } from '../extras/three'
+import { EffectComposer, EffectPass, RenderPass, SelectiveBloomEffect } from 'postprocessing';
+import { THREE } from '../extras/three';
 
-import type { World, WorldOptions } from '../../types/index.js'
-import { System } from './System.js'
+import type { World, WorldOptions } from '../../types/index.js';
+import { System } from './System.js';
 
-let renderer: THREE.WebGLRenderer | undefined
+let renderer: THREE.WebGLRenderer | undefined;
 function getRenderer() {
   if (!renderer) {
     renderer = new THREE.WebGLRenderer({
@@ -12,9 +12,9 @@ function getRenderer() {
       antialias: true,
       // logarithmicDepthBuffer: true,
       // reverseDepthBuffer: true,
-    })
+    });
   }
-  return renderer
+  return renderer;
 }
 
 /**
@@ -27,83 +27,83 @@ function getRenderer() {
  */
 export class ClientGraphics extends System {
   // Properties
-  renderer!: THREE.WebGLRenderer
-  viewport!: HTMLElement
-  maxAnisotropy!: number
-  usePostprocessing!: boolean
-  composer!: EffectComposer
-  renderPass!: RenderPass
-  bloom!: SelectiveBloomEffect
-  bloomPass!: EffectPass
-  effectPass!: EffectPass
-  resizer!: ResizeObserver
-  xrWidth: number | null = null
-  xrHeight: number | null = null
-  xrDimensionsNeeded: boolean = false
-  xrSession: any | null = null
-  width: number = 0
-  height: number = 0
-  aspect: number = 0
-  worldToScreenFactor: number = 0
-  usingExistingCanvas: boolean = false
+  renderer!: THREE.WebGLRenderer;
+  viewport!: HTMLElement;
+  maxAnisotropy!: number;
+  usePostprocessing!: boolean;
+  composer!: EffectComposer;
+  renderPass!: RenderPass;
+  bloom!: SelectiveBloomEffect;
+  bloomPass!: EffectPass;
+  effectPass!: EffectPass;
+  resizer!: ResizeObserver;
+  xrWidth: number | null = null;
+  xrHeight: number | null = null;
+  xrDimensionsNeeded: boolean = false;
+  xrSession: any | null = null;
+  width: number = 0;
+  height: number = 0;
+  aspect: number = 0;
+  worldToScreenFactor: number = 0;
+  usingExistingCanvas: boolean = false;
 
   constructor(world: World) {
-    super(world)
+    super(world);
   }
 
   override async init(options: WorldOptions & { viewport?: HTMLElement }): Promise<void> {
     if (!options.viewport) {
-      throw new Error('ClientGraphics requires viewport in options')
+      throw new Error('ClientGraphics requires viewport in options');
     }
-    const { viewport } = options
-    this.viewport = viewport
-    this.width = this.viewport.offsetWidth
-    this.height = this.viewport.offsetHeight
-    this.aspect = this.width / this.height
+    const { viewport } = options;
+    this.viewport = viewport;
+    this.width = this.viewport.offsetWidth;
+    this.height = this.viewport.offsetHeight;
+    this.aspect = this.width / this.height;
 
     // Check if there's already a canvas in the viewport (from Puppeteer/testing)
-    const existingCanvas = this.viewport.querySelector('canvas')
+    const existingCanvas = this.viewport.querySelector('canvas');
     if (existingCanvas) {
-      console.log('[ClientGraphics] Found existing canvas, using it for WebGL context')
-      this.usingExistingCanvas = true
+      console.log('[ClientGraphics] Found existing canvas, using it for WebGL context');
+      this.usingExistingCanvas = true;
       this.renderer = new THREE.WebGLRenderer({
         canvas: existingCanvas,
         powerPreference: 'high-performance',
         antialias: true,
         // logarithmicDepthBuffer: true,
         // reverseDepthBuffer: true,
-      })
+      });
     } else {
-      console.log('[ClientGraphics] Creating new WebGL renderer')
-      this.usingExistingCanvas = false
-      this.renderer = getRenderer()
+      console.log('[ClientGraphics] Creating new WebGL renderer');
+      this.usingExistingCanvas = false;
+      this.renderer = getRenderer();
     }
 
-    this.renderer.setSize(this.width, this.height)
-    this.renderer.setClearColor(0xffffff, 0)
-    const worldAny = this.world as any
-    this.renderer.setPixelRatio(worldAny.prefs?.dpr || 1)
-    this.renderer.shadowMap.enabled = true
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping
-    this.renderer.toneMappingExposure = 1
-    this.renderer.outputColorSpace = THREE.SRGBColorSpace
-    this.renderer.xr.enabled = true
-    this.renderer.xr.setReferenceSpaceType('local-floor')
-    this.renderer.xr.setFoveation(0)
-    this.maxAnisotropy = this.renderer.capabilities.getMaxAnisotropy()
-    THREE.Texture.DEFAULT_ANISOTROPY = this.maxAnisotropy
-    this.usePostprocessing = worldAny.prefs?.postprocessing ?? true
-    const context = this.renderer.getContext()
+    this.renderer.setSize(this.width, this.height);
+    this.renderer.setClearColor(0xffffff, 0);
+    const worldAny = this.world as any;
+    this.renderer.setPixelRatio(worldAny.prefs?.dpr || 1);
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1;
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.renderer.xr.enabled = true;
+    this.renderer.xr.setReferenceSpaceType('local-floor');
+    this.renderer.xr.setFoveation(0);
+    this.maxAnisotropy = this.renderer.capabilities.getMaxAnisotropy();
+    THREE.Texture.DEFAULT_ANISOTROPY = this.maxAnisotropy;
+    this.usePostprocessing = worldAny.prefs?.postprocessing ?? true;
+    const context = this.renderer.getContext();
     const maxMultisampling = (context as WebGL2RenderingContext).MAX_SAMPLES
       ? context.getParameter((context as WebGL2RenderingContext).MAX_SAMPLES)
-      : 8
+      : 8;
     this.composer = new EffectComposer(this.renderer, {
       frameBufferType: THREE.HalfFloatType,
       multisampling: Math.min(8, maxMultisampling),
-    })
-    this.renderPass = new RenderPass(this.world.stage.scene, this.world.camera)
-    this.composer.addPass(this.renderPass)
+    });
+    this.renderPass = new RenderPass(this.world.stage.scene, this.world.camera);
+    this.composer.addPass(this.renderPass);
     this.bloom = new SelectiveBloomEffect(this.world.stage.scene, this.world.camera, {
       intensity: 0.8,
       luminanceThreshold: 0.1,
@@ -111,12 +111,12 @@ export class ClientGraphics extends System {
       radius: 0.7,
       mipmapBlur: true,
       levels: 4,
-    })
-    this.bloom.inverted = true
-    this.bloom.selection.layer = 14 // NO_BLOOM layer
-    this.bloomPass = new EffectPass(this.world.camera, this.bloom)
-    this.bloomPass.enabled = worldAny.prefs?.bloom ?? true
-    this.composer.addPass(this.bloomPass)
+    });
+    this.bloom.inverted = true;
+    this.bloom.selection.layer = 14; // NO_BLOOM layer
+    this.bloomPass = new EffectPass(this.world.camera, this.bloom);
+    this.bloomPass.enabled = worldAny.prefs?.bloom ?? true;
+    this.composer.addPass(this.bloomPass);
     this.effectPass = new EffectPass(
       this.world.camera
       // new VignetteEffect({
@@ -125,115 +125,115 @@ export class ClientGraphics extends System {
       // new NoiseEffect({
       //   premultiply: true,
       // })
-    )
-    this.composer.addPass(this.effectPass)
-    worldAny.prefs?.on('change', this.onPrefsChange)
+    );
+    this.composer.addPass(this.effectPass);
+    worldAny.prefs?.on('change', this.onPrefsChange);
     this.resizer = new ResizeObserver(() => {
-      this.resize(this.viewport.offsetWidth, this.viewport.offsetHeight)
-    })
+      this.resize(this.viewport.offsetWidth, this.viewport.offsetHeight);
+    });
 
     // Only append the canvas if it's not already in the viewport
     if (!existingCanvas) {
-      console.log('[ClientGraphics] Appending new canvas to viewport')
-      this.viewport.appendChild(this.renderer.domElement)
+      console.log('[ClientGraphics] Appending new canvas to viewport');
+      this.viewport.appendChild(this.renderer.domElement);
     } else {
-      console.log('[ClientGraphics] Using existing canvas in viewport')
+      console.log('[ClientGraphics] Using existing canvas in viewport');
     }
 
-    this.resizer.observe(this.viewport)
+    this.resizer.observe(this.viewport);
   }
 
   override start() {
-    const worldAny = this.world as any
-    worldAny.on?.('xrSession', this.onXRSession)
+    const worldAny = this.world as any;
+    worldAny.on?.('xrSession', this.onXRSession);
   }
 
   resize(width: number, height: number) {
-    this.width = width
-    this.height = height
-    this.aspect = this.width / this.height
-    this.world.camera.aspect = this.aspect
-    this.world.camera.updateProjectionMatrix()
-    this.renderer.setSize(this.width, this.height)
-    this.composer.setSize(this.width, this.height)
-    this.emit('resize')
-    this.render()
+    this.width = width;
+    this.height = height;
+    this.aspect = this.width / this.height;
+    this.world.camera.aspect = this.aspect;
+    this.world.camera.updateProjectionMatrix();
+    this.renderer.setSize(this.width, this.height);
+    this.composer.setSize(this.width, this.height);
+    this.emit('resize');
+    this.render();
   }
 
   render() {
     if (this.renderer.xr.isPresenting || !this.usePostprocessing) {
-      this.renderer.render(this.world.stage.scene, this.world.camera)
+      this.renderer.render(this.world.stage.scene, this.world.camera);
     } else {
-      this.composer.render()
+      this.composer.render();
     }
     if (this.xrDimensionsNeeded) {
-      this.updateXRDimensions()
+      this.updateXRDimensions();
     }
   }
 
   override commit() {
-    this.render()
+    this.render();
   }
 
   override preTick() {
-    const fov = this.world.camera.fov
-    const fovRadians = THREE.MathUtils.degToRad(fov)
-    const rendererHeight = this.xrHeight || this.height
-    this.worldToScreenFactor = (Math.tan(fovRadians / 2) * 2) / rendererHeight
+    const fov = this.world.camera.fov;
+    const fovRadians = THREE.MathUtils.degToRad(fov);
+    const rendererHeight = this.xrHeight || this.height;
+    this.worldToScreenFactor = (Math.tan(fovRadians / 2) * 2) / rendererHeight;
   }
 
   onPrefsChange = (changes: any) => {
     // dpr
     if (changes.dpr) {
-      this.renderer.setPixelRatio(changes.dpr.value)
-      this.resize(this.width, this.height)
+      this.renderer.setPixelRatio(changes.dpr.value);
+      this.resize(this.width, this.height);
     }
     // postprocessing
     if (changes.postprocessing) {
-      this.usePostprocessing = changes.postprocessing.value
+      this.usePostprocessing = changes.postprocessing.value;
     }
     // bloom
     if (changes.bloom) {
-      this.bloomPass.enabled = changes.bloom.value
+      this.bloomPass.enabled = changes.bloom.value;
     }
-  }
+  };
 
   onXRSession = (session: any) => {
     if (session) {
-      this.xrSession = session
-      this.xrWidth = null
-      this.xrHeight = null
-      this.xrDimensionsNeeded = true
+      this.xrSession = session;
+      this.xrWidth = null;
+      this.xrHeight = null;
+      this.xrDimensionsNeeded = true;
     } else {
-      this.xrSession = null
-      this.xrWidth = null
-      this.xrHeight = null
-      this.xrDimensionsNeeded = false
+      this.xrSession = null;
+      this.xrWidth = null;
+      this.xrHeight = null;
+      this.xrDimensionsNeeded = false;
     }
-  }
+  };
 
   updateXRDimensions() {
-    const referenceSpace = this.renderer.xr.getReferenceSpace()
+    const referenceSpace = this.renderer.xr.getReferenceSpace();
     if (!referenceSpace) {
-      return
+      return;
     }
-    const frame = this.renderer.xr.getFrame()
-    const pose = frame.getViewerPose(referenceSpace)
+    const frame = this.renderer.xr.getFrame();
+    const pose = frame.getViewerPose(referenceSpace);
     if (pose && pose.views.length > 0) {
-      const view = pose.views[0]
+      const view = pose.views[0];
       if (view) {
-        const projectionMatrix = view.projectionMatrix
+        const projectionMatrix = view.projectionMatrix;
         if (projectionMatrix) {
           // Extract FOV information from projection matrix
           // const fovFactor = projectionMatrix[5] // Approximation of FOV scale
           // Access render state for framebuffer dimensions
-          const renderState = this.xrSession.renderState
-          const baseLayer = renderState.baseLayer || renderState.layers?.[0]
+          const renderState = this.xrSession.renderState;
+          const baseLayer = renderState.baseLayer || renderState.layers?.[0];
           if (baseLayer && baseLayer.framebufferWidth && baseLayer.framebufferHeight) {
-            this.xrWidth = baseLayer.framebufferWidth
-            this.xrHeight = baseLayer.framebufferHeight
-            this.xrDimensionsNeeded = false
-            console.log({ xrWidth: this.xrWidth, xrHeight: this.xrHeight })
+            this.xrWidth = baseLayer.framebufferWidth;
+            this.xrHeight = baseLayer.framebufferHeight;
+            this.xrDimensionsNeeded = false;
+            console.log({ xrWidth: this.xrWidth, xrHeight: this.xrHeight });
           }
         }
       }
@@ -241,7 +241,7 @@ export class ClientGraphics extends System {
   }
 
   override destroy() {
-    this.resizer.disconnect()
-    this.viewport.removeChild(this.renderer.domElement)
+    this.resizer.disconnect();
+    this.viewport.removeChild(this.renderer.domElement);
   }
 }

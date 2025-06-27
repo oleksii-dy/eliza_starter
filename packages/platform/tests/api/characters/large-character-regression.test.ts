@@ -3,28 +3,21 @@
  * Tests specifically for the "request entity too large" bug fix
  */
 
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-  jest,
-} from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 import { POST } from '../../../app/api/characters/route';
 
 // Mock the auth service
-jest.mock('@/lib/auth/session', () => ({
+vi.mock('@/lib/auth/session', () => ({
   authService: {
-    getCurrentUser: jest.fn(),
+    getCurrentUser: vi.fn(),
   },
 }));
 
 // Mock the character service
-jest.mock('@/lib/characters/service', () => ({
+vi.mock('@/lib/characters/service', () => ({
   characterService: {
-    createCharacter: jest.fn(),
+    createCharacter: vi.fn(),
   },
 }));
 
@@ -39,7 +32,7 @@ describe('Large Character File Regression Test', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     (authService.getCurrentUser as any).mockResolvedValue(mockUser);
   });
 
@@ -50,7 +43,7 @@ describe('Large Character File Regression Test', () => {
       .map(
         (_, i) =>
           `Knowledge item ${i}: This is substantial content for testing large character files. ` +
-          `Adding sufficient text to reach the target size for testing the request entity too large bug fix.`,
+          'Adding sufficient text to reach the target size for testing the request entity too large bug fix.',
       );
 
     const largeCharacterData = {
@@ -114,8 +107,8 @@ describe('Large Character File Regression Test', () => {
       .map(
         (_, i) =>
           `Extremely large knowledge item ${i}: This is very substantial content for stress testing large character files. ` +
-          `Adding even more text to reach very large target sizes for comprehensive testing of the request entity too large bug fix. ` +
-          `Additional content to ensure we exceed 200KB for stress testing purposes.`,
+          'Adding even more text to reach very large target sizes for comprehensive testing of the request entity too large bug fix. ' +
+          'Additional content to ensure we exceed 200KB for stress testing purposes.',
       );
 
     const extremelyLargeCharacterData = {

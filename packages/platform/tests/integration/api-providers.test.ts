@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
+import { describe, test, expect, beforeAll, afterAll } from 'vitest';
 import { createApiKey } from '@/lib/server/services/api-key-service';
 import { addCredits } from '@/lib/server/services/billing-service';
 import { db, getDatabase, initializeDbProxy } from '@/lib/database';

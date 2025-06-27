@@ -119,7 +119,7 @@ describe('MCP Routes', () => {
         const res = createMockResponse();
         const runtime = createMockRuntime(mockService);
 
-        await getServersRoute.handler(req, res, runtime);
+        await getServersRoute!.handler!(req, res, runtime);
 
         expect(res._json).toEqual({
           success: true,
@@ -152,7 +152,7 @@ describe('MCP Routes', () => {
         const res = createMockResponse();
         const runtime = createMockRuntime();
 
-        await getServersRoute.handler(req, res, runtime);
+        await getServersRoute!.handler!(req, res, runtime);
 
         expect(res._status).toBe(503);
         expect(res._json).toEqual({
@@ -181,7 +181,7 @@ describe('MCP Routes', () => {
         const res = createMockResponse();
         const runtime = createMockRuntime(mockService);
 
-        await getServersRoute.handler(req, res, runtime);
+        await getServersRoute!.handler!(req, res, runtime);
 
         expect(res._status).toBe(500);
         expect(res._json).toEqual({
@@ -212,7 +212,7 @@ describe('MCP Routes', () => {
         const res = createMockResponse();
         const runtime = createMockRuntime(mockService);
 
-        await callToolRoute.handler(req, res, runtime);
+        await callToolRoute!.handler!(req, res, runtime);
 
         expect(mockService.callTool).toHaveBeenCalledWith('test-server', 'test-tool', {
           arg1: 'value1',
@@ -249,7 +249,7 @@ describe('MCP Routes', () => {
         const res = createMockResponse();
         const runtime = createMockRuntime(mockService);
 
-        await callToolRoute.handler(req, res, runtime);
+        await callToolRoute!.handler!(req, res, runtime);
 
         expect(res._status).toBe(500);
         expect(res._json).toEqual({
@@ -282,7 +282,7 @@ describe('MCP Routes', () => {
         const res = createMockResponse();
         const runtime = createMockRuntime(mockService);
 
-        await readResourceRoute.handler(req, res, runtime);
+        await readResourceRoute!.handler!(req, res, runtime);
 
         expect(mockService.readResource).toHaveBeenCalledWith('test-server', 'test://resource');
         expect(res._json).toEqual({
@@ -313,7 +313,7 @@ describe('MCP Routes', () => {
         const res = createMockResponse();
         const runtime = createMockRuntime({});
 
-        await readResourceRoute.handler(req, res, runtime);
+        await readResourceRoute!.handler!(req, res, runtime);
 
         expect(res._status).toBe(400);
         expect(res._json).toEqual({
@@ -350,7 +350,7 @@ describe('MCP Routes', () => {
         const res = createMockResponse();
         const runtime = createMockRuntime(mockService);
 
-        await reconnectRoute.handler(req, res, runtime);
+        await reconnectRoute!.handler!(req, res, runtime);
 
         expect(mockService.reconnectServer).toHaveBeenCalledWith('test-server', {
           type: 'stdio',
@@ -386,7 +386,7 @@ describe('MCP Routes', () => {
         const res = createMockResponse();
         const runtime = createMockRuntime(mockService);
 
-        await reconnectRoute.handler(req, res, runtime);
+        await reconnectRoute!.handler!(req, res, runtime);
 
         expect(res._status).toBe(404);
         expect(res._json).toEqual({
@@ -409,7 +409,7 @@ describe('MCP Routes', () => {
         const res = createMockResponse();
         const runtime = createMockRuntime();
 
-        await viewerRoute.handler(req, res, runtime);
+        await viewerRoute!.handler!(req, res, runtime);
 
         expect(res._type).toBe('html');
         expect(res._send).toContain('<!DOCTYPE html>');

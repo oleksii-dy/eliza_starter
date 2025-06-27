@@ -10,12 +10,12 @@ import {
 } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test';
-import { PgDatabaseAdapter } from '../../pg/adapter';
+
 import { PgAdapter } from '../../pg/adapter';
 import { createIsolatedTestDatabase } from '../test-helpers';
 
 describe('Component Integration Tests', () => {
-  let adapter: PgAdapter | PgDatabaseAdapter;
+  let adapter: PgAdapter;
   let runtime: AgentRuntime;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;
@@ -56,7 +56,7 @@ describe('Component Integration Tests', () => {
       { id: testEntityId, agentId: testAgentId, names: ['Test Entity'] } as Entity,
       { id: testSourceEntityId, agentId: testAgentId, names: ['Source Entity'] } as Entity,
     ]);
-  }, 30000);
+  });
 
   afterAll(async () => {
     if (cleanup) {

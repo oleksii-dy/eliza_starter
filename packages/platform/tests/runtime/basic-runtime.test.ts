@@ -2,7 +2,7 @@
  * Basic runtime integration test to verify ElizaOS core connectivity
  */
 
-import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
+import { describe, test, expect, beforeAll, afterAll } from 'vitest';
 import { IAgentRuntime } from '@elizaos/core';
 import {
   createTestRuntime,

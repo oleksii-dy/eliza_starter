@@ -1,6 +1,6 @@
 /**
  * Database Cache Adapter
- * 
+ *
  * Implements caching using PostgreSQL for local development and scenarios
  * where Redis is not available. Provides full cache functionality with
  * database persistence and SQL-based operations.
@@ -36,7 +36,7 @@ class SimpleDatabaseClient {
         return [];
       }
     }
-    
+
     if (sql.includes('INSERT') || sql.includes('UPDATE')) {
       const [key, value, expiresAt, tags, metadata] = params;
       this.storage.set(key, {
@@ -48,7 +48,7 @@ class SimpleDatabaseClient {
       });
       return [{ key }];
     }
-    
+
     if (sql.includes('DELETE')) {
       if (sql.includes('tags &&')) {
         // Tag-based deletion
@@ -79,14 +79,14 @@ class SimpleDatabaseClient {
         return existed ? [{ key }] : [];
       }
     }
-    
+
     return [];
   }
-  
+
   private isExpired(expiresAt: Date): boolean {
     return expiresAt < new Date();
   }
-  
+
   clear() {
     this.storage.clear();
   }
@@ -139,7 +139,7 @@ export class DatabaseCacheAdapter extends CacheAdapter {
       }
 
       const entry = result[0];
-      
+
       // Check if expired
       if (this.isExpired(new Date(entry.expires_at))) {
         // Clean up expired entry
@@ -149,7 +149,7 @@ export class DatabaseCacheAdapter extends CacheAdapter {
       }
 
       this.updateStats('hit');
-      
+
       // Decompress if needed
       let value = entry.value;
       if (options?.compress) {
@@ -170,13 +170,13 @@ export class DatabaseCacheAdapter extends CacheAdapter {
   async set<T = any>(key: string, value: T, options?: CacheOptions): Promise<boolean> {
     this.validateKey(key);
     this.validateValue(value);
-    
+
     const fullKey = this.buildKey(key, options?.namespace);
     const expiresAt = this.calculateExpiration(options);
-    
+
     try {
       let serializedValue = this.serialize(value, options);
-      
+
       // Compress if requested and value is large
       if (options?.compress) {
         serializedValue = await this.compress(serializedValue);
@@ -228,7 +228,7 @@ export class DatabaseCacheAdapter extends CacheAdapter {
         this.updateStats('delete');
         this.stats.totalKeys = Math.max(0, this.stats.totalKeys - 1);
       }
-      
+
       return deleted;
     } catch (error) {
       this.updateStats('error');
@@ -296,7 +296,7 @@ export class DatabaseCacheAdapter extends CacheAdapter {
       `, [by, fullKey]);
 
       if (result.length > 0) {
-        return parseInt(result[0].value);
+        return parseInt(result[0].value, 10);
       }
 
       // If key doesn't exist, create it
@@ -366,26 +366,26 @@ export class DatabaseCacheAdapter extends CacheAdapter {
    * Set multiple keys at once
    */
   async mset(entries: Array<{ key: string; value: any; options?: CacheOptions }>): Promise<number> {
-    if (entries.length === 0) return 0;
+    if (entries.length === 0) {return 0;}
 
     try {
       let successCount = 0;
-      
+
       // Process in batches to avoid large queries
       const batchSize = 100;
       for (let i = 0; i < entries.length; i += batchSize) {
         const batch = entries.slice(i, i + batchSize);
-        
+
         const values: any[] = [];
         const placeholders: string[] = [];
-        
+
         batch.forEach((entry, index) => {
           this.validateKey(entry.key);
           this.validateValue(entry.value);
-          
+
           const baseIndex = index * 5;
           placeholders.push(`($${baseIndex + 1}, $${baseIndex + 2}, $${baseIndex + 3}, $${baseIndex + 4}, $${baseIndex + 5})`);
-          
+
           values.push(
             this.buildKey(entry.key, entry.options?.namespace),
             this.serialize(entry.value, entry.options),
@@ -425,7 +425,7 @@ export class DatabaseCacheAdapter extends CacheAdapter {
    * Delete multiple keys at once
    */
   async mdel(keys: string[]): Promise<number> {
-    if (keys.length === 0) return 0;
+    if (keys.length === 0) {return 0;}
 
     const fullKeys = keys.map(key => {
       this.validateKey(key);
@@ -441,7 +441,7 @@ export class DatabaseCacheAdapter extends CacheAdapter {
       const deletedCount = result.length;
       this.stats.deletes += deletedCount;
       this.stats.totalKeys = Math.max(0, this.stats.totalKeys - deletedCount);
-      
+
       return deletedCount;
     } catch (error) {
       this.updateStats('error');
@@ -481,7 +481,7 @@ export class DatabaseCacheAdapter extends CacheAdapter {
    * Invalidate cache entries by tags
    */
   async invalidateByTags(tags: string[]): Promise<number> {
-    if (tags.length === 0) return 0;
+    if (tags.length === 0) {return 0;}
 
     try {
       const result = await this.db.query(`
@@ -525,16 +525,16 @@ export class DatabaseCacheAdapter extends CacheAdapter {
    */
   async healthCheck(): Promise<{ healthy: boolean; latency?: number; error?: string }> {
     const startTime = Date.now();
-    
+
     try {
       await this.db.query('SELECT 1', []);
       const latency = Date.now() - startTime;
-      
+
       return { healthy: true, latency };
     } catch (error) {
-      return { 
-        healthy: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      return {
+        healthy: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
       };
     }
   }
@@ -547,7 +547,7 @@ export class DatabaseCacheAdapter extends CacheAdapter {
       clearInterval(this.cleanupInterval);
       this.cleanupInterval = null;
     }
-    
+
     logger.debug('Database cache adapter closed');
   }
 
@@ -559,7 +559,7 @@ export class DatabaseCacheAdapter extends CacheAdapter {
     if (process.env.NODE_ENV === 'test') {
       return;
     }
-    
+
     // Clean up expired entries every 5 minutes
     this.cleanupInterval = setInterval(async () => {
       try {
@@ -567,7 +567,7 @@ export class DatabaseCacheAdapter extends CacheAdapter {
           `DELETE FROM ${this.tableName} WHERE expires_at < NOW()`,
           []
         );
-        
+
         const deletedCount = result.length;
         if (deletedCount > 0) {
           this.stats.totalKeys = Math.max(0, this.stats.totalKeys - deletedCount);
@@ -603,9 +603,9 @@ export class DatabaseCacheAdapter extends CacheAdapter {
 
       const stats = result[0];
       return {
-        totalEntries: parseInt(stats.total_entries || '0'),
-        expiredEntries: parseInt(stats.expired_entries || '0'),
-        totalSize: parseInt(stats.total_size || '0'),
+        totalEntries: parseInt(stats.total_entries || '0', 10),
+        expiredEntries: parseInt(stats.expired_entries || '0', 10),
+        totalSize: parseInt(stats.total_size || '0', 10),
         oldestEntry: stats.oldest_entry ? new Date(stats.oldest_entry) : null,
         newestEntry: stats.newest_entry ? new Date(stats.newest_entry) : null,
       };

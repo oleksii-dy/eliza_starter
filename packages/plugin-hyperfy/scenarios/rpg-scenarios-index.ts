@@ -118,11 +118,13 @@ export const getScenarioByName = (name: string) => {
 
 // Development and testing utilities
 export const validateAllScenarios = () => {
-  const issues = [];
+  const issues: string[] = [];
 
   for (const scenario of allRPGScenarios) {
     // Check required fields
-    if (!scenario.id) issues.push(`${scenario.name}: Missing ID`);
+    if (!scenario.id) {
+      issues.push(`${scenario.name}: Missing ID`);
+    }
     if (!scenario.actors || scenario.actors.length === 0) {
       issues.push(`${scenario.name}: No actors defined`);
     }

@@ -21,6 +21,9 @@ import { DamageCalculator } from './combat/DamageCalculator'
 import { CombatAnimationManager } from './combat/CombatAnimationManager'
 
 export class CombatSystem extends System {
+  name = 'CombatSystem'
+  enabled = true
+
   // Core components
   private combatSessions: Map<string, CombatSession> = new Map()
   private hitCalculator: HitCalculator
@@ -46,6 +49,19 @@ export class CombatSystem extends System {
    */
   override async init(_options: any): Promise<void> {
     console.log('[CombatSystem] Initializing...')
+
+    // Listen for combat-related events
+    this.world.events.on('rpg:attack', (event: any) => {
+      this.handleAttackEvent(event)
+    })
+
+    this.world.events.on('rpg:stop_combat', (event: any) => {
+      this.endCombat(event.entityId)
+    })
+
+    this.world.events.on('rpg:special_attack', (event: any) => {
+      this.handleSpecialAttackEvent(event)
+    })
 
     // Listen for entity death to clean up combat sessions
     this.world.events.on('entity:death', (event: any) => {
@@ -341,6 +357,7 @@ export class CombatSystem extends System {
     // Check range
     const distance = this.getDistance(attacker, target)
     const attackRange = this.getAttackRange(attacker)
+    
     if (distance > attackRange) {
       return false
     }
@@ -749,12 +766,15 @@ export class CombatSystem extends System {
    * Get entity from world and cast to RPGEntity
    */
   private getEntity(entityId: string): RPGEntity | undefined {
-    const entity = this.world.entities.items.get(entityId)
+    // Check items map first
+    let entity = this.world.entities.items?.get(entityId)
+    
+    // If not found, check players map (for tests)
+    if (!entity && this.world.entities.players) {
+      entity = this.world.entities.players.get(entityId)
+    }
+    
     if (!entity) {
-      console.debug('[CombatSystem] getEntity: Entity not found', {
-        entityId,
-        availableEntities: Array.from(this.world.entities.items.keys()),
-      })
       return undefined
     }
 
@@ -793,5 +813,250 @@ export class CombatSystem extends System {
    */
   forceEndCombat(entityId: string): void {
     this.endCombat(entityId)
+  }
+
+  /**
+   * Get or create combat component for entity
+   */
+  getOrCreateCombatComponent(entityId: string): CombatComponent {
+    const entity = this.getEntity(entityId)
+    if (!entity) {
+      throw new Error(`Entity not found: ${entityId}`)
+    }
+
+    let combat = entity.getComponent<CombatComponent>('combat')
+    if (!combat) {
+      // Create default combat component
+      const defaultCombat: CombatComponent = {
+        type: 'combat',
+        entityId,
+        inCombat: false,
+        target: null,
+        lastAttackTime: 0,
+        attackSpeed: 4,
+        combatStyle: CombatStyle.ACCURATE,
+        autoRetaliate: true,
+        hitSplatQueue: [],
+        animationQueue: [],
+        specialAttackEnergy: 100,
+        specialAttackActive: false,
+        protectionPrayers: {
+          melee: false,
+          ranged: false,
+          magic: false,
+        },
+      }
+
+      // Add component to entity
+      const addedComponent = (entity as any).addComponent('combat', defaultCombat)
+      combat = addedComponent
+    }
+
+    return combat
+  }
+
+  /**
+   * Calculate maximum hit damage
+   */
+  calculateMaxHit(stats: StatsComponent, attackType: string, style: string): number {
+    return this.damageCalculator.calculateMaxHit(
+      stats,
+      style as CombatStyle,
+      attackType as AttackType
+    )
+  }
+
+  /**
+   * Calculate effective level with bonuses
+   */
+  calculateEffectiveLevel(baseLevel: number, prayerBonus: number, potionBonus: number, style: string): number {
+    let styleBonus = 0
+
+    switch (style) {
+      case 'accurate':
+      case 'aggressive':
+      case 'defensive':
+        styleBonus = 3
+        break
+      case 'controlled':
+        styleBonus = 1
+        break
+    }
+
+    return baseLevel + prayerBonus + potionBonus + styleBonus
+  }
+
+  /**
+   * Grant combat XP based on damage and attack type
+   */
+  grantCombatXP(entityId: string, damage: number, attackType: string): void {
+    const baseXp = damage * 4
+    const hpXp = damage * 1.33
+    const defenseXp = damage * 1.33
+
+    switch (attackType) {
+      case 'melee':
+        // Melee grants attack, strength, and HP XP
+        this.world.events.emit('rpg:xp_gain', {
+          playerId: entityId,
+          skill: 'attack',
+          amount: baseXp,
+          source: 'combat',
+        })
+        this.world.events.emit('rpg:xp_gain', {
+          playerId: entityId,
+          skill: 'strength',
+          amount: baseXp,
+          source: 'combat',
+        })
+        this.world.events.emit('rpg:xp_gain', {
+          playerId: entityId,
+          skill: 'hitpoints',
+          amount: hpXp,
+          source: 'combat',
+        })
+        break
+
+      case 'ranged':
+        // Ranged grants ranged, defense, and HP XP
+        this.world.events.emit('rpg:xp_gain', {
+          playerId: entityId,
+          skill: 'ranged',
+          amount: baseXp,
+          source: 'combat',
+        })
+        this.world.events.emit('rpg:xp_gain', {
+          playerId: entityId,
+          skill: 'defence',
+          amount: defenseXp,
+          source: 'combat',
+        })
+        this.world.events.emit('rpg:xp_gain', {
+          playerId: entityId,
+          skill: 'hitpoints',
+          amount: hpXp,
+          source: 'combat',
+        })
+        break
+
+      case 'magic':
+        // Magic grants magic and HP XP
+        this.world.events.emit('rpg:xp_gain', {
+          playerId: entityId,
+          skill: 'magic',
+          amount: damage * 2,
+          source: 'combat',
+        })
+        this.world.events.emit('rpg:xp_gain', {
+          playerId: entityId,
+          skill: 'hitpoints',
+          amount: hpXp,
+          source: 'combat',
+        })
+        break
+    }
+  }
+
+  /**
+   * Handle entity death with proper event emission
+   */
+  handleEntityDeathWithKiller(deadEntityId: string, killerId: string): void {
+    this.world.events.emit('rpg:entity_death', {
+      deadEntityId,
+      killerId,
+      timestamp: Date.now(),
+    })
+
+    // Also handle cleanup
+    this.handleEntityDeath(deadEntityId)
+  }
+
+  /**
+   * Regenerate special attack energy
+   */
+  regenerateSpecialAttack(): void {
+    // For testing, always regenerate 10% special attack
+    const allMaps = [this.world.entities.items, this.world.entities.players].filter(Boolean)
+    
+    for (const entityMap of allMaps) {
+      for (const [entityId] of entityMap) {
+        const entity = this.getEntity(entityId)
+        if (!entity) continue
+
+        const combat = entity.getComponent<CombatComponent>('combat')
+        if (!combat) continue
+
+        if (combat.specialAttackEnergy < 100) {
+          combat.specialAttackEnergy = Math.min(100, combat.specialAttackEnergy + 10)
+        }
+      }
+    }
+  }
+
+  /**
+   * Handle attack event
+   */
+  private handleAttackEvent(event: any): void {
+    const { attackerId, targetId } = event
+    this.initiateAttack(attackerId, targetId)
+  }
+
+  /**
+   * Handle special attack event
+   */
+  private handleSpecialAttackEvent(event: any): void {
+    const { attackerId, targetId } = event
+    this.performSpecialAttack(attackerId, targetId)
+  }
+
+  /**
+   * Perform special attack
+   */
+  private performSpecialAttack(attackerId: string, targetId: string): void {
+    const attacker = this.getEntity(attackerId)
+    const target = this.getEntity(targetId)
+
+    if (!attacker || !target) {
+      return
+    }
+
+    const combat = attacker.getComponent<CombatComponent>('combat')
+    if (!combat || combat.specialAttackEnergy < 25) {
+      return // Not enough special attack energy
+    }
+
+    // Drain special attack energy
+    combat.specialAttackEnergy -= 25
+
+    // Perform enhanced attack
+    const hit = this.calculateSpecialHit(attacker, target)
+    
+    // Apply damage if hit
+    if (hit.damage > 0) {
+      this.applyDamage(target, hit.damage, attacker)
+    }
+
+    // Queue hit splat
+    this.queueHitSplat(target, hit)
+
+    // Play special attack animation
+    this.combatAnimations.playAttackAnimation(attacker, hit.attackType)
+
+    // Emit special hit event
+    this.world.events.emit('combat:special_hit', { hit })
+  }
+
+  /**
+   * Calculate special attack hit
+   */
+  private calculateSpecialHit(attacker: RPGEntity, target: RPGEntity): HitResult {
+    // Enhanced hit calculation for special attacks
+    const hit = this.calculateHit(attacker, target)
+    
+    // Special attacks typically have higher accuracy and damage
+    hit.damage = Math.floor(hit.damage * 1.2) // 20% damage boost
+    hit.type = 'critical'
+
+    return hit
   }
 }

@@ -78,7 +78,7 @@ let isInitialized = false;
  * Ensures database is initialized before use
  */
 async function ensureInitialized() {
-  if (isInitialized) return;
+  if (isInitialized) {return;}
 
   if (!initPromise) {
     initPromise = (async () => {

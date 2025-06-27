@@ -3,7 +3,7 @@
  * Tests the actual PlatformDatabaseAdapter with real database operations
  */
 
-import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, test, expect, beforeEach, afterEach } from 'vitest';
 import { db, getDatabase } from '@/lib/database';
 import {
   organizations,

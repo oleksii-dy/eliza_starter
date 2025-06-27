@@ -277,7 +277,7 @@ export async function setSystemContext(organizationId: string): Promise<void> {
 export function withDatabaseContextMiddleware(
   getContext: () => Promise<DatabaseContext>,
 ) {
-  return function <T extends any[], R>(fn: (...args: T) => Promise<R>) {
+  return function <T extends any[], R> (fn: (...args: T) => Promise<R>) {
     return async (...args: T): Promise<R> => {
       const context = await getContext();
       return withDatabaseContext(context, () => fn(...args));

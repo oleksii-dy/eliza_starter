@@ -705,7 +705,7 @@ describe('Real-World EVM Plugin Testing', () => {
         const result = await bridgeAction.handler(
           mockRuntime,
           {
-            id: asUUID(`route-test-${route.from}-${route.to}`),
+            id: asUUID('00000000-0000-0000-0000-000000000001'),
             agentId: mockRuntime.agentId,
             entityId: asUUID('00000000-0000-0000-0000-000000000002'),
             content: { text: `Bridge ${route.from} to ${route.to}`, action: 'EVM_BRIDGE_TOKENS' },
@@ -1305,7 +1305,7 @@ describe('Real-World EVM Plugin Testing', () => {
       console.log(`⛽ Current gas price: ${Number(gasPrice) / 1e9} gwei`);
 
       // Test transaction cost calculation
-      const estimatedGas = 21000n; // Standard ETH transfer
+      const estimatedGas = BigInt(21000); // Standard ETH transfer
       const estimatedCost = gasPrice * estimatedGas;
       console.log(`💰 Estimated transaction cost: ${Number(estimatedCost) / 1e18} ETH`);
 
@@ -1383,7 +1383,23 @@ describe('Real-World EVM Plugin Testing', () => {
           text: '',
           agentId: mockRuntime.agentId,
           roomId: asUUID('00000000-0000-0000-0000-000000000003'),
+          userId: asUUID('00000000-0000-0000-0000-000000000002'),
+          bio: 'Test agent bio',
+          messageDirections: 'Test message directions',
+          postDirections: 'Test post directions',
+          recentMessages: 'Test recent messages',
+          actors: 'Test actors',
+          actorsData: [],
+          goals: 'Test goals',
+          goalsData: [],
+          recentMessagesData: [],
+          actionNames: '',
+          actions: '',
+          providers: '',
+          responseData: {},
+          senderName: 'TestUser',
           supportedChains: 'sepolia',
+          chainBalances: 'sepolia: 1.0 ETH',
         } as State,
         {},
         transferCallback

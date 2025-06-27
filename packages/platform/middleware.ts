@@ -23,7 +23,7 @@ export async function middleware(request: NextRequest) {
   const isDev = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_DEV_MODE === 'true';
   const cookieStore = await cookies();
   const authToken = cookieStore.get('auth-token')?.value;
-  
+
   if (isDev && authToken === 'dev-auth-token-123') {
     // Allow all authenticated routes in dev mode with dev token
     return NextResponse.next();
@@ -35,11 +35,12 @@ export async function middleware(request: NextRequest) {
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
-  // Allow legal pages and client-static assets to be accessed without authentication
+  // Allow legal pages, client-static assets, and landing pages to be accessed without authentication
   if (
     pathname.startsWith('/legal') ||
     pathname.startsWith('/client-static') ||
-    pathname.startsWith('/assets')
+    pathname.startsWith('/assets') ||
+    pathname === '/autocoder-lander'
   ) {
     return NextResponse.next();
   }

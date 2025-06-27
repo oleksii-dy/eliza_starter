@@ -30,7 +30,7 @@ import {
   MidnightNetworkError,
   ProofGenerationError,
   ContractExecutionError,
-} from '../types/index.js';
+} from '../types/index';
 
 /**
  * Core service for REAL Midnight Network integration
@@ -303,7 +303,7 @@ export class MidnightNetworkService extends Service {
     try {
       this.logger.info('Initializing and compiling Compact circuits...');
 
-      const { circuitCompiler } = await import('../utils/circuitCompiler.js');
+      const { circuitCompiler } = await import('../utils/circuitCompiler');
 
       // Load any previously compiled contracts
       await circuitCompiler.loadCompiledContracts();
@@ -474,7 +474,7 @@ export class MidnightNetworkService extends Service {
       }
 
       // Use the proof generator to create a real ZK proof
-      const { proofGenerator } = await import('../utils/proofGenerator.js');
+      const { proofGenerator } = await import('../utils/proofGenerator');
       const proof = await proofGenerator.generateProof(contractName, circuitName, witnesses);
 
       this.logger.info('REAL ZK proof generated successfully', {
@@ -502,7 +502,7 @@ export class MidnightNetworkService extends Service {
       this.logger.info('Verifying REAL ZK proof', { circuitId: proof.circuitId });
 
       // Use the proof generator to verify the real ZK proof
-      const { proofGenerator } = await import('../utils/proofGenerator.js');
+      const { proofGenerator } = await import('../utils/proofGenerator');
       const isValid = await proofGenerator.verifyProof(proof);
 
       this.logger.info('REAL ZK proof verification completed', {

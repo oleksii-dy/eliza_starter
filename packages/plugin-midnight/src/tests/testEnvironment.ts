@@ -1,6 +1,6 @@
 import { IAgentRuntime, type Character } from '@elizaos/core';
 import { RuntimeTestHarness } from '@elizaos/core/test-utils';
-import { midnightPlugin } from '../index.js';
+import { midnightPlugin } from '../index';
 
 /**
  * Test environment configuration for Midnight Network plugin testing

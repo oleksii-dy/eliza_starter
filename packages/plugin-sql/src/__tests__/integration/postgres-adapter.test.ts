@@ -123,15 +123,15 @@ describe('PostgreSQL Adapter Integration Tests', () => {
       expect(connection).toBeDefined();
     });
 
-    it('should check if shutting down', () => {
-      const isShuttingDown = manager.isShuttingDown();
-      expect(isShuttingDown).toBe(false);
+    it('should check if closed', () => {
+      const isClosed = manager.isClosed();
+      expect(isClosed).toBe(false);
     });
 
     it('should handle close operation', async () => {
       await manager.close();
-      const isShuttingDown = manager.isShuttingDown();
-      expect(isShuttingDown).toBe(true);
+      const isClosed = manager.isClosed();
+      expect(isClosed).toBe(true);
     });
 
     it('should test connection through adapter', async () => {

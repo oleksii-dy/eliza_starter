@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { z } from 'zod';
 import { WorkOSClient } from '@/lib/server/auth/workos';
 import { SessionManager } from '@/lib/server/auth/session';
@@ -17,7 +18,7 @@ const callbackSchema = z.object({
   state: z.string().optional(),
 });
 
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const config = loadConfig();
     const workosClient = new WorkOSClient(config.workos);
@@ -181,3 +182,5 @@ export async function handlePOST(request: NextRequest) {
     return NextResponse.json(response, { status: 500 });
   }
 }
+
+export const { POST } = wrapHandlers({ handlePOST });

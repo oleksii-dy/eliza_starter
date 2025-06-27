@@ -37,7 +37,7 @@ export function PluginPreview({ project, build }: PluginPreviewProps) {
   }, [build, selectedFile]);
 
   const runLiveTest = async () => {
-    if (!build) return;
+    if (!build) {return;}
 
     setIsTestRunning(true);
     try {
@@ -61,7 +61,7 @@ export function PluginPreview({ project, build }: PluginPreviewProps) {
   };
 
   const downloadPlugin = async () => {
-    if (!build) return;
+    if (!build) {return;}
 
     try {
       const response = await fetch(
@@ -104,8 +104,8 @@ export function PluginPreview({ project, build }: PluginPreviewProps) {
   };
 
   const getQualityColor = (score: number): string => {
-    if (score >= 90) return 'text-green-600';
-    if (score >= 70) return 'text-yellow-600';
+    if (score >= 90) {return 'text-green-600';}
+    if (score >= 70) {return 'text-yellow-600';}
     return 'text-red-600';
   };
 

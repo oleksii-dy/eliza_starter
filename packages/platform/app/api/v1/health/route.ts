@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 
-export async function handleGET() {
+async function handleGET() {
   return NextResponse.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
@@ -8,3 +9,5 @@ export async function handleGET() {
     environment: process.env.NODE_ENV || 'development',
   });
 }
+
+export const { GET } = wrapHandlers({ handleGET });

@@ -1,12 +1,12 @@
-import { describe, it, expect, beforeEach } from 'bun:test'
-import { EquipmentBonusCalculator } from '../../../rpg/systems/inventory/EquipmentBonusCalculator'
-import { ItemRegistry } from '../../../rpg/systems/inventory/ItemRegistry'
-import { EquipmentSlot, WeaponType } from '../../../rpg/types'
-import type { Equipment, StatsComponent, CombatBonuses } from '../../../rpg/types'
+import { describe, it, expect, beforeEach } from 'bun:test';
+import { EquipmentBonusCalculator } from '../../../rpg/systems/inventory/EquipmentBonusCalculator';
+import { ItemRegistry } from '../../../rpg/systems/inventory/ItemRegistry';
+import { EquipmentSlot, WeaponType } from '../../../rpg/types';
+import type { Equipment, StatsComponent, CombatBonuses } from '../../../rpg/types';
 
 describe('EquipmentBonusCalculator', () => {
-  let calculator: EquipmentBonusCalculator
-  let itemRegistry: ItemRegistry
+  let calculator: EquipmentBonusCalculator;
+  let itemRegistry: ItemRegistry;
 
   const mockBronzeSword: Equipment = {
     id: 1,
@@ -42,7 +42,7 @@ describe('EquipmentBonusCalculator', () => {
     },
     model: 'bronze_sword',
     icon: 'bronze_sword_icon',
-  }
+  };
 
   const mockBronzeShield: Equipment = {
     id: 2,
@@ -76,7 +76,7 @@ describe('EquipmentBonusCalculator', () => {
     },
     model: 'bronze_shield',
     icon: 'bronze_shield_icon',
-  }
+  };
 
   const mockBronzeHelmet: Equipment = {
     id: 3,
@@ -110,7 +110,7 @@ describe('EquipmentBonusCalculator', () => {
     },
     model: 'bronze_helmet',
     icon: 'bronze_helmet_icon',
-  }
+  };
 
   const mockPrayerAmulet: Equipment = {
     id: 4,
@@ -144,7 +144,7 @@ describe('EquipmentBonusCalculator', () => {
     },
     model: 'glory_amulet',
     icon: 'glory_amulet_icon',
-  }
+  };
 
   const mockPlayerStats: StatsComponent = {
     type: 'stats',
@@ -175,12 +175,12 @@ describe('EquipmentBonusCalculator', () => {
     },
     combatLevel: 3,
     totalLevel: 32,
-  }
+  };
 
   beforeEach(() => {
-    itemRegistry = new ItemRegistry()
-    calculator = new EquipmentBonusCalculator(itemRegistry)
-  })
+    itemRegistry = new ItemRegistry();
+    calculator = new EquipmentBonusCalculator(itemRegistry);
+  });
 
   describe('calculateTotalBonuses', () => {
     it('should return zero bonuses for empty equipment', () => {
@@ -196,16 +196,16 @@ describe('EquipmentBonusCalculator', () => {
         [EquipmentSlot.BOOTS]: null,
         [EquipmentSlot.RING]: null,
         [EquipmentSlot.AMMO]: null,
-      }
+      };
 
-      const bonuses = calculator.calculateTotalBonuses(equipment)
+      const bonuses = calculator.calculateTotalBonuses(equipment);
 
-      expect(bonuses.attackStab).toBe(0)
-      expect(bonuses.attackSlash).toBe(0)
-      expect(bonuses.defenseStab).toBe(0)
-      expect(bonuses.meleeStrength).toBe(0)
-      expect(bonuses.prayerBonus).toBe(0)
-    })
+      expect(bonuses.attackStab).toBe(0);
+      expect(bonuses.attackSlash).toBe(0);
+      expect(bonuses.defenseStab).toBe(0);
+      expect(bonuses.meleeStrength).toBe(0);
+      expect(bonuses.prayerBonus).toBe(0);
+    });
 
     it('should calculate bonuses for single item', () => {
       const equipment = {
@@ -220,15 +220,15 @@ describe('EquipmentBonusCalculator', () => {
         [EquipmentSlot.BOOTS]: null,
         [EquipmentSlot.RING]: null,
         [EquipmentSlot.AMMO]: null,
-      }
+      };
 
-      const bonuses = calculator.calculateTotalBonuses(equipment)
+      const bonuses = calculator.calculateTotalBonuses(equipment);
 
-      expect(bonuses.attackStab).toBe(4)
-      expect(bonuses.attackSlash).toBe(5)
-      expect(bonuses.attackCrush).toBe(-2)
-      expect(bonuses.meleeStrength).toBe(4)
-    })
+      expect(bonuses.attackStab).toBe(4);
+      expect(bonuses.attackSlash).toBe(5);
+      expect(bonuses.attackCrush).toBe(-2);
+      expect(bonuses.meleeStrength).toBe(4);
+    });
 
     it('should sum bonuses from multiple items', () => {
       const equipment = {
@@ -243,26 +243,26 @@ describe('EquipmentBonusCalculator', () => {
         [EquipmentSlot.BOOTS]: null,
         [EquipmentSlot.RING]: null,
         [EquipmentSlot.AMMO]: null,
-      }
+      };
 
-      const bonuses = calculator.calculateTotalBonuses(equipment)
+      const bonuses = calculator.calculateTotalBonuses(equipment);
 
       // Attack bonuses
-      expect(bonuses.attackStab).toBe(14) // 4 + 10
-      expect(bonuses.attackSlash).toBe(15) // 5 + 10
-      expect(bonuses.attackCrush).toBe(8) // -2 + 10
-      expect(bonuses.attackMagic).toBe(-9) // 0 + 3 + -6 + -6
-      expect(bonuses.attackRanged).toBe(6) // 0 + 10 + -2 + -2
+      expect(bonuses.attackStab).toBe(14); // 4 + 10
+      expect(bonuses.attackSlash).toBe(15); // 5 + 10
+      expect(bonuses.attackCrush).toBe(8); // -2 + 10
+      expect(bonuses.attackMagic).toBe(-9); // 0 + 3 + -6 + -6
+      expect(bonuses.attackRanged).toBe(6); // 0 + 10 + -2 + -2
 
       // Defense bonuses
-      expect(bonuses.defenseStab).toBe(10) // 0 + 3 + 4 + 3
-      expect(bonuses.defenseSlash).toBe(13) // 1 + 3 + 5 + 4
-      expect(bonuses.defenseCrush).toBe(14) // 0 + 3 + 6 + 5
+      expect(bonuses.defenseStab).toBe(10); // 0 + 3 + 4 + 3
+      expect(bonuses.defenseSlash).toBe(13); // 1 + 3 + 5 + 4
+      expect(bonuses.defenseCrush).toBe(14); // 0 + 3 + 6 + 5
 
       // Other bonuses
-      expect(bonuses.meleeStrength).toBe(10) // 4 + 6
-      expect(bonuses.prayerBonus).toBe(3) // 0 + 3
-    })
+      expect(bonuses.meleeStrength).toBe(10); // 4 + 6
+      expect(bonuses.prayerBonus).toBe(3); // 0 + 3
+    });
 
     it('should handle negative bonuses correctly', () => {
       const equipment = {
@@ -277,13 +277,13 @@ describe('EquipmentBonusCalculator', () => {
         [EquipmentSlot.BOOTS]: null,
         [EquipmentSlot.RING]: null,
         [EquipmentSlot.AMMO]: null,
-      }
+      };
 
-      const bonuses = calculator.calculateTotalBonuses(equipment)
+      const bonuses = calculator.calculateTotalBonuses(equipment);
 
-      expect(bonuses.attackMagic).toBe(-12) // -6 + -6
-    })
-  })
+      expect(bonuses.attackMagic).toBe(-12); // -6 + -6
+    });
+  });
 
   describe('meetsRequirements', () => {
     it('should return true when player meets all requirements', () => {
@@ -291,7 +291,7 @@ describe('EquipmentBonusCalculator', () => {
         ...mockPlayerStats,
         attack: { level: 60, xp: 273742, bonus: 0 },
         defense: { level: 60, xp: 273742, bonus: 0 },
-      }
+      };
 
       const dragonSword: Equipment = {
         ...mockBronzeSword,
@@ -299,10 +299,10 @@ describe('EquipmentBonusCalculator', () => {
           ...mockBronzeSword.equipment!,
           requirements: { attack: { level: 60, xp: 0 } },
         },
-      }
+      };
 
-      expect(calculator.meetsRequirements(dragonSword, playerWithHighStats)).toBe(true)
-    })
+      expect(calculator.meetsRequirements(dragonSword, playerWithHighStats)).toBe(true);
+    });
 
     it('should return false when player does not meet requirements', () => {
       const dragonSword: Equipment = {
@@ -311,10 +311,10 @@ describe('EquipmentBonusCalculator', () => {
           ...mockBronzeSword.equipment!,
           requirements: { attack: { level: 60, xp: 0 } },
         },
-      }
+      };
 
-      expect(calculator.meetsRequirements(dragonSword, mockPlayerStats)).toBe(false)
-    })
+      expect(calculator.meetsRequirements(dragonSword, mockPlayerStats)).toBe(false);
+    });
 
     it('should return true for items with no requirements', () => {
       const noReqItem: Equipment = {
@@ -323,10 +323,10 @@ describe('EquipmentBonusCalculator', () => {
           ...mockBronzeSword.equipment!,
           requirements: {},
         },
-      }
+      };
 
-      expect(calculator.meetsRequirements(noReqItem, mockPlayerStats)).toBe(true)
-    })
+      expect(calculator.meetsRequirements(noReqItem, mockPlayerStats)).toBe(true);
+    });
 
     it('should check multiple skill requirements', () => {
       const multiReqItem: Equipment = {
@@ -338,27 +338,27 @@ describe('EquipmentBonusCalculator', () => {
             strength: { level: 40, xp: 0 },
           },
         },
-      }
+      };
 
       const playerWithMixedStats: StatsComponent = {
         ...mockPlayerStats,
         attack: { level: 50, xp: 100000, bonus: 0 },
         strength: { level: 30, xp: 50000, bonus: 0 },
-      }
+      };
 
-      expect(calculator.meetsRequirements(multiReqItem, playerWithMixedStats)).toBe(false)
-    })
+      expect(calculator.meetsRequirements(multiReqItem, playerWithMixedStats)).toBe(false);
+    });
 
     it('should handle non-equipable items', () => {
       const nonEquipable: Equipment = {
         ...mockBronzeSword,
         equipable: false,
         equipment: undefined,
-      }
+      };
 
-      expect(calculator.meetsRequirements(nonEquipable, mockPlayerStats)).toBe(true)
-    })
-  })
+      expect(calculator.meetsRequirements(nonEquipable, mockPlayerStats)).toBe(true);
+    });
+  });
 
   describe('getEquipmentWeight', () => {
     it('should return 0 for empty equipment', () => {
@@ -374,10 +374,10 @@ describe('EquipmentBonusCalculator', () => {
         [EquipmentSlot.BOOTS]: null,
         [EquipmentSlot.RING]: null,
         [EquipmentSlot.AMMO]: null,
-      }
+      };
 
-      expect(calculator.getEquipmentWeight(equipment)).toBe(0)
-    })
+      expect(calculator.getEquipmentWeight(equipment)).toBe(0);
+    });
 
     it('should calculate total weight of equipped items', () => {
       const equipment = {
@@ -392,16 +392,16 @@ describe('EquipmentBonusCalculator', () => {
         [EquipmentSlot.BOOTS]: null,
         [EquipmentSlot.RING]: null,
         [EquipmentSlot.AMMO]: null,
-      }
+      };
 
-      expect(calculator.getEquipmentWeight(equipment)).toBeCloseTo(7.3)
-    })
+      expect(calculator.getEquipmentWeight(equipment)).toBeCloseTo(7.3);
+    });
 
     it('should handle decimal weights correctly', () => {
       const lightItem: Equipment = {
         ...mockPrayerAmulet,
         weight: 0.05,
-      }
+      };
 
       const equipment = {
         [EquipmentSlot.HEAD]: null,
@@ -415,30 +415,30 @@ describe('EquipmentBonusCalculator', () => {
         [EquipmentSlot.BOOTS]: null,
         [EquipmentSlot.RING]: null,
         [EquipmentSlot.AMMO]: null,
-      }
+      };
 
-      expect(calculator.getEquipmentWeight(equipment)).toBe(0.05)
-    })
-  })
+      expect(calculator.getEquipmentWeight(equipment)).toBe(0.05);
+    });
+  });
 
   describe('createEmptyBonuses', () => {
     it('should create bonuses object with all values set to 0', () => {
-      const bonuses = calculator.createEmptyBonuses()
+      const bonuses = calculator.createEmptyBonuses();
 
-      expect(bonuses.attackStab).toBe(0)
-      expect(bonuses.attackSlash).toBe(0)
-      expect(bonuses.attackCrush).toBe(0)
-      expect(bonuses.attackMagic).toBe(0)
-      expect(bonuses.attackRanged).toBe(0)
-      expect(bonuses.defenseStab).toBe(0)
-      expect(bonuses.defenseSlash).toBe(0)
-      expect(bonuses.defenseCrush).toBe(0)
-      expect(bonuses.defenseMagic).toBe(0)
-      expect(bonuses.defenseRanged).toBe(0)
-      expect(bonuses.meleeStrength).toBe(0)
-      expect(bonuses.rangedStrength).toBe(0)
-      expect(bonuses.magicDamage).toBe(0)
-      expect(bonuses.prayerBonus).toBe(0)
-    })
-  })
-})
+      expect(bonuses.attackStab).toBe(0);
+      expect(bonuses.attackSlash).toBe(0);
+      expect(bonuses.attackCrush).toBe(0);
+      expect(bonuses.attackMagic).toBe(0);
+      expect(bonuses.attackRanged).toBe(0);
+      expect(bonuses.defenseStab).toBe(0);
+      expect(bonuses.defenseSlash).toBe(0);
+      expect(bonuses.defenseCrush).toBe(0);
+      expect(bonuses.defenseMagic).toBe(0);
+      expect(bonuses.defenseRanged).toBe(0);
+      expect(bonuses.meleeStrength).toBe(0);
+      expect(bonuses.rangedStrength).toBe(0);
+      expect(bonuses.magicDamage).toBe(0);
+      expect(bonuses.prayerBonus).toBe(0);
+    });
+  });
+});

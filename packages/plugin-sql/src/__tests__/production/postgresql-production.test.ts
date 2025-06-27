@@ -32,15 +32,15 @@ describe('PostgreSQL Production Validation', () => {
 
     console.log('[PostgreSQL TESTS] Setting up PostgreSQL production test environment...');
 
-    const setup = await createIsolatedTestDatabase(`postgresql_production_${Date.now()}`, []);
+    const setup = await createIsolatedTestDatabase(`postgresql_production_${Date.now()}`);
 
-    adapter = setup.adapter as PgDatabaseAdapter;
+    adapter = setup.adapter as PgAdapter;
     runtime = setup.runtime;
     cleanup = setup.cleanup;
     testAgentId = setup.testAgentId;
 
     console.log('[PostgreSQL TESTS] PostgreSQL production test environment ready');
-  }, 60000); // Extended timeout for PostgreSQL setup
+  }); // Extended timeout for PostgreSQL setup
 
   afterAll(async () => {
     if (cleanup) {
@@ -395,7 +395,7 @@ describe('PostgreSQL Production Validation', () => {
         // Test query performance with large dataset
         const queryStartTime = Date.now();
         const sampleEntityIds = entityIds.slice(0, 100);
-        const queriedEntities = await runtime.getEntityByIds(sampleEntityIds);
+        const queriedEntities = await adapter.getEntitiesByIds(sampleEntityIds);
         const queryTime = Date.now() - queryStartTime;
 
         console.log(

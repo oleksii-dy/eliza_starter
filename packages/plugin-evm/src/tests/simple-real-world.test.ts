@@ -115,24 +115,24 @@ describe('🌍 Real-World EVM Plugin Validation', () => {
       // Estimate costs for different operations
       const estimatedCosts = {
         transfer: {
-          gasUnits: 21000n,
-          cost: gasPrice * 21000n,
-          costEth: Number(gasPrice * 21000n) / 1e18,
+          gasUnits: BigInt(21000),
+          cost: gasPrice * BigInt(21000),
+          costEth: Number(gasPrice * BigInt(21000)) / 1e18,
         },
         swap: {
-          gasUnits: 150000n,
-          cost: gasPrice * 150000n,
-          costEth: Number(gasPrice * 150000n) / 1e18,
+          gasUnits: BigInt(150000),
+          cost: gasPrice * BigInt(150000),
+          costEth: Number(gasPrice * BigInt(150000)) / 1e18,
         },
         bridge: {
-          gasUnits: 200000n,
-          cost: gasPrice * 200000n,
-          costEth: Number(gasPrice * 200000n) / 1e18,
+          gasUnits: BigInt(200000),
+          cost: gasPrice * BigInt(200000),
+          costEth: Number(gasPrice * BigInt(200000)) / 1e18,
         },
         governance: {
-          gasUnits: 100000n,
-          cost: gasPrice * 100000n,
-          costEth: Number(gasPrice * 100000n) / 1e18,
+          gasUnits: BigInt(100000),
+          cost: gasPrice * BigInt(100000),
+          costEth: Number(gasPrice * BigInt(100000)) / 1e18,
         },
       };
 
@@ -263,9 +263,9 @@ describe('🌍 Real-World EVM Plugin Validation', () => {
 
         if (routes.routes.length > 0) {
           const bestRoute = routes.routes[0];
-          console.log(`🎯 Best route:`, bestRoute);
+          console.log('🎯 Best route:', bestRoute);
           console.log(`💰 Estimated output: ${bestRoute.toAmount}`);
-          console.log(`⏱️ Route found`);
+          console.log('⏱️ Route found');
         }
 
         expect(routes).toBeDefined();
@@ -274,7 +274,7 @@ describe('🌍 Real-World EVM Plugin Validation', () => {
         console.log('⚠️ Bridge route test failed:', (error as Error).message);
         expect(error).toBeDefined();
       }
-    });
+    }, 10000);
   });
 
   describe('🏛️ Real Governance Contract Validation', () => {

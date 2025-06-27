@@ -25,7 +25,7 @@ describe('BaseApiClient', () => {
     timeout: 5000,
   };
 
-  let fetchMock: any;
+  let fetchMock: typeof global.fetch;
 
   beforeEach(() => {
     client = new TestClient(mockConfig);

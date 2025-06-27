@@ -3,6 +3,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { sessionService } from '@/lib/auth/session';
 
 export const runtime = 'nodejs';
@@ -10,7 +11,7 @@ export const runtime = 'nodejs';
 /**
  * GET /api/auth/refresh - Refresh access token
  */
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     // Get refresh token from cookies
     const refreshToken = request.cookies.get('refresh-token')?.value;
@@ -71,3 +72,5 @@ export async function handleGET(request: NextRequest) {
     );
   }
 }
+
+export const { GET } = wrapHandlers({ handleGET });

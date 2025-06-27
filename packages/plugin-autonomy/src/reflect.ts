@@ -59,7 +59,7 @@ export const reflectAction = {
     runtime: IAgentRuntime,
     message: Memory,
     state: State,
-    _options: any,
+    _options: { [key: string]: unknown },
     callback: HandlerCallback,
     responses?: Memory[]
   ) => {

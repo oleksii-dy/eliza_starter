@@ -210,7 +210,7 @@ describe('Real-World EVM Plugin Validation', () => {
       console.log(`⛽ Current Sepolia gas price: ${Number(gasPrice) / 1e9} gwei`);
 
       // Use standard gas estimate for transfers (21000 gas)
-      const gasEstimate = 21000n;
+      const gasEstimate = BigInt(21000);
       console.log(`📊 Standard gas for transfer: ${gasEstimate} units`);
 
       const totalCost = gasPrice * gasEstimate;

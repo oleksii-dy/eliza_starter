@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 
 // Use dynamic imports to avoid database connection during build
 const getSessionService = () =>
@@ -8,7 +9,7 @@ const getInferenceAnalytics = () =>
     (m) => m.inferenceAnalytics,
   );
 
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     // During build time, return a stub response to prevent database access
     if (process.env.NEXT_PHASE === 'phase-production-build') {
@@ -107,7 +108,7 @@ export async function handleGET(request: NextRequest) {
     console.error('Failed to fetch analytics data:', error);
 
     // In development, provide mock analytics data for testing
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV !== 'production') {
       console.warn('Using mock analytics data for development');
 
       const mockData = {
@@ -194,7 +195,7 @@ export async function handleGET(request: NextRequest) {
         success: false,
         error: 'Failed to fetch analytics data',
         details:
-          process.env.NODE_ENV === 'development'
+          process.env.NODE_ENV !== 'production'
             ? (error as Error).message
             : undefined,
       },
@@ -202,3 +203,5 @@ export async function handleGET(request: NextRequest) {
     );
   }
 }
+
+export const { GET } = wrapHandlers({ handleGET });

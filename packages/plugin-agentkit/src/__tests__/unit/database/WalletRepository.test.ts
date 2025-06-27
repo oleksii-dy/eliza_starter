@@ -2,7 +2,7 @@ import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { randomUUID } from 'crypto';
 import { WalletRepository } from '../../../database/WalletRepository';
 import type { UUID } from '@elizaos/core';
-import type { IAgentRuntime } from '../../../types/core.d';
+import type { IAgentRuntime } from '@elizaos/core';
 import type { CustodialWallet } from '../../../types/wallet';
 
 /**
@@ -46,7 +46,7 @@ describe('WalletRepository', () => {
 
       // Should create tables (3) and indexes (8) = 11 total calls
       expect(mockDb.run).toHaveBeenCalledTimes(11);
-      
+
       // Verify specific table creation calls
       expect(mockDb.run).toHaveBeenCalledWith(
         expect.stringContaining('CREATE TABLE IF NOT EXISTS custodial_wallets'),
@@ -164,7 +164,9 @@ describe('WalletRepository', () => {
         },
       ]);
 
-      const wallets = await repository.getWalletsForEntity('00000000-0000-0000-0000-000000000002' as UUID);
+      const wallets = await repository.getWalletsForEntity(
+        '00000000-0000-0000-0000-000000000002' as UUID
+      );
 
       expect(wallets).toHaveLength(1);
       expect(wallets[0].id).toBe('00000000-0000-0000-0000-000000000001' as UUID);

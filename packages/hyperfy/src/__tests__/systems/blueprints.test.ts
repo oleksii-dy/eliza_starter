@@ -1,17 +1,17 @@
-import { describe, it, expect, beforeEach } from 'bun:test'
-import { mock, spyOn } from 'bun:test'
-import { Blueprints } from '../../core/systems/Blueprints.js'
-import { createTestWorld, MockWorld } from '../test-world-factory.js'
-import type { World, Blueprint } from '../../types/index.js'
+import { describe, it, expect, beforeEach } from 'bun:test';
+import { mock, spyOn } from 'bun:test';
+import { Blueprints } from '../../core/systems/Blueprints.js';
+import { createTestWorld, MockWorld } from '../test-world-factory.js';
+import type { World, Blueprint } from '../../types/index.js';
 
 describe('Blueprints System', () => {
-  let world: MockWorld
-  let blueprints: Blueprints
+  let world: MockWorld;
+  let blueprints: Blueprints;
 
   beforeEach(async () => {
-    world = await createTestWorld()
-    blueprints = new Blueprints(world)
-  })
+    world = await createTestWorld();
+    blueprints = new Blueprints(world);
+  });
 
   describe('add', () => {
     it('should add a blueprint', () => {
@@ -23,13 +23,13 @@ describe('Blueprints System', () => {
           { type: 'mesh', data: { geometry: 'box' } },
           { type: 'material', data: { color: 0xff0000 } },
         ],
-      }
+      };
 
-      blueprints.add(blueprint)
+      blueprints.add(blueprint);
 
-      expect(blueprints.items.size).toBe(1)
-      expect(blueprints.items.get('test-blueprint')).toEqual(blueprint)
-    })
+      expect(blueprints.items.size).toBe(1);
+      expect(blueprints.items.get('test-blueprint')).toEqual(blueprint);
+    });
 
     it('should send network event when local is true', () => {
       const blueprint: Blueprint = {
@@ -37,17 +37,17 @@ describe('Blueprints System', () => {
         name: 'Test Blueprint',
         version: 1,
         components: [],
-      }
+      };
 
       const mockNetwork = {
         send: mock(),
       }
-      ;(world as any).network = mockNetwork
+      ;(world as any).network = mockNetwork;
 
-      blueprints.add(blueprint, true)
+      blueprints.add(blueprint, true);
 
-      expect(mockNetwork.send).toHaveBeenCalledWith('blueprintAdded', blueprint)
-    })
+      expect(mockNetwork.send).toHaveBeenCalledWith('blueprintAdded', blueprint);
+    });
 
     it('should not send network event when local is false', () => {
       const blueprint: Blueprint = {
@@ -55,17 +55,17 @@ describe('Blueprints System', () => {
         name: 'Test Blueprint',
         version: 1,
         components: [],
-      }
+      };
 
       const mockNetwork = {
         send: mock(),
       }
-      ;(world as any).network = mockNetwork
+      ;(world as any).network = mockNetwork;
 
-      blueprints.add(blueprint, false)
+      blueprints.add(blueprint, false);
 
-      expect(mockNetwork.send).not.toHaveBeenCalled()
-    })
+      expect(mockNetwork.send).not.toHaveBeenCalled();
+    });
 
     it('should handle missing network system gracefully', () => {
       const blueprint: Blueprint = {
@@ -76,12 +76,12 @@ describe('Blueprints System', () => {
       }
 
       // No network system
-      ;(world as any).network = undefined
+      ;(world as any).network = undefined;
 
       // Should not throw
-      expect(() => blueprints.add(blueprint, true)).not.toThrow()
-    })
-  })
+      expect(() => blueprints.add(blueprint, true)).not.toThrow();
+    });
+  });
 
   describe('get', () => {
     it('should return a blueprint by id', () => {
@@ -90,23 +90,23 @@ describe('Blueprints System', () => {
         name: 'Test Blueprint',
         version: 1,
         components: [],
-      }
+      };
 
-      blueprints.add(blueprint)
-      const retrieved = blueprints.get('test-blueprint')
+      blueprints.add(blueprint);
+      const retrieved = blueprints.get('test-blueprint');
 
-      expect(retrieved).toEqual(blueprint)
-    })
+      expect(retrieved).toEqual(blueprint);
+    });
 
     it('should return undefined for non-existent blueprint', () => {
-      const retrieved = blueprints.get('non-existent')
-      expect(retrieved).toBeUndefined()
-    })
-  })
+      const retrieved = blueprints.get('non-existent');
+      expect(retrieved).toBeUndefined();
+    });
+  });
 
   describe('modify', () => {
-    let blueprint: Blueprint
-    let mockEntity: any
+    let blueprint: Blueprint;
+    let mockEntity: any;
 
     beforeEach(() => {
       blueprint = {
@@ -114,7 +114,7 @@ describe('Blueprints System', () => {
         name: 'Test Blueprint',
         version: 1,
         components: [{ type: 'mesh', data: { geometry: 'box' } }],
-      }
+      };
 
       mockEntity = {
         id: 'entity-1',
@@ -123,46 +123,46 @@ describe('Blueprints System', () => {
           state: { foo: 'bar' },
         },
         build: mock(),
-      }
+      };
 
-      world.entities.items.set('entity-1', mockEntity)
-      blueprints.add(blueprint)
-    })
+      world.entities.items.set('entity-1', mockEntity);
+      blueprints.add(blueprint);
+    });
 
     it('should modify an existing blueprint', () => {
       const modifiedData = {
         id: 'test-blueprint',
         name: 'Modified Blueprint',
         version: 1,
-      }
+      };
 
-      blueprints.modify(modifiedData)
+      blueprints.modify(modifiedData);
 
-      const modified = blueprints.get('test-blueprint')
-      expect(modified?.name).toBe('Modified Blueprint')
-      expect(modified?.components).toEqual(blueprint.components) // Original components preserved
-    })
+      const modified = blueprints.get('test-blueprint');
+      expect(modified?.name).toBe('Modified Blueprint');
+      expect(modified?.components).toEqual(blueprint.components); // Original components preserved
+    });
 
     it('should rebuild entities using the modified blueprint', () => {
       blueprints.modify({
         id: 'test-blueprint',
         name: 'Modified Blueprint',
         version: 1,
-      })
+      });
 
-      expect(mockEntity.data.state).toEqual({})
-      expect(mockEntity.build).toHaveBeenCalled()
-    })
+      expect(mockEntity.data.state).toEqual({});
+      expect(mockEntity.build).toHaveBeenCalled();
+    });
 
     it('should emit modify event', () => {
-      const modifyHandler = mock()
-      blueprints.on('modify', modifyHandler)
+      const modifyHandler = mock();
+      blueprints.on('modify', modifyHandler);
 
       blueprints.modify({
         id: 'test-blueprint',
         name: 'Modified Blueprint',
         version: 1,
-      })
+      });
 
       expect(modifyHandler).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -170,23 +170,23 @@ describe('Blueprints System', () => {
           name: 'Modified Blueprint',
           components: blueprint.components,
         })
-      )
-    })
+      );
+    });
 
     it('should not modify or emit if no changes', () => {
-      const modifyHandler = mock()
-      blueprints.on('modify', modifyHandler)
+      const modifyHandler = mock();
+      blueprints.on('modify', modifyHandler);
 
       // Modify with same data
       blueprints.modify({
         id: 'test-blueprint',
         name: 'Test Blueprint', // Same name
         version: 1,
-      })
+      });
 
-      expect(modifyHandler).not.toHaveBeenCalled()
-      expect(mockEntity.build).not.toHaveBeenCalled()
-    })
+      expect(modifyHandler).not.toHaveBeenCalled();
+      expect(mockEntity.build).not.toHaveBeenCalled();
+    });
 
     it('should handle non-existent blueprint gracefully', () => {
       expect(() =>
@@ -195,8 +195,8 @@ describe('Blueprints System', () => {
           name: 'New Name',
           version: 1,
         })
-      ).not.toThrow()
-    })
+      ).not.toThrow();
+    });
 
     it('should handle entities without build method', () => {
       const entityWithoutBuild = {
@@ -206,9 +206,9 @@ describe('Blueprints System', () => {
           state: { foo: 'bar' },
         },
         // No build method
-      }
+      };
 
-      world.entities.items.set('entity-2', entityWithoutBuild as any)
+      world.entities.items.set('entity-2', entityWithoutBuild as any);
 
       expect(() =>
         blueprints.modify({
@@ -216,12 +216,12 @@ describe('Blueprints System', () => {
           name: 'Modified Blueprint',
           version: 1,
         })
-      ).not.toThrow()
+      ).not.toThrow();
 
       // State should be reset to empty object
-      expect(Object.keys(entityWithoutBuild.data.state).length).toBe(0)
-    })
-  })
+      expect(Object.keys(entityWithoutBuild.data.state).length).toBe(0);
+    });
+  });
 
   describe('serialize', () => {
     it('should serialize all blueprints to array', () => {
@@ -230,31 +230,31 @@ describe('Blueprints System', () => {
         name: 'Blueprint 1',
         version: 1,
         components: [],
-      }
+      };
 
       const blueprint2: Blueprint = {
         id: 'blueprint-2',
         name: 'Blueprint 2',
         version: 1,
         components: [{ type: 'mesh', data: { geometry: 'sphere' } }],
-      }
+      };
 
-      blueprints.add(blueprint1)
-      blueprints.add(blueprint2)
+      blueprints.add(blueprint1);
+      blueprints.add(blueprint2);
 
-      const serialized = blueprints.serialize()
+      const serialized = blueprints.serialize();
 
-      expect(serialized).toBeInstanceOf(Array)
-      expect(serialized).toHaveLength(2)
-      expect(serialized).toContainEqual(blueprint1)
-      expect(serialized).toContainEqual(blueprint2)
-    })
+      expect(serialized).toBeInstanceOf(Array);
+      expect(serialized).toHaveLength(2);
+      expect(serialized).toContainEqual(blueprint1);
+      expect(serialized).toContainEqual(blueprint2);
+    });
 
     it('should return empty array when no blueprints', () => {
-      const serialized = blueprints.serialize()
-      expect(serialized).toEqual([])
-    })
-  })
+      const serialized = blueprints.serialize();
+      expect(serialized).toEqual([]);
+    });
+  });
 
   describe('deserialize', () => {
     it('should deserialize array of blueprints', () => {
@@ -271,20 +271,20 @@ describe('Blueprints System', () => {
           version: 1,
           components: [{ type: 'mesh', data: { geometry: 'cylinder' } }],
         },
-      ]
+      ];
 
-      blueprints.deserialize(blueprintData)
+      blueprints.deserialize(blueprintData);
 
-      expect(blueprints.items.size).toBe(2)
-      expect(blueprints.get('blueprint-1')).toEqual(blueprintData[0])
-      expect(blueprints.get('blueprint-2')).toEqual(blueprintData[1])
-    })
+      expect(blueprints.items.size).toBe(2);
+      expect(blueprints.get('blueprint-1')).toEqual(blueprintData[0]);
+      expect(blueprints.get('blueprint-2')).toEqual(blueprintData[1]);
+    });
 
     it('should handle empty array', () => {
-      blueprints.deserialize([])
-      expect(blueprints.items.size).toBe(0)
-    })
-  })
+      blueprints.deserialize([]);
+      expect(blueprints.items.size).toBe(0);
+    });
+  });
 
   describe('destroy', () => {
     it('should clear all blueprints', () => {
@@ -293,15 +293,15 @@ describe('Blueprints System', () => {
         name: 'Test Blueprint',
         version: 1,
         components: [],
-      }
+      };
 
-      blueprints.add(blueprint)
-      expect(blueprints.items.size).toBe(1)
+      blueprints.add(blueprint);
+      expect(blueprints.items.size).toBe(1);
 
-      blueprints.destroy()
-      expect(blueprints.items.size).toBe(0)
-    })
-  })
+      blueprints.destroy();
+      expect(blueprints.items.size).toBe(0);
+    });
+  });
 
   describe('integration', () => {
     it('should handle full lifecycle', () => {
@@ -315,7 +315,7 @@ describe('Blueprints System', () => {
           { type: 'rigidbody', data: { mass: 80 } },
           { type: 'health', data: { max: 100, current: 100 } },
         ],
-      }
+      };
 
       const blueprint2: Blueprint = {
         id: 'vehicle-blueprint',
@@ -326,25 +326,25 @@ describe('Blueprints System', () => {
           { type: 'rigidbody', data: { mass: 1000 } },
           { type: 'engine', data: { power: 200 } },
         ],
-      }
+      };
 
-      blueprints.add(blueprint1)
-      blueprints.add(blueprint2)
+      blueprints.add(blueprint1);
+      blueprints.add(blueprint2);
 
       // Serialize
-      const serialized = blueprints.serialize()
-      expect(serialized).toHaveLength(2)
+      const serialized = blueprints.serialize();
+      expect(serialized).toHaveLength(2);
 
       // Clear and deserialize
-      blueprints.destroy()
-      expect(blueprints.items.size).toBe(0)
+      blueprints.destroy();
+      expect(blueprints.items.size).toBe(0);
 
-      blueprints.deserialize(serialized)
-      expect(blueprints.items.size).toBe(2)
+      blueprints.deserialize(serialized);
+      expect(blueprints.items.size).toBe(2);
 
       // Verify restored blueprints
-      expect(blueprints.get('character-blueprint')).toEqual(blueprint1)
-      expect(blueprints.get('vehicle-blueprint')).toEqual(blueprint2)
-    })
-  })
-})
+      expect(blueprints.get('character-blueprint')).toEqual(blueprint1);
+      expect(blueprints.get('vehicle-blueprint')).toEqual(blueprint2);
+    });
+  });
+});

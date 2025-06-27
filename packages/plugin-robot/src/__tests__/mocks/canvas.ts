@@ -58,7 +58,9 @@ export class Image {
     setTimeout(() => {
       this.width = 640;
       this.height = 480;
-      if (this.onload) this.onload();
+      if (this.onload) {
+        this.onload();
+      }
     }, 10);
   }
 }

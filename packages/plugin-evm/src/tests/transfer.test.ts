@@ -211,7 +211,7 @@ describe('Transfer Action', () => {
           });
 
           expect(typeof gasEstimate).toBe('bigint');
-          expect(gasEstimate).toBeGreaterThan(0n);
+          expect(gasEstimate).toBeGreaterThan(BigInt(0));
           console.warn(`Estimated gas: ${gasEstimate.toString()}`);
         } catch (error) {
           console.warn('Gas estimation failed (likely insufficient funds):', error);
@@ -223,12 +223,12 @@ describe('Transfer Action', () => {
 
         try {
           const gasPrice = await publicClient.getGasPrice();
-          const estimatedGas = 21000n; // Standard ETH transfer gas
+          const estimatedGas = BigInt(21000); // Standard ETH transfer gas
           const transferAmount = parseEther('0.001');
           const totalCost = transferAmount + gasPrice * estimatedGas;
 
           expect(typeof gasPrice).toBe('bigint');
-          expect(gasPrice).toBeGreaterThan(0n);
+          expect(gasPrice).toBeGreaterThan(BigInt(0));
 
           console.warn(`Gas price: ${formatEther(gasPrice)} ETH/gas`);
           console.warn(`Estimated total cost: ${formatEther(totalCost)} ETH`);

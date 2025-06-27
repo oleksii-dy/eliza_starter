@@ -241,7 +241,7 @@ describe('Wallet Provider', () => {
       try {
         const blockNumber = await publicClient.getBlockNumber();
         expect(typeof blockNumber).toBe('bigint');
-        expect(blockNumber).toBeGreaterThan(0n);
+        expect(blockNumber).toBeGreaterThan(BigInt(0));
       } catch (error) {
         // Skip test if network is unreachable
         console.warn('Sepolia network unreachable:', error);

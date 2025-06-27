@@ -361,7 +361,6 @@ export class SmartWalletFactory {
     return walletInstance;
   }
 
-  // eslint-disable-next-line require-await
   async deploy(config: SmartWalletDeploymentConfig): Promise<{
     address: Address;
     deploymentTx?: string;

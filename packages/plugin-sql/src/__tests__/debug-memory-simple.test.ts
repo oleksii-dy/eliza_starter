@@ -68,7 +68,7 @@ describe('Debug Memory Simple Operations', () => {
       agentId: testAgentId,
       roomId,
       content: { text: 'Test memory content', type: 'test' },
-      embedding: null,
+      embedding: undefined,
       unique: false,
       createdAt: Date.now(),
     };
@@ -94,7 +94,7 @@ describe('Debug Memory Simple Operations', () => {
     const entityId = uuidv4() as UUID;
 
     // Create multiple memories for the room
-    const memories = [];
+    const memories: any[] = [];
     for (let i = 0; i < 3; i++) {
       const memory = {
         id: uuidv4() as UUID,
@@ -102,7 +102,7 @@ describe('Debug Memory Simple Operations', () => {
         agentId: testAgentId,
         roomId,
         content: { text: `Memory ${i}`, type: 'test' },
-        embedding: null,
+        embedding: undefined,
         unique: false,
         createdAt: Date.now() + i,
       };
@@ -111,7 +111,7 @@ describe('Debug Memory Simple Operations', () => {
     }
 
     // Get memories for the room
-    const retrieved = await adapter.getMemories({ roomId, count: 10 });
+    const retrieved = await adapter.getMemories({ roomId, count: 10, tableName: 'memories' });
     expect(retrieved.length).toBe(3);
 
     // Should be ordered by creation time descending
@@ -141,7 +141,7 @@ describe('Debug Memory Simple Operations', () => {
         agentId: testAgentId,
         roomId,
         content: { text: `Memory ${i}`, type: 'test' },
-        embedding: null,
+        embedding: undefined,
         unique: false,
         createdAt: Date.now() + i,
       };

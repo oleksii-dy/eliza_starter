@@ -1,9 +1,9 @@
-import { createPortal } from 'react-dom'
+import { createPortal } from 'react-dom';
 
 export function Portal({ children }) {
-  const portalElement = document.getElementById('core-ui-portal')
+  const portalElement = document.getElementById('core-ui-portal');
   if (!portalElement) {
-    return null
+    return null;
   }
-  return createPortal(children, portalElement)
+  return createPortal(children, portalElement);
 }

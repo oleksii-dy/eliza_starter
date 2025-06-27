@@ -33,7 +33,7 @@ describe('Project Structure Validation', () => {
       expect(fileExists(path.join(rootDir, 'package.json'))).toBe(true);
       expect(fileExists(path.join(rootDir, 'tsconfig.json'))).toBe(true);
       expect(fileExists(path.join(rootDir, 'tsconfig.build.json'))).toBe(true);
-      expect(fileExists(path.join(rootDir, 'tsup.config.ts'))).toBe(true);
+      expect(fileExists(path.join(rootDir, 'build.config.ts'))).toBe(true);
       expect(fileExists(path.join(rootDir, 'bunfig.toml'))).toBe(true);
     });
 
@@ -43,24 +43,26 @@ describe('Project Structure Validation', () => {
       // Check scripts
       expect(packageJson.scripts).toHaveProperty('build');
       expect(packageJson.scripts).toHaveProperty('test');
-      expect(packageJson.scripts).toHaveProperty('test:coverage');
 
       // Check dependencies
       expect(packageJson.dependencies).toHaveProperty('@elizaos/core');
 
       // Check dev dependencies - adjusted for actual dev dependencies
       expect(packageJson.devDependencies).toBeTruthy();
-      // bun test is built-in, no external test framework dependency needed
-      expect(packageJson.devDependencies).toHaveProperty('tsup');
+      expect(packageJson.devDependencies).toHaveProperty('typescript');
+      expect(packageJson.devDependencies).toHaveProperty('vite');
     });
 
     it('should have proper TypeScript configuration', () => {
       const tsConfig = JSON.parse(fs.readFileSync(path.join(rootDir, 'tsconfig.json'), 'utf8'));
 
-      // Check essential compiler options
+      // Check that it extends from the base configuration
+      expect(tsConfig).toHaveProperty('extends');
+      expect(tsConfig.extends).toContain('@elizaos/core');
+
+      // Check essential properties
       expect(tsConfig).toHaveProperty('compilerOptions');
-      expect(tsConfig.compilerOptions).toHaveProperty('target');
-      expect(tsConfig.compilerOptions).toHaveProperty('module');
+      expect(tsConfig.compilerOptions).toHaveProperty('baseUrl');
 
       // Check paths inclusion
       expect(tsConfig).toHaveProperty('include');
@@ -89,10 +91,10 @@ describe('Project Structure Validation', () => {
       const packageJson = JSON.parse(fs.readFileSync(path.join(rootDir, 'package.json'), 'utf8'));
       expect(packageJson.scripts).toHaveProperty('build');
 
-      // Check that tsup.config.ts exists and contains proper configuration
-      const tsupConfig = fs.readFileSync(path.join(rootDir, 'tsup.config.ts'), 'utf8');
-      expect(tsupConfig).toContain('export default');
-      expect(tsupConfig).toContain('entry');
+      // Check that build.config.ts exists and contains proper configuration
+      const buildConfig = fs.readFileSync(path.join(rootDir, 'build.config.ts'), 'utf8');
+      expect(buildConfig).toContain('buildConfig');
+      expect(buildConfig).toContain('entrypoints');
     });
   });
 

@@ -1,5 +1,5 @@
 import { randomBytes, createCipheriv, createDecipheriv, pbkdf2Sync } from 'crypto';
-import { elizaLogger } from '../types/core.d';
+import { elizaLogger } from '@elizaos/core';
 
 /**
  * Production-grade encryption service for sensitive data

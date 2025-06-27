@@ -4,7 +4,7 @@
  * Uses conditional imports to handle missing dependencies gracefully
  */
 
-import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, test, expect, beforeEach, afterEach } from 'vitest';
 import { v4 as uuidv4 } from 'uuid';
 
 // Conditional ElizaOS imports - skip tests if imports fail

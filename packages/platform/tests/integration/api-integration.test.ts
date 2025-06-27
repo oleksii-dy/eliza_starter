@@ -3,7 +3,7 @@
  * Tests actual API endpoints with real database operations and services
  */
 
-import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
+import { describe, test, expect, beforeAll, afterAll, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -37,9 +37,9 @@ const TEST_USER_ID = uuidv4();
 const TEST_USER_EMAIL = 'api-integration-test@example.com';
 
 // Mock authentication for tests
-jest.mock('../../lib/auth/session', () => ({
+vi.mock('../../lib/auth/session', () => ({
   authService: {
-    getCurrentUser: jest.fn(() =>
+    getCurrentUser: vi.fn(() =>
       Promise.resolve({
         id: TEST_USER_ID,
         organizationId: TEST_ORG_ID,
@@ -314,7 +314,7 @@ describe('API Integration Tests', () => {
       // Temporarily mock unauthorized user
       const { authService } = require('../../lib/auth/session');
       const originalGetCurrentUser = authService.getCurrentUser;
-      authService.getCurrentUser = jest.fn(() => Promise.resolve(null));
+      authService.getCurrentUser = vi.fn(() => Promise.resolve(null));
 
       const request = createMockRequest(
         'GET',

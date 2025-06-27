@@ -21,6 +21,7 @@ function createAgentTable() {
     bio: factory.text('bio').notNull(),
     system: factory.text('system'),
     topics: factory.json('topics').$type<string[]>().default([]),
+    adjectives: factory.json('adjectives').$type<string[]>().default([]),
     knowledge: factory.json('knowledge').$type<string[]>().default([]),
     messageExamples: factory.json('message_examples').$type<any[]>().default([]),
     postExamples: factory.json('post_examples').$type<string[]>().default([]),

@@ -116,7 +116,7 @@ describe('Runtime Integration: GitHub Plugin with runtime.getSetting', () => {
     // Execute action
     const callback = mock();
     await rateLimitAction!.handler(
-      mockRuntime as IAgentRuntime,
+      mockRuntime as unknown as IAgentRuntime,
       {
         id: 'test' as UUID,
         roomId: 'test' as UUID,

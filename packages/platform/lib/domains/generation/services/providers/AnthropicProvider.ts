@@ -229,7 +229,7 @@ Return only the code with minimal explanation.`;
     const mockResponse = `Generated response for: ${inputText}`;
 
     return {
-      id: 'msg_' + Date.now(),
+      id: `msg_${Date.now()}`,
       type: 'message',
       role: 'assistant',
       model: params.model,

@@ -11,7 +11,7 @@
     "clean": "rm -rf dist && rm -rf .turbo",
     "lint": "eslint src --fix && prettier --write ./src",
     "typecheck": "tsc --noEmit",
-    "test": "bun test src/",
+    "test": "bun test",
     "benchmark": "node scripts/run-benchmarks.ts",
     "benchmark:deepresearch": "node scripts/run-benchmarks.ts deepresearch",
     "benchmark:breadth": "node scripts/run-benchmarks.ts breadth",

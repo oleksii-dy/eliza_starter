@@ -1,12 +1,12 @@
 import { AgentRuntime, ChannelType, type UUID } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test';
-import { PgDatabaseAdapter } from '../../pg/adapter';
+
 import { PgAdapter } from '../../pg/adapter';
 import { createIsolatedTestDatabase } from '../test-helpers';
 
 describe('Messaging Integration Tests', () => {
-  let adapter: PgAdapter | PgDatabaseAdapter;
+  let adapter: PgAdapter;
   let runtime: AgentRuntime;
   let cleanup: () => Promise<void>;
   let testAgentId: UUID;
@@ -26,7 +26,7 @@ describe('Messaging Integration Tests', () => {
       sourceType: 'test',
     });
     serverId = server.id;
-  }, 30000);
+  });
 
   afterAll(async () => {
     if (cleanup) {

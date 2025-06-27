@@ -5,7 +5,7 @@ import {
   type State,
   logger,
   asUUID,
-} from '../types/core.d';
+} from '@elizaos/core';
 import { TrustMiddleware } from '@elizaos/plugin-trust';
 import type { CustodialWalletService } from '../services/CustodialWalletService';
 

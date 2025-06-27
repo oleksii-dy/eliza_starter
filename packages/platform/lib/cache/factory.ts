@@ -1,6 +1,6 @@
 /**
  * Cache Factory Module
- * 
+ *
  * Provides factory functions for creating cache manager instances
  * with appropriate adapters based on environment and configuration.
  */
@@ -32,16 +32,16 @@ export class CacheManagerFactory {
   static createInstance(): CacheManager {
     try {
       const config = getCacheConfig();
-      logger.info('Creating cache manager', { 
+      logger.info('Creating cache manager', {
         adapter: config.adapter,
         defaultTTL: config.defaultTTL,
         maxMemoryEntries: config.maxMemoryEntries,
       });
-      
+
       return new CacheManager(config);
     } catch (error) {
       logger.error('Failed to create cache manager', error as Error);
-      
+
       // Fallback to basic database configuration
       const fallbackConfig = createCacheConfig({
         adapter: 'database',
@@ -51,7 +51,7 @@ export class CacheManagerFactory {
         enableSerialization: true,
         invalidationPatterns: [],
       });
-      
+
       logger.warn('Using fallback cache configuration', fallbackConfig);
       return new CacheManager(fallbackConfig);
     }
@@ -119,11 +119,11 @@ export class CacheManagerFactory {
     }
 
     const manager = this.getInstance();
-    
+
     try {
       // Perform health check
       const isHealthy = await manager.isHealthy();
-      
+
       if (!isHealthy) {
         logger.warn('Cache manager health check failed, but continuing with initialization');
       } else {
@@ -131,7 +131,7 @@ export class CacheManagerFactory {
           adapter: manager.getAdapterType(),
         });
       }
-      
+
       this.initialized = true;
       return manager;
     } catch (error) {
@@ -158,7 +158,7 @@ export class CacheManagerFactory {
     if (!this.instance) {
       return null;
     }
-    
+
     return await this.instance.getStats();
   }
 }
@@ -197,7 +197,7 @@ export class CacheDecoratorFactory {
       const manager = CacheDecoratorFactory.getManager();
 
       descriptor.value = manager.wrap(originalMethod, {
-        keyGenerator: options.keyGenerator || ((...args) => 
+        keyGenerator: options.keyGenerator || ((...args) =>
           `${options.namespace || 'method'}:${target.constructor.name}:${propertyName}:${JSON.stringify(args)}`
         ),
         ttl: options.ttl,
@@ -221,10 +221,10 @@ export class CacheDecoratorFactory {
       const namespace = options.namespace || constructor.name.toLowerCase();
 
       return class extends constructor {
-        protected cache = manager.cacheAside.bind(manager);
-        protected cacheNamespace = namespace;
-        protected cacheDefaultTTL = options.defaultTTL || 3600;
-        protected cacheTags = options.tags || [];
+        cache = manager.cacheAside.bind(manager);
+        cacheNamespace = namespace;
+        cacheDefaultTTL = options.defaultTTL || 3600;
+        cacheTags = options.tags || [];
       };
     };
   }
@@ -244,10 +244,10 @@ export class CacheDecoratorFactory {
       if (options.lazy) {
         // Lazy loading - cache on first access
         Object.defineProperty(target, propertyName, {
-          get: async function() {
+          async get() {
             return await manager.get(key);
           },
-          set: async function(value: any) {
+          async set(value: any) {
             await manager.set(key, value, {
               ttl: options.ttl,
               tags: options.tags,
@@ -273,7 +273,7 @@ export class CacheUtils {
       .map(part => String(part))
       .map(part => part.replace(/[:\s]/g, '_'))
       .filter(Boolean);
-    
+
     return `${namespace}:${cleanParts.join(':')}`;
   }
 
@@ -282,14 +282,14 @@ export class CacheUtils {
    */
   static createTags(obj: Record<string, any>, prefix = ''): string[] {
     const tags: string[] = [];
-    
+
     for (const [key, value] of Object.entries(obj)) {
       if (value !== null && value !== undefined) {
         const tag = prefix ? `${prefix}:${key}:${value}` : `${key}:${value}`;
         tags.push(tag);
       }
     }
-    
+
     return tags;
   }
 
@@ -320,15 +320,15 @@ export class CacheUtils {
     if (!key || typeof key !== 'string') {
       return false;
     }
-    
+
     if (key.length > 250) {
       return false;
     }
-    
+
     if (key.includes('\n') || key.includes('\r')) {
       return false;
     }
-    
+
     return true;
   }
 

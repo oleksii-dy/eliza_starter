@@ -8,8 +8,8 @@ import {
   type ChatMessage,
   type MidnightActionResult,
   MidnightNetworkError,
-} from '../types/index.js';
-import { MidnightNetworkService } from './MidnightNetworkService.js';
+} from '../types/index';
+import { MidnightNetworkService } from './MidnightNetworkService';
 
 /**
  * Service for secure messaging between agents using Midnight Network's zero-knowledge capabilities
@@ -280,9 +280,9 @@ export class SecureMessagingService extends Service {
       // Generate encryption key and nonce for this message
       const encryptionKey = new Uint8Array(32);
       const nonce = new Uint8Array(32);
-      // eslint-disable-next-line no-undef
+
       crypto.getRandomValues(encryptionKey);
-      // eslint-disable-next-line no-undef
+
       crypto.getRandomValues(nonce);
 
       const messageProof = await proofGenerator.generateMessageProof(

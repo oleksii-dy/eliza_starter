@@ -29,5 +29,5 @@ declare global {
 // Import React mount function
 import { mount } from '@cypress/react';
 
-// Make mount available globally
-Cypress.Commands.add('mount', mount);
+// Make mount available globally with proper typing
+Cypress.Commands.add('mount', mount as any);

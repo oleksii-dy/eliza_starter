@@ -273,10 +273,10 @@ export const updateGoalAction: Action = {
 
       const entityGoals = message.entityId
         ? await dataService.getGoals({
-            ownerType: 'entity',
-            ownerId: message.entityId as UUID,
-            isCompleted: false,
-          })
+          ownerType: 'entity',
+          ownerId: message.entityId as UUID,
+          isCompleted: false,
+        })
         : [];
 
       const availableGoals = [...agentGoals, ...entityGoals];

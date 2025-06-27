@@ -473,16 +473,16 @@ Explain what you're creating and how it meets their specific requirements.`,
   ): string {
     switch (type) {
       case 'n8n_workflow':
-        return `You are an expert n8n workflow generator. Create complete, functional n8n workflow JSON that can be imported directly into n8n. Include all necessary nodes, connections, credentials, and configuration. Use real n8n node types and proper syntax.`;
+        return 'You are an expert n8n workflow generator. Create complete, functional n8n workflow JSON that can be imported directly into n8n. Include all necessary nodes, connections, credentials, and configuration. Use real n8n node types and proper syntax.';
 
       case 'mcp':
-        return `You are an expert MCP (Model Context Protocol) server developer. Create complete, functional MCP server code in TypeScript that follows MCP specifications. Include proper interfaces, tools, and resources.`;
+        return 'You are an expert MCP (Model Context Protocol) server developer. Create complete, functional MCP server code in TypeScript that follows MCP specifications. Include proper interfaces, tools, and resources.';
 
       case 'agent_config':
-        return `You are an expert AI agent configuration designer. Create complete ElizaOS agent configuration with character definition, actions, evaluators, and providers. Use proper ElizaOS syntax and patterns.`;
+        return 'You are an expert AI agent configuration designer. Create complete ElizaOS agent configuration with character definition, actions, evaluators, and providers. Use proper ElizaOS syntax and patterns.';
 
       default:
-        return `You are an expert automation and AI developer. Create functional code that meets the user's requirements.`;
+        return 'You are an expert automation and AI developer. Create functional code that meets the user\'s requirements.';
     }
   }
 
@@ -498,19 +498,19 @@ Explain what you're creating and how it meets their specific requirements.`,
     let prompt = `Create a ${type} with the following requirements:\n\n`;
     prompt += `Description: ${description}\n\n`;
 
-    prompt += `Requirements:\n`;
+    prompt += 'Requirements:\n';
     for (const [key, value] of Object.entries(requirements)) {
       prompt += `- ${key}: ${value}\n`;
     }
 
     if (Object.keys(userContext).length > 0) {
-      prompt += `\nAdditional Context:\n`;
+      prompt += '\nAdditional Context:\n';
       for (const [key, value] of Object.entries(userContext)) {
         prompt += `- ${key}: ${value}\n`;
       }
     }
 
-    prompt += `\nPlease generate complete, functional code that can be used immediately. Include comments explaining key functionality.`;
+    prompt += '\nPlease generate complete, functional code that can be used immediately. Include comments explaining key functionality.';
 
     return prompt;
   }

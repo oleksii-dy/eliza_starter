@@ -5,14 +5,17 @@
  */
 
 import { NextRequest } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { withMiddleware } from '@/lib/domains/generation/api/middleware';
 import { generateHandler } from '@/lib/domains/generation/api/handlers/generate';
 import { listHandler } from '@/lib/domains/generation/api/handlers/list';
 
-export async function handlePOST(req: NextRequest) {
+async function handlePOST(req: NextRequest) {
   return withMiddleware(req, generateHandler);
 }
 
-export async function handleGET(req: NextRequest) {
+async function handleGET(req: NextRequest) {
   return withMiddleware(req, listHandler);
 }
+
+export const { POST, GET } = wrapHandlers({ handlePOST, handleGET });

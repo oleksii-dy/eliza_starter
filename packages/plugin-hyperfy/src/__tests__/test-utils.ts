@@ -1,4 +1,5 @@
 import type { IAgentRuntime, Memory, State, UUID } from '@elizaos/core';
+import { mock } from 'bun:test';
 
 /**
  * Creates a mock runtime for testing hyperfy plugin
@@ -37,7 +38,8 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     },
 
     // Hyperfy-specific services
-    getService: (name: string) => {
+    getService: ((nameOrClass: any) => {
+      const name = typeof nameOrClass === 'string' ? nameOrClass : (nameOrClass.serviceName || nameOrClass.name);
       const services: Record<string, any> = {
         'test-service': {
           start: async () => {},
@@ -53,7 +55,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
         ...(overrides as any)?.services,
       };
       return services[name];
-    },
+    }) as any,
 
     // Mock other required runtime methods
     databaseAdapter: {
@@ -92,6 +94,57 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     async evaluate() { return []; },
     async composeState() { return {} as State; },
     async updateRecentMessageState() { return {} as State; },
+
+    // Additional runtime methods needed by tests
+    ensureConnection: mock().mockResolvedValue(true),
+    getMemories: mock().mockResolvedValue([]),
+    getRoom: mock().mockResolvedValue(null),
+    emitEvent: mock(),
+    useModel: mock().mockResolvedValue({}),
+    generateText: mock().mockResolvedValue('generated text'),
+    getEntityById: mock().mockResolvedValue(null),
+    createMemory: mock().mockResolvedValue({}),
+    getEntitiesForRoom: mock().mockResolvedValue([]),
+    createEntity: mock().mockResolvedValue({}),
+    
+    // Message manager
+    messageManager: {
+      createMemory: mock().mockResolvedValue(true),
+      getMemories: mock().mockResolvedValue([]),
+      updateMemory: mock().mockResolvedValue(true),
+      deleteMemory: mock().mockResolvedValue(true),
+      searchMemories: mock().mockResolvedValue([]),
+      getLastMessages: mock().mockResolvedValue([]),
+    },
+
+    // State
+    updateState: mock().mockResolvedValue(true),
+
+    // Actions & Providers
+    actions: [],
+    providers: [],
+    evaluators: [],
+
+    // Components
+    createComponent: mock().mockResolvedValue(true),
+    getComponents: mock().mockResolvedValue([]),
+    updateComponent: mock().mockResolvedValue(true),
+
+    // Database
+    db: {
+      query: mock().mockResolvedValue([]),
+      execute: mock().mockResolvedValue({ changes: 1 }),
+      getWorlds: mock().mockResolvedValue([]),
+      getWorld: mock().mockResolvedValue(null),
+    },
+
+    // Logging
+    logger: {
+      info: mock(),
+      warn: mock(),
+      error: mock(),
+      debug: mock(),
+    },
 
     ...overrides,
   } as unknown as IAgentRuntime;
@@ -177,14 +230,55 @@ export function createMockWorld(): any {
       },
       scale: { x: 1, y: 1, z: 1, fromArray: () => {}, toArray: () => [1, 1, 1] },
     },
-    destroy: () => {},
+    destroy: mock(),
+  });
+
+  mockEntities.set('entity-2', {
+    data: { id: 'entity-2', name: 'Sphere', type: 'sphere' },
+    base: {
+      position: {
+        x: 5,
+        y: 1,
+        z: 5,
+        fromArray: () => {},
+        toArray: () => [5, 1, 5],
+      },
+      quaternion: {
+        x: 0,
+        y: 0,
+        z: 0,
+        w: 1,
+        fromArray: () => {},
+        toArray: () => [0, 0, 0, 1],
+      },
+      scale: { x: 1, y: 1, z: 1, fromArray: () => {}, toArray: () => [1, 1, 1] },
+    },
+    root: {
+      position: {
+        x: 5,
+        y: 1,
+        z: 5,
+        fromArray: () => {},
+        toArray: () => [5, 1, 5],
+      },
+      quaternion: {
+        x: 0,
+        y: 0,
+        z: 0,
+        w: 1,
+        fromArray: () => {},
+        toArray: () => [0, 0, 0, 1],
+      },
+      scale: { x: 1, y: 1, z: 1, fromArray: () => {}, toArray: () => [1, 1, 1] },
+    },
+    destroy: mock(),
   });
 
   return {
     entities: {
       player: {
         data: {
-          id: 'player-id',
+          id: 'test-player-id',
           name: 'TestAgent',
           position: { x: 10, y: 0, z: 10 },
           effect: {},
@@ -199,24 +293,24 @@ export function createMockWorld(): any {
       items: mockEntities,
     },
     chat: {
-      add: () => {},
+      add: mock(),
       msgs: [],
     },
     controls: {
-      goto: () => {},
-      stopAllActions: () => {},
+      goto: mock(),
+      stopAllActions: mock(),
     },
     actions: {
-      execute: () => {},
-      getNearby: () => [],
+      execute: mock(),
+      getNearby: mock().mockReturnValue([]),
     },
     network: {
-      upload: () => {},
-      send: () => {},
+      upload: mock(),
+      send: mock(),
     },
     assetsUrl: 'https://test.hyperfy.io/assets',
     blueprints: {
-      add: () => {},
+      add: mock(),
     },
   };
 }

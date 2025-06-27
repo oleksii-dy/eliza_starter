@@ -368,7 +368,7 @@ export class GenerationService {
         });
         return {
           success: false,
-          error: 'Invalid request: ' + validation.errors.join(', '),
+          error: `Invalid request: ${validation.errors.join(', ')}`,
           code: 'VALIDATION_ERROR',
         };
       }
@@ -1133,14 +1133,14 @@ export class GenerationService {
 
   private createIdempotencyKey(request: GenerationRequest): string {
     const key = `${request.organizationId}:${request.type}:${this.hashPrompt(request.prompt)}`;
-    return createHash('sha256').update(key).digest('hex').slice(0, 32);
+    return createHash('sha256').update(key).digest('hex').slice(0, 32) as string;
   }
 
   private hashPrompt(prompt: string): string {
     return createHash('md5')
       .update(prompt.trim().toLowerCase())
       .digest('hex')
-      .slice(0, 16);
+      .slice(0, 16) as string;
   }
 
   private validateRequest(request: GenerationRequest): {

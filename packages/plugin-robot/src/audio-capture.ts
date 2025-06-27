@@ -55,7 +55,7 @@ export class AudioCaptureService {
 
       logger.info('[AudioCapture] Audio capture initialized');
     } catch (_error) {
-      logger._error('[AudioCapture] Failed to initialize:', _error);
+      logger.error('[AudioCapture] Failed to initialize:', _error);
       throw _error;
     }
   }
@@ -148,7 +148,7 @@ export class AudioCaptureService {
 
       return null;
     } catch (_error) {
-      logger._error('[AudioCapture] Recording/transcription failed:', _error);
+      logger.error('[AudioCapture] Recording/transcription failed:', _error);
       await fs.unlink(audioFile).catch(() => {});
       return null;
     } finally {
@@ -182,7 +182,7 @@ export class AudioCaptureService {
         throw new Error(`Unsupported platform: ${platform}`);
       }
     } catch (_error) {
-      logger._error('[AudioCapture] Audio recording failed:', _error);
+      logger.error('[AudioCapture] Audio recording failed:', _error);
       throw _error;
     }
   }
@@ -207,7 +207,7 @@ export class AudioCaptureService {
       // For now, we'll just log it
       logger.info('[AudioCapture] Audio transcription stored in context');
     } catch (_error) {
-      logger._error('[AudioCapture] Failed to create audio memory:', _error);
+      logger.error('[AudioCapture] Failed to create audio memory:', _error);
     }
   }
 
@@ -264,7 +264,7 @@ export class AudioCaptureService {
         }
       }
     } catch (_error) {
-      logger._error('[AudioCapture] Failed to list audio devices:', _error);
+      logger.error('[AudioCapture] Failed to list audio devices:', _error);
     }
 
     return devices;

@@ -1,6 +1,6 @@
 /**
  * Base Cache Adapter Interface
- * 
+ *
  * Defines the contract that all cache adapters must implement,
  * ensuring consistent behavior across different storage backends.
  */
@@ -183,11 +183,11 @@ export abstract class CacheAdapter {
     if (options?.serialize === false) {
       return typeof value === 'string' ? value : String(value);
     }
-    
+
     if (typeof value === 'string') {
       return value;
     }
-    
+
     return JSON.stringify(value);
   }
 
@@ -198,7 +198,7 @@ export abstract class CacheAdapter {
     if (options?.serialize === false) {
       return value as T;
     }
-    
+
     try {
       return JSON.parse(value);
     } catch {
@@ -232,10 +232,10 @@ export abstract class CacheAdapter {
    * Update statistics
    */
   protected updateStats(operation: 'hit' | 'miss' | 'set' | 'delete' | 'error'): void {
-    this.stats[operation === 'hit' ? 'hits' : 
-                operation === 'miss' ? 'misses' :
-                operation === 'set' ? 'sets' :
-                operation === 'delete' ? 'deletes' : 'errors']++;
+    this.stats[operation === 'hit' ? 'hits' :
+      operation === 'miss' ? 'misses' :
+        operation === 'set' ? 'sets' :
+          operation === 'delete' ? 'deletes' : 'errors']++;
   }
 
   /**

@@ -3,7 +3,6 @@
  * Local caching using PGLite (embedded PostgreSQL) for development
  */
 
-// @ts-ignore
 import { PGlite } from '@electric-sql/pglite';
 import { ICacheService, CacheError, CacheConnectionError } from './interface';
 
@@ -93,7 +92,7 @@ export class PGLiteCacheService implements ICacheService {
         [key],
       );
 
-      if (result.rows.length === 0) return null;
+      if (result.rows.length === 0) {return null;}
 
       const row = result.rows[0] as {
         value: string;
@@ -236,10 +235,10 @@ export class PGLiteCacheService implements ICacheService {
   async rpop(list: string): Promise<string | null> {
     try {
       const current = await this.get(list);
-      if (!current) return null;
+      if (!current) {return null;}
 
       const array = JSON.parse(current);
-      if (array.length === 0) return null;
+      if (array.length === 0) {return null;}
 
       const value = array.pop();
       await this.set(list, JSON.stringify(array));
@@ -252,7 +251,7 @@ export class PGLiteCacheService implements ICacheService {
   async llen(list: string): Promise<number> {
     try {
       const current = await this.get(list);
-      if (!current) return 0;
+      if (!current) {return 0;}
       const array = JSON.parse(current);
       return array.length;
     } catch (error) {
@@ -284,10 +283,10 @@ export class PGLiteCacheService implements ICacheService {
         [key],
       );
 
-      if (result.rows.length === 0) return -2; // Key doesn't exist
+      if (result.rows.length === 0) {return -2;} // Key doesn't exist
 
       const row = result.rows[0] as { expires_at: number | null };
-      if (row.expires_at === null) return -1; // Key exists but has no TTL
+      if (row.expires_at === null) {return -1;} // Key exists but has no TTL
 
       const remaining = Math.max(
         0,

@@ -3,6 +3,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { z } from 'zod';
 
 // Use dynamic imports to avoid database connection during build
@@ -41,7 +42,7 @@ const createCharacterSchema = z.object({
 /**
  * GET /api/characters - List characters for current organization
  */
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   // During build time, return a stub response to prevent database access
   if (process.env.NEXT_PHASE === 'phase-production-build') {
     return NextResponse.json(
@@ -60,8 +61,8 @@ export async function handleGET(request: NextRequest) {
 
     // Parse query parameters
     const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const limit = parseInt(searchParams.get('limit') || '50', 10);
+    const offset = parseInt(searchParams.get('offset') || '0', 10);
     const search = searchParams.get('search') || undefined;
     const visibility = searchParams.get('visibility') || undefined;
     const createdBy = searchParams.get('createdBy') || undefined;
@@ -103,7 +104,7 @@ export async function handleGET(request: NextRequest) {
 /**
  * POST /api/characters - Create new character
  */
-export async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   // During build time, return a stub response to prevent database access
   if (process.env.NEXT_PHASE === 'phase-production-build') {
     return NextResponse.json(
@@ -164,3 +165,5 @@ export async function handlePOST(request: NextRequest) {
     );
   }
 }
+
+export const { GET, POST } = wrapHandlers({ handleGET, handlePOST });

@@ -1,7 +1,7 @@
 /**
  * Redis Client Configuration and Management
- * 
- * Provides a robust Redis client with connection pooling, 
+ *
+ * Provides a robust Redis client with connection pooling,
  * error handling, and monitoring capabilities.
  */
 
@@ -80,14 +80,13 @@ export class RedisClient {
 
       // Dynamic import to avoid dependency issues during build
       const Redis = await import('ioredis').then(m => m.default);
-      
+
       this.redis = new Redis({
         host: this.config.host,
         port: this.config.port,
         password: this.config.password,
         db: this.config.db || 0,
         maxRetriesPerRequest: this.config.maxRetriesPerRequest || 3,
-        retryDelayOnFailover: this.config.retryDelayOnFailover || 100,
         enableReadyCheck: this.config.enableReadyCheck !== false,
         lazyConnect: this.config.lazyConnect !== false,
         keepAlive: this.config.keepAlive || 30000,
@@ -154,7 +153,7 @@ export class RedisClient {
 
       if (value !== null) {
         this.stats.hits++;
-        
+
         // Deserialize if needed
         if (options.serialize !== false) {
           try {
@@ -163,7 +162,7 @@ export class RedisClient {
             // Value wasn't JSON, return as-is
           }
         }
-        
+
         // Decompress if needed
         if (options.compress && typeof value === 'string') {
           value = await this.decompress(value);
@@ -337,10 +336,10 @@ export class RedisClient {
 
       // Fallback to memory cache
       const entry = this.fallbackCache.get(key);
-      const currentValue = entry && entry.expires > Date.now() ? 
-        parseInt(entry.value) || 0 : 0;
+      const currentValue = entry && entry.expires > Date.now() ?
+        parseInt(entry.value, 10) || 0 : 0;
       const newValue = currentValue + by;
-      
+
       this.fallbackCache.set(key, {
         value: newValue.toString(),
         expires: Date.now() + 3600000, // 1 hour default
@@ -363,7 +362,7 @@ export class RedisClient {
         try {
           const values = await this.redis.mget(...keys);
           return values.map((value: string | null) => {
-            if (value === null) return null;
+            if (value === null) {return null;}
             try {
               return JSON.parse(value);
             } catch {
@@ -522,9 +521,9 @@ export class RedisClient {
 // Default Redis configuration
 const defaultConfig: RedisConfig = {
   host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379'),
+  port: parseInt(process.env.REDIS_PORT || '6379', 10),
   password: process.env.REDIS_PASSWORD,
-  db: parseInt(process.env.REDIS_DB || '0'),
+  db: parseInt(process.env.REDIS_DB || '0', 10),
   maxRetries: 3,
   retryDelayOnFailover: 100,
   enableReadyCheck: true,

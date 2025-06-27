@@ -29,15 +29,29 @@ export interface MessageServiceMessage {
   metadata?: any;
 }
 
+interface ServerAgentUpdateData {
+  agentId: UUID;
+  type: 'agent_added_to_server' | 'agent_removed_from_server';
+  serverId: UUID;
+}
+
+interface MessageDeletedData {
+  messageId: UUID;
+}
+
+interface ChannelClearedData {
+  channelId: UUID;
+}
+
 export class MessageBusService extends Service {
   static serviceType = 'message-bus-service';
   capabilityDescription = 'Manages connection and message synchronization with the message server.';
 
   protected runtime: IAgentRuntime;
   private boundHandleIncomingMessage: (message: MessageServiceMessage) => Promise<void>;
-  private boundHandleServerAgentUpdate: (data: any) => Promise<void>;
-  private boundHandleMessageDeleted: (data: any) => Promise<void>;
-  private boundHandleChannelCleared: (data: any) => Promise<void>;
+  private boundHandleServerAgentUpdate: (data: ServerAgentUpdateData) => Promise<void>;
+  private boundHandleMessageDeleted: (data: MessageDeletedData) => Promise<void>;
+  private boundHandleChannelCleared: (data: ChannelClearedData) => Promise<void>;
   private subscribedServers: Set<UUID> = new Set();
 
   constructor(runtime: IAgentRuntime) {
@@ -102,7 +116,10 @@ export class MessageBusService extends Service {
             headers: this.getAuthHeaders(),
           });
           if (response.ok) {
-            const data = await response.json();
+            const data = (await response.json()) as {
+              success: boolean;
+              data?: { channels?: { id: string }[] };
+            };
             if (data.success && data.data?.channels && Array.isArray(data.data.channels)) {
               // Add channel IDs to the set
               data.data.channels.forEach((channel: any) => {
@@ -186,7 +203,7 @@ export class MessageBusService extends Service {
       });
 
       if (response.ok) {
-        const data = await response.json();
+        const data = (await response.json()) as { success: boolean; data?: string[] };
         if (data.success && data.data) {
           return data.data;
         }
@@ -214,7 +231,7 @@ export class MessageBusService extends Service {
       });
 
       if (response.ok) {
-        const data = await response.json();
+        const data = (await response.json()) as { success: boolean; data?: { servers?: UUID[] } };
         if (data.success && data.data?.servers) {
           this.subscribedServers = new Set(data.data.servers);
           // Always include the default server
@@ -246,7 +263,7 @@ export class MessageBusService extends Service {
     }
   }
 
-  private async handleServerAgentUpdate(data: any) {
+  private async handleServerAgentUpdate(data: ServerAgentUpdateData) {
     if (data.agentId !== this.runtime.agentId) {
       return; // Not for this agent
     }
@@ -528,7 +545,7 @@ export class MessageBusService extends Service {
     });
   }
 
-  private async handleMessageDeleted(data: any) {
+  private async handleMessageDeleted(data: MessageDeletedData) {
     try {
       logger.info(
         `[${this.runtime.character.name}] MessageBusService: Received message_deleted event for message ${data.messageId}`
@@ -564,7 +581,7 @@ export class MessageBusService extends Service {
     }
   }
 
-  private async handleChannelCleared(data: any) {
+  private async handleChannelCleared(data: ChannelClearedData) {
     try {
       logger.info(
         `[${this.runtime.character.name}] MessageBusService: Received channel_cleared event for channel ${data.channelId}`

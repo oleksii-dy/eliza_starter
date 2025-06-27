@@ -312,7 +312,7 @@ export async function validationMiddleware(
     const contentLength = req.headers.get('content-length');
     const maxSize = 10 * 1024 * 1024; // 10MB
 
-    if (contentLength && parseInt(contentLength) > maxSize) {
+    if (contentLength && parseInt(contentLength, 10) > maxSize) {
       return {
         valid: false,
         response: NextResponse.json(
@@ -388,7 +388,7 @@ export async function withMiddleware(
   try {
     // CORS
     const corsResponse = corsMiddleware(req);
-    if (corsResponse) return corsResponse;
+    if (corsResponse) {return corsResponse;}
 
     // Content validation
     const validation = await validationMiddleware(req);

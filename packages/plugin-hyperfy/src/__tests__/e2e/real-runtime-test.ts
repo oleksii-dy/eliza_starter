@@ -29,11 +29,11 @@ export const HyperfyRealRuntimeTestSuite: TestSuite = {
      */
     {
       name: 'hyperfy_plugin_registration_and_service_start',
-      fn: async (runtime) => {
+      fn: async (runtime: IAgentRuntime) => {
         console.log('Testing plugin registration and service start...');
 
         // Check if Hyperfy plugin is loaded
-        const hyperfyPlugin = runtime.plugins.find((p) => p.name === 'plugin-hyperfy');
+        const hyperfyPlugin = runtime.plugins.find((p: any) => p.name === 'plugin-hyperfy');
         if (!hyperfyPlugin) {
           throw new Error('Hyperfy plugin not found in runtime plugins');
         }
@@ -59,7 +59,7 @@ export const HyperfyRealRuntimeTestSuite: TestSuite = {
      */
     {
       name: 'hyperfy_action_registration',
-      fn: async (runtime) => {
+      fn: async (runtime: IAgentRuntime) => {
         console.log('Testing action registration...');
 
         const expectedActions = [
@@ -78,7 +78,7 @@ export const HyperfyRealRuntimeTestSuite: TestSuite = {
         const missingActions: string[] = [];
 
         for (const actionName of expectedActions) {
-          const action = runtime.actions.find((a) => a.name === actionName);
+          const action = runtime.actions.find((a: any) => a.name === actionName);
           if (!action) {
             missingActions.push(actionName);
           } else {
@@ -103,7 +103,7 @@ export const HyperfyRealRuntimeTestSuite: TestSuite = {
      */
     {
       name: 'hyperfy_provider_registration',
-      fn: async (runtime) => {
+      fn: async (runtime: IAgentRuntime) => {
         console.log('Testing provider registration...');
 
         const expectedProviders = [
@@ -116,7 +116,7 @@ export const HyperfyRealRuntimeTestSuite: TestSuite = {
         const missingProviders: string[] = [];
 
         for (const providerName of expectedProviders) {
-          const provider = runtime.providers.find((p) => p.name === providerName);
+          const provider = runtime.providers.find((p: any) => p.name === providerName);
           if (!provider) {
             missingProviders.push(providerName);
           } else {
@@ -141,10 +141,10 @@ export const HyperfyRealRuntimeTestSuite: TestSuite = {
      */
     {
       name: 'hyperfy_world_state_provider_test',
-      fn: async (runtime) => {
+      fn: async (runtime: IAgentRuntime) => {
         console.log('Testing world state provider...');
 
-        const provider = runtime.providers.find((p) => p.name === 'HYPERFY_WORLD_STATE');
+        const provider = runtime.providers.find((p: any) => p.name === 'HYPERFY_WORLD_STATE');
         if (!provider) {
           throw new Error('World state provider not found');
         }
@@ -187,10 +187,10 @@ export const HyperfyRealRuntimeTestSuite: TestSuite = {
      */
     {
       name: 'hyperfy_emote_provider_test',
-      fn: async (runtime) => {
+      fn: async (runtime: IAgentRuntime) => {
         console.log('Testing emote provider...');
 
-        const provider = runtime.providers.find((p) => p.name === 'HYPERFY_EMOTE_LIST');
+        const provider = runtime.providers.find((p: any) => p.name === 'HYPERFY_EMOTE_LIST');
         if (!provider) {
           throw new Error('Emote provider not found');
         }
@@ -243,7 +243,7 @@ export const HyperfyRealRuntimeTestSuite: TestSuite = {
      */
     {
       name: 'hyperfy_action_validation_without_connection',
-      fn: async (runtime) => {
+      fn: async (runtime: IAgentRuntime) => {
         console.log('Testing action validation without connection...');
 
         const service = runtime.getService('hyperfy') as HyperfyService;
@@ -257,7 +257,7 @@ export const HyperfyRealRuntimeTestSuite: TestSuite = {
         }
 
         // Test movement action validation
-        const gotoAction = runtime.actions.find((a) => a.name === 'HYPERFY_GOTO_ENTITY');
+        const gotoAction = runtime.actions.find((a: any) => a.name === 'HYPERFY_GOTO_ENTITY');
         if (!gotoAction) {
           throw new Error('GOTO action not found');
         }
@@ -295,7 +295,7 @@ export const HyperfyRealRuntimeTestSuite: TestSuite = {
      */
     {
       name: 'hyperfy_message_handler_registration',
-      fn: async (runtime) => {
+      fn: async (runtime: IAgentRuntime) => {
         console.log('Testing message handler registration...');
 
         // Check if message received handler is registered
@@ -315,7 +315,7 @@ export const HyperfyRealRuntimeTestSuite: TestSuite = {
      */
     {
       name: 'hyperfy_service_managers_test',
-      fn: async (runtime) => {
+      fn: async (runtime: IAgentRuntime) => {
         console.log('Testing service managers...');
 
         const service = runtime.getService('hyperfy') as HyperfyService;
@@ -354,10 +354,10 @@ export const HyperfyRealRuntimeTestSuite: TestSuite = {
      */
     {
       name: 'hyperfy_character_integration_test',
-      fn: async (runtime) => {
+      fn: async (runtime: IAgentRuntime) => {
         console.log('Testing character integration...');
 
-        const characterProvider = runtime.providers.find((p) => p.name === 'CHARACTER');
+        const characterProvider = runtime.providers.find((p: any) => p.name === 'CHARACTER');
         if (!characterProvider) {
           throw new Error('Character provider not found');
         }
@@ -396,10 +396,10 @@ export const HyperfyRealRuntimeTestSuite: TestSuite = {
      */
     {
       name: 'hyperfy_plugin_configuration_test',
-      fn: async (runtime) => {
+      fn: async (runtime: IAgentRuntime) => {
         console.log('Testing plugin configuration...');
 
-        const plugin = runtime.plugins.find((p) => p.name === 'plugin-hyperfy');
+        const plugin = runtime.plugins.find((p: any) => p.name === 'plugin-hyperfy');
         if (!plugin) {
           throw new Error('Hyperfy plugin not found');
         }

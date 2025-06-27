@@ -22,7 +22,9 @@ export class SerialPort extends EventEmitter {
 
   write(data: Buffer | string, callback?: (error?: Error | null) => void): void {
     if (!this.isOpen) {
-      if (callback) callback(new Error('Port not open'));
+      if (callback) {
+        callback(new Error('Port not open'));
+      }
       return;
     }
 
@@ -45,7 +47,9 @@ export class SerialPort extends EventEmitter {
   close(callback?: (error?: Error | null) => void): void {
     this.isOpen = false;
     this.emit('close');
-    if (callback) callback(null);
+    if (callback) {
+      callback(null);
+    }
   }
 
   // Mock static methods

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import axios, { AxiosError } from 'axios';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const token = searchParams.get('token');
 
@@ -47,7 +48,7 @@ export async function handleGET(request: NextRequest) {
   } catch (error: any) {
     const errorData = error.response.data;
 
-    if (errorData.code == 'invalid_update_token') {
+    if (errorData.code === 'invalid_update_token') {
       return NextResponse.redirect(
         new URL('/settings/account?error=invalid_update_token', request.url),
       );
@@ -58,3 +59,5 @@ export async function handleGET(request: NextRequest) {
     }
   }
 }
+
+export const { GET } = wrapHandlers({ handleGET });

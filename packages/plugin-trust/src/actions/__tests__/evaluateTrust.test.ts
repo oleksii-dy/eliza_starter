@@ -10,8 +10,11 @@ import { createMockRuntime, createMockMemory } from '../../__tests__/test-utils'
 
 // Simplified TestSuite implementation for local use
 class TestSuite {
-  constructor(private name: string, private config: any) {}
-  
+  constructor(
+    private name: string,
+    private config: any
+  ) {}
+
   addTest(test: any) {
     it(test.name, async () => {
       const context = this.config.beforeEach ? await this.config.beforeEach() : {};
@@ -24,13 +27,14 @@ class TestSuite {
       }
     });
   }
-  
+
   run() {
     // No-op, bun:test handles execution
   }
 }
 
-const createUnitTest = (config: { name: string; fn: (context?: any) => Promise<void> | void }) => config;
+const createUnitTest = (config: { name: string; fn: (context?: any) => Promise<void> | void }) =>
+  config;
 
 const mockTrustProfile: TrustProfile = {
   entityId: 'entity-1' as UUID,
@@ -240,7 +244,9 @@ describe('evaluateTrustAction', () => {
         const runtimeWithoutService = createMockRuntime({
           getService: mock().mockReturnValue(null),
         });
-        expect(await evaluateTrustAction.validate(runtimeWithoutService, memory, state)).toBe(false);
+        expect(await evaluateTrustAction.validate(runtimeWithoutService, memory, state)).toBe(
+          false
+        );
       },
     })
   );

@@ -3,7 +3,7 @@
  * Tests system performance under various load conditions
  */
 
-import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
+import { describe, test, expect, beforeEach, afterEach } from 'vitest';
 import {
   addCredits,
   deductCredits,

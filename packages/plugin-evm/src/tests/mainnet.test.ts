@@ -183,7 +183,7 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
           const decimals = token === 'DAI' ? 18 : 6;
           console.log(`💰 ${token} Balance: ${formatUnits(balance as bigint, decimals)}`);
 
-          if ((balance as bigint) > 0n) {
+          if ((balance as bigint) > BigInt(0)) {
             const result = await transferAction.transfer({
               fromChain: 'mainnet',
               toAddress: walletAddress,
@@ -196,7 +196,7 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
             results.push({ token, success: false, reason: 'No balance' });
           }
         } catch (error) {
-          results.push({ token, success: false, error: error });
+          results.push({ token, success: false, error });
         }
       }
 
@@ -451,7 +451,7 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
                 functionName: 'getVotes',
                 args: [walletAddress],
               })
-              .catch(() => 0n),
+              .catch(() => BigInt(0)),
             publicClient.readContract({
               address: protocol.token,
               abi: votesAbi,
@@ -532,14 +532,14 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
             args: [walletAddress, parseUnits('1', 6)],
           }),
         })
-        .catch(() => 65000n); // Fallback estimate
+        .catch(() => BigInt(65000)); // Fallback estimate
 
       console.log('📊 Gas Estimates:');
       console.log(`   - ETH Transfer: ${ethTransferGas} gas`);
       console.log(`   - ERC20 Transfer: ${erc20TransferGas} gas`);
 
-      expect(ethTransferGas).toBe(21000n);
-      expect(erc20TransferGas).toBeGreaterThan(21000n);
+      expect(ethTransferGas).toBe(BigInt(21000));
+      expect(erc20TransferGas).toBeGreaterThan(BigInt(21000));
     });
   });
 
@@ -552,7 +552,7 @@ describe.skipIf(!MAINNET_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Integrat
         address: walletAddress,
       });
 
-      const excessiveAmount = formatEther(balance * 2n);
+      const excessiveAmount = formatEther(balance * BigInt(2));
 
       await expect(
         transferAction.transfer({

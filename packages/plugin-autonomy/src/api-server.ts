@@ -1,14 +1,26 @@
 import { type IAgentRuntime } from '@elizaos/core';
 import cors from 'cors';
-import express from 'express';
-import { createServer } from 'http';
+import express, { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
+import { createServer, Server as HttpServer } from 'http';
 import { Server } from 'socket.io';
 import { AutonomyLogger } from './logging';
 import { OODALoopService } from './ooda-service';
+import type { OODAContext, OODAPhase, Goal, LogLevel } from './types';
+
+interface QueryParams {
+  runId?: string;
+  phase?: OODAPhase;
+  level?: LogLevel;
+  limit?: string;
+}
+
+interface GoalUpdateBody {
+  progress: number;
+}
 
 export class AutonomyAPIServer {
   private app: express.Application;
-  private server: any;
+  private server: HttpServer;
   private io: Server;
   private logger: AutonomyLogger;
   private oodaService: OODALoopService | null = null;
@@ -39,7 +51,7 @@ export class AutonomyAPIServer {
     this.app.use(express.json());
 
     // Request logging
-    this.app.use((req: any, res: any, next: any) => {
+    this.app.use((req: Request, res: Response, next: NextFunction) => {
       this.logger.info(`API Request: ${req.method} ${req.path}`, {
         query: req.query,
         body: req.body,
@@ -50,7 +62,7 @@ export class AutonomyAPIServer {
 
   private setupRoutes() {
     // Health check
-    this.app.get('/health', (req: any, res: any) => {
+    this.app.get('/health', (req: Request, res: Response) => {
       res.json({
         status: 'ok',
         agent: this.runtime.agentId,
@@ -60,12 +72,13 @@ export class AutonomyAPIServer {
     });
 
     // Get current OODA context
-    this.app.get('/api/ooda/context', (req: any, res: any) => {
+    this.app.get('/api/ooda/context', (req: Request, res: Response) => {
       if (!this.oodaService) {
         return res.status(503).json({ error: 'OODA service not initialized' });
       }
 
-      const context = (this.oodaService as any).currentContext;
+      const context = (this.oodaService as unknown as { currentContext?: OODAContext })
+        .currentContext;
       if (!context) {
         return res.status(404).json({ error: 'No active OODA context' });
       }
@@ -74,12 +87,13 @@ export class AutonomyAPIServer {
     });
 
     // Get OODA metrics
-    this.app.get('/api/ooda/metrics', (req: any, res: any) => {
+    this.app.get('/api/ooda/metrics', (req: Request, res: Response) => {
       if (!this.oodaService) {
         return res.status(503).json({ error: 'OODA service not initialized' });
       }
 
-      const context = (this.oodaService as any).currentContext;
+      const context = (this.oodaService as unknown as { currentContext?: OODAContext })
+        .currentContext;
       if (!context) {
         return res.status(404).json({ error: 'No active OODA context' });
       }
@@ -88,15 +102,15 @@ export class AutonomyAPIServer {
     });
 
     // Get logs
-    this.app.get('/api/logs', async (req: any, res: any) => {
-      const { runId, phase, level, limit = 100 } = req.query;
+    this.app.get('/api/logs', async (req: Request<{}, {}, {}, QueryParams>, res: Response) => {
+      const { runId, phase, level, limit = '100' } = req.query;
 
       try {
         const logs = await this.logger.queryLogs({
           runId: runId as string,
-          phase: phase as any,
-          level: level as any,
-          limit: parseInt(limit as string, 10),
+          phase: phase as OODAPhase,
+          level: level as LogLevel,
+          limit: parseInt(limit, 10),
         });
 
         res.json(logs);
@@ -108,42 +122,46 @@ export class AutonomyAPIServer {
     });
 
     // Get goals
-    this.app.get('/api/goals', (req: any, res: any) => {
+    this.app.get('/api/goals', (req: Request, res: Response) => {
       if (!this.oodaService) {
         return res.status(503).json({ error: 'OODA service not initialized' });
       }
 
-      const goals = (this.oodaService as any).goals;
+      const goals = (this.oodaService as unknown as { goals: Goal[] }).goals;
       res.json(goals);
     });
 
     // Update goal progress
-    this.app.put('/api/goals/:id/progress', (req: any, res: any) => {
-      if (!this.oodaService) {
-        return res.status(503).json({ error: 'OODA service not initialized' });
+    this.app.put(
+      '/api/goals/:id/progress',
+      (req: Request<{ id: string }, {}, GoalUpdateBody>, res: Response) => {
+        if (!this.oodaService) {
+          return res.status(503).json({ error: 'OODA service not initialized' });
+        }
+
+        const { id } = req.params;
+        const { progress } = req.body;
+
+        const goals = (this.oodaService as unknown as { goals: Goal[] }).goals;
+        const goal = goals.find((g: Goal) => g.id === id);
+
+        if (!goal) {
+          return res.status(404).json({ error: 'Goal not found' });
+        }
+
+        goal.progress = progress;
+        res.json(goal);
       }
-
-      const { id } = req.params;
-      const { progress } = req.body;
-
-      const goals = (this.oodaService as any).goals;
-      const goal = goals.find((g: any) => g.id === id);
-
-      if (!goal) {
-        return res.status(404).json({ error: 'Goal not found' });
-      }
-
-      goal.progress = progress;
-      res.json(goal);
-    });
+    );
 
     // Get recent observations
-    this.app.get('/api/observations', (req: any, res: any) => {
+    this.app.get('/api/observations', (req: Request, res: Response) => {
       if (!this.oodaService) {
         return res.status(503).json({ error: 'OODA service not initialized' });
       }
 
-      const context = (this.oodaService as any).currentContext;
+      const context = (this.oodaService as unknown as { currentContext?: OODAContext })
+        .currentContext;
       if (!context) {
         return res.status(404).json({ error: 'No active OODA context' });
       }
@@ -152,12 +170,13 @@ export class AutonomyAPIServer {
     });
 
     // Get recent actions
-    this.app.get('/api/actions', (req: any, res: any) => {
+    this.app.get('/api/actions', (req: Request, res: Response) => {
       if (!this.oodaService) {
         return res.status(503).json({ error: 'OODA service not initialized' });
       }
 
-      const context = (this.oodaService as any).currentContext;
+      const context = (this.oodaService as unknown as { currentContext?: OODAContext })
+        .currentContext;
       if (!context) {
         return res.status(404).json({ error: 'No active OODA context' });
       }
@@ -166,13 +185,19 @@ export class AutonomyAPIServer {
     });
 
     // Error handler
-    this.app.use((err: any, req: any, res: any, _next: any) => {
+    const errorHandler: ErrorRequestHandler = (
+      err: Error,
+      req: Request,
+      res: Response,
+      _next: NextFunction
+    ) => {
       this.logger.error('API Server Error', err);
       res.status(500).json({
         error: 'Internal server error',
         message: err.message,
       });
-    });
+    };
+    this.app.use(errorHandler);
   }
 
   private setupWebSocket() {
@@ -181,7 +206,8 @@ export class AutonomyAPIServer {
 
       // Send initial state
       if (this.oodaService) {
-        const context = (this.oodaService as any).currentContext;
+        const context = (this.oodaService as unknown as { currentContext?: OODAContext })
+          .currentContext;
         if (context) {
           socket.emit('ooda:context', context);
         }
@@ -194,14 +220,16 @@ export class AutonomyAPIServer {
       // Allow clients to request specific data
       socket.on('request:context', () => {
         if (this.oodaService) {
-          const context = (this.oodaService as any).currentContext;
+          const context = (this.oodaService as unknown as { currentContext?: OODAContext })
+            .currentContext;
           socket.emit('ooda:context', context);
         }
       });
 
       socket.on('request:metrics', () => {
         if (this.oodaService) {
-          const context = (this.oodaService as any).currentContext;
+          const context = (this.oodaService as unknown as { currentContext?: OODAContext })
+            .currentContext;
           if (context) {
             socket.emit('ooda:metrics', context.metrics);
           }
@@ -214,14 +242,19 @@ export class AutonomyAPIServer {
     this.oodaService = service;
 
     // Hook into OODA events to broadcast updates
-    const originalExecute = (service as any).executeOODACycle;
-    (service as any).executeOODACycle = async function (this: any) {
-      const result = await originalExecute.call(this);
+    const serviceWithInternals = service as unknown as {
+      executeOODACycle: () => Promise<unknown>;
+      currentContext?: OODAContext;
+    };
+    const originalExecute = serviceWithInternals.executeOODACycle;
+
+    serviceWithInternals.executeOODACycle = async function (this: AutonomyAPIServer) {
+      const result = await originalExecute.call(serviceWithInternals);
 
       // Broadcast updates
-      if ((service as any).currentContext) {
-        this.io.emit('ooda:context', (service as any).currentContext);
-        this.io.emit('ooda:metrics', (service as any).currentContext.metrics);
+      if (serviceWithInternals.currentContext) {
+        this.io.emit('ooda:context', serviceWithInternals.currentContext);
+        this.io.emit('ooda:metrics', serviceWithInternals.currentContext.metrics);
       }
 
       return result;

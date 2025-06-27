@@ -7,6 +7,7 @@ import { E2BService } from './services/E2BService.js';
 import { AgentCommunicationBridge } from './services/AgentCommunicationBridge.js';
 import { GitHubIntegrationService } from './services/GitHubIntegrationService.js';
 import { E2BBasicE2ETestSuite } from './tests/e2e/e2b-basic.js';
+import { AgentSandboxIntegrationE2ETestSuite } from './__tests__/e2e/agent-sandbox-integration.test.js';
 import './types.js'; // Ensure module augmentation is loaded
 
 export const e2bPlugin: Plugin = {
@@ -30,7 +31,7 @@ export const e2bPlugin: Plugin = {
     GitHubIntegrationService, // GitHub API integration
   ],
 
-  tests: [new E2BBasicE2ETestSuite()],
+  tests: [new E2BBasicE2ETestSuite(), new AgentSandboxIntegrationE2ETestSuite()],
 
   init: async (config: Record<string, string>, runtime) => {
     // Validate E2B configuration

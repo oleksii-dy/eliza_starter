@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { isBoolean } from 'lodash-es'
+import { useEffect, useMemo, useState } from 'react';
+import { isBoolean } from 'lodash-es';
 
 // Extend global types to include vendor-prefixed properties
 declare global {
@@ -20,24 +20,24 @@ declare global {
 }
 
 export function useFullscreen(targetRef: any) {
-  const [enabled, setEnabled] = useState(false)
+  const [enabled, setEnabled] = useState(false);
 
   const supported = useMemo(() => {
-    const docEl = document.documentElement
+    const docEl = document.documentElement;
     return !!(
       docEl.requestFullscreen ||
       docEl.webkitRequestFullscreen ||
       docEl.mozRequestFullScreen ||
       docEl.msRequestFullscreen
-    )
-  }, [])
+    );
+  }, []);
 
   const toggle = (value?: any) => {
-    const element = targetRef?.current || document.documentElement
-    const shouldEnable = isBoolean(value) ? value : !enabled
+    const element = targetRef?.current || document.documentElement;
+    const shouldEnable = isBoolean(value) ? value : !enabled;
 
     if (!supported) {
-      return
+      return;
     }
 
     if (shouldEnable) {
@@ -45,19 +45,19 @@ export function useFullscreen(targetRef: any) {
         element.requestFullscreen ||
         element.webkitRequestFullscreen ||
         element.mozRequestFullScreen ||
-        element.msRequestFullscreen
+        element.msRequestFullscreen;
 
-      request?.call(element)
+      request?.call(element);
     } else {
       const exit =
         document.exitFullscreen ||
         document.webkitExitFullscreen ||
         document.mozCancelFullScreen ||
-        document.msExitFullscreen
+        document.msExitFullscreen;
 
-      exit?.call(document)
+      exit?.call(document);
     }
-  }
+  };
 
   useEffect(() => {
     const handleChange = () => {
@@ -65,23 +65,23 @@ export function useFullscreen(targetRef: any) {
         document.fullscreenElement ||
         document.webkitFullscreenElement ||
         document.mozFullScreenElement ||
-        document.msFullscreenElement
+        document.msFullscreenElement;
 
-      setEnabled(!!isFullscreen)
-    }
+      setEnabled(!!isFullscreen);
+    };
 
-    document.addEventListener('fullscreenchange', handleChange)
-    document.addEventListener('webkitfullscreenchange', handleChange)
-    document.addEventListener('mozfullscreenchange', handleChange)
-    document.addEventListener('MSFullscreenChange', handleChange)
+    document.addEventListener('fullscreenchange', handleChange);
+    document.addEventListener('webkitfullscreenchange', handleChange);
+    document.addEventListener('mozfullscreenchange', handleChange);
+    document.addEventListener('MSFullscreenChange', handleChange);
 
     return () => {
-      document.removeEventListener('fullscreenchange', handleChange)
-      document.removeEventListener('webkitfullscreenchange', handleChange)
-      document.removeEventListener('mozfullscreenchange', handleChange)
-      document.removeEventListener('MSFullscreenChange', handleChange)
-    }
-  }, [])
+      document.removeEventListener('fullscreenchange', handleChange);
+      document.removeEventListener('webkitfullscreenchange', handleChange);
+      document.removeEventListener('mozfullscreenchange', handleChange);
+      document.removeEventListener('MSFullscreenChange', handleChange);
+    };
+  }, []);
 
-  return [supported, enabled, toggle]
+  return [supported, enabled, toggle];
 }

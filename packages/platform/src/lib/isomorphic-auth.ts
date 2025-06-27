@@ -284,9 +284,9 @@ class IsomorphicAuthService {
   ): Promise<{ success: boolean; authUrl?: string; error?: string }> {
     try {
       // Import Tauri APIs dynamically
-      // @ts-ignore - Tauri API only available in Tauri builds
+      // @ts-expect-error - Tauri API only available in Tauri builds
       const { invoke } = await import('@tauri-apps/api/tauri');
-      // @ts-ignore - Tauri API only available in Tauri builds
+      // @ts-expect-error - Tauri API only available in Tauri builds
       const { open } = await import('@tauri-apps/api/shell');
 
       // Open OAuth URL in external browser
@@ -526,7 +526,7 @@ class IsomorphicAuthService {
 
     if (this.isTauriEnvironment()) {
       try {
-        // @ts-ignore - Tauri API only available in Tauri builds
+        // @ts-expect-error - Tauri API only available in Tauri builds
         const { invoke } = await import('@tauri-apps/api/tauri');
         await invoke('store_auth_session', {
           session: SecurityManager.encryptToken(sessionData),
@@ -558,7 +558,7 @@ class IsomorphicAuthService {
 
       if (this.isTauriEnvironment()) {
         try {
-          // @ts-ignore - Tauri API only available in Tauri builds
+          // @ts-expect-error - Tauri API only available in Tauri builds
           const { invoke } = await import('@tauri-apps/api/tauri');
           encryptedSession = await invoke('get_auth_session');
         } catch (error) {
@@ -590,7 +590,7 @@ class IsomorphicAuthService {
   private async clearStoredSession(): Promise<void> {
     if (this.isTauriEnvironment()) {
       try {
-        // @ts-ignore - Tauri API only available in Tauri builds
+        // @ts-expect-error - Tauri API only available in Tauri builds
         const { invoke } = await import('@tauri-apps/api/tauri');
         await invoke('clear_auth_session');
       } catch (error) {
@@ -655,7 +655,7 @@ class IsomorphicAuthService {
     try {
       if (this.isTauriEnvironment()) {
         // Store in Tauri secure storage
-        // @ts-ignore - Tauri API only available in Tauri builds
+        // @ts-expect-error - Tauri API only available in Tauri builds
         const { invoke } = await import('@tauri-apps/api/tauri');
         await invoke('store_auth_token', { token });
       } else {
@@ -678,7 +678,7 @@ class IsomorphicAuthService {
     try {
       if (this.isTauriEnvironment()) {
         // Get from Tauri secure storage
-        // @ts-ignore - Tauri API only available in Tauri builds
+        // @ts-expect-error - Tauri API only available in Tauri builds
         const { invoke } = await import('@tauri-apps/api/tauri');
         return await invoke('get_auth_token');
       } else {

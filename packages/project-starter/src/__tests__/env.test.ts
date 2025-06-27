@@ -8,7 +8,7 @@ describe('Environment Setup', () => {
       'package.json',
       'tsconfig.json',
       'tsconfig.build.json',
-      'tsup.config.ts',
+      'build.config.ts',
       'bunfig.toml',
     ];
 
@@ -58,23 +58,20 @@ describe('Environment Setup', () => {
     expect(fs.existsSync(tsconfigPath)).toBe(true);
 
     const tsconfig = JSON.parse(fs.readFileSync(tsconfigPath, 'utf8'));
+    expect(tsconfig).toHaveProperty('extends');
+    expect(tsconfig.extends).toContain('@elizaos/core');
     expect(tsconfig).toHaveProperty('compilerOptions');
-
-    // Check compiler options
-    expect(tsconfig.compilerOptions).toHaveProperty('target');
-    expect(tsconfig.compilerOptions).toHaveProperty('module');
-    expect(tsconfig.compilerOptions).toHaveProperty('moduleResolution');
-    expect(tsconfig.compilerOptions).toHaveProperty('esModuleInterop');
+    expect(tsconfig.compilerOptions).toHaveProperty('baseUrl');
   });
 
-  it('should have a valid tsup.config.ts for building', () => {
-    const tsupConfigPath = path.join(process.cwd(), 'tsup.config.ts');
-    expect(fs.existsSync(tsupConfigPath)).toBe(true);
+  it('should have a valid build.config.ts for building', () => {
+    const buildConfigPath = path.join(process.cwd(), 'build.config.ts');
+    expect(fs.existsSync(buildConfigPath)).toBe(true);
 
-    const tsupConfig = fs.readFileSync(tsupConfigPath, 'utf8');
-    expect(tsupConfig).toContain('defineConfig');
-    expect(tsupConfig).toContain('entry:');
-    expect(tsupConfig).toContain('src/index.ts');
+    const buildConfig = fs.readFileSync(buildConfigPath, 'utf8');
+    expect(buildConfig).toContain('buildConfig');
+    expect(buildConfig).toContain('entrypoints');
+    expect(buildConfig).toContain('./src/index.ts');
   });
 
   it('should have a valid README.md file', () => {

@@ -55,7 +55,7 @@ export async function loadAllScenarios(): Promise<Scenario[]> {
 
     // Load plugin test scenarios
     try {
-      const { pluginTestScenarios } = await import('./plugin-tests/index.js');
+      const { pluginTestScenarios } = await import('./plugin-scenarios/index.js');
       if (pluginTestScenarios && Array.isArray(pluginTestScenarios)) {
         allScenarios.push(...pluginTestScenarios);
       }
@@ -141,7 +141,7 @@ export async function loadScenariosByCategory(category: string): Promise<Scenari
 
       case 'integration':
         try {
-          const { pluginTestScenarios } = await import('./plugin-tests/index.js');
+          const { pluginTestScenarios } = await import('./plugin-scenarios/index.js');
           if (pluginTestScenarios && Array.isArray(pluginTestScenarios)) {
             scenarios.push(...pluginTestScenarios);
           }

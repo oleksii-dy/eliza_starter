@@ -156,7 +156,7 @@ export const queueAction = {
       };
     }
   },
-  // eslint-disable-next-line require-await
+
   validate: async (runtime: IAgentRuntime): Promise<boolean> => {
     const privateKey = runtime.getSetting('EVM_PRIVATE_KEY');
     return typeof privateKey === 'string' && privateKey.startsWith('0x');

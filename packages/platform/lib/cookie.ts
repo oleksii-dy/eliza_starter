@@ -46,7 +46,7 @@ export function parseNextCookie(cookie: string): {
       | 'none',
     secure: Boolean(parsed['Secure']) || false,
     expires: parsed['Expires'] ? new Date(parsed['Expires']) : undefined,
-    maxAge: parsed['Max-Age'] ? parseInt(parsed['Max-Age']) : undefined,
+    maxAge: parsed['Max-Age'] ? parseInt(parsed['Max-Age'], 10) : undefined,
   };
 
   return { name, value, options };

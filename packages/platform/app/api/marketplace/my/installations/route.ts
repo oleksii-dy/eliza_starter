@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { auth } from '@/lib/auth';
 import { getDatabase } from '@/lib/database';
 import {
@@ -9,7 +10,7 @@ import {
 } from '@/lib/database/marketplace-schema';
 import { eq, and, desc } from 'drizzle-orm';
 
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -18,10 +19,10 @@ export async function handleGET(request: NextRequest) {
 
     const url = new URL(request.url);
     const limit = Math.min(
-      parseInt(url.searchParams.get('limit') || '20'),
+      parseInt(url.searchParams.get('limit') || '20', 10),
       100,
     );
-    const offset = parseInt(url.searchParams.get('offset') || '0');
+    const offset = parseInt(url.searchParams.get('offset') || '0', 10);
     const assetType = url.searchParams.get('type');
     const status = url.searchParams.get('status') || 'active'; // active, all
 
@@ -78,25 +79,25 @@ export async function handleGET(request: NextRequest) {
         uninstalledAt: installation.uninstalledAt,
         asset: asset
           ? {
-              id: asset.id,
-              name: asset.name,
-              slug: asset.slug,
-              description: asset.description,
-              assetType: asset.assetType,
-              category: asset.category,
-              tags: asset.tags,
-              icon: asset.icon,
-              version: asset.version,
-              rating: parseFloat(asset.rating || '0'),
-              ratingCount: asset.ratingCount,
-              creator: {
-                id: asset.creatorId,
-                displayName:
+            id: asset.id,
+            name: asset.name,
+            slug: asset.slug,
+            description: asset.description,
+            assetType: asset.assetType,
+            category: asset.category,
+            tags: asset.tags,
+            icon: asset.icon,
+            version: asset.version,
+            rating: parseFloat(asset.rating || '0'),
+            ratingCount: asset.ratingCount,
+            creator: {
+              id: asset.creatorId,
+              displayName:
                   creator?.displayName || user?.name || 'Unknown Creator',
-                avatarUrl: creator?.avatarUrl,
-                isVerified: creator?.isVerified || false,
-              },
-            }
+              avatarUrl: creator?.avatarUrl,
+              isVerified: creator?.isVerified || false,
+            },
+          }
           : null,
       }),
     );
@@ -120,3 +121,5 @@ export async function handleGET(request: NextRequest) {
     );
   }
 }
+
+export const { GET } = wrapHandlers({ handleGET });

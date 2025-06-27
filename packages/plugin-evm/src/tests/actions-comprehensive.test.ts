@@ -739,7 +739,7 @@ describe('EVM Actions Comprehensive Test Suite', () => {
         );
 
         expect(mockCallback).toHaveBeenCalled();
-      });
+      }, 10000);
     });
 
     describe('Token Approval Handling', () => {

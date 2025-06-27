@@ -27,6 +27,13 @@ export enum SkillType {
   AGILITY = 'agility',
   THIEVING = 'thieving',
   HITPOINTS = 'hitpoints',
+  FIREMAKING = 'firemaking',
+  HERBLORE = 'herblore',
+  CONSTRUCTION = 'construction',
+  FARMING = 'farming',
+  HUNTER = 'hunter',
+  RUNECRAFTING = 'runecrafting',
+  SLAYER = 'slayer',
 }
 
 export interface SkillDefinition {

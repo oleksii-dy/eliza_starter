@@ -28,13 +28,13 @@ export function generateApiKey(): {
   keyValue: string;
   keyHash: string;
   keyPrefix: string;
-} {
+  } {
   // Generate a cryptographically secure random key
   const randomPart = randomBytes(32).toString('hex');
   const keyValue = `${API_KEY_PREFIX}${randomPart}`;
 
   // Hash the key for storage (using SHA-256)
-  const keyHash = createHash('sha256').update(keyValue).digest('hex');
+  const keyHash = createHash('sha256').update(keyValue).digest('hex') as string;
 
   // Store first 12 characters for display purposes
   const keyPrefix = `${keyValue.substring(0, 12)}...`;
@@ -43,7 +43,7 @@ export function generateApiKey(): {
 }
 
 export function hashApiKey(keyValue: string): string {
-  return createHash('sha256').update(keyValue).digest('hex');
+  return createHash('sha256').update(keyValue).digest('hex') as string;
 }
 
 export async function createApiKey(

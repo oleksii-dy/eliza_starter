@@ -1,4 +1,4 @@
-import type { TestSuite, IAgentRuntime } from '../../types/core';
+import type { TestSuite, IAgentRuntime } from '@elizaos/core';
 import type { CustodialWalletService } from '../../services/CustodialWalletService';
 import {
   createCustodialWalletAction,

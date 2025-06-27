@@ -28,7 +28,7 @@ describe('MessageManager', () => {
           id: expect.any(String),
           text: 'Hello world!',
           entityId: 'test-player-id',
-          from: 'TestAgent',
+          from: 'HyperfyTestAgent', // This should match runtime.character.name
           timestamp: expect.any(Number),
         }),
         true
@@ -61,7 +61,7 @@ describe('MessageManager', () => {
           id: expect.any(String),
           text: '',
           entityId: 'test-player-id',
-          from: 'TestAgent',
+          from: 'HyperfyTestAgent',
           timestamp: expect.any(Number),
         }),
         true
@@ -82,7 +82,7 @@ describe('MessageManager', () => {
           id: expect.any(String),
           text: 'Test message',
           entityId: 'test-player-id',
-          from: 'TestAgent',
+          from: 'HyperfyTestAgent',
           timestamp: expect.any(Number),
         }),
         true
@@ -209,7 +209,7 @@ describe('MessageManager', () => {
           id: expect.any(String),
           text: 'Here is a joke!',
           entityId: 'test-player-id',
-          from: 'TestAgent',
+          from: 'HyperfyTestAgent',
           timestamp: expect.any(Number),
         }),
         true

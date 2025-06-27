@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { sessionService } from '@/lib/auth/session';
 import { getCreditTransactions } from '@/lib/server/services/billing-service';
 import { z } from 'zod';
@@ -28,7 +29,7 @@ const transactionsQuerySchema = z.object({
     .transform((val) => (val ? new Date(val) : undefined)),
 });
 
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     // Get user session
     const session = await sessionService.getSessionFromCookies();
@@ -67,3 +68,5 @@ export async function handleGET(request: NextRequest) {
     );
   }
 }
+
+export const { GET } = wrapHandlers({ handleGET });

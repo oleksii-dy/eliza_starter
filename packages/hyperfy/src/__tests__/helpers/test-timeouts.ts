@@ -11,10 +11,10 @@ export async function withTimeout<T>(
   errorMessage = 'Operation timed out'
 ): Promise<T> {
   const timeoutPromise = new Promise<never>((_, reject) => {
-    setTimeout(() => reject(new Error(`${errorMessage} after ${timeoutMs}ms`)), timeoutMs)
-  })
+    setTimeout(() => reject(new Error(`${errorMessage} after ${timeoutMs}ms`)), timeoutMs);
+  });
 
-  return Promise.race([fn(), timeoutPromise])
+  return Promise.race([fn(), timeoutPromise]);
 }
 
 /**
@@ -22,10 +22,10 @@ export async function withTimeout<T>(
  */
 export async function runWithTimeoutOrDefault<T>(fn: () => Promise<T>, defaultValue: T, timeoutMs: number): Promise<T> {
   try {
-    return await withTimeout(fn, timeoutMs)
+    return await withTimeout(fn, timeoutMs);
   } catch (error) {
-    console.warn('Operation timed out, using default value:', error)
-    return defaultValue
+    console.warn('Operation timed out, using default value:', error);
+    return defaultValue;
   }
 }
 
@@ -38,19 +38,19 @@ export const TEST_TIMEOUTS = {
   LONG: 5000, // 5 seconds
   VERY_LONG: 10000, // 10 seconds
   SETUP: 15000, // 15 seconds for setup
-}
+};
 
 /**
  * Sets up global test timeout handling
  */
 export function setupGlobalTimeouts() {
   // Set BUN_ENV for test detection
-  process.env.BUN_ENV = 'test'
+  process.env.BUN_ENV = 'test';
 
   // Override console.warn for specific messages
-  const originalWarn = console.warn
+  const originalWarn = console.warn;
   console.warn = (...args: any[]) => {
-    const message = args[0]?.toString() || ''
+    const message = args[0]?.toString() || '';
 
     // Suppress specific warnings in tests
     if (
@@ -58,9 +58,9 @@ export function setupGlobalTimeouts() {
       message.includes('Unknown NPC definition') ||
       message.includes('Attempting to spawn NPC')
     ) {
-      return
+      return;
     }
 
-    originalWarn.apply(console, args)
-  }
+    originalWarn.apply(console, args);
+  };
 }

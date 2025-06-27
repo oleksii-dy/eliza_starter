@@ -438,7 +438,7 @@ describe('Security and Edge Cases', () => {
         const request: TextGenerationRequest = {
           type: GenerationType.TEXT,
           priority: 'normal',
-          prompt: prompt,
+          prompt,
           organizationId: 'org-123',
           userId: 'user-123',
         };

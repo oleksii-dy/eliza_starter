@@ -97,10 +97,14 @@ describe('Event Emission Regression Tests', () => {
       useModel: mock().mockImplementation((modelType: string) => {
         if (modelType === 'TEXT_SMALL') {
           // For shouldRespond check - return XML that indicates the agent should respond
-          return Promise.resolve(`<action>REPLY</action><reasoning>I should respond to this message</reasoning>`);
+          return Promise.resolve(
+            '<action>REPLY</action><reasoning>I should respond to this message</reasoning>'
+          );
         } else if (modelType === 'TEXT_LARGE') {
           // For message generation - return XML with response content
-          return Promise.resolve(`<thought>I should provide a helpful response</thought><text>Hello! How can I help you?</text><actions>REPLY</actions><simple>true</simple>`);
+          return Promise.resolve(
+            '<thought>I should provide a helpful response</thought><text>Hello! How can I help you?</text><actions>REPLY</actions><simple>true</simple>'
+          );
         }
         return Promise.resolve('{}');
       }),

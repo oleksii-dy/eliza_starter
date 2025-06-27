@@ -14,12 +14,28 @@ try {
       return fn._returnValue;
     };
     fn.calls = calls;
-    fn._returnValue = undefined;
-    fn._implementation = null;
-    fn.mockReturnValue = (value: any) => { fn._returnValue = value; fn._implementation = null; return fn; };
-    fn.mockResolvedValue = (value: any) => { fn._returnValue = Promise.resolve(value); fn._implementation = null; return fn; };
-    fn.mockRejectedValue = (error: any) => { fn._returnValue = Promise.reject(error); fn._implementation = null; return fn; };
-    fn.mockImplementation = (impl: any) => { fn._implementation = impl; fn._returnValue = undefined; return fn; };
+    fn._returnValue = undefined as any;
+    fn._implementation = null as ((...args: any[]) => any) | null;
+    fn.mockReturnValue = (value: any) => {
+      fn._returnValue = value;
+      fn._implementation = null;
+      return fn;
+    };
+    fn.mockResolvedValue = (value: any) => {
+      fn._returnValue = Promise.resolve(value);
+      fn._implementation = null;
+      return fn;
+    };
+    fn.mockRejectedValue = (error: any) => {
+      fn._returnValue = Promise.reject(error);
+      fn._implementation = null;
+      return fn;
+    };
+    fn.mockImplementation = (impl: any) => {
+      fn._implementation = impl;
+      fn._returnValue = undefined;
+      return fn;
+    };
     fn.mock = { calls, results: [] };
     return fn;
   };
@@ -60,7 +76,7 @@ export function createMockRuntime(overrides: Partial<MockRuntime> = {}): MockRun
     getSetting: mock().mockReturnValue(null),
 
     // Model methods
-    useModel: mock().mockImplementation((modelType, params) => {
+    useModel: mock().mockImplementation((modelType: string, params: any) => {
       if (modelType === ModelType.TEXT_SMALL) {
         return Promise.resolve('Never gonna give you up, never gonna let you down');
       } else if (modelType === ModelType.TEXT_LARGE) {

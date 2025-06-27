@@ -3,6 +3,7 @@
  * Tests the analytics endpoints to ensure proper functionality
  */
 
+import { describe, it, expect, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 import { GET as getAnalyticsOverview } from '@/app/api/analytics/overview/route';
 import {
@@ -12,9 +13,9 @@ import {
 import { GET as exportAnalyticsData } from '@/app/api/analytics/export/route';
 
 // Mock session service
-jest.mock('@/lib/auth/session', () => ({
+vi.mock('@/lib/auth/session', () => ({
   sessionService: {
-    getSessionFromCookies: jest.fn(() =>
+    getSessionFromCookies: vi.fn(() =>
       Promise.resolve({
         organizationId: 'test-org-123',
         user: { id: 'test-user', email: 'test@example.com' },
@@ -24,9 +25,9 @@ jest.mock('@/lib/auth/session', () => ({
 }));
 
 // Mock inference analytics service
-jest.mock('@/lib/services/inference-analytics', () => ({
+vi.mock('@/lib/services/inference-analytics', () => ({
   inferenceAnalytics: {
-    getAnalytics: jest.fn(() =>
+    getAnalytics: vi.fn(() =>
       Promise.resolve({
         totalRequests: 500,
         totalCost: 28.67,
@@ -76,8 +77,8 @@ jest.mock('@/lib/services/inference-analytics', () => ({
         },
       }),
     ),
-    getMarkupPercentage: jest.fn(() => Promise.resolve(20.0)),
-    setMarkupPercentage: jest.fn(() => Promise.resolve()),
+    getMarkupPercentage: vi.fn(() => Promise.resolve(20.0)),
+    setMarkupPercentage: vi.fn(() => Promise.resolve()),
   },
 }));
 

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { MarketplaceService } from '@/lib/services/marketplace';
 import { auth } from '@/lib/auth';
 
 const marketplaceService = new MarketplaceService();
 
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     const url = new URL(request.url);
 
@@ -32,8 +33,8 @@ export async function handleGET(request: NextRequest) {
       searchQuery: url.searchParams.get('q') || undefined,
       sortBy: (url.searchParams.get('sortBy') as any) || 'created',
       sortOrder: (url.searchParams.get('sortOrder') as any) || 'desc',
-      limit: Math.min(parseInt(url.searchParams.get('limit') || '20'), 100), // Max 100 results
-      offset: parseInt(url.searchParams.get('offset') || '0'),
+      limit: Math.min(parseInt(url.searchParams.get('limit') || '20', 10), 100), // Max 100 results
+      offset: parseInt(url.searchParams.get('offset') || '0', 10),
       rating: url.searchParams.get('minRating')
         ? parseFloat(url.searchParams.get('minRating')!)
         : undefined,
@@ -136,3 +137,5 @@ export async function handleGET(request: NextRequest) {
     );
   }
 }
+
+export const { GET } = wrapHandlers({ handleGET });

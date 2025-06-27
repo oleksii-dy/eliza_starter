@@ -5,6 +5,13 @@
 
 import { mock } from 'bun:test';
 
+// Set test environment variables BEFORE any imports
+process.env.NODE_ENV = 'test';
+process.env.ELIZA_NONINTERACTIVE = 'true';
+process.env.FORCE_TEST_MODE = 'true';
+process.env.DISABLE_DATABASE = 'true';
+process.env.USE_MEMORY_DATABASE = 'true';
+
 // ---------------------------------------------------------------------------
 // Ensure the CLI bundle is built *once* before any integration tests start.
 // Individual test files attempt to build on-demand, but running in parallel
@@ -102,6 +109,99 @@ mock.module('cors', () => {
     default: cors,
     ...cors,
   };
+});
+
+// Mock scenario-runner production components to prevent database connections
+mock.module('../src/scenario-runner/ProductionCostTracker.js', () => ({
+  ProductionCostTracker: mock().mockImplementation(() => ({
+    setBenchmarkBudget: mock(),
+    trackOpenAICall: mock(),
+    trackAnthropicCall: mock(),
+    trackBlockchainTransaction: mock(),
+    trackEcommercePurchase: mock(),
+    trackAdvertisingSpend: mock(),
+    trackInfrastructureCost: mock(),
+    calculateTotalCost: mock().mockReturnValue(0),
+    calculateCostsByAgent: mock().mockReturnValue(new Map()),
+    generateCostReport: mock().mockResolvedValue({}),
+    emergencyStop: mock(),
+    resumeBenchmark: mock(),
+    isBenchmarkStopped: mock().mockReturnValue(false),
+    getBenchmarkCosts: mock().mockReturnValue([]),
+    clearBenchmarkCosts: mock(),
+    exportCostData: mock().mockReturnValue([]),
+  })),
+}));
+
+mock.module('../src/scenario-runner/ExternalAgentApi.js', () => ({
+  ExternalAgentAPI: mock().mockImplementation(() => ({
+    registerAgent: mock(),
+    unregisterAgent: mock(),
+    sendMessage: mock(),
+    getAgentStatus: mock(),
+    executeAgentTask: mock(),
+  })),
+}));
+
+mock.module('../src/scenario-runner/BenchmarkScoringSystem.js', () => ({
+  BenchmarkScoringSystem: mock().mockImplementation(() => ({
+    calculateScore: mock().mockReturnValue(0),
+    updateLeaderboard: mock(),
+    getLeaderboard: mock().mockResolvedValue([]),
+  })),
+}));
+
+mock.module('../src/scenario-runner/integration-test.js', () => ({
+  ProductionVerificationSystem: mock().mockImplementation(() => ({
+    initializeSystem: mock().mockResolvedValue(undefined),
+    verify: mock().mockResolvedValue([]),
+    shutdown: mock().mockResolvedValue(undefined),
+  })),
+}));
+
+// Mock test-utils to prevent real runtime creation
+mock.module('@elizaos/core/test-utils', () => ({
+  createTestRuntime: mock().mockRejectedValue(
+    new Error('Test runtime creation disabled in unit tests')
+  ),
+  RuntimeTestHarness: mock(),
+}));
+
+// Mock the core AgentRuntime to prevent real runtime creation
+mock.module('@elizaos/core', () => {
+  const coreMocks = {
+    AgentRuntime: mock().mockImplementation(() => ({
+      agentId: 'test-agent-id',
+      character: { name: 'Test Agent' },
+      initialize: mock().mockResolvedValue(undefined),
+      stop: mock().mockResolvedValue(undefined),
+      ensureWorldExists: mock().mockResolvedValue(undefined),
+      ensureRoomExists: mock().mockResolvedValue(undefined),
+      createMemory: mock().mockResolvedValue(undefined),
+      createEntity: mock().mockResolvedValue(true),
+      createEntities: mock().mockResolvedValue(true),
+      emitEvent: mock(),
+      useModel: mock().mockResolvedValue('Test response'),
+    })),
+    logger: {
+      info: console.log,
+      debug: console.log,
+      error: console.error,
+      warn: console.warn,
+      success: console.log,
+    },
+    createUniqueUuid: () => 'test-uuid-' + Math.random().toString(36).substr(2, 9),
+    asUUID: (str: string) => str,
+    UUID: String,
+    EventType: {},
+    ChannelType: {
+      DM: 'dm',
+      GROUP: 'group',
+      PUBLIC: 'public',
+    },
+    type: {},
+  };
+  return coreMocks;
 });
 
 // Ensure logger is available globally

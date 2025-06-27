@@ -1,24 +1,29 @@
 /**
  * Cache System Index
- * 
+ *
  * Unified export for the complete cache system including adapters,
  * managers, configuration, and utilities.
  */
 
 // Core cache system
 export { CacheManager } from './cache-manager';
-export type { 
-  CacheConfig, 
-  CacheWarmupQuery, 
+export type {
+  CacheConfig,
+  CacheWarmupQuery,
   CacheEntry,
   CacheManagerStats,
 } from './cache-manager';
 
+// Import for local use
+import { CacheManager } from './cache-manager';
+import type { CacheOptions } from './adapters/base';
+import { cacheManager } from './factory';
+
 // Cache adapters
 export { CacheAdapter } from './adapters/base';
-export type { 
-  CacheOptions, 
-  CacheStats, 
+export type {
+  CacheOptions,
+  CacheStats,
   CacheBulkResult,
   CacheEntry as BaseCacheEntry,
 } from './adapters/base';
@@ -81,10 +86,10 @@ export const CachePatterns = {
   ) => {
     // Update data source first
     await updateFn(value);
-    
+
     // Then update cache
     await manager.set(key, value, options);
-    
+
     return value;
   },
 
@@ -100,7 +105,7 @@ export const CachePatterns = {
   ) => {
     // Update cache immediately
     await manager.set(key, value, options);
-    
+
     // Schedule async data source update
     setTimeout(async () => {
       try {
@@ -110,7 +115,7 @@ export const CachePatterns = {
         // Could implement retry logic here
       }
     }, 0);
-    
+
     return value;
   },
 
@@ -131,7 +136,7 @@ export const CachePatterns = {
     manager: CacheManager,
     key: string,
     fetchFn: () => Promise<T>,
-    options?: CacheOptions & { 
+    options?: CacheOptions & {
       tags?: string[];
       maxFailures?: number;
       resetTimeout?: number;
@@ -152,12 +157,12 @@ export const CachePatterns = {
 
       try {
         const result = await manager.get(key, fetchFn, options);
-        
+
         // Reset failures on success
         if (result !== null) {
           failures = 0;
         }
-        
+
         return result;
       } catch (error) {
         failures++;
@@ -184,21 +189,21 @@ export const createCacheMiddleware = (manager: CacheManager) => {
         return next();
       }
 
-      const key = options.keyGenerator 
+      const key = options.keyGenerator
         ? options.keyGenerator(req)
         : `route:${req.method}:${req.url}`;
 
       try {
         // Try to get cached response
         const cached = await manager.get(key);
-        
+
         if (cached) {
           return res.json(cached);
         }
 
         // Intercept response to cache it
         const originalJson = res.json;
-        res.json = function(data: any) {
+        res.json = function (data: any) {
           // Cache the response
           manager.set(key, data, {
             ttl: options.ttl,
@@ -206,7 +211,7 @@ export const createCacheMiddleware = (manager: CacheManager) => {
           }).catch(error => {
             console.error('Failed to cache response:', error);
           });
-          
+
           return originalJson.call(this, data);
         };
 
@@ -227,7 +232,7 @@ export const createCacheHealthCheck = (manager: CacheManager) => {
     try {
       const stats = await manager.getStats();
       const isHealthy = await manager.isHealthy();
-      
+
       return {
         status: isHealthy ? 'healthy' : 'unhealthy',
         adapter: manager.getAdapterType(),

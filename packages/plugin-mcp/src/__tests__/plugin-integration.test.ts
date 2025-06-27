@@ -52,9 +52,15 @@ function createMockRuntime(): IAgentRuntime {
     registerPlugin: mock(async (plugin: Plugin) => {
       // Register services
       if (plugin.services) {
-        for (const ServiceClass of plugin.services) {
-          const service = await ServiceClass.start({} as any);
-          services.set(ServiceClass.serviceName || 'unknown', service);
+        for (const serviceItem of plugin.services) {
+          // Handle both service class and service configuration object
+          if (typeof serviceItem === 'function' && serviceItem.start) {
+            const service = await serviceItem.start({} as any);
+            services.set(serviceItem.serviceName || 'unknown', service);
+          } else if (typeof serviceItem === 'object' && serviceItem.component) {
+            const service = await serviceItem.component.start({} as any);
+            services.set(serviceItem.component.serviceName || 'unknown', service);
+          }
         }
       }
 
@@ -215,7 +221,12 @@ describe('MCP Plugin Integration', () => {
         // Verify service is defined
         expect(mcpPlugin.services).toBeDefined();
         expect(mcpPlugin.services?.length).toBeGreaterThan(0);
-        expect(mcpPlugin.services?.[0].serviceType).toBe('mcp');
+        const firstService = mcpPlugin.services?.[0];
+        if (firstService && typeof firstService === 'function') {
+          expect((firstService as any).serviceType).toBe('mcp');
+        } else if (firstService && typeof firstService === 'object' && 'component' in firstService) {
+          expect(firstService.component.serviceType).toBe('mcp');
+        }
       },
     })
   );

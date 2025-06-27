@@ -185,7 +185,7 @@ export class AutoTopUpCircuitBreaker {
     state: string;
     failureCount: number;
     lastFailureTime: number;
-  } {
+    } {
     return {
       state: this.state,
       failureCount: this.failureCount,
@@ -217,7 +217,7 @@ class CircuitBreakerRegistry {
   getAllStatuses(): Record<
     string,
     { state: string; failureCount: number; lastFailureTime: number }
-  > {
+    > {
     const statuses: Record<string, any> = {};
     this.circuitBreakers.forEach((breaker, orgId) => {
       statuses[orgId] = breaker.getStatus();

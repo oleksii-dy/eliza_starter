@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { withSecurityHeaders } from '@/lib/security/headers';
+import { SecurityHeaders } from '@/lib/security/headers';
 import { apiLogger } from '@/lib/logger';
 import { AuthenticationError } from '@/lib/errors';
 
@@ -129,7 +129,8 @@ export function secure(
 
       // Apply security headers if enabled
       if (config.security && response instanceof NextResponse) {
-        response = withSecurityHeaders(async () => response)(request);
+        const securityHeaders = new SecurityHeaders();
+        response = securityHeaders.apply(request, response);
       }
 
       // Apply custom middleware
@@ -193,13 +194,13 @@ export function createRoute(
 ) {
   const exports: Record<string, RouteHandler> = {};
 
-  if (handlers.get) exports.GET = secure(handlers.get, config);
-  if (handlers.post) exports.POST = secure(handlers.post, config);
-  if (handlers.put) exports.PUT = secure(handlers.put, config);
-  if (handlers.patch) exports.PATCH = secure(handlers.patch, config);
-  if (handlers.delete) exports.DELETE = secure(handlers.delete, config);
-  if (handlers.head) exports.HEAD = secure(handlers.head, config);
-  if (handlers.options) exports.OPTIONS = secure(handlers.options, config);
+  if (handlers.get) {exports.GET = secure(handlers.get, config);}
+  if (handlers.post) {exports.POST = secure(handlers.post, config);}
+  if (handlers.put) {exports.PUT = secure(handlers.put, config);}
+  if (handlers.patch) {exports.PATCH = secure(handlers.patch, config);}
+  if (handlers.delete) {exports.DELETE = secure(handlers.delete, config);}
+  if (handlers.head) {exports.HEAD = secure(handlers.head, config);}
+  if (handlers.options) {exports.OPTIONS = secure(handlers.options, config);}
 
   return exports;
 }
@@ -221,16 +222,16 @@ export function wrapHandlers(
 ) {
   const exports: Record<string, RouteHandler> = {};
 
-  if (handlers.handleGET) exports.GET = secure(handlers.handleGET, config);
-  if (handlers.handlePOST) exports.POST = secure(handlers.handlePOST, config);
-  if (handlers.handlePUT) exports.PUT = secure(handlers.handlePUT, config);
+  if (handlers.handleGET) {exports.GET = secure(handlers.handleGET, config);}
+  if (handlers.handlePOST) {exports.POST = secure(handlers.handlePOST, config);}
+  if (handlers.handlePUT) {exports.PUT = secure(handlers.handlePUT, config);}
   if (handlers.handlePATCH)
-    exports.PATCH = secure(handlers.handlePATCH, config);
+  {exports.PATCH = secure(handlers.handlePATCH, config);}
   if (handlers.handleDELETE)
-    exports.DELETE = secure(handlers.handleDELETE, config);
-  if (handlers.handleHEAD) exports.HEAD = secure(handlers.handleHEAD, config);
+  {exports.DELETE = secure(handlers.handleDELETE, config);}
+  if (handlers.handleHEAD) {exports.HEAD = secure(handlers.handleHEAD, config);}
   if (handlers.handleOPTIONS)
-    exports.OPTIONS = secure(handlers.handleOPTIONS, config);
+  {exports.OPTIONS = secure(handlers.handleOPTIONS, config);}
 
   return exports;
 }

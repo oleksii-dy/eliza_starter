@@ -69,9 +69,9 @@ export class SecurityManager {
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: https:",
       "connect-src 'self' https: wss:",
-      `object-src 'none'`,
-      `base-uri 'self'`,
-      `form-action 'self'`,
+      'object-src \'none\'',
+      'base-uri \'self\'',
+      'form-action \'self\'',
     ].join('; ');
   }
 }

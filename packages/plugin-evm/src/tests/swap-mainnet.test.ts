@@ -381,9 +381,9 @@ describe.skipIf(!MAINNET_SWAP_TEST_ENABLED || !MAINNET_PRIVATE_KEY)('Mainnet Swa
 
       // Estimate gas for different swap types
       const swapTypes = [
-        { from: 'ETH', to: 'USDC', expectedGas: 150000n },
-        { from: 'USDC', to: 'USDT', expectedGas: 200000n },
-        { from: 'WETH', to: 'DAI', expectedGas: 180000n },
+        { from: 'ETH', to: 'USDC', expectedGas: BigInt(150000) },
+        { from: 'USDC', to: 'USDT', expectedGas: BigInt(200000) },
+        { from: 'WETH', to: 'DAI', expectedGas: BigInt(180000) },
       ];
 
       for (const swap of swapTypes) {

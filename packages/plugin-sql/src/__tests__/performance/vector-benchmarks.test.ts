@@ -2,7 +2,8 @@ import { describe, test, expect, beforeAll, afterAll } from 'bun:test';
 import { PgAdapter } from '../../pg/adapter';
 import { PgManager } from '../../pg/manager';
 import pgvector from 'pgvector';
-import type { IAgentRuntime } from '@elizaos/core';
+import type { IAgentRuntime, UUID } from '@elizaos/core';
+import { v4 as uuidv4 } from 'uuid';
 
 describe('Vector Performance Benchmarks', () => {
   let adapter: PgAdapter;
@@ -22,7 +23,7 @@ describe('Vector Performance Benchmarks', () => {
     await manager.query('CREATE EXTENSION IF NOT EXISTS vector');
 
     adapter = new PgAdapter('benchmark-agent' as UUID, manager);
-    runtime = createMockRuntime();
+    runtime = createMockRuntime() as IAgentRuntime;
 
     await adapter.init();
 
@@ -45,9 +46,9 @@ describe('Vector Performance Benchmarks', () => {
       console.log(`\n🚀 Benchmark: Inserting ${vectorCount} vectors of dimension ${vectorDim}`);
 
       const vectors = Array.from({ length: vectorCount }, (_, i) => ({
-        id: `benchmark_insert_${i}`,
-        entityId: 'benchmark-entity',
-        roomId: 'benchmark-room',
+        id: `benchmark_insert_${i}` as UUID,
+        entityId: 'benchmark-entity' as UUID,
+        roomId: 'benchmark-room' as UUID,
         content: { text: `benchmark_insert_${i}` },
         dim_384: pgvector.toSql(Array.from({ length: vectorDim }, () => Math.random())),
         agentId: runtime.agentId,
@@ -61,7 +62,9 @@ describe('Vector Performance Benchmarks', () => {
         const batchSize = 100;
         for (let i = 0; i < vectors.length; i += batchSize) {
           const batch = vectors.slice(i, i + batchSize);
-          await tx.insert(adapter.schema.memories).values(batch);
+          for (const vector of batch) {
+            await adapter.createMemory(vector, 'messages');
+          }
         }
       });
 
@@ -83,9 +86,9 @@ describe('Vector Performance Benchmarks', () => {
 
       for (const dim of dimensions) {
         const vectors = Array.from({ length: vectorsPerDim }, (_, i) => ({
-          id: `benchmark_dim_${dim}_${i}`,
-          entityId: 'benchmark-entity',
-          roomId: 'benchmark-room',
+          id: `benchmark_dim_${dim}_${i}` as UUID,
+          entityId: 'benchmark-entity' as UUID,
+          roomId: 'benchmark-room' as UUID,
           content: { text: `benchmark_dim_${dim}_${i}` },
           [`dim_${dim}`]: pgvector.toSql(Array.from({ length: dim }, () => Math.random())),
           agentId: runtime.agentId,
@@ -94,7 +97,9 @@ describe('Vector Performance Benchmarks', () => {
         const startTime = performance.now();
 
         await adapter.db.transaction(async (tx) => {
-          await tx.insert(adapter.schema.memories).values(vectors);
+          for (const vector of vectors) {
+            await adapter.createMemory(vector, 'messages');
+          }
         });
 
         const insertTime = performance.now() - startTime;
@@ -119,9 +124,9 @@ describe('Vector Performance Benchmarks', () => {
       // Insert test vectors
       console.log('📝 Preparing test dataset...');
       const vectors = Array.from({ length: vectorCount }, (_, i) => ({
-        id: `benchmark_search_${i}`,
-        entityId: 'search-entity',
-        roomId: 'search-room',
+        id: `benchmark_search_${i}` as UUID,
+        entityId: 'search-entity' as UUID,
+        roomId: 'search-room' as UUID,
         content: { text: `benchmark_search_${i}` },
         dim_384: pgvector.toSql(Array.from({ length: vectorDim }, () => Math.random())),
         agentId: runtime.agentId,
@@ -131,7 +136,9 @@ describe('Vector Performance Benchmarks', () => {
         const batchSize = 500;
         for (let i = 0; i < vectors.length; i += batchSize) {
           const batch = vectors.slice(i, i + batchSize);
-          await tx.insert(adapter.schema.memories).values(batch);
+          for (const vector of batch) {
+            await adapter.createMemory(vector, 'messages');
+          }
         }
       });
 
@@ -150,11 +157,12 @@ describe('Vector Performance Benchmarks', () => {
 
       const startTime = performance.now();
 
-      const results = await adapter.searchMemoriesByEmbedding({
+      const results = await adapter.searchMemories({
         embedding: queryVector,
         roomId: 'search-room',
         match_threshold: 0.1,
         count: 10,
+        tableName: 'messages',
       });
 
       const searchTime = performance.now() - startTime;
@@ -176,7 +184,7 @@ describe('Vector Performance Benchmarks', () => {
       for (const count of searchCounts) {
         const startTime = performance.now();
 
-        const results = await adapter.searchMemoriesByEmbedding({
+        const results = await adapter.searchMemories({
           embedding: queryVector,
           roomId: 'search-room',
           match_threshold: 0.1,
@@ -201,11 +209,12 @@ describe('Vector Performance Benchmarks', () => {
 
       // HNSW search (approximate)
       const startTimeHNSW = performance.now();
-      const hnswResults = await adapter.searchMemoriesByEmbedding({
+      const hnswResults = await adapter.searchMemories({
         embedding: queryVector,
         roomId: 'search-room',
         match_threshold: 0.1,
         count: resultCount,
+        tableName: 'messages',
       });
       const hnswTime = performance.now() - startTimeHNSW;
 
@@ -213,11 +222,12 @@ describe('Vector Performance Benchmarks', () => {
       await adapter.query('DROP INDEX IF EXISTS benchmark_hnsw_idx');
 
       const startTimeExact = performance.now();
-      const exactResults = await adapter.searchMemoriesByEmbedding({
+      const exactResults = await adapter.searchMemories({
         embedding: queryVector,
         roomId: 'search-room',
         match_threshold: 0.1,
         count: resultCount,
+        tableName: 'messages',
       });
       const exactTime = performance.now() - startTimeExact;
 
@@ -251,11 +261,12 @@ describe('Vector Performance Benchmarks', () => {
       const startTime = performance.now();
 
       const searchPromises = queryVectors.map((vector) =>
-        adapter.searchMemoriesByEmbedding({
+        adapter.searchMemories({
           embedding: vector,
           roomId: 'search-room',
           match_threshold: 0.1,
           count: 5,
+          tableName: 'messages',
         })
       );
 
@@ -274,7 +285,7 @@ describe('Vector Performance Benchmarks', () => {
 
     test('should handle mixed read/write operations', async () => {
       const operations = 50;
-      const mixedOps = [];
+      const mixedOps: Promise<any>[] = [];
 
       console.log(`\n🔀 Benchmark: ${operations} mixed read/write operations`);
 
@@ -283,23 +294,24 @@ describe('Vector Performance Benchmarks', () => {
           // Insert operation
           mixedOps.push(
             adapter.createMemory({
-              id: `benchmark_mixed_${i}`,
-              entityId: 'mixed-entity',
-              roomId: 'mixed-room',
+              id: uuidv4() as UUID,
+              entityId: 'mixed-entity' as UUID,
+              roomId: 'mixed-room' as UUID,
               content: { text: `benchmark_mixed_${i}` },
-              dim_384: pgvector.toSql(Array.from({ length: 384 }, () => Math.random())),
+              embedding: Array.from({ length: 384 }, () => Math.random()),
               agentId: runtime.agentId,
-            })
+            }, 'messages')
           );
         } else {
           // Search operation
           const queryVector = Array.from({ length: 384 }, () => Math.random());
           mixedOps.push(
-            adapter.searchMemoriesByEmbedding({
+            adapter.searchMemories({
               embedding: queryVector,
-              roomId: 'search-room',
+              roomId: 'search-room' as UUID,
               match_threshold: 0.1,
               count: 3,
+              tableName: 'messages',
             })
           );
         }
@@ -332,16 +344,18 @@ describe('Vector Performance Benchmarks', () => {
 
       for (let i = 0; i < iterations; i++) {
         const vectors = Array.from({ length: vectorsPerIteration }, (_, j) => ({
-          id: `memory_test_${i}_${j}`,
-          entityId: 'memory-entity',
-          roomId: 'memory-room',
+          id: `memory_test_${i}_${j}` as UUID,
+          entityId: 'memory-entity' as UUID,
+          roomId: 'memory-room' as UUID,
           content: { text: `memory_test_${i}_${j}` },
           dim_384: pgvector.toSql(Array.from({ length: 384 }, () => Math.random())),
           agentId: runtime.agentId,
         }));
 
         await adapter.db.transaction(async (tx) => {
-          await tx.insert(adapter.schema.memories).values(vectors);
+          for (const vector of vectors) {
+            await adapter.createMemory(vector, 'messages');
+          }
         });
 
         // Clean up to test memory deallocation
@@ -410,10 +424,18 @@ describe('Vector Performance Benchmarks', () => {
 // Helper function to create a mock runtime for testing
 function createMockRuntime(): IAgentRuntime {
   return {
-    agentId: 'benchmark-agent',
+    agentId: 'benchmark-agent' as UUID,
     character: {
       name: 'BenchmarkAgent',
-      bio: 'Agent for performance benchmarking',
+      bio: ['Agent for performance benchmarking'],
     },
-  } as IAgentRuntime;
+    getSetting: () => null,
+    getService: () => null,
+    logger: {
+      debug: () => {},
+      info: () => {},
+      warn: () => {},
+      error: () => {},
+    },
+  } as any as IAgentRuntime;
 }

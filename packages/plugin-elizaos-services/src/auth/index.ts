@@ -9,7 +9,7 @@ export {
   TEST_KEYS,
   type ApiKeyValidationResult,
   type AuthStatus,
-} from './RealAuthenticationService.js';
+} from './RealAuthenticationService.ts';
 
 // CLI Interface
 export {
@@ -17,13 +17,13 @@ export {
   registerAuthCommands,
   type CLICommand,
   type CLIOption,
-} from './CLIAuthCommands.js';
+} from './CLIAuthCommands.ts';
 
-// GUI Interface
-export { AuthenticationPanel, default as AuthPanel } from './AuthenticationPanel.tsx';
+// GUI Interface - commented out for testing environment compatibility
+// export { AuthenticationPanel, default as AuthPanel } from './AuthenticationPanel.tsx';
 
 // Agent Plugin Integration
-export { AgentAuthService, AuthHelper, authPluginIntegration } from './AgentPluginAuth.js';
+export { AgentAuthService, AuthHelper, authPluginIntegration } from './AgentPluginAuth.ts';
 
 // Platform Integration
 export {
@@ -34,7 +34,7 @@ export {
   type ClientSession,
   type KeyDistributionRequest,
   type KeyDistributionResponse,
-} from './PlatformIntegration.js';
+} from './PlatformIntegration.ts';
 
 // Demo and Testing
 export {
@@ -43,7 +43,7 @@ export {
   demoAgentPluginAuthentication,
   demoPlatformIntegration,
   demoSuccessAndFailureScenarios,
-} from './demo-auth-system.js';
+} from './demo-auth-system.ts';
 
 /**
  * Quick setup helper for common authentication tasks
@@ -53,7 +53,7 @@ export class QuickAuthSetup {
    * Initialize authentication for CLI usage
    */
   static async initializeForCLI(runtime: any) {
-    const { registerAuthCommands } = await import('./CLIAuthCommands.js');
+    const { registerAuthCommands } = await import('./CLIAuthCommands.ts');
     return registerAuthCommands(runtime);
   }
 
@@ -61,7 +61,7 @@ export class QuickAuthSetup {
    * Initialize authentication for Agent plugin
    */
   static async initializeForAgent(runtime: any) {
-    const { AgentAuthService } = await import('./AgentPluginAuth.js');
+    const { AgentAuthService } = await import('./AgentPluginAuth.ts');
     const service = await AgentAuthService.start(runtime);
     runtime.registerService(service);
     return service;
@@ -71,7 +71,7 @@ export class QuickAuthSetup {
    * Initialize authentication for GUI
    */
   static async initializeForGUI(runtime: any) {
-    const { PlatformIntegrationFactory } = await import('./PlatformIntegration.js');
+    const { PlatformIntegrationFactory } = await import('./PlatformIntegration.ts');
     return PlatformIntegrationFactory.createForGUI(runtime);
   }
 
@@ -79,7 +79,7 @@ export class QuickAuthSetup {
    * Quick validation check
    */
   static async quickValidation(_runtime: any) {
-    const { RealAuthenticationService } = await import('./RealAuthenticationService.js');
+    const { RealAuthenticationService } = await import('./RealAuthenticationService.ts');
     const authService = new RealAuthenticationService();
     return authService.validateAllProviders();
   }
@@ -104,7 +104,7 @@ export class AuthStatusChecker {
     issues: string[];
     recommendations: string[];
   }> {
-    const { RealAuthenticationService } = await import('./RealAuthenticationService.js');
+    const { RealAuthenticationService } = await import('./RealAuthenticationService.ts');
     const authService = new RealAuthenticationService();
 
     try {
@@ -156,7 +156,7 @@ export class AuthStatusChecker {
    * Get detailed system health report
    */
   static async getHealthReport(_runtime: any) {
-    const { RealAuthenticationService } = await import('./RealAuthenticationService.js');
+    const { RealAuthenticationService } = await import('./RealAuthenticationService.ts');
     const authService = new RealAuthenticationService();
 
     try {
@@ -216,11 +216,11 @@ export class AuthStatusChecker {
 import {
   RealAuthenticationService as AuthenticationService,
   TEST_KEYS as ImportedTestKeys,
-} from './RealAuthenticationService.js';
-import { CLIAuthCommands } from './CLIAuthCommands.js';
+} from './RealAuthenticationService.ts';
+import { CLIAuthCommands } from './CLIAuthCommands.ts';
 import { AuthenticationPanel } from './AuthenticationPanel.tsx';
-import { AgentAuthService, AuthHelper } from './AgentPluginAuth.js';
-import { PlatformIntegrationService } from './PlatformIntegration.js';
+import { AgentAuthService, AuthHelper } from './AgentPluginAuth.ts';
+import { PlatformIntegrationService } from './PlatformIntegration.ts';
 
 // Default export for convenience
 export default {

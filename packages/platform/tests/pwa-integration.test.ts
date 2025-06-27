@@ -3,7 +3,7 @@
  * Tests that verify Progressive Web App features work correctly
  */
 
-import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
+import { describe, test, expect, beforeAll, afterAll, vi } from 'vitest';
 import { JSDOM } from 'jsdom';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -117,7 +117,7 @@ describe('Progressive Web App Integration', () => {
     test('should register service worker in production', () => {
       // Mock service worker registration
       const mockServiceWorker = {
-        register: jest.fn().mockResolvedValue({}),
+        register: vi.fn().mockResolvedValue({}),
         ready: Promise.resolve({}),
         controller: null,
       };
@@ -139,8 +139,8 @@ describe('Progressive Web App Integration', () => {
 
       // Mock beforeinstallprompt event
       const mockEvent = {
-        preventDefault: jest.fn(),
-        prompt: jest.fn().mockResolvedValue({ outcome: 'accepted' }),
+        preventDefault: vi.fn(),
+        prompt: vi.fn().mockResolvedValue({ outcome: 'accepted' }),
         userChoice: Promise.resolve({ outcome: 'accepted' }),
       };
 
@@ -182,18 +182,18 @@ describe('Progressive Web App Integration', () => {
       // Test display mode detection
       const mediaQuery = {
         matches: true,
-        addEventListener: jest.fn(),
-        removeEventListener: jest.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
       };
 
-      window.matchMedia = jest.fn().mockImplementation((query) => {
+      window.matchMedia = vi.fn().mockImplementation((query) => {
         if (query === '(display-mode: standalone)') {
           return mediaQuery;
         }
         return {
           matches: false,
-          addEventListener: jest.fn(),
-          removeEventListener: jest.fn(),
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
         };
       });
 
@@ -206,7 +206,7 @@ describe('Progressive Web App Integration', () => {
 
     test('should differentiate between PWA and native Tauri app', () => {
       // Test Tauri detection
-      const mockTauri = { invoke: jest.fn() };
+      const mockTauri = { invoke: vi.fn() };
       (window as any).__TAURI__ = mockTauri;
 
       const isTauri = '__TAURI__' in window;
@@ -283,12 +283,12 @@ describe('Progressive Web App Integration', () => {
   describe('PWA Updates', () => {
     test('should handle service worker updates', () => {
       const mockServiceWorker = {
-        register: jest.fn().mockResolvedValue({
+        register: vi.fn().mockResolvedValue({
           installing: null,
           waiting: null,
           active: { state: 'activated' },
-          addEventListener: jest.fn(),
-          update: jest.fn(),
+          addEventListener: vi.fn(),
+          update: vi.fn(),
         }),
         ready: Promise.resolve({}),
         controller: null,

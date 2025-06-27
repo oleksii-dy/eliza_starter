@@ -263,30 +263,30 @@ function AccountSettingsContent() {
         note={
           userValues.updatedEmail &&
           userValues.email?.initial !== userValues.updatedEmail ? (
-            <span className="text-sm">
+              <span className="text-sm">
               To update your email, click the confirmation link we sent to{' '}
-              <strong>{userValues.updatedEmail}</strong>.{' '}
-              <Button
-                className="underline"
-                variant="link"
-                handleClick={() =>
-                  resendUpdateEmailConfirmation({ user }).then((res: any) => {
-                    console.log(res);
-                    toast({
-                      message: 'Email sent',
-                      description:
+                <strong>{userValues.updatedEmail}</strong>.{' '}
+                <Button
+                  className="underline"
+                  variant="link"
+                  handleClick={() =>
+                    resendUpdateEmailConfirmation({ user }).then((res: any) => {
+                      console.log(res);
+                      toast({
+                        message: 'Email sent',
+                        description:
                         'Please check your email for a confirmation link.',
-                      mode: 'success',
-                    });
-                  })
-                }
-              >
+                        mode: 'success',
+                      });
+                    })
+                  }
+                >
                 Resend
-              </Button>
-            </span>
-          ) : (
-            "Email changes require verification. You'll be logged out of all devices after confirming."
-          )
+                </Button>
+              </span>
+            ) : (
+              "Email changes require verification. You'll be logged out of all devices after confirming."
+            )
         }
         disabled={
           userValues.email?.initial === userValues.email?.current ||

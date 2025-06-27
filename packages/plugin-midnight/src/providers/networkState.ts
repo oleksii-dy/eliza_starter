@@ -6,9 +6,9 @@ import {
   type State,
   logger,
 } from '@elizaos/core';
-import { MidnightNetworkService } from '../services/MidnightNetworkService.js';
-import { AgentDiscoveryService } from '../services/AgentDiscoveryService.js';
-import { type NetworkState, type MidnightNetworkConnection } from '../types/index.js';
+import { MidnightNetworkService } from '../services/MidnightNetworkService';
+import { AgentDiscoveryService } from '../services/AgentDiscoveryService';
+import { type NetworkState, type MidnightNetworkConnection } from '../types/index';
 
 /**
  * Provider for Midnight Network state and connectivity information

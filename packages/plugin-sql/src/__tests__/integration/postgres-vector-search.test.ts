@@ -67,7 +67,7 @@ describe('PostgreSQL Vector Search Tests', () => {
       console.error('Failed to setup PostgreSQL test:', error);
       throw error;
     }
-  }, 30000);
+  });
 
   afterAll(async () => {
     if (adapter) {
@@ -127,7 +127,7 @@ describe('PostgreSQL Vector Search Tests', () => {
         content: { text: 'hello world' },
         // Base embedding for "hello world"
         embedding: createEmbedding([0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2]),
-        dim_384: pgvector.toSql(createEmbedding([0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2])),
+        // dim_384: pgvector.toSql(createEmbedding([0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2])),
         createdAt: Date.now() - 3000,
         unique: false,
         metadata: { type: MemoryType.CUSTOM, category: 'greeting' },
@@ -140,7 +140,7 @@ describe('PostgreSQL Vector Search Tests', () => {
         content: { text: 'hi planet' },
         // Very similar to "hello world" (90% similarity)
         embedding: createEmbedding([0.88, 0.78, 0.68, 0.58, 0.48, 0.38, 0.28, 0.18]),
-        dim_384: pgvector.toSql(createEmbedding([0.88, 0.78, 0.68, 0.58, 0.48, 0.38, 0.28, 0.18])),
+        // dim_384: pgvector.toSql(createEmbedding([0.88, 0.78, 0.68, 0.58, 0.48, 0.38, 0.28, 0.18])),
         createdAt: Date.now() - 2000,
         unique: false,
         metadata: { type: MemoryType.CUSTOM, category: 'greeting' },
@@ -153,7 +153,7 @@ describe('PostgreSQL Vector Search Tests', () => {
         content: { text: 'greetings earth' },
         // Somewhat similar (70% similarity)
         embedding: createEmbedding([0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0]),
-        dim_384: pgvector.toSql(createEmbedding([0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0])),
+        // dim_384: pgvector.toSql(createEmbedding([0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0])),
         createdAt: Date.now() - 1500,
         unique: false,
         metadata: { type: MemoryType.CUSTOM, category: 'greeting' },
@@ -166,7 +166,7 @@ describe('PostgreSQL Vector Search Tests', () => {
         content: { text: 'this is a towel' },
         // Very different embedding
         embedding: createEmbedding([0.1, 0.2, 0.1, 0.9, 0.8, 0.7, 0.6, 0.5]),
-        dim_384: pgvector.toSql(createEmbedding([0.1, 0.2, 0.1, 0.9, 0.8, 0.7, 0.6, 0.5])),
+        // dim_384: pgvector.toSql(createEmbedding([0.1, 0.2, 0.1, 0.9, 0.8, 0.7, 0.6, 0.5])),
         createdAt: Date.now() - 1000,
         unique: false,
         metadata: { type: MemoryType.CUSTOM, category: 'object' },

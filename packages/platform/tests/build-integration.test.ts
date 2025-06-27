@@ -3,7 +3,7 @@
  * Tests that verify build artifacts and deployment processes work correctly
  */
 
-import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
+import { describe, test, expect, beforeAll, afterAll } from 'vitest';
 import { spawn } from 'child_process';
 import * as fs from 'fs/promises';
 import * as path from 'path';
@@ -157,7 +157,7 @@ describe('Platform Build Integration', () => {
         expect(tauriCheck.exitCode).toBe(0);
       } catch (error) {
         console.warn('Tauri CLI not available, skipping Tauri build tests');
-        return;
+
       }
     });
 

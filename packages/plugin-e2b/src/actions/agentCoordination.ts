@@ -1,6 +1,6 @@
 import type { Action, ActionExample, Handler, Validator } from '@elizaos/core';
 import { elizaLogger } from '@elizaos/core';
-import type { AgentCommunicationBridge } from '../services/AgentCommunicationBridge.js';
+import type { AgentCommunicationBridge } from '../services/AgentCommunicationBridge';
 
 /**
  * Agent Coordination Action

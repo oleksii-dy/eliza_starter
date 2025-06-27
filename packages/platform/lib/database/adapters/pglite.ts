@@ -166,7 +166,7 @@ export class PGliteAdapter extends BaseDatabaseAdapter {
 
   async isHealthy(): Promise<boolean> {
     try {
-      if (!this.client) return false;
+      if (!this.client) {return false;}
       await this.client.query('SELECT 1');
       return true;
     } catch {

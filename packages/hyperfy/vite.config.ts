@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import fs from 'fs'
+import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -59,7 +60,21 @@ const particlesPathPlugin = () => ({
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), processPolyfillPlugin(), particlesPathPlugin()],
+  plugins: [
+    react(), 
+    nodePolyfills({
+      // Whether to polyfill specific globals.
+      globals: {
+        Buffer: true,
+        global: true,
+        process: true,
+      },
+      // Whether to polyfill Node.js built-in modules.
+      protocolImports: true,
+    }),
+    processPolyfillPlugin(), 
+    particlesPathPlugin()
+  ],
 
   // Define which env variables are exposed to client
   envPrefix: 'PUBLIC_', // Only expose env vars starting with PUBLIC_

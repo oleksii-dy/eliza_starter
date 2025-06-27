@@ -12,8 +12,8 @@ const getApiKeyService = () =>
   import('@/lib/api-keys/service').then((m) => m.apiKeyService);
 const getAuthService = () =>
   import('@/lib/auth/session').then((m) => m.authService);
-const getPermissionService = () =>
-  import('@/lib/auth/permissions').then((m) => m.permissionService);
+const getPermissions = () =>
+  import('@/lib/auth/permissions');
 
 /**
  * GET /api/api-keys - List API keys for organization
@@ -27,12 +27,8 @@ async function handleGET(request: NextRequest) {
     }
 
     // Check permissions
-    const permissionService = await getPermissionService();
-    const canViewApiKeys = await permissionService.hasPermission(
-      user.id,
-      'api_keys:read',
-    );
-    if (!canViewApiKeys) {
+    const permissions = await getPermissions();
+    if (!permissions.hasPermission(user.role as any, 'api_keys', 'read')) {
       return NextResponse.json(
         { error: 'Insufficient permissions' },
         { status: 403 },
@@ -47,14 +43,13 @@ async function handleGET(request: NextRequest) {
       id: key.id,
       name: key.name,
       description: key.description,
-      scopes: key.scopes,
+      permissions: key.permissions,
       lastUsedAt: key.lastUsedAt,
       expiresAt: key.expiresAt,
       createdAt: key.createdAt,
-      createdBy: key.createdBy,
       isActive: key.isActive,
-      // Only show last 4 characters of key
-      keyPreview: key.key ? `...${key.key.slice(-4)}` : null,
+      // Only show prefix for security
+      keyPreview: key.keyPrefix,
     }));
 
     return NextResponse.json({ apiKeys: sanitizedKeys });
@@ -79,12 +74,8 @@ async function handlePOST(request: NextRequest) {
     }
 
     // Check permissions
-    const permissionService = await getPermissionService();
-    const canCreateApiKeys = await permissionService.hasPermission(
-      user.id,
-      'api_keys:write',
-    );
-    if (!canCreateApiKeys) {
+    const permissions = await getPermissions();
+    if (!permissions.hasPermission(user.role as any, 'api_keys', 'create')) {
       return NextResponse.json(
         { error: 'Insufficient permissions' },
         { status: 403 },
@@ -110,26 +101,31 @@ async function handlePOST(request: NextRequest) {
     }
 
     const apiKeyService = await getApiKeyService();
-    const newKey = await apiKeyService.createApiKey({
-      organizationId: user.organizationId,
-      createdBy: user.id,
-      name: validation.data.name,
-      description: validation.data.description,
-      scopes: validation.data.scopes,
-      expiresIn: validation.data.expiresIn,
-    });
+    const result = await apiKeyService.createApiKey(
+      user.organizationId,
+      user.id,
+      {
+        name: validation.data.name,
+        description: validation.data.description,
+        permissions: validation.data.scopes, // Map scopes to permissions
+        rateLimit: 100, // Default rate limit
+        expiresAt: validation.data.expiresIn
+          ? new Date(Date.now() + validation.data.expiresIn * 24 * 60 * 60 * 1000)
+          : undefined,
+      }
+    );
 
     // Return the full key only once on creation
     return NextResponse.json(
       {
         apiKey: {
-          id: newKey.id,
-          key: newKey.key, // Full key shown only on creation
-          name: newKey.name,
-          description: newKey.description,
-          scopes: newKey.scopes,
-          expiresAt: newKey.expiresAt,
-          createdAt: newKey.createdAt,
+          id: result.apiKey.id,
+          key: result.key, // Full key shown only on creation
+          name: result.apiKey.name,
+          description: result.apiKey.description,
+          permissions: result.apiKey.permissions,
+          expiresAt: result.apiKey.expiresAt,
+          createdAt: result.apiKey.createdAt,
         },
         warning:
           'Please save this API key securely. You will not be able to see it again.',
@@ -157,12 +153,8 @@ async function handleDELETE(request: NextRequest) {
     }
 
     // Check permissions
-    const permissionService = await getPermissionService();
-    const canDeleteApiKeys = await permissionService.hasPermission(
-      user.id,
-      'api_keys:delete',
-    );
-    if (!canDeleteApiKeys) {
+    const permissions = await getPermissions();
+    if (!permissions.hasPermission(user.role as any, 'api_keys', 'delete')) {
       return NextResponse.json(
         { error: 'Insufficient permissions' },
         { status: 403 },
@@ -185,14 +177,31 @@ async function handleDELETE(request: NextRequest) {
     }
 
     const apiKeyService = await getApiKeyService();
-    const result = await apiKeyService.deleteApiKeys(
-      user.organizationId,
-      validation.data.ids,
-    );
+
+    // Delete each key individually
+    const deleted: string[] = [];
+    const failed: string[] = [];
+
+    for (const id of validation.data.ids) {
+      try {
+        const success = await apiKeyService.deleteApiKey(
+          user.organizationId,
+          id
+        );
+        if (success) {
+          deleted.push(id);
+        } else {
+          failed.push(id);
+        }
+      } catch (error) {
+        console.error(`Failed to delete API key ${id}:`, error);
+        failed.push(id);
+      }
+    }
 
     return NextResponse.json({
-      deleted: result.deleted,
-      failed: result.failed,
+      deleted,
+      failed,
     });
   } catch (error) {
     console.error('Error deleting API keys:', error);

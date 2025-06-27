@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 import { sessionService } from '@/lib/auth/session';
 import { inferenceAnalytics } from '@/lib/services/inference-analytics';
 
-export async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     const session = await sessionService.getSessionFromCookies();
     if (!session) {
@@ -88,7 +89,7 @@ export async function handleGET(request: NextRequest) {
 }
 
 function convertToCSV(data: any[]): string {
-  if (data.length === 0) return '';
+  if (data.length === 0) {return '';}
 
   const headers = Object.keys(data[0]);
   const csvHeaders = headers.join(',');
@@ -111,3 +112,5 @@ function convertToCSV(data: any[]): string {
 
   return [csvHeaders, ...csvRows].join('\n');
 }
+
+export const { GET } = wrapHandlers({ handleGET });

@@ -36,7 +36,7 @@ describe('Bun PostgreSQL Adapter Tests', () => {
           name: 'BunTestAgent',
           bio: ['Test agent for Bun PostgreSQL adapter tests'],
         },
-      });
+      }) as any as IAgentRuntime;
 
       await adapter.init();
     } catch (error) {
@@ -119,7 +119,7 @@ describe('Bun PostgreSQL Adapter Tests', () => {
 
       const poolSize = 3; // Reduced for reliability
       const queries = Array.from({ length: poolSize }, (_, i) =>
-        adapter.query(`SELECT ${i} as query_id`)
+        adapter!.query(`SELECT ${i} as query_id`)
       );
 
       const results = await Promise.all(queries);
@@ -175,4 +175,3 @@ describe('Bun PostgreSQL Adapter Tests', () => {
     });
   });
 });
-

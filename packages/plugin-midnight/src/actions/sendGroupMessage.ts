@@ -1,6 +1,6 @@
 import { type Action, type IAgentRuntime, type Memory, type State, logger } from '@elizaos/core';
-import { NetworkMessagingService } from '../services/NetworkMessagingService.js';
-import { type MidnightActionResult } from '../types/index.js';
+import { NetworkMessagingService } from '../services/NetworkMessagingService';
+import { type MidnightActionResult } from '../types/index';
 
 /**
  * Action for sending messages to group chat via Midnight Network

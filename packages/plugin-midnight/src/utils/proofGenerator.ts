@@ -33,8 +33,8 @@ async function midnightVerifyProof(_params: {
     'Proof verification requires Midnight SDK setup. Please configure the Midnight development environment.'
   );
 }
-import { circuitCompiler } from './circuitCompiler.js';
-import { type ZKProof, type CircuitWitness, ProofGenerationError } from '../types/index.js';
+import { circuitCompiler } from './circuitCompiler';
+import { type ZKProof, type CircuitWitness, ProofGenerationError } from '../types/index';
 import pino from 'pino';
 
 /**

@@ -323,7 +323,7 @@ describe('HYPERFY_SCENE_PERCEPTION Action', () => {
         throw new Error('Examples should be defined');
       }
 
-      hyperfyScenePerceptionAction.examples.forEach((example) => {
+      hyperfyScenePerceptionAction.examples.forEach((example: any) => {
         expect(Array.isArray(example)).toBe(true);
         expect(example.length).toBe(2);
 

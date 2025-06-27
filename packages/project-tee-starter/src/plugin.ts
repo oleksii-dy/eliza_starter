@@ -5,7 +5,7 @@ import { type DeriveKeyResponse, TappdClient } from '@phala/dstack-sdk';
 import { type PrivateKeyAccount, privateKeyToAccount } from 'viem/accounts';
 import { keccak256 } from 'viem';
 import { Keypair } from '@solana/web3.js';
-import crypto from 'node:crypto';
+// import crypto from 'node:crypto'; // Temporarily disabled due to build conflicts
 
 // Create a custom TEE Client to make calls to the TEE through the Dstack SDK.
 
@@ -51,17 +51,17 @@ export class StarterService extends Service {
       const hex = keccak256(deriveKeyResponse.asUint8Array());
       const ecdsaKeypair: PrivateKeyAccount = privateKeyToAccount(hex);
 
-      // ED25519 Key
-      const uint8ArrayDerivedKey = deriveKeyResponse.asUint8Array();
-      const hash = crypto.createHash('sha256');
-      hash.update(uint8ArrayDerivedKey);
-      const seed = hash.digest();
-      const seedArray = new Uint8Array(seed);
-      const ed25519Keypair = Keypair.fromSeed(seedArray.slice(0, 32));
+      // ED25519 Key (temporarily disabled due to crypto build conflicts)
+      // const uint8ArrayDerivedKey = deriveKeyResponse.asUint8Array();
+      // const hash = crypto.createHash('sha256');
+      // hash.update(uint8ArrayDerivedKey);
+      // const seed = hash.digest();
+      // const seedArray = new Uint8Array(seed);
+      // const ed25519Keypair = Keypair.fromSeed(seedArray.slice(0, 32));
 
       logger.log('ECDSA Key Derived Successfully!');
       logger.log('ECDSA Keypair:', ecdsaKeypair.address);
-      logger.log('ED25519 Keypair:', ed25519Keypair.publicKey);
+      // logger.log('ED25519 Keypair:', ed25519Keypair.publicKey); // Temporarily disabled
       const signature = await ecdsaKeypair.signMessage({ message: 'Hello, world!' });
       logger.log('Sign message w/ ECDSA keypair: Hello world!, Signature: ', signature);
     } catch (error) {
@@ -162,7 +162,32 @@ const teeStarterPlugin: Plugin = {
     /* StarterService */
   ],
   actions: [],
-  providers: [],
+  providers: [
+    {
+      name: 'HELLO_WORLD_PROVIDER',
+      description: 'Provides TEE status and hello world greeting',
+      get: async (_runtime, _message, _state) => {
+        return {
+          text: `Hello from Mr. TEE! TEE Mode: ${process.env.TEE_MODE || 'NOT SET'}`,
+          values: {
+            teeMode: process.env.TEE_MODE || 'NOT SET',
+            teeVendor: process.env.TEE_VENDOR || 'NOT SET',
+            walletSaltConfigured: !!process.env.WALLET_SECRET_SALT,
+          },
+        };
+      },
+    },
+  ],
+  models: {
+    TEXT_SMALL: async (params: any) => {
+      // Simple echo model for testing
+      return `Echo (small): ${params.prompt || params.text || 'No input'}`;
+    },
+    TEXT_LARGE: async (params: any) => {
+      // Simple echo model for testing
+      return `Echo (large): ${params.prompt || params.text || 'No input'}`;
+    },
+  },
 };
 
 export default teeStarterPlugin;

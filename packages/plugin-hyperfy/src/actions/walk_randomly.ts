@@ -28,13 +28,8 @@ export const hyperfyWalkRandomlyAction: Action = {
     // Keep validation simple: Check if controls exist
     return !!service && service.isConnected() && !!service.getWorld()?.controls;
   },
-  handler: async (
-    runtime: IAgentRuntime,
-    _message: Memory,
-    _state?: State,
-    options?: { interval?: number; distance?: number; command?: 'start' | 'stop' }, // Reverted options
-    callback?: HandlerCallback
-  ): Promise<ActionResult> => {
+  handler: async (runtime: IAgentRuntime, _message: Memory, _state?: State, options?: { interval?: number; distance?: number; command?: 'start' | 'stop' }, // Reverted options
+    callback?: HandlerCallback): Promise<ActionResult> => {
     const service = runtime.getService<HyperfyService>(HyperfyService.serviceName);
     const world = service?.getWorld();
     const controls = world?.controls as unknown as AgentControls | undefined;

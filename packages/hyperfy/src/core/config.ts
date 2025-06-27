@@ -3,7 +3,7 @@
  * Handles environment-based settings and removes hardcoded values
  */
 
-import { ENV } from './env'
+import { ENV } from './env';
 
 export interface HyperfyConfig {
   assetsUrl: string
@@ -22,24 +22,24 @@ export interface HyperfyConfig {
 }
 
 class ConfigurationManager {
-  private static instance: ConfigurationManager
-  private config: HyperfyConfig
+  private static instance: ConfigurationManager;
+  private config: HyperfyConfig;
 
   private constructor() {
-    this.config = this.loadConfiguration()
+    this.config = this.loadConfiguration();
   }
 
   static getInstance(): ConfigurationManager {
     if (!ConfigurationManager.instance) {
-      ConfigurationManager.instance = new ConfigurationManager()
+      ConfigurationManager.instance = new ConfigurationManager();
     }
-    return ConfigurationManager.instance
+    return ConfigurationManager.instance;
   }
 
   private loadConfiguration(): HyperfyConfig {
-    const isProduction = ENV.PROD
-    const isDevelopment = ENV.DEV
-    const isTest = ENV.TEST
+    const isProduction = ENV.PROD;
+    const isDevelopment = ENV.DEV;
+    const isTest = ENV.TEST;
 
     return {
       // Asset configuration - no more hardcoded localhost!
@@ -69,34 +69,34 @@ class ConfigurationManager {
           z: parseFloat(ENV.HYPERFY_GRAVITY_Z || '0'),
         },
       },
-    }
+    };
   }
 
   get(): HyperfyConfig {
-    return this.config
+    return this.config;
   }
 
   /**
    * Get a specific configuration value
    */
   getValue<K extends keyof HyperfyConfig>(key: K): HyperfyConfig[K] {
-    return this.config[key]
+    return this.config[key];
   }
 
   /**
    * Update configuration (mainly for testing)
    */
   update(updates: Partial<HyperfyConfig>): void {
-    this.config = { ...this.config, ...updates }
+    this.config = { ...this.config, ...updates };
   }
 
   /**
    * Reset to default configuration
    */
   reset(): void {
-    this.config = this.loadConfiguration()
+    this.config = this.loadConfiguration();
   }
 }
 
 // Export singleton instance
-export const Config = ConfigurationManager.getInstance()
+export const Config = ConfigurationManager.getInstance();

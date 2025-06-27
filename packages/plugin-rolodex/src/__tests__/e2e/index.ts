@@ -3,13 +3,18 @@ import { RolodexIntegrationTestSuite } from './rolodex-integration.test';
 import { entityGraphTests } from './entity-graph.test';
 import { realEntityExtractionTests } from './real-entity-extraction.test';
 import { realRelationshipInferenceTests } from './real-relationship-inference.test';
+import { RealIntegrationTestSuite } from './integration.test';
 import type { EntityGraphManager } from '../../managers/EntityGraphManager';
 import type { EntityResolutionManager } from '../../managers/EntityResolutionManager';
 
 const rolodexIntegrationTestsInstance = new RolodexIntegrationTestSuite();
+const realIntegrationTestsInstance = new RealIntegrationTestSuite();
 
 // Comprehensive E2E test suite for the rolodex plugin
 export const rolodexE2ETestSuites: TestSuite[] = [
+  // Real runtime integration tests
+  realIntegrationTestsInstance,
+
   // Real LLM-powered tests
   realEntityExtractionTests,
   realRelationshipInferenceTests,
@@ -25,7 +30,10 @@ export class RolodexComprehensiveTestSuite implements TestSuite {
   description = 'Comprehensive end-to-end tests for all rolodex plugin functionality';
 
   tests = [
-    // Real LLM tests first
+    // Real runtime integration tests first
+    ...realIntegrationTestsInstance.tests,
+
+    // Real LLM tests
     ...realEntityExtractionTests.tests,
     ...realRelationshipInferenceTests.tests,
 

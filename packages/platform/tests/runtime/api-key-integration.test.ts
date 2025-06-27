@@ -26,7 +26,7 @@ import {
   describe,
   expect,
   test,
-} from '@jest/globals';
+} from 'vitest';
 import { eq } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -515,7 +515,7 @@ describe('API Key Integration with ElizaOS Runtime', () => {
 afterAll(async () => {
   // Clean up test data with proper foreign key constraint handling
   try {
-    if (!database) database = await getDatabase();
+    if (!database) {database = await getDatabase();}
     // First, clean up dependent records
     await database
       .delete(usageRecords)

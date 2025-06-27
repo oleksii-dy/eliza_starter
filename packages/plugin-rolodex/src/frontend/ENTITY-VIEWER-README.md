@@ -2,28 +2,35 @@
 
 ## Overview
 
-The Entity Relationship Viewer is a comprehensive frontend component for visualizing and managing entities and their relationships within the ElizaOS rolodex plugin. It provides two main views:
+The Entity Relationship Viewer is a comprehensive frontend component for
+visualizing and managing entities and their relationships within the ElizaOS
+rolodex plugin. It provides two main views:
 
-1. **Entity List View** - A table view with collapsible rows showing detailed connection information
+1. **Entity List View** - A table view with collapsible rows showing detailed
+   connection information
 2. **Entity Graph View** - An interactive force-directed graph visualization
 
 ## Features
 
 ### Entity List View
 
-- **Collapsible Connections**: Each entity row can be expanded to show all connections
-- **Connection Details**: Shows relationship types, strengths, and bidirectional indicators
+- **Collapsible Connections**: Each entity row can be expanded to show all
+  connections
+- **Connection Details**: Shows relationship types, strengths, and bidirectional
+  indicators
 - **Filtering**:
   - Search by entity name or platform identity
   - Filter by minimum connection strength
-- **Trust Level Indicators**: Visual indicators for trusted (green), neutral (yellow), and suspicious (red) entities
+- **Trust Level Indicators**: Visual indicators for trusted (green), neutral
+  (yellow), and suspicious (red) entities
 - **Platform Identities**: Displays social media handles and verification status
 
 ### Entity Graph View
 
 - **Interactive Force Graph**: Powered by react-force-graph-2d
 - **Visual Encoding**:
-  - Node color represents trust level (green = trusted, blue = neutral, red = suspicious)
+  - Node color represents trust level (green = trusted, blue = neutral, red =
+    suspicious)
   - Node size based on engagement metrics
   - Link thickness represents connection strength
   - Link colors indicate relationship types
@@ -33,7 +40,8 @@ The Entity Relationship Viewer is a comprehensive frontend component for visuali
   - Adjust trust level range
   - Set minimum connection strength threshold
 - **Legend & Stats**: Real-time statistics and color-coded legend
-- **Relationship Type Filter**: Click legend items to highlight specific relationship types
+- **Relationship Type Filter**: Click legend items to highlight specific
+  relationship types
 
 ## Components
 

@@ -230,7 +230,7 @@ describe('HYPERFY_AMBIENT_SPEECH Action', () => {
     });
 
     it('should have properly formatted examples', () => {
-      hyperfyAmbientSpeechAction.examples!.forEach((example) => {
+      hyperfyAmbientSpeechAction.examples!.forEach((example: any[]) => {
         expect(Array.isArray(example)).toBe(true);
         expect(example.length).toBe(2);
 
