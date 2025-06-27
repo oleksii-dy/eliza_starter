@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.json", // Extend from root tsconfig
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "baseUrl": ".",
+    "paths": {
+      "@elizaos/core": ["../core/src"] // Adjust if core is not directly ../core
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

@@ -151,10 +151,11 @@ export function getGorkCharacter(): Character {
     // Core functionality/bootstrap plugin
     '@elizaos/plugin-bootstrap',
     // AI provider plugins - order might matter or be based on preference/availability
+    ...(process.env.XAI_API_KEY ? ['@elizaos/plugin-grok'] : []), // Added Grok plugin
     ...(process.env.ANTHROPIC_API_KEY ? ['@elizaos/plugin-anthropic'] : []),
     ...(process.env.OPENAI_API_KEY ? ['@elizaos/plugin-openai'] : []),
-    // Fallback to local AI if no major cloud provider keys are set
-    ...(!process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY
+    // Fallback to local AI if no major cloud provider keys are set AND Grok isn't available
+    ...(!process.env.XAI_API_KEY && !process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY
       ? ['@elizaos/plugin-local-ai']
       : []),
     // Add other Gork-specific plugins here if any are developed, e.g., a meme generator plugin

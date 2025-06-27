@@ -1,9 +1,11 @@
 import { readFileSync } from 'node:fs';
+import fs from 'node:fs'; // Added for readCharactersFromStorage
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type Character, logger } from '@elizaos/core';
 import { getElizaCharacter } from '../characters/eliza';
-import { getGorkCharacter } from '../characters/gork'; // Added Gork import
+import { getGorkCharacter } from '../characters/gork';
+import '@elizaos/plugin-grok'; // Import to register GrokService
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
