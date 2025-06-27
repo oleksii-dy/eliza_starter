@@ -31,7 +31,7 @@
   "dependencies": {
     "@elizaos/core": "beta",
     "ethers": "^6.13.1",
-    "zod": "3.24.2"
+    "zod": "3.25.32"
   },
   "devDependencies": {
     "tsup": "8.4.0",

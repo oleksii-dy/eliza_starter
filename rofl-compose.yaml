@@ -1,0 +1,32 @@
+services:
+  realityspiral:
+    restart: always
+    image: ghcr.io/elizaos/eliza:staging
+    build:
+      context: .
+      dockerfile: Dockerfile
+    platform: linux/amd64
+    ports:
+      - "3001:3000"
+      - "5174:5173"
+    environment:
+      - CHARACTERS=${CHARACTERS}
+      - SERVER_PORT=${SERVER_PORT}
+      - UI_PORT=${UI_PORT}
+      - UI_SERVER_URL=${UI_SERVER_URL}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - WALLET_PRIVATE_KEY=${WALLET_PRIVATE_KEY}
+      - ALETHEA_RPC_URL=${ALETHEA_RPC_URL}
+      - PRIVATE_KEY=${PRIVATE_KEY}
+      - ALETHEA_API_KEY=${ALETHEA_API_KEY}
+      - POD_NFT_CONTRACT_ADDRESS=${POD_NFT_CONTRACT_ADDRESS}
+      - ROFL_PLUGIN_ENABLED=${ROFL_PLUGIN_ENABLED}
+      - POLYGON_PLUGINS_ENABLED=${POLYGON_PLUGINS_ENABLED}
+      - POLYGON_RPC_URL=${POLYGON_RPC_URL}
+      - ETHEREUM_RPC_URL=${ETHEREUM_RPC_URL}
+      - POLYGONSCAN_KEY=${POLYGONSCAN_KEY}
+      - ALCHEMY_API_KEY=${ALCHEMY_API_KEY}
+      - ZKEVM_RPC_URL=${ZKEVM_RPC_URL}
+      - HEIMDALL_RPC_URL=${HEIMDALL_RPC_URL}
+    volumes:
+      - /run/rofl-appd.sock:/run/rofl-appd.sock

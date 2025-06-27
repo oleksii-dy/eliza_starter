@@ -21,6 +21,7 @@ RUN ln -s /usr/bin/python3 /usr/bin/python
 COPY package.json turbo.json tsconfig.json lerna.json renovate.json .npmrc ./
 COPY scripts ./scripts
 COPY packages ./packages
+COPY characters ./characters
 
 RUN bun install --no-cache
 
@@ -49,9 +50,10 @@ COPY --from=builder /app/renovate.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/packages ./packages
 COPY --from=builder /app/scripts ./scripts
+COPY --from=builder /app/characters ./characters
 
 ENV NODE_ENV=production
 
 EXPOSE 3000
 
-CMD ["bun", "run", "start"]
+CMD ["bun", "run", "start", "--character", "/app/characters/myagent.json"]

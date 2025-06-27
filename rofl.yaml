@@ -1,0 +1,74 @@
+name: eliza
+version: 1.0.0
+tee: tdx
+kind: container
+resources:
+  memory: 16384
+  cpus: 1
+  storage:
+    kind: disk-persistent
+    size: 10000
+artifacts:
+  firmware: https://github.com/oasisprotocol/oasis-boot/releases/download/v0.4.1/ovmf.tdx.fd#db47100a7d6a0c1f6983be224137c3f8d7cb09b63bb1c7a5ee7829d8e994a42f
+  kernel: https://github.com/oasisprotocol/oasis-boot/releases/download/v0.4.1/stage1.bin#06e12cba9b2423b4dd5916f4d84bf9c043f30041ab03aa74006f46ef9c129d22
+  stage2: https://github.com/oasisprotocol/oasis-boot/releases/download/v0.4.1/stage2-podman.tar.bz2#6f2487aa064460384309a58c858ffea9316e739331b5c36789bb2f61117869d6
+  container:
+    runtime: https://github.com/oasisprotocol/oasis-sdk/releases/download/rofl-containers%2Fv0.4.2/rofl-containers#0cbaa4c0c1b35c5ed41156868bee9f3726f52eeedc01b3060d3b2eb67d76f546
+    compose: rofl-compose.yaml
+deployments:
+  default:
+    app_id: rofl1qqqky8wuvkg3myanqpaux7d8ue7cjfchxynz0mwm
+    network: testnet
+    paratime: sapphire
+    admin: myaccount
+    trust_root:
+      height: 27232977
+      hash: c1c8d6f0945701f6e33aeb90fd034ddfb38563c816098ecb380dc90d0510316a
+    policy:
+      quotes:
+        pcs:
+          tcb_validity_period: 30
+          min_tcb_evaluation_data_number: 18
+          tdx: {}
+      enclaves: []
+      endorsements:
+        - any: {}
+      fees: endorsing_node
+      max_expiration: 3
+    secrets:
+      - name: CHARACTERS
+        value: pGJwa1ggmQnUjL0v04GUV3ywHbisPAHqmQuoCbQOz7AERtz9WzxkbmFtZVga35jb+sdidI/MNniaE2K6e/vi6KYEMGZr43hlbm9uY2VPigHI4YDdsPlQFmoXgvfPZXZhbHVlWCyrKdhh2hBAaJi/NJFa0lyg/mtFNaG/YRoyAqsCPeTaKOeRseCoq1NI26Um8A==
+      - name: SERVER_PORT
+        value: pGJwa1ggFBHwqmOpZ8EwHzDW8Sy7aDUlhR9vyesjHONEIMpOxglkbmFtZVgbAHe9DguvMyHvzBGjIqMmeOfcWKdZ/Mc6VwlFZW5vbmNlT9Cbgww32OndbLh2vYMxDGV2YWx1ZVTLUz1u55kOr38vmzEKVRFdvL1Nfw==
+      - name: UI_PORT
+        value: pGJwa1gg3rZexTRiBSy238POkkksGsY+IQPVU9vD1zJPrdtfLRRkbmFtZVc8L+J+nNQ5/dd1FvodzNGWFTOOqo/demVub25jZU+y6Y8syJmvr1/nmapvrxNldmFsdWVUK4V0dlAj1swkwiZx1SjEGC9RWqw=
+      - name: UI_SERVER_URL
+        value: pGJwa1gghdzOcpYUD+TbU5+OUDwyazSGhHUn/+dX/6LZhLdYNixkbmFtZVgdcNK5BZWBWuKIi/MW7ZXes13/NltMwSXLcb2hySplbm9uY2VPoyyiibuMzdUMsU+ff/3LZXZhbHVlUFs+PMAa02zUxmLhYs5oUOA=
+      - name: OPENAI_API_KEY
+        value: pGJwa1ggSJF0w+gQYVPub38BigQoE5bqA5DUe02jizqIsh/YcR1kbmFtZVgeQz8gPj9pNAYJ7YYell4uoNSgXPDAEj+ojSnP4oVnZW5vbmNlTzvsAVFbdIjS8eL9RBpv32V2YWx1ZVi0KhRppHRKbxuNo+OtVWUKpsvD130QZ1FVX/uzHjgDYVkXntJPNEMBvJKruxqx+tuX/r+X10nywFrcP2FcmcJGiVSBzWENluY5N6SQRZ1K1nAuZvy5LWUtHGm4YS+REB+TfXmfMCyaMDIjKy9J00KmLNoQ76uB2OjAWyjXvcVbVRJPkh99AFyQwKC7g/CoGA4u8vCVVU+6cfygJRbfhP2Ha+HyBfbWHXhtPLw9DD9uk805tMnG
+      - name: WALLET_PRIVATE_KEY
+        value: pGJwa1ggx0LEzDrLQj+pTuS5847TJMF8bc+qLYM9rcf3uCVc9AJkbmFtZVgiajL68YfvJ0JwliTHVk87au1lySNIkyEQgFhXpEOaIj40o2Vub25jZU+JDZhRxrFqp12pTCMMMXJldmFsdWVYUGSqskXiAtjEhKni6jRRMGQMhaXb/+aOzCQz8s332ZJ7q06al3GIooh9dd+Bh57IalzUusAVLSHa8ib4y1TL9EYQrdkNCoOYp5mNSjA/jaeu
+      - name: ALETHEA_RPC_URL
+        value: pGJwa1ggwWR0pSLTGhh5X4fObCy9/Oe3MAYcLu0G2pHsRtj2W2tkbmFtZVgfhDlNabz9reHAZILJWoK0YXaGO+crp+CKIJdHkYzcw2Vub25jZU/Jxw8H3VDEA05cnUKVjXBldmFsdWVYJ+RCw1Y9gCh4+7GKHiRljBQNMAtf5aNQ/ofedanGxX9hR+FTj23hDw==
+      - name: PRIVATE_KEY
+        value: pGJwa1ggWL492SvXrtoeLphB1eHtH6jqYjYsQVGhPy48wW0vR1BkbmFtZVgbA+FDU+7sHQtQznRmoLc08dUvglS9PVXDDf5fZW5vbmNlT892kI9z0snG2MxlxAPXt2V2YWx1ZVgbcMG8vL1AWhvWWmC4xndKTTsjIoxs4ja2hZQD
+      - name: ALETHEA_API_KEY
+        value: pGJwa1ggtSXQFK6a2vW+3fPOctVRNi+npWb0h9Lo/V5CN/X5kQZkbmFtZVgfFg0Nqn2b0k5SXnb4V3JEym3Qz19Y40gel/6QUYqAq2Vub25jZU8kO416wHMq1ANLL+Kc8rVldmFsdWVYG5z5tsTJGDcWzgWw/CzYDSP1dcEJ4htXv7CRTA==
+      - name: POD_NFT_CONTRACT_ADDRESS
+        value: pGJwa1ggyDbhDjjXPMJZ0gz9Wku032D/E2V43aeNSoFHU+OUcixkbmFtZVgo4/Ua74WCWnMrPk+41hGc0/eBJpHva4bZWIhmy1a7xvX+8OTis7bgyGVub25jZU/W4fNk3w/Fwv+v7GwFHy5ldmFsdWVYOlFf6w5ERxUqmp/O7LcHbZhP1+l3oBkylZIy6AhSzP91nEmvYTCXsm+ksFi4nNxoVWdpE+phfHqr+xQ=
+      - name: ROFL_PLUGIN_ENABLED
+        value: pGJwa1ggQukJfqznHVuBkSDtgt5cOEVf/EWH66ItrwchFcnPSxxkbmFtZVgjU8OWbAKvtldTaBbgi28SzoUNYfuiD/ZELipGLznJs2OnOIVlbm9uY2VPDtaD4TDqXczirAwqfF+IZXZhbHVlVAOGCG1Ujs3Nln/ixLPauXJ6XqY1
+      - name: POLYGON_PLUGINS_ENABLED
+        value: pGJwa1gg2EpwyzSfU5jNf1gEkdsl6x2abXjYAothhNaX4lL7rzVkbmFtZVgnQEaO2zaa4M661Nvimn/nNbb6947w1WQxr7KkRxHSlmchgwWAzVDuZW5vbmNlT/+wnGZVjfcY+lBQKmI8xmV2YWx1ZVQ1B2ZN+PlP5Ahk0+pjnlXPpTB9eA==
+      - name: POLYGON_RPC_URL
+        value: pGJwa1ggjD4d+CHw/+Z7MyvF/gFA68j9m+ukZXUJdSsUxY2xYB9kbmFtZVgfjAtvtDYY0N5X5XJka+nnfg4/4YFgrVFiCiF8oZpO+mVub25jZU+OfQ3zSiEo3a/ATOCtTGdldmFsdWVYMjges3UpC11L/SV3wDZ1X0wOI80lZCbepLjbFFo7eV+fDo9nz5aYThasr6lkLOzxRgjK
+      - name: ETHEREUM_RPC_URL
+        value: pGJwa1gg+OIzwohtckH31OEAYi3brKD8N9TiavS5pREPo8MNWVRkbmFtZVgg1UcV3dhTaUjGH3gdyufznRq3lwWXbfotd6ZUO0YMP0Jlbm9uY2VP6iKLAFgJvQb4pV3hK/YaZXZhbHVlWDOEYbriHbzXwkc6niK8F4VCVE3TaW1Bz6QPCsoKI0/OcqPBoJ2r/U6kKdnEpgm/+bd8DKg=
+      - name: POLYGONSCAN_KEY
+        value: pGJwa1ggmCt06GM8+MW2OK5sAoxWwYnGeUBFFPcINXT6cg0G8HdkbmFtZVgfeHRsyy6B1HBzGR2AJAUv9xaUWQSxOmYjJbAXc1QkZWVub25jZU8o5ufb9X55qXaDEElVvC5ldmFsdWVYKpDKpMpUoc0HA4/G+qd5AecN3SJvyJ4aO+K9MGatOi1ApYfAB3n7guiJiw==
+      - name: ALCHEMY_API_KEY
+        value: pGJwa1gglaZsmDgZcXRqtAlPsQwXkOg8dJvo3A09prf7ToxIZxxkbmFtZVgfEII0PClwfU5a5ggzVzL8aCJ6Xx8KpYBPqRAF4FEsyGVub25jZU88xAWFEZa4pMKkY+G5W61ldmFsdWVYG6dMiqWwbvXJJoNvniZnx0PlhoeK079Up7A+7w==
+      - name: ZKEVM_RPC_URL
+        value: pGJwa1ggwcXPf3KhcI62sIIjzAuLxbdERnzcNRWIi6UTWgv74EpkbmFtZVgdYXW09mS4gNFLj0dQxCQh28G1MHiu4WbfvYSc0a9lbm9uY2VPSaRGvHvNpiu80M/dRl4FZXZhbHVlWD79JIzj3R7mmSUUASmX6+YkyPm3/c/mbaoRsNXpFX7EtHrQXBXj8deJxDz9896HLa0p/0uz1RFOgT0n9qpixg==
+      - name: HEIMDALL_RPC_URL
+        value: pGJwa1ggc/np+DPiE4EW2lJcZhmNANnR01by61BTrbnBOuZOGzVkbmFtZVggppipoShNfNOyI+tVGSvAgUR9p1fr/KOa4xyeSN4g8uVlbm9uY2VPygDIbEzhRxhkjeRbz+DCZXZhbHVlWDc2XTNwf93wh1ON3/lNJ5LcFAYTU4xa1RhZVgmLa8Q4mI7Lf5Aqt3Y/VLPl3gCsZVCpxFYIIECY
