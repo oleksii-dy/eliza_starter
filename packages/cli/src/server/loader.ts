@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { type Character, logger } from '@elizaos/core';
 import { getElizaCharacter } from '../characters/eliza';
+import { getGorkCharacter } from '../characters/gork'; // Added Gork import
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -299,8 +300,9 @@ export async function loadCharacters(charactersArg: string): Promise<Character[]
   }
 
   if (loadedCharacters.length === 0) {
-    logger.info('No characters found, using default character');
+    logger.info('No characters found, using default characters');
     loadedCharacters.push(getElizaCharacter());
+    loadedCharacters.push(getGorkCharacter()); // Added Gork
   }
 
   return loadedCharacters;
