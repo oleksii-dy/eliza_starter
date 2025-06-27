@@ -162,6 +162,12 @@ echo -n "https://polygonzkevm-mainnet.g.alchemy.com/v2/" | oasis rofl secret set
 echo -n "https://heimdall-api.polygon.technology" | oasis rofl secret set HEIMDALL_RPC_URL -
 ```
 
+After setting all the secrets, you need to update the ROFL application on-chain with the following command:
+
+```bash
+oasis rofl update
+```
+
 ## Tutorial
 
 ### Prerequisites
