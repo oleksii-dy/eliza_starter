@@ -4,13 +4,22 @@
  * Supports both SQLite (local) and PostgreSQL (cloud)
  */
 
-import { initializeDatabase, runMigrations, resetDatabase, seedDatabase, closeDatabase, getDatabaseAdapterInstance } from './server';
+import {
+  initializeDatabase,
+  runMigrations,
+  resetDatabase,
+  seedDatabase,
+  closeDatabase,
+  getDatabaseAdapterInstance,
+} from './server';
 
 async function main() {
   const command = process.argv[2];
-  const engine = process.argv.includes('--pglite') ? 'pglite' :
-    process.argv.includes('--postgres') ? 'postgresql' :
-      'auto';
+  const engine = process.argv.includes('--pglite')
+    ? 'pglite'
+    : process.argv.includes('--postgres')
+      ? 'postgresql'
+      : 'auto';
 
   console.log(`🔧 Database CLI - Engine: ${engine}`);
 
@@ -68,9 +77,13 @@ async function main() {
         console.log('📝 Generating migrations...');
         const currentAdapter = await initializeDatabase({ engine });
         if (currentAdapter.engine === 'pglite') {
-          console.log('Use: bun drizzle-kit generate --config=drizzle.config.pglite.ts');
+          console.log(
+            'Use: bun drizzle-kit generate --config=drizzle.config.pglite.ts',
+          );
         } else {
-          console.log('Use: bun drizzle-kit generate --config=drizzle.config.ts');
+          console.log(
+            'Use: bun drizzle-kit generate --config=drizzle.config.ts',
+          );
         }
         break;
 
@@ -78,7 +91,9 @@ async function main() {
         console.log('🎨 Starting Drizzle Studio...');
         const studioAdapter = await initializeDatabase({ engine });
         if (studioAdapter.engine === 'pglite') {
-          console.log('Use: bun drizzle-kit studio --config=drizzle.config.pglite.ts');
+          console.log(
+            'Use: bun drizzle-kit studio --config=drizzle.config.pglite.ts',
+          );
         } else {
           console.log('Use: bun drizzle-kit studio --config=drizzle.config.ts');
         }

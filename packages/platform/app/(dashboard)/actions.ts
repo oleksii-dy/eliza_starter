@@ -15,7 +15,7 @@ export async function handleLogout() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Cookie': `auth-token=${cookieStore.get('auth-token')?.value}; refresh-token=${cookieStore.get('refresh-token')?.value}`,
+        Cookie: `auth-token=${cookieStore.get('auth-token')?.value}; refresh-token=${cookieStore.get('refresh-token')?.value}`,
       },
     });
 
@@ -48,7 +48,7 @@ export async function handleRestoreUser() {
           Cookie: `auth-token=${cookieStore.get('auth-token')?.value}`,
         },
         withCredentials: true,
-      }
+      },
     )
     .then((res: any) => {
       return res.data;

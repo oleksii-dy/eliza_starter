@@ -17,6 +17,7 @@ const TEST_USER_ID = uuidv4();
 
 let testApiKey: string;
 let apiKeyId: string;
+let database: any;
 
 // Helper function to check if API server is available
 async function checkApiServerAvailable(): Promise<boolean> {
@@ -27,7 +28,7 @@ async function checkApiServerAvailable(): Promise<boolean> {
   try {
     const response = await fetch('http://localhost:3333/api/health', {
       method: 'HEAD',
-      signal: AbortSignal.timeout(1000)
+      signal: AbortSignal.timeout(1000),
     });
     return response.ok;
   } catch {
@@ -38,32 +39,40 @@ async function checkApiServerAvailable(): Promise<boolean> {
 describe('API Providers Integration Tests', () => {
   beforeAll(async () => {
     // Initialize database
-    const database = getDatabase();
+    database = await getDatabase();
     initializeDbProxy(database);
-    
+
     // Skip these tests if the API server isn't running
     if (!process.env.API_SERVER_RUNNING) {
-      console.warn('Skipping API provider tests: API server not running (set API_SERVER_RUNNING=true to enable)');
+      console.warn(
+        'Skipping API provider tests: API server not running (set API_SERVER_RUNNING=true to enable)',
+      );
     }
     // Create test organization and user
-    const [organization] = await db.insert(organizations).values({
-      id: TEST_ORG_ID,
-      name: 'Test Organization',
-      slug: `test-org-${Date.now()}`,
-      creditBalance: '100.0',
-      creditThreshold: '10.0',
-      autoTopUpEnabled: false,
-      autoTopUpAmount: '25.0',
-    }).returning();
+    const [organization] = await database
+      .insert(organizations)
+      .values({
+        id: TEST_ORG_ID,
+        name: 'Test Organization',
+        slug: `test-org-${Date.now()}`,
+        creditBalance: '100.0',
+        creditThreshold: '10.0',
+        autoTopUpEnabled: false,
+        autoTopUpAmount: '25.0',
+      })
+      .returning();
 
-    const [user] = await db.insert(users).values({
-      id: TEST_USER_ID,
-      organizationId: organization.id,
-      email: `test-${Date.now()}@example.com`,
-      firstName: 'Test',
-      lastName: 'User',
-      role: 'admin',
-    }).returning();
+    const [user] = await database
+      .insert(users)
+      .values({
+        id: TEST_USER_ID,
+        organizationId: organization.id,
+        email: `test-${Date.now()}@example.com`,
+        firstName: 'Test',
+        lastName: 'User',
+        role: 'admin',
+      })
+      .returning();
 
     // Add test credits
     await addCredits({
@@ -101,7 +110,7 @@ describe('API Providers Integration Tests', () => {
     // Cleanup test data
     if (apiKeyId) {
       // Use direct database deletion instead of service method
-      await db.delete(apiKeys).where(eq(apiKeys.id, apiKeyId));
+      await database.delete(apiKeys).where(eq(apiKeys.id, apiKeyId));
     }
     // Note: In production, you'd also clean up organization and user
   });
@@ -117,31 +126,36 @@ describe('API Providers Integration Tests', () => {
         console.warn('Skipping OpenAI API test - API server not available');
         return;
       }
-      const response = await fetch('http://localhost:3333/api/v1/inference/openai', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${testApiKey}`,
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        'http://localhost:3333/api/v1/inference/openai',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${testApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [
+              {
+                role: 'user',
+                content: 'What is 2+2? Reply with just the number.',
+              },
+            ],
+            max_tokens: 10,
+            temperature: 0,
+          }),
         },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            {
-              role: 'user',
-              content: 'What is 2+2? Reply with just the number.',
-            },
-          ],
-          max_tokens: 10,
-          temperature: 0,
-        }),
-      });
+      );
 
       if (response.status !== 200) {
         const errorData = await response.json();
         console.error('API request failed:', {
           status: response.status,
           error: errorData,
-          apiKey: testApiKey ? `${testApiKey.substring(0, 10)}...` : 'undefined'
+          apiKey: testApiKey
+            ? `${testApiKey.substring(0, 10)}...`
+            : 'undefined',
         });
       }
 
@@ -160,17 +174,20 @@ describe('API Providers Integration Tests', () => {
         console.warn('Skipping invalid model test - API server not available');
         return;
       }
-      const response = await fetch('http://localhost:3333/api/v1/inference/openai', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${testApiKey}`,
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        'http://localhost:3333/api/v1/inference/openai',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${testApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'invalid-model',
+            messages: [{ role: 'user', content: 'test' }],
+          }),
         },
-        body: JSON.stringify({
-          model: 'invalid-model',
-          messages: [{ role: 'user', content: 'test' }],
-        }),
-      });
+      );
 
       expect(response.status).toBe(400);
       const data = await response.json();
@@ -179,17 +196,23 @@ describe('API Providers Integration Tests', () => {
     });
 
     test('should reject requests without API key', async () => {
-      if (!(await checkApiServerAvailable())) { console.warn('Skipping HTTP test - API server not available'); return; }
-      const response = await fetch('http://localhost:3333/api/v1/inference/openai', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      if (!(await checkApiServerAvailable())) {
+        console.warn('Skipping HTTP test - API server not available');
+        return;
+      }
+      const response = await fetch(
+        'http://localhost:3333/api/v1/inference/openai',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [{ role: 'user', content: 'test' }],
+          }),
         },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [{ role: 'user', content: 'test' }],
-        }),
-      });
+      );
 
       expect(response.status).toBe(401);
     });
@@ -202,25 +225,32 @@ describe('API Providers Integration Tests', () => {
         return;
       }
 
-      if (!(await checkApiServerAvailable())) { console.warn('Skipping HTTP test - API server not available'); return; }
-      const response = await fetch('http://localhost:3333/api/v1/inference/anthropic', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${testApiKey}`,
-          'Content-Type': 'application/json',
+      if (!(await checkApiServerAvailable())) {
+        console.warn('Skipping HTTP test - API server not available');
+        return;
+      }
+      const response = await fetch(
+        'http://localhost:3333/api/v1/inference/anthropic',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${testApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'claude-3-5-haiku-20241022',
+            messages: [
+              {
+                role: 'user',
+                content:
+                  'What is the capital of France? Reply with just the city name.',
+              },
+            ],
+            max_tokens: 10,
+            temperature: 0,
+          }),
         },
-        body: JSON.stringify({
-          model: 'claude-3-5-haiku-20241022',
-          messages: [
-            {
-              role: 'user',
-              content: 'What is the capital of France? Reply with just the city name.',
-            },
-          ],
-          max_tokens: 10,
-          temperature: 0,
-        }),
-      });
+      );
 
       expect(response.status).toBe(200);
 
@@ -232,19 +262,25 @@ describe('API Providers Integration Tests', () => {
     }, 30000);
 
     test('should require max_tokens parameter', async () => {
-      if (!(await checkApiServerAvailable())) { console.warn('Skipping HTTP test - API server not available'); return; }
-      const response = await fetch('http://localhost:3333/api/v1/inference/anthropic', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${testApiKey}`,
-          'Content-Type': 'application/json',
+      if (!(await checkApiServerAvailable())) {
+        console.warn('Skipping HTTP test - API server not available');
+        return;
+      }
+      const response = await fetch(
+        'http://localhost:3333/api/v1/inference/anthropic',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${testApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'claude-3-5-haiku-20241022',
+            messages: [{ role: 'user', content: 'test' }],
+            // max_tokens missing
+          }),
         },
-        body: JSON.stringify({
-          model: 'claude-3-5-haiku-20241022',
-          messages: [{ role: 'user', content: 'test' }],
-          // max_tokens missing
-        }),
-      });
+      );
 
       expect(response.status).toBe(400);
       const data = await response.json();
@@ -265,14 +301,20 @@ describe('API Providers Integration Tests', () => {
       formData.append('path', 'test-uploads');
       formData.append('public', 'false');
 
-      if (!(await checkApiServerAvailable())) { console.warn('Skipping HTTP test - API server not available'); return; }
-      const response = await fetch('http://localhost:3333/api/v1/storage/upload', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${testApiKey}`,
+      if (!(await checkApiServerAvailable())) {
+        console.warn('Skipping HTTP test - API server not available');
+        return;
+      }
+      const response = await fetch(
+        'http://localhost:3333/api/v1/storage/upload',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${testApiKey}`,
+          },
+          body: formData,
         },
-        body: formData,
-      });
+      );
 
       expect(response.status).toBe(200);
 
@@ -304,14 +346,20 @@ describe('API Providers Integration Tests', () => {
 
       formData.append('file', largeFile, 'large.txt');
 
-      if (!(await checkApiServerAvailable())) { console.warn('Skipping HTTP test - API server not available'); return; }
-      const response = await fetch('http://localhost:3333/api/v1/storage/upload', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${testApiKey}`,
+      if (!(await checkApiServerAvailable())) {
+        console.warn('Skipping HTTP test - API server not available');
+        return;
+      }
+      const response = await fetch(
+        'http://localhost:3333/api/v1/storage/upload',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${testApiKey}`,
+          },
+          body: formData,
         },
-        body: formData,
-      });
+      );
 
       expect(response.status).toBe(413);
       const data = await response.json();
@@ -322,14 +370,20 @@ describe('API Providers Integration Tests', () => {
       const formData = new FormData();
       // No file attached
 
-      if (!(await checkApiServerAvailable())) { console.warn('Skipping HTTP test - API server not available'); return; }
-      const response = await fetch('http://localhost:3333/api/v1/storage/upload', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${testApiKey}`,
+      if (!(await checkApiServerAvailable())) {
+        console.warn('Skipping HTTP test - API server not available');
+        return;
+      }
+      const response = await fetch(
+        'http://localhost:3333/api/v1/storage/upload',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${testApiKey}`,
+          },
+          body: formData,
         },
-        body: formData,
-      });
+      );
 
       expect(response.status).toBe(400);
       const data = await response.json();
@@ -339,13 +393,19 @@ describe('API Providers Integration Tests', () => {
 
   describe('Billing Integration', () => {
     test('should get credit balance and transactions', async () => {
-      if (!(await checkApiServerAvailable())) { console.warn('Skipping HTTP test - API server not available'); return; }
-      const response = await fetch('http://localhost:3333/api/v1/billing/credits', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${testApiKey}`, // This should be user session token, not API key
+      if (!(await checkApiServerAvailable())) {
+        console.warn('Skipping HTTP test - API server not available');
+        return;
+      }
+      const response = await fetch(
+        'http://localhost:3333/api/v1/billing/credits',
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${testApiKey}`, // This should be user session token, not API key
+          },
         },
-      });
+      );
 
       expect(response.status).toBe(200);
 
@@ -363,18 +423,24 @@ describe('API Providers Integration Tests', () => {
         return;
       }
 
-      if (!(await checkApiServerAvailable())) { console.warn('Skipping HTTP test - API server not available'); return; }
-      const response = await fetch('http://localhost:3333/api/v1/billing/payment-intent', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${testApiKey}`, // This should be user session token
-          'Content-Type': 'application/json',
+      if (!(await checkApiServerAvailable())) {
+        console.warn('Skipping HTTP test - API server not available');
+        return;
+      }
+      const response = await fetch(
+        'http://localhost:3333/api/v1/billing/payment-intent',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${testApiKey}`, // This should be user session token
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            amount: 10, // $10
+            currency: 'usd',
+          }),
         },
-        body: JSON.stringify({
-          amount: 10, // $10
-          currency: 'usd',
-        }),
-      });
+      );
 
       expect(response.status).toBe(200);
 
@@ -386,17 +452,23 @@ describe('API Providers Integration Tests', () => {
     }, 10000);
 
     test('should validate minimum payment amount', async () => {
-      if (!(await checkApiServerAvailable())) { console.warn('Skipping HTTP test - API server not available'); return; }
-      const response = await fetch('http://localhost:3333/api/v1/billing/payment-intent', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${testApiKey}`,
-          'Content-Type': 'application/json',
+      if (!(await checkApiServerAvailable())) {
+        console.warn('Skipping HTTP test - API server not available');
+        return;
+      }
+      const response = await fetch(
+        'http://localhost:3333/api/v1/billing/payment-intent',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${testApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            amount: 2, // Below $5 minimum
+          }),
         },
-        body: JSON.stringify({
-          amount: 2, // Below $5 minimum
-        }),
-      });
+      );
 
       expect(response.status).toBe(400);
       const data = await response.json();
@@ -406,11 +478,14 @@ describe('API Providers Integration Tests', () => {
 
   describe('API Key Management', () => {
     test('should list API keys', async () => {
-      if (!(await checkApiServerAvailable())) { console.warn('Skipping HTTP test - API server not available'); return; }
+      if (!(await checkApiServerAvailable())) {
+        console.warn('Skipping HTTP test - API server not available');
+        return;
+      }
       const response = await fetch('http://localhost:3333/api/v1/api-keys', {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${testApiKey}`, // This should be user session token
+          Authorization: `Bearer ${testApiKey}`, // This should be user session token
         },
       });
 
@@ -421,18 +496,23 @@ describe('API Providers Integration Tests', () => {
       expect(Array.isArray(data.data)).toBe(true);
 
       // Should find our test API key
-      const testKey = data.data.find((key: any) => key.name === 'Integration Test Key');
+      const testKey = data.data.find(
+        (key: any) => key.name === 'Integration Test Key',
+      );
       expect(testKey).toBeDefined();
       expect(testKey.keyPrefix).toBeDefined();
       expect(testKey.keyPrefix).not.toContain(testApiKey); // Should be masked
     });
 
     test('should create new API key', async () => {
-      if (!(await checkApiServerAvailable())) { console.warn('Skipping HTTP test - API server not available'); return; }
+      if (!(await checkApiServerAvailable())) {
+        console.warn('Skipping HTTP test - API server not available');
+        return;
+      }
       const response = await fetch('http://localhost:3333/api/v1/api-keys', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${testApiKey}`, // This should be user session token
+          Authorization: `Bearer ${testApiKey}`, // This should be user session token
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -456,7 +536,7 @@ describe('API Providers Integration Tests', () => {
       await fetch(`http://localhost:3333/api/v1/api-keys/${data.data.id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${testApiKey}`,
+          Authorization: `Bearer ${testApiKey}`,
         },
       });
     });
@@ -474,22 +554,30 @@ describe('API Providers Integration Tests', () => {
     test('should handle insufficient credits gracefully', async () => {
       // This would require draining the test account's credits
       // For now, we'll test with a mock scenario
-      console.warn('Insufficient credits test requires account setup - skipping');
+      console.warn(
+        'Insufficient credits test requires account setup - skipping',
+      );
     });
 
     test('should handle invalid API key', async () => {
-      if (!(await checkApiServerAvailable())) { console.warn('Skipping HTTP test - API server not available'); return; }
-      const response = await fetch('http://localhost:3333/api/v1/inference/openai', {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Bearer invalid_key_123',
-          'Content-Type': 'application/json',
+      if (!(await checkApiServerAvailable())) {
+        console.warn('Skipping HTTP test - API server not available');
+        return;
+      }
+      const response = await fetch(
+        'http://localhost:3333/api/v1/inference/openai',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: 'Bearer invalid_key_123',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [{ role: 'user', content: 'test' }],
+          }),
         },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [{ role: 'user', content: 'test' }],
-        }),
-      });
+      );
 
       expect(response.status).toBe(401);
       const data = await response.json();
@@ -497,15 +585,21 @@ describe('API Providers Integration Tests', () => {
     });
 
     test('should handle malformed requests', async () => {
-      if (!(await checkApiServerAvailable())) { console.warn('Skipping HTTP test - API server not available'); return; }
-      const response = await fetch('http://localhost:3333/api/v1/inference/openai', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${testApiKey}`,
-          'Content-Type': 'application/json',
+      if (!(await checkApiServerAvailable())) {
+        console.warn('Skipping HTTP test - API server not available');
+        return;
+      }
+      const response = await fetch(
+        'http://localhost:3333/api/v1/inference/openai',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${testApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: 'invalid json',
         },
-        body: 'invalid json',
-      });
+      );
 
       expect(response.status).toBe(400);
     });

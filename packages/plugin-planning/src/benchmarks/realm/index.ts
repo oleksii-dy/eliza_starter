@@ -156,11 +156,22 @@ export class RealmBenchmarkDataset implements BenchmarkDataset {
         description: 'Plan a sequence of actions to achieve a specific goal',
         category: 'planning',
         difficulty: 'easy' as const,
-        problemStatement: 'You need to organize a team meeting. Plan the necessary steps to schedule, prepare, and conduct the meeting effectively.',
+        problemStatement:
+          'You need to organize a team meeting. Plan the necessary steps to schedule, prepare, and conduct the meeting effectively.',
         input: {
           goal: 'Organize effective team meeting',
-          constraints: ['Must accommodate 5 people', 'Budget limit of $100', 'Maximum 2 hours duration'],
-          availableActions: ['send_email', 'book_room', 'create_agenda', 'send_calendar_invite', 'prepare_materials']
+          constraints: [
+            'Must accommodate 5 people',
+            'Budget limit of $100',
+            'Maximum 2 hours duration',
+          ],
+          availableActions: [
+            'send_email',
+            'book_room',
+            'create_agenda',
+            'send_calendar_invite',
+            'prepare_materials',
+          ],
         },
         expectedPlan: {
           steps: [
@@ -168,22 +179,29 @@ export class RealmBenchmarkDataset implements BenchmarkDataset {
             'Book appropriate meeting room',
             'Create and distribute agenda',
             'Send calendar invites',
-            'Prepare necessary materials and documents'
+            'Prepare necessary materials and documents',
           ],
-          reasoning: 'Sequential planning that ensures all constraints are met while maximizing effectiveness'
+          reasoning:
+            'Sequential planning that ensures all constraints are met while maximizing effectiveness',
         },
         constraints: {
           timeLimit: 300000, // 5 minutes
           maxSteps: 10,
-          availableActions: ['send_email', 'book_room', 'create_agenda', 'send_calendar_invite', 'prepare_materials'],
-          requiredOutcome: 'Complete plan with all steps specified and constraints addressed'
+          availableActions: [
+            'send_email',
+            'book_room',
+            'create_agenda',
+            'send_calendar_invite',
+            'prepare_materials',
+          ],
+          requiredOutcome: 'Complete plan with all steps specified and constraints addressed',
         },
         planEvaluation: {
           completeness: (plan: any) => this.checkPlanCompleteness(plan),
           feasibility: (plan: any) => this.checkPlanFeasibility(plan),
           efficiency: (plan: any) => this.checkPlanEfficiency(plan),
-          correctness: (plan: any, expected: any) => this.evaluatePlanQuality(plan, expected)
-        }
+          correctness: (plan: any, expected: any) => this.evaluatePlanQuality(plan, expected),
+        },
       },
 
       {
@@ -193,38 +211,50 @@ export class RealmBenchmarkDataset implements BenchmarkDataset {
         description: 'Solve a complex problem requiring multiple logical steps',
         category: 'reasoning',
         difficulty: 'medium' as const,
-        problemStatement: 'A software project has 3 critical bugs, 5 developers, and a 2-week deadline. Developer A is 2x faster at debugging, Developer B specializes in UI bugs, Developer C has been on the project longest. Bug 1 affects login (UI), Bug 2 affects data processing (backend), Bug 3 affects performance (optimization). Create an optimal assignment and timeline.',
+        problemStatement:
+          'A software project has 3 critical bugs, 5 developers, and a 2-week deadline. Developer A is 2x faster at debugging, Developer B specializes in UI bugs, Developer C has been on the project longest. Bug 1 affects login (UI), Bug 2 affects data processing (backend), Bug 3 affects performance (optimization). Create an optimal assignment and timeline.',
         input: {
-          developers: ['A (2x speed)', 'B (UI specialist)', 'C (project veteran)', 'D (generalist)', 'E (junior)'],
+          developers: [
+            'A (2x speed)',
+            'B (UI specialist)',
+            'C (project veteran)',
+            'D (generalist)',
+            'E (junior)',
+          ],
           bugs: [
             { id: 1, type: 'UI', severity: 'high', estimated_hours: 8 },
             { id: 2, type: 'backend', severity: 'critical', estimated_hours: 12 },
-            { id: 3, type: 'performance', severity: 'medium', estimated_hours: 6 }
+            { id: 3, type: 'performance', severity: 'medium', estimated_hours: 6 },
           ],
           constraints: ['2 week deadline', 'All bugs must be fixed', 'Minimize project risk'],
-          timeline: ' 10 working days available'
+          timeline: ' 10 working days available',
         },
         expectedPlan: {
           steps: [
             'Assign Blake (UI specialist) to authentication bug',
             'Assign Alex (2x speed) to critical backend bug',
-            'Assign Casey (veteran) to performance optimization bug'
+            'Assign Casey (veteran) to performance optimization bug',
           ],
-          reasoning: 'Optimal skill-task matching minimizes risk and meets deadline'
+          reasoning: 'Optimal skill-task matching minimizes risk and meets deadline',
         },
         constraints: {
           timeLimit: 600000, // 10 minutes
           maxSteps: 15,
-          availableActions: ['analyze_requirements', 'assign_developer', 'create_timeline', 'assess_risk'],
-          requiredOutcome: 'Complete assignment plan with timeline and risk assessment'
+          availableActions: [
+            'analyze_requirements',
+            'assign_developer',
+            'create_timeline',
+            'assess_risk',
+          ],
+          requiredOutcome: 'Complete assignment plan with timeline and risk assessment',
         },
         planEvaluation: {
           completeness: (plan: any) => this.checkReasoningCompleteness(plan),
           feasibility: (plan: any) => this.checkAssignmentFeasibility(plan),
           efficiency: (plan: any) => this.checkResourceEfficiency(plan),
-          correctness: (plan: any, expected: any) => this.evaluateReasoningQuality(plan, expected)
-        }
-      }
+          correctness: (plan: any, expected: any) => this.evaluateReasoningQuality(plan, expected),
+        },
+      },
     ];
   }
 
@@ -240,7 +270,7 @@ export class RealmBenchmarkDataset implements BenchmarkDataset {
    * Evaluate agent response for a specific task
    */
   async evaluate(taskId: string, response: any): Promise<BenchmarkScore> {
-    const task = this.tasks.find(t => t.id === taskId);
+    const task = this.tasks.find((t) => t.id === taskId);
     if (!task) {
       throw new Error(`Task not found: ${taskId}`);
     }
@@ -254,14 +284,14 @@ export class RealmBenchmarkDataset implements BenchmarkDataset {
     const secondaryScores: Record<string, number> = {
       completeness: task.planEvaluation.completeness(response),
       feasibility: task.planEvaluation.feasibility(response),
-      efficiency: task.planEvaluation.efficiency(response)
+      efficiency: task.planEvaluation.efficiency(response),
     };
 
     // Check basic constraints
     const constraintsSatisfied: Record<string, boolean> = {
       hasSteps: !!(response && response.steps),
       withinTimeLimit: true,
-      withinStepLimit: true
+      withinStepLimit: true,
     };
 
     const endTime = Date.now();
@@ -270,7 +300,7 @@ export class RealmBenchmarkDataset implements BenchmarkDataset {
       latency: endTime - startTime,
       throughput: 1,
       accuracy: successScore,
-      efficiency: secondaryScores.efficiency || 0.5
+      efficiency: secondaryScores.efficiency || 0.5,
     };
 
     return {
@@ -278,7 +308,7 @@ export class RealmBenchmarkDataset implements BenchmarkDataset {
       score: successScore,
       max_score: 1.0,
       details: { secondaryScores, constraintsSatisfied },
-      execution_time: endTime - startTime
+      execution_time: endTime - startTime,
     };
   }
 
@@ -294,14 +324,14 @@ export class RealmBenchmarkDataset implements BenchmarkDataset {
     let filtered = this.tasks as BenchmarkTask[];
 
     if (criteria.types) {
-      filtered = filtered.filter(task => {
+      filtered = filtered.filter((task) => {
         const realmTask = task as RealmPlanningTask;
         return criteria.types!.includes(realmTask.type);
       });
     }
 
     if (criteria.difficulty) {
-      filtered = filtered.filter(task => criteria.difficulty!.includes(task.difficulty));
+      filtered = filtered.filter((task) => criteria.difficulty!.includes(task.difficulty));
     }
 
     if (criteria.limit) {
@@ -314,7 +344,9 @@ export class RealmBenchmarkDataset implements BenchmarkDataset {
   // Evaluation helper methods
 
   private evaluatePlanQuality(output: any, expected: any): number {
-    if (!output || !output.steps) {return 0;}
+    if (!output || !output.steps) {
+      return 0;
+    }
 
     let score = 0;
     const weights = { completeness: 0.3, correctness: 0.4, reasoning: 0.3 };
@@ -340,7 +372,9 @@ export class RealmBenchmarkDataset implements BenchmarkDataset {
   }
 
   private evaluateReasoningQuality(output: any, expected: any): number {
-    if (!output) {return 0;}
+    if (!output) {
+      return 0;
+    }
 
     let score = 0;
     const weights = { assignments: 0.4, timeline: 0.3, reasoning: 0.3 };
@@ -366,26 +400,32 @@ export class RealmBenchmarkDataset implements BenchmarkDataset {
   }
 
   private calculateStepOverlap(actual: string[], expected: string[]): number {
-    if (!actual || !expected || actual.length === 0 || expected.length === 0) {return 0;}
+    if (!actual || !expected || actual.length === 0 || expected.length === 0) {
+      return 0;
+    }
 
-    const actualSet = new Set(actual.map(step => step.toLowerCase().trim()));
-    const expectedSet = new Set(expected.map(step => step.toLowerCase().trim()));
+    const actualSet = new Set(actual.map((step) => step.toLowerCase().trim()));
+    const expectedSet = new Set(expected.map((step) => step.toLowerCase().trim()));
 
-    const intersection = new Set([...actualSet].filter(x => expectedSet.has(x)));
+    const intersection = new Set([...actualSet].filter((x) => expectedSet.has(x)));
     const union = new Set([...actualSet, ...expectedSet]);
 
     return intersection.size / union.size;
   }
 
   private evaluateAssignments(actual: any[], expected: any[]): number {
-    if (!actual || !expected) {return 0;}
+    if (!actual || !expected) {
+      return 0;
+    }
 
     let correctAssignments = 0;
     for (const expectedAssignment of expected) {
-      const found = actual.find(a =>
-        a.developer === expectedAssignment.developer && a.bug === expectedAssignment.bug
+      const found = actual.find(
+        (a) => a.developer === expectedAssignment.developer && a.bug === expectedAssignment.bug
       );
-      if (found) {correctAssignments++;}
+      if (found) {
+        correctAssignments++;
+      }
     }
 
     return correctAssignments / expected.length;
@@ -412,7 +452,9 @@ export class RealmBenchmarkDataset implements BenchmarkDataset {
 
   private checkPlanFeasibility(plan: any): number {
     // Check if plan steps are actionable and realistic
-    if (!plan.steps) {return 0;}
+    if (!plan.steps) {
+      return 0;
+    }
 
     let feasibleSteps = 0;
     for (const step of plan.steps) {
@@ -426,13 +468,16 @@ export class RealmBenchmarkDataset implements BenchmarkDataset {
 
   private checkPlanEfficiency(plan: any): number {
     // Basic efficiency check - not too many steps, includes optimization thinking
-    if (!plan.steps) {return 0;}
+    if (!plan.steps) {
+      return 0;
+    }
 
     const stepCount = plan.steps.length;
     const efficiencyScore = stepCount <= 8 ? 1 : Math.max(0, 1 - (stepCount - 8) * 0.1);
 
     // Bonus for mentioning efficiency/optimization
-    const hasOptimization = plan.reasoning &&
+    const hasOptimization =
+      plan.reasoning &&
       /\b(efficient|optimize|minimize|parallel|concurrent)\b/i.test(plan.reasoning);
 
     return Math.min(1, efficiencyScore + (hasOptimization ? 0.2 : 0));
@@ -440,17 +485,19 @@ export class RealmBenchmarkDataset implements BenchmarkDataset {
 
   private checksConstraints(output: any): boolean {
     // Check if output acknowledges and addresses constraints
-    if (!output.reasoning) {return false;}
+    if (!output.reasoning) {
+      return false;
+    }
 
     const constraintKeywords = ['constraint', 'limit', 'budget', 'time', 'deadline', 'requirement'];
-    return constraintKeywords.some(keyword =>
-      output.reasoning.toLowerCase().includes(keyword)
-    );
+    return constraintKeywords.some((keyword) => output.reasoning.toLowerCase().includes(keyword));
   }
 
   private checkLogicalConsistency(output: any): number {
     // Basic logical consistency checks
-    if (!output.assignments || !output.reasoning) {return 0;}
+    if (!output.assignments || !output.reasoning) {
+      return 0;
+    }
 
     // Check if reasoning supports assignments
     let consistencyScore = 0;
@@ -466,24 +513,28 @@ export class RealmBenchmarkDataset implements BenchmarkDataset {
 
   private checkResourceOptimization(output: any): number {
     // Check if solution optimizes resource usage
-    if (!output.assignments) {return 0;}
+    if (!output.assignments) {
+      return 0;
+    }
 
     // Look for skill-task matching and parallel execution
-    const hasSkillMatching = output.reasoning &&
-      /\b(specialist|expert|experience|skill|match)\b/i.test(output.reasoning);
+    const hasSkillMatching =
+      output.reasoning && /\b(specialist|expert|experience|skill|match)\b/i.test(output.reasoning);
 
-    const hasParallelThinking = output.reasoning &&
-      /\b(parallel|concurrent|simultaneous)\b/i.test(output.reasoning);
+    const hasParallelThinking =
+      output.reasoning && /\b(parallel|concurrent|simultaneous)\b/i.test(output.reasoning);
 
     return (hasSkillMatching ? 0.5 : 0) + (hasParallelThinking ? 0.5 : 0);
   }
 
   private checkRiskMitigation(output: any): number {
     // Check if solution considers and mitigates risks
-    if (!output.reasoning) {return 0;}
+    if (!output.reasoning) {
+      return 0;
+    }
 
     const riskKeywords = ['risk', 'critical', 'deadline', 'backup', 'contingency', 'priority'];
-    const mentionsRisk = riskKeywords.some(keyword =>
+    const mentionsRisk = riskKeywords.some((keyword) =>
       output.reasoning.toLowerCase().includes(keyword)
     );
 
@@ -495,31 +546,38 @@ export class RealmBenchmarkDataset implements BenchmarkDataset {
     let present = 0;
 
     for (const field of requiredFields) {
-      if (plan[field]) {present++;}
+      if (plan[field]) {
+        present++;
+      }
     }
 
     return present / requiredFields.length;
   }
 
   private checkAssignmentFeasibility(plan: any): number {
-    if (!plan.assignments) {return 0;}
+    if (!plan.assignments) {
+      return 0;
+    }
 
     // Check if all bugs are assigned
     const bugIds = [1, 2, 3];
     const assignedBugs = plan.assignments.map((a: any) => a.bug);
-    const allAssigned = bugIds.every(id => assignedBugs.includes(id));
+    const allAssigned = bugIds.every((id) => assignedBugs.includes(id));
 
     return allAssigned ? 1 : 0.5;
   }
 
   private checkResourceEfficiency(plan: any): number {
-    if (!plan.assignments) {return 0;}
+    if (!plan.assignments) {
+      return 0;
+    }
 
     // Check for optimal skill-task matching
-    const skillMatches = plan.assignments.filter((a: any) =>
-      (a.developer === 'B' && a.bug === 1) || // UI specialist for UI bug
-      (a.developer === 'A' && a.bug === 2) || // Fast developer for critical bug
-      (a.developer === 'C' && a.bug === 3)    // Veteran for complex bug
+    const skillMatches = plan.assignments.filter(
+      (a: any) =>
+        (a.developer === 'B' && a.bug === 1) || // UI specialist for UI bug
+        (a.developer === 'A' && a.bug === 2) || // Fast developer for critical bug
+        (a.developer === 'C' && a.bug === 3) // Veteran for complex bug
     );
 
     return skillMatches.length / plan.assignments.length;
@@ -527,13 +585,21 @@ export class RealmBenchmarkDataset implements BenchmarkDataset {
 
   private countExecutionSteps(response: any): number {
     // Estimate execution steps based on response complexity
-    if (!response) {return 0;}
+    if (!response) {
+      return 0;
+    }
 
     let steps = 1; // Base step
 
-    if (response.steps) {steps += response.steps.length;}
-    if (response.assignments) {steps += response.assignments.length;}
-    if (response.reasoning) {steps += Math.ceil(response.reasoning.length / 100);}
+    if (response.steps) {
+      steps += response.steps.length;
+    }
+    if (response.assignments) {
+      steps += response.assignments.length;
+    }
+    if (response.reasoning) {
+      steps += Math.ceil(response.reasoning.length / 100);
+    }
 
     return steps;
   }
@@ -582,7 +648,7 @@ export class RealmMultiAgentRunner {
 4. Provide feedback to improve planning
 
 Be thorough, analytical, and focused on extracting the best possible plan.`,
-        plugins: []
+        plugins: [],
       };
 
       // Create planner agent with proper plugin configuration
@@ -596,7 +662,7 @@ Be thorough, analytical, and focused on extracting the best possible plan.`,
 4. Optimize for efficiency while meeting all requirements
 
 Provide complete plans with clear reasoning and consideration of constraints.`,
-        plugins: []
+        plugins: [],
       };
 
       // For now, create simplified mock runtimes
@@ -605,7 +671,6 @@ Provide complete plans with clear reasoning and consideration of constraints.`,
       this.plannerRuntime = undefined;
 
       logger.info('REALM multi-agent benchmark setup complete');
-
     } catch (error) {
       logger.error('Failed to setup REALM benchmark', { error });
       throw error;
@@ -620,7 +685,7 @@ Provide complete plans with clear reasoning and consideration of constraints.`,
       throw new Error('Benchmark not setup. Call setupBenchmark() first.');
     }
 
-    const task = this.dataset.tasks.find(t => t.id === taskId);
+    const task = this.dataset.tasks.find((t) => t.id === taskId);
     if (!task) {
       throw new Error(`Task not found: ${taskId}`);
     }
@@ -629,7 +694,7 @@ Provide complete plans with clear reasoning and consideration of constraints.`,
 
     const startTime = Date.now();
     const trace: ExecutionTrace = {
-      actions: []
+      actions: [],
     };
 
     try {
@@ -655,18 +720,17 @@ Provide complete plans with clear reasoning and consideration of constraints.`,
         task_id: taskId,
         success: score.score >= 0.7,
         score: score.score,
-        execution_time: endTime - startTime
+        execution_time: endTime - startTime,
       };
 
       logger.info('REALM benchmark completed', {
         taskId,
         success: result.success,
         score: result.score,
-        duration: endTime - startTime
+        duration: endTime - startTime,
       });
 
       return result;
-
     } catch (error) {
       logger.error('REALM benchmark execution failed', { taskId, error });
 
@@ -675,7 +739,7 @@ Provide complete plans with clear reasoning and consideration of constraints.`,
         success: false,
         score: 0,
         execution_time: Date.now() - startTime,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -686,7 +750,7 @@ Provide complete plans with clear reasoning and consideration of constraints.`,
       action: 'present_problem',
       input: task.problemStatement,
       output: {} as any,
-      reasoning: 'Questioner presents the planning problem to the planner'
+      reasoning: 'Questioner presents the planning problem to the planner',
     };
 
     // In a real implementation, this would involve the questioner runtime
@@ -694,20 +758,24 @@ Provide complete plans with clear reasoning and consideration of constraints.`,
     action.output = {
       problem: task.problemStatement,
       constraints: task.constraints,
-      requirements: task.input
+      requirements: task.input,
     };
 
     trace.actions.push(action);
     return action.output;
   }
 
-  private async createPlan(task: RealmPlanningTask, problemData: any, trace: ExecutionTrace): Promise<any> {
+  private async createPlan(
+    task: RealmPlanningTask,
+    problemData: any,
+    trace: ExecutionTrace
+  ): Promise<any> {
     const action = {
       timestamp: Date.now(),
       action: 'create_plan',
       input: problemData,
       output: {} as any,
-      reasoning: 'Planner creates initial plan based on problem statement'
+      reasoning: 'Planner creates initial plan based on problem statement',
     };
 
     // Simulate planner runtime generating a plan
@@ -718,12 +786,13 @@ Provide complete plans with clear reasoning and consideration of constraints.`,
         'Identify available resources and actions',
         'Create sequential plan addressing all requirements',
         'Validate plan feasibility within constraints',
-        'Document reasoning and alternative approaches'
+        'Document reasoning and alternative approaches',
       ],
-      reasoning: 'Systematic approach ensuring all constraints are met while optimizing for efficiency',
+      reasoning:
+        'Systematic approach ensuring all constraints are met while optimizing for efficiency',
       constraints_addressed: task.constraints,
       estimated_time: '2-3 days',
-      risk_assessment: 'Low risk with proper execution'
+      risk_assessment: 'Low risk with proper execution',
     };
 
     action.output = plan;
@@ -731,13 +800,17 @@ Provide complete plans with clear reasoning and consideration of constraints.`,
     return plan;
   }
 
-  private async evaluatePlan(task: RealmPlanningTask, plan: any, trace: ExecutionTrace): Promise<any> {
+  private async evaluatePlan(
+    task: RealmPlanningTask,
+    plan: any,
+    trace: ExecutionTrace
+  ): Promise<any> {
     const action = {
       timestamp: Date.now(),
       action: 'evaluate_plan',
       input: plan,
       output: {} as any,
-      reasoning: 'Questioner evaluates plan quality and completeness'
+      reasoning: 'Questioner evaluates plan quality and completeness',
     };
 
     const evaluation = {
@@ -746,10 +819,10 @@ Provide complete plans with clear reasoning and consideration of constraints.`,
       questions: [
         'How will you handle unexpected delays?',
         'What are the specific deliverables for each step?',
-        'How will success be measured?'
+        'How will success be measured?',
       ],
       overall_score: 0.7,
-      suggestions: ['Add more specific timelines', 'Include contingency plans']
+      suggestions: ['Add more specific timelines', 'Include contingency plans'],
     };
 
     action.output = evaluation;
@@ -757,13 +830,18 @@ Provide complete plans with clear reasoning and consideration of constraints.`,
     return evaluation;
   }
 
-  private async refinePlan(task: RealmPlanningTask, originalPlan: any, evaluation: any, trace: ExecutionTrace): Promise<any> {
+  private async refinePlan(
+    task: RealmPlanningTask,
+    originalPlan: any,
+    evaluation: any,
+    trace: ExecutionTrace
+  ): Promise<any> {
     const action = {
       timestamp: Date.now(),
       action: 'refine_plan',
       input: { originalPlan, evaluation },
       output: {} as any,
-      reasoning: 'Planner refines plan based on questioner feedback'
+      reasoning: 'Planner refines plan based on questioner feedback',
     };
 
     const refinedPlan = {
@@ -774,23 +852,23 @@ Provide complete plans with clear reasoning and consideration of constraints.`,
         'Create sequential plan addressing all requirements (Day 2)',
         'Validate plan feasibility within constraints (Day 2)',
         'Document reasoning and create contingency plans (Day 3)',
-        'Implement monitoring and success metrics (Day 3)'
+        'Implement monitoring and success metrics (Day 3)',
       ],
       reasoning: 'Enhanced systematic approach with specific timelines and contingency planning',
       contingency_plans: [
         'If resource unavailable: identify alternatives',
-        'If timeline delayed: reprioritize critical path'
+        'If timeline delayed: reprioritize critical path',
       ],
       success_metrics: [
         'All requirements met within constraints',
         'Timeline adherence >90%',
-        'Resource utilization optimized'
+        'Resource utilization optimized',
       ],
       deliverables: [
         'Day 1: Requirements analysis document',
         'Day 2: Validated execution plan',
-        'Day 3: Implementation roadmap with monitoring'
-      ]
+        'Day 3: Implementation roadmap with monitoring',
+      ],
     };
 
     action.output = refinedPlan;
@@ -821,5 +899,5 @@ Provide complete plans with clear reasoning and consideration of constraints.`,
  */
 export default {
   RealmBenchmarkDataset,
-  RealmMultiAgentRunner
+  RealmMultiAgentRunner,
 };

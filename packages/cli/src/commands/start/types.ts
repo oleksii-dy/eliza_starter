@@ -1,5 +1,4 @@
 import { type Character, type IAgentRuntime, type Plugin } from '@elizaos/core';
-import { type default as AgentServer } from '@elizaos/server';
 
 /**
  * Start command options and interfaces
@@ -23,7 +22,7 @@ export interface StartOptions {
  */
 export interface AgentStartConfig {
   character: Character;
-  server: AgentServer;
+  server: any;
   init?: (runtime: IAgentRuntime) => Promise<void>;
   plugins?: (Plugin | string)[];
   options?: AgentStartOptions;
@@ -69,5 +68,5 @@ export interface ServerConfig {
 export interface RuntimeConfig {
   plugins: Plugin[];
   character: Character;
-  server: AgentServer;
+  server: any;
 }

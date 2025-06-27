@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import {
-  todosTable,
-  todoTagsTable,
-  todoSchema,
-} from '../schema';
+import { todosTable, todoTagsTable, todoSchema } from '../schema';
 import { getTableColumns } from 'drizzle-orm';
 
 describe('Todo Schema', () => {

@@ -39,7 +39,7 @@ export const GoalsPlugin: Plugin = {
     completeGoalAction,
     confirmGoalAction,
     updateGoalAction,
-    cancelGoalAction
+    cancelGoalAction,
   ],
   services: [GoalDataServiceWrapper],
   routes,

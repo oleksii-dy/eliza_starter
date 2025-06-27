@@ -25,6 +25,7 @@ import { eq } from 'drizzle-orm';
 // Test configuration
 const TEST_ORG_ID = uuidv4();
 const TEST_USER_ID = uuidv4();
+let database: any;
 const TEST_USER_EMAIL = 'core-test@example.com';
 
 // Mock authentication for tests
@@ -44,14 +45,14 @@ jest.mock('../../lib/auth/session', () => ({
 describe('Core Platform Functionality', () => {
   beforeAll(async () => {
     // Initialize database
-    const database = getDatabase();
+    database = await getDatabase();
     initializeDbProxy(database);
 
     // Set up test organization and user in database
 
     try {
       // Create test organization
-      await db.insert(organizations).values({
+      await database.insert(organizations).values({
         id: TEST_ORG_ID,
         name: 'Core Test Organization',
         slug: `core-test-org-${Date.now()}`,
@@ -60,7 +61,7 @@ describe('Core Platform Functionality', () => {
       });
 
       // Create test user
-      await db.insert(users).values({
+      await database.insert(users).values({
         id: TEST_USER_ID,
         organizationId: TEST_ORG_ID,
         email: TEST_USER_EMAIL,
@@ -76,13 +77,15 @@ describe('Core Platform Functionality', () => {
     // Clean up test data in correct order (delete child records first)
     try {
       // Delete credit transactions first (by organization)
-      await db
+      await database
         .delete(creditTransactions)
         .where(eq(creditTransactions.organizationId, TEST_ORG_ID));
       // Then delete user
-      await db.delete(users).where(eq(users.id, TEST_USER_ID));
+      await database.delete(users).where(eq(users.id, TEST_USER_ID));
       // Finally delete organization
-      await db.delete(organizations).where(eq(organizations.id, TEST_ORG_ID));
+      await database
+        .delete(organizations)
+        .where(eq(organizations.id, TEST_ORG_ID));
     } catch (error) {
       console.warn('Test cleanup failed:', error);
     }
@@ -263,7 +266,7 @@ describe('Core Platform Functionality', () => {
 
   describe('Database Operations', () => {
     test('should handle database transactions properly', async () => {
-      const db = getDatabase();
+      const db = await getDatabase();
 
       // Test that we can query organizations
       const orgs = await db

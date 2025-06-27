@@ -8,6 +8,7 @@
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
+    "postinstall": "bun run scripts/setup-agent-files.ts",
     "build": "bun run build.ts",
     "dev": "bun run build.ts --watch",
     "clean": "rm -rf dist && rm -rf .turbo",

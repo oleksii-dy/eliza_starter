@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { backgroundJobs } from '@/lib/services/background-jobs';
 import { auth } from '@/lib/auth';
 
-export async function GET(request: NextRequest) {
+export async function handleGET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -18,19 +18,19 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         ...status,
-        health: healthCheck
+        health: healthCheck,
       },
     });
   } catch (error) {
     console.error('Failed to get background jobs status:', error);
     return NextResponse.json(
       { error: 'Failed to get service status' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     if (!action) {
       return NextResponse.json(
         { error: 'Missing required field: action' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -82,15 +82,23 @@ export async function POST(request: NextRequest) {
 
       default:
         return NextResponse.json(
-          { error: 'Invalid action. Supported actions: start, stop, restart, health_check' },
-          { status: 400 }
+          {
+            error:
+              'Invalid action. Supported actions: start, stop, restart, health_check',
+          },
+          { status: 400 },
         );
     }
   } catch (error) {
     console.error('Failed to manage background jobs:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to manage background jobs' },
-      { status: 500 }
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Failed to manage background jobs',
+      },
+      { status: 500 },
     );
   }
 }

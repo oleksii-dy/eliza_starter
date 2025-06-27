@@ -26,23 +26,28 @@ async function filterTypeScriptInstances() {
 
     // Parse JSONL
     const lines = content.trim().split('\n');
-    const allInstances = lines.map(line => JSON.parse(line));
+    const allInstances = lines.map((line) => JSON.parse(line));
 
     elizaLogger.info(`Total instances: ${allInstances.length}`);
 
     // Filter for TypeScript and JavaScript
     const tsInstances = allInstances.filter(
-      inst => inst.language === 'TypeScript' || inst.language === 'JavaScript'
+      (inst) => inst.language === 'TypeScript' || inst.language === 'JavaScript'
     );
 
     elizaLogger.info(`TypeScript/JavaScript instances: ${tsInstances.length}`);
 
     // Group by repository
-    const byRepo = tsInstances.reduce((acc, inst) => {
-      if (!acc[inst.repo]) {acc[inst.repo] = [];}
-      acc[inst.repo].push(inst);
-      return acc;
-    }, {} as Record<string, any[]>);
+    const byRepo = tsInstances.reduce(
+      (acc, inst) => {
+        if (!acc[inst.repo]) {
+          acc[inst.repo] = [];
+        }
+        acc[inst.repo].push(inst);
+        return acc;
+      },
+      {} as Record<string, any[]>
+    );
 
     elizaLogger.info('\nInstances by repository:');
     for (const [repo, instances] of Object.entries(byRepo)) {
@@ -55,30 +60,30 @@ async function filterTypeScriptInstances() {
 
     // Also save as JSONL
     const jsonlPath = path.join(CACHE_DIR, 'typescript-instances.jsonl');
-    const jsonlContent = tsInstances.map(inst => JSON.stringify(inst)).join('\n');
+    const jsonlContent = tsInstances.map((inst) => JSON.stringify(inst)).join('\n');
     await fs.writeFile(jsonlPath, jsonlContent);
 
     // Create a summary file
     const summary = {
       total_instances: tsInstances.length,
       languages: {
-        TypeScript: tsInstances.filter(i => i.language === 'TypeScript').length,
-        JavaScript: tsInstances.filter(i => i.language === 'JavaScript').length
+        TypeScript: tsInstances.filter((i) => i.language === 'TypeScript').length,
+        JavaScript: tsInstances.filter((i) => i.language === 'JavaScript').length,
       },
       repositories: Object.keys(byRepo).sort(),
       complexity_distribution: {
-        low: tsInstances.filter(i => i.complexity === 'low').length,
-        medium: tsInstances.filter(i => i.complexity === 'medium').length,
-        high: tsInstances.filter(i => i.complexity === 'high').length,
-        unknown: tsInstances.filter(i => !i.complexity).length
+        low: tsInstances.filter((i) => i.complexity === 'low').length,
+        medium: tsInstances.filter((i) => i.complexity === 'medium').length,
+        high: tsInstances.filter((i) => i.complexity === 'high').length,
+        unknown: tsInstances.filter((i) => !i.complexity).length,
       },
-      with_tests: tsInstances.filter(i => i.test_patch).length,
-      without_tests: tsInstances.filter(i => !i.test_patch).length,
-      sample_instances: tsInstances.slice(0, 5).map(i => ({
+      with_tests: tsInstances.filter((i) => i.test_patch).length,
+      without_tests: tsInstances.filter((i) => !i.test_patch).length,
+      sample_instances: tsInstances.slice(0, 5).map((i) => ({
         id: i.instance_id,
         repo: i.repo,
-        title: i.issue_title
-      }))
+        title: i.issue_title,
+      })),
     };
 
     const summaryPath = path.join(CACHE_DIR, 'typescript-dataset-summary.json');
@@ -90,7 +95,7 @@ async function filterTypeScriptInstances() {
 
     return {
       instances: tsInstances,
-      summary
+      summary,
     };
   } catch (error) {
     elizaLogger.error('Failed to filter dataset:', error);

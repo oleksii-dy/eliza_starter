@@ -33,11 +33,13 @@ export function isValidSlug(slug: string): boolean {
 // Zod schemas for request validation
 export const createApiKeySchema = z.object({
   name: z.string().min(1).max(100),
-  permissions: z.array(z.object({
-    resource: z.string(),
-    actions: z.array(z.string()),
-    conditions: z.record(z.any()).optional(),
-  })),
+  permissions: z.array(
+    z.object({
+      resource: z.string(),
+      actions: z.array(z.string()),
+      conditions: z.record(z.any()).optional(),
+    }),
+  ),
   expiresAt: z.string().datetime().optional(),
   metadata: z.record(z.any()).optional(),
 });
@@ -54,14 +56,16 @@ export const createOrganizationSchema = z.object({
   slug: z.string().refine(isValidSlug, 'Invalid organization slug'),
   domain: z.string().optional(),
   subscriptionTier: z.enum(['free', 'pro', 'premium', 'enterprise']).optional(),
-  settings: z.object({
-    allowCustomDomains: z.boolean().optional(),
-    ssoRequired: z.boolean().optional(),
-    maxStorageGB: z.number().positive().optional(),
-    features: z.array(z.string()).optional(),
-    webhookUrl: z.string().url().optional(),
-    logoUrl: z.string().url().optional(),
-  }).optional(),
+  settings: z
+    .object({
+      allowCustomDomains: z.boolean().optional(),
+      ssoRequired: z.boolean().optional(),
+      maxStorageGB: z.number().positive().optional(),
+      features: z.array(z.string()).optional(),
+      webhookUrl: z.string().url().optional(),
+      logoUrl: z.string().url().optional(),
+    })
+    .optional(),
 });
 
 export const paginationSchema = z.object({

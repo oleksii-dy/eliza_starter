@@ -36,7 +36,7 @@ export class ErrorInstrumentation {
     instrumentedError.context = {
       ...context,
       timestamp,
-      correlationId
+      correlationId,
     };
 
     if (error instanceof Error) {
@@ -63,7 +63,7 @@ export class ErrorInstrumentation {
       stack: error.stack?.split('\n').slice(0, 10), // First 10 lines of stack
       originalError: error.originalError?.message,
       retryCount: error.retryCount,
-      recoverable: error.recoverable
+      recoverable: error.recoverable,
     });
   }
 
@@ -78,7 +78,7 @@ export class ErrorInstrumentation {
       correlationId,
       service: context.service,
       operation: context.operation,
-      metadata: context.metadata
+      metadata: context.metadata,
     });
 
     try {
@@ -90,7 +90,7 @@ export class ErrorInstrumentation {
         service: context.service,
         operation: context.operation,
         duration,
-        success: true
+        success: true,
       });
 
       return result;
@@ -101,8 +101,8 @@ export class ErrorInstrumentation {
         metadata: {
           ...context.metadata,
           duration,
-          correlationId
-        }
+          correlationId,
+        },
       });
 
       elizaLogger.error('E2B Operation Failed', {
@@ -111,7 +111,7 @@ export class ErrorInstrumentation {
         operation: context.operation,
         duration,
         success: false,
-        error: instrumentedError.message
+        error: instrumentedError.message,
       });
 
       throw instrumentedError;
@@ -127,72 +127,82 @@ export class ErrorInstrumentation {
     const stack = error.stack?.toLowerCase() || '';
 
     // Network errors
-    if (message.includes('network') ||
-        message.includes('connection') ||
-        message.includes('timeout') ||
-        message.includes('econnreset') ||
-        stack.includes('network')) {
+    if (
+      message.includes('network') ||
+      message.includes('connection') ||
+      message.includes('timeout') ||
+      message.includes('econnreset') ||
+      stack.includes('network')
+    ) {
       return {
         type: 'network',
         recoverable: true,
-        suggestedRetryDelay: 1000
+        suggestedRetryDelay: 1000,
       };
     }
 
     // Authentication errors
-    if (message.includes('unauthorized') ||
-        message.includes('authentication') ||
-        message.includes('api key') ||
-        message.includes('401') ||
-        message.includes('forbidden') ||
-        message.includes('403')) {
+    if (
+      message.includes('unauthorized') ||
+      message.includes('authentication') ||
+      message.includes('api key') ||
+      message.includes('401') ||
+      message.includes('forbidden') ||
+      message.includes('403')
+    ) {
       return {
         type: 'authentication',
-        recoverable: false
+        recoverable: false,
       };
     }
 
     // Validation errors
-    if (message.includes('validation') ||
-        message.includes('invalid') ||
-        message.includes('malformed') ||
-        message.includes('400') ||
-        message.includes('bad request')) {
+    if (
+      message.includes('validation') ||
+      message.includes('invalid') ||
+      message.includes('malformed') ||
+      message.includes('400') ||
+      message.includes('bad request')
+    ) {
       return {
         type: 'validation',
-        recoverable: false
+        recoverable: false,
       };
     }
 
     // Timeout errors
-    if (message.includes('timeout') ||
-        message.includes('timed out') ||
-        message.includes('deadline') ||
-        message.includes('408')) {
+    if (
+      message.includes('timeout') ||
+      message.includes('timed out') ||
+      message.includes('deadline') ||
+      message.includes('408')
+    ) {
       return {
         type: 'timeout',
         recoverable: true,
-        suggestedRetryDelay: 2000
+        suggestedRetryDelay: 2000,
       };
     }
 
     // Resource errors
-    if (message.includes('quota') ||
-        message.includes('rate limit') ||
-        message.includes('too many requests') ||
-        message.includes('429') ||
-        message.includes('resource') ||
-        message.includes('capacity')) {
+    if (
+      message.includes('quota') ||
+      message.includes('rate limit') ||
+      message.includes('too many requests') ||
+      message.includes('429') ||
+      message.includes('resource') ||
+      message.includes('capacity')
+    ) {
       return {
         type: 'resource',
         recoverable: true,
-        suggestedRetryDelay: 5000
+        suggestedRetryDelay: 5000,
       };
     }
 
     return {
       type: 'unknown',
-      recoverable: false
+      recoverable: false,
     };
   }
 
@@ -211,13 +221,14 @@ export class ErrorInstrumentation {
           metadata: {
             ...context.metadata,
             attempt: attempt + 1,
-            maxRetries: maxRetries + 1
-          }
+            maxRetries: maxRetries + 1,
+          },
         });
       } catch (error) {
-        const instrumentedError = error instanceof Error && 'context' in error
-          ? error as InstrumentedError
-          : this.instrumentError(error, context);
+        const instrumentedError =
+          error instanceof Error && 'context' in error
+            ? (error as InstrumentedError)
+            : this.instrumentError(error, context);
 
         instrumentedError.retryCount = attempt;
         lastError = instrumentedError;
@@ -233,7 +244,7 @@ export class ErrorInstrumentation {
             totalAttempts: attempt + 1,
             finalError: instrumentedError.message,
             errorType: classification.type,
-            recoverable: classification.recoverable
+            recoverable: classification.recoverable,
           });
           throw instrumentedError;
         }
@@ -248,10 +259,10 @@ export class ErrorInstrumentation {
           maxRetries: maxRetries + 1,
           error: instrumentedError.message,
           retryDelay: delay,
-          errorType: classification.type
+          errorType: classification.type,
         });
 
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
 
@@ -271,8 +282,8 @@ export class ErrorInstrumentation {
         uptime: process.uptime(),
         nodeVersion: process.version,
         platform: process.platform,
-        arch: process.arch
-      }
+        arch: process.arch,
+      },
     };
   }
 
@@ -281,45 +292,42 @@ export class ErrorInstrumentation {
       service,
       operation,
       timestamp: new Date().toISOString(),
-      metrics
+      metrics,
     });
   }
 }
 
 // Helper decorators for method instrumentation
-export function instrumented(
-  service: string,
-  operation?: string
-) {
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor): PropertyDescriptor {
+export function instrumented(service: string, operation?: string) {
+  return function (
+    target: any,
+    propertyKey: string,
+    descriptor: PropertyDescriptor
+  ): PropertyDescriptor {
     const originalMethod = descriptor.value;
     const operationName = operation || propertyKey;
 
     descriptor.value = async function (this: any, ...args: any[]) {
-      return ErrorInstrumentation.withInstrumentation(
-        () => originalMethod.apply(this, args),
-        {
-          service,
-          operation: operationName,
-          metadata: {
-            method: propertyKey,
-            argsCount: args.length
-          }
-        }
-      );
+      return ErrorInstrumentation.withInstrumentation(() => originalMethod.apply(this, args), {
+        service,
+        operation: operationName,
+        metadata: {
+          method: propertyKey,
+          argsCount: args.length,
+        },
+      });
     };
 
     return descriptor;
   };
 }
 
-export function retryable(
-  service: string,
-  maxRetries = 3,
-  baseDelay = 1000,
-  operation?: string
-) {
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor): PropertyDescriptor {
+export function retryable(service: string, maxRetries = 3, baseDelay = 1000, operation?: string) {
+  return function (
+    target: any,
+    propertyKey: string,
+    descriptor: PropertyDescriptor
+  ): PropertyDescriptor {
     const originalMethod = descriptor.value;
     const operationName = operation || propertyKey;
 
@@ -331,8 +339,8 @@ export function retryable(
           operation: operationName,
           metadata: {
             method: propertyKey,
-            argsCount: args.length
-          }
+            argsCount: args.length,
+          },
         },
         maxRetries,
         baseDelay
@@ -342,4 +350,3 @@ export function retryable(
     return descriptor;
   };
 }
-

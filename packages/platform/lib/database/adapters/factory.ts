@@ -141,9 +141,11 @@ export function getDatabaseAdapter(
   config?: Partial<AdapterFactoryConfig>,
 ): DatabaseAdapter {
   // During Next.js build or static generation, return a stub adapter
-  if (process.env.NEXT_PHASE === 'phase-production-build' || 
-      process.env.BUILD_MODE === 'export' ||
-      process.env.NEXT_EXPORT === 'true') {
+  if (
+    process.env.NEXT_PHASE === 'phase-production-build' ||
+    process.env.BUILD_MODE === 'export' ||
+    process.env.NEXT_EXPORT === 'true'
+  ) {
     return {
       engine: 'pglite',
       isCloud: false,

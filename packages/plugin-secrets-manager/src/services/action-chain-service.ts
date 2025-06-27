@@ -1,11 +1,11 @@
-import type { Memory, State } from '@elizaos/core';
 import {
   Service,
+  elizaLogger,
+  type Memory,
   type IAgentRuntime,
   type UUID,
   type Action,
   type HandlerCallback,
-  elizaLogger,
 } from '@elizaos/core';
 
 export interface ActionChainStep {

@@ -86,7 +86,9 @@ export const recoverPluginAction: Action = {
     const pluginManager = runtime.getService(
       PluginManagerServiceType.PLUGIN_MANAGER
     ) as PluginManagerService;
-    if (!pluginManager) {return false;}
+    if (!pluginManager) {
+      return false;
+    }
 
     // Check if the message text contains recovery/rollback keywords
     const text = message.content.text?.toLowerCase() || '';

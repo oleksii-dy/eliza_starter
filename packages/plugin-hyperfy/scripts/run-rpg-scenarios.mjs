@@ -2,7 +2,7 @@
 
 /**
  * RPG Scenario Runner
- * 
+ *
  * This script runs the RPG scenarios for the AI Agent Metaverse
  * It can run individual scenarios or sequences of scenarios
  */
@@ -20,9 +20,9 @@ const CONFIG = {
   hyperfyPort: 3000,
   hyperfyWsPort: 3001,
   hyperfyStartupTime: 30000, // 30 seconds for hyperfy to start
-  scenarioTimeout: 1800000,  // 30 minutes max per scenario
+  scenarioTimeout: 1800000, // 30 minutes max per scenario
   retryAttempts: 3,
-  outputDir: path.join(__dirname, '../scenario-results')
+  outputDir: path.join(__dirname, '../scenario-results'),
 };
 
 // Available scenarios
@@ -32,50 +32,50 @@ const RPG_SCENARIOS = {
     file: 'rpg-basic-connection.ts',
     description: 'Tests agent connection to Hyperfy RPG world',
     duration: '30 seconds',
-    dependencies: ['hyperfy-server']
+    dependencies: ['hyperfy-server'],
   },
   'level-up': {
     name: 'Single Player Level-Up Challenge',
     file: 'rpg-basic-connection.ts',
     description: 'Agent must reach level 2 in 10 minutes',
     duration: '10 minutes',
-    dependencies: ['hyperfy-server']
+    dependencies: ['hyperfy-server'],
   },
   'quest-completion': {
     name: 'Quest Completion Challenge',
     file: 'rpg-quest-scenarios.ts',
     description: 'Agent completes fetch/kill/NPC quest',
     duration: '10 minutes',
-    dependencies: ['hyperfy-server']
+    dependencies: ['hyperfy-server'],
   },
-  'trading': {
+  trading: {
     name: 'Multi-Agent Trading Challenge',
     file: 'rpg-quest-scenarios.ts',
     description: 'Two agents trade items successfully',
     duration: '10 minutes',
-    dependencies: ['hyperfy-server']
+    dependencies: ['hyperfy-server'],
   },
   'cooperative-quest': {
     name: 'Cooperative Quest Challenge',
     file: 'rpg-quest-scenarios.ts',
     description: 'Multiple agents work together on quest',
     duration: '15 minutes',
-    dependencies: ['hyperfy-server']
+    dependencies: ['hyperfy-server'],
   },
   'self-improvement': {
     name: 'Self-Improvement Gaming Marathon',
     file: 'rpg-self-improvement.ts',
     description: 'Agent plays with 10-minute assessments',
     duration: '30 minutes',
-    dependencies: ['hyperfy-server', 'autocoder']
+    dependencies: ['hyperfy-server', 'autocoder'],
   },
   'collaborative-improvement': {
     name: 'Collaborative Self-Improvement Gaming',
     file: 'rpg-self-improvement.ts',
     description: 'Multiple agents collaborate on improvements',
     duration: '40 minutes',
-    dependencies: ['hyperfy-server', 'autocoder']
-  }
+    dependencies: ['hyperfy-server', 'autocoder'],
+  },
 };
 
 // Scenario sequences
@@ -83,7 +83,7 @@ const SCENARIO_SEQUENCES = {
   'quick-test': ['basic-connection', 'level-up'],
   'full-progression': ['basic-connection', 'level-up', 'quest-completion', 'trading'],
   'collaboration-test': ['trading', 'cooperative-quest', 'collaborative-improvement'],
-  'complete-suite': Object.keys(RPG_SCENARIOS)
+  'complete-suite': Object.keys(RPG_SCENARIOS),
 };
 
 class RPGScenarioRunner {
@@ -96,28 +96,27 @@ class RPGScenarioRunner {
   async run() {
     console.log('🎮 AI Agent Metaverse - RPG Scenario Runner');
     console.log('============================================');
-    
+
     try {
       // Parse command line arguments
       const args = this.parseArgs();
-      
+
       // Setup output directory
       this.setupOutputDir();
-      
+
       // Check dependencies
       await this.checkDependencies();
-      
+
       // Start Hyperfy server if needed
       if (args.startHyperfy) {
         await this.startHyperfyServer();
       }
-      
+
       // Run scenarios
       await this.runScenarios(args);
-      
+
       // Generate report
       this.generateReport();
-      
     } catch (error) {
       console.error('❌ Error running scenarios:', error.message);
       process.exit(1);
@@ -136,12 +135,12 @@ class RPGScenarioRunner {
       skipHyperfyCheck: false,
       continueOnFailure: false,
       outputFile: null,
-      verbose: false
+      verbose: false,
     };
 
     for (let i = 0; i < args.length; i++) {
       const arg = args[i];
-      
+
       switch (arg) {
         case '--scenario':
         case '-s':
@@ -237,7 +236,7 @@ EXAMPLES:
   listScenarios() {
     console.log('\n📋 Available Scenarios:');
     console.log('=======================');
-    
+
     Object.entries(RPG_SCENARIOS).forEach(([key, scenario]) => {
       console.log(`\n🎯 ${key}`);
       console.log(`   Name: ${scenario.name}`);
@@ -248,7 +247,7 @@ EXAMPLES:
 
     console.log('\n📦 Available Sequences:');
     console.log('========================');
-    
+
     Object.entries(SCENARIO_SEQUENCES).forEach(([key, scenarios]) => {
       console.log(`\n🎯 ${key}`);
       console.log(`   Scenarios: ${scenarios.join(' → ')}`);
@@ -265,7 +264,7 @@ EXAMPLES:
 
   async checkDependencies() {
     console.log('🔍 Checking dependencies...');
-    
+
     // Check if elizaos CLI is available
     try {
       execSync('elizaos --version', { stdio: 'ignore' });
@@ -284,9 +283,9 @@ EXAMPLES:
 
   async startHyperfyServer() {
     console.log('🚀 Starting Hyperfy server...');
-    
+
     const hyperfyPath = path.resolve(__dirname, '../../hyperfy');
-    
+
     try {
       // Check if already running
       try {
@@ -303,7 +302,7 @@ EXAMPLES:
       this.hyperfyProcess = spawn('npm', ['run', 'dev'], {
         cwd: hyperfyPath,
         stdio: 'pipe',
-        detached: false
+        detached: false,
       });
 
       this.hyperfyProcess.stdout.on('data', (data) => {
@@ -319,7 +318,7 @@ EXAMPLES:
 
       // Wait for startup
       console.log(`⏳ Waiting ${CONFIG.hyperfyStartupTime / 1000}s for Hyperfy to start...`);
-      await new Promise(resolve => setTimeout(resolve, CONFIG.hyperfyStartupTime));
+      await new Promise((resolve) => setTimeout(resolve, CONFIG.hyperfyStartupTime));
 
       // Verify it's running
       try {
@@ -331,7 +330,6 @@ EXAMPLES:
       } catch (error) {
         throw new Error('Failed to verify Hyperfy server startup');
       }
-
     } catch (error) {
       throw new Error(`Failed to start Hyperfy server: ${error.message}`);
     }
@@ -339,11 +337,11 @@ EXAMPLES:
 
   async runScenarios(args) {
     console.log(`\n🎯 Running ${args.scenarios.length} scenarios...\n`);
-    
+
     for (let i = 0; i < args.scenarios.length; i++) {
       const scenarioKey = args.scenarios[i];
       const scenario = RPG_SCENARIOS[scenarioKey];
-      
+
       if (!scenario) {
         console.error(`❌ Unknown scenario: ${scenarioKey}`);
         if (!args.continueOnFailure) break;
@@ -353,19 +351,19 @@ EXAMPLES:
       console.log(`📍 [${i + 1}/${args.scenarios.length}] ${scenario.name}`);
       console.log(`   Duration: ${scenario.duration}`);
       console.log(`   Description: ${scenario.description}`);
-      
+
       const result = await this.runSingleScenario(scenarioKey, scenario, args);
       this.results.push(result);
-      
+
       if (!result.success && !args.continueOnFailure) {
         console.log('❌ Stopping due to failure (use --continue-on-failure to continue)');
         break;
       }
-      
+
       // Brief pause between scenarios
       if (i < args.scenarios.length - 1) {
         console.log('⏳ Waiting 5 seconds before next scenario...\n');
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise((resolve) => setTimeout(resolve, 5000));
       }
     }
   }
@@ -378,30 +376,29 @@ EXAMPLES:
 
     try {
       console.log(`   🏃 Running scenario...`);
-      
+
       // Build scenario file path
       const scenarioPath = path.join(__dirname, '../scenarios', scenario.file);
-      
+
       // Run scenario using elizaos CLI
       const cmd = `elizaos scenario run ${scenarioPath}`;
-      
+
       if (args.verbose) {
         console.log(`   📝 Command: ${cmd}`);
       }
-      
-      output = execSync(cmd, { 
+
+      output = execSync(cmd, {
         cwd: path.resolve(__dirname, '../../../..'), // Root of monorepo
         encoding: 'utf8',
-        timeout: CONFIG.scenarioTimeout
+        timeout: CONFIG.scenarioTimeout,
       });
-      
+
       success = true;
       console.log(`   ✅ Completed successfully`);
-      
     } catch (err) {
       error = err.message;
       console.log(`   ❌ Failed: ${error}`);
-      
+
       if (args.verbose) {
         console.log(`   Output: ${err.stdout || 'No output'}`);
         console.log(`   Error: ${err.stderr || 'No error details'}`);
@@ -419,34 +416,40 @@ EXAMPLES:
       output,
       error,
       startTime,
-      endTime
+      endTime,
     };
   }
 
   generateReport() {
     const endTime = new Date();
     const totalDuration = endTime - this.startTime;
-    const successCount = this.results.filter(r => r.success).length;
+    const successCount = this.results.filter((r) => r.success).length;
     const failureCount = this.results.length - successCount;
 
     console.log('\n📊 Scenario Results Report');
     console.log('===========================');
     console.log(`📅 Run Date: ${this.startTime.toISOString()}`);
     console.log(`⏱️  Total Duration: ${Math.round(totalDuration / 1000)}s`);
-    console.log(`📈 Success Rate: ${successCount}/${this.results.length} (${Math.round(successCount / this.results.length * 100)}%)`);
-    
+    console.log(
+      `📈 Success Rate: ${successCount}/${this.results.length} (${Math.round((successCount / this.results.length) * 100)}%)`
+    );
+
     if (successCount > 0) {
       console.log('\n✅ Successful Scenarios:');
-      this.results.filter(r => r.success).forEach(result => {
-        console.log(`   📗 ${result.scenario} (${Math.round(result.duration / 1000)}s)`);
-      });
+      this.results
+        .filter((r) => r.success)
+        .forEach((result) => {
+          console.log(`   📗 ${result.scenario} (${Math.round(result.duration / 1000)}s)`);
+        });
     }
-    
+
     if (failureCount > 0) {
       console.log('\n❌ Failed Scenarios:');
-      this.results.filter(r => !r.success).forEach(result => {
-        console.log(`   📕 ${result.scenario} - ${result.error}`);
-      });
+      this.results
+        .filter((r) => !r.success)
+        .forEach((result) => {
+          console.log(`   📕 ${result.scenario} - ${result.error}`);
+        });
     }
 
     // Save detailed report
@@ -456,9 +459,9 @@ EXAMPLES:
       totalDuration,
       successCount,
       failureCount,
-      results: this.results
+      results: this.results,
     };
-    
+
     fs.writeFileSync(reportFile, JSON.stringify(report, null, 2));
     console.log(`\n📄 Detailed report saved: ${reportFile}`);
   }
@@ -467,14 +470,14 @@ EXAMPLES:
     if (this.hyperfyProcess) {
       console.log('\n🧹 Stopping Hyperfy server...');
       this.hyperfyProcess.kill('SIGTERM');
-      
+
       // Wait a bit for graceful shutdown
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+
       if (!this.hyperfyProcess.killed) {
         this.hyperfyProcess.kill('SIGKILL');
       }
-      
+
       console.log('✅ Hyperfy server stopped');
     }
   }

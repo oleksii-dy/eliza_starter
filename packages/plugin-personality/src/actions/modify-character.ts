@@ -186,7 +186,7 @@ Return JSON: {"isModificationRequest": boolean, "requestType": "explicit"|"sugge
         return {
           text: "I don't see any clear modification instructions. Could you be more specific about how you'd like me to change?",
           values: { success: false, error: 'no_modification_found' },
-          data: { action: 'MODIFY_CHARACTER' }
+          data: { action: 'MODIFY_CHARACTER' },
         };
       }
 
@@ -235,14 +235,14 @@ Return JSON: {"isModificationRequest": boolean, "requestType": "explicit"|"sugge
             values: {
               success: false,
               error: 'safety_rejection',
-              concerns: safetyEvaluation.concerns
+              concerns: safetyEvaluation.concerns,
             },
             data: {
               action: 'MODIFY_CHARACTER',
               rejectionReason: 'safety_concerns',
               concerns: safetyEvaluation.concerns,
-              reasoning: safetyEvaluation.reasoning
-            }
+              reasoning: safetyEvaluation.reasoning,
+            },
           };
         }
       } else {
@@ -264,13 +264,13 @@ Return JSON: {"isModificationRequest": boolean, "requestType": "explicit"|"sugge
           values: {
             success: false,
             error: 'validation_failed',
-            validationErrors: validation.errors
+            validationErrors: validation.errors,
           },
           data: {
             action: 'MODIFY_CHARACTER',
             errorType: 'validation_error',
-            validationErrors: validation.errors
-          }
+            validationErrors: validation.errors,
+          },
         };
       }
 
@@ -315,7 +315,7 @@ Return JSON: {"isModificationRequest": boolean, "requestType": "explicit"|"sugge
             success: true,
             modificationsApplied: true,
             summary: modificationSummary,
-            fieldsModified: Object.keys(modification)
+            fieldsModified: Object.keys(modification),
           },
           data: {
             action: 'MODIFY_CHARACTER',
@@ -324,9 +324,9 @@ Return JSON: {"isModificationRequest": boolean, "requestType": "explicit"|"sugge
               summary: modificationSummary,
               isUserRequested,
               timestamp: Date.now(),
-              requesterId: message.entityId
-            }
-          }
+              requesterId: message.entityId,
+            },
+          },
         };
       } else {
         await callback?.({
@@ -337,13 +337,13 @@ Return JSON: {"isModificationRequest": boolean, "requestType": "explicit"|"sugge
           text: `I couldn't update my character: ${result.error}`,
           values: {
             success: false,
-            error: result.error
+            error: result.error,
           },
           data: {
             action: 'MODIFY_CHARACTER',
             errorType: 'file_modification_failed',
-            errorDetails: result.error
-          }
+            errorDetails: result.error,
+          },
         };
       }
     } catch (error) {
@@ -358,13 +358,13 @@ Return JSON: {"isModificationRequest": boolean, "requestType": "explicit"|"sugge
         text: 'I encountered an error while trying to modify my character. Please try again.',
         values: {
           success: false,
-          error: (error as Error).message
+          error: (error as Error).message,
         },
         data: {
           action: 'MODIFY_CHARACTER',
           errorType: 'character_modification_error',
-          errorDetails: (error as Error).stack
-        }
+          errorDetails: (error as Error).stack,
+        },
       };
     }
   },
@@ -386,13 +386,16 @@ Return JSON: {"isModificationRequest": boolean, "requestType": "explicit"|"sugge
     [
       {
         name: '{{user}}',
-        content: { text: 'Add machine learning expertise and then create a study guide for beginners' },
+        content: {
+          text: 'Add machine learning expertise and then create a study guide for beginners',
+        },
       },
       {
         name: '{{agent}}',
         content: {
-          text: 'I\'ll add machine learning to my expertise and then create a beginner-friendly study guide.',
-          thought: 'User wants me to expand my knowledge base and then use that new expertise to create educational content.',
+          text: "I'll add machine learning to my expertise and then create a beginner-friendly study guide.",
+          thought:
+            'User wants me to expand my knowledge base and then use that new expertise to create educational content.',
           actions: ['MODIFY_CHARACTER'],
         },
       },
@@ -400,7 +403,8 @@ Return JSON: {"isModificationRequest": boolean, "requestType": "explicit"|"sugge
         name: '{{agent}}',
         content: {
           text: "I've successfully updated my character. I've added machine learning to my topics of expertise. Now creating a comprehensive study guide...",
-          thought: 'Character modification complete with ML expertise added. I can now create an authoritative study guide using my updated knowledge base.',
+          thought:
+            'Character modification complete with ML expertise added. I can now create an authoritative study guide using my updated knowledge base.',
           actions: ['CREATE_STUDY_GUIDE'],
         },
       },
@@ -408,13 +412,16 @@ Return JSON: {"isModificationRequest": boolean, "requestType": "explicit"|"sugge
     [
       {
         name: '{{user}}',
-        content: { text: 'Make yourself more patient with explanations, then help me understand quantum computing' },
+        content: {
+          text: 'Make yourself more patient with explanations, then help me understand quantum computing',
+        },
       },
       {
         name: '{{agent}}',
         content: {
-          text: 'I\'ll update my character to be more patient with explanations, then help you understand quantum computing.',
-          thought: 'User wants me to modify my communication style first, then apply that improved approach to teaching quantum computing.',
+          text: "I'll update my character to be more patient with explanations, then help you understand quantum computing.",
+          thought:
+            'User wants me to modify my communication style first, then apply that improved approach to teaching quantum computing.',
           actions: ['MODIFY_CHARACTER'],
         },
       },
@@ -422,7 +429,8 @@ Return JSON: {"isModificationRequest": boolean, "requestType": "explicit"|"sugge
         name: '{{agent}}',
         content: {
           text: "I've successfully updated my character. I'll now include a preference for patient, detailed explanations. Let me help you understand quantum computing with this more thoughtful approach...",
-          thought: 'Character updated with improved patience for explanations. I can now teach quantum computing using my enhanced communication style.',
+          thought:
+            'Character updated with improved patience for explanations. I can now teach quantum computing using my enhanced communication style.',
           actions: ['EXPLAIN_CONCEPT'],
         },
       },

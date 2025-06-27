@@ -39,18 +39,18 @@ export class TestPatternGenerator {
         ${includeGrid ? this.generateGrid(width, height) : ''}
         
         <!-- Quadrant dividers -->
-        <line x1="${width/2}" y1="0" x2="${width/2}" y2="${height}" stroke="#cccccc" stroke-width="2"/>
-        <line x1="0" y1="${height/2}" x2="${width}" y2="${height/2}" stroke="#cccccc" stroke-width="2"/>
+        <line x1="${width / 2}" y1="0" x2="${width / 2}" y2="${height}" stroke="#cccccc" stroke-width="2"/>
+        <line x1="0" y1="${height / 2}" x2="${width}" y2="${height / 2}" stroke="#cccccc" stroke-width="2"/>
         
         <!-- Quadrant numbers -->
-        <text x="${width/4}" y="${height/4}" font-family="Arial" font-size="${fontSize}" fill="${textColor}" text-anchor="middle" dominant-baseline="middle">1</text>
-        <text x="${3*width/4}" y="${height/4}" font-family="Arial" font-size="${fontSize}" fill="${textColor}" text-anchor="middle" dominant-baseline="middle">2</text>
-        <text x="${width/4}" y="${3*height/4}" font-family="Arial" font-size="${fontSize}" fill="${textColor}" text-anchor="middle" dominant-baseline="middle">3</text>
-        <text x="${3*width/4}" y="${3*height/4}" font-family="Arial" font-size="${fontSize}" fill="${textColor}" text-anchor="middle" dominant-baseline="middle">4</text>
+        <text x="${width / 4}" y="${height / 4}" font-family="Arial" font-size="${fontSize}" fill="${textColor}" text-anchor="middle" dominant-baseline="middle">1</text>
+        <text x="${(3 * width) / 4}" y="${height / 4}" font-family="Arial" font-size="${fontSize}" fill="${textColor}" text-anchor="middle" dominant-baseline="middle">2</text>
+        <text x="${width / 4}" y="${(3 * height) / 4}" font-family="Arial" font-size="${fontSize}" fill="${textColor}" text-anchor="middle" dominant-baseline="middle">3</text>
+        <text x="${(3 * width) / 4}" y="${(3 * height) / 4}" font-family="Arial" font-size="${fontSize}" fill="${textColor}" text-anchor="middle" dominant-baseline="middle">4</text>
         
         <!-- Center number -->
-        <circle cx="${width/2}" cy="${height/2}" r="${fontSize}" fill="#ff0000" opacity="0.3"/>
-        <text x="${width/2}" y="${height/2}" font-family="Arial" font-size="${fontSize}" fill="${textColor}" text-anchor="middle" dominant-baseline="middle">5</text>
+        <circle cx="${width / 2}" cy="${height / 2}" r="${fontSize}" fill="#ff0000" opacity="0.3"/>
+        <text x="${width / 2}" y="${height / 2}" font-family="Arial" font-size="${fontSize}" fill="${textColor}" text-anchor="middle" dominant-baseline="middle">5</text>
         
         <!-- Display info -->
         <text x="20" y="30" font-family="Arial" font-size="16" fill="${textColor}">Display ${displayIndex}</text>
@@ -60,16 +60,14 @@ export class TestPatternGenerator {
         
         <!-- Corner markers -->
         <circle cx="10" cy="10" r="5" fill="#ff0000"/>
-        <circle cx="${width-10}" cy="10" r="5" fill="#00ff00"/>
-        <circle cx="10" cy="${height-10}" r="5" fill="#0000ff"/>
-        <circle cx="${width-10}" cy="${height-10}" r="5" fill="#ffff00"/>
+        <circle cx="${width - 10}" cy="10" r="5" fill="#00ff00"/>
+        <circle cx="10" cy="${height - 10}" r="5" fill="#0000ff"/>
+        <circle cx="${width - 10}" cy="${height - 10}" r="5" fill="#ffff00"/>
       </svg>
     `;
 
     // Convert SVG to PNG
-    const buffer = await sharp(Buffer.from(svg))
-      .png()
-      .toBuffer();
+    const buffer = await sharp(Buffer.from(svg)).png().toBuffer();
 
     return buffer;
   }
@@ -102,13 +100,17 @@ export class TestPatternGenerator {
         <rect width="${width}" height="${height}" fill="${backgroundColor}"/>
         
         <!-- Title -->
-        <text x="${width/2}" y="50" font-family="Arial" font-size="32" fill="${textColor}" text-anchor="middle">Vision Test Pattern - Display ${displayIndex}</text>
+        <text x="${width / 2}" y="50" font-family="Arial" font-size="32" fill="${textColor}" text-anchor="middle">Vision Test Pattern - Display ${displayIndex}</text>
         
         <!-- Text regions for OCR testing -->
-        ${sampleTexts.map((text, i) => `
+        ${sampleTexts
+          .map(
+            (text, i) => `
           <rect x="50" y="${150 + i * 80}" width="${width - 100}" height="60" fill="white" stroke="#333" stroke-width="1"/>
           <text x="70" y="${185 + i * 80}" font-family="Arial" font-size="${fontSize}" fill="${textColor}">${text}</text>
-        `).join('')}
+        `
+          )
+          .join('')}
         
         <!-- UI Elements -->
         <rect x="50" y="${height - 200}" width="150" height="40" fill="#007bff" rx="5"/>
@@ -122,9 +124,7 @@ export class TestPatternGenerator {
       </svg>
     `;
 
-    const buffer = await sharp(Buffer.from(svg))
-      .png()
-      .toBuffer();
+    const buffer = await sharp(Buffer.from(svg)).png().toBuffer();
 
     return buffer;
   }
@@ -137,12 +137,16 @@ export class TestPatternGenerator {
 
     // Vertical lines
     for (let x = spacing; x < width; x += spacing) {
-      lines.push(`<line x1="${x}" y1="0" x2="${x}" y2="${height}" stroke="#eeeeee" stroke-width="1"/>`);
+      lines.push(
+        `<line x1="${x}" y1="0" x2="${x}" y2="${height}" stroke="#eeeeee" stroke-width="1"/>`
+      );
     }
 
     // Horizontal lines
     for (let y = spacing; y < height; y += spacing) {
-      lines.push(`<line x1="0" y1="${y}" x2="${width}" y2="${y}" stroke="#eeeeee" stroke-width="1"/>`);
+      lines.push(
+        `<line x1="0" y1="${y}" x2="${width}" y2="${y}" stroke="#eeeeee" stroke-width="1"/>`
+      );
     }
 
     return lines.join('\n');
@@ -196,7 +200,7 @@ export class TestPatternGenerator {
     // Extract all numbers from OCR text
     const matches = ocrText.match(/\d+/g);
     if (matches) {
-      matches.forEach(match => {
+      matches.forEach((match) => {
         const num = parseInt(match, 10);
         if (expectedNumbers.includes(num) && !foundNumbers.includes(num)) {
           foundNumbers.push(num);
@@ -204,7 +208,7 @@ export class TestPatternGenerator {
       });
     }
 
-    const missingNumbers = expectedNumbers.filter(n => !foundNumbers.includes(n));
+    const missingNumbers = expectedNumbers.filter((n) => !foundNumbers.includes(n));
 
     return {
       success: missingNumbers.length === 0,

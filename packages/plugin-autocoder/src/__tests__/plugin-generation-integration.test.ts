@@ -41,6 +41,7 @@ mock.module('child_process', () => ({
 
 // Import after mocks
 import { PluginCreationService, type PluginSpecification } from '../services/PluginCreationService';
+import { createMockRuntime } from './test-utils';
 import * as fs from 'fs-extra';
 import * as utils from '../utils/plugin-templates';
 import { spawn } from 'child_process';
@@ -57,15 +58,17 @@ describe('Plugin Generation Integration', () => {
     mockEnsureDir.mockClear();
     mockWriteJson.mockClear();
 
-    const runtime: IAgentRuntime = {
-      getSetting: mock().mockImplementation((key: string) => {
-        if (key === 'PLUGIN_DATA_DIR') {return '/test/plugins';}
-        if (key === 'ANTHROPIC_API_KEY') {return null;} // Force template usage
+    const runtime = createMockRuntime({
+      getSetting: (key: string) => {
+        if (key === 'PLUGIN_DATA_DIR') {
+          return '/test/plugins';
+        }
+        if (key === 'ANTHROPIC_API_KEY') {
+          return null;
+        } // Force template usage
         return null;
-      }),
-      getService: mock().mockReturnValue(null),
-      services: new Map(),
-    } as any;
+      },
+    });
 
     service = new PluginCreationService(runtime);
     await service.initialize(runtime);

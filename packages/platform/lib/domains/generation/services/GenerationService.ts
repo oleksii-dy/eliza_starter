@@ -3,17 +3,17 @@
  * Production-ready core business logic for multi-modal content generation
  */
 
-import { 
-  GenerationRequest, 
-  GenerationResult, 
-  GenerationType, 
-  GenerationStatus, 
+import {
+  GenerationRequest,
+  GenerationResult,
+  GenerationType,
+  GenerationStatus,
   GenerationProvider,
   BatchGenerationRequest,
   BatchGenerationResult,
   GenerationAnalytics,
   Project,
-  ApiResponse
+  ApiResponse,
 } from '../types';
 import { BaseGenerationProvider } from './providers/BaseGenerationProvider';
 import { OpenAIProvider } from './providers/OpenAIProvider';
@@ -28,10 +28,10 @@ import { IStorageService } from '@/lib/services/storage';
 import { getBillingService, addCredits, deductCredits } from '@/lib/billing';
 import { logger } from '@/lib/logger';
 import { createHash } from 'crypto';
-import { 
-  isImageGenerationRequest, 
+import {
+  isImageGenerationRequest,
   isVideoGenerationRequest,
-  TrackedPromise
+  TrackedPromise,
 } from '@/lib/types/common';
 
 // Type aliases and extended interfaces
@@ -39,58 +39,23 @@ type DatabaseClient = ReturnType<typeof getDatabaseClient>;
 
 // Extended billing service interface
 interface ExtendedBillingService {
-  getOrganizationBilling(organizationId: string): Promise<{ hasActiveSubscription: boolean; creditsRemaining: number }>;
+  getOrganizationBilling(
+    organizationId: string,
+  ): Promise<{ hasActiveSubscription: boolean; creditsRemaining: number }>;
   getSpendingLimits(organizationId: string): Promise<{ monthlyLimit: number }>;
   getCurrentMonthSpending(organizationId: string): Promise<number>;
-  checkGenerationLimits(organizationId: string, type: GenerationType, provider?: GenerationProvider): Promise<{ allowed: boolean; reason?: string }>;
+  checkGenerationLimits(
+    organizationId: string,
+    type: GenerationType,
+    provider?: GenerationProvider,
+  ): Promise<{ allowed: boolean; reason?: string }>;
   reserveCredits(organizationId: string, amount: number): Promise<void>;
   releaseReservedCredits(organizationId: string): Promise<void>;
-  chargeCredits(organizationId: string, amount: number, description: string): Promise<void>;
-}
-
-// Database repository interfaces
-interface GenerationRepository {
-  create(data: any, options?: { transaction?: any }): Promise<GenerationResult>;
-  findById(id: string): Promise<GenerationResult | null>;
-  findByIdempotencyKey(key: string): Promise<GenerationResult | null>;
-  update(id: string, data: Partial<GenerationResult>): Promise<void>;
-  list(params: any): Promise<{ data: GenerationResult[]; total: number; hasMore: boolean }>;
-  getAnalytics(params: any): Promise<GenerationAnalytics>;
-}
-
-interface BatchGenerationRepository {
-  create(data: BatchGenerationResult): Promise<void>;
-}
-
-interface ProviderMetricsRepository {
-  getMetrics(provider: GenerationProvider, type: GenerationType): Promise<any>;
-}
-
-interface CryptoPaymentRepository {
-  create(payment: any): Promise<void>;
-  findById(id: string): Promise<any | null>;
-  findByUser(userId: string, options: any): Promise<any[]>;
-  update(id: string, data: any): Promise<void>;
-  findExpired(): Promise<any[]>;
-}
-
-interface UserRepository {
-  findByWalletAddress(address: string, chainId: number): Promise<{ id: string } | null>;
-  create(data: any): Promise<void>;
-}
-
-interface WalletConnectionRepository {
-  create(data: any): Promise<void>;
-}
-
-// Extended database client with repositories
-interface ExtendedDatabaseClient extends DatabaseClient {
-  generations: GenerationRepository;
-  batchGenerations: BatchGenerationRepository;
-  providerMetrics: ProviderMetricsRepository;
-  cryptoPayments: CryptoPaymentRepository;
-  users: UserRepository;
-  walletConnections: WalletConnectionRepository;
+  chargeCredits(
+    organizationId: string,
+    amount: number,
+    description: string,
+  ): Promise<void>;
 }
 
 // Production configuration constants
@@ -105,12 +70,12 @@ const GENERATION_CONFIG = {
 } as const;
 
 export class GenerationService {
-  private providers: Map<GenerationProvider, BaseGenerationProvider> = new Map();
-  private database: ExtendedDatabaseClient;
+  private providers: Map<GenerationProvider, BaseGenerationProvider> =
+    new Map();
   private storage: IStorageService;
   private billing: ExtendedBillingService;
   private queueService: GenerationQueueService;
-  
+
   // Concurrency and resource management
   private processingLocks = new Map<string, Promise<any>>();
   private concurrentGenerations = new Map<string, number>();
@@ -118,119 +83,58 @@ export class GenerationService {
   private isShuttingDown = false;
 
   constructor(
-    database: DatabaseClient,
     storage: IStorageService,
-    billing: ReturnType<typeof getBillingService>
+    billing: ReturnType<typeof getBillingService>,
   ) {
-    // Create extended database client with repository methods
-    this.database = this.createExtendedDatabase(database);
     this.storage = storage;
     this.billing = this.createExtendedBilling(billing);
-    
+
     // Initialize the production queue service
     this.queueService = new GenerationQueueService({
-      database: this.database as any,
       maxConcurrentJobs: GENERATION_CONFIG.MAX_CONCURRENT_GENERATIONS,
       maxRetries: GENERATION_CONFIG.MAX_RETRIES,
       processingTimeoutMs: GENERATION_CONFIG.PROCESSING_LOCK_TIMEOUT_MS,
       pollIntervalMs: 5000, // Poll every 5 seconds
-      deadLetterQueueEnabled: true
+      deadLetterQueueEnabled: true,
     });
-    
+
     this.initializeProviders();
     this.initializeQueueWorkers();
     this.startCleanupInterval();
   }
 
-  private createExtendedDatabase(db: DatabaseClient): ExtendedDatabaseClient {
-    const extendedDb = Object.create(db) as ExtendedDatabaseClient;
-    
-    // Add repository methods
-    extendedDb.generations = {
-      create: async (data: any, options?: { transaction?: any }) => {
-        // Implement using actual database schema
-        // This is a placeholder - you'll need to implement with actual table
-        return data as GenerationResult;
-      },
-      findById: async (id: string) => {
-        // Implement using actual database schema
-        return null;
-      },
-      findByIdempotencyKey: async (key: string) => {
-        // Implement using actual database schema
-        return null;
-      },
-      update: async (id: string, data: Partial<GenerationResult>) => {
-        // Implement using actual database schema
-      },
-      list: async (params: any) => {
-        // Implement using actual database schema
-        return { data: [], total: 0, hasMore: false };
-      },
-      getAnalytics: async (params: any) => {
-        // Implement using actual database schema
-        return {} as GenerationAnalytics;
-      }
-    };
-    
-    extendedDb.batchGenerations = {
-      create: async (data: BatchGenerationResult) => {
-        // Implement using actual database schema
-      }
-    };
-    
-    extendedDb.providerMetrics = {
-      getMetrics: async (provider: GenerationProvider, type: GenerationType) => {
-        // Implement using actual database schema
-        return {
-          successRate: 0.95,
-          averageProcessingTime: 1000,
-          averageCost: 0.1,
-          qualityScore: 0.9
-        };
-      }
-    };
-    
-    extendedDb.cryptoPayments = {
-      create: async (payment: any) => {},
-      findById: async (id: string) => null,
-      findByUser: async (userId: string, options: any) => [],
-      update: async (id: string, data: any) => {},
-      findExpired: async () => []
-    };
-    
-    extendedDb.users = {
-      findByWalletAddress: async (address: string, chainId: number) => null,
-      create: async (data: any) => {}
-    };
-    
-    extendedDb.walletConnections = {
-      create: async (data: any) => {}
-    };
-    
-    return extendedDb;
-  }
-
-  private createExtendedBilling(billing: ReturnType<typeof getBillingService>): ExtendedBillingService {
+  private createExtendedBilling(
+    billing: ReturnType<typeof getBillingService>,
+  ): ExtendedBillingService {
     const reservedCredits = new Map<string, number>();
-    
+
     return {
       ...billing,
-      checkGenerationLimits: async (organizationId: string, type: GenerationType, provider?: GenerationProvider) => {
-        const { creditsRemaining } = await billing.getOrganizationBilling(organizationId);
-        const estimatedCost = this.calculateCredits(type, provider || GenerationProvider.OPENAI);
-        
+      checkGenerationLimits: async (
+        organizationId: string,
+        type: GenerationType,
+        provider?: GenerationProvider,
+      ) => {
+        const { creditsRemaining } =
+          await billing.getOrganizationBilling(organizationId);
+        const estimatedCost = this.calculateCredits(
+          type,
+          provider || GenerationProvider.OPENAI,
+        );
+
         if (creditsRemaining < estimatedCost) {
           return { allowed: false, reason: 'Insufficient credits' };
         }
-        
-        const { monthlyLimit } = await billing.getSpendingLimits(organizationId);
-        const monthlySpending = await billing.getCurrentMonthSpending(organizationId);
-        
+
+        const { monthlyLimit } =
+          await billing.getSpendingLimits(organizationId);
+        const monthlySpending =
+          await billing.getCurrentMonthSpending(organizationId);
+
         if (monthlySpending + estimatedCost > monthlyLimit) {
           return { allowed: false, reason: 'Monthly spending limit exceeded' };
         }
-        
+
         return { allowed: true };
       },
       reserveCredits: async (organizationId: string, amount: number) => {
@@ -240,16 +144,20 @@ export class GenerationService {
       releaseReservedCredits: async (organizationId: string) => {
         reservedCredits.delete(organizationId);
       },
-      chargeCredits: async (organizationId: string, amount: number, description: string) => {
+      chargeCredits: async (
+        organizationId: string,
+        amount: number,
+        description: string,
+      ) => {
         await deductCredits({
           organizationId,
           userId: 'system',
           amount,
           description,
-          metadata: { source: 'generation' }
+          metadata: { source: 'generation' },
         });
         reservedCredits.delete(organizationId);
-      }
+      },
     };
   }
 
@@ -259,13 +167,16 @@ export class GenerationService {
     this.providers.set(GenerationProvider.ANTHROPIC, new AnthropicProvider());
     this.providers.set(GenerationProvider.ELEVENLABS, new ElevenLabsProvider());
     this.providers.set(GenerationProvider.GOOGLE_VEO, new GoogleVeoProvider());
-    this.providers.set(GenerationProvider.STABLE_DIFFUSION, new StableDiffusionProvider());
+    this.providers.set(
+      GenerationProvider.STABLE_DIFFUSION,
+      new StableDiffusionProvider(),
+    );
     this.providers.set(GenerationProvider.FAL, new FALProvider());
   }
 
   private initializeQueueWorkers(): void {
     // Register workers for different generation types
-    
+
     // Text generation worker
     this.queueService.registerWorker(
       'text-worker',
@@ -275,18 +186,18 @@ export class GenerationService {
           await this.processGeneration(job.generationId);
           return { success: true };
         } catch (error) {
-          logger.error('Text generation worker failed', undefined, { 
-            error: error instanceof Error ? error.message : String(error), 
-            jobId: job.id 
-          });
-          return { 
-            success: false, 
+          logger.error('Text generation worker failed', undefined, {
             error: error instanceof Error ? error.message : String(error),
-            retry: true 
+            jobId: job.id,
+          });
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+            retry: true,
           };
         }
       },
-      2 // Allow 2 concurrent text generations
+      2, // Allow 2 concurrent text generations
     );
 
     // Image generation worker
@@ -298,18 +209,18 @@ export class GenerationService {
           await this.processGeneration(job.generationId);
           return { success: true };
         } catch (error) {
-          logger.error('Image generation worker failed', undefined, { 
-            error: error instanceof Error ? error.message : String(error), 
-            jobId: job.id 
-          });
-          return { 
-            success: false, 
+          logger.error('Image generation worker failed', undefined, {
             error: error instanceof Error ? error.message : String(error),
-            retry: true 
+            jobId: job.id,
+          });
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+            retry: true,
           };
         }
       },
-      1 // Allow 1 concurrent image generation
+      1, // Allow 1 concurrent image generation
     );
 
     // Video generation worker (more resource intensive)
@@ -321,18 +232,18 @@ export class GenerationService {
           await this.processGeneration(job.generationId);
           return { success: true };
         } catch (error) {
-          logger.error('Video generation worker failed', undefined, { 
-            error: error instanceof Error ? error.message : String(error), 
-            jobId: job.id 
-          });
-          return { 
-            success: false, 
+          logger.error('Video generation worker failed', undefined, {
             error: error instanceof Error ? error.message : String(error),
-            retry: true 
+            jobId: job.id,
+          });
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+            retry: true,
           };
         }
       },
-      1 // Allow 1 concurrent video generation
+      1, // Allow 1 concurrent video generation
     );
 
     // Audio generation worker
@@ -344,18 +255,18 @@ export class GenerationService {
           await this.processGeneration(job.generationId);
           return { success: true };
         } catch (error) {
-          logger.error('Audio generation worker failed', undefined, { 
-            error: error instanceof Error ? error.message : String(error), 
-            jobId: job.id 
-          });
-          return { 
-            success: false, 
+          logger.error('Audio generation worker failed', undefined, {
             error: error instanceof Error ? error.message : String(error),
-            retry: true 
+            jobId: job.id,
+          });
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+            retry: true,
           };
         }
       },
-      1 // Allow 1 concurrent audio generation
+      1, // Allow 1 concurrent audio generation
     );
 
     // 3D and Avatar generation worker (most resource intensive)
@@ -367,18 +278,18 @@ export class GenerationService {
           await this.processGeneration(job.generationId);
           return { success: true };
         } catch (error) {
-          logger.error('Special generation worker failed', undefined, { 
-            error: error instanceof Error ? error.message : String(error), 
-            jobId: job.id 
-          });
-          return { 
-            success: false, 
+          logger.error('Special generation worker failed', undefined, {
             error: error instanceof Error ? error.message : String(error),
-            retry: true 
+            jobId: job.id,
+          });
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+            retry: true,
           };
         }
       },
-      1 // Allow 1 concurrent special generation
+      1, // Allow 1 concurrent special generation
     );
 
     // Set up event listeners for queue monitoring
@@ -386,24 +297,32 @@ export class GenerationService {
       logger.info('Generation job completed', {
         jobId: event.job.id,
         generationId: event.job.generationId,
-        processingTime: event.processingTime
+        processingTime: event.processingTime,
       });
-      
+
       // Decrement concurrent counter
-      const currentCount = this.concurrentGenerations.get(event.job.data.organizationId) || 0;
-      this.concurrentGenerations.set(event.job.data.organizationId, Math.max(0, currentCount - 1));
+      const currentCount =
+        this.concurrentGenerations.get(event.job.data.organizationId) || 0;
+      this.concurrentGenerations.set(
+        event.job.data.organizationId,
+        Math.max(0, currentCount - 1),
+      );
     });
 
     this.queueService.on(QueueEvents.JOB_FAILED, (event: any) => {
       logger.error('Generation job failed permanently', undefined, {
         jobId: event.job.id,
         generationId: event.job.generationId,
-        error: event.error
+        error: event.error,
       });
-      
+
       // Decrement concurrent counter
-      const currentCount = this.concurrentGenerations.get(event.job.data.organizationId) || 0;
-      this.concurrentGenerations.set(event.job.data.organizationId, Math.max(0, currentCount - 1));
+      const currentCount =
+        this.concurrentGenerations.get(event.job.data.organizationId) || 0;
+      this.concurrentGenerations.set(
+        event.job.data.organizationId,
+        Math.max(0, currentCount - 1),
+      );
     });
 
     this.queueService.on(QueueEvents.JOB_RETRYING, (event: any) => {
@@ -411,33 +330,42 @@ export class GenerationService {
         jobId: event.job.id,
         generationId: event.job.generationId,
         attempt: event.job.attempts + 1,
-        error: event.error
+        error: event.error,
       });
     });
 
     // Start the queue service
-    this.queueService.start().catch(error => {
+    this.queueService.start().catch((error) => {
       logger.error('Failed to start queue service', error);
     });
 
     logger.info('Generation queue workers initialized', {
       workers: 5,
-      totalConcurrency: 6
+      totalConcurrency: 6,
     });
   }
 
   /**
    * Create a new generation request with production-grade safety
    */
-  async createGeneration(request: GenerationRequest): Promise<ApiResponse<GenerationResult>> {
+  async createGeneration(
+    request: GenerationRequest,
+  ): Promise<ApiResponse<GenerationResult>> {
     const requestId = this.generateRequestId();
-    const context = { requestId, userId: request.userId, organizationId: request.organizationId };
+    const context = {
+      requestId,
+      userId: request.userId,
+      organizationId: request.organizationId,
+    };
 
     try {
       // Early validation
       const validation = this.validateRequest(request);
       if (!validation.valid) {
-        logger.warn('Invalid generation request', { context, errors: validation.errors });
+        logger.warn('Invalid generation request', {
+          context,
+          errors: validation.errors,
+        });
         return {
           success: false,
           error: 'Invalid request: ' + validation.errors.join(', '),
@@ -450,27 +378,32 @@ export class GenerationService {
         return {
           success: false,
           error: 'Service is shutting down',
-          code: 'SERVICE_UNAVAILABLE'
+          code: 'SERVICE_UNAVAILABLE',
         };
       }
 
       // Create idempotency key for deduplication
       const idempotencyKey = this.createIdempotencyKey(request);
-      
+
       // Check for existing generation with same key
-      const existingGeneration = await this.database.generations.findByIdempotencyKey(idempotencyKey);
+      const db = await getDatabaseClient();
+      const existingGeneration =
+        await db.generations.findByIdempotencyKey(idempotencyKey);
       if (existingGeneration) {
         logger.info('Returning existing generation for idempotency key', {
-          context, 
+          context,
           existingId: existingGeneration.id,
-          idempotencyKey 
+          idempotencyKey,
         });
         return { success: true, data: existingGeneration };
       }
 
       // Use processing lock to prevent race conditions
       if (this.processingLocks.has(idempotencyKey)) {
-        logger.info('Waiting for existing generation request', { context, idempotencyKey });
+        logger.info('Waiting for existing generation request', {
+          context,
+          idempotencyKey,
+        });
         return await this.processingLocks.get(idempotencyKey);
       }
 
@@ -482,13 +415,16 @@ export class GenerationService {
       } finally {
         this.processingLocks.delete(idempotencyKey);
       }
-
     } catch (error) {
-      logger.error('Failed to create generation:', error instanceof Error ? error : undefined, { context });
+      logger.error(
+        'Failed to create generation:',
+        error instanceof Error ? error : undefined,
+        { context },
+      );
       return {
         success: false,
         error: 'Failed to create generation',
-        code: 'CREATION_FAILED'
+        code: 'CREATION_FAILED',
       };
     }
   }
@@ -497,25 +433,26 @@ export class GenerationService {
    * Internal method to create generation with transaction safety
    */
   private async doCreateGeneration(
-    request: GenerationRequest, 
+    request: GenerationRequest,
     idempotencyKey: string,
-    context: any
+    context: any,
   ): Promise<ApiResponse<GenerationResult>> {
     let creditsReserved = false;
 
     try {
       // Check concurrent generation limits
-      const currentConcurrent = this.concurrentGenerations.get(request.organizationId) || 0;
+      const currentConcurrent =
+        this.concurrentGenerations.get(request.organizationId) || 0;
       if (currentConcurrent >= GENERATION_CONFIG.MAX_CONCURRENT_GENERATIONS) {
-        logger.warn('Concurrent generation limit exceeded', { 
-          context, 
-          current: currentConcurrent, 
-          limit: GENERATION_CONFIG.MAX_CONCURRENT_GENERATIONS 
+        logger.warn('Concurrent generation limit exceeded', {
+          context,
+          current: currentConcurrent,
+          limit: GENERATION_CONFIG.MAX_CONCURRENT_GENERATIONS,
         });
         return {
           success: false,
           error: 'Too many concurrent generations',
-          code: 'RATE_LIMIT_EXCEEDED'
+          code: 'RATE_LIMIT_EXCEEDED',
         };
       }
 
@@ -523,54 +460,65 @@ export class GenerationService {
       const canGenerate = await this.billing.checkGenerationLimits(
         request.organizationId,
         request.type,
-        request.provider
+        request.provider,
       );
 
       if (!canGenerate.allowed) {
-        logger.warn('Generation denied by billing service', { context, reason: canGenerate.reason });
+        logger.warn('Generation denied by billing service', {
+          context,
+          reason: canGenerate.reason,
+        });
         return {
           success: false,
           error: 'Insufficient credits or limits exceeded',
           code: 'INSUFFICIENT_CREDITS',
-          message: canGenerate.reason
+          message: canGenerate.reason,
         };
       }
 
       // Select optimal provider if not specified
-      const provider = request.provider || await this.selectOptimalProvider(request);
+      const provider =
+        request.provider || (await this.selectOptimalProvider(request));
 
       // Estimate and reserve credits
-      const estimatedCost = await this.estimateGenerationCost(request, provider);
+      const estimatedCost = await this.estimateGenerationCost(
+        request,
+        provider,
+      );
       await this.billing.reserveCredits(request.organizationId, estimatedCost);
       creditsReserved = true;
 
       // Create generation record in database using transaction
-      const generation = await this.database.transaction(async (tx: any) => {
+      const db = await getDatabaseClient();
+      const generation = await db.transaction(async (tx: any) => {
         const generationId = this.generateId();
-        const gen = await this.database.generations.create({
-          ...request,
-          id: generationId,
-          provider,
-          status: GenerationStatus.QUEUED,
-          idempotencyKey,
-          estimatedCost,
-          createdAt: new Date(),
-        }, { transaction: tx });
-        
+        const gen = await db.generations.create(
+          {
+            ...request,
+            id: generationId,
+            provider,
+            status: GenerationStatus.QUEUED,
+            idempotencyKey,
+            estimatedCost,
+            createdAt: new Date(),
+          },
+          { transaction: tx },
+        );
+
         return gen;
       });
 
-      logger.info('Generation created successfully', { 
-        context, 
-        generationId: generation.id, 
-        provider, 
-        type: request.type 
+      logger.info('Generation created successfully', {
+        context,
+        generationId: generation.id,
+        provider,
+        type: request.type,
       });
 
       // Increment concurrent counter
       this.concurrentGenerations.set(
-        request.organizationId, 
-        currentConcurrent + 1
+        request.organizationId,
+        currentConcurrent + 1,
       );
 
       // Queue for processing
@@ -578,18 +526,19 @@ export class GenerationService {
 
       return {
         success: true,
-        data: generation
+        data: generation,
       };
-
     } catch (error) {
       if (creditsReserved) {
         try {
           await this.billing.releaseReservedCredits(request.organizationId);
         } catch (releaseError: any) {
-          logger.error('Failed to release reserved credits', releaseError, { context });
+          logger.error('Failed to release reserved credits', releaseError, {
+            context,
+          });
         }
       }
-      
+
       throw error;
     }
   }
@@ -599,13 +548,17 @@ export class GenerationService {
    */
   async processGeneration(generationId: string): Promise<void> {
     try {
-      const generation = await this.database.generations.findById(generationId);
+      const db = await getDatabaseClient();
+      const generation = await db.generations.findById(generationId);
       if (!generation) {
         throw new Error(`Generation ${generationId} not found`);
       }
 
       // Update status to processing
-      await this.updateGenerationStatus(generationId, GenerationStatus.PROCESSING);
+      await this.updateGenerationStatus(
+        generationId,
+        GenerationStatus.PROCESSING,
+      );
 
       const provider = this.providers.get(generation.provider);
       if (!provider) {
@@ -613,8 +566,14 @@ export class GenerationService {
       }
 
       // Reserve credits (using type and provider)
-      const creditAmount = this.calculateCredits(generation.type, generation.provider);
-      await this.billing.reserveCredits(generation.organizationId, creditAmount);
+      const creditAmount = this.calculateCredits(
+        generation.type,
+        generation.provider,
+      );
+      await this.billing.reserveCredits(
+        generation.organizationId,
+        creditAmount,
+      );
 
       const startTime = Date.now();
 
@@ -630,9 +589,9 @@ export class GenerationService {
           provider: generation.provider,
           metadata: generation.metadata,
           // Include any type-specific properties from the original request
-          ...(generation as any)
+          ...(generation as any),
         };
-        
+
         const result = await provider.generate(generationRequest);
 
         // Upload outputs to storage
@@ -654,35 +613,36 @@ export class GenerationService {
                 metadata: {
                   organizationId: generation.organizationId,
                   generationType: generation.type,
-                  provider: generation.provider
-                }
-              }
+                  provider: generation.provider,
+                },
+              },
             );
 
             return {
               ...output,
-              url: uploadResult.url || uploadResult.key
+              url: uploadResult.url || uploadResult.key,
             };
-          })
+          }),
         );
 
         const processingTime = Date.now() - startTime;
 
         // Update generation with results
-        await this.database.generations.update(generationId, {
+        await db.generations.update(generationId, {
           status: GenerationStatus.COMPLETED,
           outputs,
           completedAt: new Date(),
           processing_time: processingTime,
           cost: result.cost,
-          credits_used: result.credits_used
+          credits_used: result.credits_used,
         });
 
         // Charge credits
         await this.billing.chargeCredits(
           generation.organizationId,
-          result.credits_used || this.calculateCredits(generation.type, generation.provider),
-          `Generation: ${generation.type} via ${generation.provider}`
+          result.credits_used ||
+            this.calculateCredits(generation.type, generation.provider),
+          `Generation: ${generation.type} via ${generation.provider}`,
         );
 
         // Send webhook notification if configured
@@ -690,20 +650,26 @@ export class GenerationService {
         if (callbackUrl) {
           await this.sendWebhook(callbackUrl, {
             event: 'generation.completed',
-            data: { ...generation, outputs, status: GenerationStatus.COMPLETED }
+            data: {
+              ...generation,
+              outputs,
+              status: GenerationStatus.COMPLETED,
+            },
           });
         }
-
       } catch (error: any) {
         // Handle generation failure
-        await this.updateGenerationStatus(generationId, GenerationStatus.FAILED, error.message);
-        
+        await this.updateGenerationStatus(
+          generationId,
+          GenerationStatus.FAILED,
+          error.message,
+        );
+
         // Release reserved credits
         await this.billing.releaseReservedCredits(generation.organizationId);
 
         throw error;
       }
-
     } catch (error: any) {
       logger.error(`Failed to process generation ${generationId}:`, error);
       throw error;
@@ -713,13 +679,15 @@ export class GenerationService {
   /**
    * Create batch generation request
    */
-  async createBatchGeneration(request: BatchGenerationRequest): Promise<ApiResponse<BatchGenerationResult>> {
+  async createBatchGeneration(
+    request: BatchGenerationRequest,
+  ): Promise<ApiResponse<BatchGenerationResult>> {
     try {
       const batchId = this.generateId();
-      
+
       // Create individual generations
       const generations: GenerationResult[] = [];
-      
+
       for (const genRequest of request.generations) {
         const result = await this.createGeneration(genRequest);
         if (result.success && result.data) {
@@ -738,22 +706,22 @@ export class GenerationService {
         failed_generations: 0,
         generations,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
-      await this.database.batchGenerations.create(batch);
+      const db = await getDatabaseClient();
+      await db.batchGenerations.create(batch);
 
       return {
         success: true,
-        data: batch
+        data: batch,
       };
-
     } catch (error: any) {
       logger.error('Failed to create batch generation:', error);
       return {
         success: false,
         error: 'Failed to create batch generation',
-        code: 'BATCH_CREATION_FAILED'
+        code: 'BATCH_CREATION_FAILED',
       };
     }
   }
@@ -763,27 +731,27 @@ export class GenerationService {
    */
   async getGeneration(id: string): Promise<ApiResponse<GenerationResult>> {
     try {
-      const generation = await this.database.generations.findById(id);
-      
+      const db = await getDatabaseClient();
+      const generation = await db.generations.findById(id);
+
       if (!generation) {
         return {
           success: false,
           error: 'Generation not found',
-          code: 'NOT_FOUND'
+          code: 'NOT_FOUND',
         };
       }
 
       return {
         success: true,
-        data: generation
+        data: generation,
       };
-
     } catch (error: any) {
       logger.error(`Failed to get generation ${id}:`, error);
       return {
         success: false,
         error: 'Failed to retrieve generation',
-        code: 'RETRIEVAL_FAILED'
+        code: 'RETRIEVAL_FAILED',
       };
     }
   }
@@ -804,7 +772,8 @@ export class GenerationService {
     sortOrder?: 'asc' | 'desc';
   }): Promise<ApiResponse<GenerationResult[]>> {
     try {
-      const result = await this.database.generations.list(params);
+      const db = await getDatabaseClient();
+      const result = await db.generations.list(params);
 
       return {
         success: true,
@@ -813,16 +782,15 @@ export class GenerationService {
           total: result.total,
           page: params.page || 1,
           limit: params.limit || 20,
-          hasMore: result.hasMore
-        }
+          hasMore: result.hasMore,
+        },
       };
-
     } catch (error: any) {
       logger.error('Failed to list generations:', error);
       return {
         success: false,
         error: 'Failed to list generations',
-        code: 'LIST_FAILED'
+        code: 'LIST_FAILED',
       };
     }
   }
@@ -832,13 +800,14 @@ export class GenerationService {
    */
   async cancelGeneration(id: string): Promise<ApiResponse<void>> {
     try {
-      const generation = await this.database.generations.findById(id);
-      
+      const db = await getDatabaseClient();
+      const generation = await db.generations.findById(id);
+
       if (!generation) {
         return {
           success: false,
           error: 'Generation not found',
-          code: 'NOT_FOUND'
+          code: 'NOT_FOUND',
         };
       }
 
@@ -846,7 +815,7 @@ export class GenerationService {
         return {
           success: false,
           error: 'Cannot cancel completed generation',
-          code: 'INVALID_STATUS'
+          code: 'INVALID_STATUS',
         };
       }
 
@@ -864,15 +833,14 @@ export class GenerationService {
       await this.billing.releaseReservedCredits(generation.organizationId);
 
       return {
-        success: true
+        success: true,
       };
-
     } catch (error: any) {
       logger.error(`Failed to cancel generation ${id}:`, error);
       return {
         success: false,
         error: 'Failed to cancel generation',
-        code: 'CANCELLATION_FAILED'
+        code: 'CANCELLATION_FAILED',
       };
     }
   }
@@ -887,43 +855,49 @@ export class GenerationService {
     endDate: Date;
   }): Promise<ApiResponse<GenerationAnalytics>> {
     try {
-      const analytics = await this.database.generations.getAnalytics(params);
+      const db = await getDatabaseClient();
+      const analytics = await db.generations.getAnalytics(params);
 
       return {
         success: true,
-        data: analytics
+        data: analytics,
       };
-
     } catch (error: any) {
       logger.error('Failed to get generation analytics:', error);
       return {
         success: false,
         error: 'Failed to retrieve analytics',
-        code: 'ANALYTICS_FAILED'
+        code: 'ANALYTICS_FAILED',
       };
     }
   }
 
   // Private helper methods
 
-  private async selectOptimalProvider(request: GenerationRequest): Promise<GenerationProvider> {
+  private async selectOptimalProvider(
+    request: GenerationRequest,
+  ): Promise<GenerationProvider> {
     // Provider selection logic based on type, quality, cost, and availability
     const typeProviders = this.getProvidersForType(request.type);
-    
+
     // Get provider performance metrics
+    const db = await getDatabaseClient();
     const providerMetrics = await Promise.all(
       typeProviders.map(async (provider) => {
-        const metrics = await this.database.providerMetrics.getMetrics(provider, request.type);
+        const metrics = await db.providerMetrics.getMetrics(
+          provider,
+          request.type,
+        );
         return {
           provider,
-          score: this.calculateProviderScore(metrics, request)
+          score: this.calculateProviderScore(metrics, request),
         };
-      })
+      }),
     );
 
     // Select provider with highest score
-    const bestProvider = providerMetrics.reduce((best, current) => 
-      current.score > best.score ? current : best
+    const bestProvider = providerMetrics.reduce((best, current) =>
+      current.score > best.score ? current : best,
     );
 
     return bestProvider.provider;
@@ -931,22 +905,50 @@ export class GenerationService {
 
   private getProvidersForType(type: GenerationType): GenerationProvider[] {
     const providerMap: Record<GenerationType, GenerationProvider[]> = {
-      [GenerationType.TEXT]: [GenerationProvider.OPENAI, GenerationProvider.ANTHROPIC],
-      [GenerationType.IMAGE]: [GenerationProvider.OPENAI, GenerationProvider.STABLE_DIFFUSION, GenerationProvider.FAL],
-      [GenerationType.VIDEO]: [GenerationProvider.GOOGLE_VEO, GenerationProvider.FAL],
-      [GenerationType.AUDIO]: [GenerationProvider.ELEVENLABS, GenerationProvider.OPENAI],
-      [GenerationType.SPEECH]: [GenerationProvider.ELEVENLABS, GenerationProvider.OPENAI],
+      [GenerationType.TEXT]: [
+        GenerationProvider.OPENAI,
+        GenerationProvider.ANTHROPIC,
+      ],
+      [GenerationType.IMAGE]: [
+        GenerationProvider.OPENAI,
+        GenerationProvider.STABLE_DIFFUSION,
+        GenerationProvider.FAL,
+      ],
+      [GenerationType.VIDEO]: [
+        GenerationProvider.GOOGLE_VEO,
+        GenerationProvider.FAL,
+      ],
+      [GenerationType.AUDIO]: [
+        GenerationProvider.ELEVENLABS,
+        GenerationProvider.OPENAI,
+      ],
+      [GenerationType.SPEECH]: [
+        GenerationProvider.ELEVENLABS,
+        GenerationProvider.OPENAI,
+      ],
       [GenerationType.MUSIC]: [GenerationProvider.FAL],
       [GenerationType.THREE_D]: [GenerationProvider.FAL],
-      [GenerationType.AVATAR]: [GenerationProvider.READY_PLAYER_ME, GenerationProvider.FAL],
-      [GenerationType.CODE]: [GenerationProvider.OPENAI, GenerationProvider.ANTHROPIC],
-      [GenerationType.DOCUMENT]: [GenerationProvider.OPENAI, GenerationProvider.ANTHROPIC],
+      [GenerationType.AVATAR]: [
+        GenerationProvider.READY_PLAYER_ME,
+        GenerationProvider.FAL,
+      ],
+      [GenerationType.CODE]: [
+        GenerationProvider.OPENAI,
+        GenerationProvider.ANTHROPIC,
+      ],
+      [GenerationType.DOCUMENT]: [
+        GenerationProvider.OPENAI,
+        GenerationProvider.ANTHROPIC,
+      ],
     };
 
     return providerMap[type] || [GenerationProvider.OPENAI];
   }
 
-  private calculateProviderScore(metrics: any, request: GenerationRequest): number {
+  private calculateProviderScore(
+    metrics: any,
+    request: GenerationRequest,
+  ): number {
     // Scoring algorithm considering success rate, speed, cost, and quality
     const successRateWeight = 0.4;
     const speedWeight = 0.3;
@@ -965,10 +967,10 @@ export class GenerationService {
     try {
       // Determine the queue name based on generation type
       const queueName = this.getQueueNameForType(generation.type);
-      
+
       // Calculate priority (higher number = higher priority)
       const priority = this.calculateQueuePriority(generation);
-      
+
       // Add job to the production queue with metadata
       const jobId = await this.queueService.addJob(
         generation.id,
@@ -980,8 +982,8 @@ export class GenerationService {
           userId: generation.userId,
           type: generation.type,
           provider: generation.provider,
-          prompt: generation.prompt?.substring(0, 100) // Store truncated prompt for debugging
-        }
+          prompt: generation.prompt?.substring(0, 100), // Store truncated prompt for debugging
+        },
       );
 
       logger.info('Generation queued successfully', {
@@ -990,17 +992,20 @@ export class GenerationService {
         queueName,
         priority,
         type: generation.type,
-        provider: generation.provider
+        provider: generation.provider,
       });
-
     } catch (error) {
       logger.error('Failed to queue generation', undefined, {
         error: error instanceof Error ? error.message : String(error),
-        generationId: generation.id
+        generationId: generation.id,
       });
-      
+
       // Fallback: mark generation as failed
-      await this.updateGenerationStatus(generation.id, GenerationStatus.FAILED, 'Failed to queue generation');
+      await this.updateGenerationStatus(
+        generation.id,
+        GenerationStatus.FAILED,
+        'Failed to queue generation',
+      );
       throw error;
     }
   }
@@ -1019,7 +1024,7 @@ export class GenerationService {
       [GenerationType.SPEECH]: 'audio',
       [GenerationType.MUSIC]: 'audio',
       [GenerationType.THREE_D]: 'three_d',
-      [GenerationType.AVATAR]: 'avatar'
+      [GenerationType.AVATAR]: 'avatar',
     };
 
     return queueMap[type] || 'text';
@@ -1062,18 +1067,22 @@ export class GenerationService {
   }
 
   private async updateGenerationStatus(
-    id: string, 
-    status: GenerationStatus, 
-    error?: string
+    id: string,
+    status: GenerationStatus,
+    error?: string,
   ): Promise<void> {
-    await this.database.generations.update(id, {
+    const db = await getDatabaseClient();
+    await db.generations.update(id, {
       status,
       error,
-      updatedAt: new Date()
+      updatedAt: new Date(),
     });
   }
 
-  private calculateCredits(type: GenerationType, provider: GenerationProvider): number {
+  private calculateCredits(
+    type: GenerationType,
+    provider: GenerationProvider,
+  ): number {
     // Credit calculation logic based on type and provider
     const baseCosts: Record<GenerationType, number> = {
       [GenerationType.TEXT]: 1,
@@ -1097,13 +1106,15 @@ export class GenerationService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'User-Agent': 'ElizaOS-Platform/1.0'
+          'User-Agent': 'ElizaOS-Platform/1.0',
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        logger.warn(`Webhook delivery failed: ${response.status} ${response.statusText}`);
+        logger.warn(
+          `Webhook delivery failed: ${response.status} ${response.statusText}`,
+        );
       }
     } catch (error: any) {
       logger.error('Webhook delivery error:', error);
@@ -1126,10 +1137,16 @@ export class GenerationService {
   }
 
   private hashPrompt(prompt: string): string {
-    return createHash('md5').update(prompt.trim().toLowerCase()).digest('hex').slice(0, 16);
+    return createHash('md5')
+      .update(prompt.trim().toLowerCase())
+      .digest('hex')
+      .slice(0, 16);
   }
 
-  private validateRequest(request: GenerationRequest): { valid: boolean; errors: string[] } {
+  private validateRequest(request: GenerationRequest): {
+    valid: boolean;
+    errors: string[];
+  } {
     const errors: string[] = [];
 
     // Basic required fields
@@ -1146,8 +1163,13 @@ export class GenerationService {
     }
 
     // Prompt length validation
-    if (request.prompt && request.prompt.length > GENERATION_CONFIG.MAX_PROMPT_LENGTH) {
-      errors.push(`Prompt exceeds maximum length of ${GENERATION_CONFIG.MAX_PROMPT_LENGTH} characters`);
+    if (
+      request.prompt &&
+      request.prompt.length > GENERATION_CONFIG.MAX_PROMPT_LENGTH
+    ) {
+      errors.push(
+        `Prompt exceeds maximum length of ${GENERATION_CONFIG.MAX_PROMPT_LENGTH} characters`,
+      );
     }
 
     // Security validation - check for dangerous patterns
@@ -1158,7 +1180,7 @@ export class GenerationService {
         /vbscript:/gi,
         /data:(?:text\/html|application\/javascript)/gi,
         /\$\{[^}]*\}/g, // Template injection
-        /<%[^%]*%>/g,   // Code injection
+        /<%[^%]*%>/g, // Code injection
       ];
 
       for (const pattern of dangerousPatterns) {
@@ -1172,14 +1194,20 @@ export class GenerationService {
     // Type-specific validation
     if (request.type === GenerationType.IMAGE) {
       const imageRequest = request as any;
-      if (imageRequest.num_images && (imageRequest.num_images < 1 || imageRequest.num_images > 10)) {
+      if (
+        imageRequest.num_images &&
+        (imageRequest.num_images < 1 || imageRequest.num_images > 10)
+      ) {
         errors.push('Number of images must be between 1 and 10');
       }
     }
 
     if (request.type === GenerationType.VIDEO) {
       const videoRequest = request as any;
-      if (videoRequest.duration && (videoRequest.duration < 1 || videoRequest.duration > 60)) {
+      if (
+        videoRequest.duration &&
+        (videoRequest.duration < 1 || videoRequest.duration > 60)
+      ) {
         errors.push('Video duration must be between 1 and 60 seconds');
       }
     }
@@ -1187,17 +1215,24 @@ export class GenerationService {
     return { valid: errors.length === 0, errors };
   }
 
-  private async estimateGenerationCost(request: GenerationRequest, provider: GenerationProvider): Promise<number> {
+  private async estimateGenerationCost(
+    request: GenerationRequest,
+    provider: GenerationProvider,
+  ): Promise<number> {
     try {
       const providerInstance = this.providers.get(provider);
       if (providerInstance && providerInstance.estimateCost) {
         return await providerInstance.estimateCost(request);
       }
-      
+
       // Fallback to basic calculation
       return this.calculateCredits(request.type, provider);
     } catch (error) {
-      logger.warn('Failed to estimate cost, using fallback', { error, provider, type: request.type });
+      logger.warn('Failed to estimate cost, using fallback', {
+        error,
+        provider,
+        type: request.type,
+      });
       return this.calculateCredits(request.type, provider);
     }
   }
@@ -1210,14 +1245,16 @@ export class GenerationService {
 
   private performCleanup(): void {
     const now = Date.now();
-    
+
     // Clean expired processing locks
     for (const [key, promise] of this.processingLocks.entries()) {
       // Check if promise is old (indicates a stuck operation)
-      const isOld = promise.constructor.name === 'Promise' && 
-                   (promise as any)._createdAt && 
-                   (now - (promise as any)._createdAt) > GENERATION_CONFIG.PROCESSING_LOCK_TIMEOUT_MS;
-      
+      const isOld =
+        promise.constructor.name === 'Promise' &&
+        (promise as any)._createdAt &&
+        now - (promise as any)._createdAt >
+          GENERATION_CONFIG.PROCESSING_LOCK_TIMEOUT_MS;
+
       if (isOld) {
         this.processingLocks.delete(key);
         logger.warn('Cleaned up stuck processing lock', { key });
@@ -1225,7 +1262,8 @@ export class GenerationService {
     }
 
     // Reset concurrent generation counters periodically
-    if (now % (60 * 60 * 1000) < GENERATION_CONFIG.CLEANUP_INTERVAL_MS) { // Every hour
+    if (now % (60 * 60 * 1000) < GENERATION_CONFIG.CLEANUP_INTERVAL_MS) {
+      // Every hour
       this.concurrentGenerations.clear();
       logger.info('Reset concurrent generation counters');
     }
@@ -1255,15 +1293,19 @@ export class GenerationService {
     // Wait for ongoing operations to complete (with timeout)
     const ongoingOperations = Array.from(this.processingLocks.values());
     if (ongoingOperations.length > 0) {
-      logger.info(`Waiting for ${ongoingOperations.length} ongoing operations to complete`);
-      
+      logger.info(
+        `Waiting for ${ongoingOperations.length} ongoing operations to complete`,
+      );
+
       try {
         await Promise.race([
           Promise.allSettled(ongoingOperations),
-          new Promise(resolve => setTimeout(resolve, 30000)) // 30 second timeout
+          new Promise((resolve) => setTimeout(resolve, 30000)), // 30 second timeout
         ]);
       } catch (error) {
-        logger.warn('Some operations did not complete during shutdown', { error });
+        logger.warn('Some operations did not complete during shutdown', {
+          error,
+        });
       }
     }
 
@@ -1282,7 +1324,7 @@ export class GenerationService {
       isShuttingDown: this.isShuttingDown,
       activeOperations: this.processingLocks.size,
       providers: {},
-      queue: {}
+      queue: {},
     };
 
     let healthyProviders = 0;
@@ -1299,11 +1341,17 @@ export class GenerationService {
             healthyProviders++;
           }
         } else {
-          details.providers[providerName] = { healthy: true, note: 'No health check implemented' };
+          details.providers[providerName] = {
+            healthy: true,
+            note: 'No health check implemented',
+          };
           healthyProviders++;
         }
       } catch (error: any) {
-        details.providers[providerName] = { healthy: false, error: error.message };
+        details.providers[providerName] = {
+          healthy: false,
+          error: error.message,
+        };
       }
     }
 
@@ -1317,19 +1365,19 @@ export class GenerationService {
         workers: queueStats.workers,
         activeJobs: queueStats.activeJobs,
         pending: queueStats.pending,
-        processing: queueStats.processing
+        processing: queueStats.processing,
       };
     } catch (error: any) {
       queueHealthy = false;
-      details.queue = { 
-        healthy: false, 
-        error: error.message 
+      details.queue = {
+        healthy: false,
+        error: error.message,
       };
     }
 
     // Determine overall status
     let status: 'healthy' | 'degraded' | 'unhealthy';
-    
+
     if (this.isShuttingDown) {
       status = 'degraded';
     } else if (healthyProviders === totalProviders && queueHealthy) {
@@ -1354,7 +1402,10 @@ export class GenerationService {
     try {
       return await this.queueService.getQueueStats();
     } catch (error) {
-      logger.error('Failed to get queue stats', error instanceof Error ? error : undefined);
+      logger.error(
+        'Failed to get queue stats',
+        error instanceof Error ? error : undefined,
+      );
       throw error;
     }
   }
@@ -1366,7 +1417,10 @@ export class GenerationService {
     try {
       return await this.queueService.cancelJob(jobId);
     } catch (error) {
-      logger.error('Failed to cancel queued job', undefined, { error: error instanceof Error ? error.message : String(error), jobId });
+      logger.error('Failed to cancel queued job', undefined, {
+        error: error instanceof Error ? error.message : String(error),
+        jobId,
+      });
       return false;
     }
   }
@@ -1378,7 +1432,10 @@ export class GenerationService {
     try {
       return await this.queueService.retryJob(jobId);
     } catch (error) {
-      logger.error('Failed to retry failed job', undefined, { error: error instanceof Error ? error.message : String(error), jobId });
+      logger.error('Failed to retry failed job', undefined, {
+        error: error instanceof Error ? error.message : String(error),
+        jobId,
+      });
       return false;
     }
   }

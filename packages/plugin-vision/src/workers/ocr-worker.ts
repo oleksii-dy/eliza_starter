@@ -44,7 +44,11 @@ class OCRWorker {
   private readonly RESULTS_HEADER_SIZE = 16;
   private readonly MAX_TEXT_LENGTH = 65536; // 64KB for text
 
-  constructor(config: WorkerConfig, sharedBuffer: SharedArrayBuffer, resultsBuffer: SharedArrayBuffer) {
+  constructor(
+    config: WorkerConfig,
+    sharedBuffer: SharedArrayBuffer,
+    resultsBuffer: SharedArrayBuffer
+  ) {
     this.config = config;
     this.sharedBuffer = sharedBuffer;
     this.dataView = new DataView(sharedBuffer);
@@ -91,11 +95,11 @@ class OCRWorker {
           }
         } else {
           // No new frame, brief yield
-          await new Promise(resolve => setImmediate(resolve));
+          await new Promise((resolve) => setImmediate(resolve));
         }
       } catch (error) {
         logger.error('[OCRWorker] Processing error:', error);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
     }
   }
@@ -133,7 +137,9 @@ class OCRWorker {
           const ocrResult = await this.ocrService.extractText(regionBuffer);
           results.push(ocrResult);
 
-          logger.debug(`[OCRWorker] Region OCR (${region.x},${region.y}): ${ocrResult.fullText.length} chars`);
+          logger.debug(
+            `[OCRWorker] Region OCR (${region.x},${region.y}): ${ocrResult.fullText.length} chars`
+          );
         } catch (error) {
           logger.error('[OCRWorker] Region OCR failed:', error);
         }
@@ -144,7 +150,7 @@ class OCRWorker {
     await this.writeResultsToBuffer(results, metadata.frameId);
 
     // Notify main thread
-    const totalText = results.map(r => r.fullText).join('\n');
+    const totalText = results.map((r) => r.fullText).join('\n');
     const totalBlocks = results.reduce((sum, r) => sum + r.blocks.length, 0);
 
     parentPort?.postMessage({
@@ -177,7 +183,9 @@ class OCRWorker {
         height: metadata.height,
         channels: 4,
       },
-    }).png().toBuffer();
+    })
+      .png()
+      .toBuffer();
 
     return pngBuffer;
   }
@@ -201,7 +209,7 @@ class OCRWorker {
     // Copy region data row by row
     for (let row = 0; row < height; row++) {
       const sourceY = y + row;
-      const sourceOffset = this.DATA_OFFSET + (sourceY * rowStride) + (x * bytesPerPixel);
+      const sourceOffset = this.DATA_OFFSET + sourceY * rowStride + x * bytesPerPixel;
       const destOffset = row * width * bytesPerPixel;
 
       for (let i = 0; i < width * bytesPerPixel; i++) {
@@ -216,7 +224,9 @@ class OCRWorker {
         height,
         channels: 4,
       },
-    }).png().toBuffer();
+    })
+      .png()
+      .toBuffer();
 
     return pngBuffer;
   }
@@ -226,8 +236,8 @@ class OCRWorker {
     const combinedResult = {
       frameId,
       timestamp: Date.now(),
-      fullText: results.map(r => r.fullText).join('\n'),
-      blocks: results.flatMap(r => r.blocks),
+      fullText: results.map((r) => r.fullText).join('\n'),
+      blocks: results.flatMap((r) => r.blocks),
       regions: results.length,
     };
 

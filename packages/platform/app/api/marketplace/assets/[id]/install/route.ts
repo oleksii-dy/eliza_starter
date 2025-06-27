@@ -8,9 +8,9 @@ import { eq } from 'drizzle-orm';
 
 const marketplaceService = new MarketplaceService();
 
-export async function POST(
+export async function handlePOST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await auth();
@@ -27,14 +27,15 @@ export async function POST(
     if (!validPurchaseTypes.includes(purchaseType)) {
       return NextResponse.json(
         { error: 'Invalid purchase type' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const db = await getDatabase();
-    
+
     // Get asset details for billing
-    const assets = await db.select()
+    const assets = await db
+      .select()
       .from(marketplaceAssets)
       .where(eq(marketplaceAssets.id, assetId))
       .limit(1);
@@ -55,24 +56,25 @@ export async function POST(
 
     // Process billing if there's a cost
     if (purchasePrice > 0) {
-      const billingResult = await MarketplaceBillingService.processMarketplaceBilling(
-        session.organizationId,
-        session.user.id,
-        {
-          service: 'marketplace',
-          operation: 'asset_purchase',
-          usageType: 'asset_purchase',
-          assetId: assetId,
-          creatorId: asset.creatorId,
-          basePrice: purchasePrice,
-          tokens: 1 // One purchase
-        }
-      );
+      const billingResult =
+        await MarketplaceBillingService.processMarketplaceBilling(
+          session.organizationId,
+          session.user.id,
+          {
+            service: 'marketplace',
+            operation: 'asset_purchase',
+            usageType: 'asset_purchase',
+            assetId: assetId,
+            creatorId: asset.creatorId,
+            basePrice: purchasePrice,
+            tokens: 1, // One purchase
+          },
+        );
 
       if (!billingResult.success) {
         return NextResponse.json(
           { error: billingResult.error || 'Payment failed' },
-          { status: 402 } // Payment Required
+          { status: 402 }, // Payment Required
         );
       }
     }
@@ -82,14 +84,11 @@ export async function POST(
       assetId,
       session.user.id,
       session.organizationId,
-      purchaseType
+      purchaseType,
     );
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
     return NextResponse.json({
@@ -98,16 +97,17 @@ export async function POST(
         installationId: result.installationId,
         containerId: result.containerId,
         purchasePrice,
-        message: purchasePrice > 0 ? 
-          `Asset purchased and installed for $${purchasePrice.toFixed(2)}` : 
-          'Asset installed successfully'
+        message:
+          purchasePrice > 0
+            ? `Asset purchased and installed for $${purchasePrice.toFixed(2)}`
+            : 'Asset installed successfully',
       },
     });
   } catch (error) {
     console.error('Failed to install asset:', error);
     return NextResponse.json(
       { error: 'Failed to install asset' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

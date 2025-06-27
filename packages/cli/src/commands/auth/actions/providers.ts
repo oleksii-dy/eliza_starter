@@ -13,12 +13,10 @@ async function loadAuthService() {
   if (!RealAuthenticationService) {
     try {
       // Try to import the auth service from the plugin
-      const authModule = (await import(
-        '@elizaos/plugin-elizaos-services'
-      )) as any;
+      const authModule = (await import('@elizaos/plugin-elizaos-services')) as any;
       RealAuthenticationService = authModule.RealAuthenticationService;
       TEST_KEYS = authModule.TEST_KEYS;
-    } catch (error) {
+    } catch (_error) {
       // Fallback implementation for when plugin is not available
       logger.warn('ElizaOS Services plugin not available, using fallback auth service');
       const { FallbackAuthService } = await import('../services/fallback-auth');

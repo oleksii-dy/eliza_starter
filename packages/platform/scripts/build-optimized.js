@@ -2,7 +2,7 @@
 
 /**
  * Optimized Parallel Build Script for Platform
- * 
+ *
  * This script optimizes the platform build by:
  * - Running client build and type checking in parallel
  * - Using proper caching
@@ -33,11 +33,11 @@ function logError(message) {
 function runCommand(command, args, cwd, timeout = 300000) {
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
-    
+
     const child = spawn(command, args, {
       cwd,
       stdio: 'pipe',
-      shell: true
+      shell: true,
     });
 
     let stdout = '';
@@ -59,13 +59,13 @@ function runCommand(command, args, cwd, timeout = 300000) {
     child.on('close', (code) => {
       clearTimeout(timeoutId);
       const duration = Date.now() - startTime;
-      
+
       resolve({
         code,
         stdout,
         stderr,
         duration,
-        success: code === 0
+        success: code === 0,
       });
     });
 
@@ -78,12 +78,19 @@ function runCommand(command, args, cwd, timeout = 300000) {
 
 async function buildClientParallel() {
   logStep('Building client package in parallel...');
-  
+
   try {
-    const result = await runCommand('node', ['scripts/build-client.js'], PLATFORM_ROOT, 180000);
-    
+    const result = await runCommand(
+      'node',
+      ['scripts/build-client.js'],
+      PLATFORM_ROOT,
+      180000,
+    );
+
     if (result.success) {
-      logSuccess(`Client build completed in ${(result.duration / 1000).toFixed(2)}s`);
+      logSuccess(
+        `Client build completed in ${(result.duration / 1000).toFixed(2)}s`,
+      );
       return result;
     } else {
       logError('Client build failed:');
@@ -98,18 +105,27 @@ async function buildClientParallel() {
 
 async function runTypecheck() {
   logStep('Running type checking...');
-  
+
   try {
-    const result = await runCommand('bun', ['run', 'typecheck'], PLATFORM_ROOT, 120000);
-    
+    const result = await runCommand(
+      'bun',
+      ['run', 'typecheck'],
+      PLATFORM_ROOT,
+      120000,
+    );
+
     if (result.success) {
-      logSuccess(`Type checking completed in ${(result.duration / 1000).toFixed(2)}s`);
+      logSuccess(
+        `Type checking completed in ${(result.duration / 1000).toFixed(2)}s`,
+      );
       return result;
     } else {
       // Type checking can have warnings but still succeed for build purposes
       const errorCount = (result.stderr.match(/error TS/g) || []).length;
       if (errorCount > 0) {
-        console.warn(`⚠️  Type checking completed with ${errorCount} errors in ${(result.duration / 1000).toFixed(2)}s`);
+        console.warn(
+          `⚠️  Type checking completed with ${errorCount} errors in ${(result.duration / 1000).toFixed(2)}s`,
+        );
       }
       return result;
     }
@@ -121,15 +137,22 @@ async function runTypecheck() {
 
 async function buildPlatform() {
   logStep('Building Next.js platform...');
-  
+
   try {
     // Set NODE_ENV for optimized production build
     const env = { ...process.env, NODE_ENV: 'production' };
-    
-    const result = await runCommand('bun', ['run', 'build:platform'], PLATFORM_ROOT, 300000);
-    
+
+    const result = await runCommand(
+      'bun',
+      ['run', 'build:platform'],
+      PLATFORM_ROOT,
+      300000,
+    );
+
     if (result.success) {
-      logSuccess(`Platform build completed in ${(result.duration / 1000).toFixed(2)}s`);
+      logSuccess(
+        `Platform build completed in ${(result.duration / 1000).toFixed(2)}s`,
+      );
       return result;
     } else {
       logError('Platform build failed:');
@@ -145,63 +168,80 @@ async function buildPlatform() {
 async function optimizedBuild() {
   console.log('🚀 Starting optimized parallel build for Platform...');
   console.log('═'.repeat(80));
-  
+
   const totalStartTime = Date.now();
-  
+
   try {
     // Phase 1: Run client build and type checking in parallel
     logStep('Phase 1: Parallel client build and type checking');
     const phase1StartTime = Date.now();
-    
+
     const [clientResult, typecheckResult] = await Promise.all([
       buildClientParallel(),
-      runTypecheck()
+      runTypecheck(),
     ]);
-    
+
     const phase1Duration = Date.now() - phase1StartTime;
     logSuccess(`Phase 1 completed in ${(phase1Duration / 1000).toFixed(2)}s`);
-    
+
     // Phase 2: Build the platform
     logStep('Phase 2: Next.js platform build');
     const phase2StartTime = Date.now();
-    
+
     const platformResult = await buildPlatform();
-    
+
     const phase2Duration = Date.now() - phase2StartTime;
     logSuccess(`Phase 2 completed in ${(phase2Duration / 1000).toFixed(2)}s`);
-    
+
     // Summary
     const totalDuration = Date.now() - totalStartTime;
-    
+
     console.log('\n📊 Build Performance Summary');
     console.log('═'.repeat(80));
-    console.log(`  Client Build:     ${(clientResult.duration / 1000).toFixed(2)}s`);
-    console.log(`  Type Checking:    ${(typecheckResult.duration / 1000).toFixed(2)}s`);
-    console.log(`  Platform Build:   ${(platformResult.duration / 1000).toFixed(2)}s`);
+    console.log(
+      `  Client Build:     ${(clientResult.duration / 1000).toFixed(2)}s`,
+    );
+    console.log(
+      `  Type Checking:    ${(typecheckResult.duration / 1000).toFixed(2)}s`,
+    );
+    console.log(
+      `  Platform Build:   ${(platformResult.duration / 1000).toFixed(2)}s`,
+    );
     console.log(`  Total Time:       ${(totalDuration / 1000).toFixed(2)}s`);
-    
+
     // Calculate time savings from parallel execution
-    const sequentialTime = clientResult.duration + typecheckResult.duration + platformResult.duration;
-    const parallelTime = Math.max(clientResult.duration, typecheckResult.duration) + platformResult.duration;
-    const savings = ((sequentialTime - parallelTime) / sequentialTime * 100).toFixed(1);
-    
-    console.log(`  Time Saved:       ${savings}% (${((sequentialTime - parallelTime) / 1000).toFixed(2)}s)`);
+    const sequentialTime =
+      clientResult.duration +
+      typecheckResult.duration +
+      platformResult.duration;
+    const parallelTime =
+      Math.max(clientResult.duration, typecheckResult.duration) +
+      platformResult.duration;
+    const savings = (
+      ((sequentialTime - parallelTime) / sequentialTime) *
+      100
+    ).toFixed(1);
+
+    console.log(
+      `  Time Saved:       ${savings}% (${((sequentialTime - parallelTime) / 1000).toFixed(2)}s)`,
+    );
     console.log(`  Sequential Est:   ${(sequentialTime / 1000).toFixed(2)}s`);
-    
+
     logSuccess('🎉 Optimized build completed successfully!');
-    
+
     return {
       success: true,
       totalDuration,
       clientDuration: clientResult.duration,
       typecheckDuration: typecheckResult.duration,
       platformDuration: platformResult.duration,
-      timeSavedPercent: parseFloat(savings)
+      timeSavedPercent: parseFloat(savings),
     };
-    
   } catch (error) {
     const totalDuration = Date.now() - totalStartTime;
-    logError(`Build failed after ${(totalDuration / 1000).toFixed(2)}s: ${error.message}`);
+    logError(
+      `Build failed after ${(totalDuration / 1000).toFixed(2)}s: ${error.message}`,
+    );
     process.exit(1);
   }
 }

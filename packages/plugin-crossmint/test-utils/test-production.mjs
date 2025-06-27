@@ -8,9 +8,10 @@ config();
 
 const API_KEY = process.env.CROSSMINT_API_KEY;
 const ENVIRONMENT = process.env.CROSSMINT_ENVIRONMENT || 'production';
-const BASE_URL = ENVIRONMENT === 'production'
-  ? 'https://www.crossmint.com/api'
-  : 'https://staging.crossmint.com/api';
+const BASE_URL =
+  ENVIRONMENT === 'production'
+    ? 'https://www.crossmint.com/api'
+    : 'https://staging.crossmint.com/api';
 
 console.log('🚀 Testing Real CrossMint Production API Integration');
 console.log('='.repeat(60));
@@ -168,7 +169,7 @@ async function runTests() {
 }
 
 // Execute tests
-runTests().catch(error => {
+runTests().catch((error) => {
   console.error('\n💥 Test execution failed:', error);
   process.exit(1);
 });

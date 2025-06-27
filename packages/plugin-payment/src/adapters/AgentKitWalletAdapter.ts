@@ -297,12 +297,12 @@ export class AgentKitWalletAdapter implements IWalletAdapter {
       // Fallback to generating a random address
       logger.warn('[AgentKitWalletAdapter] No service available for wallet creation');
       return {
-        address:
-          `0x${
-            Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`,
-        privateKey:
-          `0x${
-            Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`,
+        address: `0x${Array.from({ length: 40 }, () =>
+          Math.floor(Math.random() * 16).toString(16)
+        ).join('')}`,
+        privateKey: `0x${Array.from({ length: 64 }, () =>
+          Math.floor(Math.random() * 16).toString(16)
+        ).join('')}`,
       };
     } catch (error) {
       logger.error('[AgentKitWalletAdapter] Error creating wallet', { error });

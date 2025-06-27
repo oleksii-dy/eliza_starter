@@ -1,7 +1,7 @@
 .btn {
-  @apply inline-flex w-fit items-center justify-center bg-none px-6 py-3 font-medium rounded-md;
+  @apply inline-flex w-fit items-center justify-center rounded-md bg-none px-6 py-3 font-medium;
   @apply transition-all duration-200 hover:opacity-90 active:opacity-95;
-  @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--focus-ring)] focus:ring-offset-[var(--background)];
+  @apply focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)] focus:ring-offset-2 focus:ring-offset-[var(--background)];
   @apply min-h-[44px] min-w-[44px]; /* WCAG minimum touch target size */
 }
 
@@ -10,7 +10,7 @@
 }
 
 .btn-secondary {
-  @apply bg-white dark:bg-secondary border border-stroke-weak text-typography-strong;
+  @apply border border-stroke-weak bg-white text-typography-strong dark:bg-secondary;
   @apply hover:bg-gray-50 dark:hover:bg-fill-hover;
 }
 
@@ -19,26 +19,26 @@
 }
 
 .btn-outline {
-  @apply bg-transparent border border-stroke-weak text-typography-strong hover:border-accent hover:bg-accent-fill;
+  @apply border border-stroke-weak bg-transparent text-typography-strong hover:border-accent hover:bg-accent-fill;
 }
 
 .btn-outline-brand {
-  @apply bg-transparent border border-brand text-brand hover:bg-brand hover:text-brand-text;
+  @apply border border-brand bg-transparent text-brand hover:bg-brand hover:text-brand-text;
 }
 
-button[type="submit"].btn-brand,
-button[type="button"].btn-brand {
+button[type='submit'].btn-brand,
+button[type='button'].btn-brand {
   @apply bg-brand text-brand-text hover:bg-brand-hover;
 }
 
-button[type="submit"].btn-secondary,
-button[type="button"].btn-secondary {
-  @apply bg-white dark:bg-secondary border border-stroke-weak text-typography-strong;
+button[type='submit'].btn-secondary,
+button[type='button'].btn-secondary {
+  @apply border border-stroke-weak bg-white text-typography-strong dark:bg-secondary;
   @apply hover:bg-gray-50 dark:hover:bg-fill-hover;
 }
 
-button[type="submit"].btn-destructive,
-button[type="button"].btn-destructive {
+button[type='submit'].btn-destructive,
+button[type='button'].btn-destructive {
   @apply bg-error text-white;
 }
 
@@ -53,7 +53,7 @@ button[type="button"].btn-destructive {
 
 /* Ghost button variant */
 .btn-ghost {
-  @apply bg-transparent text-typography-weak hover:text-typography-strong hover:bg-fill-hover;
+  @apply bg-transparent text-typography-weak hover:bg-fill-hover hover:text-typography-strong;
 }
 
 /* High contrast focus states for better accessibility */

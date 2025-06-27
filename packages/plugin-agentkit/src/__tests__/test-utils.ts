@@ -1,4 +1,4 @@
-import { mock } from 'bun:test';
+import { mock, beforeEach, afterEach } from 'bun:test';
 import type { IAgentRuntime as _CoreIAgentRuntime, Memory, State, UUID } from '@elizaos/core';
 import type { CustodialWallet } from '../types/wallet';
 import type { IAgentRuntime } from '../types/core.d';
@@ -132,4 +132,80 @@ export function createMockWallet(overrides: Partial<CustodialWallet> = {}): Cust
     },
     ...overrides,
   };
+}
+
+// TestSuite class for unified testing structure
+export class TestSuite {
+  private tests: Array<{
+    name: string;
+    fn: (context: any) => Promise<void> | void;
+  }> = [];
+  private beforeEachFn?: (context: any) => Promise<void> | void;
+  private afterEachFn?: (context: any) => Promise<void> | void;
+
+  constructor(private name: string) {}
+
+  beforeEach<T = any>(fn: (context: T) => Promise<void> | void): void {
+    this.beforeEachFn = fn;
+  }
+
+  afterEach<T = any>(fn: (context: T) => Promise<void> | void): void {
+    this.afterEachFn = fn;
+  }
+
+  addTest<T = any>(
+    name: string,
+    fn: (context: T) => Promise<void> | void
+  ): void {
+    this.tests.push({ name, fn });
+  }
+
+  run(): void {
+    // Set up the test suite using Bun's test framework
+    const context: any = {};
+
+    if (this.beforeEachFn) {
+      beforeEach(() => {
+        return this.beforeEachFn?.(context);
+      });
+    }
+
+    if (this.afterEachFn) {
+      afterEach(() => {
+        return this.afterEachFn?.(context);
+      });
+    }
+
+    // Register each test with Bun
+    for (const test of this.tests) {
+      const testFn = async () => {
+        return test.fn(context);
+      };
+
+      // Use Bun's test function to register the test
+      const { test: bunTest } = require('bun:test');
+      bunTest(test.name, testFn);
+    }
+  }
+}
+
+// Helper function to create a TestSuite
+export function createUnitTest(name: string): TestSuite {
+  const testSuite = new TestSuite(name);
+  
+  // Auto-run the test suite
+  setTimeout(() => {
+    testSuite.run();
+  }, 0);
+  
+  return testSuite;
+}
+
+// Additional helper functions for specific test types
+export function createPluginTest(name: string): TestSuite {
+  return createUnitTest(`Plugin: ${name}`);
+}
+
+export function createIntegrationTest(name: string): TestSuite {
+  return createUnitTest(`Integration: ${name}`);
 }

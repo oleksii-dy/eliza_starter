@@ -6,13 +6,15 @@ import * as fs from 'fs/promises';
 
 const mockRuntime: any = {
   getSetting: (key: string) => {
-    if (key === 'ANTHROPIC_API_KEY') {return process.env.ANTHROPIC_API_KEY;}
+    if (key === 'ANTHROPIC_API_KEY') {
+      return process.env.ANTHROPIC_API_KEY;
+    }
     return null;
   },
   getService: () => null,
   agentId: 'test-agent',
   character: { name: 'TestAgent' },
-  logger: elizaLogger
+  logger: elizaLogger,
 };
 
 async function testSWEBenchRefined() {
@@ -25,9 +27,8 @@ async function testSWEBenchRefined() {
     const allInstances = await dataLoader.loadDataset();
 
     // Filter for simpler JavaScript instances (avoid complex test setups)
-    const jsInstances = allInstances.filter(inst =>
-      inst.language === 'JavaScript' &&
-      !inst.repo.includes('axios') // Skip axios for now due to test issues
+    const jsInstances = allInstances.filter(
+      (inst) => inst.language === 'JavaScript' && !inst.repo.includes('axios') // Skip axios for now due to test issues
     );
 
     console.log(`📋 Found ${jsInstances.length} non-axios JavaScript instances`);
@@ -38,11 +39,13 @@ async function testSWEBenchRefined() {
     }
 
     // Pick a simpler instance
-    const targetInstance = jsInstances.find(inst =>
-      inst.repo.includes('express') ||
-      inst.repo.includes('lodash') ||
-      inst.repo.includes('underscore')
-    ) || jsInstances[0];
+    const targetInstance =
+      jsInstances.find(
+        (inst) =>
+          inst.repo.includes('express') ||
+          inst.repo.includes('lodash') ||
+          inst.repo.includes('underscore')
+      ) || jsInstances[0];
 
     console.log(`\n🎯 Selected instance: ${targetInstance.instance_id}`);
     console.log(`  Repository: ${targetInstance.repo}`);
@@ -52,7 +55,7 @@ async function testSWEBenchRefined() {
     // Initialize runner
     const runner = new SWEBenchRunner(mockRuntime, {
       useClaudeCode: true,
-      max_parallel_instances: 1
+      max_parallel_instances: 1,
     });
     await runner.initialize();
 
@@ -63,7 +66,7 @@ async function testSWEBenchRefined() {
       instance_ids: [targetInstance.instance_id],
       max_instances: 1,
       save_artifacts: true,
-      skip_evaluation: false
+      skip_evaluation: false,
     });
 
     const duration = Date.now() - startTime;
@@ -89,10 +92,12 @@ async function testSWEBenchRefined() {
     }
 
     // Check for generated patch
-    const resultsFile = await fs.readFile(
-      `.swe-bench-cache/results/results-${new Date().toISOString().split('T')[0]}*.json`,
-      'utf-8'
-    ).catch(() => null);
+    const resultsFile = await fs
+      .readFile(
+        `.swe-bench-cache/results/results-${new Date().toISOString().split('T')[0]}*.json`,
+        'utf-8'
+      )
+      .catch(() => null);
 
     if (resultsFile) {
       const results = JSON.parse(resultsFile);
@@ -104,7 +109,6 @@ async function testSWEBenchRefined() {
     }
 
     console.log(`\n✅ Test completed! Report saved to: ${report.logs_dir}`);
-
   } catch (error) {
     console.error('❌ Test failed:', error);
     if (error instanceof Error) {

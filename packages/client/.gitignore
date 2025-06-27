@@ -33,3 +33,7 @@ screenshots/
 coverage/
 test-results/
 .cursor/
+AGENTS.md
+.cursor/rules/elizaos
+CLAUDE.md
+.cursorignore

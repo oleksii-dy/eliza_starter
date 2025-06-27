@@ -15,10 +15,10 @@ interface AccountDeletionModalProps {
   onRestore: () => Promise<any>;
 }
 
-export function AccountDeletionModal({ 
-  isOpen, 
-  user, 
-  onRestore 
+export function AccountDeletionModal({
+  isOpen,
+  user,
+  onRestore,
 }: AccountDeletionModalProps) {
   const [loading, setLoading] = useState(false);
 
@@ -27,7 +27,7 @@ export function AccountDeletionModal({
 
     try {
       const resp = await onRestore();
-      
+
       if (resp?.error) {
         toast({
           message: getErrorMessage(resp.code),
@@ -56,13 +56,13 @@ export function AccountDeletionModal({
     }
   };
 
-  const deletionDate = user?.deleted_at 
+  const deletionDate = user?.deleted_at
     ? new Date(user.deleted_at).toLocaleString()
     : '';
 
   const permanentDeletionDate = user?.deleted_at
     ? new Date(
-        new Date(user.deleted_at).getTime() + 30 * 24 * 60 * 60 * 1000
+        new Date(user.deleted_at).getTime() + 30 * 24 * 60 * 60 * 1000,
       ).toLocaleString()
     : '';
 
@@ -76,23 +76,20 @@ export function AccountDeletionModal({
       <div className="flex flex-col gap-6 py-2">
         <p>
           A deletion request was initiated on{' '}
-          {deletionDate && (
-            <b>{deletionDate}.</b>
-          )}
+          {deletionDate && <b>{deletionDate}.</b>}
         </p>
-        
+
         <p>
           If no further action is taken, your account will be permanently
-          deleted on{' '}
-          <b>{permanentDeletionDate}</b>.
+          deleted on <b>{permanentDeletionDate}</b>.
         </p>
-        
+
         <p>
           If this was not you, please contact support immediately. After
           permanent deletion, any data associated with your account will no
           longer be recoverable.
         </p>
-        
+
         <Button
           disabled={loading}
           className="w-full"

@@ -29,8 +29,12 @@ describe('Reminder and Rolodex Integration', () => {
       character: { name: 'TestAgent' },
       db: {} as any,
       getService: mock((name: string) => {
-        if (name === 'MESSAGE_DELIVERY') {return mockRolodexService;}
-        if (name === 'ENTITY_RELATIONSHIP') {return mockRolodexService;} // Return same mock for both services
+        if (name === 'MESSAGE_DELIVERY') {
+          return mockRolodexService;
+        }
+        if (name === 'ENTITY_RELATIONSHIP') {
+          return mockRolodexService;
+        } // Return same mock for both services
         return null;
       }),
       emitEvent: mock(),
@@ -50,7 +54,10 @@ describe('Reminder and Rolodex Integration', () => {
     const logCalls = (logger.info as any).mock.calls;
     const hasRolodexLog = logCalls.some((call: any[]) => {
       const msg = call[0];
-      return typeof msg === 'string' && msg.includes('Rolodex services found - external message delivery enabled');
+      return (
+        typeof msg === 'string' &&
+        msg.includes('Rolodex services found - external message delivery enabled')
+      );
     });
     expect(hasRolodexLog).toBe(true);
   });
@@ -69,9 +76,7 @@ describe('Reminder and Rolodex Integration', () => {
 
     const service = await TodoReminderService.start(noRolodexRuntime);
 
-    expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Rolodex services not found')
-    );
+    expect(logger.warn).toHaveBeenCalledWith(expect.stringContaining('Rolodex services not found'));
 
     await service.stop();
   });

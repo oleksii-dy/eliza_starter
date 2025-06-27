@@ -5,9 +5,9 @@ import { db } from '@/lib/api/database';
 // GET /api/v1/billing/subscription - Get subscription details
 export const GET = withAuth(async (request: AuthenticatedRequest) => {
   const user = request.user!;
-  
+
   const subscription = await db.subscriptions.findByUserId(user.id);
-  
+
   if (!subscription) {
     // Return free tier info if no subscription
     return NextResponse.json({
@@ -18,12 +18,12 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
           status: 'free',
           plan: 'free',
           currentPeriodEnd: null,
-          cancelAtPeriodEnd: false
-        }
-      }
+          cancelAtPeriodEnd: false,
+        },
+      },
     });
   }
-  
+
   return NextResponse.json({
     success: true,
     data: {
@@ -32,8 +32,8 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
         status: subscription.status,
         plan: subscription.plan,
         currentPeriodEnd: subscription.currentPeriodEnd,
-        cancelAtPeriodEnd: subscription.cancelAtPeriodEnd
-      }
-    }
+        cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+      },
+    },
   });
-}); 
+});

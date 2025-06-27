@@ -1,9 +1,8 @@
 import type { Scenario } from './types.js';
-import { asUUID } from '@elizaos/core';
-import { v4 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 export const truthVsLieScenario: Scenario = {
-  id: 'truth-vs-lie',
+  id: uuidv4() as any,
   name: 'Truth vs Lie Detection',
   description: 'Test scenario to see if the agent can detect lies vs truthful statements',
   category: 'reasoning',
@@ -11,7 +10,7 @@ export const truthVsLieScenario: Scenario = {
 
   actors: [
     {
-      id: asUUID(v4()),
+      id: uuidv4() as any,
       name: 'Detective',
       role: 'subject',
       bio: 'An expert detective trying to uncover the truth',
@@ -20,7 +19,7 @@ export const truthVsLieScenario: Scenario = {
       },
     },
     {
-      id: asUUID(v4()),
+      id: uuidv4() as any,
       name: 'Truthful Witness',
       role: 'assistant',
       bio: 'A witness who always tells the truth about the blue vase',
@@ -44,7 +43,7 @@ export const truthVsLieScenario: Scenario = {
       },
     },
     {
-      id: asUUID(v4()),
+      id: uuidv4() as any,
       name: 'Deceptive Witness',
       role: 'assistant',
       bio: 'A witness who lies about the vase color',

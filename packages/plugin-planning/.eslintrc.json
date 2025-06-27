@@ -49,7 +49,14 @@
     "node": true,
     "es2022": true
   },
-  "ignorePatterns": ["dist/", "node_modules/", "*.js", "*.mjs", "vitest.config.ts", "tsup.config.ts"],
+  "ignorePatterns": [
+    "dist/",
+    "node_modules/",
+    "*.js",
+    "*.mjs",
+    "vitest.config.ts",
+    "tsup.config.ts"
+  ],
   "overrides": [
     {
       "files": ["*.test.ts", "*.spec.ts", "__tests__/**/*.ts", "test-*.ts", "run-*.ts"],
@@ -65,4 +72,4 @@
       }
     }
   ]
-} 
+}

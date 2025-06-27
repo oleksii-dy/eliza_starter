@@ -51,7 +51,9 @@ interface CreateApiKeyData {
 export default function ApiKeysPage() {
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [stats, setStats] = useState<ApiKeyStats | null>(null);
-  const [availablePermissions, setAvailablePermissions] = useState<string[]>([]);
+  const [availablePermissions, setAvailablePermissions] = useState<string[]>(
+    [],
+  );
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -103,8 +105,12 @@ export default function ApiKeysPage() {
     try {
       // Validate form
       const errors: Record<string, string> = {};
-      if (!formData.name.trim()) {errors.name = 'Name is required';}
-      if (formData.permissions.length === 0) {errors.permissions = 'At least one permission is required';}
+      if (!formData.name.trim()) {
+        errors.name = 'Name is required';
+      }
+      if (formData.permissions.length === 0) {
+        errors.permissions = 'At least one permission is required';
+      }
 
       if (Object.keys(errors).length > 0) {
         setFormErrors(errors);
@@ -121,7 +127,7 @@ export default function ApiKeysPage() {
 
       if (data.success) {
         setNewKey(data.data.key);
-        setApiKeys(prev => [data.data.apiKey, ...prev]);
+        setApiKeys((prev) => [data.data.apiKey, ...prev]);
 
         // Update stats
         if (stats) {
@@ -157,7 +163,10 @@ export default function ApiKeysPage() {
     }
   }
 
-  async function updateApiKey(keyId: string, updateData: Partial<CreateApiKeyData>) {
+  async function updateApiKey(
+    keyId: string,
+    updateData: Partial<CreateApiKeyData>,
+  ) {
     try {
       const response = await fetch(`/api/api-keys/${keyId}`, {
         method: 'PUT',
@@ -168,9 +177,9 @@ export default function ApiKeysPage() {
       const data = await response.json();
 
       if (data.success) {
-        setApiKeys(prev => prev.map(key => 
-          key.id === keyId ? data.data.apiKey : key
-        ));
+        setApiKeys((prev) =>
+          prev.map((key) => (key.id === keyId ? data.data.apiKey : key)),
+        );
 
         toast({
           message: 'API key updated successfully',
@@ -201,9 +210,9 @@ export default function ApiKeysPage() {
 
       if (data.success) {
         setNewKey(data.data.key);
-        setApiKeys(prev => prev.map(key => 
-          key.id === keyId ? data.data.apiKey : key
-        ));
+        setApiKeys((prev) =>
+          prev.map((key) => (key.id === keyId ? data.data.apiKey : key)),
+        );
 
         toast({
           message: 'API key regenerated successfully',
@@ -234,7 +243,7 @@ export default function ApiKeysPage() {
       const data = await response.json();
 
       if (data.success) {
-        setApiKeys(prev => prev.filter(key => key.id !== keyId));
+        setApiKeys((prev) => prev.filter((key) => key.id !== keyId));
 
         // Update stats
         if (stats) {
@@ -265,25 +274,28 @@ export default function ApiKeysPage() {
   }
 
   function copyToClipboard(text: string, keyId?: string) {
-    navigator.clipboard.writeText(text).then(() => {
-      if (keyId) {
-        setCopySuccess(keyId);
-        setTimeout(() => setCopySuccess(null), 2000);
-      }
-      toast({
-        message: 'Copied to clipboard',
-        mode: 'success',
+    navigator.clipboard
+      .writeText(text)
+      .then(() => {
+        if (keyId) {
+          setCopySuccess(keyId);
+          setTimeout(() => setCopySuccess(null), 2000);
+        }
+        toast({
+          message: 'Copied to clipboard',
+          mode: 'success',
+        });
+      })
+      .catch(() => {
+        toast({
+          message: 'Failed to copy to clipboard',
+          mode: 'error',
+        });
       });
-    }).catch(() => {
-      toast({
-        message: 'Failed to copy to clipboard',
-        mode: 'error',
-      });
-    });
   }
 
   function toggleKeyVisibility(keyId: string) {
-    setVisibleKeys(prev => {
+    setVisibleKeys((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(keyId)) {
         newSet.delete(keyId);
@@ -306,7 +318,7 @@ export default function ApiKeysPage() {
 
   function getPermissionColor(permission: string) {
     const colors: Record<string, string> = {
-      'admin': 'bg-red-100 text-red-800',
+      admin: 'bg-red-100 text-red-800',
       'agents:write': 'bg-blue-100 text-blue-800',
       'agents:delete': 'bg-orange-100 text-orange-800',
       'memory:write': 'bg-green-100 text-green-800',
@@ -330,13 +342,13 @@ export default function ApiKeysPage() {
     return (
       <div className="p-6">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="mb-6 h-8 w-1/4 rounded bg-gray-200"></div>
+          <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-24 bg-gray-200 rounded"></div>
+              <div key={i} className="h-24 rounded bg-gray-200"></div>
             ))}
           </div>
-          <div className="h-96 bg-gray-200 rounded"></div>
+          <div className="h-96 rounded bg-gray-200"></div>
         </div>
       </div>
     );
@@ -345,17 +357,22 @@ export default function ApiKeysPage() {
   return (
     <div className="p-6" data-cy="api-keys-page">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900" data-cy="api-keys-title">API Keys</h1>
-          <p className="text-gray-600 mt-2" data-cy="api-keys-subtitle">
+          <h1
+            className="text-3xl font-bold text-gray-900"
+            data-cy="api-keys-title"
+          >
+            API Keys
+          </h1>
+          <p className="mt-2 text-gray-600" data-cy="api-keys-subtitle">
             Manage API keys for programmatic access to your agents and data.
           </p>
         </div>
         <div className="flex items-center space-x-3">
           <button
             onClick={loadApiKeys}
-            className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+            className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
             title="Refresh"
           >
             <ReloadIcon className="h-4 w-4" />
@@ -373,42 +390,52 @@ export default function ApiKeysPage() {
 
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Keys</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalKeys}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.totalKeys}
+                </p>
               </div>
               <ActivityLogIcon className="h-8 w-8 text-blue-500" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Active Keys</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.activeKeys}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.activeKeys}
+                </p>
               </div>
               <CheckIcon className="h-8 w-8 text-green-500" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Expired Keys</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.expiredKeys}</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Expired Keys
+                </p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.expiredKeys}
+                </p>
               </div>
               <ExclamationTriangleIcon className="h-8 w-8 text-orange-500" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Usage</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalUsage.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.totalUsage.toLocaleString()}
+                </p>
               </div>
               <ActivityLogIcon className="h-8 w-8 text-purple-500" />
             </div>
@@ -417,17 +444,20 @@ export default function ApiKeysPage() {
       )}
 
       {/* API Keys List */}
-      <div className="bg-white rounded-lg border border-gray-200">
-        <div className="px-6 py-4 border-b border-gray-200">
+      <div className="rounded-lg border border-gray-200 bg-white">
+        <div className="border-b border-gray-200 px-6 py-4">
           <h2 className="text-lg font-semibold text-gray-900">API Keys</h2>
         </div>
 
         {apiKeys.length === 0 ? (
           <div className="p-8 text-center">
-            <ActivityLogIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No API keys</h3>
-            <p className="text-gray-600 mb-4">
-              Create your first API key to start using the platform programmatically.
+            <ActivityLogIcon className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+            <h3 className="mb-2 text-lg font-medium text-gray-900">
+              No API keys
+            </h3>
+            <p className="mb-4 text-gray-600">
+              Create your first API key to start using the platform
+              programmatically.
             </p>
             <Button
               handleClick={() => setShowCreateModal(true)}
@@ -444,45 +474,55 @@ export default function ApiKeysPage() {
               <div key={apiKey.id} className="p-6" data-cy="api-key-row">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="text-lg font-medium text-gray-900">{apiKey.name}</h3>
+                    <div className="mb-2 flex items-center space-x-3">
+                      <h3 className="text-lg font-medium text-gray-900">
+                        {apiKey.name}
+                      </h3>
                       {!apiKey.isActive && (
                         <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">
                           Inactive
                         </span>
                       )}
-                      {apiKey.expiresAt && new Date(apiKey.expiresAt) < new Date() && (
-                        <span className="inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-800">
-                          Expired
-                        </span>
-                      )}
+                      {apiKey.expiresAt &&
+                        new Date(apiKey.expiresAt) < new Date() && (
+                          <span className="inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-800">
+                            Expired
+                          </span>
+                        )}
                     </div>
 
                     {apiKey.description && (
-                      <p className="text-gray-600 mb-3">{apiKey.description}</p>
+                      <p className="mb-3 text-gray-600">{apiKey.description}</p>
                     )}
 
                     {/* Key Display */}
-                    <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                    <div className="mb-3 rounded-lg bg-gray-50 p-3">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2 flex-1">
-                          <code className="text-sm font-mono text-gray-900 flex-1">
+                        <div className="flex flex-1 items-center space-x-2">
+                          <code className="flex-1 font-mono text-sm text-gray-900">
                             {displayApiKey(apiKey)}
                           </code>
                           <button
                             onClick={() => toggleKeyVisibility(apiKey.id)}
-                            className="text-gray-400 hover:text-gray-600 p-1"
-                            title={visibleKeys.has(apiKey.id) ? 'Hide key' : 'Show key'}
-                          >
-                            {visibleKeys.has(apiKey.id) ?
-                              <EyeNoneIcon className="h-4 w-4" /> :
-                              <EyeOpenIcon className="h-4 w-4" />
+                            className="p-1 text-gray-400 hover:text-gray-600"
+                            title={
+                              visibleKeys.has(apiKey.id)
+                                ? 'Hide key'
+                                : 'Show key'
                             }
+                          >
+                            {visibleKeys.has(apiKey.id) ? (
+                              <EyeNoneIcon className="h-4 w-4" />
+                            ) : (
+                              <EyeOpenIcon className="h-4 w-4" />
+                            )}
                           </button>
                         </div>
                         <button
-                          onClick={() => copyToClipboard(displayApiKey(apiKey), apiKey.id)}
-                          className="text-gray-400 hover:text-gray-600 p-1 ml-2"
+                          onClick={() =>
+                            copyToClipboard(displayApiKey(apiKey), apiKey.id)
+                          }
+                          className="ml-2 p-1 text-gray-400 hover:text-gray-600"
                           title="Copy to clipboard"
                         >
                           {copySuccess === apiKey.id ? (
@@ -496,7 +536,9 @@ export default function ApiKeysPage() {
 
                     {/* Permissions */}
                     <div className="mb-3">
-                      <p className="text-xs font-medium text-gray-500 mb-2">PERMISSIONS</p>
+                      <p className="mb-2 text-xs font-medium text-gray-500">
+                        PERMISSIONS
+                      </p>
                       <div className="flex flex-wrap gap-1">
                         {apiKey.permissions.map((permission) => (
                           <span
@@ -510,30 +552,39 @@ export default function ApiKeysPage() {
                     </div>
 
                     {/* Metadata */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-gray-500">
+                    <div className="grid grid-cols-2 gap-4 text-xs text-gray-500 md:grid-cols-4">
                       <div>
-                        <span className="font-medium">Rate Limit:</span> {apiKey.rateLimit}/min
+                        <span className="font-medium">Rate Limit:</span>{' '}
+                        {apiKey.rateLimit}/min
                       </div>
                       <div>
-                        <span className="font-medium">Usage:</span> {apiKey.usageCount.toLocaleString()}
+                        <span className="font-medium">Usage:</span>{' '}
+                        {apiKey.usageCount.toLocaleString()}
                       </div>
                       <div>
-                        <span className="font-medium">Created:</span> {formatDate(apiKey.createdAt)}
+                        <span className="font-medium">Created:</span>{' '}
+                        {formatDate(apiKey.createdAt)}
                       </div>
                       <div>
-                        <span className="font-medium">Last Used:</span> {apiKey.lastUsedAt ? formatDate(apiKey.lastUsedAt) : 'Never'}
+                        <span className="font-medium">Last Used:</span>{' '}
+                        {apiKey.lastUsedAt
+                          ? formatDate(apiKey.lastUsedAt)
+                          : 'Never'}
                       </div>
                     </div>
 
                     {apiKey.expiresAt && (
                       <div className="mt-2 flex items-center text-xs text-orange-600">
-                        <CalendarIcon className="h-3 w-3 mr-1" />
+                        <CalendarIcon className="mr-1 h-3 w-3" />
                         Expires: {formatDate(apiKey.expiresAt)}
                       </div>
                     )}
                   </div>
 
-                  <div className="flex items-center space-x-2 ml-4" data-cy="api-key-actions">
+                  <div
+                    className="ml-4 flex items-center space-x-2"
+                    data-cy="api-key-actions"
+                  >
                     <button
                       onClick={() => {
                         setSelectedKey(apiKey);
@@ -545,7 +596,7 @@ export default function ApiKeysPage() {
                         });
                         setShowEditModal(true);
                       }}
-                      className="p-2 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-gray-100"
+                      className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-blue-600"
                       data-cy="edit-key"
                       title="Edit API key"
                     >
@@ -556,7 +607,7 @@ export default function ApiKeysPage() {
                         setSelectedKey(apiKey);
                         setShowRegenerateModal(true);
                       }}
-                      className="p-2 text-gray-400 hover:text-yellow-600 rounded-lg hover:bg-gray-100"
+                      className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-yellow-600"
                       data-cy="regenerate-key"
                       title="Regenerate API key"
                     >
@@ -567,7 +618,7 @@ export default function ApiKeysPage() {
                         setSelectedKey(apiKey);
                         setShowDeleteModal(true);
                       }}
-                      className="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-gray-100"
+                      className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-red-600"
                       data-cy="delete-key"
                       title="Delete API key"
                     >
@@ -600,17 +651,25 @@ export default function ApiKeysPage() {
       >
         {newKey ? (
           <div className="space-y-4">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <div className="flex items-center mb-2">
-                <CheckIcon className="h-5 w-5 text-green-600 mr-2" />
-                <h3 className="font-medium text-green-800">API Key Created Successfully</h3>
+            <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+              <div className="mb-2 flex items-center">
+                <CheckIcon className="mr-2 h-5 w-5 text-green-600" />
+                <h3 className="font-medium text-green-800">
+                  API Key Created Successfully
+                </h3>
               </div>
-              <p className="text-sm text-green-700 mb-3">
-                Copy this key now. For security reasons, it won't be shown again.
+              <p className="mb-3 text-sm text-green-700">
+                Copy this key now. For security reasons, it won't be shown
+                again.
               </p>
-              <div className="bg-white rounded border p-3">
+              <div className="rounded border bg-white p-3">
                 <div className="flex items-center justify-between">
-                  <code className="text-sm font-mono text-gray-900 break-all" data-cy="api-key-value">{newKey}</code>
+                  <code
+                    className="break-all font-mono text-sm text-gray-900"
+                    data-cy="api-key-value"
+                  >
+                    {newKey}
+                  </code>
                   <button
                     onClick={() => copyToClipboard(newKey)}
                     className="ml-2 p-1 text-gray-400 hover:text-gray-600"
@@ -636,30 +695,37 @@ export default function ApiKeysPage() {
         ) : (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700">
                 Name *
               </label>
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, name: e.target.value }))
+                }
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                 placeholder="My API Key"
                 data-cy="api-key-name"
               />
               {formErrors.name && (
-                <p className="text-sm text-red-600 mt-1">{formErrors.name}</p>
+                <p className="mt-1 text-sm text-red-600">{formErrors.name}</p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700">
                 Description
               </label>
               <textarea
                 value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
+                }
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                 rows={3}
                 placeholder="Optional description"
                 data-cy="api-key-description"
@@ -667,25 +733,30 @@ export default function ApiKeysPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700">
                 Permissions *
               </label>
-              <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-gray-300 rounded-lg p-3">
+              <div className="grid max-h-48 grid-cols-2 gap-2 overflow-y-auto rounded-lg border border-gray-300 p-3">
                 {availablePermissions.map((permission) => (
-                  <label key={permission} className="flex items-center space-x-2">
+                  <label
+                    key={permission}
+                    className="flex items-center space-x-2"
+                  >
                     <input
                       type="checkbox"
                       checked={formData.permissions.includes(permission)}
                       onChange={(e) => {
                         if (e.target.checked) {
-                          setFormData(prev => ({
+                          setFormData((prev) => ({
                             ...prev,
-                            permissions: [...prev.permissions, permission]
+                            permissions: [...prev.permissions, permission],
                           }));
                         } else {
-                          setFormData(prev => ({
+                          setFormData((prev) => ({
                             ...prev,
-                            permissions: prev.permissions.filter(p => p !== permission)
+                            permissions: prev.permissions.filter(
+                              (p) => p !== permission,
+                            ),
                           }));
                         }
                       }}
@@ -697,19 +768,26 @@ export default function ApiKeysPage() {
                 ))}
               </div>
               {formErrors.permissions && (
-                <p className="text-sm text-red-600 mt-1">{formErrors.permissions}</p>
+                <p className="mt-1 text-sm text-red-600">
+                  {formErrors.permissions}
+                </p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="mb-1 block text-sm font-medium text-gray-700">
                 Rate Limit (requests per minute)
               </label>
               <input
                 type="number"
                 value={formData.rateLimit}
-                onChange={(e) => setFormData(prev => ({ ...prev, rateLimit: parseInt(e.target.value, 10) || 100 }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    rateLimit: parseInt(e.target.value, 10) || 100,
+                  }))
+                }
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
                 min="1"
                 max="10000"
               />
@@ -718,7 +796,7 @@ export default function ApiKeysPage() {
             <div className="flex justify-end space-x-3 pt-4">
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
               >
                 Cancel
               </button>
@@ -741,20 +819,22 @@ export default function ApiKeysPage() {
       >
         <div className="space-y-4">
           <div className="flex items-start space-x-3">
-            <ExclamationTriangleIcon className="h-5 w-5 text-red-500 mt-0.5" />
+            <ExclamationTriangleIcon className="mt-0.5 h-5 w-5 text-red-500" />
             <div>
               <p className="text-sm text-gray-900">
-                Are you sure you want to delete the API key <strong>"{selectedKey?.name}"</strong>?
+                Are you sure you want to delete the API key{' '}
+                <strong>"{selectedKey?.name}"</strong>?
               </p>
-              <p className="text-sm text-gray-600 mt-1">
-                This action cannot be undone. Applications using this key will no longer be able to access the API.
+              <p className="mt-1 text-sm text-gray-600">
+                This action cannot be undone. Applications using this key will
+                no longer be able to access the API.
               </p>
             </div>
           </div>
           <div className="flex justify-end space-x-3 pt-4">
             <button
               onClick={() => setShowDeleteModal(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
               Cancel
             </button>
@@ -781,39 +861,46 @@ export default function ApiKeysPage() {
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="mb-1 block text-sm font-medium text-gray-700">
               Name *
             </label>
             <input
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, name: e.target.value }))
+              }
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
               placeholder="My API Key"
             />
             {formErrors.name && (
-              <p className="text-sm text-red-600 mt-1">{formErrors.name}</p>
+              <p className="mt-1 text-sm text-red-600">{formErrors.name}</p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="mb-1 block text-sm font-medium text-gray-700">
               Description
             </label>
             <textarea
               value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
               rows={3}
               placeholder="Optional description"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="mb-1 block text-sm font-medium text-gray-700">
               Permissions *
             </label>
-            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-gray-300 rounded-lg p-3">
+            <div className="grid max-h-48 grid-cols-2 gap-2 overflow-y-auto rounded-lg border border-gray-300 p-3">
               {availablePermissions.map((permission) => (
                 <label key={permission} className="flex items-center space-x-2">
                   <input
@@ -821,14 +908,16 @@ export default function ApiKeysPage() {
                     checked={formData.permissions.includes(permission)}
                     onChange={(e) => {
                       if (e.target.checked) {
-                        setFormData(prev => ({
+                        setFormData((prev) => ({
                           ...prev,
-                          permissions: [...prev.permissions, permission]
+                          permissions: [...prev.permissions, permission],
                         }));
                       } else {
-                        setFormData(prev => ({
+                        setFormData((prev) => ({
                           ...prev,
-                          permissions: prev.permissions.filter(p => p !== permission)
+                          permissions: prev.permissions.filter(
+                            (p) => p !== permission,
+                          ),
                         }));
                       }
                     }}
@@ -839,19 +928,26 @@ export default function ApiKeysPage() {
               ))}
             </div>
             {formErrors.permissions && (
-              <p className="text-sm text-red-600 mt-1">{formErrors.permissions}</p>
+              <p className="mt-1 text-sm text-red-600">
+                {formErrors.permissions}
+              </p>
             )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="mb-1 block text-sm font-medium text-gray-700">
               Rate Limit (requests per minute)
             </label>
             <input
               type="number"
               value={formData.rateLimit}
-              onChange={(e) => setFormData(prev => ({ ...prev, rateLimit: parseInt(e.target.value, 10) || 100 }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  rateLimit: parseInt(e.target.value, 10) || 100,
+                }))
+              }
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
               min="1"
               max="10000"
             />
@@ -860,11 +956,11 @@ export default function ApiKeysPage() {
           <div className="flex justify-end space-x-3 pt-4">
             <button
               onClick={() => setShowEditModal(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
               Cancel
             </button>
-            <Button 
+            <Button
               handleClick={() => {
                 if (selectedKey) {
                   updateApiKey(selectedKey.id, formData);
@@ -888,25 +984,30 @@ export default function ApiKeysPage() {
       >
         <div className="space-y-4">
           <div className="flex items-start space-x-3">
-            <ExclamationTriangleIcon className="h-5 w-5 text-yellow-500 mt-0.5" />
+            <ExclamationTriangleIcon className="mt-0.5 h-5 w-5 text-yellow-500" />
             <div>
               <p className="text-sm text-gray-900">
-                Are you sure you want to regenerate the API key <strong>"{selectedKey?.name}"</strong>?
+                Are you sure you want to regenerate the API key{' '}
+                <strong>"{selectedKey?.name}"</strong>?
               </p>
-              <p className="text-sm text-gray-600 mt-1">
-                This will generate a new API key and invalidate the old one. Applications using the old key will no longer be able to access the API.
+              <p className="mt-1 text-sm text-gray-600">
+                This will generate a new API key and invalidate the old one.
+                Applications using the old key will no longer be able to access
+                the API.
               </p>
             </div>
           </div>
           <div className="flex justify-end space-x-3 pt-4">
             <button
               onClick={() => setShowRegenerateModal(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
               Cancel
             </button>
             <Button
-              handleClick={() => selectedKey && regenerateApiKey(selectedKey.id)}
+              handleClick={() =>
+                selectedKey && regenerateApiKey(selectedKey.id)
+              }
               className="bg-yellow-600 hover:bg-yellow-700"
               data-cy="confirm-regenerate"
             >

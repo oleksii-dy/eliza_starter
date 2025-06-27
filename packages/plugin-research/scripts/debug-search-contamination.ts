@@ -17,7 +17,10 @@ async function testSearchContamination() {
   const provider1 = createSearchProvider('web', mockRuntime);
   console.log(`Provider 1 name: ${provider1.name}`);
 
-  const results1 = await provider1.search('From 2020 to 2050, how many elderly people will there be in Japan?', 5);
+  const results1 = await provider1.search(
+    'From 2020 to 2050, how many elderly people will there be in Japan?',
+    5
+  );
   console.log(`Found ${results1.length} results:`);
   results1.forEach((r, i) => {
     console.log(`${i + 1}. ${r.title.substring(0, 60)}...`);
@@ -30,7 +33,10 @@ async function testSearchContamination() {
   console.log(`Provider 2 name: ${provider2.name}`);
   console.log(`Same instance? ${provider1 === provider2}`);
 
-  const results2 = await provider2.search('What are the investment philosophies of Warren Buffett and Charlie Munger?', 5);
+  const results2 = await provider2.search(
+    'What are the investment philosophies of Warren Buffett and Charlie Munger?',
+    5
+  );
   console.log(`Found ${results2.length} results:`);
   results2.forEach((r, i) => {
     console.log(`${i + 1}. ${r.title.substring(0, 60)}...`);
@@ -39,17 +45,18 @@ async function testSearchContamination() {
 
   // Check for contamination
   console.log('\n🔍 Checking for contamination...');
-  const japanUrls = results2.filter(r =>
-    r.url.toLowerCase().includes('japan') ||
-    r.title.toLowerCase().includes('japan') ||
-    r.url.toLowerCase().includes('elderly') ||
-    r.title.toLowerCase().includes('elderly')
+  const japanUrls = results2.filter(
+    (r) =>
+      r.url.toLowerCase().includes('japan') ||
+      r.title.toLowerCase().includes('japan') ||
+      r.url.toLowerCase().includes('elderly') ||
+      r.title.toLowerCase().includes('elderly')
   );
 
   if (japanUrls.length > 0) {
     console.error('❌ CONTAMINATION DETECTED!');
     console.error('Found Japan-related results in investment query:');
-    japanUrls.forEach(r => console.error(`   - ${r.title}`));
+    japanUrls.forEach((r) => console.error(`   - ${r.title}`));
   } else {
     console.log('✅ No contamination detected');
   }

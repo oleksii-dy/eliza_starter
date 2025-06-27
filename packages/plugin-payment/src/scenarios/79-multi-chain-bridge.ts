@@ -12,7 +12,8 @@ const multiChainBridgeScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'Initiating cross-chain bridge:\nFrom: Ethereum → To: Arbitrum\nAmount: 500 USDC\nBridge: Arbitrum Native Bridge\nEstimated time: 10-15 minutes\nFees: $12 (L1) + $0.50 (L2)\nFinal amount: 499.50 USDC',
+        content:
+          'Initiating cross-chain bridge:\nFrom: Ethereum → To: Arbitrum\nAmount: 500 USDC\nBridge: Arbitrum Native Bridge\nEstimated time: 10-15 minutes\nFees: $12 (L1) + $0.50 (L2)\nFinal amount: 499.50 USDC',
         action: 'BRIDGE_TOKENS',
       },
     ],
@@ -23,7 +24,8 @@ const multiChainBridgeScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'Fast bridge selected: Hop Protocol\nRoute: Polygon → Ethereum → Optimism\nAmount: 2.5 ETH\nEstimated time: 2-3 minutes\nBridge fee: 0.3% (0.0075 ETH)\nYou\'ll receive: 2.4925 ETH on Optimism',
+        content:
+          "Fast bridge selected: Hop Protocol\nRoute: Polygon → Ethereum → Optimism\nAmount: 2.5 ETH\nEstimated time: 2-3 minutes\nBridge fee: 0.3% (0.0075 ETH)\nYou'll receive: 2.4925 ETH on Optimism",
         action: 'BRIDGE_TOKENS',
       },
     ],
@@ -34,7 +36,8 @@ const multiChainBridgeScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'Cross-chain transfer via Multichain:\nFrom: Polygon (MATIC) → To: BSC (Wrapped MATIC)\nAmount: 1000 MATIC\nBridge time: 5-10 minutes\nFees: 0.1% (1 MATIC) + gas\nSecurity: Audited, $2B+ bridged\nProceed with transaction?',
+        content:
+          'Cross-chain transfer via Multichain:\nFrom: Polygon (MATIC) → To: BSC (Wrapped MATIC)\nAmount: 1000 MATIC\nBridge time: 5-10 minutes\nFees: 0.1% (1 MATIC) + gas\nSecurity: Audited, $2B+ bridged\nProceed with transaction?',
         action: 'BRIDGE_TOKENS',
       },
     ],

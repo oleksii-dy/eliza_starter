@@ -63,7 +63,9 @@ export default function CharacterChatPage() {
 
   const fetchConversation = useCallback(async () => {
     try {
-      const response = await fetch(`/api/characters/conversations/${conversationId}`);
+      const response = await fetch(
+        `/api/characters/conversations/${conversationId}`,
+      );
       const data = await response.json();
 
       if (data.success) {
@@ -116,22 +118,25 @@ export default function CharacterChatPage() {
     setSending(true);
 
     try {
-      const response = await fetch(`/api/characters/conversations/${conversationId}/messages`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `/api/characters/conversations/${conversationId}/messages`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            content: messageContent,
+          }),
         },
-        body: JSON.stringify({
-          content: messageContent,
-        }),
-      });
+      );
 
       const data = await response.json();
 
       if (data.success) {
         setConversation(data.data.conversation);
         if (data.data.usage) {
-          setTotalCost(prev => prev + data.data.usage.cost);
+          setTotalCost((prev) => prev + data.data.usage.cost);
         }
       } else {
         // If AI response failed, still update with user message
@@ -172,8 +177,8 @@ export default function CharacterChatPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="flex h-64 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
       </div>
     );
   }
@@ -182,11 +187,15 @@ export default function CharacterChatPage() {
     return (
       <div className="container mx-auto py-8">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Conversation not found</h1>
-          <p className="text-gray-600 mt-2">The conversation you're looking for doesn't exist.</p>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Conversation not found
+          </h1>
+          <p className="mt-2 text-gray-600">
+            The conversation you're looking for doesn't exist.
+          </p>
           <Link href="/characters" className="mt-4 inline-block">
             <Button>
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Characters
             </Button>
           </Link>
@@ -196,7 +205,7 @@ export default function CharacterChatPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="flex h-screen flex-col">
       {/* Header */}
       <div className="border-b bg-white px-6 py-4">
         <div className="flex items-center justify-between">
@@ -214,16 +223,18 @@ export default function CharacterChatPage() {
             </Avatar>
             <div>
               <h1 className="text-lg font-semibold">{character.name}</h1>
-              <p className="text-sm text-gray-600 line-clamp-1">
+              <p className="line-clamp-1 text-sm text-gray-600">
                 {character.characterConfig.bio}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <Badge variant="outline">
-              Total Cost: {formatCost(totalCost)}
-            </Badge>
-            <Badge variant={character.visibility === 'public' ? 'default' : 'secondary'}>
+            <Badge variant="outline">Total Cost: {formatCost(totalCost)}</Badge>
+            <Badge
+              variant={
+                character.visibility === 'public' ? 'default' : 'secondary'
+              }
+            >
               {character.visibility}
             </Badge>
           </div>
@@ -232,11 +243,11 @@ export default function CharacterChatPage() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto bg-gray-50 px-6 py-4">
-        <div className="max-w-4xl mx-auto space-y-4">
+        <div className="mx-auto max-w-4xl space-y-4">
           {conversation.messages.length === 0 ? (
-            <div className="text-center py-12">
-              <Bot className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <div className="py-12 text-center">
+              <Bot className="mx-auto mb-4 h-16 w-16 text-gray-400" />
+              <h3 className="mb-2 text-lg font-medium text-gray-900">
                 Start a conversation with {character.name}
               </h3>
               <p className="text-gray-600">
@@ -247,12 +258,16 @@ export default function CharacterChatPage() {
             conversation.messages.map((msg) => (
               <div
                 key={msg.id}
-                className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'
-                  }`}
+                className={`flex gap-3 ${
+                  msg.role === 'user' ? 'justify-end' : 'justify-start'
+                }`}
               >
                 {msg.role === 'assistant' && (
-                  <Avatar className="h-8 w-8 mt-1">
-                    <AvatarImage src={character.avatarUrl} alt={character.name} />
+                  <Avatar className="mt-1 h-8 w-8">
+                    <AvatarImage
+                      src={character.avatarUrl}
+                      alt={character.name}
+                    />
                     <AvatarFallback>
                       {character.name.substring(0, 2).toUpperCase()}
                     </AvatarFallback>
@@ -260,13 +275,14 @@ export default function CharacterChatPage() {
                 )}
 
                 <div
-                  className={`max-w-[70%] rounded-lg px-4 py-2 ${msg.role === 'user'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white border'
-                    }`}
+                  className={`max-w-[70%] rounded-lg px-4 py-2 ${
+                    msg.role === 'user'
+                      ? 'bg-blue-600 text-white'
+                      : 'border bg-white'
+                  }`}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                  <div className="flex items-center justify-between mt-2 text-xs opacity-70">
+                  <p className="whitespace-pre-wrap text-sm">{msg.content}</p>
+                  <div className="mt-2 flex items-center justify-between text-xs opacity-70">
                     <span className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
                       {formatTime(msg.timestamp)}
@@ -278,7 +294,7 @@ export default function CharacterChatPage() {
                 </div>
 
                 {msg.role === 'user' && (
-                  <Avatar className="h-8 w-8 mt-1">
+                  <Avatar className="mt-1 h-8 w-8">
                     <AvatarFallback>
                       <User className="h-4 w-4" />
                     </AvatarFallback>
@@ -289,18 +305,24 @@ export default function CharacterChatPage() {
           )}
 
           {sending && (
-            <div className="flex gap-3 justify-start">
-              <Avatar className="h-8 w-8 mt-1">
+            <div className="flex justify-start gap-3">
+              <Avatar className="mt-1 h-8 w-8">
                 <AvatarImage src={character.avatarUrl} alt={character.name} />
                 <AvatarFallback>
                   {character.name.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <div className="bg-white border rounded-lg px-4 py-2">
+              <div className="rounded-lg border bg-white px-4 py-2">
                 <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="h-2 w-2 animate-bounce rounded-full bg-gray-400"></div>
+                  <div
+                    className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
+                    style={{ animationDelay: '0.1s' }}
+                  ></div>
+                  <div
+                    className="h-2 w-2 animate-bounce rounded-full bg-gray-400"
+                    style={{ animationDelay: '0.2s' }}
+                  ></div>
                 </div>
               </div>
             </div>
@@ -312,7 +334,7 @@ export default function CharacterChatPage() {
 
       {/* Input */}
       <div className="border-t bg-white px-6 py-4">
-        <div className="max-w-4xl mx-auto">
+        <div className="mx-auto max-w-4xl">
           <div className="flex gap-3">
             <Input
               ref={inputRef}
@@ -333,8 +355,9 @@ export default function CharacterChatPage() {
               <Send className="h-4 w-4" />
             </Button>
           </div>
-          <div className="text-xs text-gray-500 mt-2">
-            Powered by AI • Costs will be deducted from your organization's credits
+          <div className="mt-2 text-xs text-gray-500">
+            Powered by AI • Costs will be deducted from your organization's
+            credits
           </div>
         </div>
       </div>

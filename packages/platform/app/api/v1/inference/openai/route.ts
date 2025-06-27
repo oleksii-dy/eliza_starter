@@ -1,17 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import OpenAI from 'openai';
-import { validateApiKey, checkApiKeyPermission } from '@/lib/server/services/api-key-service';
+import {
+  validateApiKey,
+  checkApiKeyPermission,
+} from '@/lib/server/services/api-key-service';
 import { deductCredits } from '@/lib/server/services/billing-service';
 import { trackUsage } from '@/lib/server/services/usage-tracking-service';
 import { createMetricsMiddleware } from '@/lib/middleware/metrics-middleware';
 
 const openaiRequestSchema = z.object({
   model: z.string(),
-  messages: z.array(z.object({
-    role: z.enum(['system', 'user', 'assistant']),
-    content: z.string(),
-  })),
+  messages: z.array(
+    z.object({
+      role: z.enum(['system', 'user', 'assistant']),
+      content: z.string(),
+    }),
+  ),
   temperature: z.number().min(0).max(2).optional(),
   max_tokens: z.number().min(1).max(8192).optional(),
   stream: z.boolean().optional(),
@@ -32,19 +37,28 @@ export const POST = metricsMiddleware(async (request: NextRequest) => {
     // Extract API key from Authorization header
     const authHeader = request.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Missing or invalid API key' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Missing or invalid API key' },
+        { status: 401 },
+      );
     }
 
     const apiKeyValue = authHeader.substring(7);
     const apiKey = await validateApiKey(apiKeyValue);
 
     if (!apiKey) {
-      return NextResponse.json({ error: 'Invalid or expired API key' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Invalid or expired API key' },
+        { status: 401 },
+      );
     }
 
     // Check permissions
-    if (!await checkApiKeyPermission(apiKey, 'inference:openai')) {
-      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
+    if (!(await checkApiKeyPermission(apiKey, 'inference:openai'))) {
+      return NextResponse.json(
+        { error: 'Insufficient permissions' },
+        { status: 403 },
+      );
     }
 
     const body = await request.json();
@@ -52,10 +66,13 @@ export const POST = metricsMiddleware(async (request: NextRequest) => {
 
     // Check if model is supported
     if (!OPENAI_PRICING[requestData.model as keyof typeof OPENAI_PRICING]) {
-      return NextResponse.json({
-        error: 'Unsupported model',
-        supportedModels: Object.keys(OPENAI_PRICING)
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Unsupported model',
+          supportedModels: Object.keys(OPENAI_PRICING),
+        },
+        { status: 400 },
+      );
     }
 
     // Initialize OpenAI client
@@ -75,10 +92,13 @@ export const POST = metricsMiddleware(async (request: NextRequest) => {
     const duration = Date.now() - startTime;
 
     // Calculate costs
-    const pricing = OPENAI_PRICING[requestData.model as keyof typeof OPENAI_PRICING];
+    const pricing =
+      OPENAI_PRICING[requestData.model as keyof typeof OPENAI_PRICING];
     // Check if completion has usage property (non-streaming response)
-    const inputTokens = ('usage' in completion) ? completion.usage?.prompt_tokens || 0 : 0;
-    const outputTokens = ('usage' in completion) ? completion.usage?.completion_tokens || 0 : 0;
+    const inputTokens =
+      'usage' in completion ? completion.usage?.prompt_tokens || 0 : 0;
+    const outputTokens =
+      'usage' in completion ? completion.usage?.completion_tokens || 0 : 0;
 
     const inputCost = (inputTokens / 1000) * pricing.input;
     const outputCost = (outputTokens / 1000) * pricing.output;
@@ -134,7 +154,6 @@ export const POST = metricsMiddleware(async (request: NextRequest) => {
         },
       },
     });
-
   } catch (error: any) {
     console.error('OpenAI API error:', error);
 
@@ -161,22 +180,35 @@ export const POST = metricsMiddleware(async (request: NextRequest) => {
     }
 
     if (error instanceof z.ZodError) {
-      return NextResponse.json({
-        error: 'Validation error',
-        details: error.errors
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Validation error',
+          details: error.errors,
+        },
+        { status: 400 },
+      );
     }
 
-    if (error.code === 'insufficient_quota' || error.message.includes('Insufficient credit balance')) {
-      return NextResponse.json({
-        error: 'Insufficient credits',
-        message: 'Please add more credits to your account to continue using the API'
-      }, { status: 402 });
+    if (
+      error.code === 'insufficient_quota' ||
+      error.message.includes('Insufficient credit balance')
+    ) {
+      return NextResponse.json(
+        {
+          error: 'Insufficient credits',
+          message:
+            'Please add more credits to your account to continue using the API',
+        },
+        { status: 402 },
+      );
     }
 
-    return NextResponse.json({
-      error: 'API request failed',
-      message: error.message || 'Unknown error occurred'
-    }, { status: error.status || 500 });
+    return NextResponse.json(
+      {
+        error: 'API request failed',
+        message: error.message || 'Unknown error occurred',
+      },
+      { status: error.status || 500 },
+    );
   }
 });

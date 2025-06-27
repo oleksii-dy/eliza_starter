@@ -22,21 +22,21 @@ try {
   // Clone Hyperfy repository
   console.log('📥 Cloning Hyperfy repository...');
   execSync(`git clone https://github.com/lalalune/hyperfy.git ${hyperfyDir}`, {
-    stdio: 'inherit'
+    stdio: 'inherit',
   });
 
   // Install dependencies
   console.log('\n📦 Installing dependencies...');
   execSync('npm install', {
     cwd: hyperfyDir,
-    stdio: 'inherit'
+    stdio: 'inherit',
   });
 
   // Build Hyperfy
   console.log('\n🔨 Building Hyperfy...');
   execSync('npm run build', {
     cwd: hyperfyDir,
-    stdio: 'inherit'
+    stdio: 'inherit',
   });
 
   // Create target directory if it doesn't exist
@@ -74,7 +74,6 @@ try {
 
   console.log('\n✨ Hyperfy build complete!');
   console.log(`📁 Files copied to: ${targetDir}`);
-
 } catch (error) {
   console.error('\n❌ Build failed:', error.message);
 
@@ -92,13 +91,10 @@ const packageJson = {
   version: '1.0.0',
   type: 'module',
   private: true,
-  description: 'Hyperfy core modules for ElizaOS plugin'
+  description: 'Hyperfy core modules for ElizaOS plugin',
 };
 
 import { writeFileSync } from 'fs';
-writeFileSync(
-  join(targetDir, 'package.json'),
-  JSON.stringify(packageJson, null, 2)
-);
+writeFileSync(join(targetDir, 'package.json'), JSON.stringify(packageJson, null, 2));
 
 console.log('\n📝 Created package.json for hyperfy module');

@@ -31,9 +31,11 @@ export class PlatformAgentIntegrationService {
   /**
    * Create an authenticated agent runtime with authentication context
    */
-  static async createAuthenticatedRuntime(config: AuthenticatedRuntimeConfig): Promise<IAgentRuntime> {
+  static async createAuthenticatedRuntime(
+    config: AuthenticatedRuntimeConfig
+  ): Promise<IAgentRuntime> {
     const { AgentRuntime } = await import('@elizaos/core');
-    
+
     // Prepare authentication settings for the runtime
     const authSettings: Record<string, string | undefined> = {
       userId: config.authContext.userId,
@@ -52,10 +54,7 @@ export class PlatformAgentIntegrationService {
     };
 
     // Add authentication plugin to the plugins array
-    const plugins = [
-      ...(config.plugins || []),
-      platformAuthPlugin
-    ];
+    const plugins = [...(config.plugins || []), platformAuthPlugin];
 
     // Create the runtime with authentication context
     const runtime = new AgentRuntime({
@@ -72,29 +71,22 @@ export class PlatformAgentIntegrationService {
    * Validate user permissions for agent operations
    */
   static validateUserPermission(
-    authContext: AgentAuthContext, 
+    authContext: AgentAuthContext,
     permission: string
   ): { hasPermission: boolean; reason?: string } {
     const rolePermissions: Record<string, string[]> = {
-      'owner': ['*'], // Owner has all permissions
-      'admin': [
+      owner: ['*'], // Owner has all permissions
+      admin: [
         'create_agents',
         'delete_agents',
         'manage_users',
         'view_billing',
         'manage_settings',
         'deploy_agents',
-        'manage_plugins'
+        'manage_plugins',
       ],
-      'member': [
-        'create_agents',
-        'view_agents',
-        'edit_own_agents',
-        'deploy_agents'
-      ],
-      'viewer': [
-        'view_agents'
-      ]
+      member: ['create_agents', 'view_agents', 'edit_own_agents', 'deploy_agents'],
+      viewer: ['view_agents'],
     };
 
     const userPermissions = rolePermissions[authContext.userRole] || [];
@@ -102,7 +94,9 @@ export class PlatformAgentIntegrationService {
 
     return {
       hasPermission,
-      reason: hasPermission ? undefined : `Role '${authContext.userRole}' does not have permission '${permission}'`
+      reason: hasPermission
+        ? undefined
+        : `Role '${authContext.userRole}' does not have permission '${permission}'`,
     };
   }
 
@@ -137,9 +131,9 @@ export class PlatformAgentIntegrationService {
     // Check agent limit
     const agentLimit = authContext.agentLimit ? parseInt(authContext.agentLimit, 10) : undefined;
     if (agentLimit !== undefined && !isNaN(agentLimit) && currentAgentCount >= agentLimit) {
-      return { 
-        canCreate: false, 
-        reason: `Agent limit reached (${currentAgentCount}/${agentLimit}). Please upgrade your plan or delete existing agents.` 
+      return {
+        canCreate: false,
+        reason: `Agent limit reached (${currentAgentCount}/${agentLimit}). Please upgrade your plan or delete existing agents.`,
       };
     }
 
@@ -164,7 +158,7 @@ export class PlatformAgentIntegrationService {
         requireAuthentication: true,
         logSecurityEvents: true,
       },
-      authContext
+      authContext,
     };
   }
 
@@ -179,35 +173,32 @@ export class PlatformAgentIntegrationService {
         if (!message.metadata) {
           message.metadata = {};
         }
-        
+
         message.metadata.authContext = {
           userId: authContext.userId,
           userRole: authContext.userRole,
           organizationId: authContext.organizationId,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         };
 
         return message;
-      }
+      },
     };
   }
 
   /**
    * Create a database adapter with organization context
    */
-  static async createAuthenticatedAdapter(
-    adapterConfig: any,
-    authContext: AgentAuthContext
-  ) {
+  static async createAuthenticatedAdapter(adapterConfig: any, authContext: AgentAuthContext) {
     // This would integrate with the platform's database adapter
     // that already has organization scoping
     const adapter = adapterConfig.adapter;
-    
+
     // Ensure the adapter has organization context
     if (adapter && typeof adapter.setOrganizationContext === 'function') {
       adapter.setOrganizationContext({
         organizationId: authContext.organizationId,
-        userId: authContext.userId
+        userId: authContext.userId,
       });
     }
 
@@ -217,15 +208,13 @@ export class PlatformAgentIntegrationService {
   /**
    * Security audit logger for agent actions
    */
-  static async logSecurityEvent(
-    event: {
-      action: string;
-      agentId: string;
-      authContext: AgentAuthContext;
-      details?: any;
-      severity: 'low' | 'medium' | 'high';
-    }
-  ) {
+  static async logSecurityEvent(event: {
+    action: string;
+    agentId: string;
+    authContext: AgentAuthContext;
+    details?: any;
+    severity: 'low' | 'medium' | 'high';
+  }) {
     const logEntry = {
       timestamp: new Date().toISOString(),
       event: event.action,
@@ -239,7 +228,7 @@ export class PlatformAgentIntegrationService {
 
     // In a real implementation, this would write to a security audit log
     console.log('[SECURITY AUDIT]', JSON.stringify(logEntry));
-    
+
     // Could integrate with platform's logging system
     // await auditLogger.log(logEntry);
   }

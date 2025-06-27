@@ -1,23 +1,22 @@
-import { describe, it, expect, mock, beforeEach, type Mock } from 'bun:test';
+import { describe, it, expect, beforeEach } from 'bun:test';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 import type { UUID } from '@elizaos/core';
+import { mock } from '@elizaos/core/test-utils';
+
+interface MockFunction<T = any> {
+  (...args: any[]): T;
+  mockReturnValue: (value: T) => MockFunction<T>;
+  mockResolvedValue: (value: T) => MockFunction<T>;
+  mockRejectedValue: (error: any) => MockFunction<T>;
+  mockImplementation: (fn: (...args: any[]) => T) => MockFunction<T>;
+  calls: any[][];
+  mock: {
+    calls: any[][];
+    results: any[];
+  };
+}
 import { trustChangeEvaluator } from '../trustChangeEvaluator';
-
-const createMockRuntime = (): IAgentRuntime =>
-  ({
-    agentId: 'test-agent' as UUID,
-    getService: mock(),
-  }) as any;
-
-const createMockMemory = (text: string, entityId: UUID): Memory =>
-  ({
-    id: 'msg-1' as UUID,
-    entityId,
-    content: {
-      text,
-    },
-    roomId: 'room-1' as UUID,
-  }) as Memory;
+import { createMockRuntime, createMockMemory, createMockState } from '../../__tests__/test-utils';
 
 describe('trustChangeEvaluator', () => {
   let runtime: IAgentRuntime;
@@ -25,18 +24,20 @@ describe('trustChangeEvaluator', () => {
   const testEntityId = 'entity-1' as UUID;
 
   beforeEach(() => {
-    runtime = createMockRuntime();
     trustService = {
       recordInteraction: mock().mockResolvedValue({ success: true }),
     };
-    (runtime.getService as unknown as Mock<any>).mockImplementation((name: string) => {
-      if (name === 'trust-engine') {
-        return trustService;
-      }
-      if (name === 'llm-evaluator') {
+
+    runtime = createMockRuntime({
+      getService: mock().mockImplementation((name: string) => {
+        if (name === 'trust' || name === 'trust-engine') {
+          return trustService;
+        }
+        if (name === 'llm-evaluator') {
+          return null;
+        } // No LLM evaluator for these tests
         return null;
-      } // No LLM evaluator for these tests
-      return null;
+      }),
     });
   });
 
@@ -48,12 +49,14 @@ describe('trustChangeEvaluator', () => {
   });
 
   it('should not validate when trust service is unavailable', async () => {
-    (runtime.getService as unknown as Mock<any>).mockReturnValue(null);
+    const runtimeNoService = createMockRuntime({
+      getService: mock().mockReturnValue(null),
+    });
 
     const memory = createMockMemory('test', testEntityId);
     const state = {} as State;
 
-    expect(await trustChangeEvaluator.validate(runtime, memory, state)).toBe(false);
+    expect(await trustChangeEvaluator.validate(runtimeNoService, memory, state)).toBe(false);
   });
 
   it('should analyze trust evidence and update trust', async () => {
@@ -62,14 +65,12 @@ describe('trustChangeEvaluator', () => {
 
     const result = await trustChangeEvaluator.handler(runtime, memory, state);
 
-    expect(trustService.recordInteraction).toHaveBeenCalledWith(
-      expect.objectContaining({
-        sourceEntityId: testEntityId,
-        targetEntityId: 'test-agent',
-        type: 'HELPFUL_ACTION',
-        impact: 5,
-      })
-    );
+    expect(trustService.recordInteraction.calls.length).toBeGreaterThan(0);
+    const call = trustService.recordInteraction.calls[0][0];
+    expect(call.sourceEntityId).toBe(testEntityId);
+    expect(call.targetEntityId).toBe(runtime.agentId);
+    expect(call.type).toBe('HELPFUL_ACTION');
+    expect(call.impact).toBe(5);
     expect(result).toBeDefined();
     if (result && typeof result === 'object' && 'data' in result) {
       expect(result.data?.positive).toBe(true);
@@ -82,14 +83,12 @@ describe('trustChangeEvaluator', () => {
 
     const result = await trustChangeEvaluator.handler(runtime, memory, state);
 
-    expect(trustService.recordInteraction).toHaveBeenCalledWith(
-      expect.objectContaining({
-        sourceEntityId: testEntityId,
-        targetEntityId: 'test-agent',
-        type: 'SPAM_BEHAVIOR',
-        impact: -10,
-      })
-    );
+    expect(trustService.recordInteraction.calls.length).toBeGreaterThan(0);
+    const call = trustService.recordInteraction.calls[0][0];
+    expect(call.sourceEntityId).toBe(testEntityId);
+    expect(call.targetEntityId).toBe(runtime.agentId);
+    expect(call.type).toBe('SPAM_BEHAVIOR');
+    expect(call.impact).toBe(-10);
     expect(result).toBeDefined();
     if (result && typeof result === 'object' && 'data' in result) {
       expect(result.data?.positive).toBe(false);
@@ -102,7 +101,7 @@ describe('trustChangeEvaluator', () => {
 
     const result = await trustChangeEvaluator.handler(runtime, memory, state);
 
-    expect(trustService.recordInteraction).not.toHaveBeenCalled();
+    expect(trustService.recordInteraction.calls.length).toBe(0);
     expect(result).toBeNull();
   });
 

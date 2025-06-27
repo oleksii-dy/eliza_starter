@@ -15,7 +15,10 @@ class ApiAdapter {
     this.config = config;
   }
 
-  private async callLocalApi<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  private async callLocalApi<T>(
+    endpoint: string,
+    options: RequestInit = {},
+  ): Promise<T> {
     const response = await fetch(endpoint, options);
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
@@ -23,7 +26,10 @@ class ApiAdapter {
     return await response.json();
   }
 
-  private async callExternalApi<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  private async callExternalApi<T>(
+    endpoint: string,
+    options: RequestInit = {},
+  ): Promise<T> {
     const url = `${this.config.externalBaseUrl}${endpoint}`;
     const response = await fetch(url, {
       ...options,
@@ -32,11 +38,11 @@ class ApiAdapter {
         ...options.headers,
       },
     });
-    
+
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
-    
+
     return await response.json();
   }
 
@@ -49,7 +55,9 @@ class ApiAdapter {
   }
 
   // Gradually migrate endpoints
-  async getCharacters(params: any = {}): Promise<{ characters: any[]; stats: any }> {
+  async getCharacters(
+    params: any = {},
+  ): Promise<{ characters: any[]; stats: any }> {
     const query = new URLSearchParams(params).toString();
     return this.request(`/api/characters?${query}`);
   }
@@ -68,13 +76,18 @@ const getApiConfig = (): ApiConfig => {
     // In Tauri app, use external API
     return {
       mode: 'external',
-      externalBaseUrl: process.env.API_BASE_URL || 'https://api.platform.elizaos.com'
+      externalBaseUrl:
+        process.env.API_BASE_URL || 'https://api.platform.elizaos.com',
     };
-  } else if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+  } else if (
+    typeof window !== 'undefined' &&
+    window.location.hostname !== 'localhost'
+  ) {
     // In production web app, use external API
     return {
       mode: 'external',
-      externalBaseUrl: process.env.API_BASE_URL || 'https://api.platform.elizaos.com'
+      externalBaseUrl:
+        process.env.API_BASE_URL || 'https://api.platform.elizaos.com',
     };
   } else {
     // In development, use local API routes

@@ -19,26 +19,28 @@ const pwaConfig = withPWA({
         networkTimeoutSeconds: 10,
         expiration: {
           maxEntries: 16,
-          maxAgeSeconds: 24 * 60 * 60 // 24 hours
-        }
-      }
-    }
-  ]
+          maxAgeSeconds: 24 * 60 * 60, // 24 hours
+        },
+      },
+    },
+  ],
 });
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Configure for both SSG export and regular builds
-  ...(process.env.BUILD_MODE === 'export' ? {
-    output: 'export',
-    trailingSlash: true,
-    images: { unoptimized: true },
-    assetPrefix: '',
-    // Disable features not compatible with static export
-    skipTrailingSlashRedirect: true,
-    distDir: 'out'
-  } : {}),
-  
+  ...(process.env.BUILD_MODE === 'export'
+    ? {
+        output: 'export',
+        trailingSlash: true,
+        images: { unoptimized: true },
+        assetPrefix: '',
+        // Disable features not compatible with static export
+        skipTrailingSlashRedirect: true,
+        distDir: 'out',
+      }
+    : {}),
+
   poweredByHeader: false,
   pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
   images: {
@@ -47,24 +49,35 @@ const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@elizaos/client', '@elizaos/core'],
   experimental: {
-    optimizePackageImports: ['@elizaos/core', '@elizaos/server', '@elizaos/client'],
+    optimizePackageImports: [
+      '@elizaos/core',
+      '@elizaos/server',
+      '@elizaos/client',
+    ],
     webVitalsAttribution: ['CLS', 'LCP'],
   },
   // Skip API route optimization during build to prevent database initialization
-  serverExternalPackages: ['@/lib/database', 'postgres', '@electric-sql/pglite'],
-  
+  serverExternalPackages: [
+    '@/lib/database',
+    'postgres',
+    '@electric-sql/pglite',
+  ],
+
   env: {
     // Make dev mode configurable at runtime for testing
-    NEXT_PUBLIC_DEV_MODE: process.env.NEXT_PUBLIC_DEV_MODE || (process.env.NODE_ENV === 'development' ? 'true' : 'false'),
-    API_BASE_URL: process.env.API_BASE_URL || 'https://api.platform.elizaos.com',
-    BUILD_MODE: process.env.BUILD_MODE || 'default'
+    NEXT_PUBLIC_DEV_MODE:
+      process.env.NEXT_PUBLIC_DEV_MODE ||
+      (process.env.NODE_ENV === 'development' ? 'true' : 'false'),
+    API_BASE_URL:
+      process.env.API_BASE_URL || 'https://api.platform.elizaos.com',
+    BUILD_MODE: process.env.BUILD_MODE || 'default',
   },
   async rewrites() {
     // Skip rewrites for static export mode
     if (process.env.BUILD_MODE === 'export') {
       return [];
     }
-    
+
     return [
       // Redirect client assets to client-static directory
       {
@@ -150,8 +163,8 @@ const nextConfig = {
             name: 'vendors',
             chunks: 'all',
             maxSize: 200000, // 200KB chunks
-          }
-        }
+          },
+        },
       };
     }
 

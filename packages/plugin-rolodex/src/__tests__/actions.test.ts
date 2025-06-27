@@ -151,7 +151,10 @@ describe('Rolodex Actions', () => {
 
     mockRuntime = createMockRuntime({
       getService: mock((serviceNameOrClass: string | any) => {
-        const serviceName = typeof serviceNameOrClass === 'string' ? serviceNameOrClass : serviceNameOrClass.serviceName;
+        const serviceName =
+          typeof serviceNameOrClass === 'string'
+            ? serviceNameOrClass
+            : serviceNameOrClass.serviceName;
         if (serviceName === 'entity') {
           return mockRolodexService;
         } else if (serviceName === 'followup') {

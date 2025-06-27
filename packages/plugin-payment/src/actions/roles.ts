@@ -9,17 +9,21 @@ import {
   logger,
   Role,
   parseKeyValueXml,
-  type UUID
+  type UUID,
 } from '@elizaos/core';
 
 // Helper function to check if a role can modify another role
 const canModifyRole = (currentRole: Role, targetRole: Role | null, newRole: Role): boolean => {
   // Owners can do anything
-  if (currentRole === Role.OWNER) {return true;}
+  if (currentRole === Role.OWNER) {
+    return true;
+  }
 
   // Admins can modify members and add new members/admins
   if (currentRole === Role.ADMIN) {
-    if (!targetRole) {return newRole !== Role.OWNER;}
+    if (!targetRole) {
+      return newRole !== Role.OWNER;
+    }
     // Admin can only modify if target is not an owner
     return targetRole !== Role.OWNER;
   }
@@ -54,12 +58,15 @@ Return an XML object with these fields:
 
 export const updateRoleAction: Action = {
   name: 'UPDATE_ROLE',
-  description: "Update a user's role in the world with proper permission validation. Supports action chaining by providing role change data for audit trails, notification workflows, or access control updates.",
+  description:
+    "Update a user's role in the world with proper permission validation. Supports action chaining by providing role change data for audit trails, notification workflows, or access control updates.",
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     // Check if world management is available
     const world = state?.world;
-    if (!world) {return false;}
+    if (!world) {
+      return false;
+    }
 
     // Check if the message sender has appropriate permissions
     const senderRole = world.roles?.[message.entityId];
@@ -78,12 +85,12 @@ export const updateRoleAction: Action = {
       if (!world) {
         callback?.({
           text: 'World context not available',
-          error: true
+          error: true,
         });
         return {
           text: 'World context not available',
           values: { success: false, error: 'no_world_context' },
-          data: { action: 'UPDATE_ROLE' }
+          data: { action: 'UPDATE_ROLE' },
         };
       }
 
@@ -91,12 +98,12 @@ export const updateRoleAction: Action = {
       if (!senderRole || (senderRole !== Role.OWNER && senderRole !== Role.ADMIN)) {
         callback?.({
           text: "You don't have permission to update roles",
-          error: true
+          error: true,
         });
         return {
           text: "You don't have permission to update roles",
           values: { success: false, error: 'insufficient_permissions' },
-          data: { action: 'UPDATE_ROLE' }
+          data: { action: 'UPDATE_ROLE' },
         };
       }
 
@@ -105,7 +112,7 @@ export const updateRoleAction: Action = {
 
       const response = await runtime.useModel('TEXT_SMALL' as any, {
         prompt,
-        stopSequences: []
+        stopSequences: [],
       });
 
       const roleData = parseKeyValueXml(response) as {
@@ -117,12 +124,12 @@ export const updateRoleAction: Action = {
       if (!roleData || !roleData.newRole) {
         callback?.({
           text: 'Could not parse role update request',
-          error: true
+          error: true,
         });
         return {
           text: 'Could not parse role update request',
           values: { success: false, error: 'parse_error' },
-          data: { action: 'UPDATE_ROLE' }
+          data: { action: 'UPDATE_ROLE' },
         };
       }
 
@@ -131,12 +138,12 @@ export const updateRoleAction: Action = {
       if (!Role[newRole]) {
         callback?.({
           text: `Invalid role: ${roleData.newRole}. Must be owner, admin, or member`,
-          error: true
+          error: true,
         });
         return {
           text: `Invalid role: ${roleData.newRole}. Must be owner, admin, or member`,
           values: { success: false, error: 'invalid_role' },
-          data: { action: 'UPDATE_ROLE' }
+          data: { action: 'UPDATE_ROLE' },
         };
       }
 
@@ -146,24 +153,24 @@ export const updateRoleAction: Action = {
         // TODO: Resolve user name to ID using entity resolution
         callback?.({
           text: 'User name resolution not yet implemented. Please provide user ID',
-          error: true
+          error: true,
         });
         return {
           text: 'User name resolution not yet implemented. Please provide user ID',
           values: { success: false, error: 'name_resolution_unavailable' },
-          data: { action: 'UPDATE_ROLE' }
+          data: { action: 'UPDATE_ROLE' },
         };
       }
 
       if (!targetUserId) {
         callback?.({
           text: 'No target user specified',
-          error: true
+          error: true,
         });
         return {
           text: 'No target user specified',
           values: { success: false, error: 'no_target_user' },
-          data: { action: 'UPDATE_ROLE' }
+          data: { action: 'UPDATE_ROLE' },
         };
       }
 
@@ -174,12 +181,12 @@ export const updateRoleAction: Action = {
       if (!canModifyRole(senderRole as Role, currentTargetRole as Role | null, Role[newRole])) {
         callback?.({
           text: "You don't have permission to make this role change",
-          error: true
+          error: true,
         });
         return {
           text: "You don't have permission to make this role change",
           values: { success: false, error: 'role_change_forbidden' },
-          data: { action: 'UPDATE_ROLE' }
+          data: { action: 'UPDATE_ROLE' },
         };
       }
 
@@ -195,7 +202,7 @@ export const updateRoleAction: Action = {
       logger.info(`Role updated: ${targetUserId} is now ${newRole}`);
 
       callback?.({
-        text: `Role updated: ${targetUserId} is now ${newRole.toLowerCase()}`
+        text: `Role updated: ${targetUserId} is now ${newRole.toLowerCase()}`,
       });
 
       return {
@@ -205,7 +212,7 @@ export const updateRoleAction: Action = {
           targetUserId,
           oldRole: currentTargetRole,
           newRole: Role[newRole],
-          updatedBy: message.entityId
+          updatedBy: message.entityId,
         },
         data: {
           action: 'UPDATE_ROLE',
@@ -214,28 +221,28 @@ export const updateRoleAction: Action = {
             oldRole: currentTargetRole,
             newRole: Role[newRole],
             updatedBy: message.entityId,
-            timestamp: new Date().toISOString()
-          }
-        }
+            timestamp: new Date().toISOString(),
+          },
+        },
       };
     } catch (error) {
       logger.error('Error updating role:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       callback?.({
         text: errorMessage,
-        error: true
+        error: true,
       });
       return {
         text: errorMessage,
         values: {
           success: false,
-          error: errorMessage
+          error: errorMessage,
         },
         data: {
           action: 'UPDATE_ROLE',
           errorType: 'role_update_error',
-          errorDetails: error instanceof Error ? error.stack : undefined
-        }
+          errorDetails: error instanceof Error ? error.stack : undefined,
+        },
       };
     }
   },
@@ -245,64 +252,68 @@ export const updateRoleAction: Action = {
       {
         name: '{{user}}',
         content: {
-          text: 'Make Bob an admin'
-        }
+          text: 'Make Bob an admin',
+        },
       },
       {
         name: '{{agent}}',
         content: {
           text: 'Bob has been promoted to admin role',
-          actions: ['UPDATE_ROLE']
-        }
-      }
+          actions: ['UPDATE_ROLE'],
+        },
+      },
     ],
     [
       {
         name: '{{user}}',
         content: {
-          text: 'Promote Alice to admin and then notify all members about the change'
-        }
+          text: 'Promote Alice to admin and then notify all members about the change',
+        },
       },
       {
         name: '{{agent}}',
         content: {
-          text: 'I\'ll promote Alice to admin and then notify all members about the role change.',
-          thought: 'User wants me to update Alice\'s role and then broadcast the change - I should handle the role update first, then notify members.',
-          actions: ['UPDATE_ROLE']
-        }
+          text: "I'll promote Alice to admin and then notify all members about the role change.",
+          thought:
+            "User wants me to update Alice's role and then broadcast the change - I should handle the role update first, then notify members.",
+          actions: ['UPDATE_ROLE'],
+        },
       },
       {
         name: '{{agent}}',
         content: {
           text: 'Alice has been promoted to admin! Now notifying all members about this change...',
-          thought: 'Role update completed successfully. I can now send notifications to all members about Alice\'s promotion.',
-          actions: ['NOTIFY_MEMBERS']
-        }
-      }
+          thought:
+            "Role update completed successfully. I can now send notifications to all members about Alice's promotion.",
+          actions: ['NOTIFY_MEMBERS'],
+        },
+      },
     ],
     [
       {
         name: '{{user}}',
         content: {
-          text: 'Demote user-123 to member and log this action for audit purposes'
-        }
+          text: 'Demote user-123 to member and log this action for audit purposes',
+        },
       },
       {
         name: '{{agent}}',
         content: {
-          text: 'I\'ll update user-123\'s role to member and create an audit log entry.',
-          thought: 'User wants role demotion followed by audit logging - I should process the role change first, then create the audit record.',
-          actions: ['UPDATE_ROLE']
-        }
+          text: "I'll update user-123's role to member and create an audit log entry.",
+          thought:
+            'User wants role demotion followed by audit logging - I should process the role change first, then create the audit record.',
+          actions: ['UPDATE_ROLE'],
+        },
       },
       {
         name: '{{agent}}',
         content: {
           text: 'user-123 role has been updated to member. Now creating audit log entry...',
-          thought: 'Role change completed. I can now log this action with the role change details for audit purposes.',
-          actions: ['CREATE_AUDIT_LOG']
-        }
-      }
-    ]
-  ] as ActionExample[][]
+          thought:
+            'Role change completed. I can now log this action with the role change details for audit purposes.',
+          actions: ['CREATE_AUDIT_LOG'],
+        },
+      },
+    ],
+  ] as ActionExample[][],
 };

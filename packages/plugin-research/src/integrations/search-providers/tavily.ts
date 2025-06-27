@@ -182,7 +182,7 @@ export class TavilySearchProvider {
       });
 
       return response.data;
-    } catch (error) {
+    } catch (_error) {
       logger.warn('[Tavily] Could not fetch usage data');
       return null;
     }

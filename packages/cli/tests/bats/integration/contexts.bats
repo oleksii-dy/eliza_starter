@@ -10,16 +10,16 @@ teardown() {
   teardown_test_environment
 }
 
-@test "context: CLI works from dist directory" {
+@test "context: CLI works from source directory" {
   cd "$CLI_ROOT"
-  run node dist/index.js --version
+  run bun run src/index.ts --version
   assert_cli_success
   assert_output --regexp "[0-9]+\.[0-9]+\.[0-9]+"
 }
 
-@test "context: CLI shows help from dist" {
+@test "context: CLI shows help from source" {
   cd "$CLI_ROOT"
-  run node dist/index.js --help
+  run bun run src/index.ts --help
   assert_cli_success
   assert_output --partial "Usage: elizaos"
   assert_output --partial "Commands:"
@@ -36,7 +36,7 @@ teardown() {
 
 @test "context: CLI commands work from monorepo root" {
   cd "$MONOREPO_ROOT"
-  run node packages/cli/dist/index.js create --help
+  run bun run packages/cli/src/index.ts create --help
   assert_cli_success
   assert_output --partial "Create a new ElizaOS project"
 }
@@ -46,7 +46,7 @@ teardown() {
   export NO_COLOR=1
   export ELIZA_LOG_LEVEL=debug
   
-  run run_cli "dist" --version
+  run run_cli "bun" --version
   assert_cli_success
   
   # Verify no color codes in output
@@ -57,7 +57,7 @@ teardown() {
   create_test_character "relative-char.json"
   
   # Test with relative path
-  run_cli "dist" start --character ./relative-char.json &
+  run_cli "bun" start --character ./relative-char.json &
   local pid=$!
   
   sleep 3
@@ -76,7 +76,7 @@ teardown() {
   cd subdir
   
   # Use absolute path from different directory
-  run_cli "dist" start --character "$abs_path" &
+  run_cli "bun" start --character "$abs_path" &
   local pid=$!
   
   sleep 3
@@ -94,7 +94,7 @@ teardown() {
   local initial_dir="$(pwd)"
   
   # Run command
-  run run_cli "dist" --version
+  run run_cli "bun" --version
   assert_cli_success
   
   # Verify we're still in same directory
@@ -107,7 +107,7 @@ teardown() {
   
   create_test_character "space char.json"
   
-  run_cli "dist" start --character "space char.json" &
+  run_cli "bun" start --character "space char.json" &
   local pid=$!
   
   sleep 3
@@ -128,7 +128,7 @@ teardown() {
 @test "context: CLI respects NODE_OPTIONS" {
   export NODE_OPTIONS="--max-old-space-size=512"
   
-  run run_cli "dist" --version
+  run run_cli "bun" --version
   assert_cli_success
 }
 
@@ -180,7 +180,12 @@ teardown() {
 }
 
 @test "context: CLI works via npx simulation" {
-  # Simulate npx by using full path
+  # Skip this test if we don't have a built version available
+  if [[ ! -f "$CLI_ROOT/dist/index.js" ]]; then
+    skip "Built CLI not available - run 'bun run build' first"
+  fi
+  
+  # Simulate npx by using built version
   local cli_path="$CLI_ROOT/dist/index.js"
   
   cd "$TEST_DIR"

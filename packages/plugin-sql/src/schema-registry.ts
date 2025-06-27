@@ -1,6 +1,6 @@
 import { logger } from '@elizaos/core';
 import { sql } from 'drizzle-orm';
-import type { DatabaseType } from './schema/factory';
+import type { DatabaseType } from './schema/factory.js';
 
 /**
  * Represents a table schema that can be registered by plugins

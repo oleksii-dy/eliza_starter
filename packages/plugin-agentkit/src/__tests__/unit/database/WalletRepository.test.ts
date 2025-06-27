@@ -44,15 +44,21 @@ describe('WalletRepository', () => {
 
       await repository.initialize();
 
-      // Should create tables
+      // Should create tables (3) and indexes (8) = 11 total calls
+      expect(mockDb.run).toHaveBeenCalledTimes(11);
+      
+      // Verify specific table creation calls
       expect(mockDb.run).toHaveBeenCalledWith(
-        expect.stringContaining('CREATE TABLE IF NOT EXISTS custodial_wallets')
+        expect.stringContaining('CREATE TABLE IF NOT EXISTS custodial_wallets'),
+        []
       );
       expect(mockDb.run).toHaveBeenCalledWith(
-        expect.stringContaining('CREATE TABLE IF NOT EXISTS wallet_permissions')
+        expect.stringContaining('CREATE TABLE IF NOT EXISTS wallet_permissions'),
+        []
       );
       expect(mockDb.run).toHaveBeenCalledWith(
-        expect.stringContaining('CREATE TABLE IF NOT EXISTS wallet_transactions')
+        expect.stringContaining('CREATE TABLE IF NOT EXISTS wallet_transactions'),
+        []
       );
     });
 
@@ -147,21 +153,21 @@ describe('WalletRepository', () => {
     it('should get wallets for entity', async () => {
       mockDb.all.mockResolvedValue([
         {
-          id: 'wallet-1',
+          id: '00000000-0000-0000-0000-000000000001',
           address: '0x1234',
           network: 'base-sepolia',
           name: 'Wallet 1',
-          owner_id: 'entity-123',
+          owner_id: '00000000-0000-0000-0000-000000000002',
           status: 'active',
           created_at: Date.now(),
           metadata: '{}',
         },
       ]);
 
-      const wallets = await repository.getWalletsForEntity('entity-123' as UUID);
+      const wallets = await repository.getWalletsForEntity('00000000-0000-0000-0000-000000000002' as UUID);
 
       expect(wallets).toHaveLength(1);
-      expect(wallets[0].id).toBe('wallet-1' as UUID);
+      expect(wallets[0].id).toBe('00000000-0000-0000-0000-000000000001' as UUID);
     });
 
     it('should update wallet status', async () => {

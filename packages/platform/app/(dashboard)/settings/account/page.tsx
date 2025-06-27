@@ -4,7 +4,11 @@ import Input from '@/components/ui/input';
 import SettingsBox from '@/components/ui/settings-box';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
-import { ApiError as _ApiError, ApiResponse as _ApiResponse, User } from '@/types';
+import {
+  ApiError as _ApiError,
+  ApiResponse as _ApiResponse,
+  User,
+} from '@/types';
 import Spinner from '@/components/ui/spinner';
 import {
   resendUpdateEmailConfirmation,
@@ -171,7 +175,9 @@ function AccountSettingsContent() {
     }
   }
 
-  if (isLoading) {return <Spinner />;}
+  if (isLoading) {
+    return <Spinner />;
+  }
 
   return (
     <>
@@ -257,30 +263,30 @@ function AccountSettingsContent() {
         note={
           userValues.updatedEmail &&
           userValues.email?.initial !== userValues.updatedEmail ? (
-              <span className="text-sm">
+            <span className="text-sm">
               To update your email, click the confirmation link we sent to{' '}
-                <strong>{userValues.updatedEmail}</strong>.{' '}
-                <Button
-                  className="underline"
-                  variant="link"
-                  handleClick={() =>
-                    resendUpdateEmailConfirmation({ user }).then((res: any) => {
-                      console.log(res);
-                      toast({
-                        message: 'Email sent',
-                        description:
+              <strong>{userValues.updatedEmail}</strong>.{' '}
+              <Button
+                className="underline"
+                variant="link"
+                handleClick={() =>
+                  resendUpdateEmailConfirmation({ user }).then((res: any) => {
+                    console.log(res);
+                    toast({
+                      message: 'Email sent',
+                      description:
                         'Please check your email for a confirmation link.',
-                        mode: 'success',
-                      });
-                    })
-                  }
-                >
+                      mode: 'success',
+                    });
+                  })
+                }
+              >
                 Resend
-                </Button>
-              </span>
-            ) : (
-              "Email changes require verification. You'll be logged out of all devices after confirming."
-            )
+              </Button>
+            </span>
+          ) : (
+            "Email changes require verification. You'll be logged out of all devices after confirming."
+          )
         }
         disabled={
           userValues.email?.initial === userValues.email?.current ||

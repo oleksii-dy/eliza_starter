@@ -9,10 +9,10 @@ import { withMiddleware } from '@/lib/domains/generation/api/middleware';
 import { generateHandler } from '@/lib/domains/generation/api/handlers/generate';
 import { listHandler } from '@/lib/domains/generation/api/handlers/list';
 
-export async function POST(req: NextRequest) {
+export async function handlePOST(req: NextRequest) {
   return withMiddleware(req, generateHandler);
 }
 
-export async function GET(req: NextRequest) {
+export async function handleGET(req: NextRequest) {
   return withMiddleware(req, listHandler);
 }

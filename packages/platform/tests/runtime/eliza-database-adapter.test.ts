@@ -5,7 +5,13 @@
 
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
 import { db, getDatabase } from '@/lib/database';
-import { organizations, users, conversations, messages, memories } from '@/lib/database/schema';
+import {
+  organizations,
+  users,
+  conversations,
+  messages,
+  memories,
+} from '@/lib/database/schema';
 import { eq } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -29,19 +35,28 @@ class PlatformDatabaseAdapter {
   private convertToElizaMemory(platformMessage: any): Memory {
     return {
       id: this.convertToElizaUUID(platformMessage.id),
-      entityId: this.convertToElizaUUID(platformMessage.userId || platformMessage.agentId),
+      entityId: this.convertToElizaUUID(
+        platformMessage.userId || platformMessage.agentId,
+      ),
       agentId: this.convertToElizaUUID(platformMessage.agentId),
       roomId: this.convertToElizaUUID(platformMessage.conversationId),
       content: platformMessage.content as Content,
-      embedding: platformMessage.embedding ? JSON.parse(platformMessage.embedding) : undefined,
-      similarity: platformMessage.similarity ? parseFloat(platformMessage.similarity) : undefined,
+      embedding: platformMessage.embedding
+        ? JSON.parse(platformMessage.embedding)
+        : undefined,
+      similarity: platformMessage.similarity
+        ? parseFloat(platformMessage.similarity)
+        : undefined,
       createdAt: new Date(platformMessage.createdAt).getTime(),
       unique: platformMessage.isUnique || false,
-      metadata: platformMessage.metadata || {}
+      metadata: platformMessage.metadata || {},
     };
   }
 
-  async createMemory(memory: Memory, tableName: string = 'messages'): Promise<UUID> {
+  async createMemory(
+    memory: Memory,
+    tableName: string = 'messages',
+  ): Promise<UUID> {
     const platformMemory = {
       id: memory.id || uuidv4(),
       organizationId: this.organizationId,
@@ -50,7 +65,7 @@ class PlatformDatabaseAdapter {
       conversationId: memory.roomId,
       content: memory.content,
       embedding: memory.embedding ? JSON.stringify(memory.embedding) : null,
-      metadata: memory.metadata || {}
+      metadata: memory.metadata || {},
     };
 
     if (tableName === 'facts' || tableName === 'memories') {
@@ -60,10 +75,10 @@ class PlatformDatabaseAdapter {
           ...platformMemory,
           roomId: memory.roomId,
           type: tableName,
-          isUnique: memory.unique || false
+          isUnique: memory.unique || false,
         })
         .returning({ id: memories.id });
-      
+
       return this.convertToElizaUUID(inserted.id);
     } else {
       const [inserted] = await this.database
@@ -71,10 +86,10 @@ class PlatformDatabaseAdapter {
         .values({
           ...platformMemory,
           role: memory.content.thought ? 'assistant' : 'user',
-          tokenCount: JSON.stringify(memory.content).length
+          tokenCount: JSON.stringify(memory.content).length,
         })
         .returning({ id: messages.id });
-      
+
       return this.convertToElizaUUID(inserted.id);
     }
   }
@@ -86,12 +101,12 @@ class PlatformDatabaseAdapter {
     agentId?: UUID;
   }): Promise<Memory[]> {
     const searchTable = params.tableName === 'facts' ? memories : messages;
-    
+
     let query = this.database
       .select()
       .from(searchTable)
       .where(eq(searchTable.organizationId, this.organizationId));
-    
+
     if (params.roomId) {
       if (params.tableName === 'facts') {
         query = query.where(eq(memories.roomId, params.roomId));
@@ -99,11 +114,11 @@ class PlatformDatabaseAdapter {
         query = query.where(eq(messages.conversationId, params.roomId));
       }
     }
-    
+
     if (params.count) {
       query = query.limit(params.count);
     }
-    
+
     const results = await query;
     return results.map((row: any) => this.convertToElizaMemory(row));
   }
@@ -133,11 +148,19 @@ describe('ElizaOS Database Adapter Integration', () => {
 
     // Clean up any existing test data
     try {
-      await database.delete(memories).where(eq(memories.organizationId, testOrgId));
-      await database.delete(messages).where(eq(messages.organizationId, testOrgId));
-      await database.delete(conversations).where(eq(conversations.organizationId, testOrgId));
+      await database
+        .delete(memories)
+        .where(eq(memories.organizationId, testOrgId));
+      await database
+        .delete(messages)
+        .where(eq(messages.organizationId, testOrgId));
+      await database
+        .delete(conversations)
+        .where(eq(conversations.organizationId, testOrgId));
       await database.delete(users).where(eq(users.organizationId, testOrgId));
-      await database.delete(organizations).where(eq(organizations.id, testOrgId));
+      await database
+        .delete(organizations)
+        .where(eq(organizations.id, testOrgId));
     } catch (error) {
       // Ignore cleanup errors for non-existent data
     }
@@ -176,11 +199,19 @@ describe('ElizaOS Database Adapter Integration', () => {
   afterEach(async () => {
     // Clean up test data
     try {
-      await database.delete(memories).where(eq(memories.organizationId, testOrgId));
-      await database.delete(messages).where(eq(messages.organizationId, testOrgId));
-      await database.delete(conversations).where(eq(conversations.organizationId, testOrgId));
+      await database
+        .delete(memories)
+        .where(eq(memories.organizationId, testOrgId));
+      await database
+        .delete(messages)
+        .where(eq(messages.organizationId, testOrgId));
+      await database
+        .delete(conversations)
+        .where(eq(conversations.organizationId, testOrgId));
       await database.delete(users).where(eq(users.organizationId, testOrgId));
-      await database.delete(organizations).where(eq(organizations.id, testOrgId));
+      await database
+        .delete(organizations)
+        .where(eq(organizations.id, testOrgId));
     } catch (error) {
       console.warn('Error cleaning up test data:', error);
     }
@@ -194,12 +225,12 @@ describe('ElizaOS Database Adapter Integration', () => {
         roomId: testConversationId as UUID,
         content: {
           text: 'Hello, this is a test message',
-          thought: 'The user is greeting me'
+          thought: 'The user is greeting me',
         },
         metadata: {
           type: 'test',
-          test: true
-        }
+          test: true,
+        },
       };
 
       // Create memory
@@ -211,12 +242,16 @@ describe('ElizaOS Database Adapter Integration', () => {
       const retrievedMemories = await adapter.getMemories({
         roomId: testConversationId as UUID,
         tableName: 'messages',
-        count: 10
+        count: 10,
       });
 
       expect(retrievedMemories).toHaveLength(1);
-      expect(retrievedMemories[0].content.text).toBe('Hello, this is a test message');
-      expect(retrievedMemories[0].content.thought).toBe('The user is greeting me');
+      expect(retrievedMemories[0].content.text).toBe(
+        'Hello, this is a test message',
+      );
+      expect(retrievedMemories[0].content.thought).toBe(
+        'The user is greeting me',
+      );
       expect(retrievedMemories[0].entityId).toBe(testUserId);
       expect(retrievedMemories[0].agentId).toBe(testAgentId);
       expect(retrievedMemories[0].roomId).toBe(testConversationId);
@@ -229,13 +264,13 @@ describe('ElizaOS Database Adapter Integration', () => {
         roomId: testConversationId as UUID,
         content: {
           text: 'The user likes coffee',
-          source: 'conversation'
+          source: 'conversation',
         },
         metadata: {
           type: 'preference',
-          importance: 8
+          importance: 8,
         },
-        unique: true
+        unique: true,
       };
 
       // Create fact
@@ -245,7 +280,7 @@ describe('ElizaOS Database Adapter Integration', () => {
       // Retrieve facts
       const retrievedFacts = await adapter.getMemories({
         roomId: testConversationId as UUID,
-        tableName: 'facts'
+        tableName: 'facts',
       });
 
       expect(retrievedFacts).toHaveLength(1);
@@ -259,20 +294,20 @@ describe('ElizaOS Database Adapter Integration', () => {
           entityId: testUserId as UUID,
           agentId: testAgentId as UUID,
           roomId: testConversationId as UUID,
-          content: { text: 'First message' }
+          content: { text: 'First message' },
         },
         {
           entityId: testAgentId as UUID,
           agentId: testAgentId as UUID,
           roomId: testConversationId as UUID,
-          content: { text: 'Agent response', thought: 'Responding to user' }
+          content: { text: 'Agent response', thought: 'Responding to user' },
         },
         {
           entityId: testUserId as UUID,
           agentId: testAgentId as UUID,
           roomId: testConversationId as UUID,
-          content: { text: 'Second message' }
-        }
+          content: { text: 'Second message' },
+        },
       ];
 
       // Create all memories
@@ -283,13 +318,13 @@ describe('ElizaOS Database Adapter Integration', () => {
       // Retrieve all memories
       const retrievedMemories = await adapter.getMemories({
         roomId: testConversationId as UUID,
-        tableName: 'messages'
+        tableName: 'messages',
       });
 
       expect(retrievedMemories).toHaveLength(3);
-      
+
       // Check messages are retrieved
-      const messageTexts = retrievedMemories.map(m => m.content.text);
+      const messageTexts = retrievedMemories.map((m) => m.content.text);
       expect(messageTexts).toContain('First message');
       expect(messageTexts).toContain('Agent response');
       expect(messageTexts).toContain('Second message');
@@ -301,10 +336,10 @@ describe('ElizaOS Database Adapter Integration', () => {
         agentId: testAgentId as UUID,
         roomId: testConversationId as UUID,
         content: {
-          text: 'This message has an embedding vector'
+          text: 'This message has an embedding vector',
         },
         embedding: [0.1, 0.2, 0.3, 0.4, 0.5],
-        similarity: 0.95
+        similarity: 0.95,
       };
 
       const memoryId = await adapter.createMemory(testMemory, 'messages');
@@ -312,7 +347,7 @@ describe('ElizaOS Database Adapter Integration', () => {
 
       const retrievedMemories = await adapter.getMemories({
         roomId: testConversationId as UUID,
-        tableName: 'messages'
+        tableName: 'messages',
       });
 
       expect(retrievedMemories).toHaveLength(1);
@@ -327,7 +362,7 @@ describe('ElizaOS Database Adapter Integration', () => {
         entityId: testUserId as UUID,
         agentId: testAgentId as UUID,
         roomId: testConversationId as UUID,
-        content: { text: 'Test with valid references' }
+        content: { text: 'Test with valid references' },
       };
 
       const memoryId = await adapter.createMemory(testMemory, 'messages');
@@ -336,7 +371,7 @@ describe('ElizaOS Database Adapter Integration', () => {
       // Verify the memory is correctly linked
       const retrievedMemories = await adapter.getMemories({
         roomId: testConversationId as UUID,
-        tableName: 'messages'
+        tableName: 'messages',
       });
 
       expect(retrievedMemories).toHaveLength(1);
@@ -347,12 +382,15 @@ describe('ElizaOS Database Adapter Integration', () => {
 
     test('should handle organization isolation', async () => {
       // Create memory in our test org
-      await adapter.createMemory({
-        entityId: testUserId as UUID,
-        agentId: testAgentId as UUID,
-        roomId: testConversationId as UUID,
-        content: { text: 'Message in test org' }
-      }, 'messages');
+      await adapter.createMemory(
+        {
+          entityId: testUserId as UUID,
+          agentId: testAgentId as UUID,
+          roomId: testConversationId as UUID,
+          content: { text: 'Message in test org' },
+        },
+        'messages',
+      );
 
       // Create another org and adapter
       const otherOrgId = uuidv4();
@@ -367,7 +405,7 @@ describe('ElizaOS Database Adapter Integration', () => {
       // Other adapter should not see our memories
       const otherMemories = await otherAdapter.getMemories({
         roomId: testConversationId as UUID,
-        tableName: 'messages'
+        tableName: 'messages',
       });
 
       expect(otherMemories).toHaveLength(0);
@@ -375,13 +413,15 @@ describe('ElizaOS Database Adapter Integration', () => {
       // Our adapter should still see our memories
       const ourMemories = await adapter.getMemories({
         roomId: testConversationId as UUID,
-        tableName: 'messages'
+        tableName: 'messages',
       });
 
       expect(ourMemories).toHaveLength(1);
 
       // Cleanup
-      await database.delete(organizations).where(eq(organizations.id, otherOrgId));
+      await database
+        .delete(organizations)
+        .where(eq(organizations.id, otherOrgId));
     });
   });
 });

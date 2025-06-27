@@ -420,6 +420,9 @@ export class ScenarioDatabaseAdapter implements IDatabaseAdapter {
             logger.info(`[DrizzleDB] SELECT from ${tableName}`);
 
             const queryInterface: DrizzleQuery = {
+              from(_table: any): DrizzleQuery {
+                return queryInterface;
+              },
               where(_condition: any): DrizzleQuery {
                 return queryInterface;
               },
@@ -471,6 +474,9 @@ export class ScenarioDatabaseAdapter implements IDatabaseAdapter {
         const insertInterface: DrizzleInsert = {
           values(data: any | any[]): DrizzleInsert {
             const valueInterface: DrizzleInsert = {
+              values(_data: any | any[]): DrizzleInsert {
+                return valueInterface;
+              },
               returning(): DrizzleInsert {
                 return valueInterface;
               },
@@ -509,7 +515,7 @@ export class ScenarioDatabaseAdapter implements IDatabaseAdapter {
         const updateInterface: DrizzleUpdate = {
           set(data: any): DrizzleUpdate {
             const setInterface: DrizzleUpdate = {
-              set(data: any): DrizzleUpdate {
+              set(_data: any): DrizzleUpdate {
                 return setInterface;
               },
               where(_condition: any): DrizzleUpdate {
@@ -546,7 +552,7 @@ export class ScenarioDatabaseAdapter implements IDatabaseAdapter {
         logger.debug(`[DrizzleDB] DELETE from ${tableName}`);
 
         return {
-          where(condition: any) {
+          where(_condition: any) {
             return this;
           },
           async then(resolve: (value: any) => void) {
@@ -627,7 +633,7 @@ export class ScenarioDatabaseAdapter implements IDatabaseAdapter {
     agentId?: UUID;
     count?: number;
     unique?: boolean;
-    tableName?: string;
+    _tableName?: string;
     start?: number;
     end?: number;
     roomId?: UUID;
@@ -653,7 +659,7 @@ export class ScenarioDatabaseAdapter implements IDatabaseAdapter {
       if (params.unique) {
         const seen = new Set<string>();
         result = result.filter((memory) => {
-          const key = memory.content?.text || memory.id;
+          const key = memory.content?.text || memory.id || '';
           if (seen.has(key)) {
             return false;
           }
@@ -676,17 +682,18 @@ export class ScenarioDatabaseAdapter implements IDatabaseAdapter {
     });
   }
 
-  async createMemory(memory: Memory, tableName?: string, unique?: boolean): Promise<UUID> {
+  async createMemory(memory: Memory, __tableName?: string, _unique?: boolean): Promise<UUID> {
     return this.recordOperation('memory_create', async () => {
       this.instrumentation.memoryOperations.created++;
 
       const roomId = memory.roomId || 'default';
       const memories = this.storage.memories.get(roomId) || [];
 
+      const memoryId = memory.id || (uuidv4() as UUID);
       const memoryWithId: Memory = {
         ...memory,
-        id: memory.id || (uuidv4() as UUID),
-        createdAt: new Date().toISOString(),
+        id: memoryId,
+        createdAt: Date.now(),
       };
 
       memories.push(memoryWithId);
@@ -695,11 +702,10 @@ export class ScenarioDatabaseAdapter implements IDatabaseAdapter {
       logger.debug('[ScenarioDatabaseAdapter] Created memory', {
         id: memoryWithId.id,
         roomId,
-        tableName,
         contentLength: memory.content?.text?.length || 0,
       });
 
-      return memoryWithId.id;
+      return memoryId;
     });
   }
 
@@ -708,7 +714,7 @@ export class ScenarioDatabaseAdapter implements IDatabaseAdapter {
     match_threshold?: number;
     count?: number;
     unique?: boolean;
-    tableName?: string;
+    _tableName?: string;
     query?: string;
     roomId?: UUID;
     worldId?: UUID;
@@ -789,12 +795,12 @@ export class ScenarioDatabaseAdapter implements IDatabaseAdapter {
     });
   }
 
-  async getMemoriesByIds(ids: UUID[], tableName?: string): Promise<Memory[]> {
+  async getMemoriesByIds(ids: UUID[], _tableName?: string): Promise<Memory[]> {
     return this.recordOperation('memory_get_by_ids', async () => {
       const result: Memory[] = [];
       for (const memories of this.storage.memories.values()) {
         for (const memory of memories) {
-          if (ids.includes(memory.id)) {
+          if (memory.id && ids.includes(memory.id)) {
             result.push(memory);
           }
         }
@@ -804,7 +810,7 @@ export class ScenarioDatabaseAdapter implements IDatabaseAdapter {
   }
 
   async getMemoriesByRoomIds(params: {
-    tableName?: string;
+    _tableName?: string;
     roomIds: UUID[];
     limit?: number;
   }): Promise<Memory[]> {
@@ -826,19 +832,19 @@ export class ScenarioDatabaseAdapter implements IDatabaseAdapter {
     });
   }
 
-  async deleteAllMemories(roomId: UUID, tableName?: string): Promise<void> {
+  async deleteAllMemories(roomId: UUID, _tableName?: string): Promise<void> {
     this.recordOperation('memory_delete_all', async () => {
       this.storage.memories.set(roomId, []);
       logger.debug(`[ScenarioDatabaseAdapter] Deleted all memories in room ${roomId}`);
     });
   }
 
-  async countMemories(roomId: UUID, unique?: boolean, tableName?: string): Promise<number> {
+  async countMemories(roomId: UUID, _unique?: boolean, _tableName?: string): Promise<number> {
     const memories = this.storage.memories.get(roomId) || [];
     return memories.length;
   }
 
-  async getCachedEmbeddings(params: {
+  async getCachedEmbeddings(_params: {
     query_table_name: string;
     query_threshold: number;
     query_input: string;
@@ -849,10 +855,10 @@ export class ScenarioDatabaseAdapter implements IDatabaseAdapter {
     return [];
   }
 
-  async getMemoriesByWorldId(params: {
+  async getMemoriesByWorldId(_params: {
     worldId: UUID;
     count?: number;
-    tableName?: string;
+    _tableName?: string;
   }): Promise<Memory[]> {
     return [];
   }
@@ -892,7 +898,7 @@ export class ScenarioDatabaseAdapter implements IDatabaseAdapter {
     });
   }
 
-  async getEntitiesForRoom(roomId: UUID, includeComponents?: boolean): Promise<Entity[]> {
+  async getEntitiesForRoom(_roomId: UUID, _includeComponents?: boolean): Promise<Entity[]> {
     return this.recordOperation('entity_get_for_room', async () => {
       // In a real implementation, this would filter by room association
       return Array.from(this.storage.entities.values());
@@ -1084,12 +1090,12 @@ export class ScenarioDatabaseAdapter implements IDatabaseAdapter {
 
   async getParticipantsForEntity(entityId: UUID): Promise<CoreParticipant[]> {
     const result: CoreParticipant[] = [];
-    for (const [roomId, participants] of this.storage.participants.entries()) {
+    for (const [_roomId, participants] of this.storage.participants.entries()) {
       const participant = participants.find((p) => p.userId === entityId);
       if (participant) {
         // Convert to CoreParticipant format
         const entity = this.storage.entities.get(participant.userId);
-        if (entity) {
+        if (entity && participant.id) {
           result.push({
             id: participant.id,
             entity,
@@ -1106,7 +1112,11 @@ export class ScenarioDatabaseAdapter implements IDatabaseAdapter {
   ): Promise<'FOLLOWED' | 'MUTED' | null> {
     const participants = this.storage.participants.get(roomId) || [];
     const participant = participants.find((p) => p.userId === entityId);
-    return participant?.userState || null;
+    const userState = participant?.userState;
+    if (userState === 'FOLLOWED' || userState === 'MUTED') {
+      return userState;
+    }
+    return null;
   }
 
   async setParticipantUserState(
@@ -1121,13 +1131,13 @@ export class ScenarioDatabaseAdapter implements IDatabaseAdapter {
       const participant = participants.find((p) => p.userId === entityId);
 
       if (participant) {
-        participant.userState = state;
+        participant.userState = state as any;
       } else {
         participants.push({
           id: uuidv4() as UUID,
           userId: entityId,
           roomId,
-          userState: state,
+          userState: state as any,
           joinedAt: new Date().toISOString(),
         });
         this.storage.participants.set(roomId, participants);
@@ -1152,14 +1162,18 @@ export class ScenarioDatabaseAdapter implements IDatabaseAdapter {
   async getComponent(
     entityId: UUID,
     type: string,
-    worldId?: UUID,
-    sourceEntityId?: UUID
+    _worldId?: UUID,
+    _sourceEntityId?: UUID
   ): Promise<Component | null> {
     const components = this.storage.components.get(entityId) || [];
     return components.find((c) => c.type === type) || null;
   }
 
-  async getComponents(entityId: UUID, worldId?: UUID, sourceEntityId?: UUID): Promise<Component[]> {
+  async getComponents(
+    entityId: UUID,
+    _worldId?: UUID,
+    _sourceEntityId?: UUID
+  ): Promise<Component[]> {
     return this.storage.components.get(entityId) || [];
   }
 
@@ -1199,7 +1213,7 @@ export class ScenarioDatabaseAdapter implements IDatabaseAdapter {
       targetEntityId: params.targetEntityId,
       tags: params.tags || [],
       metadata: params.metadata,
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
     };
 
     const relationships = this.storage.relationships.get(params.sourceEntityId) || [];
@@ -1208,7 +1222,7 @@ export class ScenarioDatabaseAdapter implements IDatabaseAdapter {
     return true;
   }
 
-  async updateRelationship(relationship: Relationship): Promise<void> {
+  async updateRelationship(_relationship: Relationship): Promise<void> {
     // Implementation for relationship updates
   }
 
@@ -1303,7 +1317,7 @@ export class ScenarioDatabaseAdapter implements IDatabaseAdapter {
     return taskId;
   }
 
-  async getTasks(params: { roomId?: UUID; tags?: string[]; entityId?: UUID }): Promise<Task[]> {
+  async getTasks(_params: { roomId?: UUID; tags?: string[]; entityId?: UUID }): Promise<Task[]> {
     return Array.from(this.storage.tasks.values());
   }
 

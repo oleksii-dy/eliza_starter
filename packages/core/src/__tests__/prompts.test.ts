@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'bun:test';
+import { expect } from 'bun:test';
+import { createUnitTest } from '../test-utils/unifiedTestSuite';
 import {
   shouldRespondTemplate,
   messageHandlerTemplate,
@@ -7,208 +8,201 @@ import {
   imageDescriptionTemplate,
 } from '../prompts';
 
-describe('Prompts', () => {
+const promptsSuite = createUnitTest('Prompts Tests');
+
+// Test context for shared data
+interface TestContext {
+  renderTemplate: (template: string, data: Record<string, string>) => string;
+}
+
+promptsSuite.beforeEach<TestContext>((context) => {
   // Helper function to simulate template rendering
-  const renderTemplate = (template: string, data: Record<string, string>): string => {
+  context.renderTemplate = (template: string, data: Record<string, string>): string => {
     let rendered = template;
     Object.entries(data).forEach(([key, value]) => {
       rendered = rendered.replace(new RegExp(`{{${key}}}`, 'g'), value);
     });
     return rendered;
   };
+});
 
-  describe('shouldRespondTemplate', () => {
-    it('should generate valid response decision prompt', () => {
-      const data = {
-        agentName: 'TestAgent',
-        providers: 'Recent conversation context:\nUser: Hello\nAgent: Hi there!',
-      };
+promptsSuite.addTest<TestContext>('shouldRespondTemplate should generate valid response decision prompt', async (context) => {
+  const data = {
+    agentName: 'TestAgent',
+    providers: 'Recent conversation context:\nUser: Hello\nAgent: Hi there!',
+  };
 
-      const rendered = renderTemplate(shouldRespondTemplate, data);
+  const rendered = context.renderTemplate(shouldRespondTemplate, data);
 
-      // Check that the prompt is properly structured
-      expect(rendered).toContain('TestAgent');
-      expect(rendered).toContain('Recent conversation context:');
-      expect(rendered).toContain('<response>');
-      expect(rendered).toContain('</response>');
+  // Check that the prompt is properly structured
+  expect(rendered).toContain('TestAgent');
+  expect(rendered).toContain('Recent conversation context:');
+  expect(rendered).toContain('<response>');
+  expect(rendered).toContain('</response>');
 
-      // Verify no placeholders remain
-      expect(rendered).not.toContain('{{');
-    });
+  // Verify no placeholders remain
+  expect(rendered).not.toContain('{{');
+});
 
-    it('should include all required decision elements', () => {
-      const rendered = renderTemplate(shouldRespondTemplate, {
-        agentName: 'Agent',
-        providers: 'Context',
-      });
-
-      // Should have the three decision options
-      expect(rendered).toMatch(/RESPOND \| IGNORE \| STOP/);
-
-      // Should have required XML elements
-      expect(rendered).toContain('<name>');
-      expect(rendered).toContain('<reasoning>');
-      expect(rendered).toContain('<action>');
-    });
+promptsSuite.addTest<TestContext>('shouldRespondTemplate should include all required decision elements', async (context) => {
+  const rendered = context.renderTemplate(shouldRespondTemplate, {
+    agentName: 'Agent',
+    providers: 'Context',
   });
 
-  describe('messageHandlerTemplate', () => {
-    it('should generate valid message handler prompt with actions', () => {
-      const data = {
-        agentName: 'TestAgent',
-        providers: 'User profile: Active trader\nMarket data: BTC $50,000',
-        actionNames: 'CHECK_BALANCE, EXECUTE_TRADE, SEND_NOTIFICATION',
-      };
+  // Should have the three decision options
+  expect(rendered).toMatch(/RESPOND \| IGNORE \| STOP/);
 
-      const rendered = renderTemplate(messageHandlerTemplate, data);
+  // Should have required XML elements
+  expect(rendered).toContain('<name>');
+  expect(rendered).toContain('<reasoning>');
+  expect(rendered).toContain('<action>');
+});
 
-      expect(rendered).toContain('TestAgent');
-      expect(rendered).toContain('CHECK_BALANCE, EXECUTE_TRADE, SEND_NOTIFICATION');
-      expect(rendered).toContain('User profile: Active trader');
+promptsSuite.addTest<TestContext>('messageHandlerTemplate should generate valid message handler prompt with actions', async (context) => {
+  const data = {
+    agentName: 'TestAgent',
+    providers: 'User profile: Active trader\nMarket data: BTC $50,000',
+    actionNames: 'CHECK_BALANCE, EXECUTE_TRADE, SEND_NOTIFICATION',
+  };
 
-      // Check for required response structure
-      expect(rendered).toContain('<thought>');
-      expect(rendered).toContain('<actions>');
-      expect(rendered).toContain('<providers>');
-      expect(rendered).toContain('<text>');
-    });
+  const rendered = context.renderTemplate(messageHandlerTemplate, data);
 
-    it('should include action ordering rules', () => {
-      const rendered = renderTemplate(messageHandlerTemplate, {
-        agentName: 'Agent',
-        providers: 'Context',
-        actionNames: 'ACTION1, ACTION2',
-      });
+  expect(rendered).toContain('TestAgent');
+  expect(rendered).toContain('CHECK_BALANCE, EXECUTE_TRADE, SEND_NOTIFICATION');
+  expect(rendered).toContain('User profile: Active trader');
 
-      expect(rendered).toContain('IMPORTANT ACTION ORDERING RULES');
-      expect(rendered).toContain('Actions are executed in the ORDER you list them');
-    });
+  // Check for required response structure
+  expect(rendered).toContain('<thought>');
+  expect(rendered).toContain('<actions>');
+  expect(rendered).toContain('<providers>');
+  expect(rendered).toContain('<text>');
+});
 
-    it('should include provider selection rules', () => {
-      const rendered = renderTemplate(messageHandlerTemplate, {
-        agentName: 'Agent',
-        providers: 'Context',
-        actionNames: 'ACTIONS',
-      });
-
-      expect(rendered).toContain('IMPORTANT PROVIDER SELECTION RULES');
-      expect(rendered).toContain('ATTACHMENTS');
-      expect(rendered).toContain('ENTITIES');
-      expect(rendered).toContain('KNOWLEDGE');
-    });
+promptsSuite.addTest<TestContext>('messageHandlerTemplate should include action ordering rules', async (context) => {
+  const rendered = context.renderTemplate(messageHandlerTemplate, {
+    agentName: 'Agent',
+    providers: 'Context',
+    actionNames: 'ACTION1, ACTION2',
   });
 
-  describe('postCreationTemplate', () => {
-    it('should generate valid social media post prompt', () => {
-      const data = {
-        agentName: 'CryptoBot',
-        twitterUserName: '@cryptobot',
-        providers: 'Recent posts: Discussing DeFi trends',
-        adjective: 'insightful',
-        topic: 'cryptocurrency market analysis',
-      };
+  expect(rendered).toContain('IMPORTANT ACTION ORDERING RULES');
+  expect(rendered).toContain('Actions are executed in the ORDER you list them');
+});
 
-      const rendered = renderTemplate(postCreationTemplate, data);
-
-      expect(rendered).toContain('CryptoBot');
-      expect(rendered).toContain('@cryptobot');
-      expect(rendered).toContain('insightful');
-      expect(rendered).toContain('cryptocurrency market analysis');
-
-      // Check for post structure
-      expect(rendered).toContain('<thought>');
-      expect(rendered).toContain('<post>');
-      expect(rendered).toContain('<imagePrompt>');
-    });
-
-    it('should handle empty optional fields gracefully', () => {
-      const data = {
-        agentName: 'Bot',
-        twitterUserName: '',
-        providers: '',
-        adjective: 'random',
-        topic: 'general',
-      };
-
-      const rendered = renderTemplate(postCreationTemplate, data);
-
-      // Should still be valid even with empty fields
-      expect(rendered).toContain('<response>');
-      expect(rendered).toContain('</response>');
-      expect(rendered).not.toContain('{{');
-    });
+promptsSuite.addTest<TestContext>('messageHandlerTemplate should include provider selection rules', async (context) => {
+  const rendered = context.renderTemplate(messageHandlerTemplate, {
+    agentName: 'Agent',
+    providers: 'Context',
+    actionNames: 'ACTIONS',
   });
 
-  describe('imageDescriptionTemplate', () => {
-    it('should create proper image analysis prompt', () => {
-      const template = imageDescriptionTemplate;
+  expect(rendered).toContain('IMPORTANT PROVIDER SELECTION RULES');
+  expect(rendered).toContain('ATTACHMENTS');
+  expect(rendered).toContain('ENTITIES');
+  expect(rendered).toContain('KNOWLEDGE');
+});
 
-      // Should have proper task structure
-      expect(template).toContain('<task>');
-      expect(template).toContain('<instructions>');
-      expect(template).toContain('<output>');
+promptsSuite.addTest<TestContext>('postCreationTemplate should generate valid social media post prompt', async (context) => {
+  const data = {
+    agentName: 'CryptoBot',
+    twitterUserName: '@cryptobot',
+    providers: 'Recent posts: Discussing DeFi trends',
+    adjective: 'insightful',
+    topic: 'cryptocurrency market analysis',
+  };
 
-      // Should have analysis requirements
-      expect(template).toContain('Analyze the provided image');
-      expect(template).toContain('Be objective and descriptive');
+  const rendered = context.renderTemplate(postCreationTemplate, data);
 
-      // Should have output format
-      expect(template).toContain('<title>');
-      expect(template).toContain('<description>');
-      expect(template).toContain('<text>');
-    });
-  });
+  expect(rendered).toContain('CryptoBot');
+  expect(rendered).toContain('@cryptobot');
+  expect(rendered).toContain('insightful');
+  expect(rendered).toContain('cryptocurrency market analysis');
 
-  describe('booleanFooter', () => {
-    it('should be a simple YES/NO instruction', () => {
-      expect(booleanFooter).toBe('Respond with only a YES or a NO.');
-    });
-  });
+  // Check for post structure
+  expect(rendered).toContain('<thought>');
+  expect(rendered).toContain('<post>');
+  expect(rendered).toContain('<imagePrompt>');
+});
 
-  describe('Template Safety', () => {
-    it('should not execute code in templates', () => {
-      const maliciousData = {
-        agentName: '${process.exit(1)}',
-        providers: '<script>alert("xss")</script>',
-        actionNames: '"; DROP TABLE users; --',
-      };
+promptsSuite.addTest<TestContext>('postCreationTemplate should handle empty optional fields gracefully', async (context) => {
+  const data = {
+    agentName: 'Bot',
+    twitterUserName: '',
+    providers: '',
+    adjective: 'random',
+    topic: 'general',
+  };
 
-      const rendered = renderTemplate(messageHandlerTemplate, maliciousData);
+  const rendered = context.renderTemplate(postCreationTemplate, data);
 
-      // Should treat all inputs as literal strings
-      expect(rendered).toContain('${process.exit(1)}');
-      expect(rendered).toContain('<script>alert("xss")</script>');
-      expect(rendered).toContain('"; DROP TABLE users; --');
-    });
-  });
+  // Should still be valid even with empty fields
+  expect(rendered).toContain('<response>');
+  expect(rendered).toContain('</response>');
+  expect(rendered).not.toContain('{{');
+});
 
-  describe('XML Structure Validation', () => {
-    it('should have balanced XML tags in all templates', () => {
-      const templates = [
-        shouldRespondTemplate,
-        messageHandlerTemplate,
-        postCreationTemplate,
-        imageDescriptionTemplate,
-      ];
+promptsSuite.addTest<TestContext>('imageDescriptionTemplate should create proper image analysis prompt', async (context) => {
+  const template = imageDescriptionTemplate;
 
-      templates.forEach((template) => {
-        // Count opening and closing tags
-        const openTags = (template.match(/<[^\/][^>]*>/g) || []).filter(
-          (tag) => !tag.includes('/>') && !tag.includes('think')
-        );
-        const closeTags = template.match(/<\/[^>]+>/g) || [];
+  // Should have proper task structure
+  expect(template).toContain('<task>');
+  expect(template).toContain('<instructions>');
+  expect(template).toContain('<output>');
 
-        // Extract tag names
-        const openTagNames = openTags.map((tag) => tag.match(/<([^\s>]+)/)?.[1]).filter(Boolean);
-        const closeTagNames = closeTags.map((tag) => tag.match(/<\/([^>]+)/)?.[1]).filter(Boolean);
+  // Should have analysis requirements
+  expect(template).toContain('Analyze the provided image');
+  expect(template).toContain('Be objective and descriptive');
 
-        // Every open tag should have a corresponding close tag
-        openTagNames.forEach((tagName) => {
-          if (!['br', 'hr', 'img', 'input', 'meta', 'link'].includes(tagName!)) {
-            expect(closeTagNames).toContain(tagName);
-          }
-        });
-      });
+  // Should have output format
+  expect(template).toContain('<title>');
+  expect(template).toContain('<description>');
+  expect(template).toContain('<text>');
+});
+
+promptsSuite.addTest<TestContext>('booleanFooter should be a simple YES/NO instruction', async (context) => {
+  expect(booleanFooter).toBe('Respond with only a YES or a NO.');
+});
+
+promptsSuite.addTest<TestContext>('template safety should not execute code in templates', async (context) => {
+  const maliciousData = {
+    agentName: '${process.exit(1)}',
+    providers: '<script>alert("xss")</script>',
+    actionNames: '"; DROP TABLE users; --',
+  };
+
+  const rendered = context.renderTemplate(messageHandlerTemplate, maliciousData);
+
+  // Should treat all inputs as literal strings
+  expect(rendered).toContain('${process.exit(1)}');
+  expect(rendered).toContain('<script>alert("xss")</script>');
+  expect(rendered).toContain('"; DROP TABLE users; --');
+});
+
+promptsSuite.addTest<TestContext>('XML structure validation should have balanced XML tags in all templates', async (context) => {
+  const templates = [
+    shouldRespondTemplate,
+    messageHandlerTemplate,
+    postCreationTemplate,
+    imageDescriptionTemplate,
+  ];
+
+  templates.forEach((template) => {
+    // Count opening and closing tags
+    const openTags = (template.match(/<[^\/][^>]*>/g) || []).filter(
+      (tag) => !tag.includes('/>') && !tag.includes('think')
+    );
+    const closeTags = template.match(/<\/[^>]+>/g) || [];
+
+    // Extract tag names
+    const openTagNames = openTags.map((tag) => tag.match(/<([^\s>]+)/)?.[1]).filter(Boolean);
+    const closeTagNames = closeTags.map((tag) => tag.match(/<\/([^>]+)/)?.[1]).filter(Boolean);
+
+    // Every open tag should have a corresponding close tag
+    openTagNames.forEach((tagName) => {
+      if (!['br', 'hr', 'img', 'input', 'meta', 'link'].includes(tagName!)) {
+        expect(closeTagNames).toContain(tagName);
+      }
     });
   });
 });

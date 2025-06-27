@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sessionService } from '@/lib/auth/session';
 
-export async function GET(request: NextRequest) {
+export async function handleGET(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization');
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
-        { error: 'missing_token', message: 'Authorization header missing or invalid' },
-        { status: 401 }
+        {
+          error: 'missing_token',
+          message: 'Authorization header missing or invalid',
+        },
+        { status: 401 },
       );
     }
 
@@ -18,50 +21,48 @@ export async function GET(request: NextRequest) {
       // Verify the token using the session service
       const sessionData = await sessionService.verifyAccessToken(token);
       const isValid = sessionData !== null;
-      
+
       if (isValid) {
         return NextResponse.json({
           valid: true,
-          message: 'Token is valid'
+          message: 'Token is valid',
         });
       } else {
         return NextResponse.json(
-          { 
-            valid: false, 
-            error: 'invalid_token', 
-            message: 'Token is invalid or expired' 
+          {
+            valid: false,
+            error: 'invalid_token',
+            message: 'Token is invalid or expired',
           },
-          { status: 401 }
+          { status: 401 },
         );
       }
-
     } catch (verifyError) {
       console.error('Token verification failed:', verifyError);
-      
+
       return NextResponse.json(
-        { 
+        {
           valid: false,
-          error: 'verify_failed', 
-          message: 'Token verification failed' 
+          error: 'verify_failed',
+          message: 'Token verification failed',
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
-
   } catch (error) {
     console.error('Auth verify error:', error);
-    
+
     return NextResponse.json(
-      { 
-        error: 'verify_error', 
-        message: 'Authentication verification failed' 
+      {
+        error: 'verify_error',
+        message: 'Authentication verification failed',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   try {
     const body = await request.json();
     const { token } = body;
@@ -69,7 +70,7 @@ export async function POST(request: NextRequest) {
     if (!token) {
       return NextResponse.json(
         { error: 'missing_token', message: 'Token is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -77,45 +78,43 @@ export async function POST(request: NextRequest) {
       // Verify the token using the session service
       const sessionData = await sessionService.verifyAccessToken(token);
       const isValid = sessionData !== null;
-      
+
       if (isValid) {
         return NextResponse.json({
           valid: true,
-          message: 'Token is valid'
+          message: 'Token is valid',
         });
       } else {
         return NextResponse.json(
-          { 
-            valid: false, 
-            error: 'invalid_token', 
-            message: 'Token is invalid or expired' 
+          {
+            valid: false,
+            error: 'invalid_token',
+            message: 'Token is invalid or expired',
           },
-          { status: 401 }
+          { status: 401 },
         );
       }
-
     } catch (verifyError) {
       console.error('Token verification failed:', verifyError);
-      
+
       return NextResponse.json(
-        { 
+        {
           valid: false,
-          error: 'verify_failed', 
-          message: 'Token verification failed' 
+          error: 'verify_failed',
+          message: 'Token verification failed',
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
-
   } catch (error) {
     console.error('Auth verify API error:', error);
-    
+
     return NextResponse.json(
-      { 
-        error: 'verify_error', 
-        message: 'Authentication verification failed' 
+      {
+        error: 'verify_error',
+        message: 'Authentication verification failed',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

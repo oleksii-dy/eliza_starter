@@ -1,9 +1,4 @@
-import {
-  IAgentRuntime,
-  Service,
-  ServiceType,
-  logger,
-} from '@elizaos/core';
+import { IAgentRuntime, Service, ServiceType, logger } from '@elizaos/core';
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import {
   CrossMintServiceConfig,
@@ -32,7 +27,8 @@ export class CrossMintService extends Service {
   static override readonly serviceType = ServiceType.WALLET;
   static serviceName = 'crossmint';
 
-  public readonly capabilityDescription = 'Enterprise blockchain platform with MPC wallets, X.402 payments, and cross-chain infrastructure';
+  public readonly capabilityDescription =
+    'Enterprise blockchain platform with MPC wallets, X.402 payments, and cross-chain infrastructure';
 
   private client!: AxiosInstance;
   declare config: CrossMintServiceConfig;
@@ -45,7 +41,9 @@ export class CrossMintService extends Service {
       const projectId = runtime.getSetting('CROSSMINT_PROJECT_ID');
 
       if (!apiKey || !projectId) {
-        throw new CrossMintError('Missing required CrossMint configuration: CROSSMINT_API_KEY and CROSSMINT_PROJECT_ID');
+        throw new CrossMintError(
+          'Missing required CrossMint configuration: CROSSMINT_API_KEY and CROSSMINT_PROJECT_ID'
+        );
       }
 
       this.config = {
@@ -63,7 +61,8 @@ export class CrossMintService extends Service {
   }
 
   private initializeClient(): void {
-    const baseUrl = this.config.baseUrl ||
+    const baseUrl =
+      this.config.baseUrl ||
       (this.config.environment === 'production'
         ? 'https://api.crossmint.io/api/v1'
         : 'https://staging.crossmint.io/api/v1');
@@ -72,7 +71,7 @@ export class CrossMintService extends Service {
       baseURL: baseUrl,
       timeout: this.config.timeout,
       headers: {
-        'Authorization': `Bearer ${this.config.apiKey}`,
+        Authorization: `Bearer ${this.config.apiKey}`,
         'Content-Type': 'application/json',
         'X-Project-ID': this.config.projectId,
         'User-Agent': 'ElizaOS-CrossMint-Plugin/1.0',
@@ -140,8 +139,11 @@ export class CrossMintService extends Service {
         }
 
         const delay = this.config.retryDelay! * Math.pow(2, attempt - 1);
-        logger.warn(`CrossMint API request failed (attempt ${attempt}), retrying in ${delay}ms:`, error);
-        await new Promise(resolve => setTimeout(resolve, delay));
+        logger.warn(
+          `CrossMint API request failed (attempt ${attempt}), retrying in ${delay}ms:`,
+          error
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
 
@@ -151,7 +153,10 @@ export class CrossMintService extends Service {
   // Wallet Management
   async createWallet(params: CrossMintWalletCreationParams): Promise<CrossMintWallet> {
     return this.withRetry(async () => {
-      const response = await this.client.post<CrossMintApiResponse<CrossMintWallet>>('/wallets', params);
+      const response = await this.client.post<CrossMintApiResponse<CrossMintWallet>>(
+        '/wallets',
+        params
+      );
 
       if (!response.data.success || !response.data.data) {
         throw new CrossMintError(`Failed to create wallet: ${response.data.error?.message}`);
@@ -164,7 +169,9 @@ export class CrossMintService extends Service {
 
   async getWallet(walletId: string): Promise<CrossMintWallet> {
     return this.withRetry(async () => {
-      const response = await this.client.get<CrossMintApiResponse<CrossMintWallet>>(`/wallets/${walletId}`);
+      const response = await this.client.get<CrossMintApiResponse<CrossMintWallet>>(
+        `/wallets/${walletId}`
+      );
 
       if (!response.data.success || !response.data.data) {
         throw new CrossMintError(`Failed to get wallet: ${response.data.error?.message}`);
@@ -177,7 +184,9 @@ export class CrossMintService extends Service {
   async listWallets(userId?: string): Promise<CrossMintWallet[]> {
     return this.withRetry(async () => {
       const params = userId ? { userId } : {};
-      const response = await this.client.get<CrossMintApiResponse<CrossMintWallet[]>>('/wallets', { params });
+      const response = await this.client.get<CrossMintApiResponse<CrossMintWallet[]>>('/wallets', {
+        params,
+      });
 
       if (!response.data.success || !response.data.data) {
         throw new CrossMintError(`Failed to list wallets: ${response.data.error?.message}`);
@@ -190,7 +199,10 @@ export class CrossMintService extends Service {
   // Transaction Management
   async transfer(params: CrossMintTransferParams): Promise<CrossMintTransaction> {
     return this.withRetry(async () => {
-      const response = await this.client.post<CrossMintApiResponse<CrossMintTransaction>>('/transfers', params);
+      const response = await this.client.post<CrossMintApiResponse<CrossMintTransaction>>(
+        '/transfers',
+        params
+      );
 
       if (!response.data.success || !response.data.data) {
         throw new CrossMintError(`Failed to transfer: ${response.data.error?.message}`);
@@ -203,7 +215,9 @@ export class CrossMintService extends Service {
 
   async getTransaction(transactionId: string): Promise<CrossMintTransaction> {
     return this.withRetry(async () => {
-      const response = await this.client.get<CrossMintApiResponse<CrossMintTransaction>>(`/transactions/${transactionId}`);
+      const response = await this.client.get<CrossMintApiResponse<CrossMintTransaction>>(
+        `/transactions/${transactionId}`
+      );
 
       if (!response.data.success || !response.data.data) {
         throw new CrossMintError(`Failed to get transaction: ${response.data.error?.message}`);
@@ -216,7 +230,10 @@ export class CrossMintService extends Service {
   async listTransactions(walletId?: string): Promise<CrossMintTransaction[]> {
     return this.withRetry(async () => {
       const params = walletId ? { walletId } : {};
-      const response = await this.client.get<CrossMintApiResponse<CrossMintTransaction[]>>('/transactions', { params });
+      const response = await this.client.get<CrossMintApiResponse<CrossMintTransaction[]>>(
+        '/transactions',
+        { params }
+      );
 
       if (!response.data.success || !response.data.data) {
         throw new CrossMintError(`Failed to list transactions: ${response.data.error?.message}`);
@@ -229,7 +246,10 @@ export class CrossMintService extends Service {
   // X.402 Payment Protocol
   async createPaymentRequest(request: X402PaymentRequest): Promise<X402PaymentResponse> {
     return this.withRetry(async () => {
-      const response = await this.client.post<CrossMintApiResponse<X402PaymentResponse>>('/payments/x402', request);
+      const response = await this.client.post<CrossMintApiResponse<X402PaymentResponse>>(
+        '/payments/x402',
+        request
+      );
 
       if (!response.data.success || !response.data.data) {
         throw new CrossMintError(`Failed to create X.402 payment: ${response.data.error?.message}`);
@@ -242,7 +262,9 @@ export class CrossMintService extends Service {
 
   async getPaymentStatus(paymentId: string): Promise<X402PaymentResponse> {
     return this.withRetry(async () => {
-      const response = await this.client.get<CrossMintApiResponse<X402PaymentResponse>>(`/payments/x402/${paymentId}`);
+      const response = await this.client.get<CrossMintApiResponse<X402PaymentResponse>>(
+        `/payments/x402/${paymentId}`
+      );
 
       if (!response.data.success || !response.data.data) {
         throw new CrossMintError(`Failed to get payment status: ${response.data.error?.message}`);
@@ -254,7 +276,8 @@ export class CrossMintService extends Service {
 
   async listPayments(): Promise<X402PaymentResponse[]> {
     return this.withRetry(async () => {
-      const response = await this.client.get<CrossMintApiResponse<X402PaymentResponse[]>>('/payments/x402');
+      const response =
+        await this.client.get<CrossMintApiResponse<X402PaymentResponse[]>>('/payments/x402');
 
       if (!response.data.success || !response.data.data) {
         throw new CrossMintError(`Failed to list payments: ${response.data.error?.message}`);
@@ -267,7 +290,10 @@ export class CrossMintService extends Service {
   // NFT Management
   async mintNFT(params: CrossMintNFTMintParams): Promise<CrossMintNFT> {
     return this.withRetry(async () => {
-      const response = await this.client.post<CrossMintApiResponse<CrossMintNFT>>('/nfts/mint', params);
+      const response = await this.client.post<CrossMintApiResponse<CrossMintNFT>>(
+        '/nfts/mint',
+        params
+      );
 
       if (!response.data.success || !response.data.data) {
         throw new CrossMintError(`Failed to mint NFT: ${response.data.error?.message}`);
@@ -293,10 +319,16 @@ export class CrossMintService extends Service {
   async listNFTs(owner?: string, contractAddress?: string): Promise<CrossMintNFT[]> {
     return this.withRetry(async () => {
       const params: any = {};
-      if (owner) {params.owner = owner;}
-      if (contractAddress) {params.contractAddress = contractAddress;}
+      if (owner) {
+        params.owner = owner;
+      }
+      if (contractAddress) {
+        params.contractAddress = contractAddress;
+      }
 
-      const response = await this.client.get<CrossMintApiResponse<CrossMintNFT[]>>('/nfts', { params });
+      const response = await this.client.get<CrossMintApiResponse<CrossMintNFT[]>>('/nfts', {
+        params,
+      });
 
       if (!response.data.success || !response.data.data) {
         throw new CrossMintError(`Failed to list NFTs: ${response.data.error?.message}`);
@@ -307,9 +339,14 @@ export class CrossMintService extends Service {
   }
 
   // Collection Management
-  async createCollection(params: Omit<CrossMintCollection, 'id' | 'createdAt'>): Promise<CrossMintCollection> {
+  async createCollection(
+    params: Omit<CrossMintCollection, 'id' | 'createdAt'>
+  ): Promise<CrossMintCollection> {
     return this.withRetry(async () => {
-      const response = await this.client.post<CrossMintApiResponse<CrossMintCollection>>('/collections', params);
+      const response = await this.client.post<CrossMintApiResponse<CrossMintCollection>>(
+        '/collections',
+        params
+      );
 
       if (!response.data.success || !response.data.data) {
         throw new CrossMintError(`Failed to create collection: ${response.data.error?.message}`);
@@ -322,7 +359,9 @@ export class CrossMintService extends Service {
 
   async getCollection(collectionId: string): Promise<CrossMintCollection> {
     return this.withRetry(async () => {
-      const response = await this.client.get<CrossMintApiResponse<CrossMintCollection>>(`/collections/${collectionId}`);
+      const response = await this.client.get<CrossMintApiResponse<CrossMintCollection>>(
+        `/collections/${collectionId}`
+      );
 
       if (!response.data.success || !response.data.data) {
         throw new CrossMintError(`Failed to get collection: ${response.data.error?.message}`);
@@ -334,7 +373,8 @@ export class CrossMintService extends Service {
 
   async listCollections(): Promise<CrossMintCollection[]> {
     return this.withRetry(async () => {
-      const response = await this.client.get<CrossMintApiResponse<CrossMintCollection[]>>('/collections');
+      const response =
+        await this.client.get<CrossMintApiResponse<CrossMintCollection[]>>('/collections');
 
       if (!response.data.success || !response.data.data) {
         throw new CrossMintError(`Failed to list collections: ${response.data.error?.message}`);

@@ -23,7 +23,7 @@ export class ScreenVisionE2ETestSuite implements TestSuite {
         await visionService.setVisionMode(VisionMode.SCREEN);
 
         // Wait for initialization
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
 
         const mode = visionService.getVisionMode();
         if (mode !== VisionMode.SCREEN) {
@@ -56,11 +56,13 @@ export class ScreenVisionE2ETestSuite implements TestSuite {
         await visionService.setVisionMode(VisionMode.SCREEN);
 
         // Wait for capture
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        await new Promise((resolve) => setTimeout(resolve, 3000));
 
         const screenCapture = await visionService.getScreenCapture();
         if (!screenCapture) {
-          console.warn('⚠️  No screen capture available - screen capture may not be supported in this environment');
+          console.warn(
+            '⚠️  No screen capture available - screen capture may not be supported in this environment'
+          );
           return;
         }
 
@@ -77,7 +79,7 @@ export class ScreenVisionE2ETestSuite implements TestSuite {
         console.log(`  Tile size: ${firstTile.width}x${firstTile.height}`);
 
         // Check if priority tiles have data
-        const tilesWithData = screenCapture.tiles.filter(t => t.data !== undefined);
+        const tilesWithData = screenCapture.tiles.filter((t) => t.data !== undefined);
         console.log(`  Tiles with data: ${tilesWithData.length}`);
 
         if (tilesWithData.length === 0) {
@@ -100,7 +102,7 @@ export class ScreenVisionE2ETestSuite implements TestSuite {
         await visionService.setVisionMode(VisionMode.SCREEN);
 
         // Wait for analysis
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise((resolve) => setTimeout(resolve, 5000));
 
         const enhancedScene = await visionService.getEnhancedSceneDescription();
         if (!enhancedScene || !enhancedScene.screenAnalysis) {
@@ -118,13 +120,19 @@ export class ScreenVisionE2ETestSuite implements TestSuite {
 
           if (screenAnalysis.activeTile.florence2) {
             console.log(`  Florence-2 caption: ${screenAnalysis.activeTile.florence2.caption}`);
-            console.log(`  Objects detected: ${screenAnalysis.activeTile.florence2.objects?.length || 0}`);
-            console.log(`  Tags: ${screenAnalysis.activeTile.florence2.tags?.join(', ') || 'none'}`);
+            console.log(
+              `  Objects detected: ${screenAnalysis.activeTile.florence2.objects?.length || 0}`
+            );
+            console.log(
+              `  Tags: ${screenAnalysis.activeTile.florence2.tags?.join(', ') || 'none'}`
+            );
           }
 
           if (screenAnalysis.activeTile.ocr) {
             console.log(`  OCR text blocks: ${screenAnalysis.activeTile.ocr.blocks.length}`);
-            console.log(`  OCR preview: "${screenAnalysis.activeTile.ocr.fullText.substring(0, 50)}..."`);
+            console.log(
+              `  OCR preview: "${screenAnalysis.activeTile.ocr.fullText.substring(0, 50)}..."`
+            );
           }
         }
 
@@ -136,7 +144,7 @@ export class ScreenVisionE2ETestSuite implements TestSuite {
         // Check UI elements
         if (screenAnalysis.uiElements && screenAnalysis.uiElements.length > 0) {
           console.log(`✓ UI elements detected: ${screenAnalysis.uiElements.length}`);
-          const elementTypes = screenAnalysis.uiElements.map(e => e.type);
+          const elementTypes = screenAnalysis.uiElements.map((e) => e.type);
           const uniqueTypes = [...new Set(elementTypes)];
           console.log(`  Types: ${uniqueTypes.join(', ')}`);
         }
@@ -161,7 +169,7 @@ export class ScreenVisionE2ETestSuite implements TestSuite {
           await visionService.setVisionMode(mode);
 
           // Wait for mode switch
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
 
           const currentMode = visionService.getVisionMode();
           if (currentMode !== mode) {
@@ -223,7 +231,7 @@ export class ScreenVisionE2ETestSuite implements TestSuite {
         await visionService.setVisionMode(VisionMode.BOTH);
 
         // Wait for both systems to initialize
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise((resolve) => setTimeout(resolve, 5000));
 
         const enhancedScene = await visionService.getEnhancedSceneDescription();
         const hasCamera = visionService.getCameraInfo() !== null;
@@ -287,7 +295,7 @@ export class ScreenVisionE2ETestSuite implements TestSuite {
         };
 
         await visionService.setVisionMode(VisionMode.SCREEN);
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
 
         // Service should still be active despite invalid region
         const isActive = visionService.isActive();

@@ -14,27 +14,27 @@ function getMimeType(filePath: string): string {
   const ext = filePath.split('.').pop()?.toLowerCase();
 
   const mimeTypes: Record<string, string> = {
-    'html': 'text/html',
-    'js': 'application/javascript',
-    'css': 'text/css',
-    'png': 'image/png',
-    'jpg': 'image/jpeg',
-    'jpeg': 'image/jpeg',
-    'gif': 'image/gif',
-    'svg': 'image/svg+xml',
-    'ico': 'image/x-icon',
-    'webp': 'image/webp',
-    'json': 'application/json',
-    'woff': 'font/woff',
-    'woff2': 'font/woff2',
-    'ttf': 'font/ttf',
-    'eot': 'application/vnd.ms-fontobject',
+    html: 'text/html',
+    js: 'application/javascript',
+    css: 'text/css',
+    png: 'image/png',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    gif: 'image/gif',
+    svg: 'image/svg+xml',
+    ico: 'image/x-icon',
+    webp: 'image/webp',
+    json: 'application/json',
+    woff: 'font/woff',
+    woff2: 'font/woff2',
+    ttf: 'font/ttf',
+    eot: 'application/vnd.ms-fontobject',
   };
 
   return mimeTypes[ext || ''] || 'application/octet-stream';
 }
 
-export async function GET(
+export async function handleGET(
   request: NextRequest,
   props: { params: Promise<{ path?: string[] }> },
 ) {
@@ -91,7 +91,6 @@ export async function GET(
         ...cacheHeaders,
       },
     });
-
   } catch (error) {
     console.error('Error serving client static file:', error);
     return new NextResponse('Internal Server Error', { status: 500 });

@@ -18,9 +18,9 @@ beforeAll(() => {
     info: logger.info,
     error: logger.error,
     warn: logger.warn,
-    debug: logger.debug
+    debug: logger.debug,
   };
-  
+
   // Mock logger methods to prevent test output noise
   logger.info = () => {};
   logger.error = () => {};

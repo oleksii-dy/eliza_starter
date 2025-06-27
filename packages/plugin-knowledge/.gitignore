@@ -10,3 +10,7 @@ node_modules
 coverage
 cypress/screenshots
 docs
+AGENTS.md
+.cursor/rules/elizaos
+CLAUDE.md
+.cursorignore

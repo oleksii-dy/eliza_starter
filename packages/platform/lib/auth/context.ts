@@ -54,7 +54,7 @@ export const authContextSchema = z.object({
   userRole: z.enum(['owner', 'admin', 'member', 'viewer']),
   permissions: z.array(z.string()),
   sessionType: z.enum(['jwt', 'wallet', 'api_key']),
-  isAuthenticated: z.boolean()
+  isAuthenticated: z.boolean(),
 });
 
 export const jwtPayloadSchema = z.object({
@@ -64,13 +64,13 @@ export const jwtPayloadSchema = z.object({
   permissions: z.array(z.string()),
   sessionType: z.enum(['jwt', 'wallet']),
   iat: z.number(),
-  exp: z.number()
+  exp: z.number(),
 });
 
 export const walletJWTPayloadSchema = jwtPayloadSchema.extend({
   walletAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
   chainId: z.number(),
-  sessionType: z.literal('wallet')
+  sessionType: z.literal('wallet'),
 });
 
 /**
@@ -79,7 +79,7 @@ export const walletJWTPayloadSchema = jwtPayloadSchema.extend({
 export class JWTService {
   private readonly jwtSecret: string;
   private readonly issuer: string = 'elizaos-platform';
-  
+
   constructor() {
     this.jwtSecret = process.env.JWT_SECRET!;
     if (!this.jwtSecret || this.jwtSecret.length < 32) {
@@ -98,12 +98,12 @@ export class JWTService {
       permissions: this.getUserPermissions(user.role),
       sessionType: 'jwt',
       iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
+      exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60, // 24 hours
     };
 
     return jwt.sign(payload, this.jwtSecret, {
       algorithm: 'HS256',
-      issuer: this.issuer
+      issuer: this.issuer,
     });
   }
 
@@ -115,7 +115,7 @@ export class JWTService {
     organizationId: string,
     walletAddress: string,
     chainId: number,
-    userRole: string = 'member'
+    userRole: string = 'member',
   ): string {
     const payload: WalletJWTPayload = {
       userId,
@@ -126,12 +126,12 @@ export class JWTService {
       chainId,
       sessionType: 'wallet',
       iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
+      exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60, // 24 hours
     };
 
     return jwt.sign(payload, this.jwtSecret, {
       algorithm: 'HS256',
-      issuer: this.issuer
+      issuer: this.issuer,
     });
   }
 
@@ -142,7 +142,7 @@ export class JWTService {
     try {
       const decoded = jwt.verify(token, this.jwtSecret, {
         issuer: this.issuer,
-        algorithms: ['HS256']
+        algorithms: ['HS256'],
       }) as JWTPayload | WalletJWTPayload;
 
       // Validate payload structure
@@ -154,7 +154,9 @@ export class JWTService {
 
       return decoded;
     } catch (error) {
-      throw new Error(`Invalid JWT token: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Invalid JWT token: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -172,12 +174,12 @@ export class JWTService {
     const newPayload = {
       ...payload,
       iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
+      exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60, // 24 hours
     };
 
     return jwt.sign(newPayload, this.jwtSecret, {
       algorithm: 'HS256',
-      issuer: this.issuer
+      issuer: this.issuer,
     });
   }
 
@@ -187,33 +189,57 @@ export class JWTService {
   private getUserPermissions(role: string): string[] {
     const permissionMap: Record<string, string[]> = {
       owner: [
-        'org:read', 'org:write', 'org:delete',
-        'users:read', 'users:write', 'users:delete',
-        'agents:read', 'agents:write', 'agents:delete', 'agents:deploy',
-        'billing:read', 'billing:write',
-        'api_keys:read', 'api_keys:write', 'api_keys:delete',
-        'generations:read', 'generations:write',
-        'crypto:read', 'crypto:write',
-        'chat:read', 'chat:write'
+        'org:read',
+        'org:write',
+        'org:delete',
+        'users:read',
+        'users:write',
+        'users:delete',
+        'agents:read',
+        'agents:write',
+        'agents:delete',
+        'agents:deploy',
+        'billing:read',
+        'billing:write',
+        'api_keys:read',
+        'api_keys:write',
+        'api_keys:delete',
+        'generations:read',
+        'generations:write',
+        'crypto:read',
+        'crypto:write',
+        'chat:read',
+        'chat:write',
       ],
       admin: [
         'org:read',
-        'users:read', 'users:write',
-        'agents:read', 'agents:write', 'agents:deploy',
+        'users:read',
+        'users:write',
+        'agents:read',
+        'agents:write',
+        'agents:deploy',
         'billing:read',
-        'api_keys:read', 'api_keys:write',
-        'generations:read', 'generations:write',
-        'crypto:read', 'crypto:write',
-        'chat:read', 'chat:write'
+        'api_keys:read',
+        'api_keys:write',
+        'generations:read',
+        'generations:write',
+        'crypto:read',
+        'crypto:write',
+        'chat:read',
+        'chat:write',
       ],
       member: [
         'org:read',
         'users:read',
-        'agents:read', 'agents:write',
+        'agents:read',
+        'agents:write',
         'billing:read',
-        'generations:read', 'generations:write',
-        'crypto:read', 'crypto:write',
-        'chat:read', 'chat:write'
+        'generations:read',
+        'generations:write',
+        'crypto:read',
+        'crypto:write',
+        'chat:read',
+        'chat:write',
       ],
       viewer: [
         'org:read',
@@ -221,8 +247,8 @@ export class JWTService {
         'agents:read',
         'billing:read',
         'generations:read',
-        'chat:read'
-      ]
+        'chat:read',
+      ],
     };
 
     return permissionMap[role] || permissionMap.viewer;
@@ -242,9 +268,13 @@ export class AuthContextBuilder {
   /**
    * Build auth context from JWT token
    */
-  async buildFromJWT(token: string, user?: User, organization?: Organization): Promise<AuthContext> {
+  async buildFromJWT(
+    token: string,
+    user?: User,
+    organization?: Organization,
+  ): Promise<AuthContext> {
     const payload = this.jwtService.verifyToken(token);
-    
+
     if (this.jwtService.isTokenExpired(payload)) {
       throw new Error('Token has expired');
     }
@@ -254,26 +284,36 @@ export class AuthContextBuilder {
       organizationId: payload.organizationId,
       userRole: payload.userRole as 'owner' | 'admin' | 'member' | 'viewer',
       permissions: payload.permissions,
-      user: user || { id: payload.userId, organizationId: payload.organizationId },
+      user: user || {
+        id: payload.userId,
+        organizationId: payload.organizationId,
+      },
       organization: organization || { id: payload.organizationId },
       sessionType: payload.sessionType,
-      isAuthenticated: true
+      isAuthenticated: true,
     };
   }
 
   /**
    * Build auth context from API key
    */
-  async buildFromApiKey(apiKeyContext: ApiKeyContext, user?: User, organization?: Organization): Promise<AuthContext> {
+  async buildFromApiKey(
+    apiKeyContext: ApiKeyContext,
+    user?: User,
+    organization?: Organization,
+  ): Promise<AuthContext> {
     return {
       userId: apiKeyContext.userId || 'api-key-user',
       organizationId: apiKeyContext.organizationId,
       userRole: 'member', // API keys have member-level permissions by default
       permissions: apiKeyContext.permissions,
-      user: user || { id: apiKeyContext.userId, organizationId: apiKeyContext.organizationId },
+      user: user || {
+        id: apiKeyContext.userId,
+        organizationId: apiKeyContext.organizationId,
+      },
       organization: organization || { id: apiKeyContext.organizationId },
       sessionType: 'api_key',
-      isAuthenticated: true
+      isAuthenticated: true,
     };
   }
 
@@ -289,7 +329,7 @@ export class AuthContextBuilder {
       user: { id: 'guest' },
       organization: { id: organizationId || 'default' },
       sessionType: 'jwt',
-      isAuthenticated: false
+      isAuthenticated: false,
     };
   }
 
@@ -305,7 +345,7 @@ export class AuthContextBuilder {
       user: { id: 'system' },
       organization: { id: organizationId },
       sessionType: 'jwt',
-      isAuthenticated: true
+      isAuthenticated: true,
     };
   }
 
@@ -315,13 +355,13 @@ export class AuthContextBuilder {
   validateContext(context: Partial<AuthContext>): AuthContext {
     const result = authContextSchema.parse({
       ...context,
-      isAuthenticated: context.isAuthenticated ?? false
+      isAuthenticated: context.isAuthenticated ?? false,
     });
 
     return {
       ...result,
       user: context.user || { id: result.userId },
-      organization: context.organization || { id: result.organizationId }
+      organization: context.organization || { id: result.organizationId },
     };
   }
 }
@@ -344,44 +384,66 @@ export class PermissionChecker {
   /**
    * Check if context has any of the specified permissions
    */
-  static hasAnyPermission(context: AuthContext, permissions: string[]): boolean {
+  static hasAnyPermission(
+    context: AuthContext,
+    permissions: string[],
+  ): boolean {
     if (context.permissions.includes('*')) {
       return true;
     }
 
-    return permissions.some(permission => context.permissions.includes(permission));
+    return permissions.some((permission) =>
+      context.permissions.includes(permission),
+    );
   }
 
   /**
    * Check if context has all specified permissions
    */
-  static hasAllPermissions(context: AuthContext, permissions: string[]): boolean {
+  static hasAllPermissions(
+    context: AuthContext,
+    permissions: string[],
+  ): boolean {
     if (context.permissions.includes('*')) {
       return true;
     }
 
-    return permissions.every(permission => context.permissions.includes(permission));
+    return permissions.every((permission) =>
+      context.permissions.includes(permission),
+    );
   }
 
   /**
    * Check if context can access resource for organization
    */
-  static canAccessOrganization(context: AuthContext, organizationId: string): boolean {
-    return context.organizationId === organizationId || context.permissions.includes('*');
+  static canAccessOrganization(
+    context: AuthContext,
+    organizationId: string,
+  ): boolean {
+    return (
+      context.organizationId === organizationId ||
+      context.permissions.includes('*')
+    );
   }
 
   /**
    * Check if context can modify resource
    */
   static canModify(context: AuthContext, resource: string): boolean {
-    return this.hasPermission(context, `${resource}:write`) || 
-           this.hasPermission(context, `${resource}:delete`);
+    return (
+      this.hasPermission(context, `${resource}:write`) ||
+      this.hasPermission(context, `${resource}:delete`)
+    );
   }
 
   /**
    * Ensure context has permission (throws if not)
    */
-  static requirePermission(context: AuthContext, permission: string, message?: string): void {
+  static requirePermission(
+    context: AuthContext,
+    permission: string,
+    message?: string,
+  ): void {
     if (!this.hasPermission(context, permission)) {
       throw new Error(message || `Permission denied: ${permission} required`);
     }
@@ -390,9 +452,14 @@ export class PermissionChecker {
   /**
    * Ensure context can access organization (throws if not)
    */
-  static requireOrganizationAccess(context: AuthContext, organizationId: string): void {
+  static requireOrganizationAccess(
+    context: AuthContext,
+    organizationId: string,
+  ): void {
     if (!this.canAccessOrganization(context, organizationId)) {
-      throw new Error(`Access denied: Cannot access organization ${organizationId}`);
+      throw new Error(
+        `Access denied: Cannot access organization ${organizationId}`,
+      );
     }
   }
 }

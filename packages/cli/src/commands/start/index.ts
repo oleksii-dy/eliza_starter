@@ -118,3 +118,5 @@ export * from './types';
 export * from './utils/config-utils';
 export * from './utils/dependency-resolver';
 export * from './utils/plugin-utils';
+
+export default start;

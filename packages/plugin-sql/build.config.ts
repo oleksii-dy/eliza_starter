@@ -1,37 +1,14 @@
-import type { BuildConfig } from 'bun';
+import { createPluginConfigWithExternals } from '@elizaos/core';
 
-export const buildConfig: BuildConfig = {
-  entrypoints: ['./src/index.ts'],
-  outdir: './dist',
-  target: 'node',
-  format: 'esm',
-  splitting: false,
-  sourcemap: 'external',
-  external: [
-    'fs',
-    'path',
-    'http',
-    'https',
-    'crypto',
-    'node:fs',
-    'node:path',
-    'node:http',
-    'node:https',
-    'node:crypto',
-    'node:stream',
-    'node:buffer',
-    'node:util',
-    'node:events',
-    'node:url',
-    'bun:test',
-    'dotenv',
-    'zod',
-    '// Externalize dotenv to prevent bundling\n    @reflink/reflink',
-    '@node-llama-cpp',
-    'agentkeepalive',
-    'uuid',
-    '@elizaos/core',
-    '@electric-sql/pglite',
-  ],
-  naming: '[dir]/[name].[ext]',
-};
+// SQL plugin uses database externals plus some specific ones
+const additionalExternals = [
+  '@reflink/reflink',
+  '@node-llama-cpp', 
+  'agentkeepalive',
+];
+
+export const buildConfig = createPluginConfigWithExternals(
+  ['./src/index.ts'],
+  ['database'],
+  additionalExternals
+);

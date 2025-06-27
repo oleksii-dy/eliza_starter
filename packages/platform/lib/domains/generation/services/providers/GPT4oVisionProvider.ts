@@ -9,7 +9,11 @@ import {
   ProviderCapabilities,
   ProviderConfig,
 } from './BaseGenerationProvider';
-import { GenerationRequest, GenerationProvider, GenerationType } from '../../types';
+import {
+  GenerationRequest,
+  GenerationProvider,
+  GenerationType,
+} from '../../types';
 import {
   EnhancedGenerationProvider,
   GPT4oVisionRequest,
@@ -47,9 +51,9 @@ export class GPT4oVisionProvider extends BaseGenerationProvider {
       timeout: config.timeout || 120000,
       rateLimitPerSecond: config.rateLimitPerSecond || 3,
     };
-    
+
     super(baseConfig, GenerationProvider.OPENAI);
-    
+
     this.gpt4oConfig = {
       baseUrl: 'https://api.openai.com/v1',
       timeout: 120000, // 2 minutes for vision processing
@@ -180,10 +184,14 @@ export class GPT4oVisionProvider extends BaseGenerationProvider {
         },
       };
     } catch (error) {
-      logger.error('GPT-4o Vision generation failed', error instanceof Error ? error : new Error(String(error)), {
-        requestId,
-        prompt: request.prompt?.substring(0, 100),
-      });
+      logger.error(
+        'GPT-4o Vision generation failed',
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          requestId,
+          prompt: request.prompt?.substring(0, 100),
+        },
+      );
       throw error;
     }
   }
@@ -205,7 +213,7 @@ export class GPT4oVisionProvider extends BaseGenerationProvider {
       vision_prompt: (request as any).vision_prompt,
       vision_temperature: (request as any).vision_temperature,
     };
-    
+
     const costBreakdown = await this.calculateCost(visionRequest, null);
     return costBreakdown.final_price;
   }
@@ -319,7 +327,7 @@ export class GPT4oVisionProvider extends BaseGenerationProvider {
   ): Promise<any> {
     // Extract DALL-E specific properties from metadata or use defaults
     const metadata = request.metadata || {};
-    
+
     const dalleRequest = {
       model: this.capabilities.generation_model,
       prompt: prompt.substring(0, 4000), // DALL-E 3 limit
@@ -531,13 +539,13 @@ export class GPT4oVisionProvider extends BaseGenerationProvider {
     errors: string[];
   } {
     const errors: string[] = [];
-    
+
     // First validate basic requirements
     if (request.type !== GenerationType.IMAGE) {
       errors.push('Request type must be IMAGE for GPT-4o Vision provider');
       return { valid: false, errors };
     }
-    
+
     // Convert to vision request for detailed validation
     const visionRequest: GPT4oVisionRequest = {
       type: GenerationType.IMAGE,

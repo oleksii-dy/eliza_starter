@@ -21,11 +21,12 @@ export const adminChatProvider: Provider = {
       if (!adminUserId) {
         // For now, return instructions on how to set up admin
         return {
-          text: 'No admin user configured. To set an admin user, add ADMIN_USER_ID to your character settings with the user\'s entity ID from the web interface.',
+          text: "No admin user configured. To set an admin user, add ADMIN_USER_ID to your character settings with the user's entity ID from the web interface.",
           data: {
             adminConfigured: false,
-            instructions: 'Open browser dev tools -> localStorage -> find "elizaos-client-user-id" key, copy the value and set it as ADMIN_USER_ID in character settings'
-          }
+            instructions:
+              'Open browser dev tools -> localStorage -> find "elizaos-client-user-id" key, copy the value and set it as ADMIN_USER_ID in character settings',
+          },
         };
       }
 
@@ -50,15 +51,15 @@ export const adminChatProvider: Provider = {
             adminConfigured: true,
             messageCount: 0,
             adminUserId,
-            searchedEntityId: adminUUID
-          }
+            searchedEntityId: adminUUID,
+          },
         };
       }
 
       // Format the conversation
       const formattedMessages = adminMessages
         .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0))
-        .map(msg => {
+        .map((msg) => {
           const isFromAdmin = msg.entityId === adminUUID;
           const isFromAgent = msg.entityId === runtime.agentId;
 
@@ -72,7 +73,7 @@ export const adminChatProvider: Provider = {
       const recentCount = Math.min(adminMessages.length, 5);
       const summary = adminMessages
         .slice(-recentCount)
-        .map(msg => {
+        .map((msg) => {
           const isFromAdmin = msg.entityId === adminUUID;
           const text = msg.content.text || '[No text]';
           return isFromAdmin ? `Admin: ${text}` : `Agent: ${text}`;
@@ -88,19 +89,19 @@ export const adminChatProvider: Provider = {
           searchedEntityId: adminUUID,
           recentSummary: summary,
           lastMessage: adminMessages[adminMessages.length - 1]?.content.text || '',
-          lastMessageFrom: adminMessages[adminMessages.length - 1]?.entityId === adminUUID ? 'admin' : 'agent',
-          rooms: [...new Set(adminMessages.map(m => m.roomId))]
-        }
+          lastMessageFrom:
+            adminMessages[adminMessages.length - 1]?.entityId === adminUUID ? 'admin' : 'agent',
+          rooms: [...new Set(adminMessages.map((m) => m.roomId))],
+        },
       };
-
     } catch (error) {
       console.error('[AdminChat Provider] Error:', error);
       return {
         text: 'Error retrieving admin conversation',
         data: {
           error: error instanceof Error ? error.message : 'Unknown error',
-          adminConfigured: false
-        }
+          adminConfigured: false,
+        },
       };
     }
   },

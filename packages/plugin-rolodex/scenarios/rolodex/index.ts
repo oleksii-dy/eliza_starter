@@ -16,7 +16,7 @@ export const rolodexScenarios = [
   'trust-evolution',
   'complex-network',
   'follow-up-management',
-  'secrets-management'
+  'secrets-management',
 ];
 
 // Export scenario metadata

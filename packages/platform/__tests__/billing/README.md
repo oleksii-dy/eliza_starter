@@ -7,6 +7,7 @@ This directory contains comprehensive integration tests for the billing system, 
 ### Integration Tests (`/integration/`)
 
 1. **stripe-integration.test.ts**
+
    - Real Stripe API integration testing
    - Payment intent creation and confirmation
    - Concurrent transaction safety
@@ -16,6 +17,7 @@ This directory contains comprehensive integration tests for the billing system, 
    - Performance and load testing
 
 2. **webhook-security.test.ts**
+
    - Webhook signature validation
    - Deduplication and replay attack protection
    - Concurrent webhook processing
@@ -23,6 +25,7 @@ This directory contains comprehensive integration tests for the billing system, 
    - Performance under load
 
 3. **crypto-payment.test.ts**
+
    - Real blockchain API integration (Alchemy)
    - Payment monitoring setup
    - Transaction verification
@@ -41,18 +44,19 @@ This directory contains comprehensive integration tests for the billing system, 
 ### Prerequisites
 
 1. **Environment Variables** - Create `.env.test` file:
+
    ```bash
    # Database (use test database)
    DATABASE_URL=postgresql://test:test@localhost:5432/platform_test
-   
+
    # Stripe Test Keys
    STRIPE_TEST_SECRET_KEY=sk_test_your_test_key_here
    STRIPE_TEST_PUBLISHABLE_KEY=pk_test_your_test_key_here
    STRIPE_WEBHOOK_SECRET=whsec_test_webhook_secret
-   
+
    # Alchemy API (for crypto tests)
    ALCHEMY_API_KEY=your_alchemy_api_key_here
-   
+
    # App Configuration
    NEXT_PUBLIC_APP_URL=http://localhost:3000
    ```
@@ -88,18 +92,21 @@ npm run test:debug
 ## Test Categories
 
 ### 🔵 Unit Tests
+
 - Individual function and method testing
 - Mocked dependencies
 - Fast execution
 - Located in component directories
 
 ### 🟡 Integration Tests
+
 - Real service integration (Stripe, Alchemy, Database)
 - Cross-component interaction testing
 - Realistic scenarios
 - Longer execution time
 
 ### 🔴 End-to-End Tests
+
 - Complete user flows
 - Real payment processing
 - System-wide validation
@@ -108,6 +115,7 @@ npm run test:debug
 ## Key Testing Scenarios
 
 ### Payment Processing
+
 - ✅ Payment intent creation and confirmation
 - ✅ Credit addition with atomic transactions
 - ✅ Duplicate payment prevention
@@ -115,6 +123,7 @@ npm run test:debug
 - ✅ Concurrent payment safety
 
 ### Auto Top-up
+
 - ✅ Threshold-based triggering
 - ✅ Payment method retrieval
 - ✅ Automatic payment processing
@@ -122,6 +131,7 @@ npm run test:debug
 - ✅ Bulk organization processing
 
 ### Webhook Security
+
 - ✅ Signature validation
 - ✅ Replay attack prevention
 - ✅ Deduplication under load
@@ -129,6 +139,7 @@ npm run test:debug
 - ✅ Error handling and resilience
 
 ### Crypto Payments
+
 - ✅ Blockchain API integration
 - ✅ Transaction verification
 - ✅ Payment monitoring and expiration
@@ -136,6 +147,7 @@ npm run test:debug
 - ✅ Cleanup of expired payments
 
 ### System Integration
+
 - ✅ Database transaction isolation
 - ✅ Race condition prevention
 - ✅ Performance under load
@@ -154,18 +166,21 @@ The tests include performance validation to ensure production readiness:
 ## Security Validation
 
 ### Stripe Security
+
 - ✅ Valid signature verification
 - ✅ Invalid signature rejection
 - ✅ Metadata validation
 - ✅ Amount verification
 
 ### Webhook Security
+
 - ✅ Timestamp validation (replay protection)
 - ✅ Duplicate event detection
 - ✅ Concurrent processing safety
 - ✅ Error containment
 
 ### Database Security
+
 - ✅ Transaction isolation
 - ✅ Row-level locking
 - ✅ Constraint enforcement
@@ -187,17 +202,20 @@ Tests validate proper handling of:
 ## Test Data Management
 
 ### Setup
+
 - Creates isolated test organizations
 - Uses Stripe test mode only
 - Generates unique identifiers per test run
 
 ### Cleanup
+
 - Automatic cleanup after each test
 - Stripe resource deletion
 - Database record removal
 - No test data pollution
 
 ### Safety
+
 - Prevents production data access
 - Validates test-only API keys
 - Isolated test database usage
@@ -205,11 +223,13 @@ Tests validate proper handling of:
 ## Debugging
 
 ### Verbose Mode
+
 ```bash
 VERBOSE_TESTS=true npm run test:integration
 ```
 
 ### Debug Specific Issues
+
 ```bash
 # Database connection issues
 npm run test:debug --testNamePattern="database"
@@ -238,6 +258,7 @@ The tests are designed for CI environments:
 - **Comprehensive**: Full coverage of critical paths
 
 ### CI Configuration
+
 ```yaml
 # Example GitHub Actions
 - name: Run Integration Tests
@@ -269,6 +290,7 @@ When adding new billing features:
 5. Update documentation
 
 ### Test Checklist
+
 - [ ] Happy path scenario
 - [ ] Error handling
 - [ ] Edge cases

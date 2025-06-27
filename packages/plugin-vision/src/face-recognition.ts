@@ -21,7 +21,9 @@ async function initializeCanvas() {
     faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
   } catch (error) {
     logger.error('[FaceRecognition] Canvas module not available:', error);
-    throw new Error('Canvas module is required for face recognition. Install with: npm install canvas');
+    throw new Error(
+      'Canvas module is required for face recognition. Install with: npm install canvas'
+    );
   }
 }
 
@@ -38,7 +40,9 @@ export class FaceRecognition {
   private readonly MIN_FACE_SIZE = 50; // Minimum face size in pixels
 
   async initialize(): Promise<void> {
-    if (this.initialized) {return;}
+    if (this.initialized) {
+      return;
+    }
 
     try {
       logger.info('[FaceRecognition] Loading face detection models...');
@@ -57,18 +61,26 @@ export class FaceRecognition {
       logger.info('[FaceRecognition] Models loaded successfully');
     } catch (error) {
       logger.error('[FaceRecognition] Failed to load models:', error);
-      logger.info('[FaceRecognition] Download models from: https://github.com/justadudewhohacks/face-api.js-models');
+      logger.info(
+        '[FaceRecognition] Download models from: https://github.com/justadudewhohacks/face-api.js-models'
+      );
       throw error;
     }
   }
 
-  async detectFaces(imageData: Buffer, width: number, height: number): Promise<Array<{
-    detection: faceapi.FaceDetection;
-    landmarks: faceapi.FaceLandmarks68;
-    descriptor: Float32Array;
-    expressions: faceapi.FaceExpressions;
-    ageGender?: { age: number; gender: string; genderProbability: number };
-  }>> {
+  async detectFaces(
+    imageData: Buffer,
+    width: number,
+    height: number
+  ): Promise<
+    Array<{
+      detection: faceapi.FaceDetection;
+      landmarks: faceapi.FaceLandmarks68;
+      descriptor: Float32Array;
+      expressions: faceapi.FaceExpressions;
+      ageGender?: { age: number; gender: string; genderProbability: number };
+    }>
+  > {
     if (!this.initialized) {
       await this.initialize();
     }
@@ -78,7 +90,7 @@ export class FaceRecognition {
       logger.warn('[FaceRecognition] Invalid input parameters:', {
         dataLength: imageData?.length || 0,
         width,
-        height
+        height,
       });
       return [];
     }
@@ -90,7 +102,7 @@ export class FaceRecognition {
         expected: expectedSize,
         actual: imageData.length,
         width,
-        height
+        height,
       });
       return [];
     }
@@ -99,38 +111,45 @@ export class FaceRecognition {
       // Create canvas from image data
       const canvas = new Canvas(width, height);
       const ctx = canvas.getContext('2d');
-      const imageDataObj = new ImageData(
-        new Uint8ClampedArray(imageData),
-        width,
-        height
-      );
+      const imageDataObj = new ImageData(new Uint8ClampedArray(imageData), width, height);
       ctx.putImageData(imageDataObj, 0, 0);
 
       // Detect faces with full analysis
       const detections = await faceapi
-        .detectAllFaces(canvas as any, new faceapi.SsdMobilenetv1Options({
-          minConfidence: 0.5,
-          maxResults: 10,
-        }))
+        .detectAllFaces(
+          canvas as any,
+          new faceapi.SsdMobilenetv1Options({
+            minConfidence: 0.5,
+            maxResults: 10,
+          })
+        )
         .withFaceLandmarks()
         .withFaceDescriptors()
         .withFaceExpressions()
         .withAgeAndGender();
 
-      return detections.filter((d: { detection: { box: {
-        width: number;
-        height: number;
-      }; }; }) => {
-        const box = d.detection.box;
-        return box.width >= this.MIN_FACE_SIZE && box.height >= this.MIN_FACE_SIZE;
-      });
+      return detections.filter(
+        (d: {
+          detection: {
+            box: {
+              width: number;
+              height: number;
+            };
+          };
+        }) => {
+          const box = d.detection.box;
+          return box.width >= this.MIN_FACE_SIZE && box.height >= this.MIN_FACE_SIZE;
+        }
+      );
     } catch (error) {
       logger.error('[FaceRecognition] Face detection failed:', error);
       return [];
     }
   }
 
-  async recognizeFace(descriptor: Float32Array): Promise<{ profileId: string; distance: number } | null> {
+  async recognizeFace(
+    descriptor: Float32Array
+  ): Promise<{ profileId: string; distance: number } | null> {
     let bestMatch: { profileId: string; distance: number } | null = null;
     let minDistance = Infinity;
 
@@ -149,7 +168,10 @@ export class FaceRecognition {
     return bestMatch;
   }
 
-  async addOrUpdateFace(descriptor: Float32Array, attributes?: Partial<FaceProfile>): Promise<string> {
+  async addOrUpdateFace(
+    descriptor: Float32Array,
+    attributes?: Partial<FaceProfile>
+  ): Promise<string> {
     // Check if this face already exists
     const match = await this.recognizeFace(descriptor);
 
@@ -161,7 +183,8 @@ export class FaceRecognition {
 
       // Add new embedding for better recognition
       const embeddings = this.faceLibrary.embeddings.get(match.profileId)!;
-      if (embeddings.length < 10) { // Keep up to 10 embeddings per person
+      if (embeddings.length < 10) {
+        // Keep up to 10 embeddings per person
         embeddings.push(Array.from(descriptor));
       }
 

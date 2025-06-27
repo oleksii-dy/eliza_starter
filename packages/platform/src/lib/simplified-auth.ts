@@ -60,12 +60,14 @@ class SimplifiedAuthManager {
     } catch (error) {
       console.warn('Session verification failed:', error);
     }
-    
+
     this.clearAuth();
     return false;
   }
 
-  async login(credentials: LoginCredentials): Promise<{ success: boolean; error?: string }> {
+  async login(
+    credentials: LoginCredentials,
+  ): Promise<{ success: boolean; error?: string }> {
     try {
       // Input validation
       if (!credentials.email || !credentials.password) {
@@ -73,19 +75,29 @@ class SimplifiedAuthManager {
       }
 
       // Sanitize inputs
-      const sanitizedEmail = SecurityManager.sanitizeInput(credentials.email).toLowerCase();
-      const sanitizedPassword = SecurityManager.sanitizeInput(credentials.password);
+      const sanitizedEmail = SecurityManager.sanitizeInput(
+        credentials.email,
+      ).toLowerCase();
+      const sanitizedPassword = SecurityManager.sanitizeInput(
+        credentials.password,
+      );
 
       if (!this.isValidEmail(sanitizedEmail)) {
         return { success: false, error: 'Invalid email format' };
       }
 
       if (sanitizedPassword.length < 8) {
-        return { success: false, error: 'Password must be at least 8 characters' };
+        return {
+          success: false,
+          error: 'Password must be at least 8 characters',
+        };
       }
 
-      const authData = await apiClient.authenticate(sanitizedEmail, sanitizedPassword);
-      
+      const authData = await apiClient.authenticate(
+        sanitizedEmail,
+        sanitizedPassword,
+      );
+
       this.setAuthState({
         isAuthenticated: true,
         user: authData.user,
@@ -95,18 +107,23 @@ class SimplifiedAuthManager {
       return { success: true };
     } catch (error) {
       console.error('Login failed:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Login failed' 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Login failed',
       };
     }
   }
 
-  async register(data: RegisterData): Promise<{ success: boolean; error?: string }> {
+  async register(
+    data: RegisterData,
+  ): Promise<{ success: boolean; error?: string }> {
     try {
       // Input validation
       if (!data.email || !data.password || !data.name) {
-        return { success: false, error: 'Email, password, and name are required' };
+        return {
+          success: false,
+          error: 'Email, password, and name are required',
+        };
       }
 
       // Sanitize inputs
@@ -114,7 +131,9 @@ class SimplifiedAuthManager {
         email: SecurityManager.sanitizeInput(data.email).toLowerCase(),
         password: SecurityManager.sanitizeInput(data.password),
         name: SecurityManager.sanitizeInput(data.name),
-        organizationName: data.organizationName ? SecurityManager.sanitizeInput(data.organizationName) : undefined,
+        organizationName: data.organizationName
+          ? SecurityManager.sanitizeInput(data.organizationName)
+          : undefined,
       };
 
       if (!this.isValidEmail(sanitizedData.email)) {
@@ -122,23 +141,29 @@ class SimplifiedAuthManager {
       }
 
       if (sanitizedData.password.length < 8) {
-        return { success: false, error: 'Password must be at least 8 characters' };
+        return {
+          success: false,
+          error: 'Password must be at least 8 characters',
+        };
       }
 
       if (sanitizedData.name.length < 2) {
         return { success: false, error: 'Name must be at least 2 characters' };
       }
 
-      const response = await apiClient.request<{ token: string; user: any }>('/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify(sanitizedData)
-      });
+      const response = await apiClient.request<{ token: string; user: any }>(
+        '/api/auth/register',
+        {
+          method: 'POST',
+          body: JSON.stringify(sanitizedData),
+        },
+      );
 
       if (response.success && response.data) {
         // Store token and set auth state
         apiClient['authToken'] = response.data.token;
         await apiClient['storeTokenSecurely'](response.data.token);
-        
+
         this.setAuthState({
           isAuthenticated: true,
           user: response.data.user,
@@ -148,15 +173,15 @@ class SimplifiedAuthManager {
         return { success: true };
       }
 
-      return { 
-        success: false, 
-        error: response.error || 'Registration failed' 
+      return {
+        success: false,
+        error: response.error || 'Registration failed',
       };
     } catch (error) {
       console.error('Registration failed:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Registration failed' 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Registration failed',
       };
     }
   }
@@ -172,32 +197,37 @@ class SimplifiedAuthManager {
     }
   }
 
-  async resetPassword(email: string): Promise<{ success: boolean; error?: string }> {
+  async resetPassword(
+    email: string,
+  ): Promise<{ success: boolean; error?: string }> {
     try {
       const sanitizedEmail = SecurityManager.sanitizeInput(email).toLowerCase();
-      
+
       if (!this.isValidEmail(sanitizedEmail)) {
         return { success: false, error: 'Invalid email format' };
       }
 
       const response = await apiClient.request('/api/auth/reset-password', {
         method: 'POST',
-        body: JSON.stringify({ email: sanitizedEmail })
+        body: JSON.stringify({ email: sanitizedEmail }),
       });
 
-      return response.success 
+      return response.success
         ? { success: true }
         : { success: false, error: response.error || 'Reset password failed' };
     } catch (error) {
       console.error('Reset password failed:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Reset password failed' 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Reset password failed',
       };
     }
   }
 
-  async changePassword(currentPassword: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
+  async changePassword(
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<{ success: boolean; error?: string }> {
     try {
       if (!this.authState.isAuthenticated) {
         return { success: false, error: 'Not authenticated' };
@@ -207,25 +237,29 @@ class SimplifiedAuthManager {
       const sanitizedNew = SecurityManager.sanitizeInput(newPassword);
 
       if (sanitizedNew.length < 8) {
-        return { success: false, error: 'New password must be at least 8 characters' };
+        return {
+          success: false,
+          error: 'New password must be at least 8 characters',
+        };
       }
 
       const response = await apiClient.request('/api/auth/change-password', {
         method: 'POST',
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           currentPassword: sanitizedCurrent,
-          newPassword: sanitizedNew 
-        })
+          newPassword: sanitizedNew,
+        }),
       });
 
-      return response.success 
+      return response.success
         ? { success: true }
         : { success: false, error: response.error || 'Change password failed' };
     } catch (error) {
       console.error('Change password failed:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Change password failed' 
+      return {
+        success: false,
+        error:
+          error instanceof Error ? error.message : 'Change password failed',
       };
     }
   }
@@ -245,7 +279,7 @@ class SimplifiedAuthManager {
   }
 
   private notifyListeners(): void {
-    this.listeners.forEach(listener => {
+    this.listeners.forEach((listener) => {
       try {
         listener(this.authState);
       } catch (error) {
@@ -278,7 +312,7 @@ class SimplifiedAuthManager {
 
   onAuthStateChange(listener: (state: AuthState) => void): () => void {
     this.listeners.push(listener);
-    
+
     // Return unsubscribe function
     return () => {
       const index = this.listeners.indexOf(listener);
@@ -287,7 +321,6 @@ class SimplifiedAuthManager {
       }
     };
   }
-
 }
 
 /**
@@ -296,7 +329,7 @@ class SimplifiedAuthManager {
  */
 export function useAuthState(): AuthState {
   const [state, setState] = useState(auth.getAuthState());
-  
+
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChange(setState);
     return unsubscribe;

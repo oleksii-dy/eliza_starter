@@ -16,7 +16,7 @@ const TEST_CONFIG = {
   E2B_API_KEY: process.env.E2B_API_KEY || '',
   TIMEOUT: 15 * 60 * 1000, // 15 minutes
   VERBOSE: process.env.VERBOSE === 'true' || process.argv.includes('--verbose'),
-  DRY_RUN: process.argv.includes('--dry-run')
+  DRY_RUN: process.argv.includes('--dry-run'),
 };
 
 async function validateEnvironment(): Promise<void> {
@@ -51,10 +51,11 @@ async function createTestAgents() {
     const orchestratorCharacter = {
       name: 'GitHub Issue Orchestrator',
       bio: 'Coordinates GitHub issue resolution workflows using E2B sandboxes and autocoder',
-      system: 'You are a project coordinator responsible for managing GitHub issues and orchestrating development workflows.',
+      system:
+        'You are a project coordinator responsible for managing GitHub issues and orchestrating development workflows.',
       messageExamples: [],
       postExamples: [],
-      plugins: ['@elizaos/plugin-e2b']
+      plugins: ['@elizaos/plugin-e2b'],
     };
 
     const orchestrator = await testHarness.createTestRuntime({
@@ -62,8 +63,8 @@ async function createTestAgents() {
       plugins: [e2bPlugin],
       apiKeys: {
         GITHUB_TOKEN: TEST_CONFIG.GITHUB_TOKEN,
-        E2B_API_KEY: TEST_CONFIG.E2B_API_KEY
-      }
+        E2B_API_KEY: TEST_CONFIG.E2B_API_KEY,
+      },
     });
     agents.set('main-orchestrator', orchestrator);
 
@@ -71,10 +72,11 @@ async function createTestAgents() {
     const coderCharacter = {
       name: 'Sandbox Development Agent',
       bio: 'Implements solutions for GitHub issues within secure E2B sandbox environments',
-      system: 'You are a skilled software engineer operating in secure sandbox environments to implement solutions.',
+      system:
+        'You are a skilled software engineer operating in secure sandbox environments to implement solutions.',
       messageExamples: [],
       postExamples: [],
-      plugins: ['@elizaos/plugin-e2b']
+      plugins: ['@elizaos/plugin-e2b'],
     };
 
     const coder = await testHarness.createTestRuntime({
@@ -82,8 +84,8 @@ async function createTestAgents() {
       plugins: [e2bPlugin],
       apiKeys: {
         GITHUB_TOKEN: TEST_CONFIG.GITHUB_TOKEN,
-        E2B_API_KEY: TEST_CONFIG.E2B_API_KEY
-      }
+        E2B_API_KEY: TEST_CONFIG.E2B_API_KEY,
+      },
     });
     agents.set('e2b-coder-agent', coder);
 
@@ -91,10 +93,11 @@ async function createTestAgents() {
     const reviewerCharacter = {
       name: 'Quality Assurance Reviewer',
       bio: 'Conducts thorough code reviews to maintain high quality standards',
-      system: 'You are a senior code reviewer focused on maintaining high quality standards and security.',
+      system:
+        'You are a senior code reviewer focused on maintaining high quality standards and security.',
       messageExamples: [],
       postExamples: [],
-      plugins: ['@elizaos/plugin-e2b']
+      plugins: ['@elizaos/plugin-e2b'],
     };
 
     const reviewer = await testHarness.createTestRuntime({
@@ -102,8 +105,8 @@ async function createTestAgents() {
       plugins: [e2bPlugin],
       apiKeys: {
         GITHUB_TOKEN: TEST_CONFIG.GITHUB_TOKEN,
-        E2B_API_KEY: TEST_CONFIG.E2B_API_KEY
-      }
+        E2B_API_KEY: TEST_CONFIG.E2B_API_KEY,
+      },
     });
     agents.set('pr-reviewer-agent', reviewer);
 
@@ -119,9 +122,9 @@ async function runScenarioStep(stepName: string, stepFn: () => Promise<void>): P
   try {
     elizaLogger.info(`🚀 Starting: ${stepName}`);
     const startTime = Date.now();
-    
+
     await stepFn();
-    
+
     const duration = Date.now() - startTime;
     elizaLogger.info(`✅ Completed: ${stepName} (${duration}ms)`);
     return true;
@@ -142,7 +145,7 @@ async function executeScenario(): Promise<{ success: boolean; testHarness?: Runt
   const { agents, testHarness } = await createTestAgents();
   const orchestrator = agents.get('main-orchestrator');
   const coder = agents.get('e2b-coder-agent');
-  
+
   let allStepsSuccessful = true;
 
   // Step 1: Validate services are available
@@ -165,21 +168,21 @@ async function executeScenario(): Promise<{ success: boolean; testHarness?: Runt
     const message = {
       id: `test-msg-${Date.now()}`,
       entityId: 'test-user',
-      content: { 
-        text: 'Help me resolve GitHub issues from the elizaOS repository using sandbox development' 
+      content: {
+        text: 'Help me resolve GitHub issues from the elizaOS repository using sandbox development',
       },
       agentId: orchestrator.agentId,
       roomId: orchestrator.agentId,
-      createdAt: Date.now()
+      createdAt: Date.now(),
     };
 
     let responseReceived = false;
     const responses = await orchestrator.processMessage(message);
-    
+
     if (responses && responses.length > 0) {
       responseReceived = true;
       elizaLogger.info('GitHub issue orchestration response received', {
-        responseCount: responses.length
+        responseCount: responses.length,
       });
     }
 
@@ -192,22 +195,22 @@ async function executeScenario(): Promise<{ success: boolean; testHarness?: Runt
   allStepsSuccessful &= await runScenarioStep('Sandbox Environment Setup', async () => {
     const e2bService = orchestrator.getService('e2b');
     const sandboxes = e2bService.listSandboxes();
-    
+
     if (sandboxes.length === 0) {
       // Create a test sandbox
       const sandboxId = await e2bService.createSandbox({
         timeoutMs: 10 * 60 * 1000, // 10 minutes for test
         metadata: {
           purpose: 'test-github-workflow',
-          testMode: true
-        }
+          testMode: true,
+        },
       });
-      
+
       elizaLogger.info('Test sandbox created', { sandboxId });
     }
-    
+
     elizaLogger.info('✅ Sandbox environment is ready', {
-      activeSandboxes: e2bService.listSandboxes().length
+      activeSandboxes: e2bService.listSandboxes().length,
     });
   });
 
@@ -216,22 +219,22 @@ async function executeScenario(): Promise<{ success: boolean; testHarness?: Runt
     const message = {
       id: `test-coord-${Date.now()}`,
       entityId: 'test-coordinator',
-      content: { 
-        text: 'Coordinate with the coder agent to work on GitHub issue resolution' 
+      content: {
+        text: 'Coordinate with the coder agent to work on GitHub issue resolution',
       },
       agentId: orchestrator.agentId,
       roomId: orchestrator.agentId,
-      createdAt: Date.now()
+      createdAt: Date.now(),
     };
 
     const responses = await orchestrator.processMessage(message);
-    
+
     if (!responses || responses.length === 0) {
       throw new Error('Agent coordination failed - no responses received');
     }
 
     elizaLogger.info('✅ Agent coordination successful', {
-      responseCount: responses.length
+      responseCount: responses.length,
     });
   });
 
@@ -240,21 +243,21 @@ async function executeScenario(): Promise<{ success: boolean; testHarness?: Runt
     const testMessage = {
       id: `test-code-${Date.now()}`,
       entityId: 'test-user',
-      content: { 
+      content: {
         text: `\`\`\`python
 # Test code execution in sandbox
 print("GitHub + E2B + Autocoder workflow test")
 result = "All systems operational"
 print(f"Status: {result}")
-\`\`\`` 
+\`\`\``,
       },
       agentId: coder.agentId,
       roomId: coder.agentId,
-      createdAt: Date.now()
+      createdAt: Date.now(),
     };
 
     const responses = await coder.processMessage(testMessage);
-    
+
     if (!responses || responses.length === 0) {
       throw new Error('Code execution test failed - no responses received');
     }
@@ -273,7 +276,7 @@ print(f"Status: {result}")
     // Validate that all components are working together
     const e2bService = orchestrator.getService('e2b');
     const sandboxes = e2bService.listSandboxes();
-    
+
     if (sandboxes.length === 0) {
       throw new Error('No sandboxes available for workflow validation');
     }
@@ -286,7 +289,7 @@ print(f"Status: {result}")
 
     elizaLogger.info('✅ Complete workflow validation successful', {
       activeSandboxes: sandboxes.length,
-      serviceHealth: isHealthy
+      serviceHealth: isHealthy,
     });
   });
 
@@ -295,7 +298,7 @@ print(f"Status: {result}")
 
 async function cleanup(testHarness?: RuntimeTestHarness) {
   elizaLogger.info('🧹 Cleaning up test environment...');
-  
+
   try {
     if (testHarness) {
       await testHarness.cleanup();
@@ -320,7 +323,7 @@ async function main() {
         hasGitHubToken: !!TEST_CONFIG.GITHUB_TOKEN,
         hasE2BKey: !!TEST_CONFIG.E2B_API_KEY,
         timeout: TEST_CONFIG.TIMEOUT,
-        dryRun: TEST_CONFIG.DRY_RUN
+        dryRun: TEST_CONFIG.DRY_RUN,
       });
     }
 
@@ -328,7 +331,6 @@ async function main() {
     const result = await executeScenario();
     success = result.success;
     testHarness = result.testHarness;
-
   } catch (error) {
     elizaLogger.error('❌ Scenario execution failed', { error: error.message });
     success = false;

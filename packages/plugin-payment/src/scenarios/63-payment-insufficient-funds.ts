@@ -17,17 +17,19 @@ const paymentInsufficientFundsScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'I\'m checking your balance... You have insufficient funds. Your current balance is 25 USDC, but you need 100 USDC for this purchase.',
+        content:
+          "I'm checking your balance... You have insufficient funds. Your current balance is 25 USDC, but you need 100 USDC for this purchase.",
       },
     ],
     [
       {
         user: 'customer',
-        content: 'What\'s my current balance?',
+        content: "What's my current balance?",
       },
       {
         user: 'agent',
-        content: 'Your current balance is 25 USDC. You would need to add 75 USDC more to purchase the premium AI model access.',
+        content:
+          'Your current balance is 25 USDC. You would need to add 75 USDC more to purchase the premium AI model access.',
       },
     ],
   ],

@@ -52,7 +52,7 @@ export default {
 
 The plugin automatically detects and executes code blocks:
 
-```
+````
 Execute this Python code:
 ```python
 import numpy as np
@@ -73,7 +73,7 @@ plt.grid(True)
 plt.show()
 
 print(f"Generated {len(x)} data points")
-```
+````
 
 ### Sandbox Management
 
@@ -83,7 +83,7 @@ Create, list, and manage sandboxes:
 # Create new sandbox
 "Create a new sandbox with 10 minute timeout"
 
-# List active sandboxes  
+# List active sandboxes
 "Show me all active sandboxes"
 
 # Kill specific sandbox
@@ -114,11 +114,13 @@ console.log('File written successfully');
 Executes code in secure E2B sandboxes.
 
 **Triggers:**
+
 - Messages containing code blocks (```language)
 - Messages with code-like content
 - Keywords: execute, run, code, python, calculate
 
 **Examples:**
+
 ```typescript
 // Action chaining example
 const result = await runtime.processActions(message, [], state);
@@ -132,15 +134,17 @@ if (result.values.success) {
 Creates, lists, and manages E2B sandboxes.
 
 **Triggers:**
+
 - Keywords: sandbox, create sandbox, list sandbox, kill sandbox
 
 **Examples:**
+
 ```typescript
 // Create sandbox programmatically
 const e2bService = runtime.getService('e2b');
 const sandboxId = await e2bService.createSandbox({
   timeoutMs: 600000, // 10 minutes
-  metadata: { purpose: 'data-analysis' }
+  metadata: { purpose: 'data-analysis' },
 });
 ```
 
@@ -160,7 +164,7 @@ const result = await e2bService.executeCode('print("Hello World")', 'python');
 // Manage sandboxes
 const sandboxId = await e2bService.createSandbox({
   timeoutMs: 300000,
-  metadata: { user: 'alice' }
+  metadata: { user: 'alice' },
 });
 
 // File operations
@@ -189,8 +193,8 @@ const sandboxId = await e2bService.createSandbox({
   timeoutMs: 1800000, // 30 minutes
   metadata: {
     project: 'ml-training',
-    user: userId
-  }
+    user: userId,
+  },
 });
 ```
 
@@ -199,7 +203,7 @@ const sandboxId = await e2bService.createSandbox({
 ```typescript
 try {
   const result = await e2bService.executeCode(userCode);
-  
+
   if (result.error) {
     console.error('Execution error:', result.error.name, result.error.value);
     console.error('Traceback:', result.error.traceback);
@@ -220,8 +224,8 @@ const isHealthy = await e2bService.isHealthy();
 
 // List and cleanup old sandboxes
 const sandboxes = e2bService.listSandboxes();
-const oldSandboxes = sandboxes.filter(s => 
-  Date.now() - s.lastActivity.getTime() > 3600000 // 1 hour old
+const oldSandboxes = sandboxes.filter(
+  (s) => Date.now() - s.lastActivity.getTime() > 3600000 // 1 hour old
 );
 
 for (const sandbox of oldSandboxes) {
@@ -254,8 +258,8 @@ const sandboxId = await e2bService.createSandbox({
   metadata: {
     userId: runtime.userId,
     sessionId: runtime.sessionId,
-    purpose: 'user-code-execution'
-  }
+    purpose: 'user-code-execution',
+  },
 });
 ```
 
@@ -284,6 +288,7 @@ await testSuite.tests[0].fn(runtime); // Test service initialization
 ### Common Issues
 
 **API Key Issues:**
+
 ```bash
 # Check API key
 export E2B_API_KEY=your_key_here
@@ -292,6 +297,7 @@ npx @e2b/cli auth whoami
 ```
 
 **Local E2B Setup:**
+
 ```bash
 # Install E2B CLI
 npm install -g @e2b/cli
@@ -301,6 +307,7 @@ e2b template build
 ```
 
 **Network Issues:**
+
 ```bash
 # Check connectivity
 curl -X GET "https://api.e2b.dev/sandboxes" \

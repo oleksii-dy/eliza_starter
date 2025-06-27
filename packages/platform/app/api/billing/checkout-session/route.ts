@@ -5,7 +5,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { sessionService } from '@/lib/auth/session';
-import { createPaymentIntent, createStripeCustomer } from '@/lib/server/services/billing-service';
+import {
+  createPaymentIntent,
+  createStripeCustomer,
+} from '@/lib/server/services/billing-service';
 import { getDatabase } from '@/lib/database';
 import { organizations } from '@/lib/database/schema';
 import { eq } from 'drizzle-orm';
@@ -14,9 +17,18 @@ import Stripe from 'stripe';
 import { loadConfig } from '@/lib/server/utils/config';
 
 const config = loadConfig();
-const stripe = new Stripe(config.stripe.secretKey, {
-  apiVersion: '2025-02-24.acacia',
-});
+
+// Initialize Stripe only if configuration is available
+let stripe: Stripe | null = null;
+if (config.stripe.secretKey) {
+  stripe = new Stripe(config.stripe.secretKey, {
+    apiVersion: '2025-02-24.acacia',
+  });
+} else {
+  console.warn(
+    'Stripe secret key not configured. Billing routes will return errors.',
+  );
+}
 
 const checkoutSessionSchema = z.object({
   amount: z.number().min(5).max(10000), // $5 to $10,000
@@ -25,8 +37,16 @@ const checkoutSessionSchema = z.object({
   cancelUrl: z.string().url(),
 });
 
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   try {
+    // Check if Stripe is configured
+    if (!stripe) {
+      return NextResponse.json(
+        { error: 'Billing system is not configured. Please contact support.' },
+        { status: 503 },
+      );
+    }
+
     // Get user session
     const session = await sessionService.getSessionFromCookies();
     if (!session) {
@@ -38,7 +58,7 @@ export async function POST(request: NextRequest) {
     const validatedData = checkoutSessionSchema.parse(body);
 
     const db = await getDatabase();
-    
+
     // Get organization details
     const [organization] = await db
       .select({
@@ -51,7 +71,10 @@ export async function POST(request: NextRequest) {
       .limit(1);
 
     if (!organization) {
-      return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Organization not found' },
+        { status: 404 },
+      );
     }
 
     // Ensure Stripe customer exists
@@ -60,7 +83,7 @@ export async function POST(request: NextRequest) {
       customerId = await createStripeCustomer(
         session.organizationId,
         organization.billingEmail || session.email,
-        organization.name
+        organization.name,
       );
     }
 
@@ -108,14 +131,14 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid request data', details: error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     console.error('Failed to create checkout session:', error);
     return NextResponse.json(
       { error: 'Failed to create checkout session' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

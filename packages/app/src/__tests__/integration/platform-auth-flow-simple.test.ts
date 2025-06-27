@@ -4,7 +4,10 @@
  */
 
 import { describe, test, expect, beforeEach } from 'bun:test';
-import { PlatformAgentIntegrationService, type AgentAuthContext } from '../../lib/platform-agent-integration';
+import {
+  PlatformAgentIntegrationService,
+  type AgentAuthContext,
+} from '../../lib/platform-agent-integration';
 
 describe('Platform Authentication Integration', () => {
   let mockAuthContext: AgentAuthContext;
@@ -58,7 +61,7 @@ describe('Platform Authentication Integration', () => {
     testCases.forEach(({ role, permission, expected }) => {
       const context = { ...mockAuthContext, userRole: role };
       const result = PlatformAgentIntegrationService.validateUserPermission(context, permission);
-      
+
       expect(result.hasPermission).toBe(expected);
       if (!expected) {
         expect(result.reason).toContain(`Role '${role}' does not have permission '${permission}'`);
@@ -114,19 +117,20 @@ describe('Platform Authentication Integration', () => {
     expect(secureConfig.character).toEqual(baseConfig.character);
     expect(secureConfig.adapter).toEqual(baseConfig.adapter);
     expect(secureConfig.plugins).toEqual(baseConfig.plugins);
-    
+
     // Check security settings were added
     expect(secureConfig.settings?.enableSecurityEvaluators).toBe(true);
     expect(secureConfig.settings?.requireAuthentication).toBe(true);
     expect(secureConfig.settings?.logSecurityEvents).toBe(true);
-    
+
     // Check original settings were preserved
     expect(secureConfig.settings?.customSetting).toBe('value');
   });
 
   test('should create authentication middleware', async () => {
-    const middleware = PlatformAgentIntegrationService.createAuthenticationMiddleware(mockAuthContext);
-    
+    const middleware =
+      PlatformAgentIntegrationService.createAuthenticationMiddleware(mockAuthContext);
+
     expect(middleware.name).toBe('authentication-middleware');
 
     // Test message without metadata
@@ -136,13 +140,18 @@ describe('Platform Authentication Integration', () => {
     };
 
     const mockRuntime = { agentId: 'test-agent-123' };
-    const processedMessage = await middleware.processMessage(mockRuntime as any, messageWithoutMetadata);
+    const processedMessage = await middleware.processMessage(
+      mockRuntime as any,
+      messageWithoutMetadata
+    );
 
     expect(processedMessage.metadata).toBeTruthy();
     expect(processedMessage.metadata.authContext).toBeTruthy();
     expect(processedMessage.metadata.authContext.userId).toBe(mockAuthContext.userId);
     expect(processedMessage.metadata.authContext.userRole).toBe(mockAuthContext.userRole);
-    expect(processedMessage.metadata.authContext.organizationId).toBe(mockAuthContext.organizationId);
+    expect(processedMessage.metadata.authContext.organizationId).toBe(
+      mockAuthContext.organizationId
+    );
     expect(typeof processedMessage.metadata.authContext.timestamp).toBe('number');
 
     // Test message with existing metadata
@@ -179,7 +188,7 @@ describe('Platform Authentication Integration', () => {
       });
 
       // Verify security event was logged
-      const securityLog = logMessages.find(msg => msg.includes('[SECURITY AUDIT]'));
+      const securityLog = logMessages.find((msg) => msg.includes('[SECURITY AUDIT]'));
       expect(securityLog).toBeTruthy();
       expect(securityLog).toContain(mockAuthContext.userId);
       expect(securityLog).toContain(mockAuthContext.organizationId);
@@ -208,10 +217,7 @@ describe('Platform Authentication Integration', () => {
 
   test('should handle agent creation with zero limit', async () => {
     const zeroLimitContext = { ...mockAuthContext, agentLimit: '0' };
-    const result = await PlatformAgentIntegrationService.validateAgentCreation(
-      zeroLimitContext,
-      0
-    );
+    const result = await PlatformAgentIntegrationService.validateAgentCreation(zeroLimitContext, 0);
     expect(result.canCreate).toBe(false);
     expect(result.reason).toContain('Agent limit reached (0/0)');
   });

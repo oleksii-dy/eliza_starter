@@ -48,6 +48,14 @@ export class MCPCreationService extends Service {
     this.templatePath = path.join(__dirname, '../resources/templates/mcp-starter');
   }
 
+  // Required static start method for service registration
+  static async start(runtime: IAgentRuntime): Promise<MCPCreationService> {
+    const service = new MCPCreationService(runtime);
+    service.runtime = runtime;
+    await service.start();
+    return service;
+  }
+
   async start(): Promise<void> {
     elizaLogger.info('[MCP] MCP Creation Service started');
   }
@@ -208,7 +216,8 @@ export class MCPCreationService extends Service {
   /**
    * Copy template files to project directory
    */
-  private async copyTemplateFiles(templatePath: string,
+  private async copyTemplateFiles(
+    templatePath: string,
     projectPath: string,
     filesCreated: string[]
   ): Promise<void> {
@@ -232,15 +241,24 @@ export class MCPCreationService extends Service {
   /**
    * Generate package.json file
    */
-  private async generatePackageJson(projectPath: string,
+  private async generatePackageJson(
+    projectPath: string,
     config: MCPProjectConfig,
     filesCreated: string[]
   ): Promise<void> {
+    // Validate config values to prevent invalid JSON generation
+    if (!config.name || typeof config.name !== 'string' || config.name.trim() === '') {
+      throw new Error('Invalid project name for package.json generation');
+    }
+    if (!config.description || typeof config.description !== 'string') {
+      throw new Error('Invalid project description for package.json generation');
+    }
+
     const packageJson = {
-      name: config.name,
+      name: config.name.trim(),
       version: '0.1.0',
       type: 'module',
-      description: config.description,
+      description: config.description.trim(),
       main: './dist/index.js',
       types: './dist/index.d.ts',
       bin: {
@@ -277,8 +295,18 @@ export class MCPCreationService extends Service {
     };
 
     const packageJsonPath = path.join(projectPath, 'package.json');
-    await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
-    filesCreated.push('package.json');
+
+    try {
+      const jsonContent = JSON.stringify(packageJson, null, 2);
+      await fs.writeFile(packageJsonPath, jsonContent, 'utf-8');
+      filesCreated.push('package.json');
+      elizaLogger.info('[MCP] ✅ Generated package.json successfully');
+    } catch (error) {
+      elizaLogger.error('[MCP] ❌ Failed to generate package.json:', error);
+      throw new Error(
+        `Failed to write package.json: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
   }
 
   /**
@@ -314,7 +342,8 @@ export class MCPCreationService extends Service {
   /**
    * Generate tool files
    */
-  private async generateTools(projectPath: string,
+  private async generateTools(
+    projectPath: string,
     tools: MCPProjectConfig['tools'],
     toolsGenerated: string[],
     filesCreated: string[]
@@ -337,7 +366,11 @@ export class MCPCreationService extends Service {
 
       // Extract required parameters
       const requiredParams: string[] = [];
-      const parameters = tool.parameters || { /* empty */ };
+      const parameters =
+        tool.parameters ||
+        {
+          /* empty */
+        };
 
       // Build parameters object
       const paramsObj = Object.entries(parameters).reduce(
@@ -351,7 +384,9 @@ export class MCPCreationService extends Service {
           }
           return acc;
         },
-        { /* empty */ } as Record<string, any>
+        {
+          /* empty */
+        } as Record<string, any>
       );
 
       // Generate tool file
@@ -730,7 +765,8 @@ export class MCPCreationService extends Service {
   /**
    * Generate resource files
    */
-  private async generateResources(projectPath: string,
+  private async generateResources(
+    projectPath: string,
     resources: MCPProjectConfig['resources'],
     resourcesGenerated: string[],
     filesCreated: string[]
@@ -754,7 +790,9 @@ export class MCPCreationService extends Service {
         .replace(/{{RESOURCE_MIME_TYPE}}/g, resource.mimeType || 'application/json')
         .replace(/{{RESOURCE_URI}}/g, `resource://${resource.name.toLowerCase()}`)
         .replace(/{{RESOURCE_NAME_LOWER}}/g, resource.name.toLowerCase())
-        .replace(/{{RESOURCE_IMPLEMENTATION}}/g, `// Implementation for ${resource.name} resource
+        .replace(
+          /{{RESOURCE_IMPLEMENTATION}}/g,
+          `// Implementation for ${resource.name} resource
       console.log('Fetching ${resource.name} resource...');
       
       // Return sample resource data
@@ -763,7 +801,8 @@ export class MCPCreationService extends Service {
         type: '${resource.mimeType || 'application/json'}',
         content: 'Sample resource content for ${resource.name}',
         timestamp: new Date().toISOString()
-      };`);
+      };`
+        );
 
       await fs.writeFile(resourcePath, resourceContent);
       resourcesGenerated.push(resourceFileName);
@@ -774,7 +813,8 @@ export class MCPCreationService extends Service {
   /**
    * Update server file with tools and resources
    */
-  private async updateServerFile(projectPath: string,
+  private async updateServerFile(
+    projectPath: string,
     toolsGenerated: string[],
     resourcesGenerated: string[]
   ): Promise<void> {
@@ -839,7 +879,8 @@ export class MCPCreationService extends Service {
   /**
    * Generate README file
    */
-  private async generateReadme(projectPath: string,
+  private async generateReadme(
+    projectPath: string,
     config: MCPProjectConfig,
     filesCreated: string[]
   ): Promise<void> {
@@ -932,7 +973,9 @@ coverage/
    * Get additional dependencies based on configuration
    */
   private getAdditionalDependencies(deps: string[]): Record<string, string> {
-    const dependencies: Record<string, string> = { /* empty */ };
+    const dependencies: Record<string, string> = {
+      /* empty */
+    };
 
     for (const dep of deps) {
       // Handle package@version format
@@ -943,11 +986,21 @@ coverage/
         dependencies[packageName] = version;
       } else {
         // Add common dependencies with default versions
-        if (dep === 'axios') {dependencies['axios'] = '^1.6.0';}
-        if (dep === 'dotenv') {dependencies['dotenv'] = '^16.0.0';}
-        if (dep === 'zod') {dependencies['zod'] = '^3.22.0';}
-        if (dep === 'node-fetch') {dependencies['node-fetch'] = '^3.0.0';}
-        if (dep === 'pg') {dependencies['pg'] = '^8.11.0';}
+        if (dep === 'axios') {
+          dependencies['axios'] = '^1.6.0';
+        }
+        if (dep === 'dotenv') {
+          dependencies['dotenv'] = '^16.0.0';
+        }
+        if (dep === 'zod') {
+          dependencies['zod'] = '^3.22.0';
+        }
+        if (dep === 'node-fetch') {
+          dependencies['node-fetch'] = '^3.0.0';
+        }
+        if (dep === 'pg') {
+          dependencies['pg'] = '^8.11.0';
+        }
         // Add more as needed
       }
     }
@@ -970,7 +1023,8 @@ coverage/
   /**
    * Run various checks (tsc, eslint, build, test)
    */
-  private async runCheck(projectPath: string,
+  private async runCheck(
+    projectPath: string,
     checkType: 'tsc' | 'eslint' | 'build' | 'test'
   ): Promise<boolean> {
     try {

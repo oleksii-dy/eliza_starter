@@ -30,7 +30,7 @@ export function LoginForm({ onSuccess, showRegister = true }: LoginFormProps) {
 
     try {
       let result;
-      
+
       if (isRegisterMode) {
         result = await auth.register({
           email: formData.email,
@@ -45,23 +45,29 @@ export function LoginForm({ onSuccess, showRegister = true }: LoginFormProps) {
       if (result.success) {
         onSuccess?.();
       } else {
-        setError(result.error || `${isRegisterMode ? 'Registration' : 'Login'} failed`);
+        setError(
+          result.error || `${isRegisterMode ? 'Registration' : 'Login'} failed`,
+        );
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+      setError(
+        err instanceof Error ? err.message : 'An unexpected error occurred',
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
     if (error) setError(null);
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="mx-auto w-full max-w-md">
       <CardHeader>
         <CardTitle className="text-center">
           {isRegisterMode ? 'Create Account' : 'Sign In'}
@@ -72,7 +78,10 @@ export function LoginForm({ onSuccess, showRegister = true }: LoginFormProps) {
           {isRegisterMode && (
             <>
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="name"
+                  className="mb-1 block text-sm font-medium text-gray-700"
+                >
                   Full Name
                 </label>
                 <Input
@@ -87,7 +96,10 @@ export function LoginForm({ onSuccess, showRegister = true }: LoginFormProps) {
                 />
               </div>
               <div>
-                <label htmlFor="organizationName" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="organizationName"
+                  className="mb-1 block text-sm font-medium text-gray-700"
+                >
                   Organization Name (Optional)
                 </label>
                 <Input
@@ -102,9 +114,12 @@ export function LoginForm({ onSuccess, showRegister = true }: LoginFormProps) {
               </div>
             </>
           )}
-          
+
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="email"
+              className="mb-1 block text-sm font-medium text-gray-700"
+            >
               Email
             </label>
             <Input
@@ -118,9 +133,12 @@ export function LoginForm({ onSuccess, showRegister = true }: LoginFormProps) {
               placeholder="Enter your email"
             />
           </div>
-          
+
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="password"
+              className="mb-1 block text-sm font-medium text-gray-700"
+            >
               Password
             </label>
             <Input
@@ -135,29 +153,24 @@ export function LoginForm({ onSuccess, showRegister = true }: LoginFormProps) {
               minLength={8}
             />
             {isRegisterMode && (
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="mt-1 text-xs text-gray-500">
                 Password must be at least 8 characters long
               </p>
             )}
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-md p-3">
+            <div className="rounded-md border border-red-200 bg-red-50 p-3">
               <p className="text-sm text-red-600">{error}</p>
             </div>
           )}
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={isLoading}
-          >
-            {isLoading 
-              ? `${isRegisterMode ? 'Creating Account' : 'Signing In'}...` 
-              : isRegisterMode 
-                ? 'Create Account' 
-                : 'Sign In'
-            }
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading
+              ? `${isRegisterMode ? 'Creating Account' : 'Signing In'}...`
+              : isRegisterMode
+                ? 'Create Account'
+                : 'Sign In'}
           </Button>
         </form>
 
@@ -168,15 +181,19 @@ export function LoginForm({ onSuccess, showRegister = true }: LoginFormProps) {
               onClick={() => {
                 setIsRegisterMode(!isRegisterMode);
                 setError(null);
-                setFormData({ email: '', password: '', name: '', organizationName: '' });
+                setFormData({
+                  email: '',
+                  password: '',
+                  name: '',
+                  organizationName: '',
+                });
               }}
               disabled={isLoading}
               className="text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50"
             >
-              {isRegisterMode 
-                ? 'Already have an account? Sign in' 
-                : "Don't have an account? Create one"
-              }
+              {isRegisterMode
+                ? 'Already have an account? Sign in'
+                : "Don't have an account? Create one"}
             </button>
           </div>
         )}

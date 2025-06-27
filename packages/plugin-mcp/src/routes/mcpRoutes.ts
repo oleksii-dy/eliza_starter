@@ -1,5 +1,4 @@
 import type { Route, IAgentRuntime } from '@elizaos/core';
-import type { Request, Response } from 'express';
 import type { McpService } from '../service';
 import { MCP_SERVICE_NAME } from '../types';
 import type { McpServer } from '../types';

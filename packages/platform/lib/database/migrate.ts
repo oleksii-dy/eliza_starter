@@ -39,7 +39,7 @@ export async function runMigrations(): Promise<void> {
   try {
     const migrationsDir = join(__dirname, 'migrations');
     const migrationFiles = readdirSync(migrationsDir)
-      .filter(file => file.endsWith('.sql'))
+      .filter((file) => file.endsWith('.sql'))
       .sort(); // Apply migrations in order
 
     console.log(`🔄 Found ${migrationFiles.length} migration files`);
@@ -115,7 +115,7 @@ export async function checkMigrationStatus(): Promise<{
       'uploads',
       'credit_transactions',
       'audit_logs',
-      'webhooks'
+      'webhooks',
     ];
 
     const result = await sql`
@@ -125,8 +125,12 @@ export async function checkMigrationStatus(): Promise<{
       AND table_type = 'BASE TABLE'
     `;
 
-    const existingTables = result.map((row: { table_name: string }) => row.table_name);
-    const missingTables = requiredTables.filter(table => !existingTables.includes(table));
+    const existingTables = result.map(
+      (row: { table_name: string }) => row.table_name,
+    );
+    const missingTables = requiredTables.filter(
+      (table) => !existingTables.includes(table),
+    );
 
     return {
       isReady: missingTables.length === 0,
@@ -183,7 +187,9 @@ export async function createInitialOrganization(data: {
       })
       .returning();
 
-    console.log(`✅ Created organization "${data.organizationName}" with admin user "${data.adminEmail}"`);
+    console.log(
+      `✅ Created organization "${data.organizationName}" with admin user "${data.adminEmail}"`,
+    );
 
     return {
       organizationId: organization.id,
@@ -269,12 +275,14 @@ if (import.meta.url === `file://${process.argv[1]}`) {
       resetDatabase().catch(process.exit);
       break;
     case 'status':
-      checkMigrationStatus().then(status => {
-        console.log('Migration Status:', status);
-        if (!status.isReady) {
-          process.exit(1);
-        }
-      }).catch(process.exit);
+      checkMigrationStatus()
+        .then((status) => {
+          console.log('Migration Status:', status);
+          if (!status.isReady) {
+            process.exit(1);
+          }
+        })
+        .catch(process.exit);
       break;
     case 'dev-setup':
       Promise.resolve()

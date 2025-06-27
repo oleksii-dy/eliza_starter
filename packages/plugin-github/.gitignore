@@ -76,3 +76,7 @@ temp-fix/
 temp-registry/
 scripts/test-results.json
 custom-report.json
+AGENTS.md
+.cursor/rules/elizaos
+CLAUDE.md
+.cursorignore

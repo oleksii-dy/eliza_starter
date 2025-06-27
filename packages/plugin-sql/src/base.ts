@@ -1,4 +1,5 @@
 import {
+  asUUID,
   ChannelType,
   DatabaseAdapter,
   logger,
@@ -20,7 +21,7 @@ import {
 } from '@elizaos/core';
 import { and, desc, eq, gte, inArray, lt, lte, or, sql } from 'drizzle-orm';
 import { v4 } from 'uuid';
-import { DIMENSION_MAP, type EmbeddingDimensionColumn } from './schema/embedding';
+import { DIMENSION_MAP, type EmbeddingDimensionColumn } from './schema/embedding.js';
 
 import {
   agentTable,
@@ -39,7 +40,7 @@ import {
   serverAgentsTable,
   tasksTable,
   worldTable,
-} from './schema/index';
+} from './schema/index.js';
 // Migration is handled by UnifiedMigrator in the adapters
 
 // Define the metadata type inline since we can't import it
@@ -714,7 +715,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
             bio: agentTable.bio,
           })
           .from(agentTable);
-        return rows.map((row) => ({
+        return rows.map((row: any) => ({
           ...row,
           id: row.id as UUID,
           bio: row.bio === null ? '' : row.bio,
@@ -906,7 +907,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
           throw new Error('Agent ID is required for update');
         }
 
-        await this.db.transaction(async (tx) => {
+        await this.db.transaction(async (tx: any) => {
           // Handle settings update if present
           if (agent?.settings) {
             agent.settings = await this.mergeAgentSettings(tx, agentId, agent.settings);
@@ -1059,7 +1060,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
         await this.ensureTablesReady(['agents', 'cache', 'memories', 'entities', 'rooms']);
 
         // Use raw SQL to avoid Drizzle schema loading issues
-        await this.db.transaction(async (tx) => {
+        await this.db.transaction(async (tx: any) => {
           // Helper function to safely delete from a table
           const safeDelete = async (tableName: string, condition: string) => {
             try {
@@ -1361,7 +1362,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
       }
     }
     for (const k of Object.keys(entityComponents)) {
-      entities[k].components = entityComponents[k];
+      entities[asUUID(k)].components = entityComponents[asUUID(k)];
     }
 
     return Object.values(entities);
@@ -1416,7 +1417,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
 
     // Attach components to entities
     for (const entityId of Object.keys(entityComponents)) {
-      entities[entityId].components = entityComponents[entityId];
+      entities[asUUID(entityId)].components = entityComponents[asUUID(entityId)];
     }
 
     return Object.values(entities);
@@ -1492,7 +1493,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
       try {
         // Tables should be ready if adapter.init() completed successfully
 
-        return await this.db.transaction(async (tx) => {
+        return await this.db.transaction(async (tx: any) => {
           // Use raw SQL to avoid Drizzle schema loading issues
           let hasConstraintViolation = false;
 
@@ -1631,7 +1632,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
    */
   async deleteEntity(entityId: UUID): Promise<void> {
     return this.withDatabase(async () => {
-      await this.db.transaction(async (tx) => {
+      await this.db.transaction(async (tx: any) => {
         // Delete related components first
         await tx
           .delete(componentTable)
@@ -1820,7 +1821,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
         return [];
       }
 
-      const components = result.map((component) => ({
+      const components = result.map((component: any) => ({
         ...component,
         id: component.id as UUID,
         entityId: component.entityId as UUID,
@@ -1949,7 +1950,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
       const rows = params.count ? await query.limit(params.count) : await query;
 
       // Then get embeddings for the memories if they exist
-      const memoryIds = rows.map((row) => row.id);
+      const memoryIds = rows.map((row: any) => row.id);
       const embeddingsMap = new Map<string, number[]>();
 
       if (memoryIds.length > 0) {
@@ -1975,7 +1976,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
         }
       }
 
-      return rows.map((row) => ({
+      return rows.map((row: any) => ({
         id: row.id as UUID,
         type: row.type,
         createdAt: row.createdAt.getTime(),
@@ -2034,7 +2035,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
 
       const rows = params.limit ? await query.limit(params.limit) : await query;
 
-      return rows.map((row) => ({
+      return rows.map((row: any) => ({
         id: row.id as UUID,
         createdAt: row.createdAt.getTime(),
         content: typeof row.content === 'string' ? JSON.parse(row.content) : row.content,
@@ -2238,7 +2239,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
         }
       }
 
-      return rows.map((row) => {
+      return rows.map((row: any) => {
         const metadata = row.metadata || {};
         if (row.type && !metadata.type) {
           metadata.type = row.type;
@@ -2319,7 +2320,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
                 `);
 
         return results.rows
-          .map((row) => ({
+          .map((row: any) => ({
             embedding: Array.isArray(row.embedding)
               ? row.embedding
               : typeof row.embedding === 'string'
@@ -2370,7 +2371,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
         // This ensures any problematic characters are properly escaped during JSON serialization
         const jsonString = JSON.stringify(sanitizedBody);
 
-        await this.db.transaction(async (tx) => {
+        await this.db.transaction(async (tx: any) => {
           await tx.insert(logTable).values({
             id: v4() as UUID,
             body: sql`${jsonString}::jsonb`,
@@ -2474,7 +2475,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
         .limit(count ?? 10)
         .offset(offset ?? 0);
 
-      const logs = result.map((log) => ({
+      const logs = result.map((log: any) => ({
         ...log,
         id: log.id as UUID,
         entityId: log.entityId as UUID,
@@ -2634,7 +2635,7 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
           .orderBy(desc(similarity))
           .limit(count);
 
-        return results.map((row) => {
+        return results.map((row: any) => {
           const metadata = row.memory.metadata || {};
           if (row.memory.type && !metadata.type) {
             metadata.type = row.memory.type;
@@ -4811,7 +4812,14 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter {
         return;
       }
 
-      const participantValues = userIds.map((userId) => ({
+      // Filter out null/undefined userIds to prevent constraint violations
+      const validUserIds = userIds.filter((userId) => userId != null);
+
+      if (validUserIds.length === 0) {
+        return;
+      }
+
+      const participantValues = validUserIds.map((userId) => ({
         channelId,
         userId,
       }));

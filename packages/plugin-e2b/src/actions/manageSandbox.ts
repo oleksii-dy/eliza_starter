@@ -1,4 +1,11 @@
-import type { Action, ActionResult, HandlerCallback, IAgentRuntime, Memory, State } from '@elizaos/core';
+import type {
+  Action,
+  ActionResult,
+  HandlerCallback,
+  IAgentRuntime,
+  Memory,
+  State,
+} from '@elizaos/core';
 import { elizaLogger } from '@elizaos/core';
 import type { E2BService } from '../services/E2BService.js';
 
@@ -18,12 +25,19 @@ export const manageSandboxAction: Action = {
 
       // Check for sandbox management keywords
       const sandboxKeywords = [
-        'sandbox', 'create sandbox', 'new sandbox', 'list sandbox',
-        'kill sandbox', 'stop sandbox', 'sandbox status',
-        'environment', 'container', 'isolated'
+        'sandbox',
+        'create sandbox',
+        'new sandbox',
+        'list sandbox',
+        'kill sandbox',
+        'stop sandbox',
+        'sandbox status',
+        'environment',
+        'container',
+        'isolated',
       ];
 
-      return sandboxKeywords.some(keyword => text.includes(keyword));
+      return sandboxKeywords.some((keyword) => text.includes(keyword));
     } catch (error) {
       elizaLogger.error('Error validating manage sandbox action', { error: error.message });
       return false;
@@ -88,11 +102,12 @@ export const manageSandboxAction: Action = {
             metadata,
           });
 
-          responseText = '✅ **New sandbox created successfully!**\n\n' +
-                        `**Sandbox ID:** \`${sandboxId}\`\n` +
-                        `**Timeout:** ${timeoutMs / 1000} seconds\n` +
-                        '**Status:** Active and ready for code execution\n\n' +
-                        'You can now execute code, and it will run in this isolated environment.';
+          responseText =
+            '✅ **New sandbox created successfully!**\n\n' +
+            `**Sandbox ID:** \`${sandboxId}\`\n` +
+            `**Timeout:** ${timeoutMs / 1000} seconds\n` +
+            '**Status:** Active and ready for code execution\n\n' +
+            'You can now execute code, and it will run in this isolated environment.';
 
           actionData = { sandboxId, timeoutMs, metadata };
           break;
@@ -110,12 +125,15 @@ export const manageSandboxAction: Action = {
             actionData = { killedSandboxId: sandboxId };
           } else if (sandboxes.length > 0) {
             // Kill the most recent sandbox if no ID specified
-            const latestSandbox = sandboxes.sort((a, b) => b.lastActivity.getTime() - a.lastActivity.getTime())[0];
+            const latestSandbox = sandboxes.sort(
+              (a, b) => b.lastActivity.getTime() - a.lastActivity.getTime()
+            )[0];
             await e2bService.killSandbox(latestSandbox.sandboxId);
             responseText = `✅ **Latest sandbox killed successfully**\n\nSandbox \`${latestSandbox.sandboxId}\` has been terminated.`;
             actionData = { killedSandboxId: latestSandbox.sandboxId };
           } else {
-            responseText = 'ℹ️ **No sandboxes to kill**\n\nThere are currently no active sandboxes running.';
+            responseText =
+              'ℹ️ **No sandboxes to kill**\n\nThere are currently no active sandboxes running.';
             actionData = { message: 'no_sandboxes' };
           }
           break;
@@ -126,7 +144,8 @@ export const manageSandboxAction: Action = {
           const sandboxes = e2bService.listSandboxes();
 
           if (sandboxes.length === 0) {
-            responseText = 'ℹ️ **No active sandboxes**\n\nThere are currently no running sandboxes. Use "create sandbox" to start a new one.';
+            responseText =
+              'ℹ️ **No active sandboxes**\n\nThere are currently no running sandboxes. Use "create sandbox" to start a new one.';
           } else {
             responseText = `📋 **Active Sandboxes (${sandboxes.length})**\n\n`;
 
@@ -148,12 +167,14 @@ export const manageSandboxAction: Action = {
             });
           }
 
-          actionData = { sandboxes: sandboxes.map(s => ({
-            id: s.sandboxId,
-            isActive: s.isActive,
-            uptime: Date.now() - s.createdAt.getTime(),
-            lastActivity: Date.now() - s.lastActivity.getTime()
-          })) };
+          actionData = {
+            sandboxes: sandboxes.map((s) => ({
+              id: s.sandboxId,
+              isActive: s.isActive,
+              uptime: Date.now() - s.createdAt.getTime(),
+              lastActivity: Date.now() - s.lastActivity.getTime(),
+            })),
+          };
           break;
         }
       }
@@ -168,8 +189,8 @@ export const manageSandboxAction: Action = {
         data: {
           action,
           ...actionData,
-          allSandboxes: e2bService.listSandboxes()
-        }
+          allSandboxes: e2bService.listSandboxes(),
+        },
       };
 
       elizaLogger.info('Sandbox management completed', { action, success: true });
@@ -177,26 +198,29 @@ export const manageSandboxAction: Action = {
       if (callback) {
         const content = {
           text: actionResult.text,
-          ...(actionResult.values && Object.keys(actionResult.values).length > 0 && actionResult.values)
+          ...(actionResult.values &&
+            Object.keys(actionResult.values).length > 0 &&
+            actionResult.values),
         };
         await callback(content);
       }
 
       return actionResult;
-
     } catch (error) {
       elizaLogger.error('Manage sandbox action failed', { error: error.message });
 
       const errorResult: ActionResult = {
         text: `❌ **Sandbox management failed**\n\nError: ${error.message}`,
         values: { success: false, error: error.message },
-        data: { error: error.message }
+        data: { error: error.message },
       };
 
       if (callback) {
         const content = {
           text: errorResult.text,
-          ...(errorResult.values && Object.keys(errorResult.values).length > 0 && errorResult.values)
+          ...(errorResult.values &&
+            Object.keys(errorResult.values).length > 0 &&
+            errorResult.values),
         };
         await callback(content);
       }
@@ -209,44 +233,52 @@ export const manageSandboxAction: Action = {
     [
       {
         name: '{{user1}}',
-        content: { text: 'Can you create a new sandbox for me?' }
+        content: { text: 'Can you create a new sandbox for me?' },
       },
       {
         name: '{{agentName}}',
-        content: { text: '✅ **New sandbox created successfully!**\n\n**Sandbox ID:** `sbx-abc123def456`\n**Timeout:** 300 seconds\n**Status:** Active and ready for code execution' }
-      }
+        content: {
+          text: '✅ **New sandbox created successfully!**\n\n**Sandbox ID:** `sbx-abc123def456`\n**Timeout:** 300 seconds\n**Status:** Active and ready for code execution',
+        },
+      },
     ],
     [
       {
         name: '{{user1}}',
-        content: { text: 'List all my sandboxes' }
+        content: { text: 'List all my sandboxes' },
       },
       {
         name: '{{agentName}}',
-        content: { text: '📋 **Active Sandboxes (2)**\n\n**1.** `sbx-abc123def456`\n   • **Status:** 🟢 Active\n   • **Template:** base\n   • **Uptime:** 5m 23s\n   • **Last Activity:** 30s ago' }
-      }
+        content: {
+          text: '📋 **Active Sandboxes (2)**\n\n**1.** `sbx-abc123def456`\n   • **Status:** 🟢 Active\n   • **Template:** base\n   • **Uptime:** 5m 23s\n   • **Last Activity:** 30s ago',
+        },
+      },
     ],
     [
       {
         name: '{{user1}}',
-        content: { text: 'Kill sandbox sbx-abc123def456' }
+        content: { text: 'Kill sandbox sbx-abc123def456' },
       },
       {
         name: '{{agentName}}',
-        content: { text: '✅ **Sandbox killed successfully**\n\nSandbox `sbx-abc123def456` has been terminated and all resources have been cleaned up.' }
-      }
+        content: {
+          text: '✅ **Sandbox killed successfully**\n\nSandbox `sbx-abc123def456` has been terminated and all resources have been cleaned up.',
+        },
+      },
     ],
     [
       {
         name: '{{user1}}',
-        content: { text: 'Create a sandbox with 10 minute timeout' }
+        content: { text: 'Create a sandbox with 10 minute timeout' },
       },
       {
         name: '{{agentName}}',
-        content: { text: '✅ **New sandbox created successfully!**\n\n**Sandbox ID:** `sbx-xyz789abc123`\n**Timeout:** 600 seconds\n**Status:** Active and ready for code execution' }
-      }
-    ]
-  ]
+        content: {
+          text: '✅ **New sandbox created successfully!**\n\n**Sandbox ID:** `sbx-xyz789abc123`\n**Timeout:** 600 seconds\n**Status:** Active and ready for code execution',
+        },
+      },
+    ],
+  ],
 };
 
 // Helper function to format uptime

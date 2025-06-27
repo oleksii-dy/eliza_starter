@@ -12,6 +12,7 @@ import {
 import { StagehandService, BrowserSession } from '../index';
 import { logger } from '@elizaos/core';
 import { Stagehand } from '@browserbasehq/stagehand';
+import { createMockRuntime } from './test-utils';
 
 // Mock the Stagehand module
 mock.module('@browserbasehq/stagehand', () => {
@@ -98,12 +99,13 @@ describe('StagehandService', () => {
     mock.restore();
 
     // Create mock runtime
-    mockRuntime = {
+    mockRuntime = createMockRuntime({
       getService: mock(),
       character: {
         name: 'Test Agent',
+        bio: ['Test agent for Stagehand browser automation'],
       },
-    };
+    });
 
     // Create service
     service = new StagehandService(mockRuntime);

@@ -6,7 +6,7 @@ import {
   type State,
   logger,
 } from '@elizaos/core';
-import { afterEach, beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, it, spyOn } from 'bun:test';
 import {
   followRoomAction,
   ignoreAction,
@@ -16,7 +16,7 @@ import {
   unfollowRoomAction,
   unmuteRoomAction,
 } from '../actions';
-import { MockRuntime, createMockMemory, setupActionTest } from './test-utils';
+import { MockRuntime, createMockMemory, setupActionTest, mock } from './test-utils';
 
 // Spy on commonly used methods for logging
 beforeEach(() => {

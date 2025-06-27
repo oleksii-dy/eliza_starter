@@ -1,6 +1,11 @@
 import { Service, elizaLogger, type IAgentRuntime } from '@elizaos/core';
 import { Sandbox } from '@e2b/code-interpreter';
-import type { E2BServiceType, E2BSandboxOptions, E2BExecutionResult, E2BSandboxHandle } from '../types.js';
+import type {
+  E2BServiceType,
+  E2BSandboxOptions,
+  E2BExecutionResult,
+  E2BSandboxHandle,
+} from '../types.js';
 
 export class E2BService extends Service implements E2BServiceType {
   static serviceName = 'e2b';
@@ -10,7 +15,8 @@ export class E2BService extends Service implements E2BServiceType {
   private defaultSandbox?: Sandbox;
   private apiKey?: string;
 
-  capabilityDescription = 'Provides secure code execution in isolated E2B sandboxes with full language support';
+  capabilityDescription =
+    'Provides secure code execution in isolated E2B sandboxes with full language support';
 
   constructor(runtime?: IAgentRuntime) {
     super(runtime);
@@ -50,7 +56,7 @@ export class E2BService extends Service implements E2BServiceType {
             createdAt: new Date(),
             lastActivity: new Date(),
             template: 'base',
-          }
+          },
         });
       } else {
         elizaLogger.warn('E2B_API_KEY not provided, creating local sandbox');
@@ -72,7 +78,7 @@ export class E2BService extends Service implements E2BServiceType {
             createdAt: new Date(),
             lastActivity: new Date(),
             template: 'base',
-          }
+          },
         });
       }
     } catch (error) {
@@ -85,14 +91,16 @@ export class E2BService extends Service implements E2BServiceType {
     elizaLogger.info('Stopping E2B service');
 
     // Kill all active sandboxes
-    const killPromises = Array.from(this.activeSandboxes.entries()).map(async ([sandboxId, { sandbox }]) => {
-      try {
-        await sandbox.kill();
-        elizaLogger.info('Killed sandbox', { sandboxId });
-      } catch (error) {
-        elizaLogger.error('Failed to kill sandbox', { sandboxId, error: error.message });
+    const killPromises = Array.from(this.activeSandboxes.entries()).map(
+      async ([sandboxId, { sandbox }]) => {
+        try {
+          await sandbox.kill();
+          elizaLogger.info('Killed sandbox', { sandboxId });
+        } catch (error) {
+          elizaLogger.error('Failed to kill sandbox', { sandboxId, error: error.message });
+        }
       }
-    });
+    );
 
     await Promise.allSettled(killPromises);
     this.activeSandboxes.clear();
@@ -110,7 +118,7 @@ export class E2BService extends Service implements E2BServiceType {
       elizaLogger.debug('Executing code in E2B sandbox', {
         sandboxId: this.defaultSandbox.sandboxId,
         language,
-        codeLength: code.length
+        codeLength: code.length,
       });
 
       // Update last activity
@@ -126,20 +134,22 @@ export class E2BService extends Service implements E2BServiceType {
 
       const result: E2BExecutionResult = {
         text: execution.text,
-        results: execution.results.map(r => r.toJSON()),
+        results: execution.results.map((r) => r.toJSON()),
         logs: execution.logs,
-        error: execution.error ? {
-          name: execution.error.name,
-          value: execution.error.value,
-          traceback: execution.error.traceback,
-        } : undefined,
+        error: execution.error
+          ? {
+              name: execution.error.name,
+              value: execution.error.value,
+              traceback: execution.error.traceback,
+            }
+          : undefined,
         executionCount: execution.executionCount,
       };
 
       elizaLogger.debug('Code execution completed', {
         sandboxId: this.defaultSandbox.sandboxId,
         hasResult: !!result.text,
-        hasError: !!result.error
+        hasError: !!result.error,
       });
 
       return result;
@@ -205,7 +215,9 @@ export class E2BService extends Service implements E2BServiceType {
         try {
           await this.createDefaultSandbox();
         } catch (error) {
-          elizaLogger.error('Failed to create replacement default sandbox', { error: error.message });
+          elizaLogger.error('Failed to create replacement default sandbox', {
+            error: error.message,
+          });
         }
       }
 
@@ -230,7 +242,7 @@ export class E2BService extends Service implements E2BServiceType {
   }
 
   listSandboxes(): E2BSandboxHandle[] {
-    return Array.from(this.activeSandboxes.values()).map(data => data.handle);
+    return Array.from(this.activeSandboxes.values()).map((data) => data.handle);
   }
 
   // Additional utility methods
@@ -246,7 +258,11 @@ export class E2BService extends Service implements E2BServiceType {
       sandboxData.handle.lastActivity = new Date();
       elizaLogger.debug('File written to sandbox', { sandboxId, path, size: content.length });
     } catch (error) {
-      elizaLogger.error('Failed to write file to sandbox', { sandboxId, path, error: error.message });
+      elizaLogger.error('Failed to write file to sandbox', {
+        sandboxId,
+        path,
+        error: error.message,
+      });
       throw error;
     }
   }
@@ -264,7 +280,11 @@ export class E2BService extends Service implements E2BServiceType {
       elizaLogger.debug('File read from sandbox', { sandboxId, path, size: content.length });
       return content;
     } catch (error) {
-      elizaLogger.error('Failed to read file from sandbox', { sandboxId, path, error: error.message });
+      elizaLogger.error('Failed to read file from sandbox', {
+        sandboxId,
+        path,
+        error: error.message,
+      });
       throw error;
     }
   }

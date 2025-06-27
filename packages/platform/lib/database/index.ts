@@ -18,19 +18,21 @@ function getAdapter() {
 
 // Check if we're in Next.js build time
 function isBuildTime(): boolean {
-  return process.env.NEXT_PHASE === 'phase-production-build' || 
-         process.env.NODE_ENV === 'production' && process.argv.includes('build');
+  return (
+    process.env.NEXT_PHASE === 'phase-production-build' ||
+    (process.env.NODE_ENV === 'production' && process.argv.includes('build'))
+  );
 }
 
 // Export adapter methods as database utilities
 export async function getDatabase() {
   const adapter = getAdapter();
-  
+
   // Ensure adapter is connected before returning database
   if (!adapter.isConnected()) {
     await adapter.connect();
   }
-  
+
   return adapter.getDatabase();
 }
 
@@ -107,12 +109,17 @@ let _db: DatabaseClient | null = null;
 
 // Type-safe database proxy with proper generic constraints
 export const db = new Proxy({} as DatabaseClient, {
-  get<K extends keyof DatabaseClient>(target: DatabaseClient, prop: K): DatabaseClient[K] {
+  get<K extends keyof DatabaseClient>(
+    target: DatabaseClient,
+    prop: K,
+  ): DatabaseClient[K] {
     if (!_db) {
-      throw new Error('Database not initialized. Call await getDatabase() first.');
+      throw new Error(
+        'Database not initialized. Call await getDatabase() first.',
+      );
     }
     return _db[prop];
-  }
+  },
 });
 
 // Function to initialize the database proxy with proper typing
@@ -133,7 +140,7 @@ export {
   isCurrentUserAdmin,
   getCurrentOrganizationId,
   getCurrentUserId,
-  type DatabaseContext
+  type DatabaseContext,
 } from './context';
 
 // Repository classes
@@ -144,10 +151,23 @@ export { UserRepository, UserSessionRepository } from './repositories/user';
 export { schema } from './schema-pglite';
 
 // Re-export common drizzle-orm utilities that consumers might need
-export { eq, and, or, not, desc, asc, count, sum, avg, min, max, like, ilike } from 'drizzle-orm';
+export {
+  eq,
+  and,
+  or,
+  not,
+  desc,
+  asc,
+  count,
+  sum,
+  avg,
+  min,
+  max,
+  like,
+  ilike,
+} from 'drizzle-orm';
 
 // Database client factory function (alias for getDatabase)
 export async function getDatabaseClient() {
-  return _db || await getDatabase();
+  return _db || (await getDatabase());
 }
-

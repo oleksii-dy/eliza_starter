@@ -31,22 +31,22 @@
           env: { NODE_ENV: 'development' },
           platform: '',
           versions: {},
-          version: ''
-        };
+          version: '',
+        }
       }
       // Set particles worker path - different for dev vs production
       // In development, check if we're in Vite by looking for Vite-specific elements
-      const isViteDev = document.querySelector('script[src*="@vite/client"]') !== null;
+      const isViteDev = document.querySelector('script[src*="@vite/client"]') !== null
       if (isViteDev) {
         // Development: Disable particles to avoid worker loading issues
-        window.PARTICLES_PATH = null;
-        console.log('[Development] Particles disabled for development mode');
+        window.PARTICLES_PATH = null
+        console.log('[Development] Particles disabled for development mode')
       } else {
         // Production: Will be replaced during build with actual hashed filename
-        window.PARTICLES_PATH = '/client-assets/particles.js';
+        window.PARTICLES_PATH = '/client-assets/particles.js'
       }
     </script>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
-</html> 
+</html>

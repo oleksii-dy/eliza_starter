@@ -13,9 +13,7 @@ import {
   paymentTransactions,
   userWallets,
   dailySpending,
-  type NewPaymentTransaction,
   type NewUserWallet,
-  type NewDailySpending,
 } from '../database/schema';
 import {
   PaymentRequest,
@@ -59,7 +57,8 @@ export class SimplePaymentService extends Service {
     }
 
     // Get or generate encryption key
-    this.encryptionKey = runtime.getSetting('WALLET_ENCRYPTION_KEY') || this.generateEncryptionKey();
+    this.encryptionKey =
+      runtime.getSetting('WALLET_ENCRYPTION_KEY') || this.generateEncryptionKey();
 
     // Initialize providers
     this.initializeProviders();
@@ -179,7 +178,6 @@ export class SimplePaymentService extends Service {
         toAddress: request.recipientAddress || '',
         timestamp: Date.now(),
       };
-
     } catch (error) {
       logger.error('[SimplePaymentService] Payment failed', error);
 
@@ -196,7 +194,9 @@ export class SimplePaymentService extends Service {
     }
   }
 
-  private async validateRequest(request: PaymentRequest): Promise<{ isValid: boolean; error?: string }> {
+  private async validateRequest(
+    request: PaymentRequest
+  ): Promise<{ isValid: boolean; error?: string }> {
     if (!request.amount || request.amount <= BigInt(0)) {
       return { isValid: false, error: 'Invalid amount' };
     }
@@ -217,14 +217,17 @@ export class SimplePaymentService extends Service {
     if (dailySpent + amountUsd > maxDaily) {
       return {
         isValid: false,
-        error: `Daily spending limit exceeded. Limit: $${maxDaily}, Current: $${dailySpent.toFixed(2)}`
+        error: `Daily spending limit exceeded. Limit: $${maxDaily}, Current: $${dailySpent.toFixed(2)}`,
       };
     }
 
     return { isValid: true };
   }
 
-  private async getOrCreateWallet(userId: UUID, method: PaymentMethod): Promise<{ address: string; privateKey: string }> {
+  private async getOrCreateWallet(
+    userId: UUID,
+    method: PaymentMethod
+  ): Promise<{ address: string; privateKey: string }> {
     // Get network for method
     const network = this.getNetwork(method);
 
@@ -272,7 +275,7 @@ export class SimplePaymentService extends Service {
     logger.info('[SimplePaymentService] Created new wallet', {
       userId,
       address: wallet.address,
-      network
+      network,
     });
 
     return {
@@ -300,19 +303,18 @@ export class SimplePaymentService extends Service {
     }
   }
 
-  private async updateDailySpending(userId: UUID, amount: bigint, method: PaymentMethod): Promise<void> {
+  private async updateDailySpending(
+    userId: UUID,
+    amount: bigint,
+    method: PaymentMethod
+  ): Promise<void> {
     const today = new Date().toISOString().split('T')[0];
     const amountUsd = await this.convertToUSD(amount, method);
 
     const [existing] = await this.db
       .select()
       .from(dailySpending)
-      .where(
-        and(
-          eq(dailySpending.userId, userId),
-          eq(dailySpending.date, today)
-        )
-      )
+      .where(and(eq(dailySpending.userId, userId), eq(dailySpending.date, today)))
       .limit(1);
 
     if (existing) {
@@ -343,12 +345,7 @@ export class SimplePaymentService extends Service {
     const [record] = await this.db
       .select()
       .from(dailySpending)
-      .where(
-        and(
-          eq(dailySpending.userId, userId),
-          eq(dailySpending.date, today)
-        )
-      )
+      .where(and(eq(dailySpending.userId, userId), eq(dailySpending.date, today)))
       .limit(1);
 
     return record ? parseFloat(record.totalSpentUsd || '0') : 0;
@@ -386,12 +383,7 @@ export class SimplePaymentService extends Service {
 
   // Helper methods
   private get supportedMethods(): PaymentMethod[] {
-    return [
-      PaymentMethod.ETH,
-      PaymentMethod.USDC_ETH,
-      PaymentMethod.MATIC,
-      PaymentMethod.BASE,
-    ];
+    return [PaymentMethod.ETH, PaymentMethod.USDC_ETH, PaymentMethod.MATIC, PaymentMethod.BASE];
   }
 
   private getProvider(method: PaymentMethod): ethers.JsonRpcProvider {
@@ -454,9 +446,15 @@ export class SimplePaymentService extends Service {
   }
 
   private getDecimals(method: PaymentMethod): number {
-    if (method.includes('USDC')) {return 6;}
-    if (method === PaymentMethod.SOL) {return 9;}
-    if (method === PaymentMethod.BTC) {return 8;}
+    if (method.includes('USDC')) {
+      return 6;
+    }
+    if (method === PaymentMethod.SOL) {
+      return 9;
+    }
+    if (method === PaymentMethod.BTC) {
+      return 8;
+    }
     return 18;
   }
 

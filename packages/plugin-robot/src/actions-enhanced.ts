@@ -13,7 +13,8 @@ import { EntityTracker } from './entity-tracker';
 
 export const nameEntityAction: Action = {
   name: 'NAME_ENTITY',
-  description: 'Assign a name to a person or object currently visible in the camera view. Returns entity identification data and naming status for action chaining.',
+  description:
+    'Assign a name to a person or object currently visible in the camera view. Returns entity identification data and naming status for action chaining.',
   similes: [
     'call the person {name}',
     'the person in front is {name}',
@@ -56,7 +57,7 @@ export const nameEntityAction: Action = {
   ] as ActionExample[][],
 
   async validate(runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> {
-    const visionService = runtime.getService<VisionService>('VISION') | null;
+    const visionService = runtime.getService<VisionService>('VISION') || null;
     return visionService?.isActive() || false;
   },
 
@@ -69,6 +70,13 @@ export const nameEntityAction: Action = {
   ): Promise<ActionResult> {
     try {
       const visionService = runtime.getService<VisionService>('VISION');
+      if (!visionService) {
+        const text = 'Vision service is not available.';
+        if (callback) {
+          await callback({ text, actions: ['NAME_ENTITY'] });
+        }
+        return { values: { success: false, error: 'Vision service unavailable' } };
+      }
       const scene = await visionService.getSceneDescription();
 
       if (!scene || scene.people.length === 0) {
@@ -96,7 +104,8 @@ export const nameEntityAction: Action = {
       const nameMatch = messageText.match(/(?:named?|call(?:ed)?|is)\s+(\w+)/i);
 
       if (!nameMatch) {
-        const text = 'I couldn\'t understand what name to assign. Please say something like "The person is named Alice".';
+        const text =
+          'I couldn\'t understand what name to assign. Please say something like "The person is named Alice".';
         if (callback) {
           await callback({
             text,
@@ -130,7 +139,8 @@ export const nameEntityAction: Action = {
       const people = activeEntities.filter((e) => e.entityType === 'person');
 
       if (people.length === 0) {
-        const text = "I can see someone but haven't established tracking yet. Please try again in a moment.";
+        const text =
+          "I can see someone but haven't established tracking yet. Please try again in a moment.";
         if (callback) {
           await callback({
             text,
@@ -246,7 +256,8 @@ export const nameEntityAction: Action = {
 
 export const identifyPersonAction: Action = {
   name: 'IDENTIFY_PERSON',
-  description: 'Identify a person in view if they have been seen before. Returns identification data and recognition details for action chaining.',
+  description:
+    'Identify a person in view if they have been seen before. Returns identification data and recognition details for action chaining.',
   similes: [
     'who is that',
     'who is the person',
@@ -273,7 +284,7 @@ export const identifyPersonAction: Action = {
   ] as ActionExample[][],
 
   async validate(runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> {
-    const visionService = runtime.getService<VisionService>('VISION') | null;
+    const visionService = runtime.getService<VisionService>('VISION') || null;
     return visionService?.isActive() || false;
   },
 
@@ -286,6 +297,13 @@ export const identifyPersonAction: Action = {
   ): Promise<ActionResult> {
     try {
       const visionService = runtime.getService<VisionService>('VISION');
+      if (!visionService) {
+        const text = 'Vision service is not available.';
+        if (callback) {
+          await callback({ text, actions: ['IDENTIFY_PERSON'] });
+        }
+        return { values: { success: false, error: 'Vision service unavailable' } };
+      }
       const scene = await visionService.getSceneDescription();
 
       if (!scene || scene.people.length === 0) {
@@ -445,7 +463,8 @@ export const identifyPersonAction: Action = {
 
 export const trackEntityAction: Action = {
   name: 'TRACK_ENTITY',
-  description: 'Start tracking a specific person or object in view. Returns tracking statistics and entity data for action chaining.',
+  description:
+    'Start tracking a specific person or object in view. Returns tracking statistics and entity data for action chaining.',
   similes: [
     'track the {description}',
     'follow the {description}',
@@ -471,7 +490,7 @@ export const trackEntityAction: Action = {
   ] as ActionExample[][],
 
   async validate(runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> {
-    const visionService = runtime.getService<VisionService>('VISION') | null;
+    const visionService = runtime.getService<VisionService>('VISION') || null;
     return visionService?.isActive() || false;
   },
 
@@ -484,6 +503,13 @@ export const trackEntityAction: Action = {
   ): Promise<ActionResult> {
     try {
       const visionService = runtime.getService<VisionService>('VISION');
+      if (!visionService) {
+        const text = 'Vision service is not available.';
+        if (callback) {
+          await callback({ text, actions: ['TRACK_ENTITY'] });
+        }
+        return { values: { success: false, error: 'Vision service unavailable' } };
+      }
       const scene = await visionService.getSceneDescription();
 
       if (!scene) {

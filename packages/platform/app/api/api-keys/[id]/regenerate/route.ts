@@ -26,9 +26,9 @@ function getKeyPrefix(apiKey: string): string {
 }
 
 // POST /api/api-keys/[id]/regenerate - Regenerate API key
-export async function POST(
+export async function handlePOST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await sessionService.getSessionFromCookies();
@@ -46,15 +46,15 @@ export async function POST(
       .where(
         and(
           eq(apiKeys.id, keyId),
-          eq(apiKeys.organizationId, session.organizationId)
-        )
+          eq(apiKeys.organizationId, session.organizationId),
+        ),
       )
       .limit(1);
 
     if (!existingKey) {
       return NextResponse.json(
         { error: { message: 'API key not found' } },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -100,7 +100,7 @@ export async function POST(
     console.error('Failed to regenerate API key:', error);
     return NextResponse.json(
       { error: { message: 'Failed to regenerate API key' } },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -165,9 +165,7 @@ export class CrossmintAdapter implements IWalletAdapter {
 
   private validateConfiguration(): void {
     const requiredSettings = ['CROSSMINT_API_KEY', 'CROSSMINT_PROJECT_ID'];
-    const missingSettings = requiredSettings.filter(
-      setting => !this.runtime.getSetting(setting)
-    );
+    const missingSettings = requiredSettings.filter((setting) => !this.runtime.getSetting(setting));
 
     if (missingSettings.length > 0) {
       throw new CrossmintAdapterError(
@@ -186,7 +184,9 @@ export class CrossmintAdapter implements IWalletAdapter {
     );
   }
 
-  private isCrossMintUniversalWalletService(service: any): service is CrossMintUniversalWalletService {
+  private isCrossMintUniversalWalletService(
+    service: any
+  ): service is CrossMintUniversalWalletService {
     return (
       typeof service.getBalances === 'function' &&
       typeof service.transfer === 'function' &&
@@ -222,9 +222,8 @@ export class CrossmintAdapter implements IWalletAdapter {
 
       // Find the balance for the requested token
       const tokenSymbol = this.getTokenSymbol(method);
-      const balance = balances.find((b: UniversalTokenBalance) =>
-        b.symbol === tokenSymbol &&
-        b.chain === chain
+      const balance = balances.find(
+        (b: UniversalTokenBalance) => b.symbol === tokenSymbol && b.chain === chain
       );
 
       if (balance) {
@@ -239,7 +238,7 @@ export class CrossmintAdapter implements IWalletAdapter {
         } catch (parseError) {
           logger.error('[CrossmintAdapter] Error parsing balance', {
             balance: balance.balance,
-            error: parseError
+            error: parseError,
           });
           return BigInt(0);
         }
@@ -249,7 +248,7 @@ export class CrossmintAdapter implements IWalletAdapter {
         address,
         method,
         chain,
-        tokenSymbol
+        tokenSymbol,
       });
       return BigInt(0);
     } catch (error) {
@@ -259,11 +258,7 @@ export class CrossmintAdapter implements IWalletAdapter {
         throw error;
       }
 
-      throw new CrossmintAdapterError(
-        'Failed to get balance',
-        'BALANCE_ERROR',
-        error
-      );
+      throw new CrossmintAdapterError('Failed to get balance', 'BALANCE_ERROR', error);
     }
   }
 
@@ -320,18 +315,14 @@ export class CrossmintAdapter implements IWalletAdapter {
         method,
         fromAddress,
         toAddress,
-        amount: amount.toString()
+        amount: amount.toString(),
       });
 
       if (error instanceof CrossmintAdapterError) {
         throw error;
       }
 
-      throw new CrossmintAdapterError(
-        'Failed to send transaction',
-        'TRANSACTION_ERROR',
-        error
-      );
+      throw new CrossmintAdapterError('Failed to send transaction', 'TRANSACTION_ERROR', error);
     }
   }
 
@@ -400,7 +391,7 @@ export class CrossmintAdapter implements IWalletAdapter {
 
       logger.info('[CrossmintAdapter] Created MPC wallet', {
         address: wallet.address,
-        type: wallet.type
+        type: wallet.type,
       });
 
       return {
@@ -414,11 +405,7 @@ export class CrossmintAdapter implements IWalletAdapter {
         throw error;
       }
 
-      throw new CrossmintAdapterError(
-        'Failed to create wallet',
-        'WALLET_CREATION_ERROR',
-        error
-      );
+      throw new CrossmintAdapterError('Failed to create wallet', 'WALLET_CREATION_ERROR', error);
     }
   }
 
@@ -550,16 +537,16 @@ export class CrossmintAdapter implements IWalletAdapter {
 
   private mapStatus(status: string): PaymentStatus {
     const statusMap: Record<string, PaymentStatus> = {
-      'confirmed': PaymentStatus.COMPLETED,
-      'completed': PaymentStatus.COMPLETED,
-      'success': PaymentStatus.COMPLETED,
-      'failed': PaymentStatus.FAILED,
-      'error': PaymentStatus.FAILED,
-      'cancelled': PaymentStatus.FAILED,
-      'rejected': PaymentStatus.FAILED,
-      'pending': PaymentStatus.PROCESSING,
-      'processing': PaymentStatus.PROCESSING,
-      'submitted': PaymentStatus.PROCESSING,
+      confirmed: PaymentStatus.COMPLETED,
+      completed: PaymentStatus.COMPLETED,
+      success: PaymentStatus.COMPLETED,
+      failed: PaymentStatus.FAILED,
+      error: PaymentStatus.FAILED,
+      cancelled: PaymentStatus.FAILED,
+      rejected: PaymentStatus.FAILED,
+      pending: PaymentStatus.PROCESSING,
+      processing: PaymentStatus.PROCESSING,
+      submitted: PaymentStatus.PROCESSING,
     };
 
     return statusMap[status.toLowerCase()] || PaymentStatus.PROCESSING;

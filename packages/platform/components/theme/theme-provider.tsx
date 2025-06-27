@@ -31,9 +31,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (!mounted) return;
 
     localStorage.setItem('theme', theme);
-    
+
     if (theme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
+        .matches
+        ? 'dark'
+        : 'light';
       setResolvedTheme(systemTheme);
     } else {
       setResolvedTheme(theme);
@@ -45,11 +48,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (!mounted || theme !== 'system') return;
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    
+
     const handleChange = (e: MediaQueryListEvent) => {
       setResolvedTheme(e.matches ? 'dark' : 'light');
     };
-    
+
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, [theme, mounted]);
@@ -59,7 +62,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (!mounted) return;
 
     const root = document.documentElement;
-    
+
     if (resolvedTheme === 'dark') {
       root.classList.add('dark');
     } else {
@@ -68,9 +71,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [resolvedTheme, mounted]);
 
   // Prevent hydration mismatch by providing a default context during SSR
-  const contextValue = mounted 
+  const contextValue = mounted
     ? { theme, setTheme, resolvedTheme }
-    : { theme: 'system' as Theme, setTheme: () => {}, resolvedTheme: 'dark' as const };
+    : {
+        theme: 'system' as Theme,
+        setTheme: () => {},
+        resolvedTheme: 'dark' as const,
+      };
 
   return (
     <ThemeContext.Provider value={contextValue}>

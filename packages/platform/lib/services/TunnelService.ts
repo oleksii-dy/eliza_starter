@@ -1,10 +1,18 @@
-import { Service, IAgentRuntime, ITunnelService, TunnelStatus, TunnelConfig, Metadata } from '@elizaos/core';
+import {
+  Service,
+  IAgentRuntime,
+  ITunnelService,
+  TunnelStatus,
+  TunnelConfig,
+  Metadata,
+} from '@elizaos/core';
 
 export class PlatformTunnelService extends Service implements ITunnelService {
   static serviceName = 'tunnel';
   static serviceType = 'tunnel';
   serviceName = 'tunnel';
-  capabilityDescription = 'Platform tunnel service for exposing local endpoints to external webhooks';
+  capabilityDescription =
+    'Platform tunnel service for exposing local endpoints to external webhooks';
 
   private url: string | null = null;
   private port: number | null = null;
@@ -26,8 +34,9 @@ export class PlatformTunnelService extends Service implements ITunnelService {
   async startTunnel(port = 3000): Promise<string> {
     try {
       // For the platform, we'll use the configured public URL
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || `http://localhost:${port}`;
-      
+      const baseUrl =
+        process.env.NEXT_PUBLIC_API_URL || `http://localhost:${port}`;
+
       this.url = baseUrl;
       this.port = port;
       this.startedAt = new Date();
@@ -37,7 +46,9 @@ export class PlatformTunnelService extends Service implements ITunnelService {
       return this.url;
     } catch (error) {
       console.error('Failed to start tunnel:', error);
-      throw new Error(`Failed to start tunnel: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to start tunnel: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -72,10 +83,14 @@ export class PlatformTunnelService extends Service implements ITunnelService {
   }
 
   // Webhook delivery method
-  async deliverWebhook(webhookUrl: string, payload: any, secret: string): Promise<boolean> {
+  async deliverWebhook(
+    webhookUrl: string,
+    payload: any,
+    secret: string,
+  ): Promise<boolean> {
     try {
       const signature = this.generateSignature(JSON.stringify(payload), secret);
-      
+
       const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
@@ -88,7 +103,9 @@ export class PlatformTunnelService extends Service implements ITunnelService {
       });
 
       if (!response.ok) {
-        console.error(`Webhook delivery failed: ${response.status} ${response.statusText}`);
+        console.error(
+          `Webhook delivery failed: ${response.status} ${response.statusText}`,
+        );
         return false;
       }
 
@@ -121,8 +138,8 @@ export class PlatformTunnelService extends Service implements ITunnelService {
         id: `evt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       };
 
-      const deliveryPromises = webhooks.map(webhook => 
-        this.deliverWebhook(webhook.url, payload, webhook.secret)
+      const deliveryPromises = webhooks.map((webhook) =>
+        this.deliverWebhook(webhook.url, payload, webhook.secret),
       );
 
       await Promise.allSettled(deliveryPromises);

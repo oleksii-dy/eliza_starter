@@ -141,7 +141,8 @@ describe('Integration: Plugin initialization and service registration', () => {
         const GitHubServiceClass = githubPlugin.services[0];
 
         // Mock the service start to avoid actual GitHub API calls
-        const mockServiceStart = mock.spyOn(GitHubServiceClass, 'start').mockResolvedValue({
+        const originalStart = GitHubServiceClass.start;
+        GitHubServiceClass.start = mock().mockResolvedValue({
           capabilityDescription:
             'Comprehensive GitHub integration with repository management, issue tracking, and PR workflows',
           stop: mock(),

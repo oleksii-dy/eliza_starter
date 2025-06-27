@@ -1,4 +1,5 @@
-import { describe, it, expect, mock, beforeEach } from 'bun:test';
+import { describe, it, expect, beforeEach } from 'bun:test';
+import { mock } from '@elizaos/core/test-utils';
 import { TrustService } from '../TrustService';
 import { createMockRuntime } from '../../__tests__/test-utils';
 import type { IAgentRuntime, Memory } from '@elizaos/core';
@@ -22,7 +23,6 @@ describe('TrustService', () => {
   let mockTrustDatabase: any;
 
   beforeEach(() => {
-    mock.restore();
     mockRuntime = createMockRuntime();
 
     // Mock trust database service
@@ -71,16 +71,18 @@ describe('TrustService', () => {
     it('should initialize successfully with all managers', async () => {
       await service.initialize(mockRuntime);
 
-      expect(mockRuntime.getService).toHaveBeenCalledWith('trust-database');
+      // Service creates its own database and managers, not via getService
       expect(service).toBeDefined();
+      expect((service as any).trustDatabase).toBeDefined();
+      expect((service as any).trustEngine).toBeDefined();
+      expect((service as any).securityManager).toBeDefined();
+      expect((service as any).permissionManager).toBeDefined();
     });
 
-    it('should throw error if trust database service is not available', async () => {
-      mockRuntime.getService = mock().mockReturnValue(null);
-
-      await expect(service.initialize(mockRuntime)).rejects.toThrow(
-        'Trust database service not available'
-      );
+    it('should be properly constructed', () => {
+      // Simple test to verify service construction
+      expect(service).toBeInstanceOf(TrustService);
+      expect(TrustService.serviceName).toBe('trust');
     });
   });
 
@@ -120,10 +122,11 @@ describe('TrustService', () => {
         reputation: 'excellent',
       });
 
-      expect(mockTrustEngine.calculateTrust).toHaveBeenCalledWith(
-        entityId,
-        expect.objectContaining({ evaluatorId: mockRuntime.agentId })
-      );
+      expect(mockTrustEngine.calculateTrust.mock.calls.length).toBeGreaterThan(0);
+      expect(mockTrustEngine.calculateTrust.mock.calls[0][0]).toBe(entityId);
+      expect(mockTrustEngine.calculateTrust.mock.calls[0][1]).toMatchObject({
+        evaluatorId: mockRuntime.agentId,
+      });
     });
 
     it('should use cache for repeated requests', async () => {
@@ -131,11 +134,11 @@ describe('TrustService', () => {
 
       // First call
       await service.getTrustScore(entityId);
-      expect(mockTrustEngine.calculateTrust).toHaveBeenCalledTimes(1);
+      expect(mockTrustEngine.calculateTrust.mock.calls.length).toBe(1);
 
       // Second call should use cache
       await service.getTrustScore(entityId);
-      expect(mockTrustEngine.calculateTrust).toHaveBeenCalledTimes(1);
+      expect(mockTrustEngine.calculateTrust.mock.calls.length).toBe(1);
     });
 
     it('should calculate correct reputation levels', async () => {
@@ -197,15 +200,13 @@ describe('TrustService', () => {
         reason: 'helpful response',
       });
 
-      expect(mockTrustEngine.recordInteraction).toHaveBeenCalledWith(
-        expect.objectContaining({
-          sourceEntityId: entityId,
-          targetEntityId: mockRuntime.agentId,
-          type: TrustEvidenceType.HELPFUL_ACTION,
-          impact: 10,
-          details: { reason: 'helpful response' },
-        })
-      );
+      expect(mockTrustEngine.recordInteraction.mock.calls.length).toBeGreaterThan(0);
+      const call = mockTrustEngine.recordInteraction.mock.calls[0][0];
+      expect(call.sourceEntityId).toBe(entityId);
+      expect(call.targetEntityId).toBe(mockRuntime.agentId);
+      expect(call.type).toBe(TrustEvidenceType.HELPFUL_ACTION);
+      expect(call.impact).toBe(10);
+      expect(call.details).toEqual({ reason: 'helpful response' });
 
       expect(result.overall).toBe(80);
     });
@@ -215,13 +216,13 @@ describe('TrustService', () => {
 
       // Get initial score (cached)
       await service.getTrustScore(entityId);
-      expect(mockTrustEngine.calculateTrust).toHaveBeenCalledTimes(1);
+      expect(mockTrustEngine.calculateTrust.mock.calls.length).toBe(1);
 
       // Update trust - this clears cache and calls getTrustScore internally
       await service.updateTrust(entityId, TrustEvidenceType.SECURITY_VIOLATION, -20);
 
       // updateTrust internally calls getTrustScore after clearing cache
-      expect(mockTrustEngine.calculateTrust).toHaveBeenCalledTimes(2); // Initial + inside updateTrust
+      expect(mockTrustEngine.calculateTrust.mock.calls.length).toBe(2); // Initial + inside updateTrust
     });
   });
 
@@ -251,17 +252,13 @@ describe('TrustService', () => {
         reason: 'Sufficient trust level',
       });
 
-      expect(mockPermissionManager.checkAccess).toHaveBeenCalledWith(
-        expect.objectContaining({
-          entityId,
-          action,
-          resource,
-          context: expect.objectContaining({
-            timestamp: expect.any(Number),
-            platform: 'test',
-          }),
-        })
-      );
+      expect(mockPermissionManager.checkAccess.mock.calls.length).toBeGreaterThan(0);
+      const call = mockPermissionManager.checkAccess.mock.calls[0][0];
+      expect(call.entityId).toBe(entityId);
+      expect(call.action).toBe(action);
+      expect(call.resource).toBe(resource);
+      expect(call.context.timestamp).toEqual(expect.any(Number));
+      expect(call.context.platform).toBe('test');
     });
   });
 
@@ -299,14 +296,12 @@ describe('TrustService', () => {
         score: 85,
       });
 
-      expect(mockTrustEngine.evaluateTrustDecision).toHaveBeenCalledWith(
-        entityId,
-        requirements,
-        expect.objectContaining({
-          evaluatorId: mockRuntime.agentId,
-          action: 'sensitive_operation',
-        })
-      );
+      expect(mockTrustEngine.evaluateTrustDecision.mock.calls.length).toBeGreaterThan(0);
+      const call = mockTrustEngine.evaluateTrustDecision.mock.calls[0];
+      expect(call[0]).toBe(entityId);
+      expect(call[1]).toBe(requirements);
+      expect(call[2].evaluatorId).toBe(mockRuntime.agentId);
+      expect(call[2].action).toBe('sensitive_operation');
     });
   });
 
@@ -338,11 +333,11 @@ describe('TrustService', () => {
         action: 'allow',
       });
 
-      expect(mockSecurityManager.analyzeContent).toHaveBeenCalledWith(
-        content,
-        entityId,
-        expect.objectContaining({ timestamp: expect.any(Number) })
-      );
+      expect(mockSecurityManager.analyzeContent.mock.calls.length).toBeGreaterThan(0);
+      const call = mockSecurityManager.analyzeContent.mock.calls[0];
+      expect(call[0]).toBe(content);
+      expect(call[1]).toBe(entityId);
+      expect(call[2].timestamp).toEqual(expect.any(Number));
     });
 
     it('should handle threat detection', async () => {
@@ -412,16 +407,14 @@ describe('TrustService', () => {
       await service.recordMemory(message);
 
       // The service converts the Memory to a different format
-      expect(mockSecurityManager.storeMemory).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: message.id,
-          entityId: message.entityId,
-          content: expect.stringMatching(/^content_\d+$/), // UUID format
-          timestamp: message.createdAt,
-          roomId: message.roomId,
-          replyTo: undefined,
-        })
-      );
+      expect(mockSecurityManager.storeMemory.mock.calls.length).toBeGreaterThan(0);
+      const call = mockSecurityManager.storeMemory.mock.calls[0][0];
+      expect(call.id).toBe(message.id);
+      expect(call.entityId).toBe(message.entityId);
+      expect(call.content).toMatch(/^content_\d+$/); // UUID format
+      expect(call.timestamp).toBe(message.createdAt);
+      expect(call.roomId).toBe(message.roomId);
+      expect(call.replyTo).toBeUndefined();
     });
 
     it('should record action for behavioral analysis', async () => {
@@ -430,15 +423,13 @@ describe('TrustService', () => {
 
       await service.recordAction(entityId, action, 'success', { resourceId: 'res-789' });
 
-      expect(mockSecurityManager.storeAction).toHaveBeenCalledWith(
-        expect.objectContaining({
-          entityId,
-          type: action,
-          result: 'success',
-          timestamp: expect.any(Number),
-          resourceId: 'res-789',
-        })
-      );
+      expect(mockSecurityManager.storeAction.mock.calls.length).toBeGreaterThan(0);
+      const call = mockSecurityManager.storeAction.mock.calls[0][0];
+      expect(call.entityId).toBe(entityId);
+      expect(call.type).toBe(action);
+      expect(call.result).toBe('success');
+      expect(call.timestamp).toEqual(expect.any(Number));
+      expect(call.resourceId).toBe('res-789');
     });
   });
 
@@ -537,6 +528,23 @@ describe('TrustService', () => {
           changeRate: 0,
         },
       });
+
+      // Mock the database methods that getTrustHistory uses
+      const mockDb = (service as any).trustDatabase;
+      mockDb.getTrustEvidence = mock().mockResolvedValue([
+        {
+          type: 'helpful_action',
+          timestamp: Date.now() - 86400000, // 1 day ago
+          impact: 10,
+          weight: 1.0,
+        },
+        {
+          type: 'consistent_behavior',
+          timestamp: Date.now() - 172800000, // 2 days ago
+          impact: 5,
+          weight: 1.0,
+        },
+      ]);
     });
 
     it('should return trust history with trend analysis', async () => {
@@ -600,22 +608,18 @@ describe('TrustService', () => {
         category: 'support',
       });
 
-      expect(mockRuntime.useModel).toHaveBeenCalledWith(
-        'TEXT_REASONING_SMALL',
-        expect.objectContaining({
-          prompt: expect.stringContaining('Analyze the following interaction'),
-          temperature: 0.3,
-        })
-      );
+      expect((mockRuntime.useModel as any).mock?.calls?.length || 0).toBeGreaterThan(0);
+      const call = (mockRuntime.useModel as any).mock?.calls[0] || [];
+      expect(call[0]).toBe('TEXT_REASONING_SMALL');
+      expect(call[1].prompt).toContain('Analyze the following interaction');
+      expect(call[1].temperature).toBe(0.3);
 
-      expect(mockTrustEngine.recordSemanticEvidence).toHaveBeenCalledWith(
-        entityId,
-        expect.objectContaining({
-          description: 'User provided helpful assistance',
-          impact: 15,
-          sentiment: 'positive',
-        })
-      );
+      expect(mockTrustEngine.recordSemanticEvidence.mock.calls.length).toBeGreaterThan(0);
+      const semanticCall = mockTrustEngine.recordSemanticEvidence.mock.calls[0];
+      expect(semanticCall[0]).toBe(entityId);
+      expect(semanticCall[1].description).toBe('User provided helpful assistance');
+      expect(semanticCall[1].impact).toBe(15);
+      expect(semanticCall[1].sentiment).toBe('positive');
 
       expect(result.overall).toBe(70);
     });
@@ -628,15 +632,13 @@ describe('TrustService', () => {
         'test interaction' as UUID
       );
 
-      expect(mockTrustEngine.recordSemanticEvidence).toHaveBeenCalledWith(
-        'entity-123',
-        expect.objectContaining({
-          description: 'Unable to analyze interaction',
-          impact: 0,
-          sentiment: 'neutral',
-          analysisConfidence: 0,
-        })
-      );
+      expect(mockTrustEngine.recordSemanticEvidence.mock.calls.length).toBeGreaterThan(0);
+      const call = mockTrustEngine.recordSemanticEvidence.mock.calls[0];
+      expect(call[0]).toBe('entity-123');
+      expect(call[1].description).toBe('Unable to analyze interaction');
+      expect(call[1].impact).toBe(0);
+      expect(call[1].sentiment).toBe('neutral');
+      expect(call[1].analysisConfidence).toBe(0);
     });
   });
 
@@ -727,14 +729,12 @@ describe('TrustService', () => {
 
       await service.recordEvidence(entityId, description, { action: 'technical' });
 
-      expect(mockTrustEngine.recordSemanticEvidence).toHaveBeenCalledWith(
-        entityId,
-        expect.objectContaining({
-          description: 'Entity demonstrated expertise',
-          impact: 20,
-          sentiment: 'positive',
-        })
-      );
+      expect(mockTrustEngine.recordSemanticEvidence.mock.calls.length).toBeGreaterThan(0);
+      const call = mockTrustEngine.recordSemanticEvidence.mock.calls[0];
+      expect(call[0]).toBe(entityId);
+      expect(call[1].description).toBe('Entity demonstrated expertise');
+      expect(call[1].impact).toBe(20);
+      expect(call[1].sentiment).toBe('positive');
     });
   });
 
@@ -752,7 +752,7 @@ describe('TrustService', () => {
 
       // Verify all managers were stopped
       for (const manager of managers) {
-        expect((service as any)[manager].stop).toHaveBeenCalled();
+        expect((service as any)[manager].stop.mock.calls.length).toBeGreaterThan(0);
       }
     });
   });

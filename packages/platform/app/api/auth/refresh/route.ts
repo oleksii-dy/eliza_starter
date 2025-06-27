@@ -10,20 +10,26 @@ export const runtime = 'nodejs';
 /**
  * GET /api/auth/refresh - Refresh access token
  */
-export async function GET(request: NextRequest) {
+export async function handleGET(request: NextRequest) {
   try {
     // Get refresh token from cookies
     const refreshToken = request.cookies.get('refresh-token')?.value;
-    
+
     if (!refreshToken) {
-      return NextResponse.json({ error: 'No refresh token provided' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'No refresh token provided' },
+        { status: 401 },
+      );
     }
 
     // Refresh the session
     const tokens = await sessionService.refreshSession(refreshToken);
-    
+
     if (!tokens) {
-      return NextResponse.json({ error: 'Invalid or expired refresh token' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Invalid or expired refresh token' },
+        { status: 401 },
+      );
     }
 
     // Create response with new tokens
@@ -61,7 +67,7 @@ export async function GET(request: NextRequest) {
     console.error('Token refresh error:', error);
     return NextResponse.json(
       { success: false, error: 'Token refresh failed' },
-      { status: 401 }
+      { status: 401 },
     );
   }
 }

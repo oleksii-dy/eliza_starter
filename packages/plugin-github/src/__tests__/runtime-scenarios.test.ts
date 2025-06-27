@@ -45,7 +45,7 @@ describe('Runtime Scenarios: GitHub Plugin', () => {
       } as any as IAgentRuntime;
 
       // In test mode, this should not throw
-      await expect(githubPlugin.init!({}, mockRuntime)).resolves.toBeDefined();
+      await expect(githubPlugin.init!({}, mockRuntime)).resolves.toBeUndefined();
     });
 
     it('should prefer runtime settings over environment variables', async () => {

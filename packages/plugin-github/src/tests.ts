@@ -49,14 +49,23 @@ async function ensureGitHubService(runtime: IAgentRuntime): Promise<GitHubServic
         // Override getService for this test run
         const originalGetService = runtime.getService.bind(runtime);
         runtime.getService = function <T extends Service = Service>(
-          serviceNameOrClass?: string | { new (...args: any[]): T; serviceName?: string; serviceType?: string }
+          serviceNameOrClass?:
+            | string
+            | { new (...args: any[]): T; serviceName?: string; serviceType?: string }
         ): T | null {
           if (typeof serviceNameOrClass === 'string') {
-            if (serviceNameOrClass === 'github' || serviceNameOrClass === GitHubService.serviceType) {
+            if (
+              serviceNameOrClass === 'github' ||
+              serviceNameOrClass === GitHubService.serviceType
+            ) {
               return newService as unknown as T;
             }
             return originalGetService(serviceNameOrClass) as T | null;
-          } else if (serviceNameOrClass && 'serviceType' in serviceNameOrClass && serviceNameOrClass.serviceType === GitHubService.serviceType) {
+          } else if (
+            serviceNameOrClass &&
+            'serviceType' in serviceNameOrClass &&
+            serviceNameOrClass.serviceType === GitHubService.serviceType
+          ) {
             return newService as unknown as T;
           }
           return originalGetService(serviceNameOrClass as any) as T | null;

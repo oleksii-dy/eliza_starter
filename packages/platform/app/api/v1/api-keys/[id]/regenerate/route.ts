@@ -6,7 +6,7 @@ import {
 } from '@/lib/server/services/api-key-service';
 import { auditLog } from '@/lib/server/services/audit-service';
 
-export async function POST(
+export async function handlePOST(
   request: NextRequest,
   props: { params: Promise<{ id: string }> },
 ) {

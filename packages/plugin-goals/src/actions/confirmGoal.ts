@@ -166,12 +166,12 @@ export const confirmGoalAction: Action = {
           text: 'Unable to process confirmation without state context.',
           data: {
             actionName: 'CONFIRM_GOAL',
-            error: 'missing_state_context'
+            error: 'missing_state_context',
           },
           values: {
             success: false,
-            errorType: 'missing_state_context'
-          }
+            errorType: 'missing_state_context',
+          },
         };
       }
 
@@ -188,12 +188,12 @@ export const confirmGoalAction: Action = {
           text: "I don't have a pending task to confirm. Would you like to create a new task?",
           data: {
             actionName: 'CONFIRM_GOAL',
-            error: 'no_pending_goal'
+            error: 'no_pending_goal',
           },
           values: {
             success: false,
-            errorType: 'no_pending_goal'
-          }
+            errorType: 'no_pending_goal',
+          },
         };
       }
 
@@ -209,12 +209,12 @@ export const confirmGoalAction: Action = {
           text: 'I cannot confirm a goal without a room and entity context.',
           data: {
             actionName: 'CONFIRM_GOAL',
-            error: 'missing_context'
+            error: 'missing_context',
           },
           values: {
             success: false,
-            errorType: 'missing_context'
-          }
+            errorType: 'missing_context',
+          },
         };
       }
 
@@ -235,13 +235,13 @@ export const confirmGoalAction: Action = {
           data: {
             actionName: 'CONFIRM_GOAL',
             status: 'waiting_for_confirmation',
-            pendingGoalName: pendingGoal.name
+            pendingGoalName: pendingGoal.name,
           },
           values: {
             success: false,
             awaiting_confirmation: true,
-            goalName: pendingGoal.name
-          }
+            goalName: pendingGoal.name,
+          },
         };
       }
 
@@ -262,13 +262,13 @@ export const confirmGoalAction: Action = {
           data: {
             actionName: 'CONFIRM_GOAL',
             status: 'cancelled',
-            cancelledGoalName: pendingGoal.name
+            cancelledGoalName: pendingGoal.name,
           },
           values: {
             success: true,
             goalCancelled: true,
-            goalName: pendingGoal.name
-          }
+            goalName: pendingGoal.name,
+          },
         };
       }
 
@@ -298,13 +298,13 @@ export const confirmGoalAction: Action = {
           data: {
             actionName: 'CONFIRM_GOAL',
             error: 'duplicate_goal',
-            duplicateGoalName: pendingGoal.name
+            duplicateGoalName: pendingGoal.name,
           },
           values: {
             success: false,
             errorType: 'duplicate_goal',
-            goalName: pendingGoal.name
-          }
+            goalName: pendingGoal.name,
+          },
         };
       }
 
@@ -371,14 +371,14 @@ export const confirmGoalAction: Action = {
           priority: pendingGoal.priority,
           urgent: pendingGoal.urgent,
           dueDate: pendingGoal.dueDate,
-          modifications: confirmation.modifications
+          modifications: confirmation.modifications,
         },
         values: {
           success: true,
           goalCreated: true,
           goalId: createdGoalId,
-          goalName: pendingGoal.name
-        }
+          goalName: pendingGoal.name,
+        },
       };
     } catch (error) {
       logger.error('Error in confirmGoal handler:', error);
@@ -395,13 +395,13 @@ export const confirmGoalAction: Action = {
         data: {
           actionName: 'CONFIRM_GOAL',
           error: 'execution_error',
-          errorDetails: error instanceof Error ? error.message : 'Unknown error'
+          errorDetails: error instanceof Error ? error.message : 'Unknown error',
         },
         values: {
           success: false,
           errorType: 'execution_error',
-          hasError: true
-        }
+          hasError: true,
+        },
       };
     }
   },
@@ -419,7 +419,8 @@ export const confirmGoalAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll create a one-off goal: 'Finish taxes' with Priority 2, Due April 15. After you confirm, I'll show you all your goals.",
-          thought: 'The user wants to create a goal with confirmation and then see their complete goal list. I need to chain CREATE_GOAL, CONFIRM_GOAL, and LIST_GOALS to handle the full workflow from creation through confirmation to viewing the updated list.',
+          thought:
+            'The user wants to create a goal with confirmation and then see their complete goal list. I need to chain CREATE_GOAL, CONFIRM_GOAL, and LIST_GOALS to handle the full workflow from creation through confirmation to viewing the updated list.',
           actions: ['CREATE_GOAL_PREVIEW'],
         },
       },

@@ -12,7 +12,10 @@ const runtime: IAgentRuntime = {
   getSetting: (key: string) => process.env[key],
   useModel: async (modelType: any, params: any) => {
     console.log('\n[LLM Called] Model type:', modelType);
-    console.log('[LLM Called] Content preview:', `${params.messages?.[1]?.content?.substring(0, 300)}...\n`);
+    console.log(
+      '[LLM Called] Content preview:',
+      `${params.messages?.[1]?.content?.substring(0, 300)}...\n`
+    );
 
     // Simulate the exact error: returning empty array
     return '[]';
@@ -87,7 +90,9 @@ async function testUserErrorScenario() {
       { queryIntent: 'Learn about SSA', keyTopics: ['SSA', 'space tracking'] }
     );
 
-    console.log(`✅ SUCCESS: Extracted ${findings1.length} findings (expected: 0 with graceful handling)`);
+    console.log(
+      `✅ SUCCESS: Extracted ${findings1.length} findings (expected: 0 with graceful handling)`
+    );
     console.log('No error thrown - empty findings handled correctly\n');
   } catch (error: any) {
     console.log('❌ ERROR:', error.message);
@@ -101,10 +106,15 @@ async function testUserErrorScenario() {
       dataExtractionSource,
       'efficient data extraction techniques',
       dataExtractionSource.fullContent || '',
-      { queryIntent: 'Learn about data extraction', keyTopics: ['data extraction', 'big data'] }
+      {
+        queryIntent: 'Learn about data extraction',
+        keyTopics: ['data extraction', 'big data'],
+      }
     );
 
-    console.log(`✅ SUCCESS: Extracted ${findings2.length} findings (expected: 0 with graceful handling)`);
+    console.log(
+      `✅ SUCCESS: Extracted ${findings2.length} findings (expected: 0 with graceful handling)`
+    );
     console.log('No error thrown - empty findings handled correctly\n');
   } catch (error: any) {
     console.log('❌ ERROR:', error.message);
@@ -114,8 +124,12 @@ async function testUserErrorScenario() {
   console.log('\n=== Content Sanitization Results ===');
 
   // Show what the content looks like after sanitization
-  const sanitized1 = (service as any).sanitizeContentForLLM(ssaSource.fullContent || '');
-  const sanitized2 = (service as any).sanitizeContentForLLM(dataExtractionSource.fullContent || '');
+  const sanitized1 = (service as any).sanitizeContentForLLM(
+    ssaSource.fullContent || ''
+  );
+  const sanitized2 = (service as any).sanitizeContentForLLM(
+    dataExtractionSource.fullContent || ''
+  );
 
   console.log('\nSSA Content:');
   console.log('- Original length:', ssaSource.fullContent?.length);
@@ -127,7 +141,9 @@ async function testUserErrorScenario() {
   console.log('- Sanitized length:', sanitized2.length);
   console.log('- Preview:', `${sanitized2.substring(0, 200)}...`);
 
-  console.log('\n✅ SUMMARY: Both error scenarios are now handled gracefully without throwing errors');
+  console.log(
+    '\n✅ SUMMARY: Both error scenarios are now handled gracefully without throwing errors'
+  );
 }
 
 // Run the test

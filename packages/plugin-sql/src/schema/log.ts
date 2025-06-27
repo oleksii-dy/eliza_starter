@@ -1,4 +1,4 @@
-import { getSchemaFactory, createLazyTableProxy } from './factory';
+import { getSchemaFactory, createLazyTableProxy } from './factory.js';
 
 /**
  * Lazy-loaded log table definition.

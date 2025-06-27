@@ -18,8 +18,7 @@ import {
   UUID,
   Content,
 } from '@elizaos/core';
-import { createMockRuntime, MockRuntime } from './test-utils';
-import { mock } from 'bun:test';
+import { createMockRuntime, MockRuntime, mock } from './test-utils';
 
 // Mock message bus service functionality
 const mockMessageBusService = {
@@ -37,7 +36,7 @@ const mockResponse = (): Response =>
     redirected: false,
     type: 'basic' as ResponseType,
     url: 'http://test.com',
-    clone: function () {
+    clone() {
       return mockResponse();
     },
     body: null,
@@ -85,6 +84,7 @@ describe('Event Emission Regression Tests', () => {
       getRoom: mock().mockResolvedValue({
         id: 'test-room-id',
         type: 'GROUP',
+        source: 'test',
       }),
       getMemories: mock().mockResolvedValue([]),
       getConversationLength: mock().mockReturnValue(10),
@@ -94,13 +94,16 @@ describe('Event Emission Regression Tests', () => {
         data: {},
         text: '',
       }),
-      useModel: mock().mockResolvedValue(
-        JSON.stringify({
-          action: 'RESPOND',
-          providers: [],
-          reasoning: 'Test response',
-        })
-      ),
+      useModel: mock().mockImplementation((modelType: string) => {
+        if (modelType === 'TEXT_SMALL') {
+          // For shouldRespond check - return XML that indicates the agent should respond
+          return Promise.resolve(`<action>REPLY</action><reasoning>I should respond to this message</reasoning>`);
+        } else if (modelType === 'TEXT_LARGE') {
+          // For message generation - return XML with response content
+          return Promise.resolve(`<thought>I should provide a helpful response</thought><text>Hello! How can I help you?</text><actions>REPLY</actions><simple>true</simple>`);
+        }
+        return Promise.resolve('{}');
+      }),
     }) as unknown as IAgentRuntime;
     character = runtime.character;
 
@@ -166,29 +169,12 @@ describe('Event Emission Regression Tests', () => {
         createdAt: Date.now(),
       };
 
-      // Mock the callback to simulate sending the response
-      const testCallback: HandlerCallback = async (content: Content) => {
-        // This simulates what would happen in sendAgentResponseToBus
-        // The MESSAGE_SENT event should be emitted here
-        const sentMessagePayload = {
-          runtime,
-          message: {
-            ...sentMessage,
-            content,
-          },
-          source: 'agent_response',
-        };
-
-        // This is what should happen but is currently missing:
-        await runtime.emitEvent(EventType.MESSAGE_SENT, sentMessagePayload);
-
-        // Return empty array as HandlerCallback expects Memory[]
-        return [];
-      };
+      // Use the standard mock callback - let the message handler emit the MESSAGE_SENT event
+      const testCallback: HandlerCallback = mockCallback;
 
       // Process the message (this should trigger a response and MESSAGE_SENT event)
       const messagePayload = {
-        runtime: runtime,
+        runtime,
         message: incomingMessage,
         callback: testCallback,
         source: 'test',
@@ -342,7 +328,7 @@ describe('Event Emission Regression Tests', () => {
       };
 
       const messagePayload = {
-        runtime: runtime,
+        runtime,
         message: incomingMessage,
         callback: mockCallback,
         source: 'test',
@@ -387,7 +373,7 @@ describe('Event Emission Regression Tests', () => {
       };
 
       const messagePayload = {
-        runtime: runtime,
+        runtime,
         message: deletedMessage,
         source: 'test',
       };
@@ -404,7 +390,7 @@ describe('Event Emission Regression Tests', () => {
 
     it('should emit CHANNEL_CLEARED event when channels are cleared', async () => {
       const channelClearedPayload = {
-        runtime: runtime,
+        runtime,
         roomId: asUUID('abcdefab-cdef-abcd-efab-cdefabcdefab'),
         channelId: 'test-channel-id',
         memoryCount: 5,
@@ -425,7 +411,7 @@ describe('Event Emission Regression Tests', () => {
 
     it('should emit POST_GENERATED event when generating posts', async () => {
       const postPayload = {
-        runtime: runtime,
+        runtime,
         worldId: asUUID('fedcbafe-dcba-fedc-baef-dcbafedcbafe'),
         userId: 'test-user-id',
         roomId: asUUID('01234567-89ab-cdef-0123-456789abcdef'),
@@ -469,9 +455,9 @@ describe('Event Emission Regression Tests', () => {
       ];
 
       for (const eventType of expectedEventTypes) {
-        expect(events[eventType]).toBeDefined();
-        expect(Array.isArray(events[eventType])).toBe(true);
-        expect(events[eventType].length).toBeGreaterThan(0);
+        expect((events as any)[eventType]).toBeDefined();
+        expect(Array.isArray((events as any)[eventType])).toBe(true);
+        expect((events as any)[eventType].length).toBeGreaterThan(0);
       }
     });
 
@@ -494,7 +480,7 @@ describe('Event Emission Regression Tests', () => {
       };
 
       const messagePayload = {
-        runtime: runtime,
+        runtime,
         message: testMessage,
         source: 'test',
       };

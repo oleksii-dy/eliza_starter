@@ -1,12 +1,12 @@
 import { toast as sonner } from 'sonner';
 
 export type ToastMode =
-	| 'default'
-	| 'success'
-	| 'undo'
-	| 'error'
-	| 'warning'
-	| 'info';
+  | 'default'
+  | 'success'
+  | 'undo'
+  | 'error'
+  | 'warning'
+  | 'info';
 
 export default function toast({
   message,
@@ -14,10 +14,10 @@ export default function toast({
   description,
   undoAction,
 }: {
-	message: string;
-	mode?: ToastMode;
-	description?: string;
-	undoAction?: () => void;
+  message: string;
+  mode?: ToastMode;
+  description?: string;
+  undoAction?: () => void;
 }) {
   switch (mode) {
     case 'error': {

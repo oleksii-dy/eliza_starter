@@ -213,7 +213,8 @@ async function extractGoalUpdate(
 export const updateGoalAction: Action = {
   name: 'UPDATE_GOAL',
   similes: ['EDIT_GOAL', 'MODIFY_GOAL', 'CHANGE_GOAL', 'REVISE_GOAL'],
-  description: "Updates an existing goal's name or description. Can be chained with LIST_GOALS to see updated goals or COMPLETE_GOAL to mark it done.",
+  description:
+    "Updates an existing goal's name or description. Can be chained with LIST_GOALS to see updated goals or COMPLETE_GOAL to mark it done.",
 
   validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
     // Check if any active goals exist
@@ -272,10 +273,10 @@ export const updateGoalAction: Action = {
 
       const entityGoals = message.entityId
         ? await dataService.getGoals({
-          ownerType: 'entity',
-          ownerId: message.entityId as UUID,
-          isCompleted: false,
-        })
+            ownerType: 'entity',
+            ownerId: message.entityId as UUID,
+            isCompleted: false,
+          })
         : [];
 
       const availableGoals = [...agentGoals, ...entityGoals];
@@ -316,7 +317,11 @@ export const updateGoalAction: Action = {
           data: {
             actionName: 'UPDATE_GOAL',
             error: 'Goal not found',
-            availableGoals: availableGoals.map((g) => ({ id: g.id, name: g.name, ownerType: g.ownerType })),
+            availableGoals: availableGoals.map((g) => ({
+              id: g.id,
+              name: g.name,
+              ownerType: g.ownerType,
+            })),
           },
           values: {
             success: false,
@@ -441,7 +446,8 @@ export const updateGoalAction: Action = {
         name: '{{agent}}',
         content: {
           text: 'I\'ve updated your goal to "Learn Spanish fluently". Now let me show you all your goals.',
-          thought: 'The user wants to modify an existing goal and then see their complete goal list. I need to chain UPDATE_GOAL with LIST_GOALS to show the modification took effect in the context of all their goals.',
+          thought:
+            'The user wants to modify an existing goal and then see their complete goal list. I need to chain UPDATE_GOAL with LIST_GOALS to show the modification took effect in the context of all their goals.',
           actions: ['UPDATE_GOAL', 'LIST_GOALS'],
         },
       },
@@ -457,8 +463,9 @@ export const updateGoalAction: Action = {
       {
         name: '{{agent}}',
         content: {
-          text: 'I\'ve updated the description. Now I\'ll mark it as complete.',
-          thought: "The user wants to update a goal\'s details and then immediately complete it. This shows the update-complete workflow where we refine the goal definition before marking it as achieved.",
+          text: "I've updated the description. Now I'll mark it as complete.",
+          thought:
+            "The user wants to update a goal\'s details and then immediately complete it. This shows the update-complete workflow where we refine the goal definition before marking it as achieved.",
           actions: ['UPDATE_GOAL', 'COMPLETE_GOAL'],
         },
       },

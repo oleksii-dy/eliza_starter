@@ -2,7 +2,7 @@ import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { Pool, type PoolClient } from 'pg';
 import { logger, asUUID, type UUID } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
-import * as schema from '../schema';
+import * as schema from '../schema/index.js';
 
 export interface PgManagerConfig {
   connectionString: string;

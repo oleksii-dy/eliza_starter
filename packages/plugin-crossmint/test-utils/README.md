@@ -5,15 +5,19 @@ This directory contains utility scripts for debugging and validating the CrossMi
 ## Scripts
 
 ### debug-api.mjs
+
 Tests various CrossMint API endpoint variations to debug connectivity issues.
 
 ### test-corrected-api.mjs
+
 Tests the corrected API endpoints with proper versioning and request formats.
 
 ### test-production.mjs
+
 Validates the production API integration without creating actual resources.
 
 ### test-real-service.mjs
+
 Tests the real service implementation with minimal dependencies.
 
 ## Usage
@@ -32,7 +36,8 @@ bun test-utils/test-production.mjs
 ```
 
 These are useful for:
+
 - Debugging API connectivity issues
 - Validating API key permissions
 - Testing endpoint availability
-- Verifying service configuration 
+- Verifying service configuration

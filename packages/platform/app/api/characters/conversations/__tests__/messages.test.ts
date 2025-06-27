@@ -6,7 +6,11 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { NextRequest } from 'next/server';
 import { POST } from '../[id]/messages/route';
-import { clearTestDatabase, createTestOrganization, createTestUser } from '@/lib/test-utils';
+import {
+  clearTestDatabase,
+  createTestOrganization,
+  createTestUser,
+} from '@/lib/test-utils';
 
 // Mock dependencies
 vi.mock('@/lib/auth/session', () => ({
@@ -50,11 +54,11 @@ describe('/api/characters/conversations/[id]/messages', () => {
 
   beforeEach(async () => {
     await clearTestDatabase();
-    
+
     // Create test data
     const org = await createTestOrganization();
     organizationId = org.id;
-    
+
     const user = await createTestUser(organizationId);
     userId = user.id;
 
@@ -77,9 +81,9 @@ describe('/api/characters/conversations/[id]/messages', () => {
         style: 'Casual and engaging',
         system: 'You are a helpful assistant',
         knowledge: ['testing', 'AI'],
-        messageExamples: [[
-          { user: 'Hello', assistant: 'Hi there! How can I help you today?' }
-        ]],
+        messageExamples: [
+          [{ user: 'Hello', assistant: 'Hi there! How can I help you today?' }],
+        ],
       },
     };
 
@@ -122,9 +126,13 @@ describe('/api/characters/conversations/[id]/messages', () => {
       vi.mocked(authService.getCurrentUser).mockResolvedValue(mockUser);
 
       // Mock character service
-      vi.mocked(characterService.getConversation).mockResolvedValue(mockConversation);
-      vi.mocked(characterService.getCharacterById).mockResolvedValue(mockCharacter);
-      
+      vi.mocked(characterService.getConversation).mockResolvedValue(
+        mockConversation,
+      );
+      vi.mocked(characterService.getCharacterById).mockResolvedValue(
+        mockCharacter,
+      );
+
       const updatedConversationWithUser = {
         ...mockConversation,
         messages: [
@@ -167,7 +175,7 @@ describe('/api/characters/conversations/[id]/messages', () => {
         success: true,
         remainingBalance: 95.0,
         deductedAmount: 0.005,
-        transactionId: 'txn-123'
+        transactionId: 'txn-123',
       });
 
       // Mock OpenAI API response
@@ -200,11 +208,13 @@ describe('/api/characters/conversations/[id]/messages', () => {
           headers: {
             'Content-Type': 'application/json',
           },
-        }
+        },
       );
 
       // Call handler
-      const response = await POST(request, { params: Promise.resolve({ id: conversationId }) });
+      const response = await POST(request, {
+        params: Promise.resolve({ id: conversationId }),
+      });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -218,7 +228,10 @@ describe('/api/characters/conversations/[id]/messages', () => {
 
       // Verify service calls
       expect(characterService.addMessage).toHaveBeenCalledTimes(2);
-      expect(CreditService.checkSufficientCredits).toHaveBeenCalledWith(organizationId, 0.01);
+      expect(CreditService.checkSufficientCredits).toHaveBeenCalledWith(
+        organizationId,
+        0.01,
+      );
       expect(CreditService.deductCreditsForUsage).toHaveBeenCalledWith(
         organizationId,
         'system',
@@ -229,7 +242,7 @@ describe('/api/characters/conversations/[id]/messages', () => {
           inputTokens: 15,
           outputTokens: 10,
           agentId: characterId,
-        }
+        },
       );
 
       // Verify OpenAI API call
@@ -239,29 +252,38 @@ describe('/api/characters/conversations/[id]/messages', () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer test-key',
+            Authorization: 'Bearer test-key',
           },
           body: expect.stringContaining('gpt-4o-mini'),
-        })
+        }),
       );
     });
 
     it('should handle insufficient credits', async () => {
       vi.mocked(authService.getCurrentUser).mockResolvedValue(mockUser);
-      vi.mocked(characterService.getConversation).mockResolvedValue(mockConversation);
-      vi.mocked(characterService.getCharacterById).mockResolvedValue(mockCharacter);
+      vi.mocked(characterService.getConversation).mockResolvedValue(
+        mockConversation,
+      );
+      vi.mocked(characterService.getCharacterById).mockResolvedValue(
+        mockCharacter,
+      );
 
       const updatedConversation = {
         ...mockConversation,
-        messages: [...mockConversation.messages, {
-          id: 'msg-2',
-          role: 'user',
-          content: validMessage.content,
-          timestamp: Date.now(),
-        }],
+        messages: [
+          ...mockConversation.messages,
+          {
+            id: 'msg-2',
+            role: 'user',
+            content: validMessage.content,
+            timestamp: Date.now(),
+          },
+        ],
       };
 
-      vi.mocked(characterService.addMessage).mockResolvedValue(updatedConversation as any);
+      vi.mocked(characterService.addMessage).mockResolvedValue(
+        updatedConversation as any,
+      );
       vi.mocked(CreditService.checkSufficientCredits).mockResolvedValue(false);
 
       const request = new NextRequest(
@@ -272,10 +294,12 @@ describe('/api/characters/conversations/[id]/messages', () => {
           headers: {
             'Content-Type': 'application/json',
           },
-        }
+        },
       );
 
-      const response = await POST(request, { params: Promise.resolve({ id: conversationId }) });
+      const response = await POST(request, {
+        params: Promise.resolve({ id: conversationId }),
+      });
       const data = await response.json();
 
       expect(response.status).toBe(500);
@@ -299,10 +323,12 @@ describe('/api/characters/conversations/[id]/messages', () => {
           headers: {
             'Content-Type': 'application/json',
           },
-        }
+        },
       );
 
-      const response = await POST(request, { params: Promise.resolve({ id: conversationId }) });
+      const response = await POST(request, {
+        params: Promise.resolve({ id: conversationId }),
+      });
       const data = await response.json();
 
       expect(response.status).toBe(400);
@@ -322,10 +348,12 @@ describe('/api/characters/conversations/[id]/messages', () => {
           headers: {
             'Content-Type': 'application/json',
           },
-        }
+        },
       );
 
-      const response = await POST(request, { params: Promise.resolve({ id: conversationId }) });
+      const response = await POST(request, {
+        params: Promise.resolve({ id: conversationId }),
+      });
       const data = await response.json();
 
       expect(response.status).toBe(404);
@@ -334,7 +362,9 @@ describe('/api/characters/conversations/[id]/messages', () => {
 
     it('should handle non-existent character', async () => {
       vi.mocked(authService.getCurrentUser).mockResolvedValue(mockUser);
-      vi.mocked(characterService.getConversation).mockResolvedValue(mockConversation);
+      vi.mocked(characterService.getConversation).mockResolvedValue(
+        mockConversation,
+      );
       vi.mocked(characterService.getCharacterById).mockResolvedValue(null);
 
       const request = new NextRequest(
@@ -345,10 +375,12 @@ describe('/api/characters/conversations/[id]/messages', () => {
           headers: {
             'Content-Type': 'application/json',
           },
-        }
+        },
       );
 
-      const response = await POST(request, { params: Promise.resolve({ id: conversationId }) });
+      const response = await POST(request, {
+        params: Promise.resolve({ id: conversationId }),
+      });
       const data = await response.json();
 
       expect(response.status).toBe(404);
@@ -357,20 +389,29 @@ describe('/api/characters/conversations/[id]/messages', () => {
 
     it('should handle OpenAI API errors', async () => {
       vi.mocked(authService.getCurrentUser).mockResolvedValue(mockUser);
-      vi.mocked(characterService.getConversation).mockResolvedValue(mockConversation);
-      vi.mocked(characterService.getCharacterById).mockResolvedValue(mockCharacter);
+      vi.mocked(characterService.getConversation).mockResolvedValue(
+        mockConversation,
+      );
+      vi.mocked(characterService.getCharacterById).mockResolvedValue(
+        mockCharacter,
+      );
 
       const updatedConversation = {
         ...mockConversation,
-        messages: [...mockConversation.messages, {
-          id: 'msg-2',
-          role: 'user',
-          content: validMessage.content,
-          timestamp: Date.now(),
-        }],
+        messages: [
+          ...mockConversation.messages,
+          {
+            id: 'msg-2',
+            role: 'user',
+            content: validMessage.content,
+            timestamp: Date.now(),
+          },
+        ],
       };
 
-      vi.mocked(characterService.addMessage).mockResolvedValue(updatedConversation as any);
+      vi.mocked(characterService.addMessage).mockResolvedValue(
+        updatedConversation as any,
+      );
       vi.mocked(CreditService.checkSufficientCredits).mockResolvedValue(true);
 
       // Mock failed OpenAI API response
@@ -390,10 +431,12 @@ describe('/api/characters/conversations/[id]/messages', () => {
           headers: {
             'Content-Type': 'application/json',
           },
-        }
+        },
       );
 
-      const response = await POST(request, { params: Promise.resolve({ id: conversationId }) });
+      const response = await POST(request, {
+        params: Promise.resolve({ id: conversationId }),
+      });
       const data = await response.json();
 
       expect(response.status).toBe(500);
@@ -413,10 +456,12 @@ describe('/api/characters/conversations/[id]/messages', () => {
           headers: {
             'Content-Type': 'application/json',
           },
-        }
+        },
       );
 
-      const response = await POST(request, { params: Promise.resolve({ id: conversationId }) });
+      const response = await POST(request, {
+        params: Promise.resolve({ id: conversationId }),
+      });
 
       expect(response.status).toBe(401);
       expect(await response.json()).toEqual({ error: 'Unauthorized' });
@@ -424,16 +469,23 @@ describe('/api/characters/conversations/[id]/messages', () => {
 
     it('should build correct system prompt from character config', async () => {
       vi.mocked(authService.getCurrentUser).mockResolvedValue(mockUser);
-      vi.mocked(characterService.getConversation).mockResolvedValue(mockConversation);
-      vi.mocked(characterService.getCharacterById).mockResolvedValue(mockCharacter);
+      vi.mocked(characterService.getConversation).mockResolvedValue(
+        mockConversation,
+      );
+      vi.mocked(characterService.getCharacterById).mockResolvedValue(
+        mockCharacter,
+      );
       vi.mocked(characterService.addMessage).mockResolvedValue({
         ...mockConversation,
-        messages: [...mockConversation.messages, {
-          id: 'msg-2',
-          role: 'user',
-          content: validMessage.content,
-          timestamp: Date.now(),
-        }],
+        messages: [
+          ...mockConversation.messages,
+          {
+            id: 'msg-2',
+            role: 'user',
+            content: validMessage.content,
+            timestamp: Date.now(),
+          },
+        ],
       } as any);
       vi.mocked(CreditService.checkSufficientCredits).mockResolvedValue(true);
 
@@ -455,7 +507,7 @@ describe('/api/characters/conversations/[id]/messages', () => {
           headers: {
             'Content-Type': 'application/json',
           },
-        }
+        },
       );
 
       await POST(request, { params: Promise.resolve({ id: conversationId }) });

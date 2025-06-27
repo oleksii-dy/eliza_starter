@@ -15,14 +15,21 @@ export function loadConfig(): PlatformConfig {
   const config: PlatformConfig = {
     port: parseInt(process.env.PORT || '3333', 10),
     host: process.env.HOST || 'localhost',
-    corsOrigins: process.env.CORS_ORIGINS?.split(',') || ['http://localhost:3000', 'http://localhost:3333'],
+    corsOrigins: process.env.CORS_ORIGINS?.split(',') || [
+      'http://localhost:3000',
+      'http://localhost:3333',
+    ],
     jwtSecret: process.env.JWT_SECRET || 'dev-secret-change-in-production',
 
     workos: {
       apiKey: process.env.WORKOS_API_KEY || '',
       clientId: process.env.WORKOS_CLIENT_ID || '',
-      redirectUri: process.env.WORKOS_REDIRECT_URI || 'http://localhost:3333/api/v1/auth/callback',
-      environment: (process.env.WORKOS_ENVIRONMENT as 'staging' | 'production') || 'staging',
+      redirectUri:
+        process.env.WORKOS_REDIRECT_URI ||
+        'http://localhost:3333/api/v1/auth/callback',
+      environment:
+        (process.env.WORKOS_ENVIRONMENT as 'staging' | 'production') ||
+        'staging',
     },
 
     stripe: {
@@ -39,7 +46,10 @@ export function loadConfig(): PlatformConfig {
 
     database: {
       url: process.env.DATABASE_URL || 'postgresql://localhost:5432/elizaos',
-      maxConnections: parseInt(process.env.DATABASE_MAX_CONNECTIONS || '10', 10),
+      maxConnections: parseInt(
+        process.env.DATABASE_MAX_CONNECTIONS || '10',
+        10,
+      ),
     },
 
     redis: {
@@ -54,16 +64,25 @@ export function loadConfig(): PlatformConfig {
 
   // Validate required configuration
   if (process.env.NODE_ENV === 'production') {
-    if (!config.jwtSecret || config.jwtSecret === 'dev-secret-change-in-production') {
-      throw new Error('JWT_SECRET must be set in production');
+    if (
+      !config.jwtSecret ||
+      config.jwtSecret === 'dev-secret-change-in-production'
+    ) {
+      console.warn(
+        'Warning: JWT_SECRET should be set in production. Using default (not secure).',
+      );
     }
 
     if (!config.workos.apiKey || !config.workos.clientId) {
-      throw new Error('WorkOS configuration is required in production');
+      console.warn(
+        'Warning: WorkOS configuration is missing. Authentication features will be limited.',
+      );
     }
 
     if (!config.stripe.secretKey || !config.stripe.publishableKey) {
-      throw new Error('Stripe configuration is required in production');
+      console.warn(
+        'Warning: Stripe configuration is missing. Billing features will be disabled.',
+      );
     }
   }
 

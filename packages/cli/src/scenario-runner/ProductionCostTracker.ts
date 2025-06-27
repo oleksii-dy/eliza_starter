@@ -368,17 +368,17 @@ export class ProductionCostTracker {
     // Calculate budget status
     const budgetStatus = budget
       ? {
-          used: totalCost,
-          remaining: Math.max(0, budget.maxTotalCost - totalCost),
-          percentage: (totalCost / budget.maxTotalCost) * 100,
-          exceeded: totalCost > budget.maxTotalCost,
-        }
+        used: totalCost,
+        remaining: Math.max(0, budget.maxTotalCost - totalCost),
+        percentage: (totalCost / budget.maxTotalCost) * 100,
+        exceeded: totalCost > budget.maxTotalCost,
+      }
       : {
-          used: totalCost,
-          remaining: 0,
-          percentage: 0,
-          exceeded: false,
-        };
+        used: totalCost,
+        remaining: 0,
+        percentage: 0,
+        exceeded: false,
+      };
 
     return {
       benchmarkId,

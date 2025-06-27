@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import {
   PluginCreationService,
   type PluginSpecification,
-  ClaudeModel
+  ClaudeModel,
 } from '../services/PluginCreationService';
 import type { IAgentRuntime } from '@elizaos/core';
 import fs from 'fs-extra';

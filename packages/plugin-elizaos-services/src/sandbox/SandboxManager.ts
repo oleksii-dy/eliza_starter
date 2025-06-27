@@ -2,7 +2,8 @@
  * E2B Sandbox Manager for Multi-Agent Development Teams
  */
 
-import type { IAgentRuntime, Service } from '@elizaos/core';
+import type { IAgentRuntime } from '@elizaos/core';
+import { Service } from '@elizaos/core';
 import { logger } from '@elizaos/core';
 
 export interface AgentConfig {
@@ -67,7 +68,7 @@ export class SandboxManager extends Service {
 
     try {
       // Create E2B sandbox (using E2B SDK)
-      const response = await this.callE2BAPI('POST', '/sandboxes', {
+      const _response = await this.callE2BAPI('POST', '/sandboxes', {
         template_id: template,
         metadata: {
           purpose: 'eliza-multi-agent-dev',
@@ -324,7 +325,7 @@ export class SandboxManager extends Service {
         if (response.status === 'running') {
           return;
         }
-      } catch (error) {
+      } catch (_error) {
         // Continue waiting
       }
 
@@ -392,7 +393,7 @@ echo $! > /tmp/${agent.role}.pid
     }
 
     const url = `https://api.e2b.dev${endpoint}`;
-    const options: RequestInit = {
+    const options: any = {
       method,
       headers: {
         Authorization: `Bearer ${this.e2bApiKey}`,

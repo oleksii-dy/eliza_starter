@@ -15,7 +15,8 @@ import { v4 as uuidv4 } from 'uuid';
 export const githubE2bAutocoderCollaborationScenario: Scenario = {
   id: uuidv4() as any,
   name: 'GitHub Issue Resolution with E2B Sandbox and Autocoder',
-  description: 'Complex multi-agent scenario where a main agent orchestrates GitHub issue resolution by spawning a specialized coder agent in an E2B container equipped with ElizaOS CLI and autocoder capabilities. The agents collaborate through GitHub comments and real-time communication to achieve high-quality issue resolution.',
+  description:
+    'Complex multi-agent scenario where a main agent orchestrates GitHub issue resolution by spawning a specialized coder agent in an E2B container equipped with ElizaOS CLI and autocoder capabilities. The agents collaborate through GitHub comments and real-time communication to achieve high-quality issue resolution.',
   category: 'advanced-integration',
   tags: [
     'github',
@@ -27,7 +28,7 @@ export const githubE2bAutocoderCollaborationScenario: Scenario = {
     'sandbox',
     'container',
     'pr-workflow',
-    'issue-resolution'
+    'issue-resolution',
   ],
 
   actors: [
@@ -94,13 +95,13 @@ QUALITY STANDARDS:
               repo: 'eliza',
               state: 'open',
               labels: ['good first issue', 'bug', 'enhancement'],
-              limit: 5
+              limit: 5,
             },
-            description: 'Fetch open issues from elizaOS/eliza repository'
+            description: 'Fetch open issues from elizaOS/eliza repository',
           },
           {
             type: 'wait',
-            waitTime: 2000
+            waitTime: 2000,
           },
           {
             type: 'action',
@@ -110,21 +111,22 @@ QUALITY STANDARDS:
               timeout: '30 minutes',
               metadata: {
                 purpose: 'github-issue-resolution',
-                repository: 'elizaOS/eliza'
-              }
+                repository: 'elizaOS/eliza',
+              },
             },
-            description: 'Create E2B sandbox with ElizaOS development environment'
+            description: 'Create E2B sandbox with ElizaOS development environment',
           },
           {
             type: 'wait',
-            waitTime: 5000
+            waitTime: 5000,
           },
           {
             type: 'message',
-            content: 'I have set up a development environment and identified several GitHub issues that need attention. Let me coordinate with a specialized coder agent to work on these issues.'
-          }
-        ]
-      }
+            content:
+              'I have set up a development environment and identified several GitHub issues that need attention. Let me coordinate with a specialized coder agent to work on these issues.',
+          },
+        ],
+      },
     },
     {
       id: 'e2b-coder-agent' as any,
@@ -177,21 +179,27 @@ COMMUNICATION STYLE:
 - Provide detailed explanations of your implementation approach
 - Accept feedback gracefully and implement changes promptly
 - Document your work thoroughly for future reference`,
-      plugins: ['@elizaos/plugin-github', '@elizaos/plugin-e2b', '@elizaos/plugin-autocoder', '@elizaos/plugin-shell'],
+      plugins: [
+        '@elizaos/plugin-github',
+        '@elizaos/plugin-e2b',
+        '@elizaos/plugin-autocoder',
+        '@elizaos/plugin-shell',
+      ],
       script: {
         steps: [
           {
             type: 'wait',
             waitTime: 8000,
-            description: 'Wait for sandbox setup and coordination from main agent'
+            description: 'Wait for sandbox setup and coordination from main agent',
           },
           {
             type: 'message',
-            content: 'Sandbox environment is ready! I have ElizaOS CLI, Git, and autocoder available. Please assign me a GitHub issue to work on.'
+            content:
+              'Sandbox environment is ready! I have ElizaOS CLI, Git, and autocoder available. Please assign me a GitHub issue to work on.',
           },
           {
             type: 'wait',
-            waitTime: 5000
+            waitTime: 5000,
           },
           {
             type: 'action',
@@ -215,12 +223,12 @@ subprocess.run(['git', '--version'], capture_output=False)
 subprocess.run(['git', 'config', '--list'], capture_output=False)
 
 print("\\nSandbox environment ready for development work!")`,
-              language: 'python'
+              language: 'python',
             },
-            description: 'Verify sandbox environment setup'
-          }
-        ]
-      }
+            description: 'Verify sandbox environment setup',
+          },
+        ],
+      },
     },
     {
       id: 'pr-reviewer-agent' as any,
@@ -258,14 +266,15 @@ Be thorough but constructive in your reviews. The goal is to ship high-quality c
           {
             type: 'wait',
             waitTime: 15000,
-            description: 'Wait for development work to begin'
+            description: 'Wait for development work to begin',
           },
           {
             type: 'message',
-            content: 'I am ready to conduct thorough code reviews. I will evaluate all pull requests for security, performance, maintainability, and adherence to project standards.'
-          }
-        ]
-      }
+            content:
+              'I am ready to conduct thorough code reviews. I will evaluate all pull requests for security, performance, maintainability, and adherence to project standards.',
+          },
+        ],
+      },
     },
     {
       id: 'user-stakeholder' as any,
@@ -291,28 +300,30 @@ INTERACTION STYLE:
         steps: [
           {
             type: 'wait',
-            waitTime: 20000
+            waitTime: 20000,
           },
           {
             type: 'message',
-            content: 'I am monitoring this development workflow to ensure we are delivering real value to our users. Please keep me informed of progress and any decisions that might impact user experience.'
-          }
-        ]
-      }
-    }
+            content:
+              'I am monitoring this development workflow to ensure we are delivering real value to our users. Please keep me informed of progress and any decisions that might impact user experience.',
+          },
+        ],
+      },
+    },
   ],
 
   setup: {
     roomType: 'group',
     roomName: 'GitHub Issue Resolution Workspace',
-    context: 'Collaborative development environment for resolving GitHub issues with automated workflows and quality assurance',
+    context:
+      'Collaborative development environment for resolving GitHub issues with automated workflows and quality assurance',
     environment: {
       GITHUB_TOKEN: '${GITHUB_TOKEN}',
       E2B_API_KEY: '${E2B_API_KEY}',
       ELIZAOS_REPO_URL: 'https://github.com/elizaOS/eliza.git',
       DEVELOPMENT_MODE: 'true',
-      QUALITY_GATE_ENABLED: 'true'
-    }
+      QUALITY_GATE_ENABLED: 'true',
+    },
   },
 
   execution: {
@@ -322,14 +333,14 @@ INTERACTION STYLE:
       {
         type: 'custom',
         value: 'pr_merged_and_sandbox_cleaned',
-        description: 'Stop when PR is successfully merged and sandbox is cleaned up'
+        description: 'Stop when PR is successfully merged and sandbox is cleaned up',
       },
       {
         type: 'keyword',
         value: 'workflow_completed',
-        description: 'Stop when orchestrator declares workflow completion'
-      }
-    ]
+        description: 'Stop when orchestrator declares workflow completion',
+      },
+    ],
   },
 
   verification: {
@@ -339,151 +350,167 @@ INTERACTION STYLE:
         type: 'llm' as const,
         description: 'GitHub issues were successfully fetched from the elizaOS repository',
         config: {
-          successCriteria: 'The main agent successfully retrieved GitHub issues from the elizaOS/eliza repository and identified suitable issues for resolution',
+          successCriteria:
+            'The main agent successfully retrieved GitHub issues from the elizaOS/eliza repository and identified suitable issues for resolution',
           priority: 'high',
-          category: 'integration'
-        }
+          category: 'integration',
+        },
       },
       {
         id: 'sandbox-environment-created' as any,
         type: 'llm' as const,
         description: 'E2B sandbox with ElizaOS development environment was successfully created',
         config: {
-          successCriteria: 'A secure E2B sandbox was created with all necessary development tools including ElizaOS CLI, Git, and autocoder capabilities',
+          successCriteria:
+            'A secure E2B sandbox was created with all necessary development tools including ElizaOS CLI, Git, and autocoder capabilities',
           priority: 'high',
-          category: 'infrastructure'
-        }
+          category: 'infrastructure',
+        },
       },
       {
         id: 'agent-communication-established' as any,
         type: 'llm' as const,
         description: 'Communication channels between main agent and sandbox agent were established',
         config: {
-          successCriteria: 'The main orchestrator successfully communicated with the coder agent in the sandbox environment and coordinated task assignment',
+          successCriteria:
+            'The main orchestrator successfully communicated with the coder agent in the sandbox environment and coordinated task assignment',
           priority: 'high',
-          category: 'coordination'
-        }
+          category: 'coordination',
+        },
       },
       {
         id: 'repository-cloned-in-sandbox' as any,
         type: 'llm' as const,
         description: 'GitHub repository was successfully cloned in the sandbox environment',
         config: {
-          successCriteria: 'The coder agent successfully cloned the elizaOS/eliza repository in the sandbox and verified the development environment',
+          successCriteria:
+            'The coder agent successfully cloned the elizaOS/eliza repository in the sandbox and verified the development environment',
           priority: 'high',
-          category: 'development'
-        }
+          category: 'development',
+        },
       },
       {
         id: 'issue-analysis-completed' as any,
         type: 'llm' as const,
         description: 'Assigned GitHub issue was thoroughly analyzed by the coder agent',
         config: {
-          successCriteria: 'The coder agent demonstrated understanding of the GitHub issue requirements, scope, and acceptance criteria',
+          successCriteria:
+            'The coder agent demonstrated understanding of the GitHub issue requirements, scope, and acceptance criteria',
           priority: 'high',
-          category: 'analysis'
-        }
+          category: 'analysis',
+        },
       },
       {
         id: 'code-implementation-started' as any,
         type: 'llm' as const,
         description: 'Code implementation work began with proper development practices',
         config: {
-          successCriteria: 'The coder agent began implementing a solution using appropriate development practices, tools, and methodologies',
+          successCriteria:
+            'The coder agent began implementing a solution using appropriate development practices, tools, and methodologies',
           priority: 'high',
-          category: 'development'
-        }
+          category: 'development',
+        },
       },
       {
         id: 'pull-request-created' as any,
         type: 'llm' as const,
         description: 'A pull request was created with the proposed solution',
         config: {
-          successCriteria: 'The coder agent successfully created a pull request with a comprehensive description, proper commit messages, and the implemented solution',
+          successCriteria:
+            'The coder agent successfully created a pull request with a comprehensive description, proper commit messages, and the implemented solution',
           priority: 'high',
-          category: 'collaboration'
-        }
+          category: 'collaboration',
+        },
       },
       {
         id: 'code-review-initiated' as any,
         type: 'llm' as const,
         description: 'Code review process was initiated by the main agent or reviewer',
         config: {
-          successCriteria: 'A thorough code review was initiated with detailed feedback on the proposed changes, covering security, performance, and code quality',
+          successCriteria:
+            'A thorough code review was initiated with detailed feedback on the proposed changes, covering security, performance, and code quality',
           priority: 'high',
-          category: 'quality-assurance'
-        }
+          category: 'quality-assurance',
+        },
       },
       {
         id: 'feedback-loop-functioning' as any,
         type: 'llm' as const,
         description: 'Iterative feedback and improvement cycle was established',
         config: {
-          successCriteria: 'Agents engaged in multiple rounds of feedback, code improvements, and quality refinements through GitHub comments and direct communication',
+          successCriteria:
+            'Agents engaged in multiple rounds of feedback, code improvements, and quality refinements through GitHub comments and direct communication',
           priority: 'medium',
-          category: 'collaboration'
-        }
+          category: 'collaboration',
+        },
       },
       {
         id: 'quality-standards-enforced' as any,
         type: 'llm' as const,
         description: 'High quality standards were maintained throughout the review process',
         config: {
-          successCriteria: 'The review process demonstrated enforcement of coding standards, security practices, testing requirements, and documentation standards',
+          successCriteria:
+            'The review process demonstrated enforcement of coding standards, security practices, testing requirements, and documentation standards',
           priority: 'high',
-          category: 'quality-assurance'
-        }
+          category: 'quality-assurance',
+        },
       },
       {
         id: 'github-communication-used' as any,
         type: 'llm' as const,
         description: 'GitHub comments were used for formal communication and feedback',
         config: {
-          successCriteria: 'Agents effectively used GitHub comments for code review feedback, issue discussions, and formal project communication',
+          successCriteria:
+            'Agents effectively used GitHub comments for code review feedback, issue discussions, and formal project communication',
           priority: 'medium',
-          category: 'collaboration'
-        }
+          category: 'collaboration',
+        },
       },
       {
         id: 'direct-coordination-maintained' as any,
         type: 'llm' as const,
-        description: 'Direct agent-to-agent coordination was maintained for real-time collaboration',
+        description:
+          'Direct agent-to-agent coordination was maintained for real-time collaboration',
         config: {
-          successCriteria: 'Agents maintained direct communication channels for immediate coordination, urgent issues, and workflow management',
+          successCriteria:
+            'Agents maintained direct communication channels for immediate coordination, urgent issues, and workflow management',
           priority: 'medium',
-          category: 'coordination'
-        }
+          category: 'coordination',
+        },
       },
       {
         id: 'workflow-completion-achieved' as any,
         type: 'llm' as const,
         description: 'Complete workflow from issue identification to resolution was achieved',
         config: {
-          successCriteria: 'The entire workflow from GitHub issue identification through code implementation, review, and completion was successfully demonstrated',
+          successCriteria:
+            'The entire workflow from GitHub issue identification through code implementation, review, and completion was successfully demonstrated',
           priority: 'high',
-          category: 'integration'
-        }
+          category: 'integration',
+        },
       },
       {
         id: 'sandbox-lifecycle-managed' as any,
         type: 'llm' as const,
         description: 'Sandbox environment lifecycle was properly managed',
         config: {
-          successCriteria: 'The E2B sandbox environment was created, utilized effectively for development work, and properly cleaned up after completion',
+          successCriteria:
+            'The E2B sandbox environment was created, utilized effectively for development work, and properly cleaned up after completion',
           priority: 'medium',
-          category: 'infrastructure'
-        }
+          category: 'infrastructure',
+        },
       },
       {
         id: 'autocoder-integration-demonstrated' as any,
         type: 'llm' as const,
         description: 'Autocoder capabilities were effectively leveraged for development',
         config: {
-          successCriteria: 'The autocoder plugin was used effectively to assist with code generation, analysis, or development workflow automation',
+          successCriteria:
+            'The autocoder plugin was used effectively to assist with code generation, analysis, or development workflow automation',
           priority: 'medium',
-          category: 'tooling'
-        }
-      }
+          category: 'tooling',
+        },
+      },
     ],
     expectedOutcomes: [
       {
@@ -492,11 +519,13 @@ INTERACTION STYLE:
         verification: {
           id: 'orchestration-success' as any,
           type: 'llm' as const,
-          description: 'Main agent demonstrated effective project coordination and quality management',
+          description:
+            'Main agent demonstrated effective project coordination and quality management',
           config: {
-            successCriteria: 'The main orchestrator successfully managed all aspects of the workflow from issue identification to final resolution with quality assurance'
-          }
-        }
+            successCriteria:
+              'The main orchestrator successfully managed all aspects of the workflow from issue identification to final resolution with quality assurance',
+          },
+        },
       },
       {
         actorId: 'e2b-coder-agent',
@@ -506,9 +535,10 @@ INTERACTION STYLE:
           type: 'llm' as const,
           description: 'Coder agent delivered working solution with proper development practices',
           config: {
-            successCriteria: 'The coder agent successfully implemented a working solution that addresses the GitHub issue while following best practices'
-          }
-        }
+            successCriteria:
+              'The coder agent successfully implemented a working solution that addresses the GitHub issue while following best practices',
+          },
+        },
       },
       {
         actorId: 'pr-reviewer-agent',
@@ -516,11 +546,13 @@ INTERACTION STYLE:
         verification: {
           id: 'review-quality' as any,
           type: 'llm' as const,
-          description: 'Reviewer provided detailed, actionable feedback maintaining quality standards',
+          description:
+            'Reviewer provided detailed, actionable feedback maintaining quality standards',
           config: {
-            successCriteria: 'The reviewer conducted thorough code reviews with specific, actionable feedback that improved code quality'
-          }
-        }
+            successCriteria:
+              'The reviewer conducted thorough code reviews with specific, actionable feedback that improved code quality',
+          },
+        },
       },
       {
         actorId: 'user-stakeholder',
@@ -530,11 +562,12 @@ INTERACTION STYLE:
           type: 'llm' as const,
           description: 'Product stakeholder confirmed user value and requirement satisfaction',
           config: {
-            successCriteria: 'The stakeholder validated that the solution addresses real user needs and meets product requirements'
-          }
-        }
-      }
-    ]
+            successCriteria:
+              'The stakeholder validated that the solution addresses real user needs and meets product requirements',
+          },
+        },
+      },
+    ],
   },
 
   benchmarks: {
@@ -546,59 +579,59 @@ INTERACTION STYLE:
       {
         name: 'issue_resolution_time',
         target: 600000, // 10 minutes target
-        threshold: 900000 // 15 minutes maximum
+        threshold: 900000, // 15 minutes maximum
       },
       {
         name: 'code_review_cycles',
         target: 2, // Target 2 review cycles
-        threshold: 4 // Maximum 4 review cycles
+        threshold: 4, // Maximum 4 review cycles
       },
       {
         name: 'sandbox_utilization_efficiency',
         target: 0.8, // 80% efficient use of sandbox time
-        threshold: 0.6 // Minimum 60% efficiency
+        threshold: 0.6, // Minimum 60% efficiency
       },
       {
         name: 'github_api_calls',
-        threshold: 50 // Maximum 50 GitHub API calls
+        threshold: 50, // Maximum 50 GitHub API calls
       },
       {
         name: 'agent_coordination_effectiveness',
         target: 0.9, // 90% effective coordination
-        threshold: 0.7 // Minimum 70% effectiveness
-      }
-    ]
+        threshold: 0.7, // Minimum 70% effectiveness
+      },
+    ],
   },
 
   expectations: {
     messagePatterns: [
       {
         pattern: 'github.*issue.*fetch',
-        flags: 'i'
+        flags: 'i',
       },
       {
         pattern: 'sandbox.*create.*environment',
-        flags: 'i'
+        flags: 'i',
       },
       {
         pattern: 'clone.*repository',
-        flags: 'i'
+        flags: 'i',
       },
       {
         pattern: 'pull.*request.*create',
-        flags: 'i'
+        flags: 'i',
       },
       {
         pattern: 'code.*review.*feedback',
-        flags: 'i'
+        flags: 'i',
       },
       {
         pattern: 'workflow.*complete',
-        flags: 'i'
-      }
+        flags: 'i',
+      },
     ],
     responseTime: {
-      max: 10000 // 10 seconds max response time
+      max: 10000, // 10 seconds max response time
     },
     actionCalls: [
       'FETCH_GITHUB_ISSUES',
@@ -607,8 +640,8 @@ INTERACTION STYLE:
       'MANAGE_SANDBOX',
       'CREATE_PULL_REQUEST',
       'ADD_GITHUB_COMMENT',
-      'AUTO_CODE_ISSUE'
-    ]
+      'AUTO_CODE_ISSUE',
+    ],
   },
 
   metadata: {
@@ -623,7 +656,7 @@ INTERACTION STYLE:
       'Pull request created with working solution',
       'Code review cycle completed with quality feedback',
       'Workflow completed with satisfied stakeholder',
-      'Sandbox properly cleaned up'
+      'Sandbox properly cleaned up',
     ],
     failure_indicators: [
       'Unable to fetch GitHub issues',
@@ -632,9 +665,9 @@ INTERACTION STYLE:
       'Code implementation failures',
       'Communication breakdowns between agents',
       'Quality standards not maintained',
-      'Workflow abandonment before completion'
-    ]
-  }
+      'Workflow abandonment before completion',
+    ],
+  },
 };
 
 export default githubE2bAutocoderCollaborationScenario;

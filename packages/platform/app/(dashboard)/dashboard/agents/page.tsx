@@ -59,8 +59,12 @@ export default function AgentsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deployingAgents, setDeployingAgents] = useState<Set<string>>(new Set());
-  const [viewFilter, setViewFilter] = useState<'all' | 'agents' | 'characters'>('all');
+  const [deployingAgents, setDeployingAgents] = useState<Set<string>>(
+    new Set(),
+  );
+  const [viewFilter, setViewFilter] = useState<'all' | 'agents' | 'characters'>(
+    'all',
+  );
 
   // Load agents and stats
   useEffect(() => {
@@ -83,42 +87,50 @@ export default function AgentsPage() {
         }),
       ]);
 
-      const agentsData = agentsResponse.ok ? await agentsResponse.json() : { success: false };
-      const charactersData = charactersResponse.ok ? await charactersResponse.json() : { success: false };
+      const agentsData = agentsResponse.ok
+        ? await agentsResponse.json()
+        : { success: false };
+      const charactersData = charactersResponse.ok
+        ? await charactersResponse.json()
+        : { success: false };
 
       let allItems: Agent[] = [];
 
       // Add agents with type field
       if (agentsData.success && agentsData.data) {
-        const agentsWithType = (agentsData.data.agents || []).map((agent: any) => ({
-          ...agent,
-          type: 'agent' as const,
-        }));
+        const agentsWithType = (agentsData.data.agents || []).map(
+          (agent: any) => ({
+            ...agent,
+            type: 'agent' as const,
+          }),
+        );
         allItems = [...allItems, ...agentsWithType];
       }
 
       // Add characters as agents with type field and restricted capabilities
       if (charactersData.success && charactersData.data) {
-        const charactersAsAgents = (charactersData.data.characters || []).map((character: any) => ({
-          id: character.id,
-          name: character.name,
-          description: character.description,
-          slug: character.slug,
-          avatarUrl: character.avatarUrl,
-          character: character.characterConfig,
-          plugins: [], // Characters have no plugins
-          runtimeConfig: {}, // Characters have minimal runtime config
-          deploymentStatus: 'frontend-only', // Special status for characters
-          deploymentUrl: `/characters/chat/${character.id}`, // Link to character chat
-          visibility: character.visibility,
-          isPublished: character.isActive,
-          totalInteractions: character.totalConversations,
-          totalCost: '0.00', // Characters don't track cost the same way
-          createdByUserId: character.createdBy,
-          createdAt: character.createdAt,
-          updatedAt: character.updatedAt,
-          type: 'character' as const,
-        }));
+        const charactersAsAgents = (charactersData.data.characters || []).map(
+          (character: any) => ({
+            id: character.id,
+            name: character.name,
+            description: character.description,
+            slug: character.slug,
+            avatarUrl: character.avatarUrl,
+            character: character.characterConfig,
+            plugins: [], // Characters have no plugins
+            runtimeConfig: {}, // Characters have minimal runtime config
+            deploymentStatus: 'frontend-only', // Special status for characters
+            deploymentUrl: `/characters/chat/${character.id}`, // Link to character chat
+            visibility: character.visibility,
+            isPublished: character.isActive,
+            totalInteractions: character.totalConversations,
+            totalCost: '0.00', // Characters don't track cost the same way
+            createdByUserId: character.createdBy,
+            createdAt: character.createdAt,
+            updatedAt: character.updatedAt,
+            type: 'character' as const,
+          }),
+        );
         allItems = [...allItems, ...charactersAsAgents];
       }
 
@@ -126,11 +138,17 @@ export default function AgentsPage() {
 
       // Combine stats from both sources
       const combinedStats = {
-        totalAgents: (agentsData.data?.stats?.totalAgents || 0) + (charactersData.data?.stats?.totalCharacters || 0),
-        activeAgents: (agentsData.data?.stats?.activeAgents || 0) + (charactersData.data?.stats?.activeCharacters || 0),
-        draftAgents: (agentsData.data?.stats?.draftAgents || 0),
-        totalInteractions: (agentsData.data?.stats?.totalInteractions || 0) + (charactersData.data?.stats?.totalConversations || 0),
-        totalCost: (agentsData.data?.stats?.totalCost || 0),
+        totalAgents:
+          (agentsData.data?.stats?.totalAgents || 0) +
+          (charactersData.data?.stats?.totalCharacters || 0),
+        activeAgents:
+          (agentsData.data?.stats?.activeAgents || 0) +
+          (charactersData.data?.stats?.activeCharacters || 0),
+        draftAgents: agentsData.data?.stats?.draftAgents || 0,
+        totalInteractions:
+          (agentsData.data?.stats?.totalInteractions || 0) +
+          (charactersData.data?.stats?.totalConversations || 0),
+        totalCost: agentsData.data?.stats?.totalCost || 0,
       };
 
       setStats(combinedStats);
@@ -146,7 +164,7 @@ export default function AgentsPage() {
   }
 
   async function deployAgent(agentId: string) {
-    setDeployingAgents(prev => new Set(Array.from(prev).concat([agentId])));
+    setDeployingAgents((prev) => new Set(Array.from(prev).concat([agentId])));
 
     try {
       // Deploy agent using real API
@@ -181,7 +199,7 @@ export default function AgentsPage() {
         mode: 'error',
       });
     } finally {
-      setDeployingAgents(prev => {
+      setDeployingAgents((prev) => {
         const newSet = new Set(prev);
         newSet.delete(agentId);
         return newSet;
@@ -308,7 +326,7 @@ export default function AgentsPage() {
       case 'deployed':
         return <CheckCircledIcon className="h-4 w-4 text-green-600" />;
       case 'deploying':
-        return <ClockIcon className="h-4 w-4 text-yellow-600 animate-spin" />;
+        return <ClockIcon className="h-4 w-4 animate-spin text-yellow-600" />;
       case 'failed':
         return <CrossCircledIcon className="h-4 w-4 text-red-600" />;
       case 'frontend-only':
@@ -358,13 +376,13 @@ export default function AgentsPage() {
     return (
       <div className="p-6">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="mb-6 h-8 w-1/4 rounded bg-gray-200"></div>
+          <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-24 bg-gray-200 rounded"></div>
+              <div key={i} className="h-24 rounded bg-gray-200"></div>
             ))}
           </div>
-          <div className="h-96 bg-gray-200 rounded"></div>
+          <div className="h-96 rounded bg-gray-200"></div>
         </div>
       </div>
     );
@@ -373,19 +391,19 @@ export default function AgentsPage() {
   return (
     <div className="p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Agents</h1>
-          <p className="text-gray-600 mt-2">
+          <p className="mt-2 text-gray-600">
             Create, deploy, and manage your AI agents.
           </p>
         </div>
         <div className="flex items-center space-x-3">
           {/* Filter Buttons */}
-          <div className="flex items-center space-x-1 border border-gray-300 rounded-lg p-1">
+          <div className="flex items-center space-x-1 rounded-lg border border-gray-300 p-1">
             <button
               onClick={() => setViewFilter('all')}
-              className={`px-3 py-1 text-sm rounded-md ${
+              className={`rounded-md px-3 py-1 text-sm ${
                 viewFilter === 'all'
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-600 hover:bg-gray-100'
@@ -395,7 +413,7 @@ export default function AgentsPage() {
             </button>
             <button
               onClick={() => setViewFilter('agents')}
-              className={`px-3 py-1 text-sm rounded-md ${
+              className={`rounded-md px-3 py-1 text-sm ${
                 viewFilter === 'agents'
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-600 hover:bg-gray-100'
@@ -405,7 +423,7 @@ export default function AgentsPage() {
             </button>
             <button
               onClick={() => setViewFilter('characters')}
-              className={`px-3 py-1 text-sm rounded-md ${
+              className={`rounded-md px-3 py-1 text-sm ${
                 viewFilter === 'characters'
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-600 hover:bg-gray-100'
@@ -421,7 +439,7 @@ export default function AgentsPage() {
               <span>Agent Editor</span>
             </Button>
           </Link>
-          
+
           <Link href="/characters/create">
             <Button variant="outline" className="flex items-center space-x-2">
               <PlusIcon className="h-4 w-4" />
@@ -433,42 +451,56 @@ export default function AgentsPage() {
 
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4">
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Agents</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalAgents}</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Total Agents
+                </p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.totalAgents}
+                </p>
               </div>
               <RocketIcon className="h-8 w-8 text-blue-500" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Active Agents</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.activeAgents}</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Active Agents
+                </p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.activeAgents}
+                </p>
               </div>
               <CheckCircledIcon className="h-8 w-8 text-green-500" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Interactions</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalInteractions.toLocaleString()}</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Total Interactions
+                </p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.totalInteractions.toLocaleString()}
+                </p>
               </div>
               <ClockIcon className="h-8 w-8 text-purple-500" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="rounded-lg border border-gray-200 bg-white p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Cost</p>
-                <p className="text-2xl font-bold text-gray-900">${stats.totalCost.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  ${stats.totalCost.toFixed(2)}
+                </p>
               </div>
               <RocketIcon className="h-8 w-8 text-orange-500" />
             </div>
@@ -477,217 +509,242 @@ export default function AgentsPage() {
       )}
 
       {/* Agents List */}
-      <div className="bg-white rounded-lg border border-gray-200">
-        <div className="px-6 py-4 border-b border-gray-200">
+      <div className="rounded-lg border border-gray-200 bg-white">
+        <div className="border-b border-gray-200 px-6 py-4">
           <h2 className="text-lg font-semibold text-gray-900">Your Agents</h2>
         </div>
 
         {/* Apply filter */}
         {(() => {
-          const filteredAgents = agents.filter(agent => {
-            if (viewFilter === 'agents') return agent.type === 'agent' || !agent.type;
+          const filteredAgents = agents.filter((agent) => {
+            if (viewFilter === 'agents')
+              return agent.type === 'agent' || !agent.type;
             if (viewFilter === 'characters') return agent.type === 'character';
             return true; // 'all'
           });
 
           return filteredAgents.length === 0 ? (
-          <div className="p-8 text-center">
-            <RocketIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {viewFilter === 'characters' ? 'No characters yet' : 
-               viewFilter === 'agents' ? 'No agents yet' : 
-               'No agents or characters yet'}
-            </h3>
-            <p className="text-gray-600 mb-4">
-              {viewFilter === 'characters' ? 'Create your first character to get started.' :
-               viewFilter === 'agents' ? 'Create your first AI agent to get started.' :
-               'Create your first AI agent or character to get started.'}
-            </p>
-            <div className="flex items-center justify-center space-x-3">
-              {viewFilter !== 'characters' && (
-                <Link href="/dashboard/agents/create">
-                  <Button className="flex items-center space-x-2">
-                    <PlusIcon className="h-4 w-4" />
-                    <span>Create Agent</span>
-                  </Button>
-                </Link>
-              )}
-              {viewFilter !== 'agents' && (
-                <Link href="/characters/create">
-                  <Button variant="outline" className="flex items-center space-x-2">
-                    <PlusIcon className="h-4 w-4" />
-                    <span>Create Character</span>
-                  </Button>
-                </Link>
-              )}
+            <div className="p-8 text-center">
+              <RocketIcon className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+              <h3 className="mb-2 text-lg font-medium text-gray-900">
+                {viewFilter === 'characters'
+                  ? 'No characters yet'
+                  : viewFilter === 'agents'
+                    ? 'No agents yet'
+                    : 'No agents or characters yet'}
+              </h3>
+              <p className="mb-4 text-gray-600">
+                {viewFilter === 'characters'
+                  ? 'Create your first character to get started.'
+                  : viewFilter === 'agents'
+                    ? 'Create your first AI agent to get started.'
+                    : 'Create your first AI agent or character to get started.'}
+              </p>
+              <div className="flex items-center justify-center space-x-3">
+                {viewFilter !== 'characters' && (
+                  <Link href="/dashboard/agents/create">
+                    <Button className="flex items-center space-x-2">
+                      <PlusIcon className="h-4 w-4" />
+                      <span>Create Agent</span>
+                    </Button>
+                  </Link>
+                )}
+                {viewFilter !== 'agents' && (
+                  <Link href="/characters/create">
+                    <Button
+                      variant="outline"
+                      className="flex items-center space-x-2"
+                    >
+                      <PlusIcon className="h-4 w-4" />
+                      <span>Create Character</span>
+                    </Button>
+                  </Link>
+                )}
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="divide-y divide-gray-200">
-            {filteredAgents.map((agent) => (
-              <div key={agent.id} className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start space-x-4 flex-1">
-                    {/* Avatar */}
-                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
-                      {agent.name.charAt(0).toUpperCase()}
-                    </div>
-
-                    {/* Agent Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h3 className="text-lg font-medium text-gray-900">{agent.name}</h3>
-                        <span className="text-sm text-gray-500">/{agent.slug}</span>
-                        {getVisibilityIcon(agent.visibility)}
-                        {agent.type === 'character' && (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            Character
-                          </span>
-                        )}
+          ) : (
+            <div className="divide-y divide-gray-200">
+              {filteredAgents.map((agent) => (
+                <div key={agent.id} className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex flex-1 items-start space-x-4">
+                      {/* Avatar */}
+                      <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 font-semibold text-white">
+                        {agent.name.charAt(0).toUpperCase()}
                       </div>
 
-                      {agent.description && (
-                        <p className="text-gray-600 mb-2">{agent.description}</p>
-                      )}
-
-                      {/* Status */}
-                      <div className="flex items-center space-x-4 mb-2">
-                        <div className="flex items-center space-x-1">
-                          {deployingAgents.has(agent.id) ? (
-                            <ClockIcon className="h-4 w-4 text-yellow-600 animate-spin" />
-                          ) : (
-                            getStatusIcon(agent.deploymentStatus)
+                      {/* Agent Info */}
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-1 flex items-center space-x-2">
+                          <h3 className="text-lg font-medium text-gray-900">
+                            {agent.name}
+                          </h3>
+                          <span className="text-sm text-gray-500">
+                            /{agent.slug}
+                          </span>
+                          {getVisibilityIcon(agent.visibility)}
+                          {agent.type === 'character' && (
+                            <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                              Character
+                            </span>
                           )}
-                          <span className="text-sm font-medium">
-                            {deployingAgents.has(agent.id) ? 'Deploying...' : getStatusText(agent.deploymentStatus)}
-                          </span>
                         </div>
 
-                        {agent.deploymentUrl && (
-                          <a
-                            href={agent.deploymentUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center space-x-1 text-sm text-blue-600 hover:text-blue-700"
-                          >
-                            <ExternalLinkIcon className="h-3 w-3" />
-                            <span>View Live</span>
-                          </a>
+                        {agent.description && (
+                          <p className="mb-2 text-gray-600">
+                            {agent.description}
+                          </p>
                         )}
-                      </div>
 
-                      {/* Error Message */}
-                      {agent.deploymentError && (
-                        <div className="text-sm text-red-600 mb-2">
-                          Error: {agent.deploymentError}
-                        </div>
-                      )}
+                        {/* Status */}
+                        <div className="mb-2 flex items-center space-x-4">
+                          <div className="flex items-center space-x-1">
+                            {deployingAgents.has(agent.id) ? (
+                              <ClockIcon className="h-4 w-4 animate-spin text-yellow-600" />
+                            ) : (
+                              getStatusIcon(agent.deploymentStatus)
+                            )}
+                            <span className="text-sm font-medium">
+                              {deployingAgents.has(agent.id)
+                                ? 'Deploying...'
+                                : getStatusText(agent.deploymentStatus)}
+                            </span>
+                          </div>
 
-                      {/* Metadata */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs text-gray-500">
-                        <div>
-                          <span className="font-medium">Plugins:</span> {agent.plugins.length}
+                          {agent.deploymentUrl && (
+                            <a
+                              href={agent.deploymentUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center space-x-1 text-sm text-blue-600 hover:text-blue-700"
+                            >
+                              <ExternalLinkIcon className="h-3 w-3" />
+                              <span>View Live</span>
+                            </a>
+                          )}
                         </div>
-                        <div>
-                          <span className="font-medium">Interactions:</span> {agent.totalInteractions.toLocaleString()}
-                        </div>
-                        <div>
-                          <span className="font-medium">Cost:</span> ${agent.totalCost}
-                        </div>
-                        <div>
-                          <span className="font-medium">Updated:</span> {formatDate(agent.updatedAt)}
+
+                        {/* Error Message */}
+                        {agent.deploymentError && (
+                          <div className="mb-2 text-sm text-red-600">
+                            Error: {agent.deploymentError}
+                          </div>
+                        )}
+
+                        {/* Metadata */}
+                        <div className="grid grid-cols-2 gap-4 text-xs text-gray-500 md:grid-cols-4">
+                          <div>
+                            <span className="font-medium">Plugins:</span>{' '}
+                            {agent.plugins.length}
+                          </div>
+                          <div>
+                            <span className="font-medium">Interactions:</span>{' '}
+                            {agent.totalInteractions.toLocaleString()}
+                          </div>
+                          <div>
+                            <span className="font-medium">Cost:</span> $
+                            {agent.totalCost}
+                          </div>
+                          <div>
+                            <span className="font-medium">Updated:</span>{' '}
+                            {formatDate(agent.updatedAt)}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Actions */}
-                  <div className="flex items-center space-x-2 ml-4">
-                    {agent.type === 'character' ? (
-                      // Character-specific actions (limited)
-                      <>
-                        {agent.deploymentUrl && (
+                    {/* Actions */}
+                    <div className="ml-4 flex items-center space-x-2">
+                      {agent.type === 'character' ? (
+                        // Character-specific actions (limited)
+                        <>
+                          {agent.deploymentUrl && (
+                            <Link
+                              href={agent.deploymentUrl}
+                              className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-blue-600"
+                              title="Chat with Character"
+                            >
+                              <ExternalLinkIcon className="h-4 w-4" />
+                            </Link>
+                          )}
+
                           <Link
-                            href={agent.deploymentUrl}
-                            className="p-2 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-gray-100"
-                            title="Chat with Character"
+                            href={`/characters/${agent.id}`}
+                            className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-blue-600"
+                            title="Edit Character"
                           >
-                            <ExternalLinkIcon className="h-4 w-4" />
+                            <Pencil1Icon className="h-4 w-4" />
                           </Link>
-                        )}
 
-                        <Link
-                          href={`/characters/${agent.id}`}
-                          className="p-2 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-gray-100"
-                          title="Edit Character"
-                        >
-                          <Pencil1Icon className="h-4 w-4" />
-                        </Link>
-
-                        <button
-                          onClick={() => {
-                            setSelectedAgent(agent);
-                            setShowDeleteModal(true);
-                          }}
-                          className="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-gray-100"
-                          title="Delete Character"
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </button>
-                      </>
-                    ) : (
-                      // Agent-specific actions (full capabilities)
-                      <>
-                        {agent.deploymentStatus === 'deployed' ? (
                           <button
-                            onClick={() => stopAgent(agent.id)}
-                            className="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-gray-100"
-                            title="Stop Agent"
+                            onClick={() => {
+                              setSelectedAgent(agent);
+                              setShowDeleteModal(true);
+                            }}
+                            className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-red-600"
+                            title="Delete Character"
                           >
-                            <StopIcon className="h-4 w-4" />
+                            <TrashIcon className="h-4 w-4" />
                           </button>
-                        ) : (
+                        </>
+                      ) : (
+                        // Agent-specific actions (full capabilities)
+                        <>
+                          {agent.deploymentStatus === 'deployed' ? (
+                            <button
+                              onClick={() => stopAgent(agent.id)}
+                              className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-red-600"
+                              title="Stop Agent"
+                            >
+                              <StopIcon className="h-4 w-4" />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => deployAgent(agent.id)}
+                              disabled={deployingAgents.has(agent.id)}
+                              className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-green-600 disabled:opacity-50"
+                              title="Deploy Agent"
+                            >
+                              <PlayIcon className="h-4 w-4" />
+                            </button>
+                          )}
+
+                          <Link
+                            href={`/dashboard/agents/editor?id=${agent.id}`}
+                            className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-blue-600"
+                            title="Edit Agent"
+                          >
+                            <Pencil1Icon className="h-4 w-4" />
+                          </Link>
+
                           <button
-                            onClick={() => deployAgent(agent.id)}
-                            disabled={deployingAgents.has(agent.id)}
-                            className="p-2 text-gray-400 hover:text-green-600 rounded-lg hover:bg-gray-100 disabled:opacity-50"
-                            title="Deploy Agent"
+                            onClick={() => {
+                              setSelectedAgent(agent);
+                              setShowDeleteModal(true);
+                            }}
+                            className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-red-600"
+                            title="Delete Agent"
                           >
-                            <PlayIcon className="h-4 w-4" />
+                            <TrashIcon className="h-4 w-4" />
                           </button>
-                        )}
-
-                        <Link
-                          href={`/dashboard/agents/editor?id=${agent.id}`}
-                          className="p-2 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-gray-100"
-                          title="Edit Agent"
-                        >
-                          <Pencil1Icon className="h-4 w-4" />
-                        </Link>
-
-                        <button
-                          onClick={() => {
-                            setSelectedAgent(agent);
-                            setShowDeleteModal(true);
-                          }}
-                          className="p-2 text-gray-400 hover:text-red-600 rounded-lg hover:bg-gray-100"
-                          title="Delete Agent"
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </button>
-                      </>
-                    )}
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )})()}
+              ))}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Delete Confirmation Modal */}
       <Modal
-        title={selectedAgent?.type === 'character' ? 'Delete Character' : 'Delete Agent'}
+        title={
+          selectedAgent?.type === 'character'
+            ? 'Delete Character'
+            : 'Delete Agent'
+        }
         open={showDeleteModal}
         onClose={() => {
           setShowDeleteModal(false);
@@ -696,35 +753,38 @@ export default function AgentsPage() {
       >
         <div className="space-y-4">
           <div className="flex items-start space-x-3">
-            <CrossCircledIcon className="h-5 w-5 text-red-500 mt-0.5" />
+            <CrossCircledIcon className="mt-0.5 h-5 w-5 text-red-500" />
             <div>
               <p className="text-sm text-gray-900">
-                Are you sure you want to delete the {selectedAgent?.type === 'character' ? 'character' : 'agent'} <strong>"{selectedAgent?.name}"</strong>?
+                Are you sure you want to delete the{' '}
+                {selectedAgent?.type === 'character' ? 'character' : 'agent'}{' '}
+                <strong>"{selectedAgent?.name}"</strong>?
               </p>
-              <p className="text-sm text-gray-600 mt-1">
-                {selectedAgent?.type === 'character' 
+              <p className="mt-1 text-sm text-gray-600">
+                {selectedAgent?.type === 'character'
                   ? 'This action cannot be undone. All conversations and configuration will be lost.'
-                  : 'This action cannot be undone. The agent will be stopped and all configuration will be lost.'
-                }
+                  : 'This action cannot be undone. The agent will be stopped and all configuration will be lost.'}
               </p>
             </div>
           </div>
           <div className="flex justify-end space-x-3 pt-4">
             <button
               onClick={() => setShowDeleteModal(false)}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
               Cancel
             </button>
             <Button
-              handleClick={() => selectedAgent && (
-                selectedAgent.type === 'character' 
+              handleClick={() =>
+                selectedAgent &&
+                (selectedAgent.type === 'character'
                   ? deleteCharacter(selectedAgent.id)
-                  : deleteAgent(selectedAgent.id)
-              )}
+                  : deleteAgent(selectedAgent.id))
+              }
               className="bg-red-600 hover:bg-red-700"
             >
-              Delete {selectedAgent?.type === 'character' ? 'Character' : 'Agent'}
+              Delete{' '}
+              {selectedAgent?.type === 'character' ? 'Character' : 'Agent'}
             </Button>
           </div>
         </div>

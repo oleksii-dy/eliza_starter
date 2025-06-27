@@ -1,9 +1,5 @@
 // Fixed imports using specific paths to avoid workspace issues
-import type {
-  Plugin,
-  Action,
-  Provider,
-} from '@elizaos/core';
+import type { Plugin, Action, Provider } from '@elizaos/core';
 import { Service } from '@elizaos/core';
 
 // Simple message classifier provider
@@ -19,7 +15,11 @@ export const messageClassifierProvider: Provider = {
 
     if (text.includes('plan') || text.includes('strategy') || text.includes('coordinate')) {
       classification = 'STRATEGIC';
-    } else if (text.includes('research') || text.includes('analyze') || text.includes('investigate')) {
+    } else if (
+      text.includes('research') ||
+      text.includes('analyze') ||
+      text.includes('investigate')
+    ) {
       classification = 'RESEARCH_NEEDED';
     } else if (text.includes('integrate') || text.includes('connect') || text.includes('add')) {
       classification = 'CAPABILITY_REQUEST';

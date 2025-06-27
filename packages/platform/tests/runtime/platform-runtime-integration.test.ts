@@ -4,11 +4,32 @@
  * without depending on problematic core imports
  */
 
-import { describe, test, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
+import {
+  describe,
+  test,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+} from '@jest/globals';
 import { db, getDatabase, initializeDbProxy } from '@/lib/database';
-import { organizations, users, apiKeys, usageRecords, creditTransactions } from '@/lib/database/schema';
-import { createApiKey, validateApiKey, checkApiKeyPermission } from '@/lib/server/services/api-key-service';
-import { addCredits, deductCredits, getCreditBalance } from '@/lib/server/services/billing-service';
+import {
+  organizations,
+  users,
+  apiKeys,
+  usageRecords,
+  creditTransactions,
+} from '@/lib/database/schema';
+import {
+  createApiKey,
+  validateApiKey,
+  checkApiKeyPermission,
+} from '@/lib/server/services/api-key-service';
+import {
+  addCredits,
+  deductCredits,
+  getCreditBalance,
+} from '@/lib/server/services/billing-service';
 import { trackUsage } from '@/lib/server/services/usage-tracking-service';
 import { authenticateUser } from '@/lib/server/auth/session';
 import { createTokenPair } from '@/lib/server/utils/jwt';
@@ -27,11 +48,11 @@ describe('Platform Runtime Integration', () => {
     if (process.env.NODE_ENV !== 'test') {
       throw new Error('These tests should only run in test environment');
     }
-    
+
     // Initialize database
     const database = await getDatabase();
     initializeDbProxy(database);
-    
+
     console.log('Platform runtime integration tests started');
   });
 
@@ -44,31 +65,43 @@ describe('Platform Runtime Integration', () => {
 
     // Clean up test data (if any exist from previous runs)
     try {
-      await database.delete(usageRecords).where(eq(usageRecords.organizationId, testOrgId));
-      await database.delete(apiKeys).where(eq(apiKeys.organizationId, testOrgId));
+      await database
+        .delete(usageRecords)
+        .where(eq(usageRecords.organizationId, testOrgId));
+      await database
+        .delete(apiKeys)
+        .where(eq(apiKeys.organizationId, testOrgId));
       await database.delete(users).where(eq(users.organizationId, testOrgId));
-      await database.delete(organizations).where(eq(organizations.id, testOrgId));
+      await database
+        .delete(organizations)
+        .where(eq(organizations.id, testOrgId));
     } catch (error) {
       // Ignore cleanup errors for non-existent data
     }
 
     // Create test organization
-    const [org] = await database.insert(organizations).values({
-      id: testOrgId,
-      name: 'Test Organization',
-      slug: `test-org-${testOrgId}`,
-      creditBalance: '100.0',
-    }).returning();
+    const [org] = await database
+      .insert(organizations)
+      .values({
+        id: testOrgId,
+        name: 'Test Organization',
+        slug: `test-org-${testOrgId}`,
+        creditBalance: '100.0',
+      })
+      .returning();
 
     // Create test user
-    const [user] = await database.insert(users).values({
-      id: testUserId,
-      organizationId: testOrgId,
-      email: 'test@example.com',
-      firstName: 'Test',
-      lastName: 'User',
-      role: 'admin',
-    }).returning();
+    const [user] = await database
+      .insert(users)
+      .values({
+        id: testUserId,
+        organizationId: testOrgId,
+        email: 'test@example.com',
+        firstName: 'Test',
+        lastName: 'User',
+        role: 'admin',
+      })
+      .returning();
 
     // Create test API key
     const { apiKey, keyValue } = await createApiKey({
@@ -93,11 +126,19 @@ describe('Platform Runtime Integration', () => {
     // Clean up test data in correct order to avoid foreign key violations
     try {
       // Delete dependent records first
-      await database.delete(usageRecords).where(eq(usageRecords.organizationId, testOrgId));
-      await database.delete(creditTransactions).where(eq(creditTransactions.organizationId, testOrgId));
-      await database.delete(apiKeys).where(eq(apiKeys.organizationId, testOrgId));
+      await database
+        .delete(usageRecords)
+        .where(eq(usageRecords.organizationId, testOrgId));
+      await database
+        .delete(creditTransactions)
+        .where(eq(creditTransactions.organizationId, testOrgId));
+      await database
+        .delete(apiKeys)
+        .where(eq(apiKeys.organizationId, testOrgId));
       await database.delete(users).where(eq(users.organizationId, testOrgId));
-      await database.delete(organizations).where(eq(organizations.id, testOrgId));
+      await database
+        .delete(organizations)
+        .where(eq(organizations.id, testOrgId));
     } catch (error) {
       console.warn('Error cleaning up test data:', error);
     }
@@ -112,7 +153,10 @@ describe('Platform Runtime Integration', () => {
       expect(apiKeyRecord!.organizationId).toBe(testOrgId);
 
       // 2. Check permissions
-      const hasPermission = await checkApiKeyPermission(apiKeyRecord!, 'inference:openai');
+      const hasPermission = await checkApiKeyPermission(
+        apiKeyRecord!,
+        'inference:openai',
+      );
       expect(hasPermission).toBe(true);
 
       // 3. Simulate inference request with usage tracking
@@ -127,9 +171,11 @@ describe('Platform Runtime Integration', () => {
           completion_tokens: 25,
           total_tokens: 75,
         },
-        choices: [{
-          message: { content: 'Test response from simulated LLM call' }
-        }]
+        choices: [
+          {
+            message: { content: 'Test response from simulated LLM call' },
+          },
+        ],
       };
 
       const duration = Date.now() - startTime;
@@ -178,7 +224,7 @@ describe('Platform Runtime Integration', () => {
       expect(newBalance).toBe(100.0 - cost); // $100 - $0.002
 
       // 7. Verify usage record was created
-      const [usageRecord] = await db
+      const [usageRecord] = await database
         .select()
         .from(usageRecords)
         .where(eq(usageRecords.id, usageId))
@@ -190,7 +236,9 @@ describe('Platform Runtime Integration', () => {
       expect(usageRecord.provider).toBe('openai');
       expect(usageRecord.model).toBe(mockLLMResponse.model);
       expect(usageRecord.inputTokens).toBe(mockLLMResponse.usage.prompt_tokens);
-      expect(usageRecord.outputTokens).toBe(mockLLMResponse.usage.completion_tokens);
+      expect(usageRecord.outputTokens).toBe(
+        mockLLMResponse.usage.completion_tokens,
+      );
       expect(usageRecord.success).toBe(true);
       expect(usageRecord.requestId).toBe(mockLLMResponse.id);
     });
@@ -250,13 +298,15 @@ describe('Platform Runtime Integration', () => {
       const balance = await getCreditBalance(testOrgId);
       expect(balance).toBe(100.0); // Balance unchanged
 
-      const errorRecords = await db
+      const errorRecords = await database
         .select()
         .from(usageRecords)
         .where(eq(usageRecords.success, false));
 
       expect(errorRecords.length).toBeGreaterThan(0);
-      const errorRecord = errorRecords.find((r: any) => (r.metadata as any).errorTest);
+      const errorRecord = errorRecords.find(
+        (r: any) => (r.metadata as any).errorTest,
+      );
       expect(errorRecord).toBeDefined();
       expect(errorRecord!.errorMessage).toBe('API rate limit exceeded');
     });
@@ -271,11 +321,18 @@ describe('Platform Runtime Integration', () => {
           (async () => {
             // Validate API key
             const apiKeyRecord = await validateApiKey(testApiKey);
-            if (!apiKeyRecord) {throw new Error('Invalid API key');}
+            if (!apiKeyRecord) {
+              throw new Error('Invalid API key');
+            }
 
             // Check permissions
-            const hasPermission = await checkApiKeyPermission(apiKeyRecord, 'inference:openai');
-            if (!hasPermission) {throw new Error('Insufficient permissions');}
+            const hasPermission = await checkApiKeyPermission(
+              apiKeyRecord,
+              'inference:openai',
+            );
+            if (!hasPermission) {
+              throw new Error('Insufficient permissions');
+            }
 
             // Track usage
             return await trackUsage({
@@ -294,21 +351,23 @@ describe('Platform Runtime Integration', () => {
                 requestIndex: i,
               },
             });
-          })()
+          })(),
         );
       }
 
       const results = await Promise.all(promises);
       expect(results).toHaveLength(requestCount);
-      expect(results.every(id => typeof id === 'string')).toBe(true);
+      expect(results.every((id) => typeof id === 'string')).toBe(true);
 
       // Verify all records were created
-      const records = await db
+      const records = await database
         .select()
         .from(usageRecords)
         .where(eq(usageRecords.organizationId, testOrgId));
 
-      const concurrentRecords = records.filter((r: any) => (r.metadata as any).concurrentTest);
+      const concurrentRecords = records.filter(
+        (r: any) => (r.metadata as any).concurrentTest,
+      );
       expect(concurrentRecords).toHaveLength(requestCount);
     });
 
@@ -373,7 +432,7 @@ describe('Platform Runtime Integration', () => {
           duration: 1000,
           success: true,
           metadata: { test: 'consistency' },
-        })
+        }),
       );
 
       // Deduct credits
@@ -383,7 +442,7 @@ describe('Platform Runtime Integration', () => {
           userId: testUserId,
           amount: 0.01,
           description: 'Consistency test charge',
-        })
+        }),
       );
 
       await Promise.all(operations);
@@ -392,7 +451,7 @@ describe('Platform Runtime Integration', () => {
       const balance = await getCreditBalance(testOrgId);
       expect(balance).toBe(99.99); // 100 - 0.01
 
-      const usageRecordsList = await db
+      const usageRecordsList = await database
         .select()
         .from(usageRecords)
         .where(eq(usageRecords.organizationId, testOrgId));
@@ -419,7 +478,7 @@ describe('Platform Runtime Integration', () => {
           success: true,
           requestId: `perf-test-${i}`,
           metadata: { performanceTest: true, index: i },
-        })
+        }),
       );
 
       const results = await Promise.all(promises);
@@ -429,12 +488,14 @@ describe('Platform Runtime Integration', () => {
       expect(duration).toBeLessThan(5000); // Should complete in under 5 seconds
 
       // Verify all records were created correctly
-      const records = await db
+      const records = await database
         .select()
         .from(usageRecords)
         .where(eq(usageRecords.organizationId, testOrgId));
 
-      const perfRecords = records.filter((r: any) => (r.metadata as any).performanceTest);
+      const perfRecords = records.filter(
+        (r: any) => (r.metadata as any).performanceTest,
+      );
       expect(perfRecords).toHaveLength(operationCount);
     });
   });

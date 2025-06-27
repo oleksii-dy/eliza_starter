@@ -4,6 +4,24 @@ import type { IAgentRuntime } from '@elizaos/core';
 import { mcpRoutes } from '../../routes/mcpRoutes';
 import type { McpService } from '../../service';
 
+// Simplified TestSuite implementation for local use
+class TestSuite {
+  constructor(private name: string, private config: any) {}
+  
+  addTest(test: any) {
+    it(test.name, async () => {
+      const context = this.config.beforeEach ? this.config.beforeEach() : {};
+      await test.fn(context);
+    });
+  }
+  
+  run() {
+    // No-op, bun:test handles execution
+  }
+}
+
+const createUnitTest = (config: { name: string; fn: (context?: any) => Promise<void> | void }) => config;
+
 // Mock factories
 function createMockRequest(overrides: Partial<Request> = {}): Request {
   return {
@@ -58,276 +76,348 @@ function createMockRuntime(mcpService?: Partial<McpService>): IAgentRuntime {
 }
 
 describe('MCP Routes', () => {
-  describe('GET /mcp/servers', () => {
-    const getServersRoute = mcpRoutes.find(
-      (r) => r.path === '/mcp/servers' && (r as any).type === 'GET'
-    )!;
-
-    it('should return servers list when MCP service is available', async () => {
-      const mockServers = [
-        {
-          name: 'test-server',
-          status: 'connected',
-          error: undefined,
-          tools: [{ name: 'tool1', description: 'Test tool', inputSchema: {} }],
-          resources: [
-            {
-              uri: 'resource1',
-              name: 'Test Resource',
-              description: 'Test',
-              mimeType: 'text/plain',
-            },
-          ],
-        },
-      ];
-
-      const mockService = {
-        getServers: mock().mockReturnValue(mockServers),
+  const mcpRoutesTestSuite = new TestSuite('MCP Routes', {
+    beforeEach: () => {
+      return {
+        createMockRequest,
+        createMockResponse,
+        createMockRuntime,
       };
-
-      const req = createMockRequest();
-      const res = createMockResponse();
-      const runtime = createMockRuntime(mockService);
-
-      await getServersRoute.handler(req, res, runtime);
-
-      expect(res._json).toEqual({
-        success: true,
-        data: {
-          servers: expect.arrayContaining([
-            expect.objectContaining({
-              name: 'test-server',
-              status: 'connected',
-              toolCount: 1,
-              resourceCount: 1,
-            }),
-          ]),
-          totalServers: 1,
-          connectedServers: 1,
-        },
-      });
-    });
-
-    it('should return 503 when MCP service is not available', async () => {
-      const req = createMockRequest();
-      const res = createMockResponse();
-      const runtime = createMockRuntime();
-
-      await getServersRoute.handler(req, res, runtime);
-
-      expect(res._status).toBe(503);
-      expect(res._json).toEqual({
-        success: false,
-        error: 'MCP service not available',
-      });
-    });
-
-    it('should handle errors gracefully', async () => {
-      const mockService = {
-        getServers: mock().mockImplementation(() => {
-          throw new Error('Test error');
-        }),
-      };
-
-      const req = createMockRequest();
-      const res = createMockResponse();
-      const runtime = createMockRuntime(mockService);
-
-      await getServersRoute.handler(req, res, runtime);
-
-      expect(res._status).toBe(500);
-      expect(res._json).toEqual({
-        success: false,
-        error: 'Test error',
-      });
-    });
+    },
   });
 
-  describe('POST /mcp/tools/:serverName/:toolName', () => {
-    const callToolRoute = mcpRoutes.find(
-      (r) => r.path === '/mcp/tools/:serverName/:toolName' && (r as any).type === 'POST'
-    )!;
+  mcpRoutesTestSuite.addTest(
+    createUnitTest({
+      name: 'should return servers list when MCP service is available',
+      fn: async ({ createMockRequest, createMockResponse, createMockRuntime }: any) => {
+        const getServersRoute = mcpRoutes.find(
+          (r) => r.path === '/mcp/servers' && (r as any).type === 'GET'
+        )!;
 
-    it('should call tool successfully', async () => {
-      const mockResult = { success: true, data: 'Tool executed' };
-      const mockService = {
-        callTool: mock().mockResolvedValue(mockResult),
-      };
+        const mockServers = [
+          {
+            name: 'test-server',
+            status: 'connected',
+            error: undefined,
+            tools: [{ name: 'tool1', description: 'Test tool', inputSchema: {} }],
+            resources: [
+              {
+                uri: 'resource1',
+                name: 'Test Resource',
+                description: 'Test',
+                mimeType: 'text/plain',
+              },
+            ],
+          },
+        ];
 
-      const req = createMockRequest({
-        params: { serverName: 'test-server', toolName: 'test-tool' },
-        body: { arguments: { arg1: 'value1' } },
-      });
-      const res = createMockResponse();
-      const runtime = createMockRuntime(mockService);
+        const mockService = {
+          getServers: mock().mockReturnValue(mockServers),
+        };
 
-      await callToolRoute.handler(req, res, runtime);
+        const req = createMockRequest();
+        const res = createMockResponse();
+        const runtime = createMockRuntime(mockService);
 
-      expect(mockService.callTool).toHaveBeenCalledWith('test-server', 'test-tool', {
-        arg1: 'value1',
-      });
-      expect(res._json).toEqual({
-        success: true,
-        data: {
-          result: mockResult,
-          serverName: 'test-server',
-          toolName: 'test-tool',
-          timestamp: expect.any(String),
-        },
-      });
-    });
+        await getServersRoute.handler(req, res, runtime);
 
-    it('should handle tool execution errors', async () => {
-      const mockService = {
-        callTool: mock().mockRejectedValue(new Error('Tool execution failed')),
-      };
+        expect(res._json).toEqual({
+          success: true,
+          data: {
+            servers: expect.arrayContaining([
+              expect.objectContaining({
+                name: 'test-server',
+                status: 'connected',
+                toolCount: 1,
+                resourceCount: 1,
+              }),
+            ]),
+            totalServers: 1,
+            connectedServers: 1,
+          },
+        });
+      },
+    })
+  );
 
-      const req = createMockRequest({
-        params: { serverName: 'test-server', toolName: 'test-tool' },
-        body: {},
-      });
-      const res = createMockResponse();
-      const runtime = createMockRuntime(mockService);
+  mcpRoutesTestSuite.addTest(
+    createUnitTest({
+      name: 'should return 503 when MCP service is not available',
+      fn: async ({ createMockRequest, createMockResponse, createMockRuntime }: any) => {
+        const getServersRoute = mcpRoutes.find(
+          (r) => r.path === '/mcp/servers' && (r as any).type === 'GET'
+        )!;
 
-      await callToolRoute.handler(req, res, runtime);
+        const req = createMockRequest();
+        const res = createMockResponse();
+        const runtime = createMockRuntime();
 
-      expect(res._status).toBe(500);
-      expect(res._json).toEqual({
-        success: false,
-        error: 'Tool execution failed',
-      });
-    });
-  });
+        await getServersRoute.handler(req, res, runtime);
 
-  describe('POST /mcp/resources/:serverName', () => {
-    const readResourceRoute = mcpRoutes.find(
-      (r) => r.path === '/mcp/resources/:serverName' && (r as any).type === 'POST'
-    )!;
+        expect(res._status).toBe(503);
+        expect(res._json).toEqual({
+          success: false,
+          error: 'MCP service not available',
+        });
+      },
+    })
+  );
 
-    it('should read resource successfully', async () => {
-      const mockResult = {
-        contents: [{ text: 'Resource content', mimeType: 'text/plain' }],
-      };
-      const mockService = {
-        readResource: mock().mockResolvedValue(mockResult),
-      };
+  mcpRoutesTestSuite.addTest(
+    createUnitTest({
+      name: 'should handle errors gracefully',
+      fn: async ({ createMockRequest, createMockResponse, createMockRuntime }: any) => {
+        const getServersRoute = mcpRoutes.find(
+          (r) => r.path === '/mcp/servers' && (r as any).type === 'GET'
+        )!;
 
-      const req = createMockRequest({
-        params: { serverName: 'test-server' },
-        body: { uri: 'test://resource' },
-      });
-      const res = createMockResponse();
-      const runtime = createMockRuntime(mockService);
+        const mockService = {
+          getServers: mock().mockImplementation(() => {
+            throw new Error('Test error');
+          }),
+        };
 
-      await readResourceRoute.handler(req, res, runtime);
+        const req = createMockRequest();
+        const res = createMockResponse();
+        const runtime = createMockRuntime(mockService);
 
-      expect(mockService.readResource).toHaveBeenCalledWith('test-server', 'test://resource');
-      expect(res._json).toEqual({
-        success: true,
-        data: {
-          contents: mockResult.contents,
-          serverName: 'test-server',
-          uri: 'test://resource',
-          timestamp: expect.any(String),
-        },
-      });
-    });
+        await getServersRoute.handler(req, res, runtime);
 
-    it('should return 400 when URI is missing', async () => {
-      const req = createMockRequest({
-        params: { serverName: 'test-server' },
-        body: {},
-      });
-      const res = createMockResponse();
-      const runtime = createMockRuntime({});
+        expect(res._status).toBe(500);
+        expect(res._json).toEqual({
+          success: false,
+          error: 'Test error',
+        });
+      },
+    })
+  );
 
-      await readResourceRoute.handler(req, res, runtime);
+  mcpRoutesTestSuite.addTest(
+    createUnitTest({
+      name: 'should call tool successfully',
+      fn: async ({ createMockRequest, createMockResponse, createMockRuntime }: any) => {
+        const callToolRoute = mcpRoutes.find(
+          (r) => r.path === '/mcp/tools/:serverName/:toolName' && (r as any).type === 'POST'
+        )!;
 
-      expect(res._status).toBe(400);
-      expect(res._json).toEqual({
-        success: false,
-        error: 'Resource URI is required',
-      });
-    });
-  });
+        const mockResult = { success: true, data: 'Tool executed' };
+        const mockService = {
+          callTool: mock().mockResolvedValue(mockResult),
+        };
 
-  describe('POST /mcp/servers/:serverName/reconnect', () => {
-    const reconnectRoute = mcpRoutes.find(
-      (r) => r.path === '/mcp/servers/:serverName/reconnect' && r.type === 'POST'
-    )!;
+        const req = createMockRequest({
+          params: { serverName: 'test-server', toolName: 'test-tool' },
+          body: { arguments: { arg1: 'value1' } },
+        });
+        const res = createMockResponse();
+        const runtime = createMockRuntime(mockService);
 
-    it('should reconnect server successfully', async () => {
-      const mockServers = [
-        {
-          name: 'test-server',
-          status: 'disconnected',
-          config: JSON.stringify({ type: 'stdio', command: 'test' }),
-        },
-      ];
-      const mockService = {
-        getServers: mock().mockReturnValue(mockServers),
-        reconnectServer: mock().mockResolvedValue(undefined),
-      };
+        await callToolRoute.handler(req, res, runtime);
 
-      const req = createMockRequest({
-        params: { serverName: 'test-server' },
-      });
-      const res = createMockResponse();
-      const runtime = createMockRuntime(mockService);
+        expect(mockService.callTool).toHaveBeenCalledWith('test-server', 'test-tool', {
+          arg1: 'value1',
+        });
+        expect(res._json).toEqual({
+          success: true,
+          data: {
+            result: mockResult,
+            serverName: 'test-server',
+            toolName: 'test-tool',
+            timestamp: expect.any(String),
+          },
+        });
+      },
+    })
+  );
 
-      await reconnectRoute.handler(req, res, runtime);
+  mcpRoutesTestSuite.addTest(
+    createUnitTest({
+      name: 'should handle tool execution errors',
+      fn: async ({ createMockRequest, createMockResponse, createMockRuntime }: any) => {
+        const callToolRoute = mcpRoutes.find(
+          (r) => r.path === '/mcp/tools/:serverName/:toolName' && (r as any).type === 'POST'
+        )!;
 
-      expect(mockService.reconnectServer).toHaveBeenCalledWith('test-server', {
-        type: 'stdio',
-        command: 'test',
-      });
-      expect(res._json).toEqual({
-        success: true,
-        data: {
-          message: 'Server test-server reconnection initiated',
-          serverName: 'test-server',
-          timestamp: expect.any(String),
-        },
-      });
-    });
+        const mockService = {
+          callTool: mock().mockRejectedValue(new Error('Tool execution failed')),
+        };
 
-    it('should return 404 when server not found', async () => {
-      const mockService = {
-        getServers: mock().mockReturnValue([]),
-      };
+        const req = createMockRequest({
+          params: { serverName: 'test-server', toolName: 'test-tool' },
+          body: {},
+        });
+        const res = createMockResponse();
+        const runtime = createMockRuntime(mockService);
 
-      const req = createMockRequest({
-        params: { serverName: 'non-existent' },
-      });
-      const res = createMockResponse();
-      const runtime = createMockRuntime(mockService);
+        await callToolRoute.handler(req, res, runtime);
 
-      await reconnectRoute.handler(req, res, runtime);
+        expect(res._status).toBe(500);
+        expect(res._json).toEqual({
+          success: false,
+          error: 'Tool execution failed',
+        });
+      },
+    })
+  );
 
-      expect(res._status).toBe(404);
-      expect(res._json).toEqual({
-        success: false,
-        error: 'Server non-existent not found',
-      });
-    });
-  });
+  mcpRoutesTestSuite.addTest(
+    createUnitTest({
+      name: 'should read resource successfully',
+      fn: async ({ createMockRequest, createMockResponse, createMockRuntime }: any) => {
+        const readResourceRoute = mcpRoutes.find(
+          (r) => r.path === '/mcp/resources/:serverName' && (r as any).type === 'POST'
+        )!;
 
-  describe('GET /mcp/viewer', () => {
-    const viewerRoute = mcpRoutes.find((r) => r.path === '/mcp/viewer' && r.type === 'GET')!;
+        const mockResult = {
+          contents: [{ text: 'Resource content', mimeType: 'text/plain' }],
+        };
+        const mockService = {
+          readResource: mock().mockResolvedValue(mockResult),
+        };
 
-    it('should serve HTML page', async () => {
-      const req = createMockRequest({
-        query: { agentId: 'test-agent-id' },
-      });
-      const res = createMockResponse();
-      const runtime = createMockRuntime();
+        const req = createMockRequest({
+          params: { serverName: 'test-server' },
+          body: { uri: 'test://resource' },
+        });
+        const res = createMockResponse();
+        const runtime = createMockRuntime(mockService);
 
-      await viewerRoute.handler(req, res, runtime);
+        await readResourceRoute.handler(req, res, runtime);
 
-      expect(res._type).toBe('html');
-      expect(res._send).toContain('<!DOCTYPE html>');
-      expect(res._send).toContain('MCP Viewer - ElizaOS');
-      expect(res._send).toContain('test-agent-id');
-    });
-  });
+        expect(mockService.readResource).toHaveBeenCalledWith('test-server', 'test://resource');
+        expect(res._json).toEqual({
+          success: true,
+          data: {
+            contents: mockResult.contents,
+            serverName: 'test-server',
+            uri: 'test://resource',
+            timestamp: expect.any(String),
+          },
+        });
+      },
+    })
+  );
+
+  mcpRoutesTestSuite.addTest(
+    createUnitTest({
+      name: 'should return 400 when URI is missing',
+      fn: async ({ createMockRequest, createMockResponse, createMockRuntime }: any) => {
+        const readResourceRoute = mcpRoutes.find(
+          (r) => r.path === '/mcp/resources/:serverName' && (r as any).type === 'POST'
+        )!;
+
+        const req = createMockRequest({
+          params: { serverName: 'test-server' },
+          body: {},
+        });
+        const res = createMockResponse();
+        const runtime = createMockRuntime({});
+
+        await readResourceRoute.handler(req, res, runtime);
+
+        expect(res._status).toBe(400);
+        expect(res._json).toEqual({
+          success: false,
+          error: 'Resource URI is required',
+        });
+      },
+    })
+  );
+
+  mcpRoutesTestSuite.addTest(
+    createUnitTest({
+      name: 'should reconnect server successfully',
+      fn: async ({ createMockRequest, createMockResponse, createMockRuntime }: any) => {
+        const reconnectRoute = mcpRoutes.find(
+          (r) => r.path === '/mcp/servers/:serverName/reconnect' && r.type === 'POST'
+        )!;
+
+        const mockServers = [
+          {
+            name: 'test-server',
+            status: 'disconnected',
+            config: JSON.stringify({ type: 'stdio', command: 'test' }),
+          },
+        ];
+        const mockService = {
+          getServers: mock().mockReturnValue(mockServers),
+          reconnectServer: mock().mockResolvedValue(undefined),
+        };
+
+        const req = createMockRequest({
+          params: { serverName: 'test-server' },
+        });
+        const res = createMockResponse();
+        const runtime = createMockRuntime(mockService);
+
+        await reconnectRoute.handler(req, res, runtime);
+
+        expect(mockService.reconnectServer).toHaveBeenCalledWith('test-server', {
+          type: 'stdio',
+          command: 'test',
+        });
+        expect(res._json).toEqual({
+          success: true,
+          data: {
+            message: 'Server test-server reconnection initiated',
+            serverName: 'test-server',
+            timestamp: expect.any(String),
+          },
+        });
+      },
+    })
+  );
+
+  mcpRoutesTestSuite.addTest(
+    createUnitTest({
+      name: 'should return 404 when server not found',
+      fn: async ({ createMockRequest, createMockResponse, createMockRuntime }: any) => {
+        const reconnectRoute = mcpRoutes.find(
+          (r) => r.path === '/mcp/servers/:serverName/reconnect' && r.type === 'POST'
+        )!;
+
+        const mockService = {
+          getServers: mock().mockReturnValue([]),
+        };
+
+        const req = createMockRequest({
+          params: { serverName: 'non-existent' },
+        });
+        const res = createMockResponse();
+        const runtime = createMockRuntime(mockService);
+
+        await reconnectRoute.handler(req, res, runtime);
+
+        expect(res._status).toBe(404);
+        expect(res._json).toEqual({
+          success: false,
+          error: 'Server non-existent not found',
+        });
+      },
+    })
+  );
+
+  mcpRoutesTestSuite.addTest(
+    createUnitTest({
+      name: 'should serve HTML page',
+      fn: async ({ createMockRequest, createMockResponse, createMockRuntime }: any) => {
+        const viewerRoute = mcpRoutes.find((r) => r.path === '/mcp/viewer' && r.type === 'GET')!;
+
+        const req = createMockRequest({
+          query: { agentId: 'test-agent-id' },
+        });
+        const res = createMockResponse();
+        const runtime = createMockRuntime();
+
+        await viewerRoute.handler(req, res, runtime);
+
+        expect(res._type).toBe('html');
+        expect(res._send).toContain('<!DOCTYPE html>');
+        expect(res._send).toContain('MCP Viewer - ElizaOS');
+        expect(res._send).toContain('test-agent-id');
+      },
+    })
+  );
+
+  mcpRoutesTestSuite.run();
 });

@@ -33,8 +33,8 @@ describe('Database Adapter Basic Tests', () => {
       agentId: '87654321-4321-4321-4321-210987654321' as UUID,
       roomId: '11111111-2222-3333-4444-555555555555' as UUID,
       content: {
-        text: 'Hello, this is a test message'
-      }
+        text: 'Hello, this is a test message',
+      },
     };
 
     expect(testMemory.entityId).toBeDefined();
@@ -55,7 +55,10 @@ describe('Database Adapter Basic Tests', () => {
         return '99999999-9999-9999-9999-999999999999' as UUID;
       }
 
-      async getMemories(params: { roomId?: UUID; tableName: string }): Promise<Memory[]> {
+      async getMemories(params: {
+        roomId?: UUID;
+        tableName: string;
+      }): Promise<Memory[]> {
         // Mock implementation
         return [];
       }
@@ -75,17 +78,19 @@ describe('Database Adapter Basic Tests', () => {
       roomId: '11111111-2222-3333-4444-555555555555' as UUID,
       content: {
         text: 'Test message',
-        thought: 'This is what the agent thinks'
+        thought: 'This is what the agent thinks',
       },
       embedding: [0.1, 0.2, 0.3, 0.4, 0.5],
       metadata: {
         importance: 7,
-        type: 'conversation'
-      }
+        type: 'conversation',
+      },
     };
 
     // Validate structure
-    expect(memory.entityId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+    expect(memory.entityId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+    );
     expect(memory.content.text).toBe('Test message');
     expect(memory.content.thought).toBe('This is what the agent thinks');
     expect(memory.embedding).toHaveLength(5);
@@ -110,9 +115,11 @@ describe('Database Adapter Basic Tests', () => {
           agentId: platformData.agentId,
           roomId: platformData.conversationId || platformData.roomId,
           content: platformData.content,
-          embedding: platformData.embedding ? JSON.parse(platformData.embedding) : undefined,
+          embedding: platformData.embedding
+            ? JSON.parse(platformData.embedding)
+            : undefined,
           createdAt: new Date(platformData.createdAt).getTime(),
-          metadata: platformData.metadata || {}
+          metadata: platformData.metadata || {},
         };
       }
 
@@ -126,17 +133,17 @@ describe('Database Adapter Basic Tests', () => {
           conversationId: memory.roomId,
           content: memory.content,
           embedding: memory.embedding ? JSON.stringify(memory.embedding) : null,
-          metadata: memory.metadata || {}
+          metadata: memory.metadata || {},
         };
       }
 
       async mockCreateMemory(memory: Memory): Promise<UUID> {
         const platformMemory = this.convertElizaMemoryToPlatform(memory);
-        
+
         // In real implementation, this would be:
         // const [inserted] = await this.db.insert(messages).values(platformMemory).returning();
         // return inserted.id;
-        
+
         return platformMemory.id as UUID;
       }
 
@@ -144,7 +151,7 @@ describe('Database Adapter Basic Tests', () => {
         // In real implementation, this would be:
         // const results = await this.db.select().from(messages).where(eq(messages.conversationId, roomId));
         // return results.map(row => this.convertToElizaMemory(row));
-        
+
         // Mock return some test data
         const mockPlatformData = {
           id: crypto.randomUUID(),
@@ -153,7 +160,7 @@ describe('Database Adapter Basic Tests', () => {
           conversationId: roomId,
           content: { text: 'Mock conversation message' },
           createdAt: new Date().toISOString(),
-          metadata: { test: true }
+          metadata: { test: true },
         };
 
         return [this.convertToElizaMemory(mockPlatformData)];
@@ -167,7 +174,7 @@ describe('Database Adapter Basic Tests', () => {
     const memoryId = await adapter.mockCreateMemory({
       entityId: '12345678-1234-1234-1234-123456789012' as UUID,
       roomId: testRoomId,
-      content: { text: 'Test message' }
+      content: { text: 'Test message' },
     });
 
     expect(memoryId).toBeDefined();

@@ -312,7 +312,7 @@ const handler: Handler = async (
         command_id: command.id,
         executed_at: executedAt,
         completed_at: Date.now(),
-        duration: Date.now() - executedAt
+        duration: Date.now() - executedAt,
       };
     } else if (commandType === 'START_TEACHING') {
       await robotService.setMode('TEACHING' as any);
@@ -321,7 +321,7 @@ const handler: Handler = async (
         command_id: command.id,
         executed_at: executedAt,
         completed_at: Date.now(),
-        duration: Date.now() - executedAt
+        duration: Date.now() - executedAt,
       };
     } else if (commandType === 'MOVE_JOINT' && parameters.target) {
       await robotService.moveJoint(parameters.target, parameters.amount || 0, parameters.speed);
@@ -331,7 +331,7 @@ const handler: Handler = async (
         executed_at: executedAt,
         completed_at: Date.now(),
         duration: Date.now() - executedAt,
-        metadata: { target: parameters.target }
+        metadata: { target: parameters.target },
       };
     } else {
       // For other commands, try to execute through stored motions
@@ -343,7 +343,7 @@ const handler: Handler = async (
           command_id: command.id,
           executed_at: executedAt,
           completed_at: Date.now(),
-          duration: Date.now() - executedAt
+          duration: Date.now() - executedAt,
         };
       } else {
         result = {

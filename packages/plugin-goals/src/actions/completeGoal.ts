@@ -174,7 +174,8 @@ If none match well, return 0.`;
         name: '{{agent}}',
         content: {
           text: '🎉 Congratulations! Goal achieved: "Learn French fluently"! Now I\'ll create your new Spanish learning goal.',
-          thought: 'The user has completed one goal and wants to start another. I need to chain COMPLETE_GOAL with CREATE_GOAL to mark the achievement and seamlessly transition to the new learning objective.',
+          thought:
+            'The user has completed one goal and wants to start another. I need to chain COMPLETE_GOAL with CREATE_GOAL to mark the achievement and seamlessly transition to the new learning objective.',
           actions: ['COMPLETE_GOAL', 'CREATE_GOAL'],
         },
       },
@@ -191,7 +192,8 @@ If none match well, return 0.`;
         name: '{{agent}}',
         content: {
           text: '🎉 Amazing achievement! Now let me show you your remaining active goals.',
-          thought: "The user completed a major goal and wants to see their remaining objectives. I\'ll chain COMPLETE_GOAL with LIST_GOALS to celebrate the achievement and help them see what\'s next.",
+          thought:
+            "The user completed a major goal and wants to see their remaining objectives. I\'ll chain COMPLETE_GOAL with LIST_GOALS to celebrate the achievement and help them see what\'s next.",
           actions: ['COMPLETE_GOAL', 'LIST_GOALS'],
         },
       },

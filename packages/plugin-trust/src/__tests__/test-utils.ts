@@ -1,5 +1,9 @@
 import type { IAgentRuntime, Memory, State, UUID } from '@elizaos/core';
-import { createMockRuntime as createCoreMockRuntime, createMockMemory as createCoreMockMemory, createMockState as createCoreMockState } from '@elizaos/core/test-utils';
+import {
+  createMockRuntime as createCoreMockRuntime,
+  createMockMemory as createCoreMockMemory,
+  createMockState as createCoreMockState,
+} from '@elizaos/core/test-utils';
 
 /**
  * Create a mock runtime for trust plugin tests
@@ -36,7 +40,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
       bio: ['Test bio for trust plugin'],
       system: 'Test system prompt for trust evaluation',
     },
-    
+
     // Trust-specific settings
     getSetting: (key: string) => {
       const settings: Record<string, string> = {
@@ -53,22 +57,52 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
         'trust-engine': {
           evaluateTrust: async () => mockTrustProfile,
           calculateTrust: async () => mockTrustProfile,
-          getTrustScore: async () => 75,
+          getTrustScore: async () => ({
+            overall: 75,
+            confidence: 0.8,
+            dimensions: {
+              reliability: 80,
+              competence: 75,
+              integrity: 70,
+              benevolence: 78,
+              transparency: 72,
+            },
+            trend: 'stable',
+            lastUpdated: Date.now(),
+          }),
           updateTrust: async () => true,
           checkPermission: async () => ({ allowed: true }),
           detectThreats: async () => ({ isThreat: false, threats: [] }),
           getRole: async () => 'user',
           updateRole: async () => true,
+          recordInteraction: async () => ({ success: true }),
         },
         trust: {
           evaluateTrust: async () => mockTrustProfile,
           calculateTrust: async () => mockTrustProfile,
-          getTrustScore: async () => 75,
+          getTrustScore: async () => ({
+            overall: 75,
+            confidence: 0.8,
+            dimensions: {
+              reliability: 80,
+              competence: 75,
+              integrity: 70,
+              benevolence: 78,
+              transparency: 72,
+            },
+            trend: 'stable',
+            lastUpdated: Date.now(),
+          }),
           updateTrust: async () => true,
           checkPermission: async () => ({ allowed: true }),
           detectThreats: async () => ({ isThreat: false, threats: [] }),
           getRole: async () => 'user',
           updateRole: async () => true,
+          recordInteraction: async () => ({ success: true }),
+          getLatestTrustComment: async () => ({
+            comment: 'User has been helpful and reliable',
+            timestamp: Date.now(),
+          }),
           analyzeTrustEvidence: async () => ({
             evidenceType: 'HELPFUL_ACTION',
             impact: 5,
@@ -84,7 +118,7 @@ export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgen
     },
 
     ...overrides,
-  });
+  }) as unknown as IAgentRuntime;
 }
 
 /**
@@ -102,7 +136,7 @@ export function createMockMemory(
       source: 'trust-test',
     },
     ...overrides,
-  });
+  }) as Memory;
 }
 
 /**
@@ -115,5 +149,5 @@ export function createMockState(overrides: Partial<State> = {}): State {
     },
     text: 'Trust evaluation context',
     ...overrides,
-  });
+  }) as State;
 }

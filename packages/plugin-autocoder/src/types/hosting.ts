@@ -323,7 +323,15 @@ export interface HealthStatus {
 
 // Deployment status and lifecycle
 export interface DeploymentStatus {
-  phase: 'pending' | 'building' | 'deploying' | 'running' | 'stopping' | 'stopped' | 'failed' | 'unknown';
+  phase:
+    | 'pending'
+    | 'building'
+    | 'deploying'
+    | 'running'
+    | 'stopping'
+    | 'stopped'
+    | 'failed'
+    | 'unknown';
 
   // Detailed status information
   conditions: StatusCondition[];

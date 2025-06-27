@@ -17,7 +17,7 @@ export const stagehandWebResearchScenario: Scenario = {
       bio: 'An AI agent specialized in automated web research and data extraction',
       system:
         'You are a web research agent that can help gather information about topics. When asked to research something, provide helpful information based on your knowledge.',
-      plugins: ['@elizaos/plugin-stagehand', '@elizaos/plugin-knowledge'],
+      plugins: ['@elizaos/plugin-research', '@elizaos/plugin-knowledge'],
       script: { steps: [] },
     },
     {

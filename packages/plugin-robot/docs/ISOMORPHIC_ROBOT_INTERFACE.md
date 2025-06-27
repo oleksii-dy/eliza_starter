@@ -3,6 +3,7 @@
 ## Overview
 
 The isomorphic robot interface provides a unified API for controlling robots regardless of whether they are:
+
 - **Real Hardware**: Physical AiNex robot connected via serial/USB
 - **Simulation**: Gazebo simulation with ROS2 integration
 
@@ -50,15 +51,15 @@ interface RobotCommand {
   type: RobotCommandType;
   natural_language: string;
   parameters?: {
-    target?: string;        // "left arm", "head"
-    direction?: string;     // "up", "forward", "left"
-    amount?: number;        // 30 degrees, 0.5 meters
-    speed?: number;         // 0-1 normalized
-    duration?: number;      // milliseconds
-    pose?: string;          // named pose
-    motion?: string;        // named motion sequence
-    position?: { x, y, z }; // 3D position
-    orientation?: { x, y, z, w }; // Quaternion
+    target?: string; // "left arm", "head"
+    direction?: string; // "up", "forward", "left"
+    amount?: number; // 30 degrees, 0.5 meters
+    speed?: number; // 0-1 normalized
+    duration?: number; // milliseconds
+    pose?: string; // named pose
+    motion?: string; // named motion sequence
+    position?: { x; y; z }; // 3D position
+    orientation?: { x; y; z; w }; // Quaternion
   };
   constraints?: {
     maintain_balance?: boolean;
@@ -85,31 +86,31 @@ enum RobotCommandType {
   MOVE_TO_POSE = 'MOVE_TO_POSE',
   EXECUTE_MOTION = 'EXECUTE_MOTION',
   STOP = 'STOP',
-  
+
   // Advanced motion
   WALK = 'WALK',
   TURN = 'TURN',
   REACH = 'REACH',
   GRASP = 'GRASP',
   RELEASE = 'RELEASE',
-  
+
   // Head/perception
   LOOK_AT = 'LOOK_AT',
   TRACK = 'TRACK',
   SCAN = 'SCAN',
-  
+
   // Gestures
   WAVE = 'WAVE',
   POINT = 'POINT',
   NOD = 'NOD',
   SHAKE_HEAD = 'SHAKE_HEAD',
-  
+
   // System
   SET_MODE = 'SET_MODE',
   CALIBRATE = 'CALIBRATE',
   RESET = 'RESET',
   EMERGENCY_STOP = 'EMERGENCY_STOP',
-  
+
   // Teaching
   START_TEACHING = 'START_TEACHING',
   STOP_TEACHING = 'STOP_TEACHING',
@@ -145,6 +146,7 @@ The system parses natural language commands into structured RobotCommand objects
 ### Examples:
 
 1. **"Move your right arm up 45 degrees"**
+
    ```typescript
    {
      type: 'MOVE_JOINT',
@@ -158,6 +160,7 @@ The system parses natural language commands into structured RobotCommand objects
    ```
 
 2. **"Wave hello"**
+
    ```typescript
    {
      type: 'WAVE',
@@ -168,6 +171,7 @@ The system parses natural language commands into structured RobotCommand objects
    ```
 
 3. **"Walk forward 2 meters slowly"**
+
    ```typescript
    {
      type: 'WALK',
@@ -202,7 +206,7 @@ The system parses natural language commands into structured RobotCommand objects
 ### Simulation Adapter
 
 - **Communication**: ROS2 via WebSocket (roslib)
-- **Topics**: 
+- **Topics**:
   - `/joint_states` (subscribe)
   - `/joint_trajectory_controller/joint_trajectory` (publish)
   - `/emergency_stop` (publish)
@@ -235,13 +239,13 @@ const robotService = runtime.getService<RobotServiceV2>(RobotServiceType.ROBOT);
 
 // Execute natural language command
 const result = await robotService.executeNaturalLanguageCommand(
-  "Move your right arm up 45 degrees"
+  'Move your right arm up 45 degrees'
 );
 
 if (result.success) {
-  console.log("Command executed successfully");
+  console.log('Command executed successfully');
 } else {
-  console.log("Command failed:", result.error);
+  console.log('Command failed:', result.error);
 }
 ```
 
@@ -250,15 +254,11 @@ if (result.success) {
 ```typescript
 const handler: Handler = async (runtime, message, state, options, callback) => {
   const robotService = runtime.getService<RobotServiceV2>(RobotServiceType.ROBOT);
-  
-  const result = await robotService.executeNaturalLanguageCommand(
-    message.content.text
-  );
-  
+
+  const result = await robotService.executeNaturalLanguageCommand(message.content.text);
+
   await callback({
-    text: result.success 
-      ? "Command executed successfully" 
-      : `Failed: ${result.error}`,
+    text: result.success ? 'Command executed successfully' : `Failed: ${result.error}`,
     actions: ['ROBOT_COMMAND'],
   });
 };
@@ -305,4 +305,4 @@ Eliza: "Here's your coffee cup."
 
 ## Conclusion
 
-The isomorphic robot interface bridges the gap between natural language and robot control, providing a seamless experience whether working with hardware or simulation. This design enables rapid development, safe testing, and intuitive human-robot interaction within the ElizaOS ecosystem. 
+The isomorphic robot interface bridges the gap between natural language and robot control, providing a seamless experience whether working with hardware or simulation. This design enables rapid development, safe testing, and intuitive human-robot interaction within the ElizaOS ecosystem.

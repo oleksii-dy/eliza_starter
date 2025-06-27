@@ -14,7 +14,7 @@ import { MiddlewareContext } from '../middleware';
 
 export async function analyticsHandler(
   req: NextRequest,
-  context: MiddlewareContext
+  context: MiddlewareContext,
 ): Promise<NextResponse> {
   try {
     // Parse query parameters
@@ -29,30 +29,29 @@ export async function analyticsHandler(
           success: false,
           error: 'Invalid analytics query',
           code: 'VALIDATION_ERROR',
-          details: validation.errors
+          details: validation.errors,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Transform and provide defaults for analytics params
     const now = new Date();
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    
+
     const params = {
       organizationId: context.organizationId,
-      period: validation.data.period || 'month' as const,
+      period: validation.data.period || ('month' as const),
       startDate: validation.data.start_date || thirtyDaysAgo,
       endDate: validation.data.end_date || now,
       type: validation.data.type,
-      provider: validation.data.provider
+      provider: validation.data.provider,
     };
 
     // Initialize services
-    const database = getDatabaseClient();
     const storage = await getStorageManager();
     const billing = getBillingService();
-    const generationService = new GenerationService(database, storage, billing);
+    const generationService = new GenerationService(storage, billing);
 
     // Get analytics
     const result = await generationService.getAnalytics(params);
@@ -67,21 +66,23 @@ export async function analyticsHandler(
       organizationId: context.organizationId,
       period: params.period,
       startDate: params.startDate,
-      endDate: params.endDate
+      endDate: params.endDate,
     });
 
     return NextResponse.json(result);
-
   } catch (error) {
-    logger.error('Analytics handler error:', error instanceof Error ? error : new Error(String(error)));
-    
+    logger.error(
+      'Analytics handler error:',
+      error instanceof Error ? error : new Error(String(error)),
+    );
+
     return NextResponse.json(
       {
         success: false,
         error: 'Internal server error',
-        code: 'INTERNAL_ERROR'
+        code: 'INTERNAL_ERROR',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

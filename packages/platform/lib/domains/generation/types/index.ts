@@ -61,10 +61,14 @@ export const textGenerationSchema = baseGenerationRequestSchema.extend({
   max_tokens: z.number().min(1).max(8000).optional(),
   model: z.string().optional(),
   system_prompt: z.string().optional(),
-  context: z.array(z.object({
-    role: z.enum(['user', 'assistant', 'system']),
-    content: z.string(),
-  })).optional(),
+  context: z
+    .array(
+      z.object({
+        role: z.enum(['user', 'assistant', 'system']),
+        content: z.string(),
+      }),
+    )
+    .optional(),
 });
 
 // Image Generation
@@ -73,7 +77,9 @@ export const imageGenerationSchema = baseGenerationRequestSchema.extend({
   style: z.string().optional(),
   aspect_ratio: z.enum(['1:1', '16:9', '9:16', '4:3', '3:4']).default('1:1'),
   quality: z.enum(['draft', 'standard', 'high']).default('standard'),
-  resolution: z.enum(['512x512', '1024x1024', '1536x1536', '2048x2048']).default('1024x1024'),
+  resolution: z
+    .enum(['512x512', '1024x1024', '1536x1536', '2048x2048'])
+    .default('1024x1024'),
   num_images: z.number().min(1).max(10).default(1),
   negative_prompt: z.string().optional(),
   seed: z.number().optional(),
@@ -98,12 +104,14 @@ export const videoGenerationSchema = baseGenerationRequestSchema.extend({
 export const audioGenerationSchema = baseGenerationRequestSchema.extend({
   type: z.literal(GenerationType.AUDIO),
   voice_id: z.string().optional(),
-  voice_settings: z.object({
-    stability: z.number().min(0).max(1).optional(),
-    similarity_boost: z.number().min(0).max(1).optional(),
-    style: z.number().min(0).max(1).optional(),
-    use_speaker_boost: z.boolean().optional(),
-  }).optional(),
+  voice_settings: z
+    .object({
+      stability: z.number().min(0).max(1).optional(),
+      similarity_boost: z.number().min(0).max(1).optional(),
+      style: z.number().min(0).max(1).optional(),
+      use_speaker_boost: z.boolean().optional(),
+    })
+    .optional(),
   output_format: z.enum(['mp3', 'wav', 'flac']).default('mp3'),
   speed: z.number().min(0.25).max(4).default(1),
 });
@@ -112,12 +120,14 @@ export const audioGenerationSchema = baseGenerationRequestSchema.extend({
 export const speechGenerationSchema = baseGenerationRequestSchema.extend({
   type: z.literal(GenerationType.SPEECH),
   voice_id: z.string().optional(),
-  voice_settings: z.object({
-    stability: z.number().min(0).max(1).optional(),
-    similarity_boost: z.number().min(0).max(1).optional(),
-    style: z.number().min(0).max(1).optional(),
-    use_speaker_boost: z.boolean().optional(),
-  }).optional(),
+  voice_settings: z
+    .object({
+      stability: z.number().min(0).max(1).optional(),
+      similarity_boost: z.number().min(0).max(1).optional(),
+      style: z.number().min(0).max(1).optional(),
+      use_speaker_boost: z.boolean().optional(),
+    })
+    .optional(),
   output_format: z.enum(['mp3', 'wav', 'flac']).default('mp3'),
   speed: z.number().min(0.25).max(4).default(1),
 });
@@ -147,7 +157,9 @@ export const threeDGenerationSchema = baseGenerationRequestSchema.extend({
 // Avatar Generation
 export const avatarGenerationSchema = baseGenerationRequestSchema.extend({
   type: z.literal(GenerationType.AVATAR),
-  avatar_type: z.enum(['realistic', 'cartoon', 'anime', 'vroid']).default('realistic'),
+  avatar_type: z
+    .enum(['realistic', 'cartoon', 'anime', 'vroid'])
+    .default('realistic'),
   gender: z.enum(['male', 'female', 'non-binary']).optional(),
   age_range: z.enum(['child', 'teen', 'adult', 'elderly']).optional(),
   ethnicity: z.string().optional(),
@@ -174,18 +186,22 @@ export const documentGenerationSchema = baseGenerationRequestSchema.extend({
   format: z.enum(['pdf', 'docx', 'html', 'markdown']).default('pdf'),
   template: z.string().optional(),
   data: z.record(z.any()).optional(),
-  styling: z.object({
-    font: z.string().optional(),
-    font_size: z.number().optional(),
-    margins: z.object({
-      top: z.number(),
-      bottom: z.number(),
-      left: z.number(),
-      right: z.number(),
-    }).optional(),
-    header: z.string().optional(),
-    footer: z.string().optional(),
-  }).optional(),
+  styling: z
+    .object({
+      font: z.string().optional(),
+      font_size: z.number().optional(),
+      margins: z
+        .object({
+          top: z.number(),
+          bottom: z.number(),
+          left: z.number(),
+          right: z.number(),
+        })
+        .optional(),
+      header: z.string().optional(),
+      footer: z.string().optional(),
+    })
+    .optional(),
 });
 
 // Union type for all generation requests
@@ -212,7 +228,9 @@ export type MusicGenerationRequest = z.infer<typeof musicGenerationSchema>;
 export type ThreeDGenerationRequest = z.infer<typeof threeDGenerationSchema>;
 export type AvatarGenerationRequest = z.infer<typeof avatarGenerationSchema>;
 export type CodeGenerationRequest = z.infer<typeof codeGenerationSchema>;
-export type DocumentGenerationRequest = z.infer<typeof documentGenerationSchema>;
+export type DocumentGenerationRequest = z.infer<
+  typeof documentGenerationSchema
+>;
 
 // Generation Response Types
 export interface GenerationResult {

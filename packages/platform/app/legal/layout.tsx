@@ -1,14 +1,14 @@
 import Logo from '@/components/ui/logo';
 
 export default function LegalLayout({
-  children
+  children,
 }: {
-	children: React.ReactNode;
+  children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col h-full justify-between items-center flex-grow py-8 gap-6">
+    <div className="flex h-full flex-grow flex-col items-center justify-between gap-6 py-8">
       <Logo />
-      <div className="w-full max-w-lg flex flex-col gap-6">{children}</div>
+      <div className="flex w-full max-w-lg flex-col gap-6">{children}</div>
     </div>
   );
 }

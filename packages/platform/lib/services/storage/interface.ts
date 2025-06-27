@@ -5,27 +5,41 @@
 
 export interface IStorageService {
   // Basic file operations
-  upload(key: string, data: Buffer | Uint8Array | string, options?: UploadOptions): Promise<UploadResult>;
+  upload(
+    key: string,
+    data: Buffer | Uint8Array | string,
+    options?: UploadOptions,
+  ): Promise<UploadResult>;
   download(key: string): Promise<DownloadResult | null>;
   delete(key: string): Promise<void>;
   exists(key: string): Promise<boolean>;
-  
+
   // File metadata
   getMetadata(key: string): Promise<FileMetadata | null>;
   setMetadata(key: string, metadata: Record<string, string>): Promise<void>;
-  
+
   // Directory operations
   list(prefix?: string, options?: ListOptions): Promise<FileInfo[]>;
   deleteDirectory(prefix: string): Promise<void>;
-  
+
   // Batch operations
-  uploadMultiple(files: Array<{ key: string; data: Buffer | Uint8Array | string; options?: UploadOptions }>): Promise<UploadResult[]>;
+  uploadMultiple(
+    files: Array<{
+      key: string;
+      data: Buffer | Uint8Array | string;
+      options?: UploadOptions;
+    }>,
+  ): Promise<UploadResult[]>;
   downloadMultiple(keys: string[]): Promise<(DownloadResult | null)[]>;
-  
+
   // URL generation
-  getSignedUrl(key: string, operation: 'read' | 'write', expiresIn?: number): Promise<string>;
+  getSignedUrl(
+    key: string,
+    operation: 'read' | 'write',
+    expiresIn?: number,
+  ): Promise<string>;
   getPublicUrl(key: string): string;
-  
+
   // Service management
   ping(): Promise<boolean>;
   info(): Promise<StorageInfo>;
@@ -103,7 +117,7 @@ export interface StorageConfig {
 // Custom error classes
 export class StorageError extends Error {
   public cause?: Error;
-  
+
   constructor(message: string, cause?: Error) {
     super(message);
     this.name = 'StorageError';

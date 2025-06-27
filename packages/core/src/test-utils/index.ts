@@ -45,14 +45,16 @@ export * from './realRuntime';
 export * from './testDatabase';
 export * from './testModels';
 export * from './templates';
+export * from './unifiedTestSuite';
 
 // ========================================
 // LEGACY MOCK SYSTEM (DEPRECATED)
 // ========================================
 export * from './mocks/simpleRuntime';
-export * from './mocks/simpleDatabase';
+export * from './mocks/database';
 export * from './mocks/memory';
 export * from './mocks/state';
 export * from './mocks/services';
 export * from './mocks/character';
+export * from './mocks/mockUtils';
 export * from './factories';

@@ -4,7 +4,11 @@
  */
 
 import path from 'path';
-import { IStorageService, StorageConfig, StorageConnectionError } from './interface';
+import {
+  IStorageService,
+  StorageConfig,
+  StorageConnectionError,
+} from './interface';
 import { LocalStorageService } from './local-storage';
 import { R2StorageService } from './r2-storage';
 
@@ -32,12 +36,12 @@ class StorageManager {
           {
             endpoint: r2Config.endpoint,
             region: r2Config.region,
-          }
+          },
         );
-        
+
         // Test connection
         const isConnected = await r2Service.ping();
-        
+
         if (!isConnected) {
           throw new Error('R2 storage connection failed');
         }
@@ -45,20 +49,19 @@ class StorageManager {
         this.instance = r2Service;
         console.log('[StorageManager] Using R2 storage service');
       } else {
-        const storagePath = finalConfig.local?.rootPath || path.join(process.cwd(), 'data', 'storage');
-        
+        const storagePath =
+          finalConfig.local?.rootPath ||
+          path.join(process.cwd(), 'data', 'storage');
+
         // Ensure storage directory exists
         const { mkdirSync } = require('fs');
         mkdirSync(storagePath, { recursive: true });
 
-        this.instance = new LocalStorageService(
-          storagePath,
-          {
-            baseUrl: finalConfig.local?.baseUrl,
-            maxFileSize: finalConfig.local?.maxFileSize,
-          }
-        );
-        
+        this.instance = new LocalStorageService(storagePath, {
+          baseUrl: finalConfig.local?.baseUrl,
+          maxFileSize: finalConfig.local?.maxFileSize,
+        });
+
         // Test connection
         const isConnected = await this.instance.ping();
         if (!isConnected) {
@@ -70,15 +73,21 @@ class StorageManager {
 
       return this.instance;
     } catch (error) {
-      console.error('[StorageManager] Failed to initialize storage service:', error);
-      
+      console.error(
+        '[StorageManager] Failed to initialize storage service:',
+        error,
+      );
+
       // Fallback to local storage if R2 fails
       if (finalConfig.type === 'r2') {
         console.log('[StorageManager] Falling back to local storage');
         return this.initializeFallbackStorage();
       }
-      
-      throw new StorageConnectionError('Failed to initialize storage service', error as Error);
+
+      throw new StorageConnectionError(
+        'Failed to initialize storage service',
+        error as Error,
+      );
     }
   }
 
@@ -108,9 +117,13 @@ class StorageManager {
     return {
       type: 'local',
       local: {
-        rootPath: process.env.STORAGE_PATH || path.join(process.cwd(), 'data', 'storage'),
+        rootPath:
+          process.env.STORAGE_PATH ||
+          path.join(process.cwd(), 'data', 'storage'),
         baseUrl: process.env.STORAGE_BASE_URL || '/storage',
-        maxFileSize: process.env.STORAGE_MAX_FILE_SIZE ? parseInt(process.env.STORAGE_MAX_FILE_SIZE) : 100 * 1024 * 1024,
+        maxFileSize: process.env.STORAGE_MAX_FILE_SIZE
+          ? parseInt(process.env.STORAGE_MAX_FILE_SIZE)
+          : 100 * 1024 * 1024,
       },
     };
   }
@@ -126,18 +139,15 @@ class StorageManager {
     };
 
     const storagePath = fallbackConfig.local!.rootPath;
-    
+
     // Ensure storage directory exists
     const { mkdirSync } = require('fs');
     mkdirSync(storagePath, { recursive: true });
 
-    this.instance = new LocalStorageService(
-      storagePath,
-      {
-        baseUrl: fallbackConfig.local!.baseUrl,
-        maxFileSize: fallbackConfig.local!.maxFileSize,
-      }
-    );
+    this.instance = new LocalStorageService(storagePath, {
+      baseUrl: fallbackConfig.local!.baseUrl,
+      maxFileSize: fallbackConfig.local!.maxFileSize,
+    });
     this.config = fallbackConfig;
 
     return this.instance;
@@ -146,14 +156,20 @@ class StorageManager {
   static async reset(): Promise<void> {
     if (this.instance) {
       try {
-        if ('cleanup' in this.instance && typeof this.instance.cleanup === 'function') {
+        if (
+          'cleanup' in this.instance &&
+          typeof this.instance.cleanup === 'function'
+        ) {
           await this.instance.cleanup();
         }
       } catch (error) {
-        console.error('[StorageManager] Error cleaning up storage service:', error);
+        console.error(
+          '[StorageManager] Error cleaning up storage service:',
+          error,
+        );
       }
     }
-    
+
     this.instance = null;
     this.config = null;
   }
@@ -172,7 +188,9 @@ class StorageManager {
 }
 
 // Convenience functions for direct access
-export async function getStorage(config?: StorageConfig): Promise<IStorageService> {
+export async function getStorage(
+  config?: StorageConfig,
+): Promise<IStorageService> {
   return StorageManager.getInstance(config);
 }
 

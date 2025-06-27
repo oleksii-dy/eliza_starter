@@ -1,179 +1,117 @@
-import { mock } from 'bun:test';
-import {
-  type IAgentRuntime,
-  type Memory,
-  type State,
-  type UUID,
-  type Provider,
-  type Action,
-  Service,
-} from '@elizaos/core';
+import type { IAgentRuntime, Memory, State, UUID } from '@elizaos/core';
 
 /**
- * Creates a mock runtime for testing
+ * Creates a mock runtime for testing hyperfy plugin
+ * Creates a simple mock runtime without relying on core test utilities
  *
  * @param overrides - Optional overrides for the default mock methods and properties
  * @returns A mock runtime for testing
  */
 export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgentRuntime {
   return {
-    // Core properties
-    agentId: 'test-agent-id' as UUID,
     character: {
-      name: 'TestAgent',
-      bio: ['Test bio'],
-      system: 'Test system prompt',
+      name: 'HyperfyTestAgent',
+      bio: ['RPG agent for testing hyperfy world functionality'],
+      system: 'You are a test agent for RPG world management',
       messageExamples: [],
       postExamples: [],
-      topics: [],
+      topics: ['rpg', 'gaming', 'world-building'],
       knowledge: [],
-      plugins: [],
+      plugins: ['@elizaos/plugin-hyperfy'],
       ...overrides.character,
     },
 
-    // Settings
-    getSetting: mock((key: string) => {
+    // Hyperfy-specific settings
+    getSetting: (key: string) => {
       const settings: Record<string, string> = {
+        HYPERFY_API_KEY: 'test-hyperfy-api-key',
+        HYPERFY_WORLD_ID: 'test-world-123',
+        HYPERFY_SERVER_URL: 'http://localhost:3000',
+        RPG_WORLD_NAME: 'TestWorld',
+        RPG_MAX_PLAYERS: '50',
         API_KEY: 'test-api-key',
         SECRET_KEY: 'test-secret',
-        ...(overrides as any).settings,
+        ...(overrides as any)?.settings,
       };
       return settings[key];
-    }),
+    },
 
-    // Services
-    getService: mock((name: string) => {
+    // Hyperfy-specific services
+    getService: (name: string) => {
       const services: Record<string, any> = {
         'test-service': {
-          start: mock(),
-          stop: mock(),
-          doSomething: mock().mockResolvedValue('service result'),
+          start: async () => {},
+          stop: async () => {},
+          doSomething: async () => 'service result',
         },
         hyperfy: createMockHyperfyService(),
-        ...overrides.services,
+        'rpg-server': {
+          getWorld: () => createMockWorld(),
+          getPlayers: async () => [],
+          spawnEntity: async () => true,
+        },
+        ...(overrides as any)?.services,
       };
       return services[name];
-    }),
-
-    // Model/LLM
-    useModel: mock().mockResolvedValue('mock model response'),
-    generateText: mock().mockResolvedValue('generated text'),
-
-    // Memory operations
-    messageManager: {
-      createMemory: mock().mockResolvedValue({
-        id: 'test-memory-id' as UUID,
-        entityId: 'test-entity-id' as UUID,
-        roomId: 'test-room-id' as UUID,
-        agentId: 'test-agent-id' as UUID,
-        content: { text: 'test message' },
-        createdAt: Date.now(),
-      }),
-      getMemories: mock().mockResolvedValue([]),
-      updateMemory: mock().mockResolvedValue(true),
-      deleteMemory: mock().mockResolvedValue(true),
-      searchMemories: mock().mockResolvedValue([]),
-      getLastMessages: mock().mockResolvedValue([]),
-      ...(overrides as any).messageManager,
     },
 
-    // Memory methods
-    getMemories: mock().mockResolvedValue([]),
-    getMemoriesByEntityId: mock().mockResolvedValue([]),
-    createMemory: mock().mockResolvedValue({
-      id: 'test-memory-id' as UUID,
-      entityId: 'test-entity-id' as UUID,
-      roomId: 'test-room-id' as UUID,
-      agentId: 'test-agent-id' as UUID,
-      content: { text: 'test message' },
-      createdAt: Date.now(),
-    }),
-
-    // State
-    composeState: mock().mockResolvedValue({
-      values: {},
-      data: {},
-      text: '',
-      hyperfyStatus: 'Connected to Hyperfy world',
-    }),
-    updateState: mock().mockResolvedValue(true),
-
-    // Actions & Providers
-    actions: [],
-    providers: [],
-    evaluators: [],
-
-    // Components
-    createComponent: mock().mockResolvedValue(true),
-    getComponents: mock().mockResolvedValue([]),
-    updateComponent: mock().mockResolvedValue(true),
-
-    // Database
-    db: {
-      query: mock().mockResolvedValue([]),
-      execute: mock().mockResolvedValue({ changes: 1 }),
-      getWorlds: mock().mockResolvedValue([]),
-      getWorld: mock().mockResolvedValue(null),
+    // Mock other required runtime methods
+    databaseAdapter: {
+      init: async () => {},
+      close: async () => {},
+      getMemories: async () => [],
+      createMemory: async () => ({} as Memory),
+      removeMemory: async () => {},
+      searchMemories: async () => [],
+      getGoals: async () => [],
+      createGoal: async () => ({} as any),
+      removeGoal: async () => {},
+      updateGoal: async () => {},
+      searchGoals: async () => [],
+      createRoom: async () => '',
+      removeRoom: async () => {},
+      getRoomsForParticipant: async () => [],
+      getRoomsForParticipants: async () => [],
+      getParticipantsForAccount: async () => [],
+      getParticipantsForRoom: async () => [],
+      getAccountById: async () => null,
+      createAccount: async () => ({} as any),
+      getMemoriesByRoomIds: async () => [],
+      createRelationship: async () => true,
+      getRelationship: async () => null,
+      getRelationships: async () => [],
     },
 
-    // Additional methods
-    getEntityById: mock().mockResolvedValue(null),
-    getRoom: mock().mockResolvedValue({
-      id: 'test-room-id',
-      entities: [],
-    }),
-    getEntitiesForRoom: mock().mockResolvedValue([]),
+    agentId: 'test-agent-id' as UUID,
+    serverUrl: 'http://localhost:3000',
+    token: 'test-token',
 
-    // Logging
-    logger: {
-      info: mock(),
-      warn: mock(),
-      error: mock(),
-      debug: mock(),
-    },
+    // Mock action methods
+    async initialize() {},
+    async stop() {},
+    async evaluate() { return []; },
+    async composeState() { return {} as State; },
+    async updateRecentMessageState() { return {} as State; },
 
-    // Entity management
-    ensureConnection: mock().mockResolvedValue({
-      entityId: 'test-entity-id' as UUID,
-      roomId: 'test-room-id' as UUID,
-    }),
-
-    // Event handling
-    emitEvent: mock(),
-    on: mock(),
-    off: mock(),
-
-    // Process actions
-    processActions: mock().mockResolvedValue(undefined),
-
-    // Evaluate
-    evaluate: mock().mockResolvedValue(null),
-
-    // Entity operations
-    updateEntity: mock().mockResolvedValue(true),
-    createEntity: mock().mockResolvedValue(true),
-
-    // Apply any overrides
     ...overrides,
   } as unknown as IAgentRuntime;
 }
 
 /**
  * Creates a mock Memory object for testing
- *
- * @param overrides - Optional overrides for the default memory properties
- * @returns A mock memory object
+ * Simple mock memory without relying on core test utilities
  */
 export function createMockMemory(overrides: Partial<Memory> = {}): Memory {
   return {
     id: 'test-memory-id' as UUID,
-    entityId: 'test-entity-id' as UUID,
-    roomId: 'test-room-id' as UUID,
+    userId: 'test-user-id' as UUID,
     agentId: 'test-agent-id' as UUID,
+    roomId: 'test-room-id' as UUID,
     content: {
-      text: 'test message',
-      source: 'test',
+      text: 'Hyperfy RPG test message',
+      source: 'hyperfy-test',
     },
+    embedding: new Float32Array([0.1, 0.2, 0.3]),
     createdAt: Date.now(),
     ...overrides,
   } as Memory;
@@ -181,71 +119,17 @@ export function createMockMemory(overrides: Partial<Memory> = {}): Memory {
 
 /**
  * Creates a mock State object for testing
- *
- * @param overrides - Optional overrides for the default state properties
- * @returns A mock state object
+ * Simple mock state without relying on core test utilities
  */
 export function createMockState(overrides: Partial<State> = {}): State {
   return {
-    values: {},
-    data: {},
-    text: '',
+    values: {
+      hyperfyWorldId: 'test-world-123',
+      playerPosition: { x: 10, y: 0, z: 10 },
+    },
+    text: 'Hyperfy RPG world context',
     ...overrides,
   } as State;
-}
-
-/**
- * Creates a mock Service object for testing
- *
- * @param name - The name of the service
- * @param overrides - Optional overrides for the service properties
- * @returns A mock service object
- */
-export function createMockService(name: string, overrides: any = {}): any {
-  return {
-    serviceName: name,
-    capabilityDescription: `Mock ${name} service`,
-    start: mock().mockResolvedValue(undefined),
-    stop: mock().mockResolvedValue(undefined),
-    isConnected: mock().mockReturnValue(true),
-    getWorld: mock().mockReturnValue(null),
-    ...overrides,
-  };
-}
-
-/**
- * Creates a standardized setup for testing with consistent mock objects
- *
- * @param overrides - Optional overrides for default mock implementations
- * @returns An object containing mockRuntime, mockMessage, mockState, and callbackFn
- */
-export function setupTest(
-  overrides: {
-    runtimeOverrides?: Partial<IAgentRuntime>;
-    messageOverrides?: Partial<Memory>;
-    stateOverrides?: Partial<State>;
-  } = {}
-) {
-  // Create mock callback function
-  const callbackFn = mock();
-
-  // Create a message
-  const mockMessage = createMockMemory(overrides.messageOverrides);
-
-  // Create a state object
-  const mockState = createMockState(overrides.stateOverrides);
-
-  // Create a mock runtime
-  const mockRuntime = createMockRuntime({
-    ...overrides.runtimeOverrides,
-  });
-
-  return {
-    mockRuntime,
-    mockMessage,
-    mockState,
-    callbackFn,
-  };
 }
 
 /**
@@ -262,79 +146,38 @@ export function createMockWorld(): any {
         x: 0,
         y: 0,
         z: 0,
-        fromArray: mock(),
-        toArray: mock().mockReturnValue([0, 0, 0]),
+        fromArray: () => {},
+        toArray: () => [0, 0, 0],
       },
       quaternion: {
         x: 0,
         y: 0,
         z: 0,
         w: 1,
-        fromArray: mock(),
-        toArray: mock().mockReturnValue([0, 0, 0, 1]),
+        fromArray: () => {},
+        toArray: () => [0, 0, 0, 1],
       },
-      scale: { x: 1, y: 1, z: 1, fromArray: mock(), toArray: mock().mockReturnValue([1, 1, 1]) },
+      scale: { x: 1, y: 1, z: 1, fromArray: () => {}, toArray: () => [1, 1, 1] },
     },
     root: {
       position: {
         x: 0,
         y: 0,
         z: 0,
-        fromArray: mock(),
-        toArray: mock().mockReturnValue([0, 0, 0]),
+        fromArray: () => {},
+        toArray: () => [0, 0, 0],
       },
       quaternion: {
         x: 0,
         y: 0,
         z: 0,
         w: 1,
-        fromArray: mock(),
-        toArray: mock().mockReturnValue([0, 0, 0, 1]),
+        fromArray: () => {},
+        toArray: () => [0, 0, 0, 1],
       },
-      scale: { x: 1, y: 1, z: 1, fromArray: mock(), toArray: mock().mockReturnValue([1, 1, 1]) },
+      scale: { x: 1, y: 1, z: 1, fromArray: () => {}, toArray: () => [1, 1, 1] },
     },
-    destroy: mock(),
-  });
-
-  mockEntities.set('entity-2', {
-    data: { id: 'entity-2', name: 'Sphere', type: 'sphere' },
-    base: {
-      position: {
-        x: 5,
-        y: 0,
-        z: 5,
-        fromArray: mock(),
-        toArray: mock().mockReturnValue([5, 0, 5]),
-      },
-      quaternion: {
-        x: 0,
-        y: 0,
-        z: 0,
-        w: 1,
-        fromArray: mock(),
-        toArray: mock().mockReturnValue([0, 0, 0, 1]),
-      },
-      scale: { x: 1, y: 1, z: 1, fromArray: mock(), toArray: mock().mockReturnValue([1, 1, 1]) },
-    },
-    root: {
-      position: {
-        x: 5,
-        y: 0,
-        z: 5,
-        fromArray: mock(),
-        toArray: mock().mockReturnValue([5, 0, 5]),
-      },
-      quaternion: {
-        x: 0,
-        y: 0,
-        z: 0,
-        w: 1,
-        fromArray: mock(),
-        toArray: mock().mockReturnValue([0, 0, 0, 1]),
-      },
-      scale: { x: 1, y: 1, z: 1, fromArray: mock(), toArray: mock().mockReturnValue([1, 1, 1]) },
-    },
-    destroy: mock(),
+    destroy: () => {},
   });
 
   return {
@@ -356,24 +199,24 @@ export function createMockWorld(): any {
       items: mockEntities,
     },
     chat: {
-      add: mock(),
+      add: () => {},
       msgs: [],
     },
     controls: {
-      goto: mock(),
-      stopAllActions: mock(),
+      goto: () => {},
+      stopAllActions: () => {},
     },
     actions: {
-      execute: mock(),
-      getNearby: mock().mockReturnValue([]),
+      execute: () => {},
+      getNearby: () => [],
     },
     network: {
-      upload: mock(),
-      send: mock(),
+      upload: () => {},
+      send: () => {},
     },
     assetsUrl: 'https://test.hyperfy.io/assets',
     blueprints: {
-      add: mock(),
+      add: () => {},
     },
   };
 }
@@ -383,48 +226,50 @@ export function createMockWorld(): any {
  */
 export function createMockHyperfyService(): any {
   return {
-    start: mock(),
-    stop: mock(),
-    isConnected: mock().mockReturnValue(true),
-    getWorld: mock().mockReturnValue(createMockWorld()),
-    getMessageManager: mock().mockReturnValue({
-      sendMessage: mock(),
-      handleMessage: mock(),
-      getRecentMessages: mock().mockResolvedValue({
+    start: async () => {},
+    stop: async () => {},
+    isConnected: () => true,
+    getWorld: () => createMockWorld(),
+    getMessageManager: () => ({
+      sendMessage: () => {},
+      handleMessage: () => {},
+      getRecentMessages: async () => ({
         formattedHistory: 'No messages yet',
         lastResponseText: '',
         lastActions: [],
       }),
     }),
-    getEmoteManager: mock().mockReturnValue({
-      playEmote: mock(),
-      uploadEmotes: mock(),
+    getEmoteManager: () => ({
+      playEmote: () => {},
+      uploadEmotes: () => {},
     }),
-    getBehaviorManager: mock().mockReturnValue({
-      start: mock(),
-      stop: mock(),
+    getBehaviorManager: () => ({
+      start: () => {},
+      stop: () => {},
       isRunning: false,
     }),
-    getBuildManager: mock().mockReturnValue({
-      duplicate: mock(),
-      translate: mock(),
-      rotate: mock(),
-      scale: mock(),
-      delete: mock(),
-      importEntity: mock(),
+    getBuildManager: () => ({
+      duplicate: () => {},
+      translate: () => {},
+      rotate: () => {},
+      scale: () => {},
+      delete: () => {},
+      importEntity: () => {},
     }),
-    getVoiceManager: mock().mockReturnValue({
-      start: mock(),
-      stop: mock(),
+    getVoiceManager: () => ({
+      start: () => {},
+      stop: () => {},
     }),
     currentWorldId: 'test-world-123',
-    connect: mock().mockResolvedValue(true),
-    disconnect: mock().mockResolvedValue(true),
+    connect: async () => true,
+    disconnect: async () => true,
   };
 }
 
-// Add spy on console for common usage in tests
-export function setupLoggerSpies() {
+/**
+ * Sets up logger spies for common usage in tests
+ */
+export function setupLoggerSpies(mockFn?: any) {
   const originalConsole = {
     info: console.info,
     error: console.error,
@@ -432,12 +277,14 @@ export function setupLoggerSpies() {
     debug: console.debug,
   };
 
-  console.info = mock(() => {});
-  console.error = mock(() => {});
-  console.warn = mock(() => {});
-  console.debug = mock(() => {});
+  if (mockFn) {
+    console.info = mockFn(() => {});
+    console.error = mockFn(() => {});
+    console.warn = mockFn(() => {});
+    console.debug = mockFn(() => {});
+  }
 
-  // allow tests to restore originals
+  // Allow tests to restore originals
   return () => {
     console.info = originalConsole.info;
     console.error = originalConsole.error;

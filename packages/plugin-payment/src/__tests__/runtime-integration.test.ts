@@ -1,338 +1,35 @@
 import { describe, it, expect, beforeAll, afterAll, mock } from 'bun:test';
 import {
-  elizaLogger,
   type IAgentRuntime,
   type Memory,
   type UUID,
   asUUID,
   stringToUuid,
   type Character,
-  ServiceType,
-  AgentRuntime,
-  type Plugin,
 } from '@elizaos/core';
+import { createMockRuntime, createTestMemory } from './helpers/test-runtime';
 import { PaymentService } from '../services/PaymentService';
 import { researchAction } from '../actions/researchAction';
 import { PaymentMethod, PaymentStatus } from '../types';
 import { paymentPlugin } from '../index';
-import {
-  paymentTransactions,
-  paymentRequests,
-  userWallets,
-  dailySpending,
-} from '../database/schema';
-import { PriceOracleService } from '../services/PriceOracleService';
-import { UniversalPaymentService } from '../services/UniversalPaymentService';
-import { CrossmintAdapter } from '../adapters/CrossmintAdapter';
-
-// Mock database that simulates Drizzle ORM behavior
-const createMockDatabase = () => {
-  const data = new Map<string, any[]>();
-  // Initialize with table names
-  data.set('payment_transactions', []);
-  data.set('payment_requests', []);
-  data.set('user_wallets', []);
-  data.set('daily_spending', []);
-
-  return {
-    select: () => ({
-      from: (table: any) => ({
-        where: (condition: any) => ({
-          limit: (n: number) => ({
-            then: (resolve: Function) => {
-              // Get the table name from the table object
-              let tableName = 'unknown';
-              if (table.name) {
-                tableName = table.name;
-              } else if (table.tableName) {
-                tableName = table.tableName;
-              } else if (table.symbol && table.symbol.description) {
-                // Try to extract from symbol description
-                const match = table.symbol.description.match(/Symbol\((.+)\)/);
-                if (match) {tableName = match[1];}
-              }
-              const records = data.get(tableName) || [];
-              return Promise.resolve(records.slice(0, n)).then(resolve);
-            },
-          }),
-          orderBy: (order: any) => ({
-            limit: (n: number) => ({
-              offset: (o: number) => ({
-                then: (resolve: Function) => {
-                  // Get the table name from the table object
-                  let tableName = 'unknown';
-                  if (table.name) {
-                    tableName = table.name;
-                  } else if (table.tableName) {
-                    tableName = table.tableName;
-                  } else if (table.symbol && table.symbol.description) {
-                    // Try to extract from symbol description
-                    const match = table.symbol.description.match(/Symbol\((.+)\)/);
-                    if (match) {tableName = match[1];}
-                  }
-                  const records = data.get(tableName) || [];
-                  return Promise.resolve(records.slice(o, o + n)).then(resolve);
-                },
-              }),
-            }),
-          }),
-        }),
-        // Add orderBy at top level for getPaymentHistory
-        orderBy: (order: any) => ({
-          limit: (n: number) => ({
-            offset: (o: number) => {
-              return Promise.resolve([]);
-            },
-          }),
-        }),
-      }),
-    }),
-
-    insert: (table: any) => ({
-      values: async (values: any) => {
-        const tableName = table.name || 'unknown';
-        const records = data.get(tableName) || [];
-        records.push(values);
-        data.set(tableName, records);
-      },
-    }),
-
-    update: (table: any) => ({
-      set: (values: any) => ({
-        where: (condition: any) => Promise.resolve(),
-      }),
-    }),
-
-    delete: (table: any) => ({
-      where: (condition: any) => Promise.resolve(),
-    }),
-
-    // For direct SQL-like access
-    prepare: (sql: string) => ({
-      get: (id: string) => {
-        if (sql.includes('user_wallets')) {
-          const wallets = data.get('userWallets') || [];
-          return wallets.find((w: any) => w.userId === id);
-        }
-        return null;
-      },
-    }),
-  };
-};
-
-// Mock database service
-class MockDatabaseService {
-  private data = new Map<string, any>();
-
-  getDatabase() {
-    const self = this;
-    return {
-      select: mock().mockReturnThis(),
-      from: mock().mockReturnThis(),
-      where: mock().mockReturnThis(),
-      limit: mock().mockResolvedValue([]),
-      insert: mock().mockReturnThis(),
-      values: mock().mockResolvedValue({}),
-      update: mock().mockReturnThis(),
-      set: mock().mockReturnThis(),
-      delete: mock().mockReturnThis(),
-      execute: mock().mockResolvedValue([]),
-    };
-  }
-
-  async get(key: string) {
-    return this.data.get(key);
-  }
-
-  async set(key: string, value: any) {
-    this.data.set(key, value);
-  }
-
-  async delete(key: string) {
-    this.data.delete(key);
-  }
-
-  async query(sql: string, params?: any[]) {
-    return [];
-  }
-}
-
-// Mock Crossmint services for testing
-class MockCrossmintService {
-  async listWallets() {
-    return [
-      {
-        address: '0x742d35Cc6634C0532925a3b844Bc9e7595f2bD3e',
-        type: 'evm-mpc-wallet',
-        linkedUser: 'test-user',
-        createdAt: new Date().toISOString(),
-      },
-    ];
-  }
-
-  async createWallet(params: any) {
-    return {
-      address: `0x${Math.random().toString(16).substring(2, 42)}`,
-      type: params.type,
-      linkedUser: params.linkedUser,
-      createdAt: new Date().toISOString(),
-    };
-  }
-
-  async createTransfer(params: any) {
-    return {
-      id: `tx_${Date.now()}`,
-      hash: `0x${Math.random().toString(16).substring(2, 66)}`,
-      status: 'pending',
-      chain: 'ethereum',
-      gas: '21000',
-      gasPrice: '20000000000',
-      createdAt: new Date().toISOString(),
-    };
-  }
-
-  async getTransaction(hash: string) {
-    return {
-      hash,
-      status: 'success',
-      chain: 'ethereum',
-      gas: '21000',
-      gasPrice: '20000000000',
-      createdAt: new Date().toISOString(),
-    };
-  }
-}
-
-class MockCrossmintWalletService {
-  async getBalances(owner?: string) {
-    return [
-      {
-        address: 'native',
-        symbol: 'ETH',
-        name: 'Ethereum',
-        decimals: 18,
-        balance: '1.5',
-        balanceFormatted: '1.500000',
-        valueUsd: 3750,
-        priceUsd: 2500,
-        chain: 'ethereum',
-        isNative: true,
-      },
-    ];
-  }
-
-  async transfer(params: any) {
-    return {
-      hash: `0x${Math.random().toString(16).substring(2, 66)}`,
-      status: 'pending',
-      chain: params.chain || 'ethereum',
-      gasUsed: '21000',
-      gasPrice: '20000000000',
-      confirmations: 0,
-      timestamp: Date.now(),
-    };
-  }
-
-  async getTransaction(hash: string) {
-    return {
-      hash,
-      status: 'confirmed',
-      chain: 'ethereum',
-      gasUsed: '21000',
-      gasPrice: '20000000000',
-      confirmations: 1,
-      timestamp: Date.now(),
-    };
-  }
-
-  async createWallet(params: any) {
-    return {
-      id: `wallet-${Date.now()}`,
-      address: `0x${Math.random().toString(16).substring(2, 42)}`,
-      type: params.type || 'mpc',
-      name: params.name,
-      chain: 'ethereum',
-      metadata: params.metadata,
-      isActive: true,
-      createdAt: Date.now(),
-    };
-  }
-}
-
-// Mock Crossmint plugin
-const mockCrossmintPlugin: Plugin = {
-  name: '@elizaos/plugin-crossmint',
-  description: 'Mock Crossmint plugin for testing',
-  services: [MockCrossmintService as any, MockCrossmintWalletService as any],
-  actions: [],
-  providers: [],
-  evaluators: [],
-};
 
 describe('Payment Plugin Runtime Integration', () => {
   let runtime: IAgentRuntime;
   let paymentService: PaymentService;
-  let mockDb: ReturnType<typeof createMockDatabase>;
-  let mockDbService: MockDatabaseService;
 
   beforeAll(async () => {
-    elizaLogger.info('Setting up runtime integration test');
+    console.info('Setting up runtime integration test');
 
-    // Create test character
-    const testCharacter: Character = {
-      id: stringToUuid('test-payment-agent'),
-      name: 'PaymentTestAgent',
-      username: 'payment_test',
-      bio: 'A test agent for payment functionality',
-      settings: {
-        secrets: {},
-        model: 'gpt-3.5-turbo',
-        embeddingModel: 'text-embedding-3-small',
+    // Create mock runtime with payment-specific settings
+    runtime = createMockRuntime({
+      character: {
+        id: stringToUuid('test-payment-agent'),
+        name: 'PaymentTestAgent',
+        username: 'payment_test',
+        bio: 'A test agent for payment functionality',
+        plugins: [paymentPlugin.name],
       },
-      plugins: [paymentPlugin.name],
-    };
-
-    // Create mock database
-    mockDb = createMockDatabase();
-
-    // Create mock database service
-    mockDbService = new MockDatabaseService();
-
-    // Create mock runtime with mutable settings storage
-    const runtimeSettings: Record<string, string> = {
-      PAYMENT_AUTO_APPROVAL_ENABLED: 'true',
-      PAYMENT_AUTO_APPROVAL_THRESHOLD: '10',
-      PAYMENT_DEFAULT_CURRENCY: 'USDC',
-      PAYMENT_REQUIRE_CONFIRMATION: 'false',
-      PAYMENT_TRUST_THRESHOLD: '70',
-      PAYMENT_MAX_DAILY_SPEND: '1000',
-      WALLET_ENCRYPTION_KEY: `0x${'0'.repeat(64)}`,
-      ETH_RPC_URL: 'https://eth-sepolia.g.alchemy.com/v2/demo',
-      POLYGON_RPC_URL: 'https://polygon-mumbai.g.alchemy.com/v2/demo',
-      NODE_ENV: 'test',
-    };
-
-    runtime = {
-      agentId: asUUID(stringToUuid('test-agent')),
-      character: testCharacter,
-      getSetting: (key: string) => {
-        return runtimeSettings[key] || testCharacter.settings?.secrets?.[key];
-      },
-      setSetting: async (key: string, value: string) => {
-        runtimeSettings[key] = value;
-      },
-      getService: (name: string) => {
-        if (name === 'payment') {return paymentService;}
-        if (name === 'database')
-        {return {
-          getDatabase: () => mockDbService,
-        };}
-        return null;
-      },
-      registerAction: mock(),
-      registerService: mock(),
-      emit: mock(),
-    } as any;
+    });
 
     // Initialize payment service
     paymentService = new PaymentService();
@@ -384,7 +81,6 @@ describe('Payment Plugin Runtime Integration', () => {
       }
     });
 
-
     it('should check wallet encryption', async () => {
       const userId = asUUID(stringToUuid('test-user-encryption'));
 
@@ -425,16 +121,11 @@ describe('Payment Plugin Runtime Integration', () => {
 
   describe('Research Action Integration', () => {
     it('should validate research requests', async () => {
-      const message: Memory = {
-        id: asUUID(stringToUuid('test-research-msg')),
-        entityId: asUUID(stringToUuid('test-user-research')),
-        agentId: runtime.agentId,
-        roomId: asUUID(stringToUuid('test-room')),
+      const message = createTestMemory({
         content: {
           text: 'Research blockchain scalability solutions',
         },
-        createdAt: Date.now(),
-      };
+      });
 
       // Validate the action
       const isValid = await researchAction.validate!(runtime, message);
@@ -442,16 +133,11 @@ describe('Payment Plugin Runtime Integration', () => {
     });
 
     it('should handle research payment flow', async () => {
-      const message: Memory = {
-        id: asUUID(stringToUuid('test-research-payment')),
-        entityId: asUUID(stringToUuid('test-user-payment')),
-        agentId: runtime.agentId,
-        roomId: asUUID(stringToUuid('test-room')),
+      const message = createTestMemory({
         content: {
           text: 'Can you research AI trends?',
         },
-        createdAt: Date.now(),
-      };
+      });
 
       const callback = mock();
       await researchAction.handler(runtime, message, undefined, {}, callback);
@@ -622,7 +308,9 @@ describe('Payment Plugin Runtime Integration', () => {
         const result = await paymentService.processPayment(paymentRequest, runtime);
         expect(result).toBeDefined();
         // The payment should either succeed or fail gracefully
-        expect([PaymentStatus.PENDING, PaymentStatus.FAILED, PaymentStatus.COMPLETED]).toContain(result.status);
+        expect([PaymentStatus.PENDING, PaymentStatus.FAILED, PaymentStatus.COMPLETED]).toContain(
+          result.status
+        );
       } catch (error) {
         // If an error is thrown, ensure it's handled gracefully
         expect(error).toBeDefined();

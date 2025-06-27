@@ -24,11 +24,21 @@ async function validateTavilyConfig() {
 
   // Test environment variables
   console.log('📋 Environment Variables:');
-  console.log(`   TAVILY_API_KEY: ${process.env.TAVILY_API_KEY ? '✅ Configured' : '❌ Missing'}`);
-  console.log(`   EXA_API_KEY: ${process.env.EXA_API_KEY ? '✅ Present' : '⚪ Not set'}`);
-  console.log(`   SERPER_API_KEY: ${process.env.SERPER_API_KEY ? '✅ Present' : '⚪ Not set'}`);
-  console.log(`   SERPAPI_API_KEY: ${process.env.SERPAPI_API_KEY ? '✅ Present' : '⚪ Not set'}`);
-  console.log(`   FIRECRAWL_API_KEY: ${process.env.FIRECRAWL_API_KEY ? '✅ Present' : '⚪ Not set'}`);
+  console.log(
+    `   TAVILY_API_KEY: ${process.env.TAVILY_API_KEY ? '✅ Configured' : '❌ Missing'}`
+  );
+  console.log(
+    `   EXA_API_KEY: ${process.env.EXA_API_KEY ? '✅ Present' : '⚪ Not set'}`
+  );
+  console.log(
+    `   SERPER_API_KEY: ${process.env.SERPER_API_KEY ? '✅ Present' : '⚪ Not set'}`
+  );
+  console.log(
+    `   SERPAPI_API_KEY: ${process.env.SERPAPI_API_KEY ? '✅ Present' : '⚪ Not set'}`
+  );
+  console.log(
+    `   FIRECRAWL_API_KEY: ${process.env.FIRECRAWL_API_KEY ? '✅ Present' : '⚪ Not set'}`
+  );
   console.log('');
 
   // Test provider selection
@@ -39,9 +49,13 @@ async function validateTavilyConfig() {
     console.log(`✅ Web provider created: ${webProvider.constructor.name}`);
 
     if (webProvider.constructor.name === 'TavilySearchProvider') {
-      console.log('🎉 SUCCESS: Tavily is being used as the primary web search provider!');
+      console.log(
+        '🎉 SUCCESS: Tavily is being used as the primary web search provider!'
+      );
     } else {
-      console.log(`⚠️  WARNING: Using ${webProvider.constructor.name} instead of Tavily`);
+      console.log(
+        `⚠️  WARNING: Using ${webProvider.constructor.name} instead of Tavily`
+      );
       console.log('   This might be due to missing TAVILY_API_KEY');
     }
   } catch (error) {
@@ -58,12 +72,13 @@ async function validateTavilyConfig() {
       // Test a simple search (commented out to avoid API usage during config test)
       // const results = await tavilyProvider.search('test query', 1);
       // console.log(`✅ Test search completed: ${results.length} results`);
-
     } catch (error) {
       console.error(`❌ Tavily provider creation failed: ${error.message}`);
     }
   } else {
-    console.log('\n⚠️  Cannot test Tavily functionality without TAVILY_API_KEY');
+    console.log(
+      '\n⚠️  Cannot test Tavily functionality without TAVILY_API_KEY'
+    );
   }
 
   // Test academic provider
@@ -77,20 +92,26 @@ async function validateTavilyConfig() {
 
   console.log('\n📊 Configuration Summary:');
   console.log('   Research Plugin: ✅ Ready');
-  console.log(`   Primary Search: ${process.env.TAVILY_API_KEY ? '🎯 Tavily (Optimal)' : '⚠️  Fallback provider'}`);
+  console.log(
+    `   Primary Search: ${process.env.TAVILY_API_KEY ? '🎯 Tavily (Optimal)' : '⚠️  Fallback provider'}`
+  );
   console.log('   Domain Blacklisting: ✅ Enabled');
   console.log('   Intelligent Source Selection: ✅ Enabled');
   console.log('   Benchmark Infrastructure: ✅ Ready');
 
   if (process.env.TAVILY_API_KEY) {
-    console.log('\n🎉 CONFIGURATION COMPLETE: Ready for production benchmarking with Tavily!');
+    console.log(
+      '\n🎉 CONFIGURATION COMPLETE: Ready for production benchmarking with Tavily!'
+    );
   } else {
-    console.log('\n💡 RECOMMENDATION: Set TAVILY_API_KEY for optimal research performance');
+    console.log(
+      '\n💡 RECOMMENDATION: Set TAVILY_API_KEY for optimal research performance'
+    );
   }
 }
 
 // Run validation
-validateTavilyConfig().catch(error => {
+validateTavilyConfig().catch((error) => {
   console.error('❌ Configuration test failed:', error);
   process.exit(1);
 });

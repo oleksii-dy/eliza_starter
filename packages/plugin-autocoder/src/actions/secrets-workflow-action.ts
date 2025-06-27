@@ -15,7 +15,7 @@ import {
   type State,
   type HandlerCallback,
   type ActionResult,
-  elizaLogger
+  elizaLogger,
 } from '@elizaos/core';
 
 export interface SecretRequirement {
@@ -46,43 +46,43 @@ export const secretsWorkflowAction: Action = {
     'configure credentials',
     'security setup',
     'environment variables',
-    'api key management'
+    'api key management',
   ],
   examples: [
     [
       {
         name: 'User',
         content: {
-          text: 'I need help setting up API keys for my weather plugin'
-        }
+          text: 'I need help setting up API keys for my weather plugin',
+        },
       },
       {
         name: 'Assistant',
         content: {
-          text: 'I\'ll help you securely configure the required API keys for your weather plugin. Let me analyze what credentials you\'ll need.',
-          actions: ['SECRETS_WORKFLOW']
-        }
-      }
+          text: "I'll help you securely configure the required API keys for your weather plugin. Let me analyze what credentials you'll need.",
+          actions: ['SECRETS_WORKFLOW'],
+        },
+      },
     ],
     [
       {
         name: 'User',
         content: {
-          text: 'What secrets do I need for a GitHub MCP server?'
-        }
+          text: 'What secrets do I need for a GitHub MCP server?',
+        },
       },
       {
         name: 'Assistant',
         content: {
-          text: 'I\'ll analyze the GitHub MCP server requirements and guide you through setting up the necessary authentication credentials.',
-          actions: ['SECRETS_WORKFLOW']
-        }
-      }
-    ]
+          text: "I'll analyze the GitHub MCP server requirements and guide you through setting up the necessary authentication credentials.",
+          actions: ['SECRETS_WORKFLOW'],
+        },
+      },
+    ],
   ],
 
   validate: async (runtime: IAgentRuntime) => {
-    const secretsService = runtime.getService('SECRETS');
+    const secretsService = runtime.getService('SECRETS') as any;
     return !!secretsService;
   },
 
@@ -96,7 +96,7 @@ export const secretsWorkflowAction: Action = {
     try {
       elizaLogger.info('🔐 Starting Secrets Workflow');
 
-      const secretsService = runtime.getService('SECRETS');
+      const secretsService = runtime.getService('SECRETS') as any;
       if (!secretsService) {
         throw new Error('Secrets service not available');
       }
@@ -124,7 +124,7 @@ Common secret categories:
 Respond with JSON containing: projectType, projectName, intent, secretCategories.
 `,
         temperature: 0.1,
-        maxTokens: 1000
+        maxTokens: 1000,
       });
 
       let analysisData: any;
@@ -135,7 +135,7 @@ Respond with JSON containing: projectType, projectName, intent, secretCategories
           projectType: 'general',
           projectName: 'unknown',
           intent: 'setup',
-          secretCategories: ['api_key']
+          secretCategories: ['api_key'],
         };
       }
 
@@ -154,11 +154,16 @@ Respond with JSON containing: projectType, projectName, intent, secretCategories
 
       responseText += '📊 **Secrets Analysis**\n';
       responseText += `- Security Level: ${secretsAnalysis.securityLevel.toUpperCase()}\n`;
-      responseText += `- Required Secrets: ${secretsAnalysis.requirements.filter(r => r.required).length}\n`;
-      responseText += `- Optional Secrets: ${secretsAnalysis.requirements.filter(r => !r.required).length}\n\n`;
+      responseText += `- Required Secrets: ${secretsAnalysis.requirements.filter((r) => r.required).length}\n`;
+      responseText += `- Optional Secrets: ${secretsAnalysis.requirements.filter((r) => !r.required).length}\n\n`;
 
       // Check current secrets status
-      const secretsStatus = await checkSecretsStatus(secretsAnalysis.requirements, secretsService, runtime, message.entityId);
+      const secretsStatus = await checkSecretsStatus(
+        secretsAnalysis.requirements,
+        secretsService,
+        runtime,
+        message.entityId
+      );
 
       responseText += '🔍 **Current Status**\n';
       responseText += `- Available: ${secretsStatus.available.length}\n`;
@@ -181,7 +186,7 @@ Respond with JSON containing: projectType, projectName, intent, secretCategories
 
       if (secretsStatus.available.length > 0) {
         responseText += '✅ **Available Secrets**\n';
-        secretsStatus.available.forEach(secret => {
+        secretsStatus.available.forEach((secret) => {
           responseText += `- ${secret.name}: Ready ✓\n`;
         });
         responseText += '\n';
@@ -189,7 +194,7 @@ Respond with JSON containing: projectType, projectName, intent, secretCategories
 
       if (secretsStatus.invalid.length > 0) {
         responseText += '⚠️ **Invalid/Expired Secrets**\n';
-        secretsStatus.invalid.forEach(secret => {
+        secretsStatus.invalid.forEach((secret) => {
           responseText += `- ${secret.name}: Needs updating\n`;
         });
         responseText += '\n';
@@ -198,7 +203,7 @@ Respond with JSON containing: projectType, projectName, intent, secretCategories
       // Provide recommendations
       if (secretsAnalysis.recommendations.length > 0) {
         responseText += '💡 **Security Recommendations**\n';
-        secretsAnalysis.recommendations.forEach(rec => {
+        secretsAnalysis.recommendations.forEach((rec) => {
           responseText += `- ${rec}\n`;
         });
         responseText += '\n';
@@ -239,8 +244,8 @@ Respond with JSON containing: projectType, projectName, intent, secretCategories
           secretsAnalysis,
           secretsStatus,
           projectType: analysisData.projectType,
-          projectName: analysisData.projectName
-        }
+          projectName: analysisData.projectName,
+        },
       });
 
       return {
@@ -252,25 +257,26 @@ Respond with JSON containing: projectType, projectName, intent, secretCategories
           missingSecrets: secretsStatus.missing.length,
           invalidSecrets: secretsStatus.invalid.length,
           securityLevel: secretsAnalysis.securityLevel,
-          readyForDevelopment: secretsStatus.missing.length === 0 && secretsStatus.invalid.length === 0
-        }
+          readyForDevelopment:
+            secretsStatus.missing.length === 0 && secretsStatus.invalid.length === 0,
+        },
       };
-
-    } catch (error) {
-      elizaLogger.error('Error in SECRETS_WORKFLOW:', error);
+    } catch (_error) {
+      elizaLogger.error('Error in SECRETS_WORKFLOW:', _error);
 
       let errorText = '❌ **Secrets Workflow Failed**\n\n';
-      errorText += `Error: ${error instanceof Error ? error.message : 'Unknown error'}\n\n`;
-      errorText += 'Please ensure the secrets manager service is available and properly configured.';
+      errorText += `Error: ${_error instanceof Error ? _error.message : 'Unknown error'}\n\n`;
+      errorText +=
+        'Please ensure the secrets manager service is available and properly configured.';
 
       await callback?.({
         text: errorText,
-        action: 'SECRETS_WORKFLOW'
+        action: 'SECRETS_WORKFLOW',
       });
 
-      throw error;
+      throw _error;
     }
-  }
+  },
 };
 
 async function generateSecretsAnalysis(
@@ -304,7 +310,7 @@ Respond with JSON containing detailed requirements array with name, description,
   const response = await runtime.useModel('TEXT_LARGE', {
     prompt: analysisPrompt,
     temperature: 0.2,
-    maxTokens: 2000
+    maxTokens: 2000,
   });
 
   try {
@@ -312,7 +318,8 @@ Respond with JSON containing detailed requirements array with name, description,
 
     // Calculate security level
     const requiredCount = analysis.requirements?.filter((r: any) => r.required).length || 0;
-    const apiKeyCount = analysis.requirements?.filter((r: any) => r.category === 'api_key').length || 0;
+    const apiKeyCount =
+      analysis.requirements?.filter((r: any) => r.category === 'api_key').length || 0;
 
     let securityLevel: 'low' | 'medium' | 'high' = 'low';
     if (apiKeyCount > 2 || requiredCount > 3) {
@@ -331,8 +338,8 @@ Respond with JSON containing detailed requirements array with name, description,
         'Store secrets securely using the secrets manager',
         'Never commit secrets to version control',
         'Use environment-specific configurations',
-        'Regularly rotate API keys and tokens'
-      ]
+        'Regularly rotate API keys and tokens',
+      ],
     };
   } catch (_parseError) {
     // Fallback analysis
@@ -342,7 +349,7 @@ Respond with JSON containing detailed requirements array with name, description,
       requirements: [],
       estimatedSecrets: 0,
       securityLevel: 'low',
-      recommendations: ['Use the secrets manager for secure credential storage']
+      recommendations: ['Use the secrets manager for secure credential storage'],
     };
   }
 }
@@ -353,9 +360,9 @@ async function checkSecretsStatus(
   runtime: IAgentRuntime,
   entityId?: string
 ): Promise<{
-  available: SecretRequirement[],
-  missing: SecretRequirement[],
-  invalid: SecretRequirement[]
+  available: SecretRequirement[];
+  missing: SecretRequirement[];
+  invalid: SecretRequirement[];
 }> {
   const available: SecretRequirement[] = [];
   const missing: SecretRequirement[] = [];
@@ -366,7 +373,7 @@ async function checkSecretsStatus(
       const secretValue = await (secretsService as any).get(requirement.name, {
         level: 'global',
         agentId: runtime.agentId,
-        requesterId: entityId || runtime.agentId
+        requesterId: entityId || runtime.agentId,
       });
 
       if (secretValue) {
@@ -384,7 +391,7 @@ async function checkSecretsStatus(
       } else {
         missing.push(requirement);
       }
-    } catch (error) {
+    } catch (_error) {
       missing.push(requirement);
     }
   }
@@ -415,11 +422,11 @@ Keep instructions practical and specific.
     const response = await runtime.useModel('TEXT_LARGE', {
       prompt: instructionsPrompt,
       temperature: 0.1,
-      maxTokens: 1000
+      maxTokens: 1000,
     });
 
     return response;
-  } catch (error) {
+  } catch (_error) {
     return `1. Obtain ${requirement.name} from the appropriate service provider\n2. Store securely using: Set secret "${requirement.name}" via secrets manager\n3. Validate the credential is working correctly`;
   }
 }

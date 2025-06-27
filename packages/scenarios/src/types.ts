@@ -92,7 +92,13 @@ export interface ScenarioVerification {
 
 export interface VerificationRule {
   id: string;
-  type: 'llm' | 'api-verification' | 'fact-checking' | 'llm-evaluation' | 'storage-verification' | 'code';
+  type:
+    | 'llm'
+    | 'api-verification'
+    | 'fact-checking'
+    | 'llm-evaluation'
+    | 'storage-verification'
+    | 'code';
   description: string;
   config: VerificationConfig;
   weight?: number;

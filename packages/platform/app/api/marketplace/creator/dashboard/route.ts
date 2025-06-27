@@ -4,7 +4,7 @@ import { auth } from '@/lib/auth';
 
 const marketplaceService = new MarketplaceService();
 
-export async function GET(request: NextRequest) {
+export async function handleGET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     // Get creator dashboard data
     const dashboard = await marketplaceService.getCreatorDashboard(
       session.user.id,
-      session.organizationId
+      session.organizationId,
     );
 
     return NextResponse.json({
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     console.error('Failed to get creator dashboard:', error);
     return NextResponse.json(
       { error: 'Failed to get creator dashboard' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

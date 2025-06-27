@@ -4,16 +4,25 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
-import { addCredits, deductCredits, getCreditBalance } from '../../lib/server/services/billing-service';
+import {
+  addCredits,
+  deductCredits,
+  getCreditBalance,
+} from '../../lib/server/services/billing-service';
 import { CreditService } from '../../lib/billing/credit-service';
-import { db, initializeDatabase } from '../../lib/database';
-import { organizations, users, creditTransactions } from '../../lib/database/schema';
+import { db, initializeDatabase, getDatabase } from '../../lib/database';
+import {
+  organizations,
+  users,
+  creditTransactions,
+} from '../../lib/database/schema';
 import { eq } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 
 describe('Performance and Load Testing', () => {
   let testOrgId: string;
   let testUserId: string;
+  let database: any;
 
   beforeEach(async () => {
     // Only run in test environment
@@ -23,21 +32,26 @@ describe('Performance and Load Testing', () => {
 
     // Initialize database
     await initializeDatabase();
+    database = await getDatabase();
 
     testOrgId = uuidv4();
     testUserId = uuidv4();
 
     try {
       // Clean up any existing test data
-      await db.delete(creditTransactions).where(eq(creditTransactions.organizationId, testOrgId));
-      await db.delete(users).where(eq(users.organizationId, testOrgId));
-      await db.delete(organizations).where(eq(organizations.id, testOrgId));
+      await database
+        .delete(creditTransactions)
+        .where(eq(creditTransactions.organizationId, testOrgId));
+      await database.delete(users).where(eq(users.organizationId, testOrgId));
+      await database
+        .delete(organizations)
+        .where(eq(organizations.id, testOrgId));
     } catch (error) {
       // Ignore cleanup errors for non-existent data
     }
 
     // Create test organization
-    await db.insert(organizations).values({
+    await database.insert(organizations).values({
       id: testOrgId,
       name: 'Performance Test Organization',
       slug: `perf-test-${testOrgId}`,
@@ -45,7 +59,7 @@ describe('Performance and Load Testing', () => {
     });
 
     // Create test user
-    await db.insert(users).values({
+    await database.insert(users).values({
       id: testUserId,
       organizationId: testOrgId,
       email: 'performance-test@example.com',
@@ -58,9 +72,13 @@ describe('Performance and Load Testing', () => {
   afterEach(async () => {
     // Clean up test data
     try {
-      await db.delete(creditTransactions).where(eq(creditTransactions.organizationId, testOrgId));
-      await db.delete(users).where(eq(users.organizationId, testOrgId));
-      await db.delete(organizations).where(eq(organizations.id, testOrgId));
+      await database
+        .delete(creditTransactions)
+        .where(eq(creditTransactions.organizationId, testOrgId));
+      await database.delete(users).where(eq(users.organizationId, testOrgId));
+      await database
+        .delete(organizations)
+        .where(eq(organizations.id, testOrgId));
     } catch (error) {
       console.warn('Performance test cleanup error:', error);
     }
@@ -79,12 +97,12 @@ describe('Performance and Load Testing', () => {
             userId: testUserId,
             amount: 1.0,
             description: `Concurrent operation ${i}`,
-            type: 'adjustment'
+            type: 'adjustment',
           }),
-          new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Operation timeout')), 5000)
-          )
-        ])
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Operation timeout')), 5000),
+          ),
+        ]),
       );
 
       const results = await Promise.allSettled(operations);
@@ -93,12 +111,19 @@ describe('Performance and Load Testing', () => {
 
       // Count successful operations (some may fail due to concurrent access)
       const successfulResults = results
-        .filter((result): result is PromiseFulfilledResult<any> => result.status === 'fulfilled' && result.value && (result.value as any).amount)
-        .map(result => result.value as any);
-      
-      expect(successfulResults.length).toBeGreaterThan(concurrentOperations * 0.5); // At least 50% success
+        .filter(
+          (result): result is PromiseFulfilledResult<any> =>
+            result.status === 'fulfilled' &&
+            result.value &&
+            (result.value as any).amount,
+        )
+        .map((result) => result.value as any);
 
-      successfulResults.forEach(result => {
+      expect(successfulResults.length).toBeGreaterThan(
+        concurrentOperations * 0.5,
+      ); // At least 50% success
+
+      successfulResults.forEach((result) => {
         expect(result).toBeDefined();
         expect(parseFloat(result.amount)).toBe(1.0);
       });
@@ -111,7 +136,9 @@ describe('Performance and Load Testing', () => {
       expect(finalBalance).toBeGreaterThan(1000.0); // Should be at least initial balance
       expect(finalBalance).toBeLessThanOrEqual(1000.0 + concurrentOperations); // Should not exceed maximum possible
 
-      console.log(`Concurrent test: ${successfulResults.length}/${concurrentOperations} operations succeeded, final balance: ${finalBalance}`);
+      console.log(
+        `Concurrent test: ${successfulResults.length}/${concurrentOperations} operations succeeded, final balance: ${finalBalance}`,
+      );
     }, 20000);
 
     test('should handle high-frequency usage tracking', async () => {
@@ -120,18 +147,14 @@ describe('Performance and Load Testing', () => {
 
       // Create high-frequency usage deductions
       const usageOperations = Array.from({ length: usageCount }, (_, i) =>
-        CreditService.deductCreditsForUsage(
-          testOrgId,
-          testUserId,
-          {
-            service: 'openai',
-            operation: 'chat',
-            modelName: 'gpt-4o-mini',
-            inputTokens: 100,
-            outputTokens: 50,
-            requestId: `perf-test-${i}`
-          }
-        )
+        CreditService.deductCreditsForUsage(testOrgId, testUserId, {
+          service: 'openai',
+          operation: 'chat',
+          modelName: 'gpt-4o-mini',
+          inputTokens: 100,
+          outputTokens: 50,
+          requestId: `perf-test-${i}`,
+        }),
       );
 
       const results = await Promise.allSettled(usageOperations);
@@ -139,7 +162,9 @@ describe('Performance and Load Testing', () => {
       const duration = endTime - startTime;
 
       // Count successful operations
-      const successfulOps = results.filter(r => r.status === 'fulfilled').length;
+      const successfulOps = results.filter(
+        (r) => r.status === 'fulfilled',
+      ).length;
 
       // Should handle most operations successfully
       expect(successfulOps).toBeGreaterThan(usageCount * 0.8); // At least 80% success rate
@@ -147,7 +172,9 @@ describe('Performance and Load Testing', () => {
       // Performance check: should complete within reasonable time
       expect(duration).toBeLessThan(10000); // 10 seconds max for 50 operations
 
-      console.log(`Processed ${successfulOps}/${usageCount} usage operations in ${duration}ms`);
+      console.log(
+        `Processed ${successfulOps}/${usageCount} usage operations in ${duration}ms`,
+      );
     }, 15000);
 
     test('should maintain performance with large transaction history', async () => {
@@ -162,30 +189,36 @@ describe('Performance and Load Testing', () => {
           userId: testUserId,
           amount: 0.01,
           description: `Historical transaction ${i}`,
-          type: 'adjustment'
+          type: 'adjustment',
         });
       }
 
       const setupDuration = Date.now() - startSetupTime;
-      console.log(`Setup ${historicalTransactions} transactions in ${setupDuration}ms`);
+      console.log(
+        `Setup ${historicalTransactions} transactions in ${setupDuration}ms`,
+      );
 
       // Now test query performance with large dataset
       const startQueryTime = Date.now();
 
-      const operations = Array.from({ length: 10 }, () => getCreditBalance(testOrgId));
+      const operations = Array.from({ length: 10 }, () =>
+        getCreditBalance(testOrgId),
+      );
       const results = await Promise.all(operations);
 
       const queryDuration = Date.now() - startQueryTime;
 
       // All queries should return correct balance
-      results.forEach(balance => {
+      results.forEach((balance) => {
         expect(balance).toBe(1000.0 + historicalTransactions * 0.01);
       });
 
       // Performance should not degrade significantly with large history
       expect(queryDuration).toBeLessThan(2000); // 2 seconds max for 10 queries
 
-      console.log(`Executed 10 balance queries in ${queryDuration}ms with ${historicalTransactions} historical transactions`);
+      console.log(
+        `Executed 10 balance queries in ${queryDuration}ms with ${historicalTransactions} historical transactions`,
+      );
     }, 30000);
   });
 
@@ -200,7 +233,7 @@ describe('Performance and Load Testing', () => {
         userId: testUserId,
         amount: 10.0,
         description: largeDescription,
-        type: 'adjustment'
+        type: 'adjustment',
       });
 
       const duration = Date.now() - startTime;
@@ -224,7 +257,7 @@ describe('Performance and Load Testing', () => {
             userId: testUserId,
             amount: 1.0,
             description: `Stress test ${i}`,
-            type: 'adjustment'
+            type: 'adjustment',
           }),
           getCreditBalance(testOrgId),
           CreditService.deductCreditsForUsage(testOrgId, testUserId, {
@@ -233,15 +266,15 @@ describe('Performance and Load Testing', () => {
             modelName: 'gpt-4o-mini',
             inputTokens: 10,
             outputTokens: 5,
-            requestId: `stress-${i}`
-          })
+            requestId: `stress-${i}`,
+          }),
         ];
 
         await Promise.allSettled(operations);
 
         // Small delay to allow garbage collection
         if (i % 10 === 0) {
-          await new Promise(resolve => setTimeout(resolve, 10));
+          await new Promise((resolve) => setTimeout(resolve, 10));
         }
       }
 
@@ -257,7 +290,10 @@ describe('Performance and Load Testing', () => {
       // Test getCreditBalance performance
       let startTime = Date.now();
       await getCreditBalance(testOrgId);
-      timings.push({ operation: 'getCreditBalance', duration: Date.now() - startTime });
+      timings.push({
+        operation: 'getCreditBalance',
+        duration: Date.now() - startTime,
+      });
 
       // Test addCredits performance
       startTime = Date.now();
@@ -266,9 +302,12 @@ describe('Performance and Load Testing', () => {
         userId: testUserId,
         amount: 5.0,
         description: 'Performance test credit addition',
-        type: 'adjustment'
+        type: 'adjustment',
       });
-      timings.push({ operation: 'addCredits', duration: Date.now() - startTime });
+      timings.push({
+        operation: 'addCredits',
+        duration: Date.now() - startTime,
+      });
 
       // Test deductCredits performance
       startTime = Date.now();
@@ -276,9 +315,12 @@ describe('Performance and Load Testing', () => {
         organizationId: testOrgId,
         userId: testUserId,
         amount: 1.0,
-        description: 'Performance test deduction'
+        description: 'Performance test deduction',
       });
-      timings.push({ operation: 'deductCredits', duration: Date.now() - startTime });
+      timings.push({
+        operation: 'deductCredits',
+        duration: Date.now() - startTime,
+      });
 
       // Test usage deduction performance
       startTime = Date.now();
@@ -288,9 +330,12 @@ describe('Performance and Load Testing', () => {
         modelName: 'gpt-4o-mini',
         inputTokens: 100,
         outputTokens: 50,
-        requestId: 'perf-test-usage'
+        requestId: 'perf-test-usage',
       });
-      timings.push({ operation: 'deductCreditsForUsage', duration: Date.now() - startTime });
+      timings.push({
+        operation: 'deductCreditsForUsage',
+        duration: Date.now() - startTime,
+      });
 
       // Log performance results
       timings.forEach(({ operation, duration }) => {
@@ -313,7 +358,7 @@ describe('Performance and Load Testing', () => {
 
         // Create burst of operations
         const burstOperations = Array.from({ length: burstSize }, (_, i) =>
-          getCreditBalance(testOrgId)
+          getCreditBalance(testOrgId),
         );
 
         const results = await Promise.all(burstOperations);
@@ -321,18 +366,20 @@ describe('Performance and Load Testing', () => {
 
         // All operations in burst should succeed
         expect(results).toHaveLength(burstSize);
-        results.forEach(balance => {
+        results.forEach((balance) => {
           expect(typeof balance).toBe('number');
         });
 
         // Burst should complete within reasonable time
         expect(burstDuration).toBeLessThan(2000); // 2 seconds max per burst
 
-        console.log(`Burst ${burst + 1}: ${burstSize} operations in ${burstDuration}ms`);
+        console.log(
+          `Burst ${burst + 1}: ${burstSize} operations in ${burstDuration}ms`,
+        );
 
         // Wait between bursts
         if (burst < burstCount - 1) {
-          await new Promise(resolve => setTimeout(resolve, burstDelay));
+          await new Promise((resolve) => setTimeout(resolve, burstDelay));
         }
       }
     }, 15000);
@@ -345,45 +392,54 @@ describe('Performance and Load Testing', () => {
         id: uuidv4(),
         name: `Scalability Test Org ${i}`,
         slug: `scale-test-${i}-${Date.now()}`,
-        creditBalance: '100.0'
+        creditBalance: '100.0',
       }));
 
       // Create multiple organizations
-      await Promise.all(orgsData.map(org =>
-        db.insert(organizations).values(org)
-      ));
+      await Promise.all(
+        orgsData.map((org) => database.insert(organizations).values(org)),
+      );
 
       try {
         const startTime = Date.now();
 
         // Perform operations across all organizations
-        const crossOrgOperations = orgsData.flatMap(org => [
+        const crossOrgOperations = orgsData.flatMap((org) => [
           getCreditBalance(org.id),
           addCredits({
             organizationId: org.id,
             userId: testUserId,
             amount: 10.0,
             description: 'Cross-org scalability test',
-            type: 'adjustment'
-          })
+            type: 'adjustment',
+          }),
         ]);
 
         const results = await Promise.allSettled(crossOrgOperations);
         const duration = Date.now() - startTime;
 
         // Most operations should succeed
-        const successCount = results.filter(r => r.status === 'fulfilled').length;
+        const successCount = results.filter(
+          (r) => r.status === 'fulfilled',
+        ).length;
         expect(successCount).toBeGreaterThan(crossOrgOperations.length * 0.8);
 
         // Should scale reasonably with multiple organizations
         expect(duration).toBeLessThan(5000); // 5 seconds max
 
-        console.log(`Cross-org operations: ${successCount}/${crossOrgOperations.length} succeeded in ${duration}ms`);
+        console.log(
+          `Cross-org operations: ${successCount}/${crossOrgOperations.length} succeeded in ${duration}ms`,
+        );
       } finally {
         // Clean up test organizations
-        await Promise.all(orgsData.map(org =>
-          db.delete(organizations).where(eq(organizations.id, org.id)).catch(() => {})
-        ));
+        await Promise.all(
+          orgsData.map((org) =>
+            database
+              .delete(organizations)
+              .where(eq(organizations.id, org.id))
+              .catch(() => {}),
+          ),
+        );
       }
     }, 10000);
   });

@@ -104,12 +104,12 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         tooltip,
         hint,
       }: {
-      htmlFor: string;
-      label: string;
-      required?: boolean;
-      tooltip?: string;
-      hint?: React.ReactNode;
-    }) => (
+        htmlFor: string;
+        label: string;
+        required?: boolean;
+        tooltip?: string;
+        hint?: React.ReactNode;
+      }) => (
         <div className="flex items-center justify-between">
           <label
             htmlFor={htmlFor}
@@ -239,7 +239,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         </div>
       </div>
     );
-  }
+  },
 );
 
 Input.displayName = 'Input';

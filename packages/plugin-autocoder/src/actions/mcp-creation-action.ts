@@ -9,7 +9,7 @@ import type {
 import { elizaLogger } from '@elizaos/core';
 import { MCPCreationService } from '../services/McpCreationService';
 import { getPluginDataPath } from '../utils/path-manager';
-import _path from 'path';  // Path utilities
+import _path from 'path'; // Path utilities
 
 /**
  * Action to create MCP (Model Context Protocol) servers

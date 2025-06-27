@@ -7,6 +7,8 @@
 
 import { $ } from 'bun';
 import { buildConfig } from './build.config';
+import { promises as fs } from 'fs';
+import { join } from 'path';
 
 async function build() {
   console.log('🏗️  Building package...');
@@ -27,7 +29,6 @@ async function build() {
 
   console.log(`✅ Built ${result.outputs.length} files`);
 
-
   // Generate TypeScript declarations
   console.log('📝 Generating TypeScript declarations...');
   try {
@@ -36,7 +37,6 @@ async function build() {
   } catch (error) {
     console.warn('⚠️ TypeScript declaration generation had issues, but continuing...');
   }
-
 
   console.log('✅ Build complete!');
 }

@@ -1,16 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import Anthropic from '@anthropic-ai/sdk';
-import { validateApiKey, checkApiKeyPermission } from '@/lib/server/services/api-key-service';
+import {
+  validateApiKey,
+  checkApiKeyPermission,
+} from '@/lib/server/services/api-key-service';
 import { deductCredits } from '@/lib/server/services/billing-service';
 import { trackUsage } from '@/lib/server/services/usage-tracking-service';
 
 const anthropicRequestSchema = z.object({
   model: z.string(),
-  messages: z.array(z.object({
-    role: z.enum(['user', 'assistant']),
-    content: z.string(),
-  })),
+  messages: z.array(
+    z.object({
+      role: z.enum(['user', 'assistant']),
+      content: z.string(),
+    }),
+  ),
   max_tokens: z.number().min(1).max(8192),
   temperature: z.number().min(0).max(1).optional(),
   system: z.string().optional(),
@@ -26,35 +31,49 @@ const ANTHROPIC_PRICING = {
   'claude-3-haiku-20240307': { input: 0.00025, output: 0.00125 },
 } as const;
 
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   try {
     // Extract API key from Authorization header
     const authHeader = request.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Missing or invalid API key' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Missing or invalid API key' },
+        { status: 401 },
+      );
     }
 
     const apiKeyValue = authHeader.substring(7);
     const apiKey = await validateApiKey(apiKeyValue);
 
     if (!apiKey) {
-      return NextResponse.json({ error: 'Invalid or expired API key' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Invalid or expired API key' },
+        { status: 401 },
+      );
     }
 
     // Check permissions
-    if (!await checkApiKeyPermission(apiKey, 'inference:anthropic')) {
-      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
+    if (!(await checkApiKeyPermission(apiKey, 'inference:anthropic'))) {
+      return NextResponse.json(
+        { error: 'Insufficient permissions' },
+        { status: 403 },
+      );
     }
 
     const body = await request.json();
     const requestData = anthropicRequestSchema.parse(body);
 
     // Check if model is supported
-    if (!ANTHROPIC_PRICING[requestData.model as keyof typeof ANTHROPIC_PRICING]) {
-      return NextResponse.json({
-        error: 'Unsupported model',
-        supportedModels: Object.keys(ANTHROPIC_PRICING)
-      }, { status: 400 });
+    if (
+      !ANTHROPIC_PRICING[requestData.model as keyof typeof ANTHROPIC_PRICING]
+    ) {
+      return NextResponse.json(
+        {
+          error: 'Unsupported model',
+          supportedModels: Object.keys(ANTHROPIC_PRICING),
+        },
+        { status: 400 },
+      );
     }
 
     // Initialize Anthropic client
@@ -75,10 +94,13 @@ export async function POST(request: NextRequest) {
     const duration = Date.now() - startTime;
 
     // Calculate costs
-    const pricing = ANTHROPIC_PRICING[requestData.model as keyof typeof ANTHROPIC_PRICING];
+    const pricing =
+      ANTHROPIC_PRICING[requestData.model as keyof typeof ANTHROPIC_PRICING];
     // Check if completion has usage property (non-streaming response)
-    const inputTokens = ('usage' in completion) ? completion.usage?.input_tokens || 0 : 0;
-    const outputTokens = ('usage' in completion) ? completion.usage?.output_tokens || 0 : 0;
+    const inputTokens =
+      'usage' in completion ? completion.usage?.input_tokens || 0 : 0;
+    const outputTokens =
+      'usage' in completion ? completion.usage?.output_tokens || 0 : 0;
 
     const inputCost = (inputTokens / 1000) * pricing.input;
     const outputCost = (outputTokens / 1000) * pricing.output;
@@ -134,7 +156,6 @@ export async function POST(request: NextRequest) {
         },
       },
     });
-
   } catch (error: any) {
     console.error('Anthropic API error:', error);
 
@@ -161,22 +182,32 @@ export async function POST(request: NextRequest) {
     }
 
     if (error instanceof z.ZodError) {
-      return NextResponse.json({
-        error: 'Validation error',
-        details: error.errors
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Validation error',
+          details: error.errors,
+        },
+        { status: 400 },
+      );
     }
 
     if (error.message.includes('Insufficient credit balance')) {
-      return NextResponse.json({
-        error: 'Insufficient credits',
-        message: 'Please add more credits to your account to continue using the API'
-      }, { status: 402 });
+      return NextResponse.json(
+        {
+          error: 'Insufficient credits',
+          message:
+            'Please add more credits to your account to continue using the API',
+        },
+        { status: 402 },
+      );
     }
 
-    return NextResponse.json({
-      error: 'API request failed',
-      message: error.message || 'Unknown error occurred'
-    }, { status: error.status || 500 });
+    return NextResponse.json(
+      {
+        error: 'API request failed',
+        message: error.message || 'Unknown error occurred',
+      },
+      { status: error.status || 500 },
+    );
   }
 }

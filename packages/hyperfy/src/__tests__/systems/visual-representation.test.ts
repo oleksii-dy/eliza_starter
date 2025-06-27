@@ -1,39 +1,39 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
-import { createTestWorld } from '../createTestWorld';
-import { VisualRepresentationSystem } from '../../rpg/systems/VisualRepresentationSystem';
-import { SpawningSystem } from '../../rpg/systems/SpawningSystem';
-import { NPCSystem } from '../../rpg/systems/NPCSystem';
-import { RPGEntity } from '../../rpg/entities/RPGEntity';
-import { SpawnerType } from '../../rpg/types';
-import { VisualComponent } from '../../rpg/types/visual.types';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
+import { createTestWorld } from '../createTestWorld'
+import { VisualRepresentationSystem } from '../../rpg/systems/VisualRepresentationSystem'
+import { SpawningSystem } from '../../rpg/systems/SpawningSystem'
+import { NPCSystem } from '../../rpg/systems/NPCSystem'
+import { RPGEntity } from '../../rpg/entities/RPGEntity'
+import { SpawnerType } from '../../rpg/types'
+import { VisualComponent } from '../../rpg/types/visual.types'
 
 describe('VisualRepresentationSystem', () => {
-  let world: any;
-  let visualSystem: VisualRepresentationSystem;
-  let spawningSystem: SpawningSystem;
-  let npcSystem: NPCSystem;
+  let world: any
+  let visualSystem: VisualRepresentationSystem
+  let spawningSystem: SpawningSystem
+  let npcSystem: NPCSystem
 
   beforeEach(async () => {
     // Create test world with all RPG systems
     world = await createTestWorld({
-      enableAllSystems: true
-    });
+      enableAllSystems: true,
+    })
 
     // Get systems
-    visualSystem = world.getSystem('visualRepresentation') as VisualRepresentationSystem;
-    spawningSystem = world.getSystem('spawning') as SpawningSystem;
-    npcSystem = world.getSystem('npc') as NPCSystem;
+    visualSystem = world.getSystem('visualRepresentation') as VisualRepresentationSystem
+    spawningSystem = world.getSystem('spawning') as SpawningSystem
+    npcSystem = world.getSystem('npc') as NPCSystem
 
-    expect(visualSystem).toBeDefined();
-    expect(spawningSystem).toBeDefined();
-    expect(npcSystem).toBeDefined();
-  });
+    expect(visualSystem).toBeDefined()
+    expect(spawningSystem).toBeDefined()
+    expect(npcSystem).toBeDefined()
+  })
 
   afterEach(() => {
     if (visualSystem) {
-      visualSystem.destroy();
+      visualSystem.destroy()
     }
-  });
+  })
 
   describe('Visual Creation', () => {
     it('should create visual for entity with explicit template', () => {
@@ -41,27 +41,27 @@ describe('VisualRepresentationSystem', () => {
         id: 'test-sword',
         type: 'item',
         name: 'Test Sword',
-        position: { x: 0, y: 0, z: 0 }
-      });
+        position: { x: 0, y: 0, z: 0 },
+      })
 
       // Create visual with explicit template
-      visualSystem.createVisual(entity, 'sword');
+      visualSystem.createVisual(entity, 'sword')
 
       // Verify visual was created
-      const visual = visualSystem.getVisual(entity.id);
-      expect(visual).toBeDefined();
-      expect(visual?.template.color).toBe(16729156); // Red color for sword
-      expect(visual?.template.size.height).toBe(1.2);
-      expect(visual?.template.animations).toContain('swing_down');
-    });
+      const visual = visualSystem.getVisual(entity.id)
+      expect(visual).toBeDefined()
+      expect(visual?.template.color).toBe(16729156) // Red color for sword
+      expect(visual?.template.size.height).toBe(1.2)
+      expect(visual?.template.animations).toContain('swing_down')
+    })
 
     it('should auto-detect template from entity type', () => {
       const entity = new RPGEntity(world, 'npc', {
         id: 'test-goblin',
         type: 'npc',
         name: 'Goblin Scout',
-        position: { x: 5, y: 0, z: 5 }
-      });
+        position: { x: 5, y: 0, z: 5 },
+      })
 
       // Add NPC component
       entity.addComponent('npc', {
@@ -89,155 +89,157 @@ describe('VisualRepresentationSystem', () => {
         wanderRadius: 5,
         spawnPoint: { x: 5, y: 0, z: 5 },
         currentTarget: null,
-        lastInteraction: 0
-      });
+        lastInteraction: 0,
+      })
 
       // Create visual without template name
-      visualSystem.createVisual(entity);
+      visualSystem.createVisual(entity)
 
       // Verify goblin template was auto-detected
-      const visual = visualSystem.getVisual(entity.id);
-      expect(visual).toBeDefined();
-      expect(visual?.template.color).toBe(2263842); // Forest green for goblin
-      expect(visual?.template.animations).toContain('walk');
-      expect(visual?.template.animations).toContain('attack');
-      expect(visual?.template.animations).toContain('die');
-    });
+      const visual = visualSystem.getVisual(entity.id)
+      expect(visual).toBeDefined()
+      expect(visual?.template.color).toBe(2263842) // Forest green for goblin
+      expect(visual?.template.animations).toContain('walk')
+      expect(visual?.template.animations).toContain('attack')
+      expect(visual?.template.animations).toContain('die')
+    })
 
     it('should use default template for unknown entity types', () => {
       const entity = new RPGEntity(world, 'unknown', {
         id: 'test-unknown',
         type: 'unknown',
         name: 'Mystery Object',
-        position: { x: 0, y: 0, z: 0 }
-      });
+        position: { x: 0, y: 0, z: 0 },
+      })
 
-      visualSystem.createVisual(entity);
+      visualSystem.createVisual(entity)
 
-      const visual = visualSystem.getVisual(entity.id);
-      expect(visual).toBeDefined();
-      expect(visual?.template.color).toBe(8947848); // Gray for default
-      expect(visual?.template.animations).toContain('pulse');
-    });
+      const visual = visualSystem.getVisual(entity.id)
+      expect(visual).toBeDefined()
+      expect(visual?.template.color).toBe(8947848) // Gray for default
+      expect(visual?.template.animations).toContain('pulse')
+    })
 
     it('should handle resource entities', () => {
       const spawnerId = spawningSystem.registerSpawner({
         position: { x: 10, y: 0, z: 10 },
         type: SpawnerType.RESOURCE,
-        entityDefinitions: [{
-          entityType: 'tree',
-          weight: 100
-        }],
+        entityDefinitions: [
+          {
+            entityType: 'tree',
+            weight: 100,
+          },
+        ],
         maxEntities: 1,
-        respawnTime: 60000
-      });
+        respawnTime: 60000,
+      })
 
-      const spawner = (spawningSystem as any).spawners.get(spawnerId);
-      const resource = spawningSystem.spawnEntity(spawner!);
+      const spawner = (spawningSystem as any).spawners.get(spawnerId)
+      const resource = spawningSystem.spawnEntity(spawner!)
 
       // Check visual was created automatically
-      const visual = resource ? visualSystem.getVisual(resource.id) : null;
-      expect(visual).toBeDefined();
-      expect(visual?.template.color).toBe(2263842); // Green for tree
-      expect(visual?.template.geometryType).toBe('cylinder');
-    });
-  });
+      const visual = resource ? visualSystem.getVisual(resource.id) : null
+      expect(visual).toBeDefined()
+      expect(visual?.template.color).toBe(2263842) // Green for tree
+      expect(visual?.template.geometryType).toBe('cylinder')
+    })
+  })
 
   describe('Animation System', () => {
-    let testEntity: RPGEntity;
-    let visual: VisualComponent | undefined;
+    let testEntity: RPGEntity
+    let visual: VisualComponent | undefined
 
     beforeEach(() => {
       testEntity = new RPGEntity(world, 'item', {
         id: 'anim-test-entity',
         type: 'item',
         name: 'Animation Test',
-        position: { x: 0, y: 0, z: 0 }
-      });
+        position: { x: 0, y: 0, z: 0 },
+      })
 
-      visualSystem.createVisual(testEntity, 'sword');
-      visual = visualSystem.getVisual(testEntity.id);
-    });
+      visualSystem.createVisual(testEntity, 'sword')
+      visual = visualSystem.getVisual(testEntity.id)
+    })
 
     it('should play animations', () => {
-      expect(visual).toBeDefined();
+      expect(visual).toBeDefined()
 
       // Play animation
-      visualSystem.playAnimation(testEntity.id, 'swing_down', false, 1000);
+      visualSystem.playAnimation(testEntity.id, 'swing_down', false, 1000)
 
       // Check animation is active
-      const activeAnimations = (visualSystem as any).activeAnimations;
-      expect(activeAnimations.has(testEntity.id)).toBe(true);
+      const activeAnimations = (visualSystem as any).activeAnimations
+      expect(activeAnimations.has(testEntity.id)).toBe(true)
 
-      const animation = activeAnimations.get(testEntity.id);
-      expect(animation.animationType).toBe('swing_down');
-      expect(animation.loop).toBe(false);
-      expect(animation.duration).toBe(1000);
-    });
+      const animation = activeAnimations.get(testEntity.id)
+      expect(animation.animationType).toBe('swing_down')
+      expect(animation.loop).toBe(false)
+      expect(animation.duration).toBe(1000)
+    })
 
     it('should loop animations', () => {
-      visualSystem.playAnimation(testEntity.id, 'idle', true, 500);
+      visualSystem.playAnimation(testEntity.id, 'idle', true, 500)
 
-      const animation = (visualSystem as any).activeAnimations.get(testEntity.id);
-      expect(animation).toBeDefined();
-      expect(animation.loop).toBe(true);
-    });
+      const animation = (visualSystem as any).activeAnimations.get(testEntity.id)
+      expect(animation).toBeDefined()
+      expect(animation.loop).toBe(true)
+    })
 
     it('should stop animations', () => {
-      visualSystem.playAnimation(testEntity.id, 'swing_down', false, 1000);
-      expect((visualSystem as any).activeAnimations.has(testEntity.id)).toBe(true);
+      visualSystem.playAnimation(testEntity.id, 'swing_down', false, 1000)
+      expect((visualSystem as any).activeAnimations.has(testEntity.id)).toBe(true)
 
-      visualSystem.stopAnimation(testEntity.id);
-      expect((visualSystem as any).activeAnimations.has(testEntity.id)).toBe(false);
-    });
+      visualSystem.stopAnimation(testEntity.id)
+      expect((visualSystem as any).activeAnimations.has(testEntity.id)).toBe(false)
+    })
 
     it('should update animations over time', () => {
       // Play walk animation
-      visualSystem.playAnimation(testEntity.id, 'walk', true, 1000);
+      visualSystem.playAnimation(testEntity.id, 'walk', true, 1000)
 
       // Check animation was started
-      const activeAnimations = (visualSystem as any).activeAnimations;
-      expect(activeAnimations.has(testEntity.id)).toBe(true);
+      const activeAnimations = (visualSystem as any).activeAnimations
+      expect(activeAnimations.has(testEntity.id)).toBe(true)
 
       // Get initial animation state
-      const animation = activeAnimations.get(testEntity.id);
-      const initialStartTime = animation.startTime;
+      const animation = activeAnimations.get(testEntity.id)
+      const initialStartTime = animation.startTime
 
       // Simulate time passing by adjusting start time
-      animation.startTime = Date.now() - 500; // 50% through animation
+      animation.startTime = Date.now() - 500 // 50% through animation
 
       // Update animations
-      visualSystem.update(0.016); // One frame
+      visualSystem.update(0.016) // One frame
 
       // Check that animation is still active (since it's looping)
-      expect(activeAnimations.has(testEntity.id)).toBe(true);
+      expect(activeAnimations.has(testEntity.id)).toBe(true)
 
       // For non-looping animation, test completion
-      visualSystem.playAnimation(testEntity.id, 'attack', false, 100);
-      const attackAnim = activeAnimations.get(testEntity.id);
-      attackAnim.startTime = Date.now() - 150; // Past duration
+      visualSystem.playAnimation(testEntity.id, 'attack', false, 100)
+      const attackAnim = activeAnimations.get(testEntity.id)
+      attackAnim.startTime = Date.now() - 150 // Past duration
 
-      visualSystem.update(0.016);
+      visualSystem.update(0.016)
 
       // Non-looping animation should be removed after completion
-      expect(activeAnimations.has(testEntity.id)).toBe(false);
-    });
+      expect(activeAnimations.has(testEntity.id)).toBe(false)
+    })
 
     it('should handle multiple animation types', () => {
-      const animationTypes = ['walk', 'attack', 'die', 'pulse', 'rotate', 'bounce'];
+      const animationTypes = ['walk', 'attack', 'die', 'pulse', 'rotate', 'bounce']
 
       for (const animType of animationTypes) {
-        visualSystem.playAnimation(testEntity.id, animType, false, 100);
+        visualSystem.playAnimation(testEntity.id, animType, false, 100)
 
-        const animation = (visualSystem as any).activeAnimations.get(testEntity.id);
-        expect(animation).toBeDefined();
-        expect(animation.animationType).toBe(animType);
+        const animation = (visualSystem as any).activeAnimations.get(testEntity.id)
+        expect(animation).toBeDefined()
+        expect(animation.animationType).toBe(animType)
 
         // Update to apply animation
-        visualSystem.update(0.05);
+        visualSystem.update(0.05)
       }
-    });
-  });
+    })
+  })
 
   describe('Visual Cleanup', () => {
     it('should remove visual when entity is destroyed', () => {
@@ -245,33 +247,33 @@ describe('VisualRepresentationSystem', () => {
         id: 'cleanup-test',
         type: 'item',
         name: 'Cleanup Test',
-        position: { x: 0, y: 0, z: 0 }
-      });
+        position: { x: 0, y: 0, z: 0 },
+      })
 
-      visualSystem.createVisual(entity, 'coin');
-      expect(visualSystem.getVisual(entity.id)).toBeDefined();
+      visualSystem.createVisual(entity, 'coin')
+      expect(visualSystem.getVisual(entity.id)).toBeDefined()
 
       // Remove visual
-      visualSystem.removeVisual(entity.id);
-      expect(visualSystem.getVisual(entity.id)).toBeUndefined();
-    });
+      visualSystem.removeVisual(entity.id)
+      expect(visualSystem.getVisual(entity.id)).toBeUndefined()
+    })
 
     it('should stop animations when removing visual', () => {
       const entity = new RPGEntity(world, 'item', {
         id: 'cleanup-anim-test',
         type: 'item',
         name: 'Cleanup Animation Test',
-        position: { x: 0, y: 0, z: 0 }
-      });
+        position: { x: 0, y: 0, z: 0 },
+      })
 
-      visualSystem.createVisual(entity, 'gem');
-      visualSystem.playAnimation(entity.id, 'rotate', true);
+      visualSystem.createVisual(entity, 'gem')
+      visualSystem.playAnimation(entity.id, 'rotate', true)
 
-      expect((visualSystem as any).activeAnimations.has(entity.id)).toBe(true);
+      expect((visualSystem as any).activeAnimations.has(entity.id)).toBe(true)
 
-      visualSystem.removeVisual(entity.id);
-      expect((visualSystem as any).activeAnimations.has(entity.id)).toBe(false);
-    });
+      visualSystem.removeVisual(entity.id)
+      expect((visualSystem as any).activeAnimations.has(entity.id)).toBe(false)
+    })
 
     it('should clean up all visuals on destroy', () => {
       // Create multiple entities
@@ -280,69 +282,73 @@ describe('VisualRepresentationSystem', () => {
           id: `destroy-test-${i}`,
           type: 'item',
           name: `Test Item ${i}`,
-          position: { x: i, y: 0, z: 0 }
-        });
-        visualSystem.createVisual(entity);
+          position: { x: i, y: 0, z: 0 },
+        })
+        visualSystem.createVisual(entity)
       }
 
-      expect((visualSystem as any).entityVisuals.size).toBe(5);
+      expect((visualSystem as any).entityVisuals.size).toBe(5)
 
       // Destroy system
-      visualSystem.destroy();
+      visualSystem.destroy()
 
-      expect((visualSystem as any).entityVisuals.size).toBe(0);
-      expect((visualSystem as any).activeAnimations.size).toBe(0);
-    });
-  });
+      expect((visualSystem as any).entityVisuals.size).toBe(0)
+      expect((visualSystem as any).activeAnimations.size).toBe(0)
+    })
+  })
 
   describe('Integration with Spawning System', () => {
     it('should create visuals for spawned NPCs', () => {
       const spawnerId = spawningSystem.registerSpawner({
         position: { x: 0, y: 0, z: 0 },
         type: SpawnerType.NPC,
-        entityDefinitions: [{
-          entityType: 'skeleton',
-          entityId: 5, // Skeleton NPC ID
-          weight: 100
-        }],
+        entityDefinitions: [
+          {
+            entityType: 'skeleton',
+            entityId: 5, // Skeleton NPC ID
+            weight: 100,
+          },
+        ],
         maxEntities: 1,
-        respawnTime: 30000
-      });
+        respawnTime: 30000,
+      })
 
-      const spawner = (spawningSystem as any).spawners.get(spawnerId);
-      const npc = spawningSystem.spawnEntity(spawner!);
+      const spawner = (spawningSystem as any).spawners.get(spawnerId)
+      const npc = spawningSystem.spawnEntity(spawner!)
 
       if (npc) {
-        const visual = visualSystem.getVisual(npc.id);
-        expect(visual).toBeDefined();
-        expect(visual?.template.color).toBe(16119260); // Beige for skeleton
+        const visual = visualSystem.getVisual(npc.id)
+        expect(visual).toBeDefined()
+        expect(visual?.template.color).toBe(16119260) // Beige for skeleton
       }
-    });
+    })
 
     it('should create visuals for spawned chests', () => {
       const spawnerId = spawningSystem.registerSpawner({
         position: { x: 5, y: 0, z: 5 },
         type: SpawnerType.CHEST,
-        entityDefinitions: [{
-          entityType: 'treasure_chest',
-          weight: 100
-        }],
+        entityDefinitions: [
+          {
+            entityType: 'treasure_chest',
+            weight: 100,
+          },
+        ],
         maxEntities: 1,
-        respawnTime: 300000
-      });
+        respawnTime: 300000,
+      })
 
-      const spawner = (spawningSystem as any).spawners.get(spawnerId);
-      const chest = spawningSystem.spawnEntity(spawner!);
+      const spawner = (spawningSystem as any).spawners.get(spawnerId)
+      const chest = spawningSystem.spawnEntity(spawner!)
 
       if (chest) {
-        const visual = visualSystem.getVisual(chest.id);
-        expect(visual).toBeDefined();
+        const visual = visualSystem.getVisual(chest.id)
+        expect(visual).toBeDefined()
         // Should detect 'chest' in the entity type
-        expect(visual?.template.animations).toContain('open');
-        expect(visual?.template.animations).toContain('close');
+        expect(visual?.template.animations).toContain('open')
+        expect(visual?.template.animations).toContain('close')
       }
-    });
-  });
+    })
+  })
 
   describe('Material and Geometry Types', () => {
     it('should create cylinder geometry for appropriate entities', () => {
@@ -350,45 +356,45 @@ describe('VisualRepresentationSystem', () => {
         id: 'potion-test',
         type: 'item',
         name: 'Health Potion',
-        position: { x: 0, y: 0, z: 0 }
-      });
+        position: { x: 0, y: 0, z: 0 },
+      })
 
       entity.addComponent('item', {
         type: 'item',
         itemId: 1,
         itemType: 'potion',
-        stackable: true
-      });
+        stackable: true,
+      })
 
-      visualSystem.createVisual(entity);
+      visualSystem.createVisual(entity)
 
-      const visual = visualSystem.getVisual(entity.id);
-      expect(visual).toBeDefined();
-      expect(visual?.template.geometryType).toBe('cylinder');
-      expect(visual?.template.material?.opacity).toBe(0.8);
-    });
+      const visual = visualSystem.getVisual(entity.id)
+      expect(visual).toBeDefined()
+      expect(visual?.template.geometryType).toBe('cylinder')
+      expect(visual?.template.material?.opacity).toBe(0.8)
+    })
 
     it('should apply metallic materials for appropriate items', () => {
       const entity = new RPGEntity(world, 'item', {
         id: 'sword-material-test',
         type: 'item',
         name: 'Iron Sword',
-        position: { x: 0, y: 0, z: 0 }
-      });
+        position: { x: 0, y: 0, z: 0 },
+      })
 
-      visualSystem.createVisual(entity, 'sword');
+      visualSystem.createVisual(entity, 'sword')
 
-      const visual = visualSystem.getVisual(entity.id);
-      expect(visual).toBeDefined();
-      expect(visual?.template.material?.metalness).toBe(0.8);
-      expect(visual?.template.material?.roughness).toBe(0.2);
-    });
-  });
+      const visual = visualSystem.getVisual(entity.id)
+      expect(visual).toBeDefined()
+      expect(visual?.template.material?.metalness).toBe(0.8)
+      expect(visual?.template.material?.roughness).toBe(0.2)
+    })
+  })
 
   describe('Performance', () => {
     it('should handle many entities efficiently', () => {
-      const startTime = Date.now();
-      const entityCount = 100;
+      const startTime = Date.now()
+      const entityCount = 100
 
       // Create many entities
       for (let i = 0; i < entityCount; i++) {
@@ -396,28 +402,29 @@ describe('VisualRepresentationSystem', () => {
           id: `perf-test-${i}`,
           type: 'item',
           name: `Item ${i}`,
-          position: { x: i % 10, y: 0, z: Math.floor(i / 10) }
-        });
+          position: { x: i % 10, y: 0, z: Math.floor(i / 10) },
+        })
 
-        visualSystem.createVisual(entity);
-        visualSystem.playAnimation(entity.id, 'rotate', true);
+        visualSystem.createVisual(entity)
+        visualSystem.playAnimation(entity.id, 'rotate', true)
       }
 
-      const creationTime = Date.now() - startTime;
-      expect(creationTime).toBeLessThan(1000); // Should create 100 entities in under 1 second
+      const creationTime = Date.now() - startTime
+      expect(creationTime).toBeLessThan(1000) // Should create 100 entities in under 1 second
 
       // Test update performance
-      const updateStart = Date.now();
-      for (let i = 0; i < 60; i++) { // Simulate 60 frames
-        visualSystem.update(0.016); // ~60 FPS
+      const updateStart = Date.now()
+      for (let i = 0; i < 60; i++) {
+        // Simulate 60 frames
+        visualSystem.update(0.016) // ~60 FPS
       }
-      const updateTime = Date.now() - updateStart;
-      expect(updateTime).toBeLessThan(1000); // 60 frames should process in under 1 second
+      const updateTime = Date.now() - updateStart
+      expect(updateTime).toBeLessThan(1000) // 60 frames should process in under 1 second
 
       // Cleanup
       for (let i = 0; i < entityCount; i++) {
-        visualSystem.removeVisual(`perf-test-${i}`);
+        visualSystem.removeVisual(`perf-test-${i}`)
       }
-    });
-  });
-});
+    })
+  })
+})

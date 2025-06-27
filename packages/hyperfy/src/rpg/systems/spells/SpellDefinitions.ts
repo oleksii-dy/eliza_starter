@@ -1,10 +1,9 @@
-// @ts-nocheck
 /**
  * Spell Definitions - Magic system with combat and utility spells
  * Based on RuneScape spell system with rune requirements
  */
 
-import { SkillType } from '../skills/SkillDefinitions';
+import { SkillType } from '../skills/SkillDefinitions'
 
 export enum SpellType {
   // Combat Spells
@@ -20,25 +19,25 @@ export enum SpellType {
   WATER_BLAST = 'water_blast',
   EARTH_BLAST = 'earth_blast',
   FIRE_BLAST = 'fire_blast',
-  
+
   // Utility Spells
   LOW_LEVEL_ALCHEMY = 'low_level_alchemy',
   HIGH_LEVEL_ALCHEMY = 'high_level_alchemy',
   TELEKINETIC_GRAB = 'telekinetic_grab',
-  
+
   // Teleport Spells
   LUMBRIDGE_TELEPORT = 'lumbridge_teleport',
   VARROCK_TELEPORT = 'varrock_teleport',
   FALADOR_TELEPORT = 'falador_teleport',
   CAMELOT_TELEPORT = 'camelot_teleport',
-  
+
   // Enchant Spells
   ENCHANT_CROSSBOW_BOLT = 'enchant_crossbow_bolt',
   ENCHANT_SAPPHIRE = 'enchant_sapphire',
   ENCHANT_EMERALD = 'enchant_emerald',
   ENCHANT_RUBY = 'enchant_ruby',
   ENCHANT_DIAMOND = 'enchant_diamond',
-  
+
   // Support Spells
   SUPERHEAT_ITEM = 'superheat_item',
   CHARGE_WATER_ORB = 'charge_water_orb',
@@ -65,70 +64,70 @@ export enum RuneType {
 }
 
 export interface RuneRequirement {
-  runeType: RuneType;
-  quantity: number;
+  runeType: RuneType
+  quantity: number
 }
 
 export interface SpellEffect {
-  type: 'damage' | 'heal' | 'teleport' | 'alchemy' | 'enchant' | 'utility';
+  type: 'damage' | 'heal' | 'teleport' | 'alchemy' | 'enchant' | 'utility'
   damage?: {
-    min: number;
-    max: number;
-    element?: 'air' | 'water' | 'earth' | 'fire';
-  };
+    min: number
+    max: number
+    element?: 'air' | 'water' | 'earth' | 'fire'
+  }
   heal?: {
-    amount: number;
-  };
+    amount: number
+  }
   teleport?: {
-    x: number;
-    y: number;
-    z: number;
-    zoneName?: string;
-  };
+    x: number
+    y: number
+    z: number
+    zoneName?: string
+  }
   alchemy?: {
-    valueMultiplier: number; // e.g., 0.6 for low alch, 1.0 for high alch
-  };
+    valueMultiplier: number // e.g., 0.6 for low alch, 1.0 for high alch
+  }
   enchant?: {
-    targetItemId: number;
-    resultItemId: number;
-  };
+    targetItemId: number
+    resultItemId: number
+  }
   utility?: {
-    description: string;
-    effect: string;
-  };
+    description: string
+    effect: string
+  }
 }
 
 export interface SpellDefinition {
-  type: SpellType;
-  name: string;
-  description: string;
-  levelRequired: number;
-  baseXP: number;
-  
+  type: SpellType
+  name: string
+  description: string
+  levelRequired: number
+  baseXP: number
+
   // Rune costs
-  runes: RuneRequirement[];
-  
+  runes: RuneRequirement[]
+
   // Spell effects
-  effects: SpellEffect[];
-  
+  effects: SpellEffect[]
+
   // Targeting
-  targetType: 'self' | 'enemy' | 'item' | 'ground' | 'none';
-  maxRange?: number; // tiles
-  
+  targetType: 'self' | 'enemy' | 'item' | 'ground' | 'none'
+  maxRange?: number // tiles
+
   // Cooldown and cast time
-  castTime: number; // milliseconds
-  cooldown?: number; // milliseconds
-  
+  castTime: number // milliseconds
+  cooldown?: number // milliseconds
+
   // Combat only
-  combatOnly?: boolean;
-  
+  combatOnly?: boolean
+
   // Animation and visual effects
-  animation?: string;
+  animation?: string
   projectile?: {
-    speed: number;
-    model: string;
-    color: string;
-  };
+    speed: number
+    model: string
+    color: string
+  }
 }
 
 export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
@@ -141,13 +140,13 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     baseXP: 5.5,
     runes: [
       { runeType: RuneType.AIR_RUNE, quantity: 1 },
-      { runeType: RuneType.MIND_RUNE, quantity: 1 }
+      { runeType: RuneType.MIND_RUNE, quantity: 1 },
     ],
     effects: [
       {
         type: 'damage',
-        damage: { min: 0, max: 2, element: 'air' }
-      }
+        damage: { min: 0, max: 2, element: 'air' },
+      },
     ],
     targetType: 'enemy',
     maxRange: 10,
@@ -156,10 +155,10 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     projectile: {
       speed: 8,
       model: 'wind_strike',
-      color: '#87CEEB'
-    }
+      color: '#87CEEB',
+    },
   },
-  
+
   [SpellType.WATER_STRIKE]: {
     type: SpellType.WATER_STRIKE,
     name: 'Water Strike',
@@ -169,13 +168,13 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     runes: [
       { runeType: RuneType.WATER_RUNE, quantity: 1 },
       { runeType: RuneType.AIR_RUNE, quantity: 1 },
-      { runeType: RuneType.MIND_RUNE, quantity: 1 }
+      { runeType: RuneType.MIND_RUNE, quantity: 1 },
     ],
     effects: [
       {
         type: 'damage',
-        damage: { min: 0, max: 4, element: 'water' }
-      }
+        damage: { min: 0, max: 4, element: 'water' },
+      },
     ],
     targetType: 'enemy',
     maxRange: 10,
@@ -184,10 +183,10 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     projectile: {
       speed: 8,
       model: 'water_strike',
-      color: '#4169E1'
-    }
+      color: '#4169E1',
+    },
   },
-  
+
   [SpellType.EARTH_STRIKE]: {
     type: SpellType.EARTH_STRIKE,
     name: 'Earth Strike',
@@ -197,13 +196,13 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     runes: [
       { runeType: RuneType.EARTH_RUNE, quantity: 2 },
       { runeType: RuneType.AIR_RUNE, quantity: 1 },
-      { runeType: RuneType.MIND_RUNE, quantity: 1 }
+      { runeType: RuneType.MIND_RUNE, quantity: 1 },
     ],
     effects: [
       {
         type: 'damage',
-        damage: { min: 0, max: 6, element: 'earth' }
-      }
+        damage: { min: 0, max: 6, element: 'earth' },
+      },
     ],
     targetType: 'enemy',
     maxRange: 10,
@@ -212,10 +211,10 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     projectile: {
       speed: 8,
       model: 'earth_strike',
-      color: '#8B4513'
-    }
+      color: '#8B4513',
+    },
   },
-  
+
   [SpellType.FIRE_STRIKE]: {
     type: SpellType.FIRE_STRIKE,
     name: 'Fire Strike',
@@ -225,13 +224,13 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     runes: [
       { runeType: RuneType.FIRE_RUNE, quantity: 3 },
       { runeType: RuneType.AIR_RUNE, quantity: 2 },
-      { runeType: RuneType.MIND_RUNE, quantity: 1 }
+      { runeType: RuneType.MIND_RUNE, quantity: 1 },
     ],
     effects: [
       {
         type: 'damage',
-        damage: { min: 0, max: 8, element: 'fire' }
-      }
+        damage: { min: 0, max: 8, element: 'fire' },
+      },
     ],
     targetType: 'enemy',
     maxRange: 10,
@@ -240,10 +239,10 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     projectile: {
       speed: 8,
       model: 'fire_strike',
-      color: '#FF4500'
-    }
+      color: '#FF4500',
+    },
   },
-  
+
   // Bolt Spells (Level 17-29)
   [SpellType.WIND_BOLT]: {
     type: SpellType.WIND_BOLT,
@@ -253,13 +252,13 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     baseXP: 13.5,
     runes: [
       { runeType: RuneType.AIR_RUNE, quantity: 2 },
-      { runeType: RuneType.CHAOS_RUNE, quantity: 1 }
+      { runeType: RuneType.CHAOS_RUNE, quantity: 1 },
     ],
     effects: [
       {
         type: 'damage',
-        damage: { min: 0, max: 9, element: 'air' }
-      }
+        damage: { min: 0, max: 9, element: 'air' },
+      },
     ],
     targetType: 'enemy',
     maxRange: 10,
@@ -268,10 +267,10 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     projectile: {
       speed: 10,
       model: 'wind_bolt',
-      color: '#87CEEB'
-    }
+      color: '#87CEEB',
+    },
   },
-  
+
   [SpellType.WATER_BOLT]: {
     type: SpellType.WATER_BOLT,
     name: 'Water Bolt',
@@ -281,13 +280,13 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     runes: [
       { runeType: RuneType.WATER_RUNE, quantity: 2 },
       { runeType: RuneType.AIR_RUNE, quantity: 2 },
-      { runeType: RuneType.CHAOS_RUNE, quantity: 1 }
+      { runeType: RuneType.CHAOS_RUNE, quantity: 1 },
     ],
     effects: [
       {
         type: 'damage',
-        damage: { min: 0, max: 10, element: 'water' }
-      }
+        damage: { min: 0, max: 10, element: 'water' },
+      },
     ],
     targetType: 'enemy',
     maxRange: 10,
@@ -296,10 +295,10 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     projectile: {
       speed: 10,
       model: 'water_bolt',
-      color: '#4169E1'
-    }
+      color: '#4169E1',
+    },
   },
-  
+
   [SpellType.EARTH_BOLT]: {
     type: SpellType.EARTH_BOLT,
     name: 'Earth Bolt',
@@ -309,13 +308,13 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     runes: [
       { runeType: RuneType.EARTH_RUNE, quantity: 3 },
       { runeType: RuneType.AIR_RUNE, quantity: 2 },
-      { runeType: RuneType.CHAOS_RUNE, quantity: 1 }
+      { runeType: RuneType.CHAOS_RUNE, quantity: 1 },
     ],
     effects: [
       {
         type: 'damage',
-        damage: { min: 0, max: 11, element: 'earth' }
-      }
+        damage: { min: 0, max: 11, element: 'earth' },
+      },
     ],
     targetType: 'enemy',
     maxRange: 10,
@@ -324,10 +323,10 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     projectile: {
       speed: 10,
       model: 'earth_bolt',
-      color: '#8B4513'
-    }
+      color: '#8B4513',
+    },
   },
-  
+
   [SpellType.FIRE_BOLT]: {
     type: SpellType.FIRE_BOLT,
     name: 'Fire Bolt',
@@ -337,13 +336,13 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     runes: [
       { runeType: RuneType.FIRE_RUNE, quantity: 4 },
       { runeType: RuneType.AIR_RUNE, quantity: 3 },
-      { runeType: RuneType.CHAOS_RUNE, quantity: 1 }
+      { runeType: RuneType.CHAOS_RUNE, quantity: 1 },
     ],
     effects: [
       {
         type: 'damage',
-        damage: { min: 0, max: 12, element: 'fire' }
-      }
+        damage: { min: 0, max: 12, element: 'fire' },
+      },
     ],
     targetType: 'enemy',
     maxRange: 10,
@@ -352,10 +351,10 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     projectile: {
       speed: 10,
       model: 'fire_bolt',
-      color: '#FF4500'
-    }
+      color: '#FF4500',
+    },
   },
-  
+
   // Blast Spells (Level 41-59)
   [SpellType.WIND_BLAST]: {
     type: SpellType.WIND_BLAST,
@@ -365,13 +364,13 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     baseXP: 25.5,
     runes: [
       { runeType: RuneType.AIR_RUNE, quantity: 3 },
-      { runeType: RuneType.DEATH_RUNE, quantity: 1 }
+      { runeType: RuneType.DEATH_RUNE, quantity: 1 },
     ],
     effects: [
       {
         type: 'damage',
-        damage: { min: 0, max: 13, element: 'air' }
-      }
+        damage: { min: 0, max: 13, element: 'air' },
+      },
     ],
     targetType: 'enemy',
     maxRange: 10,
@@ -380,10 +379,10 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     projectile: {
       speed: 12,
       model: 'wind_blast',
-      color: '#87CEEB'
-    }
+      color: '#87CEEB',
+    },
   },
-  
+
   [SpellType.WATER_BLAST]: {
     type: SpellType.WATER_BLAST,
     name: 'Water Blast',
@@ -393,13 +392,13 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     runes: [
       { runeType: RuneType.WATER_RUNE, quantity: 3 },
       { runeType: RuneType.AIR_RUNE, quantity: 3 },
-      { runeType: RuneType.DEATH_RUNE, quantity: 1 }
+      { runeType: RuneType.DEATH_RUNE, quantity: 1 },
     ],
     effects: [
       {
         type: 'damage',
-        damage: { min: 0, max: 14, element: 'water' }
-      }
+        damage: { min: 0, max: 14, element: 'water' },
+      },
     ],
     targetType: 'enemy',
     maxRange: 10,
@@ -408,10 +407,10 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     projectile: {
       speed: 12,
       model: 'water_blast',
-      color: '#4169E1'
-    }
+      color: '#4169E1',
+    },
   },
-  
+
   [SpellType.EARTH_BLAST]: {
     type: SpellType.EARTH_BLAST,
     name: 'Earth Blast',
@@ -421,13 +420,13 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     runes: [
       { runeType: RuneType.EARTH_RUNE, quantity: 4 },
       { runeType: RuneType.AIR_RUNE, quantity: 3 },
-      { runeType: RuneType.DEATH_RUNE, quantity: 1 }
+      { runeType: RuneType.DEATH_RUNE, quantity: 1 },
     ],
     effects: [
       {
         type: 'damage',
-        damage: { min: 0, max: 15, element: 'earth' }
-      }
+        damage: { min: 0, max: 15, element: 'earth' },
+      },
     ],
     targetType: 'enemy',
     maxRange: 10,
@@ -436,10 +435,10 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     projectile: {
       speed: 12,
       model: 'earth_blast',
-      color: '#8B4513'
-    }
+      color: '#8B4513',
+    },
   },
-  
+
   [SpellType.FIRE_BLAST]: {
     type: SpellType.FIRE_BLAST,
     name: 'Fire Blast',
@@ -449,13 +448,13 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     runes: [
       { runeType: RuneType.FIRE_RUNE, quantity: 5 },
       { runeType: RuneType.AIR_RUNE, quantity: 4 },
-      { runeType: RuneType.DEATH_RUNE, quantity: 1 }
+      { runeType: RuneType.DEATH_RUNE, quantity: 1 },
     ],
     effects: [
       {
         type: 'damage',
-        damage: { min: 0, max: 16, element: 'fire' }
-      }
+        damage: { min: 0, max: 16, element: 'fire' },
+      },
     ],
     targetType: 'enemy',
     maxRange: 10,
@@ -464,10 +463,10 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     projectile: {
       speed: 12,
       model: 'fire_blast',
-      color: '#FF4500'
-    }
+      color: '#FF4500',
+    },
   },
-  
+
   // Utility Spells
   [SpellType.LOW_LEVEL_ALCHEMY]: {
     type: SpellType.LOW_LEVEL_ALCHEMY,
@@ -477,19 +476,19 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     baseXP: 31,
     runes: [
       { runeType: RuneType.FIRE_RUNE, quantity: 3 },
-      { runeType: RuneType.NATURE_RUNE, quantity: 1 }
+      { runeType: RuneType.NATURE_RUNE, quantity: 1 },
     ],
     effects: [
       {
         type: 'alchemy',
-        alchemy: { valueMultiplier: 0.6 }
-      }
+        alchemy: { valueMultiplier: 0.6 },
+      },
     ],
     targetType: 'item',
     castTime: 2400,
-    combatOnly: false
+    combatOnly: false,
   },
-  
+
   [SpellType.HIGH_LEVEL_ALCHEMY]: {
     type: SpellType.HIGH_LEVEL_ALCHEMY,
     name: 'High Level Alchemy',
@@ -498,19 +497,19 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     baseXP: 65,
     runes: [
       { runeType: RuneType.FIRE_RUNE, quantity: 5 },
-      { runeType: RuneType.NATURE_RUNE, quantity: 1 }
+      { runeType: RuneType.NATURE_RUNE, quantity: 1 },
     ],
     effects: [
       {
         type: 'alchemy',
-        alchemy: { valueMultiplier: 1.0 }
-      }
+        alchemy: { valueMultiplier: 1.0 },
+      },
     ],
     targetType: 'item',
     castTime: 2400,
-    combatOnly: false
+    combatOnly: false,
   },
-  
+
   [SpellType.TELEKINETIC_GRAB]: {
     type: SpellType.TELEKINETIC_GRAB,
     name: 'Telekinetic Grab',
@@ -519,23 +518,23 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     baseXP: 43,
     runes: [
       { runeType: RuneType.AIR_RUNE, quantity: 1 },
-      { runeType: RuneType.LAW_RUNE, quantity: 1 }
+      { runeType: RuneType.LAW_RUNE, quantity: 1 },
     ],
     effects: [
       {
         type: 'utility',
         utility: {
           description: 'Grabs distant items',
-          effect: 'telekinetic_grab'
-        }
-      }
+          effect: 'telekinetic_grab',
+        },
+      },
     ],
     targetType: 'ground',
     maxRange: 15,
     castTime: 1800,
-    combatOnly: false
+    combatOnly: false,
   },
-  
+
   // Teleport Spells
   [SpellType.LUMBRIDGE_TELEPORT]: {
     type: SpellType.LUMBRIDGE_TELEPORT,
@@ -546,19 +545,19 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     runes: [
       { runeType: RuneType.AIR_RUNE, quantity: 3 },
       { runeType: RuneType.EARTH_RUNE, quantity: 1 },
-      { runeType: RuneType.LAW_RUNE, quantity: 1 }
+      { runeType: RuneType.LAW_RUNE, quantity: 1 },
     ],
     effects: [
       {
         type: 'teleport',
-        teleport: { x: 0, y: 0, z: 0, zoneName: 'lumbridge' }
-      }
+        teleport: { x: 0, y: 0, z: 0, zoneName: 'lumbridge' },
+      },
     ],
     targetType: 'self',
     castTime: 3000,
-    combatOnly: false
+    combatOnly: false,
   },
-  
+
   [SpellType.VARROCK_TELEPORT]: {
     type: SpellType.VARROCK_TELEPORT,
     name: 'Varrock Teleport',
@@ -568,19 +567,19 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     runes: [
       { runeType: RuneType.AIR_RUNE, quantity: 3 },
       { runeType: RuneType.FIRE_RUNE, quantity: 1 },
-      { runeType: RuneType.LAW_RUNE, quantity: 1 }
+      { runeType: RuneType.LAW_RUNE, quantity: 1 },
     ],
     effects: [
       {
         type: 'teleport',
-        teleport: { x: 100, y: 0, z: 0, zoneName: 'varrock' }
-      }
+        teleport: { x: 100, y: 0, z: 0, zoneName: 'varrock' },
+      },
     ],
     targetType: 'self',
     castTime: 3000,
-    combatOnly: false
+    combatOnly: false,
   },
-  
+
   [SpellType.FALADOR_TELEPORT]: {
     type: SpellType.FALADOR_TELEPORT,
     name: 'Falador Teleport',
@@ -590,19 +589,19 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     runes: [
       { runeType: RuneType.AIR_RUNE, quantity: 3 },
       { runeType: RuneType.WATER_RUNE, quantity: 1 },
-      { runeType: RuneType.LAW_RUNE, quantity: 1 }
+      { runeType: RuneType.LAW_RUNE, quantity: 1 },
     ],
     effects: [
       {
         type: 'teleport',
-        teleport: { x: -100, y: 0, z: 0, zoneName: 'falador' }
-      }
+        teleport: { x: -100, y: 0, z: 0, zoneName: 'falador' },
+      },
     ],
     targetType: 'self',
     castTime: 3000,
-    combatOnly: false
+    combatOnly: false,
   },
-  
+
   [SpellType.CAMELOT_TELEPORT]: {
     type: SpellType.CAMELOT_TELEPORT,
     name: 'Camelot Teleport',
@@ -611,19 +610,19 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     baseXP: 55.5,
     runes: [
       { runeType: RuneType.AIR_RUNE, quantity: 5 },
-      { runeType: RuneType.LAW_RUNE, quantity: 1 }
+      { runeType: RuneType.LAW_RUNE, quantity: 1 },
     ],
     effects: [
       {
         type: 'teleport',
-        teleport: { x: 0, y: 0, z: 100, zoneName: 'camelot' }
-      }
+        teleport: { x: 0, y: 0, z: 100, zoneName: 'camelot' },
+      },
     ],
     targetType: 'self',
     castTime: 3000,
-    combatOnly: false
+    combatOnly: false,
   },
-  
+
   // Enchant Spells
   [SpellType.ENCHANT_SAPPHIRE]: {
     type: SpellType.ENCHANT_SAPPHIRE,
@@ -633,19 +632,19 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     baseXP: 17.5,
     runes: [
       { runeType: RuneType.WATER_RUNE, quantity: 1 },
-      { runeType: RuneType.COSMIC_RUNE, quantity: 1 }
+      { runeType: RuneType.COSMIC_RUNE, quantity: 1 },
     ],
     effects: [
       {
         type: 'enchant',
-        enchant: { targetItemId: 1637, resultItemId: 2550 } // Ring of recoil
-      }
+        enchant: { targetItemId: 1637, resultItemId: 2550 }, // Ring of recoil
+      },
     ],
     targetType: 'item',
     castTime: 2400,
-    combatOnly: false
+    combatOnly: false,
   },
-  
+
   [SpellType.ENCHANT_EMERALD]: {
     type: SpellType.ENCHANT_EMERALD,
     name: 'Enchant Emerald',
@@ -654,19 +653,19 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     baseXP: 37,
     runes: [
       { runeType: RuneType.AIR_RUNE, quantity: 3 },
-      { runeType: RuneType.COSMIC_RUNE, quantity: 1 }
+      { runeType: RuneType.COSMIC_RUNE, quantity: 1 },
     ],
     effects: [
       {
         type: 'enchant',
-        enchant: { targetItemId: 1639, resultItemId: 2552 } // Ring of dueling
-      }
+        enchant: { targetItemId: 1639, resultItemId: 2552 }, // Ring of dueling
+      },
     ],
     targetType: 'item',
     castTime: 2400,
-    combatOnly: false
+    combatOnly: false,
   },
-  
+
   [SpellType.ENCHANT_RUBY]: {
     type: SpellType.ENCHANT_RUBY,
     name: 'Enchant Ruby',
@@ -675,19 +674,19 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     baseXP: 59,
     runes: [
       { runeType: RuneType.FIRE_RUNE, quantity: 5 },
-      { runeType: RuneType.COSMIC_RUNE, quantity: 1 }
+      { runeType: RuneType.COSMIC_RUNE, quantity: 1 },
     ],
     effects: [
       {
         type: 'enchant',
-        enchant: { targetItemId: 1641, resultItemId: 2568 } // Ring of forging
-      }
+        enchant: { targetItemId: 1641, resultItemId: 2568 }, // Ring of forging
+      },
     ],
     targetType: 'item',
     castTime: 2400,
-    combatOnly: false
+    combatOnly: false,
   },
-  
+
   [SpellType.ENCHANT_DIAMOND]: {
     type: SpellType.ENCHANT_DIAMOND,
     name: 'Enchant Diamond',
@@ -696,19 +695,19 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     baseXP: 67,
     runes: [
       { runeType: RuneType.EARTH_RUNE, quantity: 10 },
-      { runeType: RuneType.COSMIC_RUNE, quantity: 1 }
+      { runeType: RuneType.COSMIC_RUNE, quantity: 1 },
     ],
     effects: [
       {
         type: 'enchant',
-        enchant: { targetItemId: 1643, resultItemId: 2570 } // Ring of life
-      }
+        enchant: { targetItemId: 1643, resultItemId: 2570 }, // Ring of life
+      },
     ],
     targetType: 'item',
     castTime: 2400,
-    combatOnly: false
+    combatOnly: false,
   },
-  
+
   // Support Spells
   [SpellType.SUPERHEAT_ITEM]: {
     type: SpellType.SUPERHEAT_ITEM,
@@ -718,56 +717,62 @@ export const SPELL_DEFINITIONS: Record<SpellType, SpellDefinition> = {
     baseXP: 53,
     runes: [
       { runeType: RuneType.FIRE_RUNE, quantity: 4 },
-      { runeType: RuneType.NATURE_RUNE, quantity: 1 }
+      { runeType: RuneType.NATURE_RUNE, quantity: 1 },
     ],
     effects: [
       {
         type: 'utility',
         utility: {
           description: 'Smelts ores instantly',
-          effect: 'superheat'
-        }
-      }
+          effect: 'superheat',
+        },
+      },
     ],
     targetType: 'item',
     castTime: 1800,
-    combatOnly: false
-  }
-};
+    combatOnly: false,
+  },
+}
 
 // Helper functions
 export function getSpellsByLevel(level: number): SpellDefinition[] {
-  return Object.values(SPELL_DEFINITIONS).filter(spell => spell.levelRequired <= level);
+  return Object.values(SPELL_DEFINITIONS).filter(spell => spell.levelRequired <= level)
 }
 
 export function getCombatSpells(): SpellDefinition[] {
-  return Object.values(SPELL_DEFINITIONS).filter(spell => spell.combatOnly);
+  return Object.values(SPELL_DEFINITIONS).filter(spell => spell.combatOnly)
 }
 
 export function getUtilitySpells(): SpellDefinition[] {
-  return Object.values(SPELL_DEFINITIONS).filter(spell => !spell.combatOnly);
+  return Object.values(SPELL_DEFINITIONS).filter(spell => !spell.combatOnly)
 }
 
 export function canCastSpell(spell: SpellDefinition, playerLevel: number, inventory: any[]): boolean {
-  if (playerLevel < spell.levelRequired) return false;
-  
+  if (playerLevel < spell.levelRequired) {
+    return false
+  }
+
   // Check rune requirements
   for (const rune of spell.runes) {
-    const runeCount = inventory.filter(item => item && item.itemId === rune.runeType).length;
-    if (runeCount < rune.quantity) return false;
+    const runeCount = inventory.filter(item => item && item.itemId === rune.runeType).length
+    if (runeCount < rune.quantity) {
+      return false
+    }
   }
-  
-  return true;
+
+  return true
 }
 
 export function calculateSpellDamage(spell: SpellDefinition, magicLevel: number): number {
-  if (!spell.effects[0]?.damage) return 0;
-  
-  const { min, max } = spell.effects[0].damage;
-  const baseDamage = Math.floor(Math.random() * (max - min + 1)) + min;
-  
+  if (!spell.effects[0]?.damage) {
+    return 0
+  }
+
+  const { min, max } = spell.effects[0].damage
+  const baseDamage = Math.floor(Math.random() * (max - min + 1)) + min
+
   // Magic level bonus (simplified)
-  const levelBonus = Math.floor(magicLevel / 10);
-  
-  return Math.max(0, baseDamage + levelBonus);
+  const levelBonus = Math.floor(magicLevel / 10)
+
+  return Math.max(0, baseDamage + levelBonus)
 }

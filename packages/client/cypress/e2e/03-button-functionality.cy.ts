@@ -10,7 +10,7 @@ describe('Button Functionality and Screenshots', () => {
   it('captures homepage screenshot and tests all buttons', () => {
     // Take initial screenshot of homepage
     cy.screenshot('success-01-homepage', { capture: 'fullPage' });
-    
+
     // Test connection status (if clickable)
     cy.get('[data-testid="connection-status"]').should('exist');
     cy.screenshot('success-02-connection-status', { capture: 'fullPage' });
@@ -21,7 +21,7 @@ describe('Button Functionality and Screenshots', () => {
         cy.get('[data-testid="sidebar-toggle"]').should('be.visible').click();
         cy.wait(500); // Wait for animation
         cy.screenshot('success-03-sidebar-collapsed', { capture: 'fullPage' });
-        
+
         // Toggle back
         cy.get('[data-testid="sidebar-toggle"]').click();
         cy.wait(500);
@@ -32,7 +32,7 @@ describe('Button Functionality and Screenshots', () => {
     // Test add agent button
     cy.get('[data-testid="add-agent-button"]').should('exist').and('be.visible');
     cy.screenshot('success-05-add-agent-button', { capture: 'fullPage' });
-    
+
     // Click add agent button (should show prompt)
     cy.get('[data-testid="add-agent-button"]').click();
     cy.screenshot('success-06-add-agent-clicked', { capture: 'fullPage' });
@@ -41,7 +41,7 @@ describe('Button Functionality and Screenshots', () => {
     cy.get('[data-testid="agent-card"]').should('exist');
     cy.get('[data-testid="agent-card"]').first().should('be.visible');
     cy.screenshot('success-07-agent-cards', { capture: 'fullPage' });
-    
+
     // Click on first agent card
     cy.get('[data-testid="agent-card"]').first().click();
     cy.wait(1000);
@@ -96,11 +96,7 @@ describe('Button Functionality and Screenshots', () => {
 
   it('tests all interactive elements', () => {
     // Test all buttons exist and are interactive
-    const elements = [
-      'connection-status',
-      'add-agent-button',
-      'mobile-menu-button'
-    ];
+    const elements = ['connection-status', 'add-agent-button', 'mobile-menu-button'];
 
     elements.forEach((elementId, index) => {
       cy.get(`[data-testid="${elementId}"]`).should('exist');

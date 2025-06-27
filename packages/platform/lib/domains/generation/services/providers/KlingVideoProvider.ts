@@ -9,7 +9,11 @@ import {
   ProviderCapabilities,
   ProviderConfig,
 } from './BaseGenerationProvider';
-import { GenerationRequest, GenerationProvider, GenerationType } from '../../types';
+import {
+  GenerationRequest,
+  GenerationProvider,
+  GenerationType,
+} from '../../types';
 import {
   EnhancedGenerationProvider,
   KlingVideoRequest,
@@ -64,9 +68,9 @@ export class KlingVideoProvider extends BaseGenerationProvider {
       timeout: config.timeout || 300000,
       rateLimitPerSecond: config.rateLimitPerSecond || 0.5,
     };
-    
+
     super(baseConfig, GenerationProvider.CUSTOM);
-    
+
     this.config = {
       baseUrl: 'https://fal.run/fal-ai',
       timeout: 300000, // 5 minutes for video
@@ -225,11 +229,15 @@ export class KlingVideoProvider extends BaseGenerationProvider {
       }
     } catch (error) {
       this.activeRequests.delete(requestId);
-      logger.error('Kling video generation failed', error instanceof Error ? error : new Error(String(error)), {
-        requestId,
-        provider: request.provider,
-        prompt: request.prompt?.substring(0, 100),
-      });
+      logger.error(
+        'Kling video generation failed',
+        error instanceof Error ? error : new Error(String(error)),
+        {
+          requestId,
+          provider: request.provider,
+          prompt: request.prompt?.substring(0, 100),
+        },
+      );
       throw error;
     }
   }
@@ -580,13 +588,13 @@ export class KlingVideoProvider extends BaseGenerationProvider {
     errors: string[];
   } {
     const errors: string[] = [];
-    
+
     // First validate basic requirements
     if (request.type !== GenerationType.VIDEO) {
       errors.push('Request type must be VIDEO for Kling provider');
       return { valid: false, errors };
     }
-    
+
     // Convert to kling request for detailed validation
     const klingRequest: KlingVideoRequest = {
       type: GenerationType.VIDEO,
@@ -671,7 +679,7 @@ export class KlingVideoProvider extends BaseGenerationProvider {
     const response = await fetch(`${this.config.baseUrl}/models`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${this.config.apiKey}`,
+        Authorization: `Bearer ${this.config.apiKey}`,
         'Content-Type': 'application/json',
       },
       signal: AbortSignal.timeout(5000),

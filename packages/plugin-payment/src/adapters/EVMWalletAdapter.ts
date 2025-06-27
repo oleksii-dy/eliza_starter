@@ -37,7 +37,9 @@ export class EVMWalletAdapter implements IWalletAdapter {
 
       if (service) {
         this.walletService = service as any as EVMWalletService;
-        logger.info('[EVMWalletAdapter] Initialized with real EVM providers and EVM wallet service');
+        logger.info(
+          '[EVMWalletAdapter] Initialized with real EVM providers and EVM wallet service'
+        );
       } else {
         logger.warn(
           '[EVMWalletAdapter] EVM wallet service not found - adapter will have limited functionality'
@@ -126,7 +128,7 @@ export class EVMWalletAdapter implements IWalletAdapter {
       if (privateKey) {
         wallet = new Wallet(privateKey);
       } else {
-        wallet = this.wallets.get(fromAddress) || await this.loadWallet(fromAddress);
+        wallet = this.wallets.get(fromAddress) || (await this.loadWallet(fromAddress));
       }
 
       const provider = this.getProvider(method);

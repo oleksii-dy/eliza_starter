@@ -1,4 +1,11 @@
-import type { Action, ActionResult, IAgentRuntime, Memory, State, HandlerCallback } from '@elizaos/core';
+import type {
+  Action,
+  ActionResult,
+  IAgentRuntime,
+  Memory,
+  State,
+  HandlerCallback,
+} from '@elizaos/core';
 import { logger } from '@elizaos/core';
 import type { CharacterFileManager } from '../services/character-file-manager.js';
 
@@ -9,7 +16,8 @@ import type { CharacterFileManager } from '../services/character-file-manager.js
 export const restoreCharacterAction: Action = {
   name: 'RESTORE_CHARACTER',
   similes: ['UNDO_CHANGES', 'ROLLBACK_CHARACTER', 'REVERT_MODIFICATIONS'],
-  description: 'Restore character from backup files or modification history with validation and logging. Supports action chaining by providing restoration metadata for audit trails, notification workflows, or rollback confirmation processes.',
+  description:
+    'Restore character from backup files or modification history with validation and logging. Supports action chaining by providing restoration metadata for audit trails, notification workflows, or rollback confirmation processes.',
 
   validate: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
     // Check if restoration is requested
@@ -52,7 +60,7 @@ export const restoreCharacterAction: Action = {
         return {
           text: "I don't have access to backup management right now.",
           values: { success: false, error: 'service_unavailable' },
-          data: { action: 'RESTORE_CHARACTER' }
+          data: { action: 'RESTORE_CHARACTER' },
         };
       }
 
@@ -73,7 +81,7 @@ export const restoreCharacterAction: Action = {
           return {
             text: "I don't have any character backups available.",
             values: { success: false, error: 'no_backups' },
-            data: { action: 'RESTORE_CHARACTER' }
+            data: { action: 'RESTORE_CHARACTER' },
           };
         }
 

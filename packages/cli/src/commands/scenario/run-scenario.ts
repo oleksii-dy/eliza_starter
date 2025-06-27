@@ -122,7 +122,7 @@ async function runScenarioWithLegacyApproach(scenario: any, options: any): Promi
   logger.info(`Converted scenario with ${convertedScenario.actors?.length || 0} actors`);
 
   // Now safe to import AgentServer after database type is set
-  const AgentServer = (await import('@elizaos/server')).default;
+  const AgentServerClass = (await import('@elizaos/server')).default as any;
   logger.info('✅ Imported AgentServer after setting database type');
 
   // Load environment variables from .env file
@@ -143,7 +143,7 @@ async function runScenarioWithLegacyApproach(scenario: any, options: any): Promi
   }
 
   // Initialize server
-  const server = new AgentServer();
+  const server = new AgentServerClass();
   await server.initialize({
     dataDir: getTempDbPath('scenario-test-db'),
   });

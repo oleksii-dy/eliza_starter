@@ -27,19 +27,18 @@ describe('requestSecretFormAction', () => {
         sessionId: 'session-123',
       }),
     } as any;
-    
+
     // Use the unified mock runtime with plugin-specific overrides
     mockRuntime = createMockRuntime({
-      agentId: 'agent-123',
-      getService: (name: string) => {
+      agentId: 'agent-123' as any,
+      getService: (name: any) => {
         if (name === 'SECRET_FORMS') {
           return mockForm;
         }
         return null;
       },
-      get: mock().mockReturnValue(mockForm),
-    });
-    
+    } as any);
+
     mockCallback = mock();
     mockState = {
       values: {},
@@ -139,7 +138,7 @@ describe('requestSecretFormAction', () => {
       const formCall = mockForm.createSecretForm.mock.calls[0];
       const request = formCall[0];
       expect(request.secrets).toHaveLength(2);
-      const keys = request.secrets.map((s) => s.key);
+      const keys = request.secrets.map((s: any) => s.key);
       expect(keys).toContain('OPENAI_API_KEY');
       expect(keys).toContain('ANTHROPIC_API_KEY');
     });

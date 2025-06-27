@@ -63,18 +63,24 @@ export class ConfigValidator {
       if (!value) {
         if (config.required) {
           result.missingRequired.push(config.key);
-          result.errors.push(`Missing required environment variable: ${config.key} - ${config.description}`);
+          result.errors.push(
+            `Missing required environment variable: ${config.key} - ${config.description}`,
+          );
           result.isValid = false;
         } else {
           result.missingOptional.push(config.key);
-          result.warnings.push(`Missing optional environment variable: ${config.key} - ${config.description}`);
+          result.warnings.push(
+            `Missing optional environment variable: ${config.key} - ${config.description}`,
+          );
         }
         continue;
       }
 
       // Run custom validator if provided
       if (config.validator && !config.validator(value)) {
-        result.errors.push(`Invalid format for ${config.key}: ${config.description}`);
+        result.errors.push(
+          `Invalid format for ${config.key}: ${config.description}`,
+        );
         result.isValid = false;
       }
     }
@@ -102,7 +108,7 @@ export class ConfigValidator {
     // Log warnings
     if (result.warnings.length > 0) {
       console.warn('Billing system configuration warnings:');
-      result.warnings.forEach(warning => console.warn(`  - ${warning}`));
+      result.warnings.forEach((warning) => console.warn(`  - ${warning}`));
     }
   }
 

@@ -28,7 +28,7 @@ import {
   Share1Icon,
   ActivityLogIcon,
   HamburgerMenuIcon,
-  Cross1Icon
+  Cross1Icon,
 } from '@radix-ui/react-icons';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/theme/theme-switcher';
@@ -205,7 +205,11 @@ interface SidebarProps {
   onToggle?: () => void;
 }
 
-export default function Sidebar({ className, isOpen = false, onToggle }: SidebarProps) {
+export default function Sidebar({
+  className,
+  isOpen = false,
+  onToggle,
+}: SidebarProps) {
   const pathname = usePathname();
   const [isMobile, setIsMobile] = useState(false);
 
@@ -239,23 +243,28 @@ export default function Sidebar({ className, isOpen = false, onToggle }: Sidebar
           isMobile
             ? `fixed inset-y-0 left-0 z-50 w-64 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`
             : 'relative w-64',
-          className
+          className,
         )}
         data-cy="sidebar"
         aria-label="Main navigation"
       >
         {/* Header with Logo and Mobile Close Button */}
         <div className="flex h-16 items-center justify-between border-b border-stroke-weak px-4">
-          <Link href="/dashboard" className="flex items-center space-x-2 no-underline hover:opacity-80 transition-opacity">
+          <Link
+            href="/dashboard"
+            className="flex items-center space-x-2 no-underline transition-opacity hover:opacity-80"
+          >
             <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-500 to-blue-600"></div>
-            <span className="text-lg font-semibold text-typography-strong">ElizaOS</span>
+            <span className="text-lg font-semibold text-typography-strong">
+              ElizaOS
+            </span>
           </Link>
 
           {/* Mobile Close Button */}
           {isMobile && (
             <button
               onClick={onToggle}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-typography-weak hover:bg-fill hover:text-typography-strong transition-colors md:hidden"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-typography-weak transition-colors hover:bg-fill hover:text-typography-strong md:hidden"
               data-cy="sidebar-close"
               aria-label="Close sidebar"
             >
@@ -276,7 +285,9 @@ export default function Sidebar({ className, isOpen = false, onToggle }: Sidebar
                 )}
                 <div className="space-y-1">
                   {section.items.map((item) => {
-                    const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                    const isActive =
+                      pathname === item.href ||
+                      pathname.startsWith(`${item.href}/`);
 
                     return (
                       <Link
@@ -287,14 +298,12 @@ export default function Sidebar({ className, isOpen = false, onToggle }: Sidebar
                           'focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--focus-ring)]',
                           'min-h-[44px]', // WCAG touch target size
                           isActive
-                            ? 'bg-purple-500/20 text-purple-400 font-semibold'
-                            : 'text-typography-weak hover:bg-hover hover:text-typography-strong'
+                            ? 'bg-purple-500/20 font-semibold text-purple-400'
+                            : 'text-typography-weak hover:bg-hover hover:text-typography-strong',
                         )}
                         data-cy={`sidebar-link-${item.id}`}
                       >
-                        <span className="mr-3 flex-shrink-0">
-                          {item.icon}
-                        </span>
+                        <span className="mr-3 flex-shrink-0">{item.icon}</span>
                         <span className="flex-1">{item.label}</span>
 
                         {/* Badge */}
@@ -321,15 +330,13 @@ export default function Sidebar({ className, isOpen = false, onToggle }: Sidebar
 
         {/* Footer */}
         <div className="border-t border-stroke-weak p-4">
-          <div className="flex items-center space-x-3 mb-3">
+          <div className="mb-3 flex items-center space-x-3">
             <div className="h-8 w-8 rounded-full bg-fill"></div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-typography-strong truncate">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-typography-strong">
                 Organization
               </p>
-              <p className="text-xs text-typography-weak truncate">
-                Free Plan
-              </p>
+              <p className="truncate text-xs text-typography-weak">Free Plan</p>
             </div>
           </div>
 
@@ -347,7 +354,7 @@ export default function Sidebar({ className, isOpen = false, onToggle }: Sidebar
 // Mobile Menu Button Component (for use in layouts)
 export function MobileMenuButton({
   isOpen,
-  onToggle
+  onToggle,
 }: {
   isOpen: boolean;
   onToggle: () => void;
@@ -355,14 +362,9 @@ export function MobileMenuButton({
   return (
     <button
       onClick={onToggle}
-      className="
-        flex h-10 w-10 items-center justify-center rounded-lg bg-fill text-typography-strong 
-        transition-colors hover:bg-fill-hover 
-        focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--focus-ring)]
-        min-h-[44px] min-w-[44px] md:hidden
-      "
+      className="flex h-10 min-h-[44px] w-10 min-w-[44px] items-center justify-center rounded-lg bg-fill text-typography-strong transition-colors hover:bg-fill-hover focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--focus-ring)] md:hidden"
       data-cy="mobile-menu-button"
-      aria-label={isOpen ? "Close navigation menu" : "Open navigation menu"}
+      aria-label={isOpen ? 'Close navigation menu' : 'Open navigation menu'}
       aria-expanded={isOpen}
       aria-controls="sidebar-navigation"
     >

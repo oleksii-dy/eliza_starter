@@ -7,7 +7,8 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import fetch from 'node-fetch';
 
-const DATASET_URL = 'https://huggingface.co/datasets/ByteDance-Seed/Multi-SWE-bench/resolve/main/data/test.jsonl';
+const DATASET_URL =
+  'https://huggingface.co/datasets/ByteDance-Seed/Multi-SWE-bench/resolve/main/data/test.jsonl';
 const CACHE_DIR = '.swe-bench-cache';
 
 async function downloadDataset() {
@@ -21,7 +22,8 @@ async function downloadDataset() {
     // Check if already downloaded
     try {
       const stats = await fs.stat(outputPath);
-      if (stats.size > 1000000) { // If file is larger than 1MB, assume it's complete
+      if (stats.size > 1000000) {
+        // If file is larger than 1MB, assume it's complete
         elizaLogger.info('Dataset already downloaded');
         return outputPath;
       }
@@ -34,7 +36,7 @@ async function downloadDataset() {
     // For now, we'll create a more comprehensive sample dataset
     const sampleInstances = generateSampleDataset();
 
-    const lines = sampleInstances.map(inst => JSON.stringify(inst));
+    const lines = sampleInstances.map((inst) => JSON.stringify(inst));
     await fs.writeFile(outputPath, lines.join('\n'));
 
     elizaLogger.info(`Dataset saved to: ${outputPath}`);
@@ -42,7 +44,7 @@ async function downloadDataset() {
 
     // Filter TypeScript instances
     const tsInstances = sampleInstances.filter(
-      inst => inst.language === 'TypeScript' || inst.language === 'JavaScript'
+      (inst) => inst.language === 'TypeScript' || inst.language === 'JavaScript'
     );
 
     const tsOutputPath = path.join(CACHE_DIR, 'typescript-instances.json');
@@ -68,50 +70,50 @@ function generateSampleDataset() {
     { name: 'vercel/next.js', language: 'TypeScript' },
     { name: 'nestjs/nest', language: 'TypeScript' },
     { name: 'expressjs/express', language: 'JavaScript' },
-    { name: 'sveltejs/svelte', language: 'TypeScript' }
+    { name: 'sveltejs/svelte', language: 'TypeScript' },
   ];
 
   const issueTemplates = [
     {
       title: 'Type inference fails with generic constraints',
       body: 'When using generic constraints with conditional types, TypeScript fails to properly infer the type...',
-      complexity: 'high'
+      complexity: 'high',
     },
     {
       title: 'Error handling improvement needed',
       body: 'The current error handling does not properly catch async errors in middleware...',
-      complexity: 'medium'
+      complexity: 'medium',
     },
     {
       title: 'Performance regression in latest version',
       body: 'After updating to the latest version, build times have increased significantly...',
-      complexity: 'high'
+      complexity: 'high',
     },
     {
       title: 'Add support for new API feature',
       body: 'Need to add support for the new experimental API that was recently introduced...',
-      complexity: 'medium'
+      complexity: 'medium',
     },
     {
       title: 'Fix memory leak in component lifecycle',
       body: 'There appears to be a memory leak when components are repeatedly mounted and unmounted...',
-      complexity: 'high'
+      complexity: 'high',
     },
     {
       title: 'Improve documentation for configuration',
       body: 'The configuration documentation is unclear about how to set up custom options...',
-      complexity: 'low'
+      complexity: 'low',
     },
     {
       title: 'Type safety issue with event handlers',
       body: 'Event handlers are not properly typed when using the new event system...',
-      complexity: 'medium'
+      complexity: 'medium',
     },
     {
       title: 'Build fails with specific dependency version',
       body: 'When using version X of dependency Y, the build process fails with an obscure error...',
-      complexity: 'medium'
-    }
+      complexity: 'medium',
+    },
   ];
 
   const instances = [];
@@ -134,11 +136,14 @@ function generateSampleDataset() {
         version: '1.0',
         problem_statement: `${issue.title}. ${issue.body}`,
         complexity: issue.complexity,
-        hints: Math.random() > 0.5 ? [
-          'Check the existing implementation for similar patterns',
-          'Consider backward compatibility'
-        ] : undefined,
-        test_patch: Math.random() > 0.3 ? generateTestPatch(issue.title) : undefined
+        hints:
+          Math.random() > 0.5
+            ? [
+                'Check the existing implementation for similar patterns',
+                'Consider backward compatibility',
+              ]
+            : undefined,
+        test_patch: Math.random() > 0.3 ? generateTestPatch(issue.title) : undefined,
       });
 
       instanceId++;

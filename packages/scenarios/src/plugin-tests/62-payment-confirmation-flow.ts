@@ -22,7 +22,12 @@ const paymentConfirmationFlowScenario: Scenario = {
 For amounts over 5 USDC, always create a confirmation task.
 Explain the value provided before requesting payment.
 Use the task system to get explicit approval.`,
-      plugins: ['@elizaos/plugin-payment', '@elizaos/plugin-tasks', '@elizaos/plugin-research'],
+      plugins: [
+        '@elizaos/plugin-sql',
+        '@elizaos/plugin-payment',
+        '@elizaos/plugin-tasks',
+        '@elizaos/plugin-research',
+      ],
       script: { steps: [] },
     },
     {

@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import { getDatabase } from '@/lib/database';
-import { 
-  userFavorites, 
-  marketplaceAssets, 
+import {
+  userFavorites,
+  marketplaceAssets,
   creatorProfiles,
-  users 
+  users,
 } from '@/lib/database/marketplace-schema';
 import { eq, and, desc } from 'drizzle-orm';
 
-export async function GET(request: NextRequest) {
+export async function handleGET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -17,7 +17,10 @@ export async function GET(request: NextRequest) {
     }
 
     const url = new URL(request.url);
-    const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 100);
+    const limit = Math.min(
+      parseInt(url.searchParams.get('limit') || '20'),
+      100,
+    );
     const offset = parseInt(url.searchParams.get('offset') || '0');
     const assetType = url.searchParams.get('type');
 
@@ -25,30 +28,40 @@ export async function GET(request: NextRequest) {
     const conditions = [
       eq(userFavorites.userId, session.user.id),
       eq(marketplaceAssets.status, 'published'),
-      eq(marketplaceAssets.visibility, 'public')
+      eq(marketplaceAssets.visibility, 'public'),
     ];
 
-    if (assetType && ['mcp', 'agent', 'workflow', 'plugin'].includes(assetType)) {
+    if (
+      assetType &&
+      ['mcp', 'agent', 'workflow', 'plugin'].includes(assetType)
+    ) {
       conditions.push(eq(marketplaceAssets.assetType, assetType as any));
     }
 
     const db = await getDatabase();
-    
+
     // Get user's favorites with asset details
-    const favorites = await db.select({
-      favorite: userFavorites,
-      asset: marketplaceAssets,
-      creator: creatorProfiles,
-      user: users
-    })
-    .from(userFavorites)
-    .leftJoin(marketplaceAssets, eq(userFavorites.assetId, marketplaceAssets.id))
-    .leftJoin(creatorProfiles, eq(marketplaceAssets.creatorId, creatorProfiles.userId))
-    .leftJoin(users, eq(marketplaceAssets.creatorId, users.id))
-    .where(and(...conditions))
-    .orderBy(desc(userFavorites.createdAt))
-    .limit(limit)
-    .offset(offset);
+    const favorites = await db
+      .select({
+        favorite: userFavorites,
+        asset: marketplaceAssets,
+        creator: creatorProfiles,
+        user: users,
+      })
+      .from(userFavorites)
+      .leftJoin(
+        marketplaceAssets,
+        eq(userFavorites.assetId, marketplaceAssets.id),
+      )
+      .leftJoin(
+        creatorProfiles,
+        eq(marketplaceAssets.creatorId, creatorProfiles.userId),
+      )
+      .leftJoin(users, eq(marketplaceAssets.creatorId, users.id))
+      .where(and(...conditions))
+      .orderBy(desc(userFavorites.createdAt))
+      .limit(limit)
+      .offset(offset);
 
     const formattedFavorites = favorites
       .filter(({ asset }: any) => asset !== null) // Filter out deleted assets
@@ -78,11 +91,12 @@ export async function GET(request: NextRequest) {
           updatedAt: asset!.updatedAt,
           creator: {
             id: asset!.creatorId,
-            displayName: creator?.displayName || user?.name || 'Unknown Creator',
+            displayName:
+              creator?.displayName || user?.name || 'Unknown Creator',
             avatarUrl: creator?.avatarUrl,
-            isVerified: creator?.isVerified || false
-          }
-        }
+            isVerified: creator?.isVerified || false,
+          },
+        },
       }));
 
     return NextResponse.json({
@@ -92,15 +106,15 @@ export async function GET(request: NextRequest) {
         pagination: {
           limit,
           offset,
-          hasMore: favorites.length === limit
-        }
+          hasMore: favorites.length === limit,
+        },
       },
     });
   } catch (error) {
     console.error('Failed to get user favorites:', error);
     return NextResponse.json(
       { error: 'Failed to get favorites' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

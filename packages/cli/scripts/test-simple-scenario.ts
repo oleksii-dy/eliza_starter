@@ -19,26 +19,26 @@ const simpleTestScenario = {
       bio: 'I am a test agent for scenario validation.',
       system: 'You are a helpful test agent. Respond clearly and concisely to user messages.',
       plugins: [], // No plugins for simplicity
-      settings: {}
-    }
+      settings: {},
+    },
   ],
   script: {
     steps: [
       {
         type: 'message',
         from: 'user',
-        content: 'Hello, can you help me test the scenario system?'
+        content: 'Hello, can you help me test the scenario system?',
       },
       {
         type: 'wait',
-        duration: 2000
+        duration: 2000,
       },
       {
-        type: 'message', 
+        type: 'message',
         from: 'user',
-        content: 'Great! The test is working.'
-      }
-    ]
+        content: 'Great! The test is working.',
+      },
+    ],
   },
   verification: {
     rules: [
@@ -46,20 +46,20 @@ const simpleTestScenario = {
         id: 'response-check',
         type: 'llm',
         description: 'Agent responded to user messages',
-        prompt: 'Did the agent respond helpfully to the user messages?'
-      }
-    ]
-  }
+        prompt: 'Did the agent respond helpfully to the user messages?',
+      },
+    ],
+  },
 };
 
 async function testSimpleScenario() {
   console.log('🔄 Testing Simple Scenario...');
-  
+
   try {
     const result = await executeRealScenario(simpleTestScenario, {
       verbose: true,
       timeout: 60000,
-      maxSteps: 10
+      maxSteps: 10,
     });
 
     console.log(`📊 Result: ${result.passed ? 'PASSED' : 'FAILED'}`);
@@ -74,12 +74,12 @@ async function testSimpleScenario() {
     } else {
       console.log('❌ Simple scenario test failed');
       console.log('Errors:', result.errors);
-      
+
       // Log verification details
-      result.verificationResults.forEach(v => {
+      result.verificationResults.forEach((v) => {
         console.log(`   Rule ${v.ruleId}: ${v.passed ? 'PASSED' : 'FAILED'} - ${v.reason}`);
       });
-      
+
       process.exit(1);
     }
   } catch (error) {

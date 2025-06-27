@@ -2,10 +2,10 @@ import { Command } from 'commander';
 import { logger } from '@elizaos/core';
 import { ScenarioRunner } from '../scenario-runner/index.js';
 import { loadProject } from '../project.js';
-import AgentServer from '@elizaos/server';
+// AgentServer imported dynamically
 
 async function initializeServer(): Promise<{
-  server: AgentServer;
+  server: any;
   runtime: import('@elizaos/core').IAgentRuntime;
   cleanup: () => Promise<void>;
 }> {
@@ -23,7 +23,8 @@ async function initializeServer(): Promise<{
   }
 
   // Initialize server with test configuration
-  const server = new AgentServer();
+  const { default: AgentServer } = (await import('@elizaos/server')) as any;
+  const server = new AgentServer() as any;
 
   // Initialize the server with a simplified configuration for testing
   await server.initialize({
@@ -301,3 +302,5 @@ async function runStressTest(
     overallPassed,
   };
 }
+
+export default stressTestVerificationCommand;

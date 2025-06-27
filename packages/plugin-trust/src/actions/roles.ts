@@ -2,6 +2,7 @@ import {
   type Action,
   type ActionResult,
   type ActionExample,
+  asUUID,
   ChannelType,
   composePrompt,
   type HandlerCallback,
@@ -262,7 +263,7 @@ export const updateRoleAction: Action = {
         continue;
       }
 
-      const currentRole = world.metadata.roles[assignment.entityId];
+      const currentRole = world.metadata.roles[asUUID(assignment.entityId)];
 
       // Validate role modification permissions
       if (!canModifyRole(requesterRole, currentRole, assignment.newRole)) {
@@ -275,7 +276,7 @@ export const updateRoleAction: Action = {
       }
 
       // Update role in world metadata
-      world.metadata.roles[assignment.entityId] = assignment.newRole;
+      world.metadata.roles[asUUID(assignment.entityId)] = assignment.newRole;
 
       worldUpdated = true;
       updatedRoles.push({

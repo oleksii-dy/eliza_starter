@@ -8,30 +8,42 @@ import type { CompletionRequest, EmbeddingRequest } from '../types/index.js';
 // Chat completion request schema
 const chatCompletionSchema = z.object({
   model: z.string().min(1, 'Model is required'),
-  messages: z.array(z.object({
-    role: z.enum(['system', 'user', 'assistant', 'tool']),
-    content: z.union([
-      z.string(),
-      z.array(z.object({
-        type: z.enum(['text', 'image_url']),
-        text: z.string().optional(),
-        image_url: z.object({
-          url: z.string().url(),
-          detail: z.enum(['low', 'high', 'auto']).optional(),
-        }).optional(),
-      })),
-    ]),
-    name: z.string().optional(),
-    tool_calls: z.array(z.object({
-      id: z.string(),
-      type: z.literal('function'),
-      function: z.object({
-        name: z.string(),
-        arguments: z.string(),
-      }),
-    })).optional(),
-    tool_call_id: z.string().optional(),
-  })).min(1, 'At least one message is required'),
+  messages: z
+    .array(
+      z.object({
+        role: z.enum(['system', 'user', 'assistant', 'tool']),
+        content: z.union([
+          z.string(),
+          z.array(
+            z.object({
+              type: z.enum(['text', 'image_url']),
+              text: z.string().optional(),
+              image_url: z
+                .object({
+                  url: z.string().url(),
+                  detail: z.enum(['low', 'high', 'auto']).optional(),
+                })
+                .optional(),
+            })
+          ),
+        ]),
+        name: z.string().optional(),
+        tool_calls: z
+          .array(
+            z.object({
+              id: z.string(),
+              type: z.literal('function'),
+              function: z.object({
+                name: z.string(),
+                arguments: z.string(),
+              }),
+            })
+          )
+          .optional(),
+        tool_call_id: z.string().optional(),
+      })
+    )
+    .min(1, 'At least one message is required'),
   max_tokens: z.number().int().positive().max(128000).optional(),
   temperature: z.number().min(0).max(2).optional(),
   top_p: z.number().min(0).max(1).optional(),
@@ -39,29 +51,30 @@ const chatCompletionSchema = z.object({
   presence_penalty: z.number().min(-2).max(2).optional(),
   stop: z.union([z.string(), z.array(z.string())]).optional(),
   stream: z.boolean().optional(),
-  tools: z.array(z.object({
-    type: z.literal('function'),
-    function: z.object({
-      name: z.string(),
-      description: z.string(),
-      parameters: z.object({}).passthrough(),
-    }),
-  })).optional(),
+  tools: z
+    .array(
+      z.object({
+        type: z.literal('function'),
+        function: z.object({
+          name: z.string(),
+          description: z.string(),
+          parameters: z.object({}).passthrough(),
+        }),
+      })
+    )
+    .optional(),
   tool_choice: z.union([z.string(), z.object({}).passthrough()]).optional(),
   user: z.string().optional(),
 });
 
 // Embedding request schema
 const embeddingSchema = z.object({
-  input: z.union([z.string(), z.array(z.string())]).refine(
-    (input) => {
-      if (Array.isArray(input)) {
-        return input.length > 0 && input.length <= 2048;
-      }
-      return input.length > 0 && input.length <= 8192;
-    },
-    'Input must be non-empty and within size limits'
-  ),
+  input: z.union([z.string(), z.array(z.string())]).refine((input) => {
+    if (Array.isArray(input)) {
+      return input.length > 0 && input.length <= 2048;
+    }
+    return input.length > 0 && input.length <= 8192;
+  }, 'Input must be non-empty and within size limits'),
   model: z.string().min(1, 'Model is required'),
   encoding_format: z.enum(['float', 'base64']).optional(),
   dimensions: z.number().int().positive().max(3072).optional(),
@@ -74,10 +87,12 @@ export const validateRequest = {
     return {
       success: result.success,
       data: result.success ? result.data : null,
-      error: result.success ? null : {
-        message: result.error.errors[0]?.message || 'Validation failed',
-        path: result.error.errors[0]?.path,
-      },
+      error: result.success
+        ? null
+        : {
+            message: result.error.errors[0]?.message || 'Validation failed',
+            path: result.error.errors[0]?.path,
+          },
     };
   },
 
@@ -86,10 +101,12 @@ export const validateRequest = {
     return {
       success: result.success,
       data: result.success ? result.data : null,
-      error: result.success ? null : {
-        message: result.error.errors[0]?.message || 'Validation failed',
-        path: result.error.errors[0]?.path,
-      },
+      error: result.success
+        ? null
+        : {
+            message: result.error.errors[0]?.message || 'Validation failed',
+            path: result.error.errors[0]?.path,
+          },
     };
   },
 };
@@ -117,7 +134,11 @@ export function validateOrganizationLimits(
   }
 
   // Check token limits for completion requests
-  if ('max_tokens' in request && request.max_tokens && request.max_tokens > limits.maxTokensPerRequest) {
+  if (
+    'max_tokens' in request &&
+    request.max_tokens &&
+    request.max_tokens > limits.maxTokensPerRequest
+  ) {
     return {
       valid: false,
       error: `Requested tokens (${request.max_tokens}) exceeds limit (${limits.maxTokensPerRequest})`,

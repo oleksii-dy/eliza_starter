@@ -9,13 +9,19 @@
 // ***********************************************
 
 // Custom command to upload files
-Cypress.Commands.add('uploadFile', (selector: string, fileName: string, fileContent: string, mimeType: string = 'text/plain') => {
-  cy.get(selector).selectFile({
-    contents: Cypress.Buffer.from(fileContent),
-    fileName,
-    mimeType
-  }, { force: true });
-});
+Cypress.Commands.add(
+  'uploadFile',
+  (selector: string, fileName: string, fileContent: string, mimeType: string = 'text/plain') => {
+    cy.get(selector).selectFile(
+      {
+        contents: Cypress.Buffer.from(fileContent),
+        fileName,
+        mimeType,
+      },
+      { force: true }
+    );
+  }
+);
 
 // Custom command to wait for API response
 Cypress.Commands.add('waitForApi', (alias: string, timeout: number = 10000) => {
@@ -26,7 +32,12 @@ Cypress.Commands.add('waitForApi', (alias: string, timeout: number = 10000) => {
 declare global {
   namespace Cypress {
     interface Chainable {
-      uploadFile(selector: string, fileName: string, fileContent: string, mimeType?: string): Chainable<void>;
+      uploadFile(
+        selector: string,
+        fileName: string,
+        fileContent: string,
+        mimeType?: string
+      ): Chainable<void>;
       waitForApi(alias: string, timeout?: number): Chainable<void>;
     }
   }

@@ -1,6 +1,6 @@
 {
   "id": "skeleton_drops",
-  "name": "Skeleton Loot Table", 
+  "name": "Skeleton Loot Table",
   "description": "Drops from skeletons",
   "drops": [
     {
@@ -31,4 +31,4 @@
   "rareDropTable": true,
   "rareTableAccess": 128,
   "maxDrops": 2
-} 
+}

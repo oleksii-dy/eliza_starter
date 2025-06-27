@@ -7,43 +7,64 @@ import {
 import { KnowledgeService } from '../../service';
 import type { IAgentRuntime, Memory, State, UUID, ActionResult } from '@elizaos/core';
 
-// Create mock functions for testing
-const createMockFn = () => mock();
+// Simplified TestSuite implementation for local use
+class TestSuite {
+  constructor(private name: string, private config: any) {}
+  
+  addTest(test: any) {
+    it(test.name, async () => {
+      const context = this.config.beforeEach();
+      await test.fn(context);
+    });
+  }
+  
+  run() {
+    // No-op, bun:test handles execution
+  }
+}
+
+const createUnitTest = (config: { name: string; fn: (context: any) => Promise<void> }) => config;
+
+const generateMockUuid = (suffix: string | number): UUID =>
+  `00000000-0000-0000-0000-00000000${suffix.toString().padStart(4, '0')}` as UUID;
 
 describe('Advanced Knowledge Features', () => {
-  let mockRuntime: IAgentRuntime;
-  let mockKnowledgeService: KnowledgeService;
-  let mockCallback: any;
-  let mockState: State;
+  const advancedKnowledgeFeaturesSuite = new TestSuite('Advanced Knowledge Features', {
+    beforeEach: () => {
+      const mockKnowledgeService = {
+        advancedSearch: mock(),
+        getAnalytics: mock(),
+        exportKnowledge: mock(),
+        importKnowledge: mock(),
+        batchOperation: mock(),
+      } as any;
 
-  const generateMockUuid = (suffix: string | number): UUID =>
-    `00000000-0000-0000-0000-00000000${suffix.toString().padStart(4, '0')}` as UUID;
+      const mockRuntime = {
+        agentId: generateMockUuid(1),
+        getService: mock().mockReturnValue(mockKnowledgeService),
+        getSetting: mock(),
+      } as any;
 
-  beforeEach(() => {
-    mockKnowledgeService = {
-      advancedSearch: mock(),
-      getAnalytics: mock(),
-      exportKnowledge: mock(),
-      importKnowledge: mock(),
-      batchOperation: mock(),
-    } as any;
+      const mockCallback = mock();
+      const mockState = {
+        values: {},
+        data: {},
+        text: '',
+      };
 
-    mockRuntime = {
-      agentId: generateMockUuid(1),
-      getService: mock().mockReturnValue(mockKnowledgeService),
-      getSetting: mock(),
-    } as any;
-
-    mockCallback = mock();
-    mockState = {
-      values: {},
-      data: {},
-      text: '',
-    };
+      return {
+        mockRuntime,
+        mockKnowledgeService,
+        mockCallback,
+        mockState,
+      };
+    },
   });
 
-  describe('advancedSearchAction', () => {
-    it('should validate when advanced search keywords are present', async () => {
+advancedKnowledgeFeaturesSuite.addTest(
+  createUnitTest({
+    name: 'advancedSearchAction should validate when advanced search keywords are present',
+    fn: async ({ mockRuntime }) => {
       const message: Memory = {
         id: generateMockUuid(10),
         content: {
@@ -55,9 +76,14 @@ describe('Advanced Knowledge Features', () => {
 
       const isValid = await advancedSearchAction.validate?.(mockRuntime, message);
       expect(isValid).toBe(true);
-    });
+    },
+  })
+);
 
-    it('should extract filters from natural language', async () => {
+advancedKnowledgeFeaturesSuite.addTest(
+  createUnitTest({
+    name: 'advancedSearchAction should extract filters from natural language',
+    fn: async ({ mockRuntime, mockKnowledgeService, mockCallback, mockState }) => {
       const mockResults = {
         results: [
           {
@@ -118,9 +144,14 @@ describe('Advanced Knowledge Features', () => {
           text: expect.stringContaining('Found 1 documents'),
         })
       );
-    });
+    },
+  })
+);
 
-    it('should handle empty search results', async () => {
+advancedKnowledgeFeaturesSuite.addTest(
+  createUnitTest({
+    name: 'advancedSearchAction should handle empty search results',
+    fn: async ({ mockRuntime, mockKnowledgeService, mockCallback, mockState }) => {
       (mockKnowledgeService.advancedSearch as any).mockResolvedValue({
         results: [],
         totalCount: 0,
@@ -147,11 +178,14 @@ describe('Advanced Knowledge Features', () => {
       expect(mockCallback).toHaveBeenCalledWith({
         text: 'No documents found matching your criteria.',
       });
-    });
-  });
+    },
+  })
+);
 
-  describe('knowledgeAnalyticsAction', () => {
-    it('should validate when analytics keywords are present', async () => {
+advancedKnowledgeFeaturesSuite.addTest(
+  createUnitTest({
+    name: 'knowledgeAnalyticsAction should validate when analytics keywords are present',
+    fn: async ({ mockRuntime }) => {
       const message: Memory = {
         id: generateMockUuid(40),
         content: {
@@ -163,9 +197,14 @@ describe('Advanced Knowledge Features', () => {
 
       const isValid = await knowledgeAnalyticsAction.validate?.(mockRuntime, message);
       expect(isValid).toBe(true);
-    });
+    },
+  })
+);
 
-    it('should return formatted analytics', async () => {
+advancedKnowledgeFeaturesSuite.addTest(
+  createUnitTest({
+    name: 'knowledgeAnalyticsAction should return formatted analytics',
+    fn: async ({ mockRuntime, mockKnowledgeService, mockCallback, mockState }) => {
       const mockAnalytics = {
         totalDocuments: 42,
         totalFragments: 156,
@@ -219,11 +258,14 @@ describe('Advanced Knowledge Features', () => {
           text: expect.stringContaining('5.00 MB'),
         })
       );
-    });
-  });
+    },
+  })
+);
 
-  describe('exportKnowledgeAction', () => {
-    it('should validate when export keywords are present', async () => {
+advancedKnowledgeFeaturesSuite.addTest(
+  createUnitTest({
+    name: 'exportKnowledgeAction should validate when export keywords are present',
+    fn: async ({ mockRuntime }) => {
       const message: Memory = {
         id: generateMockUuid(50),
         content: {
@@ -235,9 +277,14 @@ describe('Advanced Knowledge Features', () => {
 
       const isValid = await exportKnowledgeAction.validate?.(mockRuntime, message);
       expect(isValid).toBe(true);
-    });
+    },
+  })
+);
 
-    it('should export to JSON format by default', async () => {
+advancedKnowledgeFeaturesSuite.addTest(
+  createUnitTest({
+    name: 'exportKnowledgeAction should export to JSON format by default',
+    fn: async ({ mockRuntime, mockKnowledgeService, mockCallback, mockState }) => {
       const mockExportData = JSON.stringify(
         {
           exportDate: new Date().toISOString(),
@@ -284,9 +331,14 @@ describe('Advanced Knowledge Features', () => {
         size: mockExportData.length,
         content: mockExportData,
       });
-    });
+    },
+  })
+);
 
-    it('should detect CSV format from message', async () => {
+advancedKnowledgeFeaturesSuite.addTest(
+  createUnitTest({
+    name: 'exportKnowledgeAction should detect CSV format from message',
+    fn: async ({ mockRuntime, mockKnowledgeService, mockCallback, mockState }) => {
       const mockCsvData =
         'ID,Title,Content,Type,Created\n1,test.txt,Test content,text/plain,2024-01-01';
 
@@ -308,9 +360,14 @@ describe('Advanced Knowledge Features', () => {
         includeMetadata: true,
         includeFragments: false,
       });
-    });
+    },
+  })
+);
 
-    it('should detect Markdown format from message', async () => {
+advancedKnowledgeFeaturesSuite.addTest(
+  createUnitTest({
+    name: 'exportKnowledgeAction should detect Markdown format from message',
+    fn: async ({ mockRuntime, mockKnowledgeService, mockCallback, mockState }) => {
       const mockMarkdownData =
         '# Document 1\n\nContent here\n\n---\n\n# Document 2\n\nMore content';
 
@@ -332,11 +389,14 @@ describe('Advanced Knowledge Features', () => {
         includeMetadata: true,
         includeFragments: false,
       });
-    });
-  });
+    },
+  })
+);
 
-  describe('Batch Operations', () => {
-    it('should handle batch add operations', async () => {
+advancedKnowledgeFeaturesSuite.addTest(
+  createUnitTest({
+    name: 'Batch Operations should handle batch add operations',
+    fn: async ({ mockRuntime, mockKnowledgeService }) => {
       const mockBatchResult = {
         successful: 3,
         failed: 0,
@@ -392,9 +452,14 @@ describe('Advanced Knowledge Features', () => {
 
       expect(result.successful).toBe(3);
       expect(result.failed).toBe(0);
-    });
+    },
+  })
+);
 
-    it('should handle mixed batch operations with failures', async () => {
+advancedKnowledgeFeaturesSuite.addTest(
+  createUnitTest({
+    name: 'Batch Operations should handle mixed batch operations with failures',
+    fn: async ({ mockKnowledgeService }) => {
       const mockBatchResult = {
         successful: 2,
         failed: 1,
@@ -421,11 +486,14 @@ describe('Advanced Knowledge Features', () => {
       expect(result.successful).toBe(2);
       expect(result.failed).toBe(1);
       expect(result.results[1].error).toBe('Document not found');
-    });
-  });
+    },
+  })
+);
 
-  describe('Import Operations', () => {
-    it('should import JSON data', async () => {
+advancedKnowledgeFeaturesSuite.addTest(
+  createUnitTest({
+    name: 'Import Operations should import JSON data',
+    fn: async ({ mockKnowledgeService }) => {
       const jsonData = JSON.stringify({
         documents: [
           {
@@ -451,9 +519,14 @@ describe('Advanced Knowledge Features', () => {
 
       expect(result.successful).toBe(1);
       expect(result.failed).toBe(0);
-    });
+    },
+  })
+);
 
-    it('should import CSV data', async () => {
+advancedKnowledgeFeaturesSuite.addTest(
+  createUnitTest({
+    name: 'Import Operations should import CSV data',
+    fn: async ({ mockKnowledgeService }) => {
       const csvData =
         'ID,Title,Content,Type,Created\n1,test.txt,Test content,text/plain,2024-01-01';
 
@@ -471,6 +544,9 @@ describe('Advanced Knowledge Features', () => {
       });
 
       expect(result.successful).toBe(1);
-    });
-  });
+    },
+  })
+);
+
+  advancedKnowledgeFeaturesSuite.run();
 });

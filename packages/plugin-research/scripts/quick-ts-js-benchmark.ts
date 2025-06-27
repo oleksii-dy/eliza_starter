@@ -50,7 +50,8 @@ async function createQuickRuntime(): Promise<IAgentRuntime> {
     character: {
       name: 'Quick TS/JS Research Agent',
       bio: ['Fast TypeScript/JavaScript research specialist'],
-      system: 'You are an expert in TypeScript, JavaScript, and web development research.',
+      system:
+        'You are an expert in TypeScript, JavaScript, and web development research.',
       plugins: ['research'],
     },
 
@@ -94,7 +95,9 @@ async function createQuickRuntime(): Promise<IAgentRuntime> {
 async function runQuickTsJsBenchmark() {
   console.log('🚀 Quick TypeScript/JavaScript Research Benchmark');
   console.log('='.repeat(60));
-  console.log(`📊 Testing ${TS_JS_QUERIES.length} software development research queries`);
+  console.log(
+    `📊 Testing ${TS_JS_QUERIES.length} software development research queries`
+  );
   console.log('='.repeat(60));
 
   const runtime = await createQuickRuntime();
@@ -116,17 +119,20 @@ async function runQuickTsJsBenchmark() {
 
     try {
       // Create fast research project
-      const project = await researchService.createResearchProject(testQuery.query, {
-        researchDepth: 'moderate' as ResearchDepth, // Fast setting
-        domain: 'computer_science' as ResearchDomain,
-        maxSearchResults: 5, // Reduced for speed
-        evaluationEnabled: false, // Disable for speed
-        searchProviders: ['web'], // Single provider
-        timeout: 90000, // 90 seconds
-        maxDepth: 2, // Quick iterations
-        enableCitations: false, // Disable for speed
-        qualityThreshold: 0.5, // Lower threshold for speed
-      });
+      const project = await researchService.createResearchProject(
+        testQuery.query,
+        {
+          researchDepth: 'moderate' as ResearchDepth, // Fast setting
+          domain: 'computer_science' as ResearchDomain,
+          maxSearchResults: 5, // Reduced for speed
+          evaluationEnabled: false, // Disable for speed
+          searchProviders: ['web'], // Single provider
+          timeout: 90000, // 90 seconds
+          maxDepth: 2, // Quick iterations
+          enableCitations: false, // Disable for speed
+          qualityThreshold: 0.5, // Lower threshold for speed
+        }
+      );
 
       console.log(`✅ Project created: ${project.id}`);
       console.log(`📊 Domain: ${project.metadata.domain}`);
@@ -154,7 +160,9 @@ async function runQuickTsJsBenchmark() {
 
         if (updated.status === 'completed') {
           const duration = Date.now() - queryStart;
-          console.log(`\n✅ Research completed in ${Math.round(duration / 1000)}s`);
+          console.log(
+            `\n✅ Research completed in ${Math.round(duration / 1000)}s`
+          );
 
           // Log statistics
           console.log('📊 Results:');
@@ -267,10 +275,14 @@ async function runQuickTsJsBenchmark() {
   console.log(`⏰ Timed Out: ${timedOut.length}`);
 
   if (successful.length > 0) {
-    const avgDuration = successful.reduce((sum, r) => sum + r.duration, 0) / successful.length;
-    const avgSources = successful.reduce((sum, r) => sum + r.sources, 0) / successful.length;
-    const avgFindings = successful.reduce((sum, r) => sum + r.findings, 0) / successful.length;
-    const avgWordCount = successful.reduce((sum, r) => sum + r.wordCount, 0) / successful.length;
+    const avgDuration =
+      successful.reduce((sum, r) => sum + r.duration, 0) / successful.length;
+    const avgSources =
+      successful.reduce((sum, r) => sum + r.sources, 0) / successful.length;
+    const avgFindings =
+      successful.reduce((sum, r) => sum + r.findings, 0) / successful.length;
+    const avgWordCount =
+      successful.reduce((sum, r) => sum + r.wordCount, 0) / successful.length;
 
     console.log('\n📊 Average Performance Metrics (Successful Queries):');
     console.log(`  ⏱️  Duration: ${Math.round(avgDuration / 1000)}s`);
@@ -282,7 +294,11 @@ async function runQuickTsJsBenchmark() {
   console.log('\n📋 Individual Query Results:');
   for (const result of results) {
     const statusIcon =
-      result.status === 'completed' ? '✅' : result.status === 'failed' ? '❌' : '⏰';
+      result.status === 'completed'
+        ? '✅'
+        : result.status === 'failed'
+          ? '❌'
+          : '⏰';
     console.log(`\n${statusIcon} ${result.id}:`);
     console.log(`   Query: ${result.query.substring(0, 80)}...`);
     console.log(`   Duration: ${Math.round(result.duration / 1000)}s`);
@@ -318,11 +334,19 @@ async function runQuickTsJsBenchmark() {
     averageMetrics:
       successful.length > 0
         ? {
-          duration: successful.reduce((sum, r) => sum + r.duration, 0) / successful.length,
-          sources: successful.reduce((sum, r) => sum + r.sources, 0) / successful.length,
-          findings: successful.reduce((sum, r) => sum + r.findings, 0) / successful.length,
-          wordCount: successful.reduce((sum, r) => sum + r.wordCount, 0) / successful.length,
-        }
+            duration:
+              successful.reduce((sum, r) => sum + r.duration, 0) /
+              successful.length,
+            sources:
+              successful.reduce((sum, r) => sum + r.sources, 0) /
+              successful.length,
+            findings:
+              successful.reduce((sum, r) => sum + r.findings, 0) /
+              successful.length,
+            wordCount:
+              successful.reduce((sum, r) => sum + r.wordCount, 0) /
+              successful.length,
+          }
         : null,
     queryResults: results,
   };
@@ -332,7 +356,10 @@ async function runQuickTsJsBenchmark() {
   await fs.mkdir(outputDir, { recursive: true });
 
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const outputFile = path.join(outputDir, `quick_ts_js_benchmark_${timestamp}.json`);
+  const outputFile = path.join(
+    outputDir,
+    `quick_ts_js_benchmark_${timestamp}.json`
+  );
 
   await fs.writeFile(outputFile, JSON.stringify(benchmarkReport, null, 2));
 
@@ -341,9 +368,13 @@ async function runQuickTsJsBenchmark() {
   // Final assessment
   const overallSuccess = successful.length >= 2; // At least 2/3 should succeed
   if (overallSuccess) {
-    console.log('\n🎉 BENCHMARK PASSED: TypeScript/JavaScript research capabilities verified!');
+    console.log(
+      '\n🎉 BENCHMARK PASSED: TypeScript/JavaScript research capabilities verified!'
+    );
   } else {
-    console.log('\n⚠️  BENCHMARK MIXED: Some issues detected in research capabilities');
+    console.log(
+      '\n⚠️  BENCHMARK MIXED: Some issues detected in research capabilities'
+    );
   }
 
   console.log('\n✅ Quick TypeScript/JavaScript Research Benchmark Complete!');
@@ -357,7 +388,9 @@ async function runQuickTsJsBenchmark() {
 runQuickTsJsBenchmark()
   .then((results) => {
     console.log('\n🎉 Quick benchmark execution completed!');
-    console.log(`📊 Final Success Rate: ${(results.successRate * 100).toFixed(1)}%`);
+    console.log(
+      `📊 Final Success Rate: ${(results.successRate * 100).toFixed(1)}%`
+    );
     process.exit(0);
   })
   .catch((error) => {

@@ -2,7 +2,8 @@
 const crossmintIntegrationScenario: any = {
   id: 'payment-crossmint-integration-001',
   name: 'Crossmint Integration Test',
-  description: 'Tests Crossmint adapter integration with MPC wallets and multi-chain payment support',
+  description:
+    'Tests Crossmint adapter integration with MPC wallets and multi-chain payment support',
   category: 'payment',
   tags: ['payment', 'crossmint', 'mpc', 'multi-chain', 'ethereum', 'solana'],
 
@@ -39,7 +40,8 @@ Always inform users about the MPC wallet benefits and supported chains.`,
           },
           {
             type: 'message',
-            content: 'Great! Please use the secure MPC wallet. Here\'s the address: 0x742d35Cc6634C0532925a3b844Bc9e7595f2bD3e',
+            content:
+              "Great! Please use the secure MPC wallet. Here's the address: 0x742d35Cc6634C0532925a3b844Bc9e7595f2bD3e",
           },
           {
             type: 'wait',
@@ -63,7 +65,8 @@ Always inform users about the MPC wallet benefits and supported chains.`,
           },
           {
             type: 'message',
-            content: 'This MPC wallet system seems very secure. Can you explain how it protects my funds?',
+            content:
+              'This MPC wallet system seems very secure. Can you explain how it protects my funds?',
           },
         ],
       },
@@ -95,7 +98,8 @@ Always inform users about the MPC wallet benefits and supported chains.`,
         type: 'llm',
         description: 'Agent mentions Crossmint or MPC wallets',
         config: {
-          criteria: 'The agent should mention using Crossmint or MPC (Multi-Party Computation) wallets for secure payments',
+          criteria:
+            'The agent should mention using Crossmint or MPC (Multi-Party Computation) wallets for secure payments',
           expectedValue: 'Crossmint/MPC wallet mentioned',
         },
         weight: 3,
@@ -125,7 +129,8 @@ Always inform users about the MPC wallet benefits and supported chains.`,
         type: 'llm',
         description: 'MPC security explained',
         config: {
-          criteria: 'The agent should explain how MPC wallets protect funds without exposing private keys',
+          criteria:
+            'The agent should explain how MPC wallets protect funds without exposing private keys',
           expectedValue: 'Security benefits explained',
         },
         weight: 2,
@@ -135,7 +140,8 @@ Always inform users about the MPC wallet benefits and supported chains.`,
         type: 'llm',
         description: 'Cross-chain support demonstrated',
         config: {
-          criteria: 'The agent should successfully handle payments on both Ethereum and Solana chains',
+          criteria:
+            'The agent should successfully handle payments on both Ethereum and Solana chains',
           expectedValue: 'Multi-chain payments supported',
         },
         weight: 2,
@@ -150,7 +156,8 @@ Always inform users about the MPC wallet benefits and supported chains.`,
           type: 'llm',
           description: 'Complete Crossmint payment flow executed',
           config: {
-            criteria: 'The agent successfully processed payments on multiple chains using Crossmint MPC wallets and explained the security benefits',
+            criteria:
+              'The agent successfully processed payments on multiple chains using Crossmint MPC wallets and explained the security benefits',
           },
         },
       },

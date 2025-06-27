@@ -477,6 +477,7 @@ export default function CharacterForm({
           value={field.getValue(characterValue)}
           onChange={handleChange}
           className="min-h-[120px] resize-y"
+          data-cy={`agent-${field.name}-input`}
         />
       ) : field.fieldType === 'checkbox' ? (
         <Input
@@ -516,6 +517,7 @@ export default function CharacterForm({
           type={field.fieldType}
           value={field.getValue(characterValue)}
           onChange={handleChange}
+          data-cy={`agent-${field.name}-input`}
         />
       )}
     </div>
@@ -695,7 +697,7 @@ export default function CharacterForm({
       </div>
 
       {/* Template Selector */}
-      <div className="mb-6">
+      <div className="mb-6" data-cy="agent-templates-section">
         <Label htmlFor="template-selector" className="text-base font-medium">
           Start with Template:
         </Label>
@@ -878,7 +880,7 @@ export default function CharacterForm({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button type="submit" disabled={isSubmitting} className="agent-form-submit w-full">
+                <Button type="submit" disabled={isSubmitting} className="agent-form-submit w-full" data-cy="create-agent-btn">
                   {isSubmitting ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />

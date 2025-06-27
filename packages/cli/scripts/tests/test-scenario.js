@@ -56,7 +56,9 @@ async function testScenarioLoading() {
     console.log('\nSuggested next steps:');
     console.log('1. Ensure all required plugins are installed');
     console.log('2. Check that plugin modules export proper plugin objects');
-    console.log('3. Consider running scenarios with a pre-configured agent that has plugins loaded');
+    console.log(
+      '3. Consider running scenarios with a pre-configured agent that has plugins loaded'
+    );
   }
 }
 

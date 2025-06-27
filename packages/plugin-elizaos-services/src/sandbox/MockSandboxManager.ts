@@ -14,7 +14,7 @@ export class MockSandboxManager extends Service {
   private sandboxes: Map<string, SandboxEnvironment> = new Map();
   private mockDelay = 200; // Simulate API delays (reduced for tests)
 
-  constructor(runtime?: IAgentRuntime) {
+  constructor(_runtime?: IAgentRuntime) {
     super();
   }
 
@@ -77,7 +77,7 @@ export class MockSandboxManager extends Service {
   /**
    * Create a mock shared room
    */
-  async createRoom(sandboxId: string, name?: string): Promise<string> {
+  async createRoom(sandboxId: string, _name?: string): Promise<string> {
     const sandbox = this.sandboxes.get(sandboxId);
     if (!sandbox) {
       throw new Error(`Sandbox ${sandboxId} not found`);
@@ -139,7 +139,7 @@ export class MockSandboxManager extends Service {
   /**
    * Mock file upload
    */
-  async uploadFile(sandboxId: string, path: string, content: string): Promise<void> {
+  async uploadFile(sandboxId: string, path: string, _content: string): Promise<void> {
     logger.debug(`Mock uploaded file to ${sandboxId}: ${path}`);
   }
 

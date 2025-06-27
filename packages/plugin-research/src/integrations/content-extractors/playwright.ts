@@ -191,7 +191,7 @@ export class PlaywrightContentExtractor {
         // @ts-ignore - This runs in browser context
         window.scrollTo(0, 0);
       });
-    } catch (error) {
+    } catch (_error) {
       logger.warn('[Playwright] Could not wait for specific content selectors');
     }
   }

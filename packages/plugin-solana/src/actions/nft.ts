@@ -340,9 +340,12 @@ export const viewNftsAction: Action = {
 
       // Use specified address or agent's wallet
       const keyManager = runtime.getService('secure-key-manager');
-      const walletKeypair = keyManager && 'getAgentKeypair' in keyManager && typeof keyManager.getAgentKeypair === 'function' 
-        ? await keyManager.getAgentKeypair() 
-        : null;
+      const walletKeypair =
+        keyManager &&
+        'getAgentKeypair' in keyManager &&
+        typeof keyManager.getAgentKeypair === 'function'
+          ? await keyManager.getAgentKeypair()
+          : null;
       const owner = addressMatch ? new PublicKey(addressMatch[1]) : walletKeypair?.publicKey;
 
       if (!owner) {

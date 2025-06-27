@@ -3,12 +3,12 @@
  * Abstract interface for all generation providers
  */
 
-import { 
-  GenerationRequest, 
-  GenerationResult, 
-  GenerationType, 
+import {
+  GenerationRequest,
+  GenerationResult,
+  GenerationType,
   GenerationProvider,
-  GenerationOutput 
+  GenerationOutput,
 } from '../../types';
 
 export interface ProviderGenerationResult {
@@ -54,7 +54,10 @@ export abstract class BaseGenerationProvider {
   /**
    * Validate if request is supported by this provider
    */
-  validateRequest(request: GenerationRequest): { valid: boolean; errors: string[] } {
+  validateRequest(request: GenerationRequest): {
+    valid: boolean;
+    errors: string[];
+  } {
     const errors: string[] = [];
     const capabilities = this.getCapabilities();
 
@@ -65,7 +68,9 @@ export abstract class BaseGenerationProvider {
 
     // Check prompt length
     if (request.prompt.length > capabilities.maxPromptLength) {
-      errors.push(`Prompt exceeds maximum length of ${capabilities.maxPromptLength} characters`);
+      errors.push(
+        `Prompt exceeds maximum length of ${capabilities.maxPromptLength} characters`,
+      );
     }
 
     // Type-specific validation
@@ -73,14 +78,16 @@ export abstract class BaseGenerationProvider {
 
     return {
       valid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
   /**
    * Generate content based on request
    */
-  abstract generate(request: GenerationRequest): Promise<ProviderGenerationResult>;
+  abstract generate(
+    request: GenerationRequest,
+  ): Promise<ProviderGenerationResult>;
 
   /**
    * Cancel generation (optional)
@@ -90,7 +97,9 @@ export abstract class BaseGenerationProvider {
   /**
    * Get generation progress (optional)
    */
-  async getProgress?(generationId: string): Promise<{ progress: number; status: string }>;
+  async getProgress?(
+    generationId: string,
+  ): Promise<{ progress: number; status: string }>;
 
   /**
    * Estimate cost for generation
@@ -100,7 +109,11 @@ export abstract class BaseGenerationProvider {
   /**
    * Check provider health and availability
    */
-  async healthCheck(): Promise<{ healthy: boolean; latency?: number; error?: string }> {
+  async healthCheck(): Promise<{
+    healthy: boolean;
+    latency?: number;
+    error?: string;
+  }> {
     try {
       const start = Date.now();
       await this.performHealthCheck();
@@ -108,12 +121,12 @@ export abstract class BaseGenerationProvider {
 
       return {
         healthy: true,
-        latency
+        latency,
       };
     } catch (error) {
       return {
         healthy: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -126,7 +139,10 @@ export abstract class BaseGenerationProvider {
   /**
    * Type-specific request validation
    */
-  protected validateTypeSpecificRequest(request: GenerationRequest, errors: string[]): void {
+  protected validateTypeSpecificRequest(
+    request: GenerationRequest,
+    errors: string[],
+  ): void {
     // Override in specific providers for type-specific validation
   }
 
@@ -136,7 +152,7 @@ export abstract class BaseGenerationProvider {
   protected async rateLimitDelay(): Promise<void> {
     if (this.config.rateLimitPerSecond) {
       const delay = 1000 / this.config.rateLimitPerSecond;
-      await new Promise(resolve => setTimeout(resolve, delay));
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
 
@@ -145,7 +161,7 @@ export abstract class BaseGenerationProvider {
    */
   protected async withRetry<T>(
     operation: () => Promise<T>,
-    maxAttempts?: number
+    maxAttempts?: number,
   ): Promise<T> {
     const attempts = maxAttempts || this.config.retryAttempts || 3;
     let lastError: Error;
@@ -155,14 +171,14 @@ export abstract class BaseGenerationProvider {
         return await operation();
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
-        
+
         if (attempt === attempts) {
           throw lastError;
         }
 
         // Exponential backoff
         const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
 
@@ -177,7 +193,7 @@ export abstract class BaseGenerationProvider {
       // HTTP error
       const status = error.response.status;
       const message = error.response.data?.message || error.message;
-      
+
       switch (status) {
         case 401:
           return new Error(`Authentication failed: ${message}`);
@@ -211,7 +227,7 @@ export abstract class BaseGenerationProvider {
     if (url.startsWith('//')) {
       return `https:${url}`;
     }
-    
+
     if (url.startsWith('http://')) {
       return url.replace('http://', 'https://');
     }
@@ -247,7 +263,7 @@ export abstract class BaseGenerationProvider {
         'audio/ogg': 'ogg',
         'application/pdf': 'pdf',
         'text/plain': 'txt',
-        'application/json': 'json'
+        'application/json': 'json',
       };
 
       if (formatMap[contentType]) {
@@ -263,7 +279,10 @@ export abstract class BaseGenerationProvider {
   /**
    * Calculate file size from response headers or content
    */
-  protected calculateFileSize(headers?: Record<string, string>, content?: Buffer): number {
+  protected calculateFileSize(
+    headers?: Record<string, string>,
+    content?: Buffer,
+  ): number {
     if (headers && headers['content-length']) {
       return parseInt(headers['content-length'], 10);
     }

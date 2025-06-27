@@ -51,7 +51,9 @@ export class ScreenCaptureService {
         }
       } else if (platform === 'win32') {
         // Windows: Use wmic
-        const { stdout } = await execAsync('wmic path Win32_VideoController get CurrentHorizontalResolution,CurrentVerticalResolution /value');
+        const { stdout } = await execAsync(
+          'wmic path Win32_VideoController get CurrentHorizontalResolution,CurrentVerticalResolution /value'
+        );
         const width = stdout.match(/CurrentHorizontalResolution=(\d+)/)?.[1];
         const height = stdout.match(/CurrentVerticalResolution=(\d+)/)?.[1];
         if (width && height) {
@@ -216,6 +218,6 @@ export class ScreenCaptureService {
   }
 
   getProcessedTiles(): ScreenTile[] {
-    return this.lastCapture?.tiles.filter(t => t.analysis) || [];
+    return this.lastCapture?.tiles.filter((t) => t.analysis) || [];
   }
 }

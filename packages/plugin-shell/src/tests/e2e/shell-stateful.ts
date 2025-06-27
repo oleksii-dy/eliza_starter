@@ -35,15 +35,23 @@ export class ShellStatefulE2ETestSuite implements TestSuite {
         };
 
         const state: State = { values: {}, data: {}, text: '' };
-        await runShellCommandAction.handler(runtime, cdMessage, state, {}, async () => {
-          return [];
-        });
+        await runShellCommandAction.handler(
+          runtime,
+          cdMessage,
+          state,
+          {},
+          async () => {
+            return [];
+          }
+        );
 
         const newCwd = shellService.getCurrentWorkingDirectory();
         const expectedCwd = path.resolve(initialCwd, '..');
 
         if (newCwd !== expectedCwd) {
-          throw new Error(`CWD not updated correctly. Expected: ${expectedCwd}, Got: ${newCwd}`);
+          throw new Error(
+            `CWD not updated correctly. Expected: ${expectedCwd}, Got: ${newCwd}`
+          );
         }
 
         console.log(`✓ CWD changed to: ${newCwd}`);
@@ -59,16 +67,24 @@ export class ShellStatefulE2ETestSuite implements TestSuite {
         };
 
         let pwdResponse: any = null;
-        await runShellCommandAction.handler(runtime, pwdMessage, state, {}, async (resp) => {
-          pwdResponse = resp;
-          return [];
-        });
+        await runShellCommandAction.handler(
+          runtime,
+          pwdMessage,
+          state,
+          {},
+          async (resp) => {
+            pwdResponse = resp;
+            return [];
+          }
+        );
 
         const attachment = pwdResponse.attachments[0];
         const outputData = JSON.parse(attachment.text);
 
         if (!outputData.stdout.includes(newCwd)) {
-          throw new Error(`PWD output doesn't match current directory: ${outputData.stdout}`);
+          throw new Error(
+            `PWD output doesn't match current directory: ${outputData.stdout}`
+          );
         }
 
         // Navigate back
@@ -121,13 +137,21 @@ export class ShellStatefulE2ETestSuite implements TestSuite {
               createdAt: Date.now(),
             };
 
-            await runShellCommandAction.handler(runtime, message, state, {}, async () => {
-              return [];
-            });
+            await runShellCommandAction.handler(
+              runtime,
+              message,
+              state,
+              {},
+              async () => {
+                return [];
+              }
+            );
 
             const currentCwd = shellService.getCurrentWorkingDirectory();
             if (currentCwd !== expected) {
-              throw new Error(`Navigation failed. Expected: ${expected}, Got: ${currentCwd}`);
+              throw new Error(
+                `Navigation failed. Expected: ${expected}, Got: ${currentCwd}`
+              );
             }
 
             console.log(`✓ ${cmd} -> ${path.basename(currentCwd)}`);
@@ -160,9 +184,15 @@ export class ShellStatefulE2ETestSuite implements TestSuite {
           createdAt: Date.now(),
         };
 
-        await runShellCommandAction.handler(runtime, setEnvMessage, state, {}, async () => {
-          return [];
-        });
+        await runShellCommandAction.handler(
+          runtime,
+          setEnvMessage,
+          state,
+          {},
+          async () => {
+            return [];
+          }
+        );
 
         // Read the environment variable in the same session
         const getEnvMessage: Memory = {
@@ -174,15 +204,23 @@ export class ShellStatefulE2ETestSuite implements TestSuite {
           createdAt: Date.now(),
         };
 
-        await runShellCommandAction.handler(runtime, getEnvMessage, state, {}, async (_resp) => {
-          return [];
-        });
+        await runShellCommandAction.handler(
+          runtime,
+          getEnvMessage,
+          state,
+          {},
+          async (_resp) => {
+            return [];
+          }
+        );
 
         // Note: Environment variables set via export in a child process
         // won't persist in the parent. This is a limitation of using execSync.
         // The test should acknowledge this limitation.
         console.log('✓ Environment variable command executed');
-        console.log('  Note: Environment variables are scoped to individual command executions');
+        console.log(
+          '  Note: Environment variables are scoped to individual command executions'
+        );
       },
     },
 
@@ -216,9 +254,15 @@ export class ShellStatefulE2ETestSuite implements TestSuite {
             createdAt: Date.now(),
           };
 
-          await runShellCommandAction.handler(runtime, createFileMessage, state, {}, async () => {
-            return [];
-          });
+          await runShellCommandAction.handler(
+            runtime,
+            createFileMessage,
+            state,
+            {},
+            async () => {
+              return [];
+            }
+          );
 
           // Verify file exists
           const listMessage: Memory = {
@@ -231,10 +275,16 @@ export class ShellStatefulE2ETestSuite implements TestSuite {
           };
 
           let response: any = null;
-          await runShellCommandAction.handler(runtime, listMessage, state, {}, async (resp) => {
-            response = resp;
-            return [];
-          });
+          await runShellCommandAction.handler(
+            runtime,
+            listMessage,
+            state,
+            {},
+            async (resp) => {
+              response = resp;
+              return [];
+            }
+          );
 
           const attachment = response.attachments[0];
           const outputData = JSON.parse(attachment.text);

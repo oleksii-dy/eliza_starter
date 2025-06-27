@@ -1,5 +1,5 @@
 // IMPLEMENTED: Using real runtime factory for integration testing
-import { createRuntimeForScenarios } from '../src/utils/mock-runtime.js';
+import { createTestRuntime } from '@elizaos/core/test-utils';
 
 import { describe, expect, it, beforeEach, afterEach, mock } from 'bun:test';
 import { ScenarioRunner } from '../src/scenario-runner/index.js';
@@ -28,7 +28,8 @@ describe.skip('ScenarioRunner Integration Tests', () => {
   beforeEach(async () => {
     // Create real runtime for integration testing
     try {
-      mockRuntime = await createRuntimeForScenarios();
+      const { runtime } = await createTestRuntime();
+      mockRuntime = runtime;
     } catch (error) {
       console.warn('Failed to create real runtime, falling back to mock:', error);
 
@@ -74,8 +75,8 @@ describe.skip('ScenarioRunner Integration Tests', () => {
         // Mock settings method
         getSetting: mock().mockImplementation((key: string) => {
           const mockSettings: Record<string, any> = {
-            'OPENAI_API_KEY': 'mock-openai-key',
-            'ANTHROPIC_API_KEY': 'mock-anthropic-key',
+            OPENAI_API_KEY: 'mock-openai-key',
+            ANTHROPIC_API_KEY: 'mock-anthropic-key',
           };
           return mockSettings[key] || null;
         }),
@@ -195,7 +196,9 @@ describe.skip('ScenarioRunner Integration Tests', () => {
     );
 
     // Run the scenario
-    if (!scenarioRunner) {return;} // Skip if not initialized
+    if (!scenarioRunner) {
+      return;
+    } // Skip if not initialized
     const result = await scenarioRunner.runScenario(testScenario);
 
     // Verify the result
@@ -231,7 +234,9 @@ describe.skip('ScenarioRunner Integration Tests', () => {
       },
     };
 
-    if (!scenarioRunner) {return;} // Skip if not initialized
+    if (!scenarioRunner) {
+      return;
+    } // Skip if not initialized
     await expect(scenarioRunner.runScenario(invalidScenario)).rejects.toThrow();
   });
 
@@ -336,7 +341,9 @@ describe.skip('ScenarioRunner Integration Tests', () => {
       },
     };
 
-    if (!scenarioRunner) {return;} // Skip if not initialized
+    if (!scenarioRunner) {
+      return;
+    } // Skip if not initialized
     const results = await scenarioRunner.runScenarios([scenario1, scenario2]);
 
     expect(results).toHaveLength(2);
@@ -386,7 +393,9 @@ describe.skip('ScenarioRunner Integration Tests', () => {
       },
     };
 
-    if (!scenarioRunner) {return;} // Skip if not initialized
+    if (!scenarioRunner) {
+      return;
+    } // Skip if not initialized
     const result = await scenarioRunner.runScenario(metricsScenario);
 
     // Verify metrics were collected

@@ -109,7 +109,8 @@ async function extractTaskCancellation(
 export const cancelGoalAction: Action = {
   name: 'CANCEL_GOAL',
   similes: ['DELETE_GOAL', 'REMOVE_TASK', 'DELETE_TASK', 'REMOVE_GOAL'],
-  description: "Cancels and deletes a goal item from the user's task list immediately. Can be chained with LIST_GOALS to see remaining goals or CREATE_GOAL to add a new one.",
+  description:
+    "Cancels and deletes a goal item from the user's task list immediately. Can be chained with LIST_GOALS to see remaining goals or CREATE_GOAL to add a new one.",
 
   validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
     // Check if *any* active GOALs exist
@@ -316,14 +317,15 @@ export const cancelGoalAction: Action = {
       {
         name: '{{user}}',
         content: {
-          text: 'Cancel my task to finish taxes and show me what\'s left',
+          text: "Cancel my task to finish taxes and show me what's left",
         },
       },
       {
         name: '{{agent}}',
         content: {
           text: '✅ Cancelled goal: "Finish taxes". Now let me show you your remaining goals.',
-          thought: 'The user wants to remove a goal and see their updated goal list. I need to chain CANCEL_GOAL with LIST_GOALS to remove the unwanted goal and then display the current active goals.',
+          thought:
+            'The user wants to remove a goal and see their updated goal list. I need to chain CANCEL_GOAL with LIST_GOALS to remove the unwanted goal and then display the current active goals.',
           actions: ['CANCEL_GOAL', 'LIST_GOALS'],
         },
       },
@@ -339,8 +341,9 @@ export const cancelGoalAction: Action = {
       {
         name: '{{agent}}',
         content: {
-          text: 'I\'ve cancelled your exercise goal. Now I\'ll create a new goal for yoga.',
-          thought: "The user wants to replace one goal with another. I\'ll chain CANCEL_GOAL with CREATE_GOAL to remove the old exercise goal and create the new yoga goal, ensuring smooth goal management transition.",
+          text: "I've cancelled your exercise goal. Now I'll create a new goal for yoga.",
+          thought:
+            "The user wants to replace one goal with another. I\'ll chain CANCEL_GOAL with CREATE_GOAL to remove the old exercise goal and create the new yoga goal, ensuring smooth goal management transition.",
           actions: ['CANCEL_GOAL', 'CREATE_GOAL'],
         },
       },

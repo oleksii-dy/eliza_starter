@@ -5,7 +5,7 @@ import type {
   // ComponentConfigState,
 } from '../types/plugin';
 import type {} from // WalletCapability
-'../types/universal-wallet';
+  '../types/universal-wallet';
 
 /**
  * Plugin categories for intelligent defaults

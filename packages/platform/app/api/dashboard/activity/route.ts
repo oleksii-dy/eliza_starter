@@ -13,11 +13,11 @@ export const runtime = 'nodejs';
 /**
  * GET /api/dashboard/activity - Get recent dashboard activity
  */
-export async function GET(request: NextRequest) {
+export async function handleGET(request: NextRequest) {
   try {
     // Get current user session
     const user = await authService.getCurrentUser();
-    
+
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -25,7 +25,10 @@ export async function GET(request: NextRequest) {
     // Get organization
     const organization = await authService.getCurrentOrganization();
     if (!organization) {
-      return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Organization not found' },
+        { status: 404 },
+      );
     }
 
     // Get limit from query params
@@ -34,9 +37,9 @@ export async function GET(request: NextRequest) {
 
     // For now, create some sample activity based on recent data
     const recentActivity = [];
-    
+
     const db = await getDatabase();
-    
+
     // Get recent user sessions as activity
     const recentSessions = await db
       .select({
@@ -48,10 +51,15 @@ export async function GET(request: NextRequest) {
       })
       .from(userSessions)
       .innerJoin(users, eq(userSessions.userId, users.id))
-      .where(and(
-        eq(users.organizationId, organization.id),
-        gte(userSessions.createdAt, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))
-      ))
+      .where(
+        and(
+          eq(users.organizationId, organization.id),
+          gte(
+            userSessions.createdAt,
+            new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+          ),
+        ),
+      )
       .orderBy(desc(userSessions.createdAt))
       .limit(Math.min(limit, 10));
 
@@ -77,10 +85,12 @@ export async function GET(request: NextRequest) {
         isActive: agents.isActive, // Using isActive as proxy
       })
       .from(agents)
-      .where(and(
-        eq(agents.organizationId, organization.id),
-        gte(agents.createdAt, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000))
-      ))
+      .where(
+        and(
+          eq(agents.organizationId, organization.id),
+          gte(agents.createdAt, new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)),
+        ),
+      )
       .orderBy(desc(agents.createdAt))
       .limit(Math.min(limit, 5));
 
@@ -97,7 +107,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Sort by timestamp and limit
-    recentActivity.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    recentActivity.sort(
+      (a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+    );
     const limitedActivity = recentActivity.slice(0, limit);
 
     // If no real activity, add some placeholder activity for development
@@ -117,7 +130,7 @@ export async function GET(request: NextRequest) {
           title: 'Credits added',
           description: 'Development credits were added to account',
           timestamp: getTimeAgo(new Date(now.getTime() - 5 * 60 * 1000)),
-        }
+        },
       );
     }
 
@@ -129,7 +142,7 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching dashboard activity:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to fetch activity' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

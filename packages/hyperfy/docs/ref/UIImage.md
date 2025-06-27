@@ -9,8 +9,8 @@ const image = app.create('uiimage', {
   height: 150,
   objectFit: 'cover',
   backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  borderRadius: 10
-});
+  borderRadius: 10,
+})
 ```
 
 ## Properties
@@ -19,7 +19,6 @@ const image = app.create('uiimage', {
 
 Determines whether the image is displayed or hidden. Options are flex or none.
 Defaults to flex.
-
 
 ### `.src`: String
 
@@ -96,7 +95,7 @@ Defaults to null.
 Loads an image from the specified URL. Returns a promise that resolves when the image is loaded or rejects if loading fails.
 
 ```jsx
-image.src = 'https://example.com/new-image.png';
+image.src = 'https://example.com/new-image.png'
 ```
 
 ## Example Usage
@@ -111,8 +110,8 @@ const ui = app.create('ui', {
   width: 300,
   height: 200,
   backgroundColor: 'rgba(0, 0, 0, 0.7)',
-  pivot: 'top-left'
-});
+  pivot: 'top-left',
+})
 
 // Create an image element
 const image = app.create('uiimage', {
@@ -121,11 +120,11 @@ const image = app.create('uiimage', {
   height: 200,
   objectFit: 'cover',
   backgroundColor: 'rgba(255, 255, 255, 0.2)',
-  borderRadius: 10
-});
+  borderRadius: 10,
+})
 
 // Add the image to the UI node
-ui.add(image);
+ui.add(image)
 ```
 
 In this example:
@@ -143,9 +142,9 @@ app.configure([
     type: 'file',
     key: 'selectedImage',
     label: 'Upload Image',
-    kind: 'texture' // Specify the kind as 'image' to restrict file types
-  }
-]);
+    kind: 'texture', // Specify the kind as 'image' to restrict file types
+  },
+])
 
 // Create the image element using the selected file
 const image = app.create('uiimage', {
@@ -154,6 +153,6 @@ const image = app.create('uiimage', {
   height: 200,
   objectFit: 'cover',
   backgroundColor: 'rgba(255, 255, 255, 0.2)',
-  borderRadius: 10
-});
+  borderRadius: 10,
+})
 ```

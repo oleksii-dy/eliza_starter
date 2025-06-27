@@ -3,7 +3,8 @@
  * Enables sandbox agents to communicate with host server and shared rooms
  */
 
-import type { IAgentRuntime, Service, Memory, Content } from '@elizaos/core';
+import type { IAgentRuntime, Content } from '@elizaos/core';
+import { Service } from '@elizaos/core';
 import { logger } from '@elizaos/core';
 import WebSocket from 'ws';
 
@@ -15,6 +16,7 @@ export interface BridgeConfig {
   role: string;
   reconnectInterval?: number;
   heartbeatInterval?: number;
+  [key: string]: any; // Index signature to match Metadata type
 }
 
 export interface RoomMessage {
@@ -31,7 +33,7 @@ export class WebSocketBridge extends Service {
   capabilityDescription = 'Bridges sandbox agents to host server via WebSocket';
 
   private ws: WebSocket | null = null;
-  private config: BridgeConfig;
+  config: BridgeConfig;
   private isConnected = false;
   private reconnectTimer: NodeJS.Timeout | null = null;
   private heartbeatTimer: NodeJS.Timeout | null = null;
@@ -47,7 +49,15 @@ export class WebSocketBridge extends Service {
     };
   }
 
-  static async start(runtime: IAgentRuntime, config: BridgeConfig): Promise<WebSocketBridge> {
+  static async start(runtime: IAgentRuntime): Promise<WebSocketBridge> {
+    // This method is for Service compatibility but WebSocketBridge needs special config
+    throw new Error('WebSocketBridge must be started with createBridge() method instead');
+  }
+
+  static async createBridge(
+    runtime: IAgentRuntime,
+    config: BridgeConfig
+  ): Promise<WebSocketBridge> {
     logger.info(`Starting WebSocket Bridge for agent ${config.agentId}`);
     const bridge = new WebSocketBridge(runtime, config);
     await bridge.connect();
@@ -227,8 +237,9 @@ export class WebSocketBridge extends Service {
    */
   onTaskAssignment(callback: (task: any) => void): void {
     this.onMessage('task_assignment', (message) => {
-      if (message.content.task && message.content.task.assignedTo === this.config.agentId) {
-        callback(message.content.task);
+      const task = (message.content as any).task;
+      if (task && task.assignedTo === this.config.agentId) {
+        callback(task);
       }
     });
   }
@@ -238,8 +249,9 @@ export class WebSocketBridge extends Service {
    */
   onFileSync(callback: (files: any[]) => void): void {
     this.onMessage('file_sync', (message) => {
-      if (message.content.files && message.content.syncedBy !== this.config.agentId) {
-        callback(message.content.files);
+      const content = message.content as any;
+      if (content.files && content.syncedBy !== this.config.agentId) {
+        callback(content.files);
       }
     });
   }
@@ -368,7 +380,7 @@ export async function createWebSocketBridge(
   runtime: IAgentRuntime,
   config: BridgeConfig
 ): Promise<WebSocketBridge> {
-  return WebSocketBridge.start(runtime, config);
+  return WebSocketBridge.createBridge(runtime, config);
 }
 
 /**

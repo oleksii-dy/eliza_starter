@@ -70,22 +70,26 @@ jest.mock('openai', () => {
       chat: {
         completions: {
           create: jest.fn().mockResolvedValue({
-            choices: [{
-              message: {
-                content: 'Test response from mocked OpenAI'
-              }
-            }]
-          })
-        }
+            choices: [
+              {
+                message: {
+                  content: 'Test response from mocked OpenAI',
+                },
+              },
+            ],
+          }),
+        },
       },
       embeddings: {
         create: jest.fn().mockResolvedValue({
-          data: [{
-            embedding: new Array(1536).fill(0).map(() => Math.random())
-          }]
-        })
-      }
-    }))
+          data: [
+            {
+              embedding: new Array(1536).fill(0).map(() => Math.random()),
+            },
+          ],
+        }),
+      },
+    })),
   };
 });
 
@@ -105,7 +109,8 @@ jest.mock('ioredis', () => {
 
 // Test database configuration
 if (!process.env.DATABASE_URL) {
-  process.env.DATABASE_URL = 'postgresql://shawwalters@localhost:5432/elizaos_platform_test';
+  process.env.DATABASE_URL =
+    'postgresql://shawwalters@localhost:5432/elizaos_platform_test';
 }
 
 // Test environment variables

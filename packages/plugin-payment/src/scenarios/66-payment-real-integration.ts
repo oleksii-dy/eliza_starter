@@ -16,7 +16,8 @@ const paymentRealIntegrationScenario: any = {
       },
       {
         user: 'agent',
-        content: 'I\'ll help you connect your MetaMask wallet. Please approve the connection request in your wallet. Once connected, you can make secure blockchain payments.',
+        content:
+          "I'll help you connect your MetaMask wallet. Please approve the connection request in your wallet. Once connected, you can make secure blockchain payments.",
       },
     ],
     [
@@ -26,7 +27,8 @@ const paymentRealIntegrationScenario: any = {
       },
       {
         user: 'agent',
-        content: 'Current gas fees on Ethereum are approximately 25 gwei, which would cost about $3.50 for a USDC transfer. Would you like to proceed or wait for lower fees?',
+        content:
+          'Current gas fees on Ethereum are approximately 25 gwei, which would cost about $3.50 for a USDC transfer. Would you like to proceed or wait for lower fees?',
       },
     ],
   ],
@@ -147,11 +149,7 @@ Research services cost 1 USDC. Always inform users of costs before processing pa
 
             // Check database persistence
             const db = dbService.getDatabase();
-            const wallets = await db
-              .select()
-              .from('userWallets')
-              .where({ userId })
-              .limit(10);
+            const wallets = await db.select().from('userWallets').where({ userId }).limit(10);
 
             if (!wallets || wallets.length === 0) {
               return { success: false, reason: 'Wallet not persisted in database' };
@@ -183,7 +181,8 @@ Research services cost 1 USDC. Always inform users of costs before processing pa
         type: 'llm',
         description: 'Payment context in research response',
         config: {
-          criteria: 'The agent should mention payment requirement or insufficient funds for research',
+          criteria:
+            'The agent should mention payment requirement or insufficient funds for research',
           expectedValue: 'Payment context mentioned',
         },
         weight: 2,
@@ -198,7 +197,8 @@ Research services cost 1 USDC. Always inform users of costs before processing pa
           type: 'llm',
           description: 'Real integration completed',
           config: {
-            criteria: 'The agent successfully created wallets, reported balances, and handled payment requirements',
+            criteria:
+              'The agent successfully created wallets, reported balances, and handled payment requirements',
           },
         },
       },
@@ -213,7 +213,9 @@ Research services cost 1 USDC. Always inform users of costs before processing pa
     try {
       // Clean up test data
       await db.delete('userWallets').where({ userId: 'b2c3d4e5-f6a7-8901-bcde-f23456789012' });
-      await db.delete('paymentTransactions').where({ payerId: 'b2c3d4e5-f6a7-8901-bcde-f23456789012' });
+      await db
+        .delete('paymentTransactions')
+        .where({ payerId: 'b2c3d4e5-f6a7-8901-bcde-f23456789012' });
     } catch (error) {
       // Ignore cleanup errors
     }
@@ -350,7 +352,8 @@ Always generate unique verification codes for payment confirmations.`,
           type: 'llm',
           description: 'Confirmation flow executed',
           config: {
-            criteria: 'The agent created a pending payment and requested confirmation with proper security',
+            criteria:
+              'The agent created a pending payment and requested confirmation with proper security',
           },
         },
       },

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll  } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from 'bun:test';
 import { execSync } from 'child_process';
 import { existsSync } from 'fs';
 import { mkdtemp, rm, writeFile } from 'fs/promises';

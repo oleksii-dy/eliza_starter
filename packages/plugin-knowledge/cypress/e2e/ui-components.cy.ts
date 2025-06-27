@@ -12,7 +12,7 @@ describe('UI Components', () => {
 
     it('should render with all variants', () => {
       const variants = ['default', 'outline', 'secondary', 'destructive'];
-      variants.forEach(variant => {
+      variants.forEach((variant) => {
         cy.get(`[data-testid="badge-${variant}"]`).should('exist');
       });
     });
@@ -44,14 +44,14 @@ describe('UI Components', () => {
 
     it('should render all variants', () => {
       const variants = ['default', 'outline', 'ghost', 'destructive'];
-      variants.forEach(variant => {
+      variants.forEach((variant) => {
         cy.get(`[data-testid="button-${variant}"]`).should('exist');
       });
     });
 
     it('should render all sizes', () => {
       const sizes = ['default', 'sm', 'lg', 'icon'];
-      sizes.forEach(size => {
+      sizes.forEach((size) => {
         cy.get(`[data-testid="button-size-${size}"]`).should('exist');
       });
     });
@@ -97,7 +97,11 @@ describe('UI Components', () => {
     });
 
     it('should show placeholder', () => {
-      cy.get('[data-testid="input-placeholder"]').should('have.attr', 'placeholder', 'Enter text...');
+      cy.get('[data-testid="input-placeholder"]').should(
+        'have.attr',
+        'placeholder',
+        'Enter text...'
+      );
     });
 
     it('should be disabled when disabled prop is true', () => {

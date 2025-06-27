@@ -1,33 +1,33 @@
-import { describe, it, expect, beforeEach } from 'bun:test';
-import { mock, spyOn } from 'bun:test';
-import { QuestSystem } from '../../rpg/systems/QuestSystem';
-import { createTestWorld } from '../test-world-factory';
-import type { World } from '../../types';
-import type { PlayerEntity, StatsComponent, InventoryComponent } from '../../rpg/types';
-import type { QuestDefinition, QuestObjective } from '../../rpg/systems/QuestSystem';
+import { describe, it, expect, beforeEach } from 'bun:test'
+import { mock, spyOn } from 'bun:test'
+import { QuestSystem } from '../../rpg/systems/QuestSystem'
+import { createTestWorld } from '../test-world-factory'
+import type { World } from '../../types'
+import type { PlayerEntity, StatsComponent, InventoryComponent } from '../../rpg/types'
+import type { QuestDefinition, QuestObjective } from '../../rpg/systems/QuestSystem'
 
 describe('QuestSystem', () => {
-  let world: World;
-  let questSystem: QuestSystem;
-  let mockPlayer: PlayerEntity;
-  let mockSkillsSystem: any;
-  let mockInventorySystem: any;
+  let world: World
+  let questSystem: QuestSystem
+  let mockPlayer: PlayerEntity
+  let mockSkillsSystem: any
+  let mockInventorySystem: any
 
   beforeEach(async () => {
-    world = await createTestWorld();
-    questSystem = new QuestSystem(world);
+    world = await createTestWorld()
+    questSystem = new QuestSystem(world)
 
     // Mock systems
     mockSkillsSystem = {
-      addExperience: mock()
-    };
+      addExperience: mock(),
+    }
 
     mockInventorySystem = {
-      addItem: mock()
-    };
+      addItem: mock(),
+    }
 
-    world.systems.push(mockSkillsSystem);
-    world.systems.push(mockInventorySystem);
+    world.systems.push(mockSkillsSystem)
+    world.systems.push(mockInventorySystem)
 
     // Create mock player
     const statsComponent: StatsComponent = {
@@ -57,9 +57,9 @@ describe('QuestSystem', () => {
         meleeStrength: 0,
         rangedStrength: 0,
         magicDamage: 0,
-        prayerBonus: 0
-      }
-    };
+        prayerBonus: 0,
+      },
+    }
 
     const inventoryComponent: InventoryComponent = {
       type: 'inventory',
@@ -78,7 +78,7 @@ describe('QuestSystem', () => {
         gloves: null,
         boots: null,
         ring: null,
-        ammo: null
+        ammo: null,
       },
       totalWeight: 0,
       equipmentBonuses: {
@@ -95,9 +95,9 @@ describe('QuestSystem', () => {
         meleeStrength: 0,
         rangedStrength: 0,
         magicDamage: 0,
-        prayerBonus: 0
-      }
-    };
+        prayerBonus: 0,
+      },
+    }
 
     mockPlayer = {
       id: 'player_1',
@@ -105,12 +105,16 @@ describe('QuestSystem', () => {
       position: { x: 0, y: 0, z: 0 },
       data: { type: 'player', id: 'player_1' },
       getComponent: mock().mockImplementation((type: string) => {
-        if (type === 'stats') {return statsComponent;}
-        if (type === 'inventory') {return inventoryComponent;}
-        return null;
-      }) as any
-    } as PlayerEntity;
-  });
+        if (type === 'stats') {
+          return statsComponent
+        }
+        if (type === 'inventory') {
+          return inventoryComponent
+        }
+        return null
+      }) as any,
+    } as PlayerEntity
+  })
 
   describe('Quest Registration', () => {
     it('should register a quest definition', () => {
@@ -122,17 +126,17 @@ describe('QuestSystem', () => {
         questPoints: 1,
         objectives: [],
         rewards: {},
-      };
+      }
 
-      questSystem.registerQuest(quest);
-      const allQuests = questSystem.getAllQuests();
+      questSystem.registerQuest(quest)
+      const allQuests = questSystem.getAllQuests()
 
-      expect(allQuests).toHaveLength(2); // Tutorial + test quest
-      expect(allQuests.find(q => q.id === 'test_quest')).toBeDefined();
-    });
+      expect(allQuests).toHaveLength(2) // Tutorial + test quest
+      expect(allQuests.find(q => q.id === 'test_quest')).toBeDefined()
+    })
 
     it('should emit quest:registered event', () => {
-      const emitSpy = spyOn(world.events, 'emit');
+      const emitSpy = spyOn(world.events, 'emit')
       const quest: QuestDefinition = {
         id: 'test_quest',
         name: 'Test Quest',
@@ -141,13 +145,13 @@ describe('QuestSystem', () => {
         questPoints: 1,
         objectives: [],
         rewards: {},
-      };
+      }
 
-      questSystem.registerQuest(quest);
+      questSystem.registerQuest(quest)
 
-      expect(emitSpy).toHaveBeenCalledWith('quest:registered', { questId: 'test_quest' });
-    });
-  });
+      expect(emitSpy).toHaveBeenCalledWith('quest:registered', { questId: 'test_quest' })
+    })
+  })
 
   describe('Quest Requirements', () => {
     it('should check quest prerequisites', () => {
@@ -158,18 +162,18 @@ describe('QuestSystem', () => {
         difficulty: 'intermediate',
         questPoints: 2,
         requirements: {
-          quests: ['tutorial']
+          quests: ['tutorial'],
         },
         objectives: [],
         rewards: {},
-      };
+      }
 
-      questSystem.registerQuest(quest);
+      questSystem.registerQuest(quest)
 
-      const canStart = questSystem.canStartQuest(mockPlayer, 'advanced_quest');
-      expect(canStart.canStart).toBe(false);
-      expect(canStart.reason).toBe('Must complete quest: tutorial');
-    });
+      const canStart = questSystem.canStartQuest(mockPlayer, 'advanced_quest')
+      expect(canStart.canStart).toBe(false)
+      expect(canStart.reason).toBe('Must complete quest: tutorial')
+    })
 
     it('should check skill requirements', () => {
       const quest: QuestDefinition = {
@@ -179,18 +183,18 @@ describe('QuestSystem', () => {
         difficulty: 'intermediate',
         questPoints: 2,
         requirements: {
-          skills: [{ skill: 'attack', level: 10 }]
+          skills: [{ skill: 'attack', level: 10 }],
         },
         objectives: [],
         rewards: {},
-      };
+      }
 
-      questSystem.registerQuest(quest);
+      questSystem.registerQuest(quest)
 
-      const canStart = questSystem.canStartQuest(mockPlayer, 'skill_quest');
-      expect(canStart.canStart).toBe(false);
-      expect(canStart.reason).toBe('Requires attack level 10');
-    });
+      const canStart = questSystem.canStartQuest(mockPlayer, 'skill_quest')
+      expect(canStart.canStart).toBe(false)
+      expect(canStart.reason).toBe('Requires attack level 10')
+    })
 
     it('should check item requirements', () => {
       const quest: QuestDefinition = {
@@ -200,18 +204,18 @@ describe('QuestSystem', () => {
         difficulty: 'novice',
         questPoints: 1,
         requirements: {
-          items: [{ itemId: 1001, quantity: 1 }]
+          items: [{ itemId: 1001, quantity: 1 }],
         },
         objectives: [],
         rewards: {},
-      };
+      }
 
-      questSystem.registerQuest(quest);
+      questSystem.registerQuest(quest)
 
-      const canStart = questSystem.canStartQuest(mockPlayer, 'item_quest');
-      expect(canStart.canStart).toBe(false);
-      expect(canStart.reason).toBe('Requires 1 of item 1001');
-    });
+      const canStart = questSystem.canStartQuest(mockPlayer, 'item_quest')
+      expect(canStart.canStart).toBe(false)
+      expect(canStart.reason).toBe('Requires 1 of item 1001')
+    })
 
     it('should allow starting quest when all requirements are met', () => {
       const quest: QuestDefinition = {
@@ -222,14 +226,14 @@ describe('QuestSystem', () => {
         questPoints: 1,
         objectives: [],
         rewards: {},
-      };
+      }
 
-      questSystem.registerQuest(quest);
+      questSystem.registerQuest(quest)
 
-      const canStart = questSystem.canStartQuest(mockPlayer, 'simple_quest');
-      expect(canStart.canStart).toBe(true);
-    });
-  });
+      const canStart = questSystem.canStartQuest(mockPlayer, 'simple_quest')
+      expect(canStart.canStart).toBe(true)
+    })
+  })
 
   describe('Quest Start Handlers', () => {
     it('should use custom start handler', () => {
@@ -241,19 +245,19 @@ describe('QuestSystem', () => {
         questPoints: 1,
         objectives: [],
         rewards: {},
-      };
+      }
 
-      questSystem.registerQuest(quest);
+      questSystem.registerQuest(quest)
 
-      const startHandler = mock().mockReturnValue(false);
-      questSystem.registerQuestStartHandler('handler_quest', startHandler);
+      const startHandler = mock().mockReturnValue(false)
+      questSystem.registerQuestStartHandler('handler_quest', startHandler)
 
-      const canStart = questSystem.canStartQuest(mockPlayer, 'handler_quest');
-      expect(canStart.canStart).toBe(false);
-      expect(canStart.reason).toBe('Quest cannot be started at this time');
-      expect(startHandler).toHaveBeenCalledWith(mockPlayer);
-    });
-  });
+      const canStart = questSystem.canStartQuest(mockPlayer, 'handler_quest')
+      expect(canStart.canStart).toBe(false)
+      expect(canStart.reason).toBe('Quest cannot be started at this time')
+      expect(startHandler).toHaveBeenCalledWith(mockPlayer)
+    })
+  })
 
   describe('Starting Quests', () => {
     it('should start a quest successfully', () => {
@@ -271,26 +275,26 @@ describe('QuestSystem', () => {
             target: 'npc_goblin',
             quantity: 5,
             current: 0,
-            completed: false
-          }
+            completed: false,
+          },
         ],
         rewards: {},
-      };
+      }
 
-      questSystem.registerQuest(quest);
+      questSystem.registerQuest(quest)
 
-      const started = questSystem.startQuest(mockPlayer, 'start_quest');
-      expect(started).toBe(true);
+      const started = questSystem.startQuest(mockPlayer, 'start_quest')
+      expect(started).toBe(true)
 
-      const progress = questSystem.getQuestProgress(mockPlayer, 'start_quest');
-      expect(progress).toBeDefined();
-      expect(progress?.status).toBe('in_progress');
-      expect(progress?.objectives).toHaveLength(1);
-      expect(progress?.objectives[0].current).toBe(0);
-    });
+      const progress = questSystem.getQuestProgress(mockPlayer, 'start_quest')
+      expect(progress).toBeDefined()
+      expect(progress?.status).toBe('in_progress')
+      expect(progress?.objectives).toHaveLength(1)
+      expect(progress?.objectives[0].current).toBe(0)
+    })
 
     it('should emit quest:started event', () => {
-      const emitSpy = spyOn(world.events, 'emit');
+      const emitSpy = spyOn(world.events, 'emit')
       const quest: QuestDefinition = {
         id: 'event_quest',
         name: 'Event Quest',
@@ -299,17 +303,17 @@ describe('QuestSystem', () => {
         questPoints: 1,
         objectives: [],
         rewards: {},
-      };
+      }
 
-      questSystem.registerQuest(quest);
-      questSystem.startQuest(mockPlayer, 'event_quest');
+      questSystem.registerQuest(quest)
+      questSystem.startQuest(mockPlayer, 'event_quest')
 
       expect(emitSpy).toHaveBeenCalledWith('quest:started', {
         playerId: 'player_1',
         questId: 'event_quest',
-        questName: 'Event Quest'
-      });
-    });
+        questName: 'Event Quest',
+      })
+    })
 
     it('should not start already started quest', () => {
       const quest: QuestDefinition = {
@@ -320,19 +324,19 @@ describe('QuestSystem', () => {
         questPoints: 1,
         objectives: [],
         rewards: {},
-      };
+      }
 
-      questSystem.registerQuest(quest);
-      questSystem.startQuest(mockPlayer, 'once_quest');
+      questSystem.registerQuest(quest)
+      questSystem.startQuest(mockPlayer, 'once_quest')
 
-      const canStart = questSystem.canStartQuest(mockPlayer, 'once_quest');
-      expect(canStart.canStart).toBe(false);
-      expect(canStart.reason).toBe('Quest already started or completed');
-    });
-  });
+      const canStart = questSystem.canStartQuest(mockPlayer, 'once_quest')
+      expect(canStart.canStart).toBe(false)
+      expect(canStart.reason).toBe('Quest already started or completed')
+    })
+  })
 
   describe('Objective Progress', () => {
-    let testQuest: QuestDefinition;
+    let testQuest: QuestDefinition
 
     beforeEach(() => {
       testQuest = {
@@ -349,7 +353,7 @@ describe('QuestSystem', () => {
             target: 'npc_goblin',
             quantity: 3,
             current: 0,
-            completed: false
+            completed: false,
           },
           {
             id: 'collect_items',
@@ -358,58 +362,58 @@ describe('QuestSystem', () => {
             target: 'item_logs',
             quantity: 5,
             current: 0,
-            completed: false
-          }
+            completed: false,
+          },
         ],
         rewards: {
           experience: [{ skill: 'attack', amount: 100 }],
           items: [{ itemId: 995, quantity: 100 }], // 100 gold
-          questPoints: 1
-        }
-      };
+          questPoints: 1,
+        },
+      }
 
-      questSystem.registerQuest(testQuest);
-      questSystem.startQuest(mockPlayer, 'objective_quest');
-    });
+      questSystem.registerQuest(testQuest)
+      questSystem.startQuest(mockPlayer, 'objective_quest')
+    })
 
     it('should update kill objectives', () => {
-      questSystem.handleNPCKill(mockPlayer, 'npc_goblin');
+      questSystem.handleNPCKill(mockPlayer, 'npc_goblin')
 
-      const progress = questSystem.getQuestProgress(mockPlayer, 'objective_quest');
-      expect(progress?.objectives[0].current).toBe(1);
-      expect(progress?.objectives[0].completed).toBe(false);
-    });
+      const progress = questSystem.getQuestProgress(mockPlayer, 'objective_quest')
+      expect(progress?.objectives[0].current).toBe(1)
+      expect(progress?.objectives[0].completed).toBe(false)
+    })
 
     it('should complete kill objective when target reached', () => {
-      const emitSpy = spyOn(world.events, 'emit');
+      const emitSpy = spyOn(world.events, 'emit')
 
-      questSystem.handleNPCKill(mockPlayer, 'npc_goblin');
-      questSystem.handleNPCKill(mockPlayer, 'npc_goblin');
-      questSystem.handleNPCKill(mockPlayer, 'npc_goblin');
+      questSystem.handleNPCKill(mockPlayer, 'npc_goblin')
+      questSystem.handleNPCKill(mockPlayer, 'npc_goblin')
+      questSystem.handleNPCKill(mockPlayer, 'npc_goblin')
 
-      const progress = questSystem.getQuestProgress(mockPlayer, 'objective_quest');
-      expect(progress?.objectives[0].current).toBe(3);
-      expect(progress?.objectives[0].completed).toBe(true);
+      const progress = questSystem.getQuestProgress(mockPlayer, 'objective_quest')
+      expect(progress?.objectives[0].current).toBe(3)
+      expect(progress?.objectives[0].completed).toBe(true)
 
       expect(emitSpy).toHaveBeenCalledWith('quest:objective_complete', {
         playerId: 'player_1',
         questId: 'objective_quest',
         objectiveId: 'kill_goblins',
-        objectiveDescription: 'Kill 3 goblins'
-      });
-    });
+        objectiveDescription: 'Kill 3 goblins',
+      })
+    })
 
     it('should update collect objectives based on inventory', () => {
       // Add logs to inventory
-      const inventory = mockPlayer.getComponent('inventory') as InventoryComponent;
-      inventory.items[0] = { itemId: 1, quantity: 3 }; // Assuming logs are item ID 1
+      const inventory = mockPlayer.getComponent('inventory') as InventoryComponent
+      inventory.items[0] = { itemId: 1, quantity: 3 } // Assuming logs are item ID 1
 
-      questSystem.handleItemCollected(mockPlayer, 'item_logs', 3);
+      questSystem.handleItemCollected(mockPlayer, 'item_logs', 3)
 
-      const progress = questSystem.getQuestProgress(mockPlayer, 'objective_quest');
-      expect(progress?.objectives[1].current).toBe(3);
-      expect(progress?.objectives[1].completed).toBe(false);
-    });
+      const progress = questSystem.getQuestProgress(mockPlayer, 'objective_quest')
+      expect(progress?.objectives[1].current).toBe(3)
+      expect(progress?.objectives[1].completed).toBe(false)
+    })
 
     it('should update talk objectives', () => {
       const talkQuest: QuestDefinition = {
@@ -426,42 +430,42 @@ describe('QuestSystem', () => {
             target: 'npc_guide',
             quantity: 1,
             current: 0,
-            completed: false
-          }
+            completed: false,
+          },
         ],
         rewards: {},
-      };
+      }
 
-      questSystem.registerQuest(talkQuest);
-      questSystem.startQuest(mockPlayer, 'talk_quest');
+      questSystem.registerQuest(talkQuest)
+      questSystem.startQuest(mockPlayer, 'talk_quest')
 
-      questSystem.handleNPCTalk(mockPlayer, 'npc_guide');
+      questSystem.handleNPCTalk(mockPlayer, 'npc_guide')
 
-      const progress = questSystem.getQuestProgress(mockPlayer, 'talk_quest');
-      expect(progress?.objectives[0].completed).toBe(true);
-    });
+      const progress = questSystem.getQuestProgress(mockPlayer, 'talk_quest')
+      expect(progress?.objectives[0].completed).toBe(true)
+    })
 
     it('should not update objectives for wrong targets', () => {
-      questSystem.handleNPCKill(mockPlayer, 'npc_guard'); // Wrong NPC
+      questSystem.handleNPCKill(mockPlayer, 'npc_guard') // Wrong NPC
 
-      const progress = questSystem.getQuestProgress(mockPlayer, 'objective_quest');
-      expect(progress?.objectives[0].current).toBe(0);
-    });
+      const progress = questSystem.getQuestProgress(mockPlayer, 'objective_quest')
+      expect(progress?.objectives[0].current).toBe(0)
+    })
 
     it('should not update completed objectives', () => {
       // Complete the kill objective
-      questSystem.updateObjective(mockPlayer, 'objective_quest', 'kill_goblins', 3);
+      questSystem.updateObjective(mockPlayer, 'objective_quest', 'kill_goblins', 3)
 
       // Try to update again
-      questSystem.handleNPCKill(mockPlayer, 'npc_goblin');
+      questSystem.handleNPCKill(mockPlayer, 'npc_goblin')
 
-      const progress = questSystem.getQuestProgress(mockPlayer, 'objective_quest');
-      expect(progress?.objectives[0].current).toBe(3); // Still 3, not 4
-    });
-  });
+      const progress = questSystem.getQuestProgress(mockPlayer, 'objective_quest')
+      expect(progress?.objectives[0].current).toBe(3) // Still 3, not 4
+    })
+  })
 
   describe('Quest Completion', () => {
-    let completionQuest: QuestDefinition;
+    let completionQuest: QuestDefinition
 
     beforeEach(() => {
       completionQuest = {
@@ -478,89 +482,89 @@ describe('QuestSystem', () => {
             target: 'npc_goblin',
             quantity: 1,
             current: 0,
-            completed: false
-          }
+            completed: false,
+          },
         ],
         rewards: {
           experience: [
             { skill: 'attack', amount: 250 },
-            { skill: 'strength', amount: 250 }
+            { skill: 'strength', amount: 250 },
           ],
           items: [
             { itemId: 1001, quantity: 1 },
-            { itemId: 995, quantity: 500 }
+            { itemId: 995, quantity: 500 },
           ],
           gold: 1000,
-          unlocks: ['advanced_area', 'next_quest']
-        }
-      };
+          unlocks: ['advanced_area', 'next_quest'],
+        },
+      }
 
-      questSystem.registerQuest(completionQuest);
-      questSystem.startQuest(mockPlayer, 'completion_quest');
-    });
+      questSystem.registerQuest(completionQuest)
+      questSystem.startQuest(mockPlayer, 'completion_quest')
+    })
 
     it('should complete quest when all objectives are done', () => {
-      const emitSpy = spyOn(world.events, 'emit');
+      const emitSpy = spyOn(world.events, 'emit')
 
-      questSystem.handleNPCKill(mockPlayer, 'npc_goblin');
+      questSystem.handleNPCKill(mockPlayer, 'npc_goblin')
 
-      const progress = questSystem.getQuestProgress(mockPlayer, 'completion_quest');
-      expect(progress?.status).toBe('completed');
-      expect(progress?.completedAt).toBeDefined();
+      const progress = questSystem.getQuestProgress(mockPlayer, 'completion_quest')
+      expect(progress?.status).toBe('completed')
+      expect(progress?.completedAt).toBeDefined()
 
       expect(emitSpy).toHaveBeenCalledWith('quest:completed', {
         playerId: 'player_1',
         questId: 'completion_quest',
         questName: 'Completion Quest',
-        rewards: completionQuest.rewards
-      });
-    });
+        rewards: completionQuest.rewards,
+      })
+    })
 
     it('should grant experience rewards', () => {
-      questSystem.handleNPCKill(mockPlayer, 'npc_goblin');
+      questSystem.handleNPCKill(mockPlayer, 'npc_goblin')
 
-      expect(mockSkillsSystem.addExperience).toHaveBeenCalledWith(mockPlayer, 'attack', 250);
-      expect(mockSkillsSystem.addExperience).toHaveBeenCalledWith(mockPlayer, 'strength', 250);
-    });
+      expect(mockSkillsSystem.addExperience).toHaveBeenCalledWith(mockPlayer, 'attack', 250)
+      expect(mockSkillsSystem.addExperience).toHaveBeenCalledWith(mockPlayer, 'strength', 250)
+    })
 
     it('should grant item rewards', () => {
-      questSystem.handleNPCKill(mockPlayer, 'npc_goblin');
+      questSystem.handleNPCKill(mockPlayer, 'npc_goblin')
 
-      expect(mockInventorySystem.addItem).toHaveBeenCalledWith(mockPlayer, 1001, 1);
-      expect(mockInventorySystem.addItem).toHaveBeenCalledWith(mockPlayer, 995, 500);
-    });
+      expect(mockInventorySystem.addItem).toHaveBeenCalledWith(mockPlayer, 1001, 1)
+      expect(mockInventorySystem.addItem).toHaveBeenCalledWith(mockPlayer, 995, 500)
+    })
 
     it('should grant gold rewards', () => {
-      questSystem.handleNPCKill(mockPlayer, 'npc_goblin');
+      questSystem.handleNPCKill(mockPlayer, 'npc_goblin')
 
       // Gold is added as item 995
-      expect(mockInventorySystem.addItem).toHaveBeenCalledWith(mockPlayer, 995, 1000);
-    });
+      expect(mockInventorySystem.addItem).toHaveBeenCalledWith(mockPlayer, 995, 1000)
+    })
 
     it('should emit unlock events', () => {
-      const emitSpy = spyOn(world.events, 'emit');
+      const emitSpy = spyOn(world.events, 'emit')
 
-      questSystem.handleNPCKill(mockPlayer, 'npc_goblin');
+      questSystem.handleNPCKill(mockPlayer, 'npc_goblin')
 
       expect(emitSpy).toHaveBeenCalledWith('quest:unlock', {
         playerId: 'player_1',
-        unlock: 'advanced_area'
-      });
+        unlock: 'advanced_area',
+      })
       expect(emitSpy).toHaveBeenCalledWith('quest:unlock', {
         playerId: 'player_1',
-        unlock: 'next_quest'
-      });
-    });
+        unlock: 'next_quest',
+      })
+    })
 
     it('should call completion handler if registered', () => {
-      const completeHandler = mock();
-      questSystem.registerQuestCompleteHandler('completion_quest', completeHandler);
+      const completeHandler = mock()
+      questSystem.registerQuestCompleteHandler('completion_quest', completeHandler)
 
-      questSystem.handleNPCKill(mockPlayer, 'npc_goblin');
+      questSystem.handleNPCKill(mockPlayer, 'npc_goblin')
 
-      expect(completeHandler).toHaveBeenCalledWith(mockPlayer);
-    });
-  });
+      expect(completeHandler).toHaveBeenCalledWith(mockPlayer)
+    })
+  })
 
   describe('Quest Queries', () => {
     beforeEach(() => {
@@ -593,95 +597,98 @@ describe('QuestSystem', () => {
           questPoints: 3,
           objectives: [],
           rewards: {},
-        }
-      ];
+        },
+      ]
 
-      quests.forEach(q => questSystem.registerQuest(q));
+      quests.forEach(q => questSystem.registerQuest(q))
 
       // Start and complete quest1
-      questSystem.startQuest(mockPlayer, 'quest1');
-      const playerQuests = questSystem.getPlayerQuests(mockPlayer.id);
-      const quest1Data = playerQuests.get('quest1')!;
-      quest1Data.status = 'completed';
+      questSystem.startQuest(mockPlayer, 'quest1')
+      const playerQuests = questSystem.getPlayerQuests(mockPlayer.id)
+      const quest1Data = playerQuests.get('quest1')!
+      quest1Data.status = 'completed'
 
       // Start quest3
-      questSystem.startQuest(mockPlayer, 'quest3');
-    });
+      questSystem.startQuest(mockPlayer, 'quest3')
+    })
 
     it('should get all quests', () => {
-      const allQuests = questSystem.getAllQuests();
-      expect(allQuests).toHaveLength(4); // Tutorial + 3 test quests
-    });
+      const allQuests = questSystem.getAllQuests()
+      expect(allQuests).toHaveLength(4) // Tutorial + 3 test quests
+    })
 
     it('should get available quests', () => {
-      const available = questSystem.getAvailableQuests(mockPlayer);
-      expect(available.map(q => q.id)).toContain('quest2');
-      expect(available.map(q => q.id)).not.toContain('quest1'); // Completed
-      expect(available.map(q => q.id)).not.toContain('quest3'); // In progress
-    });
+      const available = questSystem.getAvailableQuests(mockPlayer)
+      expect(available.map(q => q.id)).toContain('quest2')
+      expect(available.map(q => q.id)).not.toContain('quest1') // Completed
+      expect(available.map(q => q.id)).not.toContain('quest3') // In progress
+    })
 
     it('should get active quests', () => {
-      const active = questSystem.getActiveQuests(mockPlayer);
-      expect(active).toHaveLength(1);
-      expect(active[0].id).toBe('quest3');
-    });
+      const active = questSystem.getActiveQuests(mockPlayer)
+      expect(active).toHaveLength(1)
+      expect(active[0].id).toBe('quest3')
+    })
 
     it('should get completed quests', () => {
-      const completed = questSystem.getCompletedQuests(mockPlayer);
-      expect(completed).toHaveLength(1);
-      expect(completed[0].id).toBe('quest1');
-    });
+      const completed = questSystem.getCompletedQuests(mockPlayer)
+      expect(completed).toHaveLength(1)
+      expect(completed[0].id).toBe('quest1')
+    })
 
     it('should calculate total quest points', () => {
-      const points = questSystem.getTotalQuestPoints(mockPlayer);
-      expect(points).toBe(1); // Only quest1 is completed
-    });
-  });
+      const points = questSystem.getTotalQuestPoints(mockPlayer)
+      expect(points).toBe(1) // Only quest1 is completed
+    })
+  })
 
   describe('Serialization', () => {
     it('should serialize player quest data', () => {
-      questSystem.startQuest(mockPlayer, 'tutorial');
+      questSystem.startQuest(mockPlayer, 'tutorial')
 
-      const serialized = questSystem.serialize();
-      expect(serialized.playerQuests).toBeDefined();
-      expect(serialized.playerQuests['player_1']).toBeDefined();
-      expect(serialized.playerQuests['player_1']).toHaveLength(1);
-    });
+      const serialized = questSystem.serialize()
+      expect(serialized.playerQuests).toBeDefined()
+      expect(serialized.playerQuests['player_1']).toBeDefined()
+      expect(serialized.playerQuests['player_1']).toHaveLength(1)
+    })
 
     it('should deserialize player quest data', () => {
       const data = {
         playerQuests: {
-          'player_1': [
-            ['tutorial', {
-              questId: 'tutorial',
-              status: 'completed',
-              objectives: [],
-              completedAt: Date.now(),
-            }]
-          ]
-        }
-      };
+          player_1: [
+            [
+              'tutorial',
+              {
+                questId: 'tutorial',
+                status: 'completed',
+                objectives: [],
+                completedAt: Date.now(),
+              },
+            ],
+          ],
+        },
+      }
 
-      questSystem.deserialize(data);
+      questSystem.deserialize(data)
 
-      const progress = questSystem.getQuestProgress(mockPlayer, 'tutorial');
-      expect(progress).toBeDefined();
-      expect(progress?.status).toBe('completed');
-    });
-  });
+      const progress = questSystem.getQuestProgress(mockPlayer, 'tutorial')
+      expect(progress).toBeDefined()
+      expect(progress?.status).toBe('completed')
+    })
+  })
 
   describe('Edge Cases', () => {
     it('should handle non-existent quest', () => {
-      const canStart = questSystem.canStartQuest(mockPlayer, 'fake_quest');
-      expect(canStart.canStart).toBe(false);
-      expect(canStart.reason).toBe('Quest not found');
-    });
+      const canStart = questSystem.canStartQuest(mockPlayer, 'fake_quest')
+      expect(canStart.canStart).toBe(false)
+      expect(canStart.reason).toBe('Quest not found')
+    })
 
     it('should handle missing player components gracefully', () => {
       const playerWithoutComponents = {
         ...mockPlayer,
-        getComponent: mock().mockReturnValue(null)
-      };
+        getComponent: mock().mockReturnValue(null),
+      }
 
       const quest: QuestDefinition = {
         id: 'component_quest',
@@ -691,22 +698,22 @@ describe('QuestSystem', () => {
         questPoints: 1,
         requirements: {
           skills: [{ skill: 'attack', level: 10 }],
-          items: [{ itemId: 1001, quantity: 1 }]
+          items: [{ itemId: 1001, quantity: 1 }],
         },
         objectives: [],
         rewards: {},
-      };
+      }
 
-      questSystem.registerQuest(quest);
+      questSystem.registerQuest(quest)
 
       // Should still work but fail requirements
-      const canStart = questSystem.canStartQuest(playerWithoutComponents, 'component_quest');
-      expect(canStart.canStart).toBe(true); // No components means no requirements check
-    });
+      const canStart = questSystem.canStartQuest(playerWithoutComponents, 'component_quest')
+      expect(canStart.canStart).toBe(true) // No components means no requirements check
+    })
 
     it('should handle missing systems gracefully when granting rewards', () => {
       // Remove systems
-      world.systems = [];
+      world.systems = []
 
       const quest: QuestDefinition = {
         id: 'reward_quest',
@@ -722,20 +729,20 @@ describe('QuestSystem', () => {
             target: 'npc_goblin',
             quantity: 1,
             current: 0,
-            completed: false
-          }
+            completed: false,
+          },
         ],
         rewards: {
           experience: [{ skill: 'attack', amount: 100 }],
-          items: [{ itemId: 1001, quantity: 1 }]
-        }
-      };
+          items: [{ itemId: 1001, quantity: 1 }],
+        },
+      }
 
-      questSystem.registerQuest(quest);
-      questSystem.startQuest(mockPlayer, 'reward_quest');
+      questSystem.registerQuest(quest)
+      questSystem.startQuest(mockPlayer, 'reward_quest')
 
       // Should complete without errors
-      expect(() => questSystem.handleNPCKill(mockPlayer, 'npc_goblin')).not.toThrow();
-    });
-  });
-});
+      expect(() => questSystem.handleNPCKill(mockPlayer, 'npc_goblin')).not.toThrow()
+    })
+  })
+})

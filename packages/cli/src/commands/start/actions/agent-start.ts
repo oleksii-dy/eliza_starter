@@ -8,7 +8,6 @@ import {
   type Plugin,
   // type IDatabaseAdapter,
 } from '@elizaos/core';
-import AgentServer from '@elizaos/server';
 import { AgentStartOptions } from '../types';
 import { loadEnvConfig } from '../utils/config-utils';
 import { resolvePluginDependencies } from '../utils/dependency-resolver';
@@ -21,7 +20,7 @@ import { isValidPluginShape, loadAndPreparePlugin } from '../utils/plugin-utils'
  */
 export async function startAgent(
   character: Character,
-  server: AgentServer,
+  server: any,
   init?: (runtime: IAgentRuntime) => Promise<void>,
   plugins: (Plugin | string)[] = [],
   options: AgentStartOptions = {}
@@ -144,7 +143,7 @@ export async function startAgent(
 /**
  * Stop an agent and unregister it from the server
  */
-export async function stopAgent(runtime: IAgentRuntime, server: AgentServer): Promise<void> {
+export async function stopAgent(runtime: IAgentRuntime, server: any): Promise<void> {
   await runtime.close();
   server.unregisterAgent(runtime.agentId);
   logger.success(`Agent ${runtime.character.name} stopped successfully!`);

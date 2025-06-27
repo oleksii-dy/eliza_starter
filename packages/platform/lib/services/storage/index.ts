@@ -7,7 +7,11 @@ import { getStorage } from './storage-manager';
 
 // Core interfaces and types - direct exports to avoid module resolution issues
 export interface IStorageService {
-  upload(key: string, data: Buffer | Uint8Array | string, options?: UploadOptions): Promise<UploadResult>;
+  upload(
+    key: string,
+    data: Buffer | Uint8Array | string,
+    options?: UploadOptions,
+  ): Promise<UploadResult>;
   download(key: string): Promise<DownloadResult | null>;
   delete(key: string): Promise<void>;
   exists(key: string): Promise<boolean>;
@@ -15,9 +19,19 @@ export interface IStorageService {
   setMetadata(key: string, metadata: Record<string, string>): Promise<void>;
   list(prefix?: string, options?: ListOptions): Promise<FileInfo[]>;
   deleteDirectory(prefix: string): Promise<void>;
-  uploadMultiple(files: Array<{ key: string; data: Buffer | Uint8Array | string; options?: UploadOptions }>): Promise<UploadResult[]>;
+  uploadMultiple(
+    files: Array<{
+      key: string;
+      data: Buffer | Uint8Array | string;
+      options?: UploadOptions;
+    }>,
+  ): Promise<UploadResult[]>;
   downloadMultiple(keys: string[]): Promise<(DownloadResult | null)[]>;
-  getSignedUrl(key: string, operation: 'read' | 'write', expiresIn?: number): Promise<string>;
+  getSignedUrl(
+    key: string,
+    operation: 'read' | 'write',
+    expiresIn?: number,
+  ): Promise<string>;
   getPublicUrl(key: string): string;
   ping(): Promise<boolean>;
   info(): Promise<StorageInfo>;
@@ -106,7 +120,12 @@ export { R2StorageService } from './r2-storage';
 
 // Storage manager and convenience functions
 export {
-  getStorage, getStorageConfig, isLocalStorage, isR2Storage, resetStorage, StorageManager
+  getStorage,
+  getStorageConfig,
+  isLocalStorage,
+  isR2Storage,
+  resetStorage,
+  StorageManager,
 } from './storage-manager';
 
 // Storage manager factory function

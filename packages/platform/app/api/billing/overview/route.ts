@@ -5,19 +5,25 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { authService } from '@/lib/auth/session';
-import { getCreditBalance, getUsageStatistics } from '@/lib/server/services/billing-service';
+import {
+  getCreditBalance,
+  getUsageStatistics,
+} from '@/lib/server/services/billing-service';
 import { getDatabase, organizations } from '@/lib/database';
 import { eq } from 'drizzle-orm';
 
-export async function GET(request: NextRequest) {
+export async function handleGET(request: NextRequest) {
   try {
     // Get current user session
     const user = await authService.getCurrentUser();
     if (!user) {
-      return NextResponse.json({
-        success: false,
-        error: 'Unauthorized'
-      }, { status: 401 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Unauthorized',
+        },
+        { status: 401 },
+      );
     }
 
     // Get organization details
@@ -34,10 +40,13 @@ export async function GET(request: NextRequest) {
       .limit(1);
 
     if (!organization) {
-      return NextResponse.json({
-        success: false,
-        error: 'Organization not found'
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Organization not found',
+        },
+        { status: 404 },
+      );
     }
 
     // Get current credit balance
@@ -69,16 +78,16 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: overview
+      data: overview,
     });
   } catch (error) {
     console.error('Failed to get billing overview:', error);
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to get billing overview'
+        error: 'Failed to get billing overview',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

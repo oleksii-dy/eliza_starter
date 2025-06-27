@@ -1,5 +1,4 @@
 import { getElizaCharacter } from '@/src/characters/eliza';
-import AgentServer from '@elizaos/server';
 // Dynamic imports for utilities that may not be properly exported
 let jsonToCharacter: any;
 let loadCharacterTryPath: any;
@@ -14,7 +13,7 @@ import { getTempLogPath } from '../../../utils/log-archiver';
 async function loadServerUtilities() {
   if (!jsonToCharacter || !loadCharacterTryPath) {
     try {
-      const serverModule = await import('@elizaos/server');
+      const serverModule = (await import('@elizaos/server')) as any;
       jsonToCharacter = (serverModule as any).jsonToCharacter;
       loadCharacterTryPath = (serverModule as any).loadCharacterTryPath;
     } catch (error) {
@@ -72,7 +71,8 @@ export async function startAgents(options: ServerStartOptions): Promise<void> {
 
   const pgliteDataDir = postgresUrl ? undefined : await resolvePgliteDir();
 
-  const server = new AgentServer();
+  const { default: AgentServer } = (await import('@elizaos/server')) as any;
+  const server = new AgentServer() as any;
   await server.initialize({ dataDir: pgliteDataDir, postgresUrl: postgresUrl || undefined });
 
   // Load server utilities dynamically

@@ -44,17 +44,20 @@ This is a unified Next.js application that serves both the frontend and API:
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/elizaos/platform
 cd platform
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Copy environment variables:
+
 ```bash
 cp .env.example .env.local
 ```
@@ -62,11 +65,13 @@ cp .env.example .env.local
 4. Configure environment variables in `.env.local`
 
 5. Run database migrations:
+
 ```bash
 npm run db:migrate
 ```
 
 6. Start the development server:
+
 ```bash
 npm run dev
 ```
@@ -84,12 +89,14 @@ Visit `http://localhost:3333/api/docs` for interactive API documentation powered
 The API supports two authentication methods:
 
 1. **Bearer Token (JWT)**
+
 ```bash
 curl -H "Authorization: Bearer <access_token>" \
   http://localhost:3333/api/v1/auth/me
 ```
 
 2. **API Key**
+
 ```bash
 curl -H "X-API-Key: pk_live_..." \
   http://localhost:3333/api/v1/auth/me
@@ -109,21 +116,25 @@ curl -H "X-API-Key: pk_live_..." \
 ## Testing
 
 ### Run all tests:
+
 ```bash
 npm run test:all
 ```
 
 ### Run E2E tests:
+
 ```bash
 npm run test:e2e
 ```
 
 ### Run API tests:
+
 ```bash
 npm run test:api
 ```
 
 ### Run tests in CI:
+
 ```bash
 npm run test:e2e:headless
 ```
@@ -146,6 +157,7 @@ npm run test:e2e:headless
 4. Add tests in `/cypress/e2e`
 
 Example:
+
 ```typescript
 import { requireAuth } from '@/lib/server/middleware/auth';
 
@@ -168,6 +180,7 @@ The platform uses a mock in-memory database for development. For production:
 See `.env.example` for all required environment variables.
 
 Key variables:
+
 - `JWT_SECRET` - Secret for JWT signing
 - `WORKOS_API_KEY` - WorkOS API key
 - `STRIPE_SECRET_KEY` - Stripe secret key

@@ -178,3 +178,7 @@ dist
 .bun
 bun.lockb
 .turbo
+AGENTS.md
+.cursor/rules/elizaos
+CLAUDE.md
+.cursorignore

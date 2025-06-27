@@ -7,4 +7,8 @@ const cleanupCommand = new Command('cleanup')
     console.log('This feature will be restored in a future update.');
   });
 
+// Export both default and named for compatibility
 export default cleanupCommand;
+export { cleanupCommand };
+// Also export as 'cleanup' for CLI loader compatibility
+export { cleanupCommand as cleanup };

@@ -13,5 +13,6 @@ declare module '@elizaos/server' {
 
   export function createServer(config?: ServerConfig): ServerInstance;
   export function startServer(config?: ServerConfig): Promise<ServerInstance>;
-  export default any;
+  const defaultExport: unknown;
+  export default defaultExport;
 }

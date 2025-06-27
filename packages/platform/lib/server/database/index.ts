@@ -40,17 +40,19 @@ export class DatabaseManager {
 
   async getUserByEmail(email: string): Promise<User | null> {
     const allUsers = Array.from(users.values());
-    return allUsers.find(u => u.email === email) || null;
+    return allUsers.find((u) => u.email === email) || null;
   }
 
   async getUserByWorkOSId(workosUserId: string): Promise<User | null> {
     const allUsers = Array.from(users.values());
-    return allUsers.find(u => u.workosUserId === workosUserId) || null;
+    return allUsers.find((u) => u.workosUserId === workosUserId) || null;
   }
 
   async updateUser(id: string, data: Partial<User>): Promise<User | null> {
     const user = users.get(id);
-    if (!user) {return null;}
+    if (!user) {
+      return null;
+    }
 
     const updated = {
       ...user,
@@ -94,17 +96,27 @@ export class DatabaseManager {
 
   async getOrganizationBySlug(slug: string): Promise<Organization | null> {
     const allOrgs = Array.from(organizations.values());
-    return allOrgs.find(o => o.slug === slug) || null;
+    return allOrgs.find((o) => o.slug === slug) || null;
   }
 
-  async getOrganizationByWorkOSId(workosOrganizationId: string): Promise<Organization | null> {
+  async getOrganizationByWorkOSId(
+    workosOrganizationId: string,
+  ): Promise<Organization | null> {
     const allOrgs = Array.from(organizations.values());
-    return allOrgs.find(o => o.workosOrganizationId === workosOrganizationId) || null;
+    return (
+      allOrgs.find((o) => o.workosOrganizationId === workosOrganizationId) ||
+      null
+    );
   }
 
-  async updateOrganization(id: string, data: Partial<Organization>): Promise<Organization | null> {
+  async updateOrganization(
+    id: string,
+    data: Partial<Organization>,
+  ): Promise<Organization | null> {
     const org = organizations.get(id);
-    if (!org) {return null;}
+    if (!org) {
+      return null;
+    }
 
     const updated = {
       ...org,
@@ -117,7 +129,11 @@ export class DatabaseManager {
   }
 
   // Organization member operations
-  async addUserToOrganization(userId: string, organizationId: string, role: 'owner' | 'admin' | 'member' | 'viewer' = 'member'): Promise<OrganizationMember> {
+  async addUserToOrganization(
+    userId: string,
+    organizationId: string,
+    role: 'owner' | 'admin' | 'member' | 'viewer' = 'member',
+  ): Promise<OrganizationMember> {
     const member: OrganizationMember = {
       id: `member_${generateSecureToken(16)}`,
       userId,
@@ -136,7 +152,9 @@ export class DatabaseManager {
     return member;
   }
 
-  async getOrganizationMembers(organizationId: string): Promise<OrganizationMember[]> {
+  async getOrganizationMembers(
+    organizationId: string,
+  ): Promise<OrganizationMember[]> {
     return orgMembers.get(organizationId) || [];
   }
 
@@ -144,7 +162,7 @@ export class DatabaseManager {
     const userOrgs: Organization[] = [];
 
     orgMembers.forEach((members, orgId) => {
-      if (members.some(m => m.userId === userId)) {
+      if (members.some((m) => m.userId === userId)) {
         const org = organizations.get(orgId);
         if (org) {
           userOrgs.push(org);
@@ -182,17 +200,22 @@ export class DatabaseManager {
 
   async getApiKeyByHash(keyHash: string): Promise<ApiKey | null> {
     const allKeys = Array.from(apiKeys.values());
-    return allKeys.find(k => k.keyHash === keyHash && k.isActive) || null;
+    return allKeys.find((k) => k.keyHash === keyHash && k.isActive) || null;
   }
 
   async getUserApiKeys(userId: string): Promise<ApiKey[]> {
     const allKeys = Array.from(apiKeys.values());
-    return allKeys.filter(k => k.userId === userId && k.isActive);
+    return allKeys.filter((k) => k.userId === userId && k.isActive);
   }
 
-  async updateApiKey(id: string, data: Partial<ApiKey>): Promise<ApiKey | null> {
+  async updateApiKey(
+    id: string,
+    data: Partial<ApiKey>,
+  ): Promise<ApiKey | null> {
     const key = apiKeys.get(id);
-    if (!key) {return null;}
+    if (!key) {
+      return null;
+    }
 
     const updated = {
       ...key,
@@ -205,7 +228,9 @@ export class DatabaseManager {
 
   async deleteApiKey(id: string): Promise<boolean> {
     const key = apiKeys.get(id);
-    if (!key) {return false;}
+    if (!key) {
+      return false;
+    }
 
     key.isActive = false;
     apiKeys.set(id, key);

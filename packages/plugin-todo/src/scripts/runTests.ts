@@ -261,7 +261,9 @@ class TestRunner {
 
   private generateCoverageReport(): void {
     const coverageResults = this.results.filter((r) => r.coverage);
-    if (coverageResults.length === 0) {return;}
+    if (coverageResults.length === 0) {
+      return;
+    }
 
     const reportPath = path.join(this.outputDir, 'coverage-report.json');
     const report = {

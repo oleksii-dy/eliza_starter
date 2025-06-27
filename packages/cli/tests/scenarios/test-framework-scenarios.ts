@@ -16,9 +16,7 @@ export const basicMessageExchangeScenario: Scenario = {
       name: 'Test Agent',
       role: 'subject',
       script: {
-        steps: [
-          { type: 'message', content: 'Hello, I am ready to assist' },
-        ],
+        steps: [{ type: 'message', content: 'Hello, I am ready to assist' }],
       },
     },
     {
@@ -107,10 +105,7 @@ export const actionExecutionScenario: Scenario = {
     ],
   },
   benchmarks: {
-    customMetrics: [
-      { name: 'action_execution_time' },
-      { name: 'action_success_rate' },
-    ],
+    customMetrics: [{ name: 'action_execution_time' }, { name: 'action_success_rate' }],
   },
 };
 
@@ -132,7 +127,7 @@ export const multiActorComplexScenario: Scenario = {
         steps: [
           { type: 'message', content: 'Welcome everyone to the discussion' },
           { type: 'wait', waitTime: 2000 },
-          { type: 'message', content: 'Let\'s discuss AI safety' },
+          { type: 'message', content: "Let's discuss AI safety" },
         ],
       },
     },
@@ -299,10 +294,12 @@ export const performanceBenchmarkScenario: Scenario = {
       name: 'Performance Agent',
       role: 'subject',
       script: {
-        steps: Array(20).fill(null).map((_, i) => ({
-          type: 'message' as const,
-          content: `Performance test message ${i + 1}`,
-        })),
+        steps: Array(20)
+          .fill(null)
+          .map((_, i) => ({
+            type: 'message' as const,
+            content: `Performance test message ${i + 1}`,
+          })),
       },
     },
   ],
@@ -433,9 +430,7 @@ export const dynamicVerificationScenario: Scenario = {
           {
             on: 'keyword',
             condition: 'help',
-            response: [
-              { type: 'message', content: 'I detected you need help!' },
-            ],
+            response: [{ type: 'message', content: 'I detected you need help!' }],
           },
         ],
       },

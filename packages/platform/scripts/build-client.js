@@ -34,11 +34,11 @@ function copyRecursive(src, dest) {
   try {
     mkdirSync(dest, { recursive: true });
     const entries = readdirSync(src);
-    
+
     for (const entry of entries) {
       const srcPath = join(src, entry);
       const destPath = join(dest, entry);
-      
+
       if (statSync(srcPath).isDirectory()) {
         copyRecursive(srcPath, destPath);
       } else {
@@ -53,17 +53,17 @@ function copyRecursive(src, dest) {
 async function buildClient() {
   try {
     logStep('Building @elizaos/client package...');
-    
+
     // Try to build the client package
     try {
       execSync('bun run build', {
         cwd: CLIENT_ROOT,
-        stdio: 'inherit'
+        stdio: 'inherit',
       });
       logSuccess('Client package built successfully');
     } catch (buildError) {
       logError(`Build failed: ${buildError.message}`);
-      
+
       // Check if there's an existing dist folder we can use
       try {
         if (statSync(CLIENT_DIST).isDirectory()) {
@@ -75,28 +75,28 @@ async function buildClient() {
         throw new Error('No existing client build found and build failed');
       }
     }
-    
+
     logStep('Cleaning previous client static files...');
-    
+
     // Clean existing client static files
     try {
       rmSync(PLATFORM_PUBLIC_CLIENT, { recursive: true, force: true });
     } catch (error) {
       // Ignore if directory doesn't exist
     }
-    
+
     logStep('Copying client build to platform public directory...');
-    
+
     // Copy built client to platform public directory
     copyRecursive(CLIENT_DIST, PLATFORM_PUBLIC_CLIENT);
-    
+
     logSuccess('Client build copied to platform');
-    
+
     logStep('Verifying integration...');
-    
+
     // Verify key files exist
     const requiredFiles = ['index.html', 'assets'];
-    const missingFiles = requiredFiles.filter(file => {
+    const missingFiles = requiredFiles.filter((file) => {
       try {
         statSync(join(PLATFORM_PUBLIC_CLIENT, file));
         return false;
@@ -104,14 +104,13 @@ async function buildClient() {
         return true;
       }
     });
-    
+
     if (missingFiles.length > 0) {
       throw new Error(`Missing required files: ${missingFiles.join(', ')}`);
     }
-    
+
     logSuccess('Client integration verified');
     logSuccess('🎉 Client build integration completed successfully!');
-    
   } catch (error) {
     logError(`Client import failed: ${error.message}`);
     // process.exit(1);

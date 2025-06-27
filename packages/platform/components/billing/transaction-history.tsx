@@ -6,7 +6,13 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, Download, Search, Filter, ArrowUpDown } from 'lucide-react';
+import {
+  ChevronDown,
+  Download,
+  Search,
+  Filter,
+  ArrowUpDown,
+} from 'lucide-react';
 import { CreditTransaction } from '@/lib/database/schema';
 import { SelectChangeEvent } from '@/lib/types/common';
 
@@ -15,7 +21,9 @@ interface TransactionHistoryProps {
   organizationId: string;
 }
 
-export function TransactionHistory({ transactions: initialTransactions }: TransactionHistoryProps) {
+export function TransactionHistory({
+  transactions: initialTransactions,
+}: TransactionHistoryProps) {
   const [transactions, setTransactions] = useState(initialTransactions);
   const [filter, setFilter] = useState<'all' | 'purchase' | 'usage'>('all');
   const [sortBy, setSortBy] = useState<'date' | 'amount'>('date');
@@ -30,7 +38,8 @@ export function TransactionHistory({ transactions: initialTransactions }: Transa
   };
 
   const handleSortChange = (newSortBy: 'date' | 'amount') => {
-    const newOrder = sortBy === newSortBy && sortOrder === 'desc' ? 'asc' : 'desc';
+    const newOrder =
+      sortBy === newSortBy && sortOrder === 'desc' ? 'asc' : 'desc';
     setSortBy(newSortBy);
     setSortOrder(newOrder);
     filterAndSortTransactions(filter, newSortBy, newOrder, searchTerm);
@@ -45,20 +54,21 @@ export function TransactionHistory({ transactions: initialTransactions }: Transa
     filterType: string,
     sortField: string,
     order: string,
-    search: string
+    search: string,
   ) => {
     let filtered = [...initialTransactions];
 
     // Apply filter
     if (filterType !== 'all') {
-      filtered = filtered.filter(t => t.type === filterType);
+      filtered = filtered.filter((t) => t.type === filterType);
     }
 
     // Apply search
     if (search) {
-      filtered = filtered.filter(t =>
-        t.description.toLowerCase().includes(search.toLowerCase()) ||
-        t.type.toLowerCase().includes(search.toLowerCase())
+      filtered = filtered.filter(
+        (t) =>
+          t.description.toLowerCase().includes(search.toLowerCase()) ||
+          t.type.toLowerCase().includes(search.toLowerCase()),
       );
     }
 
@@ -147,10 +157,16 @@ export function TransactionHistory({ transactions: initialTransactions }: Transa
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6" data-testid="transaction-history">
+    <div
+      className="rounded-lg border border-gray-200 bg-white p-6"
+      data-testid="transaction-history"
+    >
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-semibold text-gray-900" data-testid="transactions-title">
+      <div className="mb-6 flex items-center justify-between">
+        <h2
+          className="text-xl font-semibold text-gray-900"
+          data-testid="transactions-title"
+        >
           Transaction History
         </h2>
         <button
@@ -159,22 +175,22 @@ export function TransactionHistory({ transactions: initialTransactions }: Transa
           className="flex items-center text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50"
           data-testid="export-transactions"
         >
-          <Download className="h-4 w-4 mr-1" />
+          <Download className="mr-1 h-4 w-4" />
           {isLoading ? 'Exporting...' : 'Export'}
         </button>
       </div>
 
       {/* Filters and Search */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row">
         {/* Search */}
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
           <input
             type="text"
             placeholder="Search transactions..."
             value={searchTerm}
             onChange={(e) => handleSearch(e.target.value)}
-            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full rounded-lg border border-gray-300 py-2 pl-10 pr-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
             data-testid="transaction-search"
           />
         </div>
@@ -184,8 +200,10 @@ export function TransactionHistory({ transactions: initialTransactions }: Transa
           <Filter className="h-4 w-4 text-gray-500" />
           <select
             value={filter}
-            onChange={(e: SelectChangeEvent) => handleFilterChange(e.target.value as 'all' | 'purchase' | 'usage')}
-            className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            onChange={(e: SelectChangeEvent) =>
+              handleFilterChange(e.target.value as 'all' | 'purchase' | 'usage')
+            }
+            className="rounded-lg border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
             data-testid="transaction-filter"
           >
             <option value="all">All Transactions</option>
@@ -198,25 +216,25 @@ export function TransactionHistory({ transactions: initialTransactions }: Transa
         <div className="flex space-x-1">
           <button
             onClick={() => handleSortChange('date')}
-            className={`flex items-center px-3 py-2 text-sm border rounded-lg ${
+            className={`flex items-center rounded-lg border px-3 py-2 text-sm ${
               sortBy === 'date'
-                ? 'bg-blue-50 border-blue-300 text-blue-700'
-                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                ? 'border-blue-300 bg-blue-50 text-blue-700'
+                : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
             }`}
             data-testid="sort-by-date"
           >
-            Date <ArrowUpDown className="h-3 w-3 ml-1" />
+            Date <ArrowUpDown className="ml-1 h-3 w-3" />
           </button>
           <button
             onClick={() => handleSortChange('amount')}
-            className={`flex items-center px-3 py-2 text-sm border rounded-lg ${
+            className={`flex items-center rounded-lg border px-3 py-2 text-sm ${
               sortBy === 'amount'
-                ? 'bg-blue-50 border-blue-300 text-blue-700'
-                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                ? 'border-blue-300 bg-blue-50 text-blue-700'
+                : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
             }`}
             data-testid="sort-by-amount"
           >
-            Amount <ArrowUpDown className="h-3 w-3 ml-1" />
+            Amount <ArrowUpDown className="ml-1 h-3 w-3" />
           </button>
         </div>
       </div>
@@ -224,10 +242,10 @@ export function TransactionHistory({ transactions: initialTransactions }: Transa
       {/* Transactions List */}
       <div className="space-y-3" data-testid="transaction-list">
         {transactions.length === 0 ? (
-          <div className="text-center py-8" data-testid="no-transactions">
+          <div className="py-8 text-center" data-testid="no-transactions">
             <p className="text-gray-500">No transactions found</p>
             {searchTerm && (
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="mt-1 text-sm text-gray-400">
                 Try adjusting your search or filter criteria
               </p>
             )}
@@ -236,7 +254,7 @@ export function TransactionHistory({ transactions: initialTransactions }: Transa
           transactions.map((transaction) => (
             <div
               key={transaction.id}
-              className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              className="flex items-center justify-between rounded-lg bg-gray-50 p-4 transition-colors hover:bg-gray-100"
               data-testid="transaction-item"
             >
               <div className="flex items-center space-x-4">
@@ -244,23 +262,32 @@ export function TransactionHistory({ transactions: initialTransactions }: Transa
                   {getTransactionIcon(transaction.type)}
                 </span>
                 <div>
-                  <p className="font-medium text-gray-900" data-testid="transaction-description">
+                  <p
+                    className="font-medium text-gray-900"
+                    data-testid="transaction-description"
+                  >
                     {transaction.description}
                   </p>
                   <div className="flex items-center space-x-4 text-sm text-gray-500">
                     <span data-testid="transaction-date">
-                      {new Date(transaction.createdAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
+                      {new Date(transaction.createdAt).toLocaleDateString(
+                        'en-US',
+                        {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        },
+                      )}
                     </span>
                     <span className="capitalize" data-testid="transaction-type">
                       {transaction.type}
                     </span>
-                    <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800" data-testid="transaction-status">
+                    <span
+                      className="rounded-full bg-green-100 px-2 py-1 text-xs text-green-800"
+                      data-testid="transaction-status"
+                    >
                       completed
                     </span>
                   </div>
@@ -287,7 +314,7 @@ export function TransactionHistory({ transactions: initialTransactions }: Transa
               // TODO: Implement pagination
               console.log('Load more transactions');
             }}
-            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+            className="text-sm font-medium text-blue-600 hover:text-blue-800"
             data-testid="load-more-transactions"
           >
             Load More Transactions

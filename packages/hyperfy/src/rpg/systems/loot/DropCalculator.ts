@@ -1,58 +1,61 @@
-import { LootTable, LootDrop, RPGEntity, StatsComponent } from '../../types/index';
+import { LootTable, LootDrop, RPGEntity, StatsComponent } from '../../types/index'
 
 export class DropCalculator {
   /**
    * Calculate drops from a loot table
    */
   calculateDrops(lootTable: LootTable, _killer?: RPGEntity | null): LootDrop[] {
-    const drops: LootDrop[] = [];
+    const drops: LootDrop[] = []
 
     // Add always drops
     for (const drop of lootTable.drops) {
       if (drop.rarity === 'always') {
-        drops.push(this.createDrop(drop));
+        drops.push(this.createDrop(drop))
       }
     }
 
     // Roll for other drops
-    const regularDrops = lootTable.drops.filter(d => d.rarity !== 'always');
+    const regularDrops = lootTable.drops.filter(d => d.rarity !== 'always')
     if (regularDrops.length > 0) {
-      const rolled = this.rollWeightedDrop(regularDrops);
+      const rolled = this.rollWeightedDrop(regularDrops)
       if (rolled) {
-        drops.push(this.createDrop(rolled));
+        drops.push(this.createDrop(rolled))
       }
     }
 
     // Check for rare drop table access
-    if (lootTable.rareDropTable && Math.random() < 0.01) { // 1% chance
+    if (lootTable.rareDropTable && Math.random() < 0.01) {
+      // 1% chance
       // Would roll on rare drop table here
-      console.log('[DropCalculator] Rare drop table access!');
+      console.log('[DropCalculator] Rare drop table access!')
     }
 
-    return drops;
+    return drops
   }
 
   /**
    * Roll for a weighted drop
    */
   private rollWeightedDrop(drops: LootDrop[]): LootDrop | null {
-    const totalWeight = drops.reduce((sum, drop) => sum + drop.weight, 0);
-    if (totalWeight === 0) {return null;}
+    const totalWeight = drops.reduce((sum, drop) => sum + drop.weight, 0)
+    if (totalWeight === 0) {
+      return null
+    }
 
-    let roll = Math.random() * totalWeight;
+    let roll = Math.random() * totalWeight
 
     for (const drop of drops) {
-      roll -= drop.weight;
+      roll -= drop.weight
       if (roll <= 0) {
         // Check rarity chance
         if (this.checkRarity(drop.rarity)) {
-          return drop;
+          return drop
         }
-        break;
+        break
       }
     }
 
-    return null;
+    return null
   }
 
   /**
@@ -60,15 +63,15 @@ export class DropCalculator {
    */
   private checkRarity(rarity: string): boolean {
     const rarityChances: Record<string, number> = {
-      'common': 1.0,
-      'uncommon': 0.25,
-      'rare': 0.05,
-      'very_rare': 0.01,
-      'ultra_rare': 0.001
-    };
+      common: 1.0,
+      uncommon: 0.25,
+      rare: 0.05,
+      very_rare: 0.01,
+      ultra_rare: 0.001,
+    }
 
-    const chance = rarityChances[rarity] || 1.0;
-    return Math.random() < chance;
+    const chance = rarityChances[rarity] || 1.0
+    return Math.random() < chance
   }
 
   /**
@@ -80,8 +83,8 @@ export class DropCalculator {
       itemId: template.itemId,
       quantity: template.quantity,
       weight: template.weight,
-      rarity: template.rarity
-    };
+      rarity: template.rarity,
+    }
   }
 
   /**
@@ -96,14 +99,18 @@ export class DropCalculator {
    * Apply drop modifiers (e.g., ring of wealth)
    */
   applyModifiers(drops: LootDrop[], killer?: RPGEntity | null): LootDrop[] {
-    if (!killer) {return drops;}
+    if (!killer) {
+      return drops
+    }
 
     // Check for drop modifiers
-    const stats = killer.getComponent<StatsComponent>('stats');
-    if (!stats) {return drops;}
+    const stats = killer.getComponent<StatsComponent>('stats')
+    if (!stats) {
+      return drops
+    }
 
     // Apply drop modifiers including ring of wealth
-    return this.applyDropModifiers(drops, killer);
+    return this.applyDropModifiers(drops, killer)
   }
 
   /**
@@ -112,67 +119,69 @@ export class DropCalculator {
   private applyDropModifiers(drops: LootDrop[], killer?: RPGEntity): LootDrop[] {
     // Check for ring of wealth, etc.
     if (killer) {
-      const hasRingOfWealth = this.hasRingOfWealth(killer);
+      const hasRingOfWealth = this.hasRingOfWealth(killer)
 
       if (hasRingOfWealth) {
         // Ring of wealth effects:
         // 1. Removes empty drops from rare drop table
-        drops = drops.filter(drop => drop.itemId !== 0);
+        drops = drops.filter(drop => drop.itemId !== 0)
 
         // 2. Slightly improves chances for rare drops
         drops = drops.map(drop => {
           // Check if it's a rare drop (you might want to add rarity to ItemDrop)
-          const isRareDrop = this.isRareDrop(drop.itemId);
+          const isRareDrop = this.isRareDrop(drop.itemId)
           if (isRareDrop) {
             // Add 1-2 extra quantity to rare drops occasionally
-            if (Math.random() < 0.1) { // 10% chance
+            if (Math.random() < 0.1) {
+              // 10% chance
               return {
                 ...drop,
-                quantity: drop.quantity + Math.floor(Math.random() * 2) + 1
-              };
+                quantity: drop.quantity + Math.floor(Math.random() * 2) + 1,
+              }
             }
           }
-          return drop;
-        });
+          return drop
+        })
       }
 
       // Check for other drop modifiers
-      const hasLootingEnchant = this.hasLootingEnchantment(killer);
+      const hasLootingEnchant = this.hasLootingEnchantment(killer)
       if (hasLootingEnchant) {
         // Increase quantity of drops
         drops = drops.map(drop => ({
           ...drop,
-          quantity: Math.floor(drop.quantity * 1.2) // 20% increase
-        }));
+          quantity: Math.floor(drop.quantity * 1.2), // 20% increase
+        }))
       }
     }
 
-    return drops;
+    return drops
   }
 
   /**
    * Check if player has ring of wealth equipped
    */
   private hasRingOfWealth(entity: RPGEntity): boolean {
-    const inventory = entity.getComponent<any>('inventory');
-    if (!inventory) {return false;}
+    const inventory = entity.getComponent<any>('inventory')
+    if (!inventory) {
+      return false
+    }
 
-    const ring = inventory.equipment?.ring;
-    return ring && (
-      ring.name === 'Ring of wealth' ||
-      ring.name === 'Ring of wealth (i)'
-    );
+    const ring = inventory.equipment?.ring
+    return ring && (ring.name === 'Ring of wealth' || ring.name === 'Ring of wealth (i)')
   }
 
   /**
    * Check if player has looting enchantment
    */
   private hasLootingEnchantment(entity: RPGEntity): boolean {
-    const inventory = entity.getComponent<any>('inventory');
-    if (!inventory) {return false;}
+    const inventory = entity.getComponent<any>('inventory')
+    if (!inventory) {
+      return false
+    }
 
-    const weapon = inventory.equipment?.weapon;
-    return weapon && weapon.enchantments?.includes('looting');
+    const weapon = inventory.equipment?.weapon
+    return weapon && weapon.enchantments?.includes('looting')
   }
 
   /**
@@ -188,8 +197,8 @@ export class DropCalculator {
       6571, // Uncut onyx
       2577, // Ranger boots
       // Add more rare item IDs
-    ];
+    ]
 
-    return rareItems.includes(itemId);
+    return rareItems.includes(itemId)
   }
 }

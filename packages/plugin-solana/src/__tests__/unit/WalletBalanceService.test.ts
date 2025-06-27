@@ -31,6 +31,7 @@ mock.module('@elizaos/core', () => ({
 import { WalletBalanceService } from '../../services/WalletBalanceService';
 import { Connection, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { logger } from '@elizaos/core';
+import { createMockRuntime } from '@elizaos/core/test-utils';
 
 describe('WalletBalanceService', () => {
   let service: WalletBalanceService;
@@ -51,7 +52,7 @@ describe('WalletBalanceService', () => {
     (Connection as any).mockImplementation(() => mockConnection);
 
     // Create mock runtime
-    mockRuntime = {
+    mockRuntime = createMockRuntime({
       getSetting: mock((key: string) => {
         const settings: Record<string, string> = {
           SOLANA_NETWORK: 'mainnet-beta',
@@ -60,7 +61,7 @@ describe('WalletBalanceService', () => {
         return settings[key];
       }),
       getService: mock(() => null), // No services available in tests
-    };
+    });
 
     // Create service instance
     service = new WalletBalanceService(mockRuntime);

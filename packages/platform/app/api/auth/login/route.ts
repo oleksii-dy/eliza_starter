@@ -7,10 +7,10 @@ import { z } from 'zod';
 
 const loginSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(1, 'Password is required')
+  password: z.string().min(1, 'Password is required'),
 });
 
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   try {
     const body = await request.json();
 
@@ -21,9 +21,9 @@ export async function POST(request: NextRequest) {
         {
           code: 'validation_error',
           error: 'Invalid input',
-          details: validation.error.flatten()
+          details: validation.error.flatten(),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     if (userResult.length === 0) {
       return NextResponse.json(
         { code: 'invalid_credentials', error: 'Invalid email or password' },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -63,15 +63,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         code: 'endpoint_disabled',
-        error: 'This endpoint has been disabled for security reasons. Use WorkOS authentication.'
+        error:
+          'This endpoint has been disabled for security reasons. Use WorkOS authentication.',
       },
-      { status: 501 }
+      { status: 501 },
     );
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(
       { code: 'internal_server_error', error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

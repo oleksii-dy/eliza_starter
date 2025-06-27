@@ -37,17 +37,19 @@ const agent = new Agent({
 Executes shell commands with persistent state management.
 
 **Examples:**
+
 ```typescript
 // Direct command
-"Run the command: ls -la"
+'Run the command: ls -la';
 
 // Natural language
-"Show me all TypeScript files in the src directory"
-"Create a new directory called 'test-output'"
-"Check what's in the package.json file"
+'Show me all TypeScript files in the src directory';
+"Create a new directory called 'test-output'";
+"Check what's in the package.json file";
 ```
 
 **Features:**
+
 - Maintains working directory between commands
 - Supports pipes, redirects, and command chaining
 - Handles wildcards intelligently
@@ -58,8 +60,9 @@ Executes shell commands with persistent state management.
 Clears the command history for the current conversation.
 
 **Example:**
+
 ```typescript
-"Clear the shell history"
+'Clear the shell history';
 ```
 
 ### killAutonomous
@@ -67,8 +70,9 @@ Clears the command history for the current conversation.
 Stops any long-running or background processes.
 
 **Example:**
+
 ```typescript
-"Stop the autonomous process"
+'Stop the autonomous process';
 ```
 
 ## Configuration
@@ -77,10 +81,14 @@ The plugin works out of the box with no required configuration. Optional setting
 
 ```typescript
 const shellPlugin = {
-  name: "shell",
-  description: "Shell command execution with state management",
+  name: 'shell',
+  description: 'Shell command execution with state management',
   services: [new ShellService()],
-  actions: [runShellCommandAction, clearShellHistoryAction, killAutonomousAction],
+  actions: [
+    runShellCommandAction,
+    clearShellHistoryAction,
+    killAutonomousAction,
+  ],
   providers: [shellProvider],
 };
 ```
@@ -139,42 +147,45 @@ npm run test:watch
 ## Examples
 
 ### Basic File Operations
+
 ```typescript
 // List files
-"Show me what files are in this directory"
+'Show me what files are in this directory';
 
 // Create a file
-"Create a file called README.md with the content 'Hello World'"
+"Create a file called README.md with the content 'Hello World'";
 
 // Read a file
-"What's in the config.json file?"
+"What's in the config.json file?";
 
 // Delete a file
-"Remove the temporary.txt file"
+'Remove the temporary.txt file';
 ```
 
 ### Directory Navigation
+
 ```typescript
 // Change directory
-"Go to the src directory"
+'Go to the src directory';
 
 // Check current location
-"Where am I?"
+'Where am I?';
 
 // Create and navigate
-"Create a new folder called 'output' and go into it"
+"Create a new folder called 'output' and go into it";
 ```
 
 ### Complex Operations
+
 ```typescript
 // Find files
-"Find all JavaScript files in the project"
+'Find all JavaScript files in the project';
 
 // Search content
-"Search for 'TODO' in all TypeScript files"
+"Search for 'TODO' in all TypeScript files";
 
 // Pipe commands
-"Count how many TypeScript files are in the src directory"
+'Count how many TypeScript files are in the src directory';
 ```
 
 ## API Reference
@@ -183,10 +194,15 @@ npm run test:watch
 
 ```typescript
 class ShellService {
-  async executeCommand(command: string, workingDir?: string): Promise<ShellCommandResult>
-  async getCommandHistory(conversationId?: string): Promise<CommandHistoryEntry[]>
-  async clearCommandHistory(conversationId?: string): Promise<void>
-  getCurrentWorkingDirectory(conversationId?: string): string
+  async executeCommand(
+    command: string,
+    workingDir?: string
+  ): Promise<ShellCommandResult>;
+  async getCommandHistory(
+    conversationId?: string
+  ): Promise<CommandHistoryEntry[]>;
+  async clearCommandHistory(conversationId?: string): Promise<void>;
+  getCurrentWorkingDirectory(conversationId?: string): string;
 }
 ```
 

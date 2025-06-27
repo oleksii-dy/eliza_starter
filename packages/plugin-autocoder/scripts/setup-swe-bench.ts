@@ -21,7 +21,7 @@ async function setup() {
       '.swe-bench-cache/results',
       '.swe-bench-work',
       '.swe-bench-repos',
-      'scripts'
+      'scripts',
     ];
 
     for (const dir of dirs) {
@@ -40,18 +40,15 @@ async function setup() {
 
     // Install Python dependencies
     elizaLogger.info('Installing Python dependencies...');
-    const pythonDeps = [
-      'requests',
-      'jsonlines',
-      'docker',
-      'gitpython'
-    ];
+    const pythonDeps = ['requests', 'jsonlines', 'docker', 'gitpython'];
 
     try {
       await execAsync(`pip3 install ${pythonDeps.join(' ')}`);
       elizaLogger.info('Python dependencies installed');
     } catch (error) {
-      elizaLogger.warn('Failed to install Python dependencies. You may need to install them manually.');
+      elizaLogger.warn(
+        'Failed to install Python dependencies. You may need to install them manually.'
+      );
     }
 
     // Check Docker installation (optional)
@@ -79,12 +76,13 @@ async function setup() {
         repo_url: 'https://github.com/microsoft/TypeScript',
         language: 'TypeScript',
         issue_title: 'Improve error message for missing type declaration',
-        issue_body: 'When a type declaration is missing, the error message should be more helpful...',
+        issue_body:
+          'When a type declaration is missing, the error message should be more helpful...',
         issue_number: 12345,
         base_commit: 'abc123',
         created_at: new Date().toISOString(),
         version: '1.0',
-        problem_statement: 'Improve TypeScript error messages for better developer experience'
+        problem_statement: 'Improve TypeScript error messages for better developer experience',
       },
       {
         instance_id: 'react-sample-001',
@@ -97,12 +95,12 @@ async function setup() {
         base_commit: 'def456',
         created_at: new Date().toISOString(),
         version: '1.0',
-        problem_statement: 'Fix useState hook behavior for immediate updates'
-      }
+        problem_statement: 'Fix useState hook behavior for immediate updates',
+      },
     ];
 
     const sampleDataPath = path.join('.swe-bench-cache', 'multi-swe-bench.jsonl');
-    const lines = sampleData.map(d => JSON.stringify(d));
+    const lines = sampleData.map((d) => JSON.stringify(d));
     await fs.writeFile(sampleDataPath, lines.join('\n'));
     elizaLogger.info(`Created sample dataset at ${sampleDataPath}`);
 
@@ -222,7 +220,6 @@ test-results.json
     elizaLogger.info('2. Run: bun run build');
     elizaLogger.info('3. Test with: bun run test');
     elizaLogger.info('4. Start evaluation: Use the RUN_SWE_BENCH action in your agent');
-
   } catch (error) {
     elizaLogger.error('Setup failed:', error);
     process.exit(1);

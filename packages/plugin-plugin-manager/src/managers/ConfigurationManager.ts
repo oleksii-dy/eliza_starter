@@ -123,12 +123,7 @@ export class ConfigurationManager {
 
   async getRequiredConfiguration(pluginName: string): Promise<PluginEnvironmentVariable[]> {
     // Try to load from plugin's configuration schema
-    const configSchemaPath = path.join(
-      process.cwd(),
-      'plugins',
-      pluginName,
-      'config-schema.json'
-    );
+    const configSchemaPath = path.join(process.cwd(), 'plugins', pluginName, 'config-schema.json');
 
     try {
       const schemaContent = await fs.readFile(configSchemaPath, 'utf-8');
@@ -176,7 +171,9 @@ export class ConfigurationManager {
   async loadConfiguration(pluginName: string): Promise<Record<string, any>> {
     // Check cache first
     const cached = this.configCache.get(pluginName);
-    if (cached) {return cached;}
+    if (cached) {
+      return cached;
+    }
 
     try {
       const configFile = path.join(this.configPath, `${pluginName}.json`);

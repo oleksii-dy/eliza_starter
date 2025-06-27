@@ -1,4 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
+import { afterEach, beforeEach, expect, mock } from 'bun:test';
+import { createUnitTest } from '../test-utils/unifiedTestSuite';
 import { Content, Entity, IAgentRuntime, Memory, ModelType, State } from '../types';
 import * as utils from '../utils';
 import {
@@ -20,29 +21,29 @@ import {
   validateUuid,
 } from '../utils';
 
-describe('Utils Comprehensive Tests', () => {
-  describe('parseBooleanFromText', () => {
-    it('should return true for affirmative values', () => {
-      const affirmativeValues = [
-        'YES',
-        'Y',
-        'TRUE',
-        'T',
-        '1',
-        'ON',
-        'ENABLE',
-        'yes',
-        'y',
-        'true',
-        't',
-        ' YES ',
-        ' true ',
-      ];
+const utilsSuite = createUnitTest('Utils Comprehensive Tests');
 
-      affirmativeValues.forEach((value) => {
-        expect(parseBooleanFromText(value)).toBe(true);
-      });
-    });
+utilsSuite.addTest('parseBooleanFromText should return true for affirmative values', async () => {
+  const affirmativeValues = [
+    'YES',
+    'Y',
+    'TRUE',
+    'T',
+    '1',
+    'ON',
+    'ENABLE',
+    'yes',
+    'y',
+    'true',
+    't',
+    ' YES ',
+    ' true ',
+  ];
+
+  affirmativeValues.forEach((value) => {
+    expect(parseBooleanFromText(value)).toBe(true);
+  });
+});
 
     it('should return false for negative values', () => {
       const negativeValues = [

@@ -7,20 +7,20 @@ const uuidSchema = z
   .regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, 'Invalid UUID format');
 
 // Message content schema matching the Content interface
-const _contentSchema = z
-  .object({
-    text: z.string().optional(),
-    thought: z.string().optional(),
-    actions: z.array(z.string()).optional(),
-    providers: z.array(z.string()).optional(),
-    source: z.string().optional(),
-    target: z.string().optional(),
-    url: z.string().optional(),
-    inReplyTo: uuidSchema.optional(),
-    attachments: z.array(z.any()).optional(),
-    channelType: z.string().optional(),
-  })
-  .passthrough(); // Allow additional properties
+// const _contentSchema = z
+//   .object({
+//     text: z.string().optional(),
+//     thought: z.string().optional(),
+//     actions: z.array(z.string()).optional(),
+//     providers: z.array(z.string()).optional(),
+//     source: z.string().optional(),
+//     target: z.string().optional(),
+//     url: z.string().optional(),
+//     inReplyTo: uuidSchema.optional(),
+//     attachments: z.array(z.any()).optional(),
+//     channelType: z.string().optional(),
+//   })
+//   .passthrough(); // Allow additional properties
 
 // DirectoryItem schema
 const directoryItemSchema = z.object({

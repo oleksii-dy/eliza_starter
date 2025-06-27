@@ -4,3 +4,7 @@ dist
 .turbo
 .elizadb-test
 .eliza
+AGENTS.md
+.cursor/rules/elizaos
+CLAUDE.md
+.cursorignore

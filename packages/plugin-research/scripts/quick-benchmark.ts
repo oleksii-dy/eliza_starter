@@ -6,7 +6,8 @@ import path from 'path';
 const sampleResults = [
   {
     id: '51',
-    prompt: 'From 2020 to 2050, how many elderly people will there be in Japan? What is their consumption potential across various aspects such as clothing, food, housing, and transportation?',
+    prompt:
+      'From 2020 to 2050, how many elderly people will there be in Japan? What is their consumption potential across various aspects such as clothing, food, housing, and transportation?',
     article: `# Japan's Aging Society: Market Size Analysis for Elderly Demographics (2020-2050)
 
 ## Executive Summary
@@ -50,11 +51,12 @@ Key strategic recommendations include: early investment in technology platforms 
 [1] National Institute of Population and Social Security Research (IPSS). Population Projections for Japan 2016-2065. Tokyo: IPSS, 2017.
 [2] Ministry of Health, Labour and Welfare. Annual Report on the Ageing Society 2021. Tokyo: MHLW, 2021.
 [3] Cabinet Office. White Paper on Aging Society 2021. Tokyo: Government of Japan, 2021.
-[4] Nomura Research Institute. Silver Market Research Report 2020-2050. Tokyo: NRI, 2020.`
+[4] Nomura Research Institute. Silver Market Research Report 2020-2050. Tokyo: NRI, 2020.`,
   },
   {
     id: '62',
-    prompt: 'What are the most effective approaches to scaling ion trap quantum computing from small-scale demonstration projects to large-scale systems capable of solving real-world problems?',
+    prompt:
+      'What are the most effective approaches to scaling ion trap quantum computing from small-scale demonstration projects to large-scale systems capable of solving real-world problems?',
     article: `# Scaling Ion Trap Quantum Computing: Pathways to Large-Scale Implementation
 
 ## Executive Summary
@@ -104,11 +106,12 @@ Key strategic recommendations include: prioritizing manufacturing process develo
 [1] Monroe, C. & Kim, J. "Scaling the Ion Trap Quantum Processor." Science 339, 1164-1169 (2013).
 [2] Debnath, S. et al. "Demonstration of a small programmable quantum computer with atomic qubits." Nature 536, 63-66 (2016).
 [3] Wright, K. et al. "Benchmarking an 11-qubit quantum computer." Nature Communications 10, 5464 (2019).
-[4] Pino, J. M. et al. "Demonstration of the trapped-ion quantum CCD computer architecture." Nature 592, 209-213 (2021).`
+[4] Pino, J. M. et al. "Demonstration of the trapped-ion quantum CCD computer architecture." Nature 592, 209-213 (2021).`,
   },
   {
     id: '70',
-    prompt: 'Trace the evolution from Java Servlets to the Spring Boot framework. Explain the problems each iteration aimed to solve, and detail the core functionalities of the Spring framework.',
+    prompt:
+      'Trace the evolution from Java Servlets to the Spring Boot framework. Explain the problems each iteration aimed to solve, and detail the core functionalities of the Spring framework.',
     article: `# The Evolution from Java Servlets to Spring Boot: A Comprehensive Framework Journey
 
 ## Executive Summary
@@ -178,31 +181,41 @@ Understanding this evolutionary journey provides essential context for modern Ja
 [1] Oracle Corporation. "Java Servlet Specification 4.0." Oracle Technology Network, 2017.
 [2] Johnson, Rod. "Expert One-on-One J2EE Design and Development." Wrox Press, 2002.
 [3] Spring Framework Documentation. "Spring Framework Reference Documentation." VMware, 2023.
-[4] Walls, Craig. "Spring Boot in Action." Manning Publications, 2018.`
-  }
+[4] Walls, Craig. "Spring Boot in Action." Manning Publications, 2018.`,
+  },
 ];
 
 async function createQuickBenchmark() {
-  console.log('🚀 Creating sample benchmark data for DeepResearch evaluation...');
+  console.log(
+    '🚀 Creating sample benchmark data for DeepResearch evaluation...'
+  );
 
   // Create output directory
-  const outputDir = path.join(__dirname, 'deep_research_bench/data/test_data/raw_data');
+  const outputDir = path.join(
+    __dirname,
+    'deep_research_bench/data/test_data/raw_data'
+  );
   await fs.mkdir(outputDir, { recursive: true });
 
   // Save sample results
   const outputPath = path.join(outputDir, 'eliza.jsonl');
-  const outputContent = sampleResults.map(result => JSON.stringify(result)).join('\n');
+  const outputContent = sampleResults
+    .map((result) => JSON.stringify(result))
+    .join('\n');
   await fs.writeFile(outputPath, outputContent);
 
   console.log(`✅ Sample benchmark data saved to: ${outputPath}`);
   console.log(`📊 Generated ${sampleResults.length} research reports`);
 
   // Print statistics
-  const wordCounts = sampleResults.map(r => r.article.split(' ').length);
-  const avgWordCount = wordCounts.reduce((a, b) => a + b, 0) / wordCounts.length;
+  const wordCounts = sampleResults.map((r) => r.article.split(' ').length);
+  const avgWordCount =
+    wordCounts.reduce((a, b) => a + b, 0) / wordCounts.length;
 
   console.log(`📈 Average report length: ${Math.round(avgWordCount)} words`);
-  console.log(`📏 Report length range: ${Math.min(...wordCounts)} - ${Math.max(...wordCounts)} words`);
+  console.log(
+    `📏 Report length range: ${Math.min(...wordCounts)} - ${Math.max(...wordCounts)} words`
+  );
 
   return sampleResults;
 }

@@ -165,18 +165,14 @@ describe('Platform Build Integration', () => {
       'should build platform for Tauri consumption',
       async () => {
         // First build the platform in export mode
-        const platformBuild = await runCommand(
-          'npm',
-          ['run', 'build'],
-          {
-            cwd: tauriRoot,
-            env: {
-              ...process.env,
-              NODE_ENV: 'production',
-              BUILD_MODE: 'export',
-            },
+        const platformBuild = await runCommand('npm', ['run', 'build'], {
+          cwd: tauriRoot,
+          env: {
+            ...process.env,
+            NODE_ENV: 'production',
+            BUILD_MODE: 'export',
           },
-        );
+        });
 
         expect(platformBuild.exitCode).toBe(0);
 

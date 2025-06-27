@@ -9,16 +9,7 @@ export default defineConfig({
     react(),
     nodePolyfills({
       // Include specific polyfills
-      include: [
-        'crypto',
-        'stream', 
-        'buffer',
-        'util',
-        'events',
-        'path',
-        'fs',
-        'module'
-      ],
+      include: ['crypto', 'stream', 'buffer', 'util', 'events', 'path', 'fs', 'module'],
       globals: {
         Buffer: true,
         global: true,
@@ -40,11 +31,11 @@ export default defineConfig({
   optimizeDeps: {
     include: [
       'buffer',
-      'events', 
+      'events',
       'crypto-browserify',
       'stream-browserify',
       'util',
-      '@elizaos/core'
+      '@elizaos/core',
     ],
     // Disable esbuild for dependency optimization
     disabled: false,
@@ -57,7 +48,11 @@ export default defineConfig({
         chunkSizeWarningLimit: 1600,
         manualChunks: {
           'react-vendor': ['react', 'react-dom'],
-          'ui-vendor': ['@radix-ui/react-alert-dialog', '@radix-ui/react-avatar', '@radix-ui/react-checkbox'],
+          'ui-vendor': [
+            '@radix-ui/react-alert-dialog',
+            '@radix-ui/react-avatar',
+            '@radix-ui/react-checkbox',
+          ],
           'chart-vendor': ['react-force-graph', 'react-force-graph-2d'],
         },
       },

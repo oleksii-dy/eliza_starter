@@ -55,4 +55,3 @@ Whether the surface should receive shadows. Defaults to `false`.
 ### `.{...Node}`
 
 Inherits all [Node](/docs/ref/Node.md) properties
-

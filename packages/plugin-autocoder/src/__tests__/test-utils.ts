@@ -1,153 +1,108 @@
 // Test utilities for plugin-autocoder
-import { mock  } from 'bun:test';
-import type { IAgentRuntime, Memory, State, UUID } from '@elizaos/core';
+import type { IAgentRuntime } from '@elizaos/core';
+import { createMockRuntime as createCoreMockRuntime } from '@elizaos/core/test-utils';
+import { mock } from 'bun:test';
 
 /**
  * Creates a mock runtime for plugin-autocoder tests
  */
-export function createMockRuntime(overrides: Partial<IAgentRuntime> = { /* empty */ }): IAgentRuntime {
-  return {
-    agentId: 'test-agent-id' as UUID,
-    character: {
-      name: 'TestAgent',
-      bio: ['Test bio'],
-      system: 'Test system prompt',
-      messageExamples: [],
-      postExamples: [],
-      topics: [],
-      knowledge: [],
-      plugins: ['@elizaos/plugin-autocoder'],
-    },
-
-    // Autocoder-specific settings
+export function createMockRuntime(overrides: Partial<IAgentRuntime> = {}): IAgentRuntime {
+  // Use the unified mock runtime from core with autocoder-specific overrides
+  return createCoreMockRuntime({
+    // Autocoder-specific settings - use a mock function that can be modified in tests
     getSetting: mock((key: string) => {
-      const settings: Record<string, string> = {
+      const defaultSettings: Record<string, any> = {
         DOCKER_HOST: 'unix:///var/run/docker.sock',
         COMMUNICATION_BRIDGE_PORT: '9000',
-        ENCRYPTION_KEY: 'test-encryption-key',
-        GITHUB_TOKEN: 'test-github-token',
-        ...(overrides as any).settings,
+        MCP_SERVER_TIMEOUT: '30000',
+        N8N_WEBHOOK_URL: 'http://localhost:5678/webhook',
+        N8N_API_KEY: 'test-n8n-api-key',
+        PLATFORM_REGISTRY_URL: 'http://localhost:3000/api/platforms',
       };
-      return settings[key];
+      return defaultSettings[key] || null;
     }),
 
     // Autocoder-specific services
-    getService: mock((name: string) => {
+    getService: (name: string) => {
       const services: Record<string, any> = {
-        docker: {
-          ping: mock().mockResolvedValue(true),
-          createContainer: mock().mockResolvedValue('container-id'),
-          startContainer: mock().mockResolvedValue(undefined),
-          stopContainer: mock().mockResolvedValue(undefined),
-          removeContainer: mock().mockResolvedValue(undefined),
-          getContainerStatus: mock().mockResolvedValue({
-            id: 'container-id',
-            state: 'running',
-            health: 'healthy',
+        'platform-registry': {
+          listPlatforms: async () => [],
+          getPlatform: async () => null,
+          registerPlatform: async () => true,
+        },
+        'container-orchestration': {
+          createContainer: async () => ({ id: 'test-container', status: 'running' }),
+          stopContainer: async () => true,
+          removeContainer: async () => true,
+          listContainers: async () => [],
+        },
+        'workflow-automation': {
+          createWorkflow: async () => ({ id: 'test-workflow', status: 'active' }),
+          executeWorkflow: async () => ({ success: true, result: 'test-result' }),
+          deleteWorkflow: async () => true,
+        },
+        research: {
+          createResearchProject: async () => ({ id: 'research-1' }),
+          getProject: async () => ({
+            id: 'research-1',
+            status: 'completed',
+            report: 'Test research report',
+            findings: [],
           }),
         },
-        'container-orchestrator': {
-          spawnSubAgent: mock().mockResolvedValue('container-id'),
-          terminateSubAgent: mock().mockResolvedValue(undefined),
-          getTaskContainers: mock().mockResolvedValue([]),
+        knowledge: {
+          storeDocument: async () => ({ id: 'doc-1' }),
+          getKnowledge: async () => [],
         },
-        'communication-bridge': {
-          sendToAgent: mock().mockResolvedValue(true),
-          broadcastToTask: mock().mockResolvedValue(1),
-          isAgentConnected: mock().mockReturnValue(true),
+        'env-manager': {
+          getEnvVar: () => null,
         },
-        'task-manager': {
-          createTask: mock().mockResolvedValue('task-id'),
-          getTask: mock().mockResolvedValue({
-            id: 'task-id',
-            title: 'Test Task',
-            status: 'pending',
-          }),
-          listTasks: mock().mockResolvedValue([]),
+        'plugin-manager': {
+          clonePlugin: async () => ({ path: '/tmp/test-project' }),
         },
-        'secure-environment': {
-          createTaskEnvironment: mock().mockResolvedValue({ /* empty */ }),
-          provisionAgentCredentials: mock().mockResolvedValue({ /* empty */ }),
-          getAgentEnvironment: mock().mockResolvedValue({ /* empty */ }),
-        },
-        'secrets-manager': {
-          getSecret: mock().mockResolvedValue('secret-value'),
-          validateSecret: mock().mockResolvedValue(true),
-        },
-        'trust-engine': {
-          getTrustLevel: mock().mockResolvedValue(75),
-        },
-        ...overrides.services,
+        ...(overrides as any)?.services,
       };
       return services[name];
-    }),
-
-    // Add other required runtime methods
-    logger: {
-      info: mock(),
-      warn: mock(),
-      error: mock(),
-      debug: mock(),
     },
-    useModel: mock().mockResolvedValue('mock model response'),
-    createMemory: mock().mockResolvedValue('memory-id' as UUID),
-    getMemories: mock().mockResolvedValue([]),
-    composeState: mock().mockResolvedValue({
-      values: { /* empty */ },
-      data: { /* empty */ },
-      text: '',
-    }),
 
     ...overrides,
-  } as unknown as IAgentRuntime;
+  }) as any;
 }
 
 /**
- * Creates a mock memory for autocoder tests
+ * Creates a mock Anthropic client for testing
  */
-export function createMockMemory(overrides: Partial<Memory> = { /* empty */ }): Memory {
+export function mockAnthropicClient() {
   return {
-    id: 'test-memory-id' as UUID,
-    entityId: 'test-entity-id' as UUID,
-    roomId: 'test-room-id' as UUID,
-    agentId: 'test-agent-id' as UUID,
-    content: {
-      text: 'test message',
-      source: 'test',
-    },
-    createdAt: Date.now(),
-    ...overrides,
-  } as Memory;
-}
+    messages: {
+      create: mock().mockResolvedValue({
+        content: [
+          {
+            type: 'text',
+            text: `File: src/index.ts
+\`\`\`typescript
+export const plugin = {
+  name: 'test-plugin',
+  description: 'A test plugin',
+  actions: [],
+  providers: [],
+};
+\`\`\`
 
-/**
- * Creates a mock state for autocoder tests
- */
-export function createMockState(overrides: Partial<State> = { /* empty */ }): State {
-  return {
-    values: { /* empty */ },
-    data: { /* empty */ },
-    text: '',
-    ...overrides,
-  } as State;
-}
+File: src/__tests__/index.test.ts
+\`\`\`typescript
+import { describe, it, expect  } from 'bun:test';
+import { plugin } from '../index';
 
-/**
- * Creates a mock container request for autocoder tests
- */
-export function createMockContainerRequest() {
-  return {
-    name: 'test-agent',
-    image: 'elizaos/autocoder-agent:latest',
-    agentConfig: {
-      agentId: 'test-agent-id' as any,
-      containerId: '',
-      agentName: 'test-agent',
-      role: 'coder' as const,
-      capabilities: ['code-generation'],
-      communicationPort: 8000,
-      healthPort: 8001,
-      environment: { TEST: 'true' },
+describe('Plugin', () => {
+  it('should be defined', () => {
+    expect(plugin).toBeDefined();
+  });
+});
+\`\`\``,
+          },
+        ],
+      }),
     },
   };
 }

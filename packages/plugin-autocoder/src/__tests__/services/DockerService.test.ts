@@ -5,9 +5,15 @@ import { createMockRuntime } from '../test-utils.js';
 // Mock dockerode
 const mockContainer = {
   id: 'mock-container-id',
-  start: mock().mockResolvedValue({ /* empty */ }),
-  stop: mock().mockResolvedValue({ /* empty */ }),
-  remove: mock().mockResolvedValue({ /* empty */ }),
+  start: mock().mockResolvedValue({
+    /* empty */
+  }),
+  stop: mock().mockResolvedValue({
+    /* empty */
+  }),
+  remove: mock().mockResolvedValue({
+    /* empty */
+  }),
   inspect: mock().mockResolvedValue({
     Id: 'mock-container-id',
     Name: '/test-container',
@@ -18,12 +24,22 @@ const mockContainer = {
       FinishedAt: null,
       Error: null,
     },
-    Config: { Labels: { /* empty */ } },
-    NetworkSettings: { Ports: { /* empty */ } },
+    Config: {
+      Labels: {
+        /* empty */
+      },
+    },
+    NetworkSettings: {
+      Ports: {
+        /* empty */
+      },
+    },
   }),
   logs: mock().mockResolvedValue('mock logs'),
   exec: mock().mockResolvedValue({
-    start: mock().mockResolvedValue({ /* empty */ }),
+    start: mock().mockResolvedValue({
+      /* empty */
+    }),
   }),
 };
 
@@ -33,12 +49,16 @@ const mockNetwork = {
     Name: 'eliza-network',
     Id: 'network-id',
   }),
-  remove: mock().mockResolvedValue({ /* empty */ }),
+  remove: mock().mockResolvedValue({
+    /* empty */
+  }),
 };
 
 // Create a comprehensive Docker mock that will be reused
 const createDockerMock = () => ({
-  ping: mock().mockResolvedValue({ /* empty */ }),
+  ping: mock().mockResolvedValue({
+    /* empty */
+  }),
   version: mock().mockResolvedValue({ Version: '20.10.0' }),
   createContainer: mock().mockResolvedValue(mockContainer),
   getContainer: mock().mockReturnValue(mockContainer),

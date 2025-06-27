@@ -225,7 +225,9 @@ export const integrationPatterns = {
     const pluginManager = runtime.getService(
       PluginManagerServiceType.PLUGIN_MANAGER
     ) as PluginManagerService;
-    if (!pluginManager) {return false;}
+    if (!pluginManager) {
+      return false;
+    }
 
     const capabilities = await pluginManager.analyzeCurrentCapabilities();
     return capabilities.core.some((c) => c.includes(capability));
@@ -236,7 +238,9 @@ export const integrationPatterns = {
     const pluginManager = runtime.getService(
       PluginManagerServiceType.PLUGIN_MANAGER
     ) as PluginManagerService;
-    if (!pluginManager) {return false;}
+    if (!pluginManager) {
+      return false;
+    }
 
     const plugins = pluginManager.getAllPlugins();
     const exists = plugins.some((p) => p.name === pluginName && p.status === 'loaded');
@@ -262,7 +266,9 @@ export const integrationPatterns = {
     const pluginManager = runtime.getService(
       PluginManagerServiceType.PLUGIN_MANAGER
     ) as PluginManagerService;
-    if (!pluginManager) {return [];}
+    if (!pluginManager) {
+      return [];
+    }
 
     const recommendations = await pluginManager.recommendPlugins({
       recentActions: [],

@@ -80,7 +80,7 @@ export class AnonymousSessionRepository {
       if (process.env.NODE_ENV === 'test') {
         // Generate a mock session ID for testing
         const mockSessionId = `test-session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        
+
         // Store session in test map
         const mockSession: AnonymousSession = {
           id: mockSessionId,
@@ -93,7 +93,7 @@ export class AnonymousSessionRepository {
             workflowType: null,
             requirements: {},
             generatedAssets: [],
-            customizations: []
+            customizations: [],
           },
           userPreferences: sessionData.userPreferences || {},
           generatedContent: sessionData.generatedContent || [],
@@ -103,15 +103,15 @@ export class AnonymousSessionRepository {
           migratedToUserId: null,
           migratedAt: null,
         };
-        
+
         // Store with the mock session ID as key for consistency
         AnonymousSessionRepository.testSessions.set(mockSessionId, mockSession);
         console.log(`✅ Mock session created for testing: ${mockSessionId}`);
         return mockSessionId;
       }
 
-      const db = await (await this.getDb());
-      
+      const db = await await this.getDb();
+
       // Create session data with explicit type casting for complex objects
       const sessionInsertData = {
         sessionId: sessionData.sessionId,
@@ -123,12 +123,12 @@ export class AnonymousSessionRepository {
           workflowType: null,
           requirements: {},
           generatedAssets: [],
-          customizations: []
+          customizations: [],
         },
         userPreferences: sessionData.userPreferences || {},
         generatedContent: sessionData.generatedContent || [],
       };
-      
+
       const [session] = await db
         .insert(anonymousSessions)
         .values(sessionInsertData)
@@ -151,7 +151,7 @@ export class AnonymousSessionRepository {
         return AnonymousSessionRepository.testSessions.get(sessionId) || null;
       }
 
-      const db = await (await this.getDb());
+      const db = await await this.getDb();
 
       const [session] = await db
         .select()
@@ -159,8 +159,8 @@ export class AnonymousSessionRepository {
         .where(
           and(
             eq(anonymousSessions.sessionId, sessionId),
-            sql`${anonymousSessions.expiresAt} > now()`
-          )
+            sql`${anonymousSessions.expiresAt} > now()`,
+          ),
         )
         .limit(1);
 
@@ -175,8 +175,16 @@ export class AnonymousSessionRepository {
    * Update session with new data
    */
   async updateSession(
-    sessionId: string, 
-    updates: Partial<Pick<SessionData, 'chatHistory' | 'workflowProgress' | 'userPreferences' | 'generatedContent'>>
+    sessionId: string,
+    updates: Partial<
+      Pick<
+        SessionData,
+        | 'chatHistory'
+        | 'workflowProgress'
+        | 'userPreferences'
+        | 'generatedContent'
+      >
+    >,
   ): Promise<boolean> {
     try {
       // For test environment compatibility, update the in-memory session
@@ -185,11 +193,14 @@ export class AnonymousSessionRepository {
         if (session) {
           // Apply updates to the stored session
           if (updates.chatHistory) session.chatHistory = updates.chatHistory;
-          if (updates.workflowProgress) session.workflowProgress = updates.workflowProgress;
-          if (updates.userPreferences) session.userPreferences = updates.userPreferences;
-          if (updates.generatedContent) session.generatedContent = updates.generatedContent;
+          if (updates.workflowProgress)
+            session.workflowProgress = updates.workflowProgress;
+          if (updates.userPreferences)
+            session.userPreferences = updates.userPreferences;
+          if (updates.generatedContent)
+            session.generatedContent = updates.generatedContent;
           session.lastActivity = new Date();
-          
+
           console.log(`✅ Mock session updated for testing: ${sessionId}`);
           return true;
         }
@@ -197,7 +208,7 @@ export class AnonymousSessionRepository {
         return false;
       }
 
-      const db = await (await this.getDb());
+      const db = await await this.getDb();
 
       const updateData: any = {
         lastActivity: sql`now()`,
@@ -222,8 +233,8 @@ export class AnonymousSessionRepository {
         .where(
           and(
             eq(anonymousSessions.sessionId, sessionId),
-            sql`${anonymousSessions.expiresAt} > now()`
-          )
+            sql`${anonymousSessions.expiresAt} > now()`,
+          ),
         );
 
       return result.count > 0;
@@ -257,7 +268,9 @@ export class AnonymousSessionRepository {
       }
 
       const updatedHistory = [...session.chatHistory, message];
-      return await this.updateSession(sessionId, { chatHistory: updatedHistory });
+      return await this.updateSession(sessionId, {
+        chatHistory: updatedHistory,
+      });
     } catch (error) {
       console.error('Failed to add message to session:', error);
       return false;
@@ -267,7 +280,10 @@ export class AnonymousSessionRepository {
   /**
    * Add generated content to session
    */
-  async addGeneratedContent(sessionId: string, content: GeneratedContent): Promise<boolean> {
+  async addGeneratedContent(
+    sessionId: string,
+    content: GeneratedContent,
+  ): Promise<boolean> {
     try {
       // For test environment compatibility, update in-memory session
       if (process.env.NODE_ENV === 'test') {
@@ -288,7 +304,9 @@ export class AnonymousSessionRepository {
       }
 
       const updatedContent = [...session.generatedContent, content];
-      return await this.updateSession(sessionId, { generatedContent: updatedContent });
+      return await this.updateSession(sessionId, {
+        generatedContent: updatedContent,
+      });
     } catch (error) {
       console.error('Failed to add generated content to session:', error);
       return false;
@@ -298,9 +316,12 @@ export class AnonymousSessionRepository {
   /**
    * Migrate anonymous session to authenticated user
    */
-  async migrateToUser(sessionId: string, userId: string): Promise<MigrationResult> {
+  async migrateToUser(
+    sessionId: string,
+    userId: string,
+  ): Promise<MigrationResult> {
     try {
-      const dbConnection = await (await this.getDb());
+      const dbConnection = await await this.getDb();
 
       // Get the anonymous session
       const session = await this.getSession(sessionId);
@@ -313,7 +334,7 @@ export class AnonymousSessionRepository {
         chatHistory: [],
         workflowProgress: [],
         generatedContent: [],
-        preferences: {}
+        preferences: {},
       };
 
       // Merge data
@@ -321,7 +342,7 @@ export class AnonymousSessionRepository {
         chatMessages: session.chatHistory.length,
         workflowProgress: session.workflowProgress ? 1 : 0,
         generatedAssets: session.generatedContent.length,
-        preferences: Object.keys(session.userPreferences).length
+        preferences: Object.keys(session.userPreferences).length,
       };
 
       // Mark session as migrated
@@ -329,7 +350,7 @@ export class AnonymousSessionRepository {
         .update(anonymousSessions)
         .set({
           migratedToUserId: userId,
-          migratedAt: sql`now()`
+          migratedAt: sql`now()`,
         })
         .where(eq(anonymousSessions.sessionId, sessionId));
 
@@ -354,14 +375,16 @@ export class AnonymousSessionRepository {
               sessionId: sessionId,
               migratedAt: new Date(),
               preservedAssets: session.generatedContent.length,
-              chatMessages: session.chatHistory.length
-            }
-          }
-        }
+              chatMessages: session.chatHistory.length,
+            },
+          },
+        },
       };
     } catch (error) {
       console.error('Failed to migrate session:', error);
-      throw new Error(`Migration failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Migration failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -372,12 +395,13 @@ export class AnonymousSessionRepository {
     try {
       // For test environment compatibility, delete from test map
       if (process.env.NODE_ENV === 'test') {
-        const deleted = AnonymousSessionRepository.testSessions.delete(sessionId);
+        const deleted =
+          AnonymousSessionRepository.testSessions.delete(sessionId);
         console.log(`✅ Mock session deleted for testing: ${sessionId}`);
         return deleted;
       }
 
-      const db = await (await this.getDb());
+      const db = await await this.getDb();
 
       const result = await db
         .delete(anonymousSessions)
@@ -395,7 +419,7 @@ export class AnonymousSessionRepository {
    */
   async cleanupExpiredSessions(): Promise<number> {
     try {
-      const db = await (await this.getDb());
+      const db = await await this.getDb();
 
       const result = await db
         .delete(anonymousSessions)
@@ -418,14 +442,14 @@ export class AnonymousSessionRepository {
     migratedSessions: number;
   }> {
     try {
-      const dbConnection = await (await this.getDb());
+      const dbConnection = await await this.getDb();
 
       const [stats] = await dbConnection
         .select({
           totalSessions: sql<number>`count(*)`,
           activeSessions: sql<number>`count(*) filter (where ${anonymousSessions.expiresAt} > now())`,
           expiredSessions: sql<number>`count(*) filter (where ${anonymousSessions.expiresAt} <= now())`,
-          migratedSessions: sql<number>`count(*) filter (where ${anonymousSessions.migratedToUserId} is not null)`
+          migratedSessions: sql<number>`count(*) filter (where ${anonymousSessions.migratedToUserId} is not null)`,
         })
         .from(anonymousSessions);
 
@@ -436,7 +460,7 @@ export class AnonymousSessionRepository {
         totalSessions: 0,
         activeSessions: 0,
         expiredSessions: 0,
-        migratedSessions: 0
+        migratedSessions: 0,
       };
     }
   }

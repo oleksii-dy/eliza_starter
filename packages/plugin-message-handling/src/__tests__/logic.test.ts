@@ -12,9 +12,10 @@ import {
   ModelType,
   UUID,
 } from '@elizaos/core';
-import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
+
 import { messageHandlingPlugin } from '../index';
-import { MockRuntime, setupActionTest } from './test-utils';
+import { MockRuntime, setupActionTest, mock } from './test-utils';
 
 describe('Message Handler Logic', () => {
   let mockRuntime: MockRuntime;

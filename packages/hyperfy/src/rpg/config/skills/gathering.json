@@ -1,6 +1,6 @@
 {
   "id": "gathering",
-  "name": "Gathering Skills", 
+  "name": "Gathering Skills",
   "description": "Configuration for resource gathering skills",
   "skills": {
     "mining": {
@@ -55,4 +55,4 @@
       }
     }
   }
-} 
+}

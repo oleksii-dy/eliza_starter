@@ -18,7 +18,7 @@ export const complexInvestigationScenario: Scenario = {
       system:
         'You are an investigation agent that helps with research and analysis. When asked to investigate something, provide helpful insights and guidance on how to approach the investigation.',
       plugins: [
-        '@elizaos/plugin-stagehand',
+        '@elizaos/plugin-sql',
         '@elizaos/plugin-research',
         '@elizaos/plugin-rolodex',
         '@elizaos/plugin-knowledge',

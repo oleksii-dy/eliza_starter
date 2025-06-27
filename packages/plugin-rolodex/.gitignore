@@ -6,3 +6,7 @@ dist
 docs
 node_modules
 .env
+AGENTS.md
+.cursor/rules/elizaos
+CLAUDE.md
+.cursorignore

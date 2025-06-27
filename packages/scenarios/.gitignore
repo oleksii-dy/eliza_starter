@@ -2,3 +2,7 @@
 .test-*
 .scenario-*
 *.json
+AGENTS.md
+.cursor/rules/elizaos
+CLAUDE.md
+.cursorignore

@@ -6,13 +6,10 @@ import type { SecretConfig, SecretContext } from './types';
  * Migration utilities for transitioning from old settings/secrets to new unified system
  */
 export class SecretMigrationHelper {
-  private runtime: IAgentRuntime;
   private secretsManager: EnhancedSecretManager;
 
-  constructor(runtime: IAgentRuntime) {
-    this.runtime = runtime;
-    this.secretsManager = runtime.getService<EnhancedSecretManager>('SECRETS');
-
+  constructor(private runtime: IAgentRuntime) {
+    this.secretsManager = runtime.getService<EnhancedSecretManager>('SECRETS')!;
     if (!this.secretsManager) {
       throw new Error('Secrets manager service not available');
     }

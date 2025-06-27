@@ -22,7 +22,8 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   title: 'ElizaOS Platform - AI Agent Development Platform',
-  description: 'Complete AI agent development platform with inference, hosting, storage, and rapid deployment',
+  description:
+    'Complete AI agent development platform with inference, hosting, storage, and rapid deployment',
   keywords: ['AI', 'agents', 'ElizaOS', 'platform', 'development', 'hosting'],
   authors: [{ name: 'ElizaOS Team' }],
   creator: 'ElizaOS',
@@ -32,13 +33,16 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://platform.elizaos.com'),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || 'https://platform.elizaos.com',
+  ),
   alternates: {
     canonical: '/',
   },
   openGraph: {
     title: 'ElizaOS Platform',
-    description: 'Complete AI agent development platform with inference, hosting, storage, and rapid deployment',
+    description:
+      'Complete AI agent development platform with inference, hosting, storage, and rapid deployment',
     url: '/',
     siteName: 'ElizaOS Platform',
     type: 'website',
@@ -54,7 +58,8 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'ElizaOS Platform',
-    description: 'Complete AI agent development platform with inference, hosting, storage, and rapid deployment',
+    description:
+      'Complete AI agent development platform with inference, hosting, storage, and rapid deployment',
     images: ['/images/twitter-image.png'],
   },
   appleWebApp: {
@@ -99,8 +104,18 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="application-name" content="ElizaOS Platform" />
         <link rel="apple-touch-icon" href="/icons/icon-152x152.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png" />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="32x32"
+          href="/icons/icon-32x32.png"
+        />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="16x16"
+          href="/icons/icon-16x16.png"
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} bg-background text-typography-strong antialiased`}
@@ -114,9 +129,7 @@ export default function RootLayout({
             trackLocalhost={false}
           >
             <CSPostHogProvider>
-              <ThemeProvider>
-                  {children}
-              </ThemeProvider>
+              <ThemeProvider>{children}</ThemeProvider>
             </CSPostHogProvider>
           </PlausibleProvider>
         </div>

@@ -27,7 +27,7 @@ export default function ConfirmEmailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-screen">
+      <div className="flex h-screen items-center justify-center">
         <Spinner />
       </div>
     );
@@ -37,7 +37,7 @@ export default function ConfirmEmailPage() {
     <div className="flex flex-col gap-4">
       <h1>Check your inbox</h1>
       <p>
-				We&apos;ve sent a confirmation link
+        We&apos;ve sent a confirmation link
         {email && ' to '}
         <strong>{email}</strong>. Please click the link to confirm your address.
       </p>
@@ -49,7 +49,7 @@ export default function ConfirmEmailPage() {
       </div>
       <div className="flex flex-col gap-2">
         <p className="text-sm">
-					Can&apos;t find the email? Please check the spam folder.
+          Can&apos;t find the email? Please check the spam folder.
         </p>
         <p className="text-sm">
           {!noCookie ? (
@@ -60,20 +60,20 @@ export default function ConfirmEmailPage() {
                     toast({
                       message: 'Email resent',
                       mode: 'success',
-                    })
+                    }),
                   )
                   .catch(() => {
                     setNoCookie(true);
                     toast({
                       message:
-												'We could not verify your identity. Please log in and try again.',
+                        'We could not verify your identity. Please log in and try again.',
                       mode: 'error',
                     });
                   })
               }
               variant="link"
             >
-							Resend email
+              Resend email
             </Button>
           ) : (
             <Link href="/auth/login">Login instead</Link>

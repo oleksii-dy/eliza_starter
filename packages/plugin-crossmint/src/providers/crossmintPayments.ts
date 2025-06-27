@@ -1,10 +1,4 @@
-import {
-  type Provider,
-  type IAgentRuntime,
-  type Memory,
-  type State,
-  logger,
-} from '@elizaos/core';
+import { type Provider, type IAgentRuntime, type Memory, type State, logger } from '@elizaos/core';
 import { CrossMintService } from '../services/CrossMintService';
 
 /**
@@ -13,7 +7,8 @@ import { CrossMintService } from '../services/CrossMintService';
  */
 export const crossmintPaymentsProvider: Provider = {
   name: 'CROSSMINT_PAYMENTS',
-  description: 'Provides recent X.402 payment request history and HTTP-native payment protocol capabilities when agent needs to process blockchain payments or verify transaction status',
+  description:
+    'Provides recent X.402 payment request history and HTTP-native payment protocol capabilities when agent needs to process blockchain payments or verify transaction status',
   dynamic: true, // Only when explicitly requested
   position: 15,
 
@@ -35,8 +30,9 @@ export const crossmintPaymentsProvider: Provider = {
       const supportedNetworks = crossmintService.getSupportedNetworks();
 
       const paymentsList = recentPayments
-        .map(payment =>
-          `- ${payment.id}: ${payment.amount} ${payment.currency} (${payment.status}) on ${payment.network}`
+        .map(
+          (payment) =>
+            `- ${payment.id}: ${payment.amount} ${payment.currency} (${payment.status}) on ${payment.network}`
         )
         .join('\n');
 

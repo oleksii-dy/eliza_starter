@@ -26,7 +26,6 @@ interface TodoTaskInput {
   recurring?: 'daily' | 'weekly' | 'monthly'; // For recurring tasks
 }
 
-
 /**
  * Template for extracting todo information from the user's message.
  */
@@ -256,11 +255,17 @@ export const createTodoAction: Action = {
       const tags = ['TODO'];
       if (todo.taskType === 'daily') {
         tags.push('daily');
-        if (todo.recurring) {tags.push(`recurring-${todo.recurring}`);}
+        if (todo.recurring) {
+          tags.push(`recurring-${todo.recurring}`);
+        }
       } else if (todo.taskType === 'one-off') {
         tags.push('one-off');
-        if (todo.priority) {tags.push(`priority-${todo.priority}`);}
-        if (todo.urgent) {tags.push('urgent');}
+        if (todo.priority) {
+          tags.push(`priority-${todo.priority}`);
+        }
+        if (todo.urgent) {
+          tags.push('urgent');
+        }
       } else if (todo.taskType === 'aspirational') {
         tags.push('aspirational');
       }
@@ -268,8 +273,12 @@ export const createTodoAction: Action = {
       const metadata: Record<string, any> = {
         createdAt: new Date().toISOString(),
       };
-      if (todo.description) {metadata.description = todo.description;}
-      if (todo.dueDate) {metadata.dueDate = todo.dueDate;}
+      if (todo.description) {
+        metadata.description = todo.description;
+      }
+      if (todo.dueDate) {
+        metadata.dueDate = todo.dueDate;
+      }
 
       const room = state.data?.room ?? (await runtime.getRoom(message.roomId));
       const worldId =

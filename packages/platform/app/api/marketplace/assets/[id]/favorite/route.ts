@@ -4,9 +4,9 @@ import { auth } from '@/lib/auth';
 
 const marketplaceService = new MarketplaceService();
 
-export async function POST(
+export async function handlePOST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const resolvedParams = await params;
@@ -21,21 +21,21 @@ export async function POST(
     const isFavorited = await marketplaceService.toggleFavorite(
       assetId,
       session.user.id,
-      session.organizationId
+      session.organizationId,
     );
 
     return NextResponse.json({
       success: true,
       data: {
         isFavorited,
-        message: isFavorited ? 'Added to favorites' : 'Removed from favorites'
+        message: isFavorited ? 'Added to favorites' : 'Removed from favorites',
       },
     });
   } catch (error) {
     console.error('Failed to toggle favorite:', error);
     return NextResponse.json(
       { error: 'Failed to toggle favorite' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

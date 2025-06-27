@@ -69,3 +69,7 @@ IMPROVEMENTS.md
 .elizadb/
 .cursor/
 .elizadb-test/
+AGENTS.md
+.cursor/rules/elizaos
+CLAUDE.md
+.cursorignore

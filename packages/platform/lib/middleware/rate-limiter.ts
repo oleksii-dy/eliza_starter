@@ -7,8 +7,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ApiErrorHandler, ErrorCode } from '../api/error-handler';
 
 interface RateLimitConfig {
-  windowMs: number;     // Time window in milliseconds
-  maxRequests: number;  // Maximum requests per window
+  windowMs: number; // Time window in milliseconds
+  maxRequests: number; // Maximum requests per window
   skipSuccessfulRequests?: boolean;
   keyGenerator?: (request: NextRequest) => string;
   onLimitReached?: (request: NextRequest) => void;
@@ -26,9 +26,12 @@ class RateLimiter {
 
   constructor() {
     // Clean up expired entries every 5 minutes
-    this.cleanupInterval = setInterval(() => {
-      this.cleanup();
-    }, 5 * 60 * 1000);
+    this.cleanupInterval = setInterval(
+      () => {
+        this.cleanup();
+      },
+      5 * 60 * 1000,
+    );
   }
 
   private cleanup(): void {
@@ -40,22 +43,29 @@ class RateLimiter {
     }
   }
 
-  private getKey(request: NextRequest, keyGenerator?: (req: NextRequest) => string): string {
+  private getKey(
+    request: NextRequest,
+    keyGenerator?: (req: NextRequest) => string,
+  ): string {
     if (keyGenerator) {
       return keyGenerator(request);
     }
 
     // Default key generation: IP + User-Agent + Path
-    const ip = request.headers.get('x-forwarded-for') || 
-               request.headers.get('x-real-ip') || 
-               'unknown';
+    const ip =
+      request.headers.get('x-forwarded-for') ||
+      request.headers.get('x-real-ip') ||
+      'unknown';
     const userAgent = request.headers.get('user-agent') || 'unknown';
     const path = new URL(request.url).pathname;
-    
+
     return `${ip}:${userAgent}:${path}`;
   }
 
-  async checkLimit(request: NextRequest, config: RateLimitConfig): Promise<{
+  async checkLimit(
+    request: NextRequest,
+    config: RateLimitConfig,
+  ): Promise<{
     allowed: boolean;
     remaining: number;
     resetTime: number;
@@ -136,7 +146,10 @@ export function createRateLimit(config: RateLimitConfig) {
       const headers = new Headers();
       headers.set('X-RateLimit-Limit', config.maxRequests.toString());
       headers.set('X-RateLimit-Remaining', result.remaining.toString());
-      headers.set('X-RateLimit-Reset', Math.ceil(result.resetTime / 1000).toString());
+      headers.set(
+        'X-RateLimit-Reset',
+        Math.ceil(result.resetTime / 1000).toString(),
+      );
 
       if (!result.allowed) {
         return new NextResponse(
@@ -157,9 +170,11 @@ export function createRateLimit(config: RateLimitConfig) {
             headers: {
               'Content-Type': 'application/json',
               ...Object.fromEntries(headers.entries()),
-              'Retry-After': Math.ceil((result.resetTime - Date.now()) / 1000).toString(),
+              'Retry-After': Math.ceil(
+                (result.resetTime - Date.now()) / 1000,
+              ).toString(),
             },
-          }
+          },
         );
       }
 
@@ -180,7 +195,7 @@ export const RateLimitPresets = {
   // Webhook endpoints - strict limits
   WEBHOOK: {
     windowMs: 60 * 1000, // 1 minute
-    maxRequests: 100,    // 100 requests per minute per source
+    maxRequests: 100, // 100 requests per minute per source
     keyGenerator: (request: NextRequest) => {
       // Use stripe signature or IP for webhook rate limiting
       const signature = request.headers.get('stripe-signature');
@@ -192,13 +207,13 @@ export const RateLimitPresets = {
   // API endpoints - moderate limits
   API: {
     windowMs: 15 * 60 * 1000, // 15 minutes
-    maxRequests: 1000,        // 1000 requests per 15 minutes
+    maxRequests: 1000, // 1000 requests per 15 minutes
   },
 
   // Authentication endpoints - strict limits
   AUTH: {
     windowMs: 15 * 60 * 1000, // 15 minutes
-    maxRequests: 5,           // 5 auth attempts per 15 minutes
+    maxRequests: 5, // 5 auth attempts per 15 minutes
     keyGenerator: (request: NextRequest) => {
       const ip = request.headers.get('x-forwarded-for') || 'unknown';
       return `auth:${ip}`;
@@ -208,7 +223,7 @@ export const RateLimitPresets = {
   // Payment endpoints - strict limits
   PAYMENT: {
     windowMs: 60 * 1000, // 1 minute
-    maxRequests: 10,     // 10 payment attempts per minute
+    maxRequests: 10, // 10 payment attempts per minute
     keyGenerator: (request: NextRequest) => {
       const ip = request.headers.get('x-forwarded-for') || 'unknown';
       const userAgent = request.headers.get('user-agent') || 'unknown';
@@ -219,7 +234,7 @@ export const RateLimitPresets = {
   // General API - lenient limits
   GENERAL: {
     windowMs: 15 * 60 * 1000, // 15 minutes
-    maxRequests: 500,         // 500 requests per 15 minutes
+    maxRequests: 500, // 500 requests per 15 minutes
   },
 } as const;
 
@@ -244,7 +259,9 @@ export class WebhookRateLimiter {
   }> {
     const ip = request.headers.get('x-forwarded-for') || 'unknown';
     const signature = request.headers.get('stripe-signature');
-    const contentLength = parseInt(request.headers.get('content-length') || '0');
+    const contentLength = parseInt(
+      request.headers.get('content-length') || '0',
+    );
 
     // Check for missing signature
     if (!signature) {
@@ -257,7 +274,8 @@ export class WebhookRateLimiter {
     }
 
     // Check for suspicious payload size
-    if (contentLength > 1024 * 1024) { // 1MB limit
+    if (contentLength > 1024 * 1024) {
+      // 1MB limit
       this.recordSuspiciousActivity(ip, 'large_payload');
       return {
         allowed: false,
@@ -283,7 +301,9 @@ export class WebhookRateLimiter {
     const count = this.suspiciousActivity.get(ip) || 0;
     this.suspiciousActivity.set(ip, count + 1);
 
-    console.warn(`Suspicious webhook activity from ${ip}: ${reason} (count: ${count + 1})`);
+    console.warn(
+      `Suspicious webhook activity from ${ip}: ${reason} (count: ${count + 1})`,
+    );
 
     // Clean up old entries periodically
     if (this.suspiciousActivity.size > 1000) {
@@ -309,11 +329,11 @@ export class WebhookRateLimiter {
  */
 export function withRateLimit(config: RateLimitConfig) {
   return function <T extends any[], R>(
-    handler: (...args: T) => Promise<NextResponse<R>>
+    handler: (...args: T) => Promise<NextResponse<R>>,
   ) {
     return async (...args: T): Promise<NextResponse<R>> => {
       const request = args[0] as NextRequest;
-      
+
       const rateLimitResponse = await createRateLimit(config)(request);
       if (rateLimitResponse) {
         return rateLimitResponse as NextResponse<R>;

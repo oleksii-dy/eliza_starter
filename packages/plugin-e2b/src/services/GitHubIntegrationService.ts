@@ -63,7 +63,7 @@ export class GitHubIntegrationService extends Service {
 
     this.octokit = new Octokit({
       auth: token,
-      userAgent: 'ElizaOS-Agent/1.0.0'
+      userAgent: 'ElizaOS-Agent/1.0.0',
     });
   }
 
@@ -91,13 +91,13 @@ export class GitHubIntegrationService extends Service {
         authenticatedUser: user.login,
         userType: user.type,
         publicRepos: user.public_repos,
-        serviceReady: true
+        serviceReady: true,
       });
     } catch (error) {
       const instrumentedError = ErrorInstrumentation.instrumentError(error, {
         service: 'GitHubIntegrationService',
         operation: 'initialize',
-        metadata: { step: 'authentication' }
+        metadata: { step: 'authentication' },
       });
       elizaLogger.error('Failed to authenticate with GitHub', { error: instrumentedError });
       throw instrumentedError;
@@ -113,20 +113,24 @@ export class GitHubIntegrationService extends Service {
    * Fetch issues from a repository with optional filtering
    */
   @retryable('GitHubIntegrationService', 3, 1000, 'getIssues')
-  async getIssues(owner: string, repo: string, options?: {
-    state?: 'open' | 'closed' | 'all';
-    labels?: string[];
-    assignee?: string;
-    since?: string;
-    limit?: number;
-  }): Promise<GitHubIssue[]> {
+  async getIssues(
+    owner: string,
+    repo: string,
+    options?: {
+      state?: 'open' | 'closed' | 'all';
+      labels?: string[];
+      assignee?: string;
+      since?: string;
+      limit?: number;
+    }
+  ): Promise<GitHubIssue[]> {
     try {
       elizaLogger.debug('Fetching GitHub issues', { owner, repo, options });
 
       ErrorInstrumentation.logMetrics('GitHubIntegrationService', 'getIssues', {
         repository: `${owner}/${repo}`,
         requestOptions: options,
-        startTime: Date.now()
+        startTime: Date.now(),
       });
 
       const { data: issues } = await this.octokit.rest.issues.listForRepo({
@@ -138,25 +142,25 @@ export class GitHubIntegrationService extends Service {
         since: options?.since,
         per_page: Math.min(options?.limit || 30, 100),
         sort: 'created',
-        direction: 'desc'
+        direction: 'desc',
       });
 
       return issues
-        .filter(issue => !issue.pull_request) // Filter out PRs
-        .map(issue => ({
+        .filter((issue) => !issue.pull_request) // Filter out PRs
+        .map((issue) => ({
           id: issue.id,
           number: issue.number,
           title: issue.title,
           body: issue.body || '',
           state: issue.state as 'open' | 'closed',
-          labels: issue.labels.map(label => ({
+          labels: issue.labels.map((label) => ({
             name: typeof label === 'string' ? label : label.name || '',
-            color: typeof label === 'string' ? '' : label.color || ''
+            color: typeof label === 'string' ? '' : label.color || '',
           })),
           assignee: issue.assignee ? { login: issue.assignee.login } : undefined,
           user: { login: issue.user?.login || 'unknown' },
           html_url: issue.html_url,
-          repository: { owner, name: repo }
+          repository: { owner, name: repo },
         }));
     } catch (error) {
       elizaLogger.error('Failed to fetch GitHub issues', { owner, repo, error });
@@ -172,7 +176,7 @@ export class GitHubIntegrationService extends Service {
       const { data: issue } = await this.octokit.rest.issues.get({
         owner,
         repo,
-        issue_number: issueNumber
+        issue_number: issueNumber,
       });
 
       return {
@@ -181,14 +185,14 @@ export class GitHubIntegrationService extends Service {
         title: issue.title,
         body: issue.body || '',
         state: issue.state as 'open' | 'closed',
-        labels: issue.labels.map(label => ({
+        labels: issue.labels.map((label) => ({
           name: typeof label === 'string' ? label : label.name || '',
-          color: typeof label === 'string' ? '' : label.color || ''
+          color: typeof label === 'string' ? '' : label.color || '',
         })),
         assignee: issue.assignee ? { login: issue.assignee.login } : undefined,
         user: { login: issue.user?.login || 'unknown' },
         html_url: issue.html_url,
-        repository: { owner, name: repo }
+        repository: { owner, name: repo },
       };
     } catch (error) {
       elizaLogger.error('Failed to fetch GitHub issue', { owner, repo, issueNumber, error });
@@ -199,13 +203,17 @@ export class GitHubIntegrationService extends Service {
   /**
    * Create a new pull request
    */
-  async createPullRequest(owner: string, repo: string, options: {
-    title: string;
-    body: string;
-    head: string; // branch name
-    base: string; // target branch (usually 'main' or 'develop')
-    draft?: boolean;
-  }): Promise<GitHubPullRequest> {
+  async createPullRequest(
+    owner: string,
+    repo: string,
+    options: {
+      title: string;
+      body: string;
+      head: string; // branch name
+      base: string; // target branch (usually 'main' or 'develop')
+      draft?: boolean;
+    }
+  ): Promise<GitHubPullRequest> {
     try {
       elizaLogger.info('Creating GitHub pull request', { owner, repo, options });
 
@@ -216,7 +224,7 @@ export class GitHubIntegrationService extends Service {
         body: options.body,
         head: options.head,
         base: options.base,
-        draft: options.draft || false
+        draft: options.draft || false,
       });
 
       return {
@@ -227,14 +235,14 @@ export class GitHubIntegrationService extends Service {
         state: pr.state as 'open' | 'closed' | 'merged',
         head: {
           ref: pr.head.ref,
-          sha: pr.head.sha
+          sha: pr.head.sha,
         },
         base: {
-          ref: pr.base.ref
+          ref: pr.base.ref,
         },
         html_url: pr.html_url,
         user: { login: pr.user?.login || 'unknown' },
-        repository: { owner, name: repo }
+        repository: { owner, name: repo },
       };
     } catch (error) {
       elizaLogger.error('Failed to create GitHub pull request', { owner, repo, options, error });
@@ -250,7 +258,7 @@ export class GitHubIntegrationService extends Service {
       const { data: pr } = await this.octokit.rest.pulls.get({
         owner,
         repo,
-        pull_number: prNumber
+        pull_number: prNumber,
       });
 
       return {
@@ -261,14 +269,14 @@ export class GitHubIntegrationService extends Service {
         state: pr.state as 'open' | 'closed' | 'merged',
         head: {
           ref: pr.head.ref,
-          sha: pr.head.sha
+          sha: pr.head.sha,
         },
         base: {
-          ref: pr.base.ref
+          ref: pr.base.ref,
         },
         html_url: pr.html_url,
         user: { login: pr.user?.login || 'unknown' },
-        repository: { owner, name: repo }
+        repository: { owner, name: repo },
       };
     } catch (error) {
       elizaLogger.error('Failed to fetch GitHub pull request', { owner, repo, prNumber, error });
@@ -279,7 +287,12 @@ export class GitHubIntegrationService extends Service {
   /**
    * Add a comment to an issue or PR
    */
-  async addComment(owner: string, repo: string, issueNumber: number, body: string): Promise<GitHubComment> {
+  async addComment(
+    owner: string,
+    repo: string,
+    issueNumber: number,
+    body: string
+  ): Promise<GitHubComment> {
     try {
       elizaLogger.debug('Adding GitHub comment', { owner, repo, issueNumber });
 
@@ -287,7 +300,7 @@ export class GitHubIntegrationService extends Service {
         owner,
         repo,
         issue_number: issueNumber,
-        body
+        body,
       });
 
       return {
@@ -295,7 +308,7 @@ export class GitHubIntegrationService extends Service {
         body: comment.body,
         user: { login: comment.user?.login || 'unknown' },
         created_at: comment.created_at,
-        html_url: comment.html_url
+        html_url: comment.html_url,
       };
     } catch (error) {
       elizaLogger.error('Failed to add GitHub comment', { owner, repo, issueNumber, error });
@@ -313,15 +326,15 @@ export class GitHubIntegrationService extends Service {
         repo,
         issue_number: issueNumber,
         sort: 'created',
-        direction: 'asc'
+        direction: 'asc',
       });
 
-      return comments.map(comment => ({
+      return comments.map((comment) => ({
         id: comment.id,
         body: comment.body,
         user: { login: comment.user?.login || 'unknown' },
         created_at: comment.created_at,
-        html_url: comment.html_url
+        html_url: comment.html_url,
       }));
     } catch (error) {
       elizaLogger.error('Failed to fetch GitHub comments', { owner, repo, issueNumber, error });
@@ -332,18 +345,29 @@ export class GitHubIntegrationService extends Service {
   /**
    * Assign an issue to a user
    */
-  async assignIssue(owner: string, repo: string, issueNumber: number, assignee: string): Promise<void> {
+  async assignIssue(
+    owner: string,
+    repo: string,
+    issueNumber: number,
+    assignee: string
+  ): Promise<void> {
     try {
       await this.octokit.rest.issues.addAssignees({
         owner,
         repo,
         issue_number: issueNumber,
-        assignees: [assignee]
+        assignees: [assignee],
       });
 
       elizaLogger.info('Successfully assigned issue', { owner, repo, issueNumber, assignee });
     } catch (error) {
-      elizaLogger.error('Failed to assign GitHub issue', { owner, repo, issueNumber, assignee, error });
+      elizaLogger.error('Failed to assign GitHub issue', {
+        owner,
+        repo,
+        issueNumber,
+        assignee,
+        error,
+      });
       throw error;
     }
   }
@@ -351,7 +375,12 @@ export class GitHubIntegrationService extends Service {
   /**
    * Close an issue
    */
-  async closeIssue(owner: string, repo: string, issueNumber: number, comment?: string): Promise<void> {
+  async closeIssue(
+    owner: string,
+    repo: string,
+    issueNumber: number,
+    comment?: string
+  ): Promise<void> {
     try {
       // Add closing comment if provided
       if (comment) {
@@ -362,7 +391,7 @@ export class GitHubIntegrationService extends Service {
         owner,
         repo,
         issue_number: issueNumber,
-        state: 'closed'
+        state: 'closed',
       });
 
       elizaLogger.info('Successfully closed issue', { owner, repo, issueNumber });
@@ -379,7 +408,7 @@ export class GitHubIntegrationService extends Service {
     try {
       const { data: repository } = await this.octokit.rest.repos.get({
         owner,
-        repo
+        repo,
       });
 
       return {
@@ -392,7 +421,7 @@ export class GitHubIntegrationService extends Service {
         ssh_url: repository.ssh_url,
         default_branch: repository.default_branch,
         language: repository.language,
-        topics: repository.topics || []
+        topics: repository.topics || [],
       };
     } catch (error) {
       elizaLogger.error('Failed to fetch GitHub repository', { owner, repo, error });
@@ -412,7 +441,10 @@ export class GitHubIntegrationService extends Service {
    * Process incoming webhook events
    */
   async processWebhookEvent(eventType: string, payload: any): Promise<void> {
-    elizaLogger.debug('Processing GitHub webhook event', { eventType, payload: { action: payload.action } });
+    elizaLogger.debug('Processing GitHub webhook event', {
+      eventType,
+      payload: { action: payload.action },
+    });
 
     const listener = this.webhookListeners.get(eventType);
     if (listener) {
@@ -424,4 +456,3 @@ export class GitHubIntegrationService extends Service {
     }
   }
 }
-

@@ -1,16 +1,16 @@
-import 'dotenv-flow/config';
-import fs from 'fs-extra';
-import path from 'path';
-import { fork, execSync } from 'child_process';
-import * as esbuild from 'esbuild';
-import { fileURLToPath } from 'url';
-import { polyfillNode } from 'esbuild-plugin-polyfill-node';
+import 'dotenv-flow/config'
+import fs from 'fs-extra'
+import path from 'path'
+import { fork, execSync } from 'child_process'
+import * as esbuild from 'esbuild'
+import { fileURLToPath } from 'url'
+import { polyfillNode } from 'esbuild-plugin-polyfill-node'
 
-const dev = process.argv.includes('--dev');
-const dirname = path.dirname(fileURLToPath(import.meta.url));
-const rootDir = path.join(dirname, '../');
-const buildDir = path.join(rootDir, 'build'); // This can remain for other potential build outputs or be removed if not used elsewhere
-const npmPackageDir = buildDir;
+const dev = process.argv.includes('--dev')
+const dirname = path.dirname(fileURLToPath(import.meta.url))
+const rootDir = path.join(dirname, '../')
+const buildDir = path.join(rootDir, 'build') // This can remain for other potential build outputs or be removed if not used elsewhere
+const npmPackageDir = buildDir
 
 // await fs.emptyDir(buildDir) // Keep if buildDir is still used for other things
 // await fs.emptyDir(npmPackageDir) // Ensure the new package directory is clean
@@ -23,18 +23,18 @@ const npmPackageDir = buildDir;
  *
  */
 
-let spawn;
+let spawn
 
 async function buildNodeClient() {
   try {
     // Ensure the NPM package directory is clean and exists
-    await fs.emptyDir(npmPackageDir);
-    await fs.ensureDir(npmPackageDir);
+    await fs.emptyDir(npmPackageDir)
+    await fs.ensureDir(npmPackageDir)
 
-    console.log(`Building Node.js client for ${dev ? 'development' : 'production'}...`);
+    console.log(`Building Node.js client for ${dev ? 'development' : 'production'}...`)
 
     // Read root package.json for details like version, license, dependencies
-    const rootPackageJson = await fs.readJson(path.join(rootDir, 'package.json'));
+    const rootPackageJson = await fs.readJson(path.join(rootDir, 'package.json'))
 
     const nodeClientCtx = await esbuild.context({
       entryPoints: [path.join(rootDir, 'src/node-client/index.js')],
@@ -55,22 +55,24 @@ async function buildNodeClient() {
           setup(build) {
             build.onEnd(async result => {
               if (result.errors.length > 0) {
-                console.error('Build failed with errors:', result.errors);
-                if (!dev) {process.exit(1);}
-                return;
+                console.error('Build failed with errors:', result.errors)
+                if (!dev) {
+                  process.exit(1)
+                }
+                return
               }
 
-              console.log('Build successful. Finalizing package...');
+              console.log('Build successful. Finalizing package...')
 
-              const physxFiles = ['physx-js-webidl.js', 'physx-js-webidl.wasm'];
+              const physxFiles = ['physx-js-webidl.js', 'physx-js-webidl.wasm']
               for (const file of physxFiles) {
-                const src = path.join(rootDir, 'src/core', file);
-                const dest = path.join(npmPackageDir, file);
+                const src = path.join(rootDir, 'src/core', file)
+                const dest = path.join(npmPackageDir, file)
                 if (await fs.pathExists(src)) {
-                  await fs.copy(src, dest);
-                  console.log(`Copied ${file} to ${dest}`);
+                  await fs.copy(src, dest)
+                  console.log(`Copied ${file} to ${dest}`)
                 } else {
-                  console.warn(`PhysX asset ${src} not found. Skipping.`);
+                  console.warn(`PhysX asset ${src} not found. Skipping.`)
                 }
               }
 
@@ -82,26 +84,20 @@ async function buildNodeClient() {
                 main: 'index.js',
                 types: 'index.d.ts',
                 type: 'module',
-                files: [
-                  'index.js',
-                  'index.d.ts',
-                  'vendor/',
-                  'README.md',
-                  'LICENSE',
-                ],
+                files: ['index.js', 'index.d.ts', 'vendor/', 'README.md', 'LICENSE'],
                 // Dependencies that are truly bundled or very core could be here
                 // For 'three' and 'eventemitter3', peerDependencies are better.
                 dependencies: {
                   // 'ses': rootPackageJson.dependencies?.ses, // If needed and not externalized correctly
                 },
                 peerDependencies: {
-                  'three': rootPackageJson.dependencies?.three || '>=0.173.0 <0.174.0',
-                  'eventemitter3': rootPackageJson.dependencies?.eventemitter3 || '^5.0.0',
+                  three: rootPackageJson.dependencies?.three || '>=0.173.0 <0.174.0',
+                  eventemitter3: rootPackageJson.dependencies?.eventemitter3 || '^5.0.0',
                   'lodash-es': rootPackageJson.dependencies?.['lodash-es'] || '^4.17.0', // if used by the client bundle directly
                 },
                 peerDependenciesMeta: {
-                  'three': { optional: false },
-                  'eventemitter3': { optional: false },
+                  three: { optional: false },
+                  eventemitter3: { optional: false },
                   'lodash-es': { optional: true }, // Make optional if not strictly required
                 },
                 engines: {
@@ -115,43 +111,50 @@ async function buildNodeClient() {
                 bugs: rootPackageJson.bugs,
                 keywords: rootPackageJson.keywords,
                 license: rootPackageJson.license,
-              };
-              await fs.writeJson(path.join(npmPackageDir, 'package.json'), packageJson, { spaces: 2 });
-              console.log('Generated package.json in', npmPackageDir);
+              }
+              await fs.writeJson(path.join(npmPackageDir, 'package.json'), packageJson, { spaces: 2 })
+              console.log('Generated package.json in', npmPackageDir)
 
               // 3. Copy README.md and LICENSE
-              const rootFilesToCopy = ['README.md', 'LICENSE'];
+              const rootFilesToCopy = ['README.md', 'LICENSE']
               for (const file of rootFilesToCopy) {
-                const src = path.join(rootDir, file);
-                const dest = path.join(npmPackageDir, file);
+                const src = path.join(rootDir, file)
+                const dest = path.join(npmPackageDir, file)
                 if (await fs.pathExists(src)) {
-                  await fs.copy(src, dest);
-                  console.log(`Copied ${file} to ${npmPackageDir}`);
+                  await fs.copy(src, dest)
+                  console.log(`Copied ${file} to ${npmPackageDir}`)
                 } else {
-                  console.warn(`Root file ${src} not found. Skipping.`);
+                  console.warn(`Root file ${src} not found. Skipping.`)
                 }
               }
 
               // 4. Generate index.d.ts
-              const tsconfigPath = path.join(rootDir, 'tsconfig.dts.json');
-              const inputFileForDts = path.join(rootDir, 'src/node-client/index.js'); // Relative to CWD for the command
-              const outputFileDts = path.join(npmPackageDir, 'index.d.ts');
+              const tsconfigPath = path.join(rootDir, 'tsconfig.dts.json')
+              const inputFileForDts = path.join(rootDir, 'src/node-client/index.js') // Relative to CWD for the command
+              const outputFileDts = path.join(npmPackageDir, 'index.d.ts')
 
               try {
                 if (!fs.existsSync(tsconfigPath)) {
-                  throw new Error(`tsconfig.dts.json not found at ${tsconfigPath}. Please create it or ensure it's correctly named.`);
+                  throw new Error(
+                    `tsconfig.dts.json not found at ${tsconfigPath}. Please create it or ensure it's correctly named.`
+                  )
                 }
-                console.log(`Attempting to generate index.d.ts using dts-bundle-generator with tsconfig: ${tsconfigPath}`);
-                execSync(`npx dts-bundle-generator --project "${tsconfigPath}" -o "${outputFileDts}" "${inputFileForDts}"`, {
-                  stdio: 'inherit',
-                  cwd: rootDir, // Important: run from project root
-                });
-                console.log('index.d.ts generated successfully using dts-bundle-generator.');
+                console.log(
+                  `Attempting to generate index.d.ts using dts-bundle-generator with tsconfig: ${tsconfigPath}`
+                )
+                execSync(
+                  `npx dts-bundle-generator --project "${tsconfigPath}" -o "${outputFileDts}" "${inputFileForDts}"`,
+                  {
+                    stdio: 'inherit',
+                    cwd: rootDir, // Important: run from project root
+                  }
+                )
+                console.log('index.d.ts generated successfully using dts-bundle-generator.')
               } catch (error) {
-                console.error('Error generating index.d.ts with dts-bundle-generator:', error.message);
+                console.error('Error generating index.d.ts with dts-bundle-generator:', error.message)
                 // console.error('stdout:', error.stdout?.toString()) // dts-bundle-generator might not populate these well on error
                 // console.error('stderr:', error.stderr?.toString())
-                console.warn('Falling back to manually specified index.d.ts content.');
+                console.warn('Falling back to manually specified index.d.ts content.')
 
                 // --- Start of comprehensive fallback index.d.ts ---
                 const fallbackDtsContent = `
@@ -322,42 +325,46 @@ export declare class NodeEnvironment extends System { /* Actual API for NodeEnvi
 export declare function createNodeClientWorld(): World
 export declare const storage: IStorage
 export declare function getPhysXAssetPath(assetName: string): string
-`;
+`
                 // --- End of comprehensive fallback index.d.ts ---
-                await fs.writeFile(outputFileDts, fallbackDtsContent.trim());
-                console.log('Written fallback index.d.ts to', outputFileDts);
+                await fs.writeFile(outputFileDts, fallbackDtsContent.trim())
+                console.log('Written fallback index.d.ts to', outputFileDts)
               }
 
               if (dev) {
-                spawn?.kill('SIGTERM');
-                spawn = fork(path.join(npmPackageDir, 'index.js')); // Runs the newly built package entry point
-                console.log('Development server (re)started with new build.');
+                spawn?.kill('SIGTERM')
+                spawn = fork(path.join(npmPackageDir, 'index.js')) // Runs the newly built package entry point
+                console.log('Development server (re)started with new build.')
               } else {
-                console.log('NPM package built successfully to:', npmPackageDir);
+                console.log('NPM package built successfully to:', npmPackageDir)
                 // For non-dev builds, we let the calling script (e.g., publish:node) handle process exit or next steps.
               }
-            });
+            })
           },
         },
       ],
-    });
+    })
 
     if (dev) {
-      await nodeClientCtx.watch();
-      console.log('Watching for changes...');
+      await nodeClientCtx.watch()
+      console.log('Watching for changes...')
     } else {
-      await nodeClientCtx.rebuild();
-      await nodeClientCtx.dispose(); // Dispose context after build for non-watch mode
-      console.log('Build complete.');
+      await nodeClientCtx.rebuild()
+      await nodeClientCtx.dispose() // Dispose context after build for non-watch mode
+      console.log('Build complete.')
     }
   } catch (error) {
-    console.error('Unhandled error during build process:', error);
-    if (!dev) {process.exit(1);}
+    console.error('Unhandled error during build process:', error)
+    if (!dev) {
+      process.exit(1)
+    }
   }
 }
 
 // Execute the build
 buildNodeClient().catch(err => {
-  console.error('Failed to execute buildNodeClient:', err);
-  if (!dev) {process.exit(1);}
-});
+  console.error('Failed to execute buildNodeClient:', err)
+  if (!dev) {
+    process.exit(1)
+  }
+})

@@ -17,7 +17,7 @@ const requiredFiles = [
   'tsconfig.json',
   'src/index.ts',
   'scripts/test-autocoder.ts',
-  'scripts/test-github-todo.ts'
+  'scripts/test-github-todo.ts',
 ];
 
 const disallowedFiles = [
@@ -35,7 +35,7 @@ const disallowedFiles = [
   'test-github-todo-workflow.ts',
   'test-enhanced-scenarios.cjs',
   'test-github-simple.ts',
-  'test-github-workflow.cjs'
+  'test-github-workflow.cjs',
 ];
 
 const disallowedDirectories = [
@@ -43,7 +43,7 @@ const disallowedDirectories = [
   'test-data',
   'existing-app',
   'my-test-app',
-  'plugin-my-create'
+  'plugin-my-create',
 ];
 
 async function verifyProject() {
@@ -83,13 +83,15 @@ async function verifyProject() {
   const scriptsDir = join(projectRoot, 'scripts');
   if (existsSync(scriptsDir)) {
     const entries = await readdir(scriptsDir, { withFileTypes: true });
-    
-    const hasTestScripts = entries.some(e => e.name === 'test-autocoder.ts' || e.name === 'test-github-todo.ts');
-    const hasTestsSubdir = entries.some(e => e.isDirectory() && e.name === 'tests');
-    
+
+    const hasTestScripts = entries.some(
+      (e) => e.name === 'test-autocoder.ts' || e.name === 'test-github-todo.ts'
+    );
+    const hasTestsSubdir = entries.some((e) => e.isDirectory() && e.name === 'tests');
+
     console.log(`  ${hasTestScripts ? '✅' : '❌'} Test scripts present`);
     console.log(`  ${hasTestsSubdir ? '✅' : '❌'} Tests subdirectory organized`);
-    
+
     if (!hasTestScripts || !hasTestsSubdir) allPassed = false;
   } else {
     console.log('  ❌ Scripts directory missing');
@@ -99,9 +101,11 @@ async function verifyProject() {
   // Check package.json scripts
   console.log('\n📦 Checking npm scripts:');
   try {
-    const packageJson = JSON.parse(await import('fs').then(fs => fs.readFileSync(join(projectRoot, 'package.json'), 'utf8')));
+    const packageJson = JSON.parse(
+      await import('fs').then((fs) => fs.readFileSync(join(projectRoot, 'package.json'), 'utf8'))
+    );
     const scripts = packageJson.scripts || {};
-    
+
     const requiredScripts = ['test:scenarios', 'build', 'lint', 'test', 'test:unit'];
     for (const script of requiredScripts) {
       const exists = script in scripts;
@@ -126,7 +130,7 @@ async function verifyProject() {
   }
 }
 
-verifyProject().catch(error => {
+verifyProject().catch((error) => {
   console.error('💥 Verification script failed:', error);
   process.exit(1);
 });

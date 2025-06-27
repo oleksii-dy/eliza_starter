@@ -4,7 +4,7 @@ import type { IAgentRuntime, Plugin, ProjectAgent, Character } from '@elizaos/co
 
 // Mock the logger
 mock.module('@elizaos/core', async () => {
-  const actual = ({}) as any;
+  const actual = {} as any;
   return {
     ...actual,
     logger: {

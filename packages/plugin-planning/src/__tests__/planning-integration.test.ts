@@ -12,7 +12,12 @@ import {
   AgentRuntime,
 } from '@elizaos/core';
 import { PlanningService } from '../services/planning-service';
-import { createMockRuntime, createMockMemory, createMockState, createMockPlanningContext } from './test-utils';
+import {
+  createMockRuntime,
+  createMockMemory,
+  createMockState,
+  createMockPlanningContext,
+} from './test-utils';
 
 /**
  * Integration tests for the unified planning system
@@ -81,8 +86,8 @@ describe('Planning Integration Tests', () => {
 
       expect(plan).toBeDefined();
       expect(plan.steps.length).toBe(2); // SEARCH and REPLY actions
-      expect(plan.steps.some(step => step.actionName === 'SEARCH')).toBe(true);
-      expect(plan.steps.some(step => step.actionName === 'REPLY')).toBe(true);
+      expect(plan.steps.some((step) => step.actionName === 'SEARCH')).toBe(true);
+      expect(plan.steps.some((step) => step.actionName === 'REPLY')).toBe(true);
     });
 
     it('should create conservative plans when uncertain', async () => {
@@ -197,7 +202,9 @@ describe('Planning Integration Tests', () => {
       );
 
       expect(plan.executionModel).toBe('dag');
-      expect(plan.steps.some(step => step.dependencies && step.dependencies.length > 0)).toBe(true);
+      expect(plan.steps.some((step) => step.dependencies && step.dependencies.length > 0)).toBe(
+        true
+      );
     });
   });
 
@@ -305,14 +312,16 @@ describe('Planning Integration Tests', () => {
       };
 
       // Mock a failing action
-      mockRuntime.actions = [{
-        name: 'FAILING_ACTION',
-        similes: [],
-        description: 'An action that fails',
-        handler: mock().mockRejectedValue(new Error('Action failed')),
-        validate: mock().mockResolvedValue(true),
-        examples: [],
-      }];
+      mockRuntime.actions = [
+        {
+          name: 'FAILING_ACTION',
+          similes: [],
+          description: 'An action that fails',
+          handler: mock().mockRejectedValue(new Error('Action failed')),
+          validate: mock().mockResolvedValue(true),
+          examples: [],
+        },
+      ];
 
       const mockCallback = mock();
 
@@ -497,7 +506,7 @@ describe('Planning Integration Tests', () => {
 
       expect(validation.valid).toBe(false);
       expect(validation.issues).toBeDefined();
-      expect(validation.issues!.some(issue => issue.includes('circular'))).toBe(true);
+      expect(validation.issues!.some((issue) => issue.includes('circular'))).toBe(true);
     });
   });
 
@@ -585,8 +594,8 @@ describe('Planning Integration Tests', () => {
           {
             values: { setupComplete: true },
             data: { stepId: originalPlan.steps[0].id },
-            text: 'Setup completed'
-          }
+            text: 'Setup completed',
+          },
         ], // results
         new Error(failureContext.error) // error
       );
@@ -612,7 +621,12 @@ describe('Planning Integration Tests', () => {
       const message = createMockMemory();
       const mockCallback = mock();
 
-      const result = await planningService.executePlan(mockRuntime, emptyPlan, message, mockCallback);
+      const result = await planningService.executePlan(
+        mockRuntime,
+        emptyPlan,
+        message,
+        mockCallback
+      );
 
       expect(result.success).toBe(true);
       expect(result.results).toHaveLength(0);
@@ -647,14 +661,23 @@ describe('Planning Integration Tests', () => {
       const state = createMockState();
 
       // Simple plan should still work even with broken useModel since it uses heuristics
-      const simplePlan = await planningServiceWithBrokenRuntime.createSimplePlan(brokenRuntime, message, state);
+      const simplePlan = await planningServiceWithBrokenRuntime.createSimplePlan(
+        brokenRuntime,
+        message,
+        state
+      );
       expect(simplePlan).toBeDefined();
       expect(simplePlan!.steps.length).toBeGreaterThan(0);
 
       // Comprehensive plan should fail with broken useModel
       const context = createMockPlanningContext();
       await expect(
-        planningServiceWithBrokenRuntime.createComprehensivePlan(brokenRuntime, context, message, state)
+        planningServiceWithBrokenRuntime.createComprehensivePlan(
+          brokenRuntime,
+          context,
+          message,
+          state
+        )
       ).rejects.toThrow('Model service unavailable');
     });
   });
@@ -680,7 +703,12 @@ describe('Planning Integration Tests', () => {
       const mockCallback = mock().mockResolvedValue([]);
 
       const startTime = Date.now();
-      const result = await planningService.executePlan(mockRuntime, largePlan, message, mockCallback);
+      const result = await planningService.executePlan(
+        mockRuntime,
+        largePlan,
+        message,
+        mockCallback
+      );
       const executionTime = Date.now() - startTime;
 
       expect(result.success).toBe(true);
@@ -713,22 +741,29 @@ describe('Planning Integration Tests', () => {
       };
 
       // Mock a slow action
-      mockRuntime.actions = [{
-        name: 'SLOW_ACTION',
-        similes: [],
-        description: 'A slow action',
-        handler: mock().mockImplementation(async () => {
-          await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
-          return { text: 'Slow result' };
-        }),
-        validate: mock().mockResolvedValue(true),
-        examples: [],
-      }];
+      mockRuntime.actions = [
+        {
+          name: 'SLOW_ACTION',
+          similes: [],
+          description: 'A slow action',
+          handler: mock().mockImplementation(async () => {
+            await new Promise((resolve) => setTimeout(resolve, 2000)); // 2 second delay
+            return { text: 'Slow result' };
+          }),
+          validate: mock().mockResolvedValue(true),
+          examples: [],
+        },
+      ];
 
       const message = createMockMemory();
       const mockCallback = mock();
 
-      const result = await planningService.executePlan(mockRuntime, timeoutPlan, message, mockCallback);
+      const result = await planningService.executePlan(
+        mockRuntime,
+        timeoutPlan,
+        message,
+        mockCallback
+      );
 
       // Since the action completes successfully after 2 seconds, and there's no actual timeout logic
       // in the plan execution, we should expect success

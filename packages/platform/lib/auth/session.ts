@@ -12,9 +12,13 @@ import {
   setDatabaseContext,
   clearDatabaseContext,
   type User,
-  type Organization
+  type Organization,
 } from '../database';
-import { workosAuth, mapWorkOSRoleToAppRole, getDomainFromEmail } from './workos';
+import {
+  workosAuth,
+  mapWorkOSRoleToAppRole,
+  getDomainFromEmail,
+} from './workos';
 import { env } from '../config/env-validation';
 import { logger, authLogger } from '../logger';
 import { AuthenticationError, DatabaseError, handleApiError } from '../errors';
@@ -78,7 +82,9 @@ export class SessionService {
     // Use Web Crypto API for Edge Runtime compatibility
     const array = new Uint8Array(32);
     crypto.getRandomValues(array);
-    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+    return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join(
+      '',
+    );
   }
 
   /**
@@ -100,13 +106,20 @@ export class SessionService {
 
       // Validate payload structure
       const sessionData = payload as unknown as SessionData;
-      
-      if (!sessionData.userId || !sessionData.organizationId || !sessionData.email) {
-        authLogger.warn('Token verification failed: invalid payload structure', {
-          hasUserId: !!sessionData.userId,
-          hasOrgId: !!sessionData.organizationId,
-          hasEmail: !!sessionData.email,
-        });
+
+      if (
+        !sessionData.userId ||
+        !sessionData.organizationId ||
+        !sessionData.email
+      ) {
+        authLogger.warn(
+          'Token verification failed: invalid payload structure',
+          {
+            hasUserId: !!sessionData.userId,
+            hasOrgId: !!sessionData.organizationId,
+            hasEmail: !!sessionData.email,
+          },
+        );
         return null;
       }
 
@@ -124,16 +137,19 @@ export class SessionService {
           authLogger.debug('Token verification failed: token expired');
           return null;
         }
-        
+
         if (error.name === 'JWSInvalid') {
           authLogger.debug('Token verification failed: invalid signature');
           return null;
         }
-        
+
         if (error.name === 'JWTClaimValidationFailed') {
-          authLogger.debug('Token verification failed: claim validation failed', {
-            message: error.message,
-          });
+          authLogger.debug(
+            'Token verification failed: claim validation failed',
+            {
+              message: error.message,
+            },
+          );
           return null;
         }
       }
@@ -145,7 +161,9 @@ export class SessionService {
           name: error instanceof Error ? error.name : 'Unknown',
         });
         authLogger.info('💡 Troubleshooting tips:');
-        authLogger.info('  - Try the dev login: POST http://localhost:3333/api/auth/dev-login');
+        authLogger.info(
+          '  - Try the dev login: POST http://localhost:3333/api/auth/dev-login',
+        );
         authLogger.info('  - Clear browser cookies for localhost:3333');
         authLogger.info('  - Check if JWT_SECRET is properly set');
       } else {
@@ -153,7 +171,7 @@ export class SessionService {
           tokenLength: token?.length || 0,
         });
       }
-      
+
       return null;
     }
   }
@@ -170,7 +188,7 @@ export class SessionService {
     },
     options: {
       clearExistingSessions?: boolean;
-    } = {}
+    } = {},
   ): Promise<AuthTokens> {
     try {
       // Validate inputs
@@ -179,7 +197,9 @@ export class SessionService {
       }
 
       if (!organization || !organization.id) {
-        throw new AuthenticationError('Invalid organization data for session creation');
+        throw new AuthenticationError(
+          'Invalid organization data for session creation',
+        );
       }
 
       const sessionData: SessionData = {
@@ -203,7 +223,9 @@ export class SessionService {
       // Clear existing sessions if requested (useful for dev login)
       if (options.clearExistingSessions) {
         await this.sessionRepo.deleteAllForUser(user.id);
-        authLogger.debug('Cleared existing sessions for user', { userId: user.id });
+        authLogger.debug('Cleared existing sessions for user', {
+          userId: user.id,
+        });
       }
 
       // Create tokens
@@ -320,11 +342,17 @@ export class SessionService {
    */
   async getSession(accessToken: string): Promise<SessionData | null> {
     const sessionData = await this.verifyAccessToken(accessToken);
-    if (!sessionData) {return null;}
+    if (!sessionData) {
+      return null;
+    }
 
     // Check if this is a dev token (by checking if it has all required fields for standalone operation)
-    const isDevToken = sessionData.userId && sessionData.organizationId && sessionData.email && sessionData.role;
-    
+    const isDevToken =
+      sessionData.userId &&
+      sessionData.organizationId &&
+      sessionData.email &&
+      sessionData.role;
+
     if (isDevToken && process.env.NODE_ENV === 'development') {
       // For dev tokens, skip database session lookup and return the JWT data directly
       authLogger.debug('Using dev token without database session lookup', {
@@ -417,7 +445,9 @@ export class SessionService {
     const cookieStore = await cookies();
     const authToken = cookieStore.get('auth-token')?.value;
 
-    if (!authToken) { return null; }
+    if (!authToken) {
+      return null;
+    }
 
     return this.getSession(authToken);
   }
@@ -439,10 +469,11 @@ export class AuthService {
     request: {
       ipAddress?: string;
       userAgent?: string;
-    }
+    },
   ): Promise<AuthTokens> {
     // Get user data from WorkOS
-    const { user: workosUser, organizationId: workosOrgId } = await workosAuth.authenticateWithCode(code);
+    const { user: workosUser, organizationId: workosOrgId } =
+      await workosAuth.authenticateWithCode(code);
 
     // Find or create organization
     let organization = workosOrgId
@@ -452,7 +483,9 @@ export class AuthService {
     if (!organization) {
       // Try to find organization by domain
       const domain = getDomainFromEmail(workosUser.email);
-      const existingOrg = await this.orgRepo.getBySlug(domain.replace('.', '-'));
+      const existingOrg = await this.orgRepo.getBySlug(
+        domain.replace('.', '-'),
+      );
 
       if (existingOrg) {
         organization = existingOrg;
@@ -497,9 +530,12 @@ export class AuthService {
         workosUserId: workosUser.id,
         firstName: workosUser.firstName || user.firstName,
         lastName: workosUser.lastName || user.lastName,
-        profilePictureUrl: workosUser.profilePictureUrl || user.profilePictureUrl,
+        profilePictureUrl:
+          workosUser.profilePictureUrl || user.profilePictureUrl,
         emailVerified: workosUser.emailVerified || user.emailVerified,
-        emailVerifiedAt: workosUser.emailVerified ? new Date() : user.emailVerifiedAt,
+        emailVerifiedAt: workosUser.emailVerified
+          ? new Date()
+          : user.emailVerifiedAt,
       });
     }
 
@@ -510,20 +546,28 @@ export class AuthService {
     // Create session - convert user object to match expected format
     const userForSession = {
       ...user,
-      metadata: {},  // Add missing metadata field
-      lastLoginAt: null,  // Add missing lastLoginAt field  
+      metadata: {}, // Add missing metadata field
+      lastLoginAt: null, // Add missing lastLoginAt field
       createdAt: user.createdAt.getTime(),
       updatedAt: user.updatedAt.getTime(),
     };
     // Convert organization dates to timestamps too
     const orgForSession = {
       ...organization,
-      currentPeriodStart: organization.currentPeriodStart ? organization.currentPeriodStart.getTime() : null,
-      currentPeriodEnd: organization.currentPeriodEnd ? organization.currentPeriodEnd.getTime() : null,
+      currentPeriodStart: organization.currentPeriodStart
+        ? organization.currentPeriodStart.getTime()
+        : null,
+      currentPeriodEnd: organization.currentPeriodEnd
+        ? organization.currentPeriodEnd.getTime()
+        : null,
       createdAt: organization.createdAt.getTime(),
       updatedAt: organization.updatedAt.getTime(),
     };
-    const tokens = await this.sessionService.createSession(userForSession as any, orgForSession as any, request);
+    const tokens = await this.sessionService.createSession(
+      userForSession as any,
+      orgForSession as any,
+      request,
+    );
 
     await clearDatabaseContext();
 
@@ -539,7 +583,7 @@ export class AuthService {
     request: {
       ipAddress?: string;
       userAgent?: string;
-    }
+    },
   ): Promise<AuthTokens | null> {
     // For development purposes - in production, use WorkOS
     if (process.env.NODE_ENV !== 'development') {
@@ -574,12 +618,20 @@ export class AuthService {
     };
     const orgForSession = {
       ...organization,
-      currentPeriodStart: organization.currentPeriodStart ? organization.currentPeriodStart.getTime() : null,
-      currentPeriodEnd: organization.currentPeriodEnd ? organization.currentPeriodEnd.getTime() : null,
+      currentPeriodStart: organization.currentPeriodStart
+        ? organization.currentPeriodStart.getTime()
+        : null,
+      currentPeriodEnd: organization.currentPeriodEnd
+        ? organization.currentPeriodEnd.getTime()
+        : null,
       createdAt: organization.createdAt.getTime(),
       updatedAt: organization.updatedAt.getTime(),
     };
-    const tokens = await this.sessionService.createSession(userForSession as any, orgForSession as any, request);
+    const tokens = await this.sessionService.createSession(
+      userForSession as any,
+      orgForSession as any,
+      request,
+    );
     await clearDatabaseContext();
 
     return tokens;
@@ -597,18 +649,24 @@ export class AuthService {
    */
   async getCurrentUser(): Promise<User | null> {
     const sessionData = await this.sessionService.getSessionFromCookies();
-    if (!sessionData) {return null;}
+    if (!sessionData) {
+      return null;
+    }
 
     // Check if this is a dev token with all required user data
-    const isDevToken = sessionData.userId && sessionData.organizationId && sessionData.email && sessionData.role;
-    
+    const isDevToken =
+      sessionData.userId &&
+      sessionData.organizationId &&
+      sessionData.email &&
+      sessionData.role;
+
     if (isDevToken && process.env.NODE_ENV === 'development') {
       // For dev tokens, return user data directly from JWT without database lookup
       authLogger.debug('Returning dev user data from JWT token', {
         userId: sessionData.userId,
         organizationId: sessionData.organizationId,
       });
-      
+
       return {
         id: sessionData.userId,
         organizationId: sessionData.organizationId,
@@ -638,11 +696,11 @@ export class AuthService {
     await clearDatabaseContext();
 
     if (!user) return null;
-    
+
     // Transform user to match expected type
     return {
       ...user,
-      metadata: user.metadata || {}
+      metadata: user.metadata || {},
     } as any;
   }
 
@@ -651,17 +709,23 @@ export class AuthService {
    */
   async getCurrentOrganization(): Promise<Organization | null> {
     const sessionData = await this.sessionService.getSessionFromCookies();
-    if (!sessionData) {return null;}
+    if (!sessionData) {
+      return null;
+    }
 
     // Check if this is a dev token with all required organization data
-    const isDevToken = sessionData.userId && sessionData.organizationId && sessionData.email && sessionData.role;
-    
+    const isDevToken =
+      sessionData.userId &&
+      sessionData.organizationId &&
+      sessionData.email &&
+      sessionData.role;
+
     if (isDevToken && process.env.NODE_ENV === 'development') {
       // For dev tokens, return organization data directly without database lookup
       authLogger.debug('Returning dev organization data from JWT token', {
         organizationId: sessionData.organizationId,
       });
-      
+
       return {
         id: sessionData.organizationId,
         name: 'ElizaOS Development',

@@ -58,3 +58,7 @@ cache/
 
 
 :memory:
+AGENTS.md
+.cursor/rules/elizaos
+CLAUDE.md
+.cursorignore

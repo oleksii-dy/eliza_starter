@@ -25,7 +25,8 @@ export const githubTodoWorkflowScenario: Scenario = {
         steps: [
           {
             type: 'message',
-            content: 'Can you check our GitHub issues and create some todo tasks for the high priority ones?',
+            content:
+              'Can you check our GitHub issues and create some todo tasks for the high priority ones?',
           },
           {
             type: 'wait',
@@ -53,7 +54,8 @@ export const githubTodoWorkflowScenario: Scenario = {
   setup: {
     roomType: 'dm',
     roomName: 'Project Management Session',
-    context: 'You are helping manage a software project by integrating GitHub issues with todo task management.',
+    context:
+      'You are helping manage a software project by integrating GitHub issues with todo task management.',
     environment: {
       githubRepo: 'test-repo',
       projectType: 'software',
@@ -79,7 +81,8 @@ export const githubTodoWorkflowScenario: Scenario = {
         type: 'llm',
         description: 'Agent successfully used GitHub integration',
         config: {
-          criteria: 'The agent demonstrated ability to interact with GitHub (listing issues, creating PRs, etc.)',
+          criteria:
+            'The agent demonstrated ability to interact with GitHub (listing issues, creating PRs, etc.)',
         },
         weight: 3,
       },

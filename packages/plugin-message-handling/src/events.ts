@@ -546,6 +546,15 @@ const messageReceivedHandler = async ({
 
             // without actions there can't be more than one message
             await callback(responseContent);
+            
+            // Emit MESSAGE_SENT event for simple responses
+            if (responseMessages.length > 0) {
+              await runtime.emitEvent(EventType.MESSAGE_SENT, {
+                runtime,
+                message: responseMessages[0],
+                source: 'agent_response',
+              });
+            }
           } else {
             // Check if planning service is available for enhanced planning
             const planningService = runtime.getService('planning') as unknown as IPlanningService;
@@ -584,6 +593,15 @@ const messageReceivedHandler = async ({
                     );
                     await runtime.processActions(message, responseMessages, state, callback);
                   }
+                  
+                  // Emit MESSAGE_SENT event for planned responses
+                  if (responseMessages.length > 0) {
+                    await runtime.emitEvent(EventType.MESSAGE_SENT, {
+                      runtime,
+                      message: responseMessages[0],
+                      source: 'agent_response',
+                    });
+                  }
                 } else {
                   // No plan created, use regular action processing
                   await runtime.processActions(message, responseMessages, state, callback);
@@ -598,6 +616,15 @@ const messageReceivedHandler = async ({
             } else {
               // No planning service available, use regular action processing
               await runtime.processActions(message, responseMessages, state, callback);
+            }
+            
+            // Emit MESSAGE_SENT event for complex responses
+            if (responseMessages.length > 0) {
+              await runtime.emitEvent(EventType.MESSAGE_SENT, {
+                runtime,
+                message: responseMessages[0],
+                source: 'agent_response',
+              });
             }
           }
           await runtime.evaluate(message, state, shouldRespond, callback, responseMessages);

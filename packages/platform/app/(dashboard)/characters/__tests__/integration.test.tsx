@@ -6,7 +6,11 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { clearTestDatabase, createTestOrganization, createTestUser } from '@/lib/test-utils';
+import {
+  clearTestDatabase,
+  createTestOrganization,
+  createTestUser,
+} from '@/lib/test-utils';
 
 // Mock Next.js router
 vi.mock('next/navigation', () => ({
@@ -27,10 +31,10 @@ describe('Character System Integration', () => {
 
   beforeEach(async () => {
     await clearTestDatabase();
-    
+
     const org = await createTestOrganization();
     organizationId = org.id;
-    
+
     const user = await createTestUser(organizationId);
     userId = user.id;
 
@@ -67,32 +71,53 @@ describe('Character System Integration', () => {
       render(<CreateCharacterPage />);
 
       // Fill out the form
-      await user.type(screen.getByLabelText(/character name/i), 'Test Character');
-      await user.type(screen.getByLabelText(/description/i), 'A helpful test character');
-      await user.type(screen.getByLabelText(/bio/i), 'I am a helpful AI assistant');
-      await user.type(screen.getByLabelText(/personality/i), 'Friendly and helpful');
+      await user.type(
+        screen.getByLabelText(/character name/i),
+        'Test Character',
+      );
+      await user.type(
+        screen.getByLabelText(/description/i),
+        'A helpful test character',
+      );
+      await user.type(
+        screen.getByLabelText(/bio/i),
+        'I am a helpful AI assistant',
+      );
+      await user.type(
+        screen.getByLabelText(/personality/i),
+        'Friendly and helpful',
+      );
 
       // Add knowledge item
-      const knowledgeInput = screen.getByPlaceholderText(/add knowledge topic/i);
+      const knowledgeInput =
+        screen.getByPlaceholderText(/add knowledge topic/i);
       await user.type(knowledgeInput, 'Testing');
       await user.click(screen.getByRole('button', { name: /add/i }));
 
       // Add message example
       await user.type(screen.getByLabelText(/user message/i), 'Hello');
-      await user.type(screen.getByLabelText(/character response/i), 'Hi there! How can I help?');
+      await user.type(
+        screen.getByLabelText(/character response/i),
+        'Hi there! How can I help?',
+      );
       await user.click(screen.getByRole('button', { name: /add example/i }));
 
       // Submit form
-      await user.click(screen.getByRole('button', { name: /create character/i }));
+      await user.click(
+        screen.getByRole('button', { name: /create character/i }),
+      );
 
       await waitFor(() => {
-        expect(fetch).toHaveBeenCalledWith('/api/characters', expect.objectContaining({
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: expect.stringContaining('Test Character'),
-        }));
+        expect(fetch).toHaveBeenCalledWith(
+          '/api/characters',
+          expect.objectContaining({
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: expect.stringContaining('Test Character'),
+          }),
+        );
       });
     });
 
@@ -103,7 +128,9 @@ describe('Character System Integration', () => {
       render(<CreateCharacterPage />);
 
       // Try to submit without required fields
-      await user.click(screen.getByRole('button', { name: /create character/i }));
+      await user.click(
+        screen.getByRole('button', { name: /create character/i }),
+      );
 
       // Should show HTML5 validation (required attributes)
       const nameInput = screen.getByLabelText(/character name/i);
@@ -129,14 +156,21 @@ describe('Character System Integration', () => {
       render(<CreateCharacterPage />);
 
       // Fill required fields
-      await user.type(screen.getByLabelText(/character name/i), 'Test Character');
+      await user.type(
+        screen.getByLabelText(/character name/i),
+        'Test Character',
+      );
       await user.type(screen.getByLabelText(/bio/i), 'A test character');
 
       // Submit form
-      await user.click(screen.getByRole('button', { name: /create character/i }));
+      await user.click(
+        screen.getByRole('button', { name: /create character/i }),
+      );
 
       await waitFor(() => {
-        expect(global.alert).toHaveBeenCalledWith('Character with this slug already exists');
+        expect(global.alert).toHaveBeenCalledWith(
+          'Character with this slug already exists',
+        );
       });
     });
   });
@@ -214,17 +248,20 @@ describe('Character System Integration', () => {
           json: async () => ({
             success: true,
             data: {
-              characters: lastSearchQuery === 'assistant' ? [
-                {
-                  id: 'char-1',
-                  name: 'Assistant Bot',
-                  slug: 'assistant-bot',
-                  characterConfig: { bio: 'I help with tasks' },
-                  visibility: 'public',
-                  totalConversations: 5,
-                  isActive: true,
-                },
-              ] : [],
+              characters:
+                lastSearchQuery === 'assistant'
+                  ? [
+                      {
+                        id: 'char-1',
+                        name: 'Assistant Bot',
+                        slug: 'assistant-bot',
+                        characterConfig: { bio: 'I help with tasks' },
+                        visibility: 'public',
+                        totalConversations: 5,
+                        isActive: true,
+                      },
+                    ]
+                  : [],
               stats: {
                 totalCharacters: lastSearchQuery === 'assistant' ? 1 : 0,
                 activeCharacters: lastSearchQuery === 'assistant' ? 1 : 0,
@@ -309,13 +346,16 @@ describe('Character System Integration', () => {
       await user.click(chatButton);
 
       await waitFor(() => {
-        expect(fetch).toHaveBeenCalledWith('/api/characters/char-1/conversations', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
+        expect(fetch).toHaveBeenCalledWith(
+          '/api/characters/char-1/conversations',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({}),
           },
-          body: JSON.stringify({}),
-        });
+        );
       });
     });
   });
@@ -372,7 +412,9 @@ describe('Character System Integration', () => {
       await waitFor(() => {
         expect(screen.getByText('Assistant Bot')).toBeInTheDocument();
         expect(screen.getByText('Hello')).toBeInTheDocument();
-        expect(screen.getByText('Hi there! How can I help you today?')).toBeInTheDocument();
+        expect(
+          screen.getByText('Hi there! How can I help you today?'),
+        ).toBeInTheDocument();
       });
     });
 
@@ -449,7 +491,9 @@ describe('Character System Integration', () => {
       });
 
       // Type message
-      const messageInput = screen.getByPlaceholderText(/message assistant bot/i);
+      const messageInput = screen.getByPlaceholderText(
+        /message assistant bot/i,
+      );
       await user.type(messageInput, 'Hello');
 
       // Send message
@@ -462,13 +506,15 @@ describe('Character System Integration', () => {
           expect.objectContaining({
             method: 'POST',
             body: JSON.stringify({ content: 'Hello' }),
-          })
+          }),
         );
       });
 
       await waitFor(() => {
         expect(screen.getByText('Hello')).toBeInTheDocument();
-        expect(screen.getByText('Hi there! How can I help you?')).toBeInTheDocument();
+        expect(
+          screen.getByText('Hi there! How can I help you?'),
+        ).toBeInTheDocument();
       });
     });
 
@@ -526,9 +572,11 @@ describe('Character System Integration', () => {
       });
 
       // Send message
-      const messageInput = screen.getByPlaceholderText(/message assistant bot/i);
+      const messageInput = screen.getByPlaceholderText(
+        /message assistant bot/i,
+      );
       await user.type(messageInput, 'Hello');
-      
+
       const sendButton = screen.getByRole('button', { name: '' });
       await user.click(sendButton);
 

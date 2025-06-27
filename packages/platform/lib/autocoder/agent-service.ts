@@ -1,133 +1,133 @@
-import { IAgentRuntime, ModelType, Memory, State } from '@elizaos/core'
-import { createAgentRuntime } from '@/lib/agents/create-runtime'
+import { IAgentRuntime, ModelType, Memory, State } from '@elizaos/core';
+import { createAgentRuntime } from '@/lib/agents/create-runtime';
 
 interface ResearchRequest {
-  projectType: string
-  features: string[]
-  dependencies: string[]
+  projectType: string;
+  features: string[];
+  dependencies: string[];
 }
 
 interface ResearchResults {
   references: Array<{
-    title: string
-    description: string
-    url?: string
-    relevance: number
-    type: 'documentation' | 'example' | 'library' | 'pattern'
-  }>
-  bestPractices: string[]
-  recommendations: string[]
-  warnings: string[]
+    title: string;
+    description: string;
+    url?: string;
+    relevance: number;
+    type: 'documentation' | 'example' | 'library' | 'pattern';
+  }>;
+  bestPractices: string[];
+  recommendations: string[];
+  warnings: string[];
 }
 
 interface ImplementationPlanRequest {
-  specification: any
-  researchResults: ResearchResults
+  specification: any;
+  researchResults: ResearchResults;
 }
 
 interface ImplementationPlan {
   steps: Array<{
-    id: string
-    title: string
-    description: string
-    dependencies: string[]
-    estimatedTime: number
-    files: string[]
-    tasks: string[]
-  }>
+    id: string;
+    title: string;
+    description: string;
+    dependencies: string[];
+    estimatedTime: number;
+    files: string[];
+    tasks: string[];
+  }>;
   architecture: {
-    structure: string
-    patterns: string[]
-    technologies: string[]
-  }
+    structure: string;
+    patterns: string[];
+    technologies: string[];
+  };
   risksAndMitigations: Array<{
-    risk: string
-    likelihood: 'low' | 'medium' | 'high'
-    impact: 'low' | 'medium' | 'high'
-    mitigation: string
-  }>
+    risk: string;
+    likelihood: 'low' | 'medium' | 'high';
+    impact: 'low' | 'medium' | 'high';
+    mitigation: string;
+  }>;
 }
 
 interface CodeGenerationRequest {
-  specification: any
-  plan: ImplementationPlan
-  researchContext: ResearchResults
+  specification: any;
+  plan: ImplementationPlan;
+  researchContext: ResearchResults;
 }
 
 interface CodeGenerationResult {
-  files: Record<string, string>
-  packageJson: any
+  files: Record<string, string>;
+  packageJson: any;
   documentation: {
-    readme: string
-    api: string
-    examples: string[]
-  }
+    readme: string;
+    api: string;
+    examples: string[];
+  };
 }
 
 interface TestGenerationRequest {
-  specification: any
-  code: CodeGenerationResult
-  testCases: string[]
+  specification: any;
+  code: CodeGenerationResult;
+  testCases: string[];
 }
 
 interface TestSuite {
   tests: Array<{
-    name: string
-    file: string
-    content: string
-    type: 'unit' | 'integration' | 'e2e'
-  }>
+    name: string;
+    file: string;
+    content: string;
+    type: 'unit' | 'integration' | 'e2e';
+  }>;
   coverage: {
-    target: number
-    strategy: string
-  }
+    target: number;
+    strategy: string;
+  };
 }
 
 interface QualityAnalysisRequest {
-  code: CodeGenerationResult
-  tests: TestSuite
-  securityRequirements: string[]
+  code: CodeGenerationResult;
+  tests: TestSuite;
+  securityRequirements: string[];
 }
 
 interface QualityAnalysis {
-  codeQuality: number
-  testCoverage: number
-  security: number
-  performance: number
-  documentation: number
+  codeQuality: number;
+  testCoverage: number;
+  security: number;
+  performance: number;
+  documentation: number;
   issues: Array<{
-    type: 'error' | 'warning' | 'suggestion'
-    severity: 'low' | 'medium' | 'high' | 'critical'
-    message: string
-    file?: string
-    line?: number
-    fix?: string
-  }>
+    type: 'error' | 'warning' | 'suggestion';
+    severity: 'low' | 'medium' | 'high' | 'critical';
+    message: string;
+    file?: string;
+    line?: number;
+    fix?: string;
+  }>;
 }
 
 interface TestExecutionRequest {
-  code: CodeGenerationResult
-  tests: TestSuite
+  code: CodeGenerationResult;
+  tests: TestSuite;
 }
 
 interface TestExecutionResult {
   results: Array<{
-    name: string
-    status: 'passed' | 'failed' | 'skipped'
-    message?: string
-    duration: number
-  }>
+    name: string;
+    status: 'passed' | 'failed' | 'skipped';
+    message?: string;
+    duration: number;
+  }>;
   summary: {
-    total: number
-    passed: number
-    failed: number
-    skipped: number
-    coverage: number
-  }
+    total: number;
+    passed: number;
+    failed: number;
+    skipped: number;
+    coverage: number;
+  };
 }
 
 export class AutocoderAgentService {
-  private runtime: IAgentRuntime | null = null
+  private runtime: IAgentRuntime | null = null;
   private agentCharacter = {
     name: 'Autocoder Agent',
     username: 'autocoder',
@@ -157,19 +157,21 @@ Always prioritize:
 - Performance optimization`,
     messageExamples: [],
     knowledge: [],
-    plugins: ['@elizaos/plugin-research', '@elizaos/plugin-autocoder']
-  }
+    plugins: ['@elizaos/plugin-research', '@elizaos/plugin-autocoder'],
+  };
 
   async initialize(): Promise<void> {
     if (!this.runtime) {
-      this.runtime = await createAgentRuntime({ character: this.agentCharacter })
-      await this.runtime.initialize()
+      this.runtime = await createAgentRuntime({
+        character: this.agentCharacter,
+      });
+      await this.runtime.initialize();
     }
   }
 
   async performResearch(request: ResearchRequest): Promise<ResearchResults> {
-    await this.initialize()
-    
+    await this.initialize();
+
     const prompt = `Research the following project requirements and provide comprehensive analysis:
 
 Project Type: ${request.projectType}
@@ -190,16 +192,16 @@ Format your response as structured JSON with the following schema:
   "bestPractices": ["string"],
   "recommendations": ["string"],
   "warnings": ["string"]
-}`
+}`;
 
     const response = await this.runtime!.useModel(ModelType.TEXT_LARGE, {
       prompt,
       temperature: 0.3,
-      maxTokens: 2000
-    })
+      maxTokens: 2000,
+    });
 
     try {
-      return JSON.parse(response) as ResearchResults
+      return JSON.parse(response) as ResearchResults;
     } catch (error) {
       // Fallback to structured response
       return {
@@ -209,31 +211,33 @@ Format your response as structured JSON with the following schema:
             description: 'Official documentation for building ElizaOS plugins',
             url: 'https://elizaos.github.io/docs/plugins',
             relevance: 0.95,
-            type: 'documentation'
-          }
+            type: 'documentation',
+          },
         ],
         bestPractices: [
           'Use TypeScript for type safety',
           'Implement comprehensive error handling',
           'Follow ElizaOS plugin conventions',
-          'Include thorough testing'
+          'Include thorough testing',
         ],
         recommendations: [
           'Start with the plugin template',
           'Review existing similar plugins',
-          'Focus on security from the beginning'
+          'Focus on security from the beginning',
         ],
         warnings: [
           'Avoid storing secrets in code',
           'Validate all user inputs',
-          'Handle API rate limits properly'
-        ]
-      }
+          'Handle API rate limits properly',
+        ],
+      };
     }
   }
 
-  async createImplementationPlan(request: ImplementationPlanRequest): Promise<ImplementationPlan> {
-    await this.initialize()
+  async createImplementationPlan(
+    request: ImplementationPlanRequest,
+  ): Promise<ImplementationPlan> {
+    await this.initialize();
 
     const prompt = `Create a detailed implementation plan for the following project:
 
@@ -251,16 +255,19 @@ Format as JSON with this schema:
   "steps": [{"id": "string", "title": "string", "description": "string", "dependencies": ["string"], "estimatedTime": number, "files": ["string"], "tasks": ["string"]}],
   "architecture": {"structure": "string", "patterns": ["string"], "technologies": ["string"]},
   "risksAndMitigations": [{"risk": "string", "likelihood": "string", "impact": "string", "mitigation": "string"}]
-}`
+}`;
 
-    const response = await this.runtime!.useModel(ModelType.TEXT_REASONING_LARGE, {
-      prompt,
-      temperature: 0.2,
-      maxTokens: 3000
-    })
+    const response = await this.runtime!.useModel(
+      ModelType.TEXT_REASONING_LARGE,
+      {
+        prompt,
+        temperature: 0.2,
+        maxTokens: 3000,
+      },
+    );
 
     try {
-      return JSON.parse(response) as ImplementationPlan
+      return JSON.parse(response) as ImplementationPlan;
     } catch (error) {
       // Fallback implementation plan
       return {
@@ -272,7 +279,11 @@ Format as JSON with this schema:
             dependencies: [],
             estimatedTime: 300,
             files: ['package.json', 'tsconfig.json', 'src/index.ts'],
-            tasks: ['Create package.json', 'Set up TypeScript', 'Initialize git repository']
+            tasks: [
+              'Create package.json',
+              'Set up TypeScript',
+              'Initialize git repository',
+            ],
           },
           {
             id: 'core',
@@ -281,7 +292,11 @@ Format as JSON with this schema:
             dependencies: ['setup'],
             estimatedTime: 900,
             files: ['src/plugin.ts', 'src/actions/', 'src/providers/'],
-            tasks: ['Implement core logic', 'Add error handling', 'Create plugin interface']
+            tasks: [
+              'Implement core logic',
+              'Add error handling',
+              'Create plugin interface',
+            ],
           },
           {
             id: 'testing',
@@ -290,28 +305,34 @@ Format as JSON with this schema:
             dependencies: ['core'],
             estimatedTime: 600,
             files: ['src/__tests__/', 'jest.config.js'],
-            tasks: ['Write unit tests', 'Add integration tests', 'Set up test coverage']
-          }
+            tasks: [
+              'Write unit tests',
+              'Add integration tests',
+              'Set up test coverage',
+            ],
+          },
         ],
         architecture: {
           structure: 'Standard ElizaOS plugin structure',
           patterns: ['Plugin pattern', 'Action pattern', 'Provider pattern'],
-          technologies: ['TypeScript', 'Node.js', 'Jest']
+          technologies: ['TypeScript', 'Node.js', 'Jest'],
         },
         risksAndMitigations: [
           {
             risk: 'Dependency conflicts',
             likelihood: 'medium',
             impact: 'medium',
-            mitigation: 'Use peer dependencies and version ranges carefully'
-          }
-        ]
-      }
+            mitigation: 'Use peer dependencies and version ranges carefully',
+          },
+        ],
+      };
     }
   }
 
-  async generateCode(request: CodeGenerationRequest): Promise<CodeGenerationResult> {
-    await this.initialize()
+  async generateCode(
+    request: CodeGenerationRequest,
+  ): Promise<CodeGenerationResult> {
+    await this.initialize();
 
     const prompt = `Generate complete, production-ready code for this project:
 
@@ -338,37 +359,46 @@ Requirements:
 - Implement all specified features
 - Use modern JavaScript/TypeScript patterns
 
-Format as JSON: {"files": {"filename": "content"}, "packageJson": {...}, "documentation": {...}}`
+Format as JSON: {"files": {"filename": "content"}, "packageJson": {...}, "documentation": {...}}`;
 
-    const response = await this.runtime!.useModel(ModelType.TEXT_REASONING_LARGE, {
-      prompt,
-      temperature: 0.1,
-      maxTokens: 4000
-    })
+    const response = await this.runtime!.useModel(
+      ModelType.TEXT_REASONING_LARGE,
+      {
+        prompt,
+        temperature: 0.1,
+        maxTokens: 4000,
+      },
+    );
 
     try {
-      return JSON.parse(response) as CodeGenerationResult
+      return JSON.parse(response) as CodeGenerationResult;
     } catch (error) {
       // Fallback code generation
       return {
         files: {
-          'src/index.ts': this.generateFallbackPluginCode(request.specification),
-          'package.json': JSON.stringify(this.generateFallbackPackageJson(request.specification), null, 2),
+          'src/index.ts': this.generateFallbackPluginCode(
+            request.specification,
+          ),
+          'package.json': JSON.stringify(
+            this.generateFallbackPackageJson(request.specification),
+            null,
+            2,
+          ),
           'tsconfig.json': JSON.stringify(this.generateTSConfig(), null, 2),
-          'README.md': this.generateFallbackReadme(request.specification)
+          'README.md': this.generateFallbackReadme(request.specification),
         },
         packageJson: this.generateFallbackPackageJson(request.specification),
         documentation: {
           readme: this.generateFallbackReadme(request.specification),
           api: 'API documentation will be generated based on your implementation.',
-          examples: ['Basic usage example will be provided.']
-        }
-      }
+          examples: ['Basic usage example will be provided.'],
+        },
+      };
     }
   }
 
   async generateTests(request: TestGenerationRequest): Promise<TestSuite> {
-    await this.initialize()
+    await this.initialize();
 
     const prompt = `Generate comprehensive tests for this code:
 
@@ -384,16 +414,16 @@ Create a complete test suite including:
 5. Mock implementations for external dependencies
 
 Use Jest testing framework and follow best practices.
-Format as JSON: {"tests": [{"name": "string", "file": "string", "content": "string", "type": "string"}], "coverage": {...}}`
+Format as JSON: {"tests": [{"name": "string", "file": "string", "content": "string", "type": "string"}], "coverage": {...}}`;
 
     const response = await this.runtime!.useModel(ModelType.TEXT_LARGE, {
       prompt,
       temperature: 0.2,
-      maxTokens: 3000
-    })
+      maxTokens: 3000,
+    });
 
     try {
-      return JSON.parse(response) as TestSuite
+      return JSON.parse(response) as TestSuite;
     } catch (error) {
       return {
         tests: [
@@ -401,19 +431,21 @@ Format as JSON: {"tests": [{"name": "string", "file": "string", "content": "stri
             name: 'Basic Plugin Test',
             file: 'src/__tests__/plugin.test.ts',
             content: this.generateFallbackTest(request.specification),
-            type: 'unit'
-          }
+            type: 'unit',
+          },
         ],
         coverage: {
           target: 90,
-          strategy: 'Comprehensive unit and integration testing'
-        }
-      }
+          strategy: 'Comprehensive unit and integration testing',
+        },
+      };
     }
   }
 
-  async analyzeQuality(request: QualityAnalysisRequest): Promise<QualityAnalysis> {
-    await this.initialize()
+  async analyzeQuality(
+    request: QualityAnalysisRequest,
+  ): Promise<QualityAnalysis> {
+    await this.initialize();
 
     const prompt = `Analyze the quality of this code and provide detailed assessment:
 
@@ -429,16 +461,16 @@ Evaluate:
 5. Documentation (0-100): Clarity and completeness
 
 Identify specific issues and provide actionable recommendations.
-Format as JSON with scores and detailed issue list.`
+Format as JSON with scores and detailed issue list.`;
 
     const response = await this.runtime!.useModel(ModelType.TEXT_LARGE, {
       prompt,
       temperature: 0.1,
-      maxTokens: 2000
-    })
+      maxTokens: 2000,
+    });
 
     try {
-      return JSON.parse(response) as QualityAnalysis
+      return JSON.parse(response) as QualityAnalysis;
     } catch (error) {
       return {
         codeQuality: 85,
@@ -451,22 +483,25 @@ Format as JSON with scores and detailed issue list.`
             type: 'suggestion',
             severity: 'low',
             message: 'Consider adding more comprehensive documentation',
-            fix: 'Add JSDoc comments to all public methods'
-          }
-        ]
-      }
+            fix: 'Add JSDoc comments to all public methods',
+          },
+        ],
+      };
     }
   }
 
   async runTests(request: TestExecutionRequest): Promise<TestExecutionResult> {
     // Try to run tests in E2B container if available
     try {
-      const { E2BContainerService } = await import('./e2b-container-service')
-      const containerService = E2BContainerService.getInstance()
-      
+      const { E2BContainerService } = await import('./e2b-container-service');
+      const containerService = E2BContainerService.getInstance();
+
       // Create a temporary session for testing
-      const sessionId = await containerService.createSession('test-' + Date.now(), 'system')
-      
+      const sessionId = await containerService.createSession(
+        'test-' + Date.now(),
+        'system',
+      );
+
       try {
         // Execute tests in container
         const buildResult = await containerService.executeCodeBuild(sessionId, {
@@ -475,11 +510,11 @@ Format as JSON with scores and detailed issue list.`
           files: request.code.files,
           packageJson: request.code.packageJson,
           buildCommands: ['npm run build'],
-          testCommands: ['npm test']
-        })
+          testCommands: ['npm test'],
+        });
 
         // Clean up session
-        await containerService.terminateSession(sessionId)
+        await containerService.terminateSession(sessionId);
 
         if (buildResult.success && buildResult.testResults) {
           return {
@@ -489,38 +524,44 @@ Format as JSON with scores and detailed issue list.`
               passed: buildResult.testResults.passed,
               failed: buildResult.testResults.failed,
               skipped: 0,
-              coverage: buildResult.testResults.coverage
-            }
-          }
+              coverage: buildResult.testResults.coverage,
+            },
+          };
         }
       } catch (containerError) {
-        console.warn('Container test execution failed, falling back to simulation:', containerError)
-        await containerService.terminateSession(sessionId).catch(() => {})
+        console.warn(
+          'Container test execution failed, falling back to simulation:',
+          containerError,
+        );
+        await containerService.terminateSession(sessionId).catch(() => {});
       }
     } catch (importError) {
-      console.warn('E2B container service not available, using simulated tests:', importError)
+      console.warn(
+        'E2B container service not available, using simulated tests:',
+        importError,
+      );
     }
 
     // Fallback to simulation if container execution fails
-    const testCount = request.tests.tests.length
-    const passedCount = Math.floor(testCount * 0.9) // 90% pass rate
-    const failedCount = testCount - passedCount
+    const testCount = request.tests.tests.length;
+    const passedCount = Math.floor(testCount * 0.9); // 90% pass rate
+    const failedCount = testCount - passedCount;
 
     return {
       results: request.tests.tests.map((test, index) => ({
         name: test.name,
         status: index < passedCount ? 'passed' : 'failed',
         message: index >= passedCount ? 'Test assertion failed' : undefined,
-        duration: Math.floor(Math.random() * 100) + 10
+        duration: Math.floor(Math.random() * 100) + 10,
       })),
       summary: {
         total: testCount,
         passed: passedCount,
         failed: failedCount,
         skipped: 0,
-        coverage: 85
-      }
-    }
+        coverage: 85,
+      },
+    };
   }
 
   private generateFallbackPluginCode(specification: any): string {
@@ -542,7 +583,7 @@ export const ${specification.name.replace(/[^a-zA-Z0-9]/g, '')}Plugin: Plugin = 
   evaluators: []
 }
 
-export default ${specification.name.replace(/[^a-zA-Z0-9]/g, '')}Plugin`
+export default ${specification.name.replace(/[^a-zA-Z0-9]/g, '')}Plugin`;
   }
 
   private generateFallbackPackageJson(specification: any): any {
@@ -555,18 +596,18 @@ export default ${specification.name.replace(/[^a-zA-Z0-9]/g, '')}Plugin`
       scripts: {
         build: 'tsc',
         test: 'jest',
-        'test:watch': 'jest --watch'
+        'test:watch': 'jest --watch',
       },
       dependencies: {
-        '@elizaos/core': '^0.1.0'
+        '@elizaos/core': '^0.1.0',
       },
       devDependencies: {
         '@types/node': '^20.0.0',
         typescript: '^5.0.0',
         jest: '^29.0.0',
-        '@types/jest': '^29.0.0'
-      }
-    }
+        '@types/jest': '^29.0.0',
+      },
+    };
   }
 
   private generateTSConfig(): any {
@@ -582,11 +623,11 @@ export default ${specification.name.replace(/[^a-zA-Z0-9]/g, '')}Plugin`
         forceConsistentCasingInFileNames: true,
         declaration: true,
         declarationMap: true,
-        sourceMap: true
+        sourceMap: true,
       },
       include: ['src/**/*'],
-      exclude: ['node_modules', 'dist', '**/*.test.ts']
-    }
+      exclude: ['node_modules', 'dist', '**/*.test.ts'],
+    };
   }
 
   private generateFallbackReadme(specification: any): string {
@@ -617,7 +658,7 @@ ${specification.features.map((f: string) => `- ${f}`).join('\n')}
 
 ## License
 
-MIT`
+MIT`;
   }
 
   private generateFallbackTest(specification: any): string {
@@ -634,6 +675,6 @@ describe('${specification.name}', () => {
     expect(${specification.name.replace(/[^a-zA-Z0-9]/g, '')}Plugin).toHaveProperty('providers')
     expect(${specification.name.replace(/[^a-zA-Z0-9]/g, '')}Plugin).toHaveProperty('evaluators')
   })
-})`
+})`;
   }
 }

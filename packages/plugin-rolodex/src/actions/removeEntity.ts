@@ -12,7 +12,7 @@ import {
   type ActionResult,
   type UUID,
 } from '@elizaos/core';
-import { EntityNotFoundError, WorldNotFoundError } from '../types';
+import { EntityNotFoundError, WorldNotFoundError } from '../errors';
 import { findBestMatch } from '../utils/stringDistance';
 
 const removeEntityTemplate = `# Remove Entity from Network

@@ -217,7 +217,7 @@ export class SafetyMonitor {
     jointsTracked: number;
     violationsDetected: boolean;
     config: SafetyConfig;
-    } {
+  } {
     return {
       jointsTracked: this.lastPositions.size,
       violationsDetected: false, // TODO: Track violations

@@ -41,13 +41,22 @@ async function build() {
 
   // Also remove any usage of createRequire if present
   content = content.replace(/const\s+require\s*=\s*createRequire\([^)]*\);?\s*\n?/g, '');
-  
+
   // Remove direct createRequire usage (the problematic line)
-  content = content.replace(/var __require = \/\* @__PURE__ \*\/ createRequire\(import\.meta\.url\);?\s*\n?/g, '');
-  content = content.replace(/createRequire\(import\.meta\.url\)/g, '(() => { throw new Error("createRequire not available in browser"); })');
-  
-  // Replace any remaining createRequire references with a browser-safe version
-  content = content.replace(/createRequire/g, '(() => { throw new Error("createRequire not available in browser"); })');
+  content = content.replace(
+    /var __require = \/\* @__PURE__ \*\/ createRequire\(import\.meta\.url\);?\s*\n?/g,
+    ''
+  );
+  content = content.replace(
+    /createRequire\(import\.meta\.url\)/g,
+    '(() => { throw new Error("createRequire not available in browser"); })'
+  );
+
+  // Replace any remaining standalone createRequire references with a browser-safe version
+  content = content.replace(
+    /\bcreateRequire\s*\(/g,
+    '(() => { throw new Error("createRequire not available in browser"); })('
+  );
 
   // Remove handlebars require.extensions code
   content = content.replace(
@@ -62,7 +71,23 @@ async function build() {
   console.log('📝 Generating TypeScript declarations...');
   try {
     await $`tsc --project tsconfig.build.json`;
-    console.log('✅ TypeScript declarations generated');
+    console.log('✅ Individual TypeScript declarations generated');
+
+    // Bundle declarations to match the bundled JS structure
+    console.log('🔧 Bundling TypeScript declarations...');
+    await $`npx dts-bundle-generator -o dist/index.d.ts src/index.ts --no-check --export-referenced-types false --umd-module-name ElizaCore`;
+
+    // Also bundle test-utils declarations
+    if (
+      await fs
+        .access(join(import.meta.dir, 'src/test-utils/index.ts'))
+        .then(() => true)
+        .catch(() => false)
+    ) {
+      await $`npx dts-bundle-generator -o dist/test-utils/index.d.ts src/test-utils/index.ts --no-check --export-referenced-types false --umd-module-name ElizaCoreTestUtils`;
+    }
+
+    console.log('✅ Bundled TypeScript declarations generated');
   } catch (error) {
     console.warn('⚠️ TypeScript declaration generation had issues, but continuing...');
   }

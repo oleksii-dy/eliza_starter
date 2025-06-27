@@ -7,7 +7,7 @@
 import chalk from 'chalk';
 
 console.log(chalk.blue('🎉 ELIZA SCENARIO TRANSFORMATION COMPLETE!'));
-console.log(chalk.blue('=' .repeat(60)));
+console.log(chalk.blue('='.repeat(60)));
 
 console.log(chalk.green('\n✅ MISSION ACCOMPLISHED: FROM LARP TO REALITY\n'));
 
@@ -79,4 +79,4 @@ console.log(chalk.white('• Run: tsx src/real-benchmark-runner.ts'));
 console.log(chalk.white('• Get genuine ElizaOS performance metrics'));
 
 console.log(chalk.green('\n🎊 THE SCENARIOS NOW TEST REAL THINGS! 🎊'));
-console.log(chalk.blue('=' .repeat(60)));
+console.log(chalk.blue('='.repeat(60)));

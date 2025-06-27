@@ -4,8 +4,19 @@
 
 import { eq, and, or, desc, asc, ilike, count, lt } from 'drizzle-orm';
 import { getDatabase } from '../index';
-import { users, userSessions, type User, type NewUser, type UserSession, type NewUserSession } from '../index';
-import { validateDatabaseContext, getCurrentOrganizationId, getCurrentUserId } from '../context';
+import {
+  users,
+  userSessions,
+  type User,
+  type NewUser,
+  type UserSession,
+  type NewUserSession,
+} from '../index';
+import {
+  validateDatabaseContext,
+  getCurrentOrganizationId,
+  getCurrentUserId,
+} from '../context';
 
 export class UserRepository {
   private async getDb() {
@@ -19,7 +30,9 @@ export class UserRepository {
     await validateDatabaseContext();
 
     const userId = await getCurrentUserId();
-    if (!userId) { return null; }
+    if (!userId) {
+      return null;
+    }
 
     const db = await this.getDb();
     const [user] = await db
@@ -37,7 +50,8 @@ export class UserRepository {
   async getById(id: string): Promise<User | null> {
     await validateDatabaseContext();
 
-    const [user] = await this.getDb()
+    const db = await this.getDb();
+    const [user] = await db
       .select()
       .from(users)
       .where(eq(users.id, id))
@@ -52,7 +66,8 @@ export class UserRepository {
   async getByEmail(email: string): Promise<User | null> {
     await validateDatabaseContext();
 
-    const [user] = await this.getDb()
+    const db = await this.getDb();
+    const [user] = await db
       .select()
       .from(users)
       .where(eq(users.email, email))
@@ -65,7 +80,8 @@ export class UserRepository {
    * Get user by WorkOS user ID
    */
   async getByWorkosId(workosUserId: string): Promise<User | null> {
-    const [user] = await this.getDb()
+    const db = await this.getDb();
+    const [user] = await db
       .select()
       .from(users)
       .where(eq(users.workosUserId, workosUserId))
@@ -77,15 +93,17 @@ export class UserRepository {
   /**
    * Get all users in organization
    */
-  async getAll(options: {
-    limit?: number;
-    offset?: number;
-    search?: string;
-    role?: string;
-    isActive?: boolean;
-    sortBy?: 'name' | 'email' | 'createdAt';
-    sortOrder?: 'asc' | 'desc';
-  } = {}): Promise<User[]> {
+  async getAll(
+    options: {
+      limit?: number;
+      offset?: number;
+      search?: string;
+      role?: string;
+      isActive?: boolean;
+      sortBy?: 'name' | 'email' | 'createdAt';
+      sortOrder?: 'asc' | 'desc';
+    } = {},
+  ): Promise<User[]> {
     await validateDatabaseContext();
 
     const {
@@ -95,7 +113,7 @@ export class UserRepository {
       role,
       isActive,
       sortBy = 'createdAt',
-      sortOrder = 'desc'
+      sortOrder = 'desc',
     } = options;
 
     // Build where conditions array
@@ -107,8 +125,8 @@ export class UserRepository {
         or(
           ilike(users.email, `%${search}%`),
           ilike(users.firstName, `%${search}%`),
-          ilike(users.lastName, `%${search}%`)
-        )
+          ilike(users.lastName, `%${search}%`),
+        ),
       );
     }
 
@@ -123,23 +141,28 @@ export class UserRepository {
     }
 
     // Build and execute query
-    const baseQuery = await this.getDb().select().from(users);
+    const db = await this.getDb();
+    const baseQuery = db.select().from(users);
 
     // Determine sort column
-    const sortCol = sortBy === 'email' ? users.email :
-      sortBy === 'name' ? users.firstName :
-        users.createdAt;
+    const sortCol =
+      sortBy === 'email'
+        ? users.email
+        : sortBy === 'name'
+          ? users.firstName
+          : users.createdAt;
 
-    const finalQuery = conditions.length > 0
-      ? baseQuery
-        .where(and(...conditions))
-        .orderBy(sortOrder === 'desc' ? desc(sortCol) : asc(sortCol))
-        .limit(limit)
-        .offset(offset)
-      : baseQuery
-        .orderBy(sortOrder === 'desc' ? desc(sortCol) : asc(sortCol))
-        .limit(limit)
-        .offset(offset);
+    const finalQuery =
+      conditions.length > 0
+        ? baseQuery
+            .where(and(...conditions))
+            .orderBy(sortOrder === 'desc' ? desc(sortCol) : asc(sortCol))
+            .limit(limit)
+            .offset(offset)
+        : baseQuery
+            .orderBy(sortOrder === 'desc' ? desc(sortCol) : asc(sortCol))
+            .limit(limit)
+            .offset(offset);
 
     return finalQuery;
   }
@@ -148,7 +171,8 @@ export class UserRepository {
    * Create a new user
    */
   async create(data: NewUser): Promise<User> {
-    const [user] = await this.getDb()
+    const db = await this.getDb();
+    const [user] = await db
       .insert(users)
       .values({
         ...data,
@@ -166,9 +190,12 @@ export class UserRepository {
     await validateDatabaseContext();
 
     const userId = await getCurrentUserId();
-    if (!userId) { return null; }
+    if (!userId) {
+      return null;
+    }
 
-    const [user] = await this.getDb()
+    const db = await this.getDb();
+    const [user] = await db
       .update(users)
       .set({
         ...data,
@@ -186,7 +213,8 @@ export class UserRepository {
   async updateById(id: string, data: Partial<NewUser>): Promise<User | null> {
     await validateDatabaseContext();
 
-    const [user] = await this.getDb()
+    const db = await this.getDb();
+    const [user] = await db
       .update(users)
       .set({
         ...data,
@@ -201,17 +229,23 @@ export class UserRepository {
   /**
    * Update user's last seen timestamp
    */
-  async updateLastSeen(userId?: string, skipContextValidation = false): Promise<void> {
+  async updateLastSeen(
+    userId?: string,
+    skipContextValidation = false,
+  ): Promise<void> {
     // Skip context validation for dev login or when explicitly requested
     if (!skipContextValidation) {
       await validateDatabaseContext();
     }
-    
-    const targetUserId = userId || await getCurrentUserId();
-    if (!targetUserId) { return; }
+
+    const targetUserId = userId || (await getCurrentUserId());
+    if (!targetUserId) {
+      return;
+    }
 
     // Simply update the updatedAt timestamp since lastSeenAt/lastLoginAt fields were removed from schema
-    await this.getDb()
+    const db = await this.getDb();
+    await db
       .update(users)
       .set({
         updatedAt: new Date(),
@@ -225,7 +259,8 @@ export class UserRepository {
   async deactivate(userId: string): Promise<boolean> {
     await validateDatabaseContext();
 
-    const result = await this.getDb()
+    const db = await this.getDb();
+    const result = await db
       .update(users)
       .set({
         isActive: false,
@@ -242,7 +277,8 @@ export class UserRepository {
   async activate(userId: string): Promise<boolean> {
     await validateDatabaseContext();
 
-    const result = await this.getDb()
+    const db = await this.getDb();
+    const result = await db
       .update(users)
       .set({
         isActive: true,
@@ -259,7 +295,8 @@ export class UserRepository {
   async updateRole(userId: string, role: string): Promise<User | null> {
     await validateDatabaseContext();
 
-    const [user] = await this.getDb()
+    const db = await this.getDb();
+    const [user] = await db
       .update(users)
       .set({
         role,
@@ -275,7 +312,8 @@ export class UserRepository {
    * Verify user email
    */
   async verifyEmail(userId: string): Promise<User | null> {
-    const [user] = await this.getDb()
+    const db = await this.getDb();
+    const [user] = await db
       .update(users)
       .set({
         emailVerified: true,
@@ -291,16 +329,22 @@ export class UserRepository {
   /**
    * Update user preferences
    */
-  async updatePreferences(userId: string, preferences: Partial<User['preferences']>): Promise<User | null> {
+  async updatePreferences(
+    userId: string,
+    preferences: Partial<User['preferences']>,
+  ): Promise<User | null> {
     const user = await this.getById(userId);
-    if (!user) { return null; }
+    if (!user) {
+      return null;
+    }
 
     const updatedPreferences = {
       ...user.preferences,
       ...preferences,
     };
 
-    const [updatedUser] = await this.getDb()
+    const db = await this.getDb();
+    const [updatedUser] = await db
       .update(users)
       .set({
         preferences: updatedPreferences,
@@ -318,7 +362,8 @@ export class UserRepository {
   async getCountByRole(): Promise<Record<string, number>> {
     await validateDatabaseContext();
 
-    const results = await this.getDb()
+    const db = await this.getDb();
+    const results = await db
       .select({
         role: users.role,
         count: count(users.id),
@@ -327,10 +372,13 @@ export class UserRepository {
       .where(eq(users.isActive, true))
       .groupBy(users.role);
 
-    return results.reduce((acc: Record<string, number>, result: any) => {
-      acc[result.role] = result.count;
-      return acc;
-    }, {} as Record<string, number>);
+    return results.reduce(
+      (acc: Record<string, number>, result: any) => {
+        acc[result.role] = result.count;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
   }
 
   /**
@@ -339,7 +387,8 @@ export class UserRepository {
   async existsByEmail(email: string): Promise<boolean> {
     await validateDatabaseContext();
 
-    const [user] = await this.getDb()
+    const db = await this.getDb();
+    const [user] = await db
       .select({ id: users.id })
       .from(users)
       .where(eq(users.email, email))
@@ -353,35 +402,47 @@ export class UserRepository {
    */
   async hasPermission(userId: string, permission: string): Promise<boolean> {
     const user = await this.getById(userId);
-    if (!user) { return false; }
+    if (!user) {
+      return false;
+    }
 
     // Role-based permissions
     const rolePermissions = {
       owner: ['*'], // All permissions
       admin: [
-        'users:read', 'users:write', 'users:delete',
-        'agents:read', 'agents:write', 'agents:delete',
-        'api_keys:read', 'api_keys:write', 'api_keys:delete',
-        'billing:read', 'billing:write',
-        'webhooks:read', 'webhooks:write', 'webhooks:delete',
+        'users:read',
+        'users:write',
+        'users:delete',
+        'agents:read',
+        'agents:write',
+        'agents:delete',
+        'api_keys:read',
+        'api_keys:write',
+        'api_keys:delete',
+        'billing:read',
+        'billing:write',
+        'webhooks:read',
+        'webhooks:write',
+        'webhooks:delete',
         'audit_logs:read',
       ],
       member: [
         'users:read',
-        'agents:read', 'agents:write',
-        'api_keys:read', 'api_keys:write',
-        'billing:read',
-      ],
-      viewer: [
-        'users:read',
         'agents:read',
+        'agents:write',
+        'api_keys:read',
+        'api_keys:write',
         'billing:read',
       ],
+      viewer: ['users:read', 'agents:read', 'billing:read'],
     };
 
-    const userPermissions = rolePermissions[user.role as keyof typeof rolePermissions] || [];
+    const userPermissions =
+      rolePermissions[user.role as keyof typeof rolePermissions] || [];
 
-    return userPermissions.includes('*') || userPermissions.includes(permission);
+    return (
+      userPermissions.includes('*') || userPermissions.includes(permission)
+    );
   }
 
   /**
@@ -389,7 +450,8 @@ export class UserRepository {
    * WARNING: Use only for system operations that need to bypass organization boundaries
    */
   async getByIdGlobal(id: string): Promise<User | null> {
-    const [user] = await this.getDb()
+    const db = await this.getDb();
+    const [user] = await db
       .select()
       .from(users)
       .where(eq(users.id, id))
@@ -400,10 +462,11 @@ export class UserRepository {
 
   /**
    * Get user by email globally (bypasses RLS - for system operations like device auth)
-   * WARNING: Use only for system operations that need to bypass organization boundaries  
+   * WARNING: Use only for system operations that need to bypass organization boundaries
    */
   async getByEmailGlobal(email: string): Promise<User | null> {
-    const [user] = await this.getDb()
+    const db = await this.getDb();
+    const [user] = await db
       .select()
       .from(users)
       .where(eq(users.email, email))
@@ -456,10 +519,7 @@ export class UserSessionRepository {
    */
   async create(data: NewUserSession): Promise<UserSession> {
     const db = await this.getDb();
-    const [session] = await db
-      .insert(userSessions)
-      .values(data)
-      .returning();
+    const [session] = await db.insert(userSessions).values(data).returning();
 
     return session;
   }
@@ -512,7 +572,8 @@ export class UserSessionRepository {
    * Delete session
    */
   async delete(sessionToken: string): Promise<boolean> {
-    const result = await this.getDb()
+    const db = await this.getDb();
+    const result = await db
       .delete(userSessions)
       .where(eq(userSessions.sessionToken, sessionToken));
 
@@ -523,7 +584,8 @@ export class UserSessionRepository {
    * Delete all sessions for user
    */
   async deleteAllForUser(userId: string): Promise<number> {
-    const result = await this.getDb()
+    const db = await this.getDb();
+    const result = await db
       .delete(userSessions)
       .where(eq(userSessions.userId, userId));
 
@@ -534,7 +596,8 @@ export class UserSessionRepository {
    * Delete expired sessions
    */
   async deleteExpired(): Promise<number> {
-    const result = await this.getDb()
+    const db = await this.getDb();
+    const result = await db
       .delete(userSessions)
       .where(lt(userSessions.expiresAt, new Date()));
 
@@ -545,7 +608,8 @@ export class UserSessionRepository {
    * Get all sessions for user
    */
   async getAllForUser(userId: string): Promise<UserSession[]> {
-    return await this.getDb()
+    const db = await this.getDb();
+    return await db
       .select()
       .from(userSessions)
       .where(eq(userSessions.userId, userId))

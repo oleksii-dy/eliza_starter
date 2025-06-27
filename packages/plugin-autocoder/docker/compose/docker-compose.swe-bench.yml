@@ -7,10 +7,10 @@ services:
     volumes:
       - redis-data:/data
     ports:
-      - "6379:6379"
+      - '6379:6379'
     command: redis-server --appendonly yes
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -21,8 +21,8 @@ services:
       context: ../..
       dockerfile: docker/bridge/Dockerfile.bridge-server
     ports:
-      - "8080:8080"
-      - "8081:8081"  # Metrics
+      - '8080:8080'
+      - '8081:8081' # Metrics
     environment:
       - REDIS_URL=redis://redis:6379
       - CENTRAL_SERVER_URL=${CENTRAL_SERVER_URL:-http://host.docker.internal:3000}
@@ -34,7 +34,7 @@ services:
       - shared-workspace:/workspace
       - shared-results:/results
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ['CMD', 'curl', '-f', 'http://localhost:8080/health']
       interval: 30s
       timeout: 10s
       retries: 3
@@ -180,7 +180,7 @@ services:
   prometheus:
     image: prom/prometheus:latest
     ports:
-      - "9090:9090"
+      - '9090:9090'
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus
@@ -191,7 +191,7 @@ services:
   grafana:
     image: grafana/grafana:latest
     ports:
-      - "3001:3000"
+      - '3001:3000'
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
@@ -223,4 +223,4 @@ networks:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.30.0.0/16 
+        - subnet: 172.30.0.0/16

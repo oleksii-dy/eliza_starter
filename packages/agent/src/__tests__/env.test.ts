@@ -12,9 +12,9 @@ describe('Build and Runtime Environment', () => {
       const packageJson = await import('../../package.json');
       expect(packageJson.scripts).toBeDefined();
       expect(packageJson.scripts.build).toBeDefined();
-      expect(packageJson.scripts.build).toContain('typecheck');
-      expect(packageJson.scripts.build).toContain('vite');
-      expect(packageJson.scripts.build).toContain('tsup');
+      // This package uses bun build instead of traditional build tools
+      expect(packageJson.scripts.build).toContain('build.ts');
+      expect(packageJson.scripts.typecheck).toBeDefined();
     } catch (error) {
       throw new Error(`Build configuration check failed: ${error.message}`);
     }

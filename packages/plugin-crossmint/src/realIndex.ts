@@ -1,8 +1,4 @@
-import {
-  type Plugin,
-  type IAgentRuntime,
-  logger,
-} from '@elizaos/core';
+import { type Plugin, type IAgentRuntime, logger } from '@elizaos/core';
 
 // Real Services
 import { RealCrossMintService } from './services/RealCrossMintService';
@@ -39,7 +35,8 @@ export * from './services/HybridCrossMintUniversalWalletService';
  */
 export const realCrossmintPlugin: Plugin = {
   name: '@elizaos/plugin-crossmint-real',
-  description: 'Real CrossMint enterprise blockchain platform with actual API integration and Coinbase X.402 protocol',
+  description:
+    'Real CrossMint enterprise blockchain platform with actual API integration and Coinbase X.402 protocol',
 
   // Plugin configuration
   config: {
@@ -78,11 +75,7 @@ export const realCrossmintPlugin: Plugin = {
   },
 
   // Real Services
-  services: [
-    RealCrossMintService,
-    RealX402Service,
-    HybridCrossMintUniversalWalletService
-  ],
+  services: [RealCrossMintService, RealX402Service, HybridCrossMintUniversalWalletService],
 
   // Real Actions
   actions: [
@@ -92,16 +85,10 @@ export const realCrossmintPlugin: Plugin = {
   ],
 
   // Providers (these would need updates to use real services)
-  providers: [
-    crossmintWalletProvider,
-    crossmintPortfolioProvider,
-    crossmintPaymentsProvider,
-  ],
+  providers: [crossmintWalletProvider, crossmintPortfolioProvider, crossmintPaymentsProvider],
 
   // Real Scenario Tests
-  scenarios: [
-    crossmintX402WorkflowScenario,
-  ],
+  scenarios: [crossmintX402WorkflowScenario],
 
   // Plugin initialization with real validation
   async init(config: Record<string, string>, runtime: IAgentRuntime) {
@@ -112,13 +99,14 @@ export const realCrossmintPlugin: Plugin = {
     if (!apiKey) {
       logger.error(
         'CROSSMINT_API_KEY is required but not set. ' +
-        'Please obtain an API key from CrossMint Console and set the environment variable.'
+          'Please obtain an API key from CrossMint Console and set the environment variable.'
       );
       throw new Error('CROSSMINT_API_KEY is required for real CrossMint integration');
     }
 
     const environment = runtime.getSetting('CROSSMINT_ENVIRONMENT') || 'staging';
-    const facilitatorUrl = runtime.getSetting('X402_FACILITATOR_URL') || 'https://x402.coinbase.com';
+    const facilitatorUrl =
+      runtime.getSetting('X402_FACILITATOR_URL') || 'https://x402.coinbase.com';
 
     logger.info(`Real CrossMint plugin initialized in ${environment} mode`);
     logger.info(`Using X.402 facilitator: ${facilitatorUrl}`);
@@ -153,7 +141,9 @@ export const realCrossmintPlugin: Plugin = {
     logger.info('Real CrossMint capabilities:');
     logger.info('  ✅ MPC (Multi-Party Computation) wallets via CrossMint API');
     logger.info('  ✅ Real X.402 payment protocol via Coinbase facilitator');
-    logger.info('  ✅ Cross-chain operations (Ethereum, Polygon, Arbitrum, Optimism, Base, BSC, Solana)');
+    logger.info(
+      '  ✅ Cross-chain operations (Ethereum, Polygon, Arbitrum, Optimism, Base, BSC, Solana)'
+    );
     logger.info('  ✅ Real NFT minting and management via CrossMint');
     logger.info('  ✅ Enterprise blockchain infrastructure');
     logger.info('  ✅ HTTP-native payments with real-time settlement');

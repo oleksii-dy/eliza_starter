@@ -8,7 +8,8 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const MODELS_BASE_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js-models/master/';
+const MODELS_BASE_URL =
+  'https://raw.githubusercontent.com/justadudewhohacks/face-api.js-models/master/';
 const MODELS_DIR = path.join(__dirname, '..', 'models', 'face-api');
 
 const models = [
@@ -56,41 +57,47 @@ function downloadFile(modelInfo) {
 
     const file = fs.createWriteStream(filePath);
 
-    https.get(url, (response) => {
-      if (response.statusCode === 302 || response.statusCode === 301) {
-        // Handle redirect
-        https.get(response.headers.location, (redirectResponse) => {
-          if (redirectResponse.statusCode !== 200) {
-            reject(new Error(`Failed to download ${modelInfo.file}: ${redirectResponse.statusCode}`));
-            return;
-          }
+    https
+      .get(url, (response) => {
+        if (response.statusCode === 302 || response.statusCode === 301) {
+          // Handle redirect
+          https
+            .get(response.headers.location, (redirectResponse) => {
+              if (redirectResponse.statusCode !== 200) {
+                reject(
+                  new Error(`Failed to download ${modelInfo.file}: ${redirectResponse.statusCode}`)
+                );
+                return;
+              }
 
-          redirectResponse.pipe(file);
+              redirectResponse.pipe(file);
+
+              file.on('finish', () => {
+                file.close();
+                console.log(`✓ Downloaded ${modelInfo.file}`);
+                resolve();
+              });
+            })
+            .on('error', (err) => {
+              fs.unlink(filePath, () => {}); // Delete incomplete file
+              reject(err);
+            });
+        } else if (response.statusCode === 200) {
+          response.pipe(file);
 
           file.on('finish', () => {
             file.close();
             console.log(`✓ Downloaded ${modelInfo.file}`);
             resolve();
           });
-        }).on('error', (err) => {
-          fs.unlink(filePath, () => {}); // Delete incomplete file
-          reject(err);
-        });
-      } else if (response.statusCode === 200) {
-        response.pipe(file);
-
-        file.on('finish', () => {
-          file.close();
-          console.log(`✓ Downloaded ${modelInfo.file}`);
-          resolve();
-        });
-      } else {
-        reject(new Error(`Failed to download ${modelInfo.file}: ${response.statusCode}`));
-      }
-    }).on('error', (err) => {
-      fs.unlink(filePath, () => {}); // Delete incomplete file
-      reject(err);
-    });
+        } else {
+          reject(new Error(`Failed to download ${modelInfo.file}: ${response.statusCode}`));
+        }
+      })
+      .on('error', (err) => {
+        fs.unlink(filePath, () => {}); // Delete incomplete file
+        reject(err);
+      });
   });
 }
 

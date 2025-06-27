@@ -22,7 +22,9 @@ function getGithubPreviewUrl(repoPath) {
  * Fix image URL by removing /eliza/ prefix if present
  */
 function fixImageUrl(url) {
-  if (!url) {return null;}
+  if (!url) {
+    return null;
+  }
   return url.replace(/^\/eliza\//, '/');
 }
 

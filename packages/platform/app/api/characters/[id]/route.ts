@@ -43,7 +43,7 @@ const updateCharacterSchema = z.object({
 /**
  * GET /api/characters/[id] - Get character by ID
  */
-export async function GET(
+export async function handleGET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {

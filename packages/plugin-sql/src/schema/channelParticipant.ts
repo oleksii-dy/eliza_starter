@@ -1,4 +1,4 @@
-import { getSchemaFactory, createLazyTableProxy } from './factory';
+import { getSchemaFactory, createLazyTableProxy } from './factory.js';
 
 /**
  * Lazy-loaded channel participants table definition.

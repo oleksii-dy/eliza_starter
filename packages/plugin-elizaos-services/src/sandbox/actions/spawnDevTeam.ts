@@ -4,6 +4,7 @@
  */
 
 import type { Action, IAgentRuntime, Memory, State } from '@elizaos/core';
+import { ChannelType } from '@elizaos/core';
 import { logger, parseJSONObjectFromText } from '@elizaos/core';
 import type { SandboxManager } from '../SandboxManager.js';
 import type { MockSandboxManager } from '../MockSandboxManager.js';
@@ -22,6 +23,27 @@ export interface ProjectSpecification {
   priority?: 'low' | 'medium' | 'high';
 }
 
+export interface TaskAssignment {
+  id: string;
+  title: string;
+  description: string;
+  assignedTo: string; // Agent role
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  estimatedHours?: number;
+  dependencies?: string[]; // Other task IDs
+  deliverables: string[];
+  acceptanceCriteria: string[];
+  dueDate?: string;
+  status: 'assigned' | 'in_progress' | 'completed' | 'blocked';
+}
+
+export interface TaskDelegationRequest {
+  projectId?: string;
+  tasks: Omit<TaskAssignment, 'id' | 'status'>[];
+  sprintGoal?: string;
+  deadline?: string;
+}
+
 export const spawnDevTeamAction: Action = {
   name: 'SPAWN_DEV_TEAM',
   similes: [
@@ -37,13 +59,13 @@ export const spawnDevTeamAction: Action = {
   examples: [
     [
       {
-        user: '{{user1}}',
+        name: 'user',
         content: {
           text: 'Create a todo list app with React, Express, and SQLite',
         },
       },
       {
-        user: '{{agent}}',
+        name: 'agent',
         content: {
           text: "I'll spawn a development team to build your todo list app! Let me create a sandbox with specialized agents.",
           action: 'SPAWN_DEV_TEAM',
@@ -52,13 +74,13 @@ export const spawnDevTeamAction: Action = {
     ],
     [
       {
-        user: '{{user1}}',
+        name: 'user',
         content: {
           text: 'I need a team to build a blog platform with authentication and comments',
         },
       },
       {
-        user: '{{agent}}',
+        name: 'agent',
         content: {
           text: "Perfect! I'll assemble a development team with backend, frontend, and DevOps specialists to build your blog platform.",
           action: 'SPAWN_DEV_TEAM',
@@ -89,7 +111,7 @@ export const spawnDevTeamAction: Action = {
     return hasProjectIntent;
   },
 
-  handler: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<any> => {
+  handler: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<any> => {
     try {
       logger.info('Starting SPAWN_DEV_TEAM action');
 
@@ -111,9 +133,10 @@ export const spawnDevTeamAction: Action = {
       // 2. Create shared room for team collaboration
       const roomName = `${projectSpec.name.replace(/\s+/g, '-').toLowerCase()}-dev-team`;
       const roomId = await runtime.createRoom({
-        type: 'GROUP',
+        id: `room-${Date.now()}` as any,
         name: roomName,
-        participants: [runtime.agentId],
+        source: 'sandbox',
+        type: ChannelType.GROUP,
       });
 
       // 3. Define specialized agent configurations
@@ -143,34 +166,46 @@ export const spawnDevTeamAction: Action = {
       await sandboxManager.deployAgents(sandboxId, agents);
 
       // 5. Create room in sandbox and connect to host
-      const sandboxRoomId = await sandboxManager.createRoom(sandboxId, roomName);
+      const _sandboxRoomId = await sandboxManager.createRoom(sandboxId, roomName);
       const hostUrl = runtime.getSetting('HOST_URL') || 'http://localhost:3000';
       await sandboxManager.connectToHost(sandboxId, hostUrl, roomId);
 
       // 6. Send project briefing to team
       const briefing = generateProjectBriefing(projectSpec);
-      await runtime.sendMessage(roomId, {
-        text: briefing,
-        project: projectSpec,
-        sandbox: sandboxId,
-        type: 'project_briefing',
-      });
-
-      // 7. Store sandbox info for future reference
-      await runtime.createMemory({
-        roomId,
-        content: {
-          text: `Development sandbox created for ${projectSpec.name}`,
-          sandbox: {
-            id: sandboxId,
+      await runtime.createMemory(
+        {
+          roomId,
+          entityId: runtime.agentId,
+          content: {
+            text: briefing,
             project: projectSpec,
-            agents: agents.map((a) => a.role),
-            status: 'active',
-            createdAt: new Date().toISOString(),
+            sandbox: sandboxId,
+            type: 'project_briefing',
           },
         },
-        unique: true,
-      });
+        'messages',
+        false
+      );
+
+      // 7. Store sandbox info for future reference
+      await runtime.createMemory(
+        {
+          roomId,
+          entityId: runtime.agentId,
+          content: {
+            text: `Development sandbox created for ${projectSpec.name}`,
+            sandbox: {
+              id: sandboxId,
+              project: projectSpec,
+              agents: agents.map((a) => a.role),
+              status: 'active',
+              createdAt: new Date().toISOString(),
+            },
+          },
+        },
+        'messages',
+        true
+      );
 
       // 8. Initialize project structure
       await sandboxManager.executeSandboxCommand(
@@ -243,7 +278,10 @@ async function parseProjectSpecification(text: string): Promise<ProjectSpecifica
   try {
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      projectSpec = parseJSONObjectFromText(jsonMatch[0]);
+      const parsed = parseJSONObjectFromText(jsonMatch[0]);
+      if (parsed) {
+        projectSpec = parsed as Partial<ProjectSpecification>;
+      }
     }
   } catch {
     // Fall back to natural language parsing

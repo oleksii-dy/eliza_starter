@@ -15,9 +15,9 @@ interface AnonymousSession {
 // In production, this would use Redis or a database
 const sessionStore = new Map<string, AnonymousSession>();
 
-export async function GET(
+export async function handleGET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id: sessionId } = await params;
@@ -25,26 +25,20 @@ export async function GET(
     if (!sessionId) {
       return NextResponse.json(
         { error: 'Session ID is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const session = sessionStore.get(sessionId);
 
     if (!session) {
-      return NextResponse.json(
-        { error: 'Session not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
 
     // Check if session has expired
     if (session.expiryTime && new Date() > session.expiryTime) {
       sessionStore.delete(sessionId);
-      return NextResponse.json(
-        { error: 'Session expired' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Session expired' }, { status: 404 });
     }
 
     // Remove expiry time from response
@@ -55,14 +49,14 @@ export async function GET(
     console.error('Session retrieval error:', error);
     return NextResponse.json(
       { error: 'Failed to retrieve session' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id: sessionId } = await params;
@@ -71,26 +65,20 @@ export async function PUT(
     if (!sessionId) {
       return NextResponse.json(
         { error: 'Session ID is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const existingSession = sessionStore.get(sessionId);
 
     if (!existingSession) {
-      return NextResponse.json(
-        { error: 'Session not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
 
     // Check if session has expired
     if (existingSession.expiryTime && new Date() > existingSession.expiryTime) {
       sessionStore.delete(sessionId);
-      return NextResponse.json(
-        { error: 'Session expired' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Session expired' }, { status: 404 });
     }
 
     // Update session
@@ -98,7 +86,7 @@ export async function PUT(
       ...existingSession,
       ...updates,
       sessionId, // Ensure sessionId cannot be changed
-      lastActivity: new Date()
+      lastActivity: new Date(),
     };
 
     sessionStore.set(sessionId, updatedSession);
@@ -111,14 +99,14 @@ export async function PUT(
     console.error('Session update error:', error);
     return NextResponse.json(
       { error: 'Failed to update session' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id: sessionId } = await params;
@@ -126,17 +114,14 @@ export async function DELETE(
     if (!sessionId) {
       return NextResponse.json(
         { error: 'Session ID is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const deleted = sessionStore.delete(sessionId);
 
     if (!deleted) {
-      return NextResponse.json(
-        { error: 'Session not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
 
     return NextResponse.json({ success: true });
@@ -144,7 +129,7 @@ export async function DELETE(
     console.error('Session deletion error:', error);
     return NextResponse.json(
       { error: 'Failed to delete session' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

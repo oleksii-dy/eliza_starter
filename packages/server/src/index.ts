@@ -17,7 +17,7 @@ import path, { basename, dirname, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Server as SocketIOServer } from 'socket.io';
 import { createApiRouter, createPluginRouteHandler, setupSocketIO } from './api/index.js';
-import { enhancedAuthMiddleware } from './AuthMiddleware.js';
+import { enhancedAuthMiddleware } from './authMiddleware.js';
 import { messageBusConnectorPlugin } from './services/MessageBusService.js';
 import { loadCharacterTryPath, jsonToCharacter } from './CharacterLoader.js';
 
@@ -1333,3 +1333,6 @@ export {
 
 // Export types
 export * from './types';
+
+// Default export
+export default AgentServer;

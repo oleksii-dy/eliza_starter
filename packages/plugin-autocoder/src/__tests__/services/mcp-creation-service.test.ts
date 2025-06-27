@@ -18,8 +18,11 @@ mock.module('fs/promises', () => {
 // Mock other modules
 mock.module('child_process', () => ({
   exec: mock((cmd, opts, callback) => {
-    if (callback) {callback(null, '', '');}
-    else {return Promise.resolve({ stdout: '', stderr: '' });}
+    if (callback) {
+      callback(null, '', '');
+    } else {
+      return Promise.resolve({ stdout: '', stderr: '' });
+    }
   }),
 }));
 
@@ -44,9 +47,15 @@ mock.module('@elizaos/core', async () => {
       debug: mock(),
     },
     Service: class {
-      constructor() { /* empty */ }
-      async start() { /* empty */ }
-      async stop() { /* empty */ }
+      constructor() {
+        /* empty */
+      }
+      async start() {
+        /* empty */
+      }
+      async stop() {
+        /* empty */
+      }
     },
   };
 });

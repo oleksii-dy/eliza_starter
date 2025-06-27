@@ -27,16 +27,16 @@ async function build() {
 
   console.log(`✅ Built ${result.outputs.length} files`);
 
-
   // Generate TypeScript declarations
   console.log('📝 Generating TypeScript declarations...');
   try {
     await $`tsc --project tsconfig.build.json`;
     console.log('✅ TypeScript declarations generated');
   } catch (error) {
-    console.warn('⚠️ TypeScript declaration generation had issues, but continuing...');
+    console.warn(
+      '⚠️ TypeScript declaration generation had issues, but continuing...'
+    );
   }
-
 
   console.log('✅ Build complete!');
 }

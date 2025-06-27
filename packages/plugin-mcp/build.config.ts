@@ -1,7 +1,7 @@
 import type { BuildConfig } from 'bun';
 
 export const buildConfig: BuildConfig = {
-  entrypoints: ['./src/index.ts', './src/scenarios/index.ts', './src/scenarios/**/*.ts'],
+  entrypoints: ['./src/index.ts', './src/scenarios/index.ts'],
   outdir: './dist',
   target: 'node',
   format: 'esm',

@@ -12,8 +12,10 @@ mock.module('@elizaos/core', () => ({
 }));
 
 // Timer mocking utilities
-const timerCallbacks: Map<NodeJS.Timeout, { callback: Function; delay: number; startTime: number }> =
-  new Map();
+const timerCallbacks: Map<
+  NodeJS.Timeout,
+  { callback: Function; delay: number; startTime: number }
+> = new Map();
 let currentTime = 0;
 let nextTimerId = 1;
 

@@ -11,7 +11,8 @@ import { eq } from 'drizzle-orm';
 import Stripe from 'stripe';
 
 // Test configuration
-const TEST_STRIPE_SECRET_KEY = process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
+const TEST_STRIPE_SECRET_KEY =
+  process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
 const TEST_ORGANIZATION_ID = 'test-org-' + Date.now();
 const TEST_USER_ID = 'test-user-' + Date.now();
 
@@ -22,7 +23,9 @@ describe('Stripe Integration Tests', () => {
 
   beforeAll(async () => {
     if (!TEST_STRIPE_SECRET_KEY) {
-      throw new Error('STRIPE_TEST_SECRET_KEY or STRIPE_SECRET_KEY required for integration tests');
+      throw new Error(
+        'STRIPE_TEST_SECRET_KEY or STRIPE_SECRET_KEY required for integration tests',
+      );
     }
 
     stripe = new Stripe(TEST_STRIPE_SECRET_KEY, {
@@ -83,8 +86,12 @@ describe('Stripe Integration Tests', () => {
 
     // Cleanup database
     const db = getDatabase();
-    await db.delete(organizations).where(eq(organizations.id, TEST_ORGANIZATION_ID));
-    await db.delete(creditTransactions).where(eq(creditTransactions.organizationId, TEST_ORGANIZATION_ID));
+    await db
+      .delete(organizations)
+      .where(eq(organizations.id, TEST_ORGANIZATION_ID));
+    await db
+      .delete(creditTransactions)
+      .where(eq(creditTransactions.organizationId, TEST_ORGANIZATION_ID));
   });
 
   beforeEach(async () => {
@@ -126,9 +133,12 @@ describe('Stripe Integration Tests', () => {
       });
 
       // Confirm payment
-      const confirmedPayment = await stripe.paymentIntents.confirm(paymentIntent.id, {
-        payment_method: testPaymentMethodId,
-      });
+      const confirmedPayment = await stripe.paymentIntents.confirm(
+        paymentIntent.id,
+        {
+          payment_method: testPaymentMethodId,
+        },
+      );
 
       expect(confirmedPayment.status).toBe('succeeded');
 
@@ -136,7 +146,7 @@ describe('Stripe Integration Tests', () => {
       await StripeService.confirmPaymentAndAddCredits({
         organizationId: TEST_ORGANIZATION_ID,
         userId: TEST_USER_ID,
-        amount: 25.00,
+        amount: 25.0,
         paymentIntentId: paymentIntent.id,
         // description: 'Test credit purchase', // Not part of CreditPurchaseOptions interface
       });
@@ -149,7 +159,7 @@ describe('Stripe Integration Tests', () => {
         .where(eq(organizations.id, TEST_ORGANIZATION_ID))
         .limit(1);
 
-      expect(parseFloat(org.creditBalance)).toBe(125.00); // 100 + 25
+      expect(parseFloat(org.creditBalance)).toBe(125.0); // 100 + 25
     });
 
     test('should prevent duplicate payment processing', async () => {
@@ -165,7 +175,7 @@ describe('Stripe Integration Tests', () => {
       await StripeService.confirmPaymentAndAddCredits({
         organizationId: TEST_ORGANIZATION_ID,
         userId: TEST_USER_ID,
-        amount: 10.00,
+        amount: 10.0,
         paymentIntentId: paymentIntent.id,
         // description: 'Test duplicate prevention', // Not part of CreditPurchaseOptions interface
       });
@@ -175,10 +185,10 @@ describe('Stripe Integration Tests', () => {
         StripeService.confirmPaymentAndAddCredits({
           organizationId: TEST_ORGANIZATION_ID,
           userId: TEST_USER_ID,
-          amount: 10.00,
+          amount: 10.0,
           paymentIntentId: paymentIntent.id,
           // description: 'Test duplicate prevention - second attempt', // Not part of CreditPurchaseOptions interface
-        })
+        }),
       ).rejects.toThrow();
 
       // Verify balance only increased once
@@ -189,7 +199,7 @@ describe('Stripe Integration Tests', () => {
         .where(eq(organizations.id, TEST_ORGANIZATION_ID))
         .limit(1);
 
-      expect(parseFloat(org.creditBalance)).toBe(110.00); // 100 + 10 (not 120)
+      expect(parseFloat(org.creditBalance)).toBe(110.0); // 100 + 10 (not 120)
     });
   });
 
@@ -199,10 +209,10 @@ describe('Stripe Integration Tests', () => {
         StripeService.confirmPaymentAndAddCredits({
           organizationId: TEST_ORGANIZATION_ID,
           userId: TEST_USER_ID,
-          amount: 10.00,
+          amount: 10.0,
           paymentIntentId: `test-payment-${i}-${Date.now()}`,
           // description: `Concurrent test payment ${i}`, // Not part of CreditPurchaseOptions interface
-        })
+        }),
       );
 
       // Execute all operations concurrently
@@ -216,7 +226,7 @@ describe('Stripe Integration Tests', () => {
         .where(eq(organizations.id, TEST_ORGANIZATION_ID))
         .limit(1);
 
-      expect(parseFloat(org.creditBalance)).toBe(150.00); // 100 + (5 * 10)
+      expect(parseFloat(org.creditBalance)).toBe(150.0); // 100 + (5 * 10)
     });
 
     // COMMENTED OUT: Test accesses private method getCurrentBalanceWithLock
@@ -235,10 +245,13 @@ describe('Stripe Integration Tests', () => {
         .where(eq(organizations.id, TEST_ORGANIZATION_ID));
 
       // Import AutoTopUpService
-      const { AutoTopUpService } = await import('@/lib/billing/auto-topup-service');
+      const { AutoTopUpService } = await import(
+        '@/lib/billing/auto-topup-service'
+      );
 
       // Trigger auto top-up check
-      const triggered = await AutoTopUpService.checkAndTriggerAutoTopUp(TEST_ORGANIZATION_ID);
+      const triggered =
+        await AutoTopUpService.checkAndTriggerAutoTopUp(TEST_ORGANIZATION_ID);
 
       expect(triggered).toBe(true);
 
@@ -248,8 +261,9 @@ describe('Stripe Integration Tests', () => {
         .from(creditTransactions)
         .where(eq(creditTransactions.organizationId, TEST_ORGANIZATION_ID));
 
-      const autoTopUpTransaction = transactions.find((t: any) => 
-        t.type === 'auto_topup' || t.description?.includes('Auto top-up')
+      const autoTopUpTransaction = transactions.find(
+        (t: any) =>
+          t.type === 'auto_topup' || t.description?.includes('Auto top-up'),
       );
 
       expect(autoTopUpTransaction).toBeDefined();
@@ -273,10 +287,13 @@ describe('Stripe Integration Tests', () => {
         .set({ creditBalance: '40.00' })
         .where(eq(organizations.id, TEST_ORGANIZATION_ID));
 
-      const { AutoTopUpService } = await import('@/lib/billing/auto-topup-service');
+      const { AutoTopUpService } = await import(
+        '@/lib/billing/auto-topup-service'
+      );
 
       // Should not trigger due to recent attempt
-      const triggered = await AutoTopUpService.checkAndTriggerAutoTopUp(TEST_ORGANIZATION_ID);
+      const triggered =
+        await AutoTopUpService.checkAndTriggerAutoTopUp(TEST_ORGANIZATION_ID);
 
       expect(triggered).toBe(false);
     });
@@ -292,7 +309,7 @@ describe('Stripe Integration Tests', () => {
       // Create organization without payment method
       const testOrgId = 'test-org-no-payment-' + Date.now();
       const db = getDatabase();
-      
+
       await db.insert(organizations).values({
         id: testOrgId,
         name: 'Test Org No Payment',
@@ -303,11 +320,13 @@ describe('Stripe Integration Tests', () => {
         autoTopUpAmount: '100.00',
       });
 
-      const { AutoTopUpService } = await import('@/lib/billing/auto-topup-service');
+      const { AutoTopUpService } = await import(
+        '@/lib/billing/auto-topup-service'
+      );
 
       // Should fail gracefully
       await expect(
-        AutoTopUpService.checkAndTriggerAutoTopUp(testOrgId)
+        AutoTopUpService.checkAndTriggerAutoTopUp(testOrgId),
       ).rejects.toThrow('No Stripe customer ID found');
 
       // Cleanup
@@ -321,10 +340,10 @@ describe('Stripe Integration Tests', () => {
         StripeService.confirmPaymentAndAddCredits({
           organizationId: TEST_ORGANIZATION_ID,
           userId: TEST_USER_ID,
-          amount: 25.00,
+          amount: 25.0,
           paymentIntentId: 'pi_invalid_payment_intent_id',
           // description: 'Invalid payment test', // Not part of CreditPurchaseOptions interface
-        })
+        }),
       ).rejects.toThrow();
     });
 
@@ -339,10 +358,10 @@ describe('Stripe Integration Tests', () => {
         StripeService.confirmPaymentAndAddCredits({
           organizationId: 'non-existent-org-id',
           userId: TEST_USER_ID,
-          amount: 25.00,
+          amount: 25.0,
           paymentIntentId: 'pi_test_payment',
           // description: 'Non-existent org test', // Not part of CreditPurchaseOptions interface
-        })
+        }),
       ).rejects.toThrow('Organization not found');
     });
   });
@@ -350,46 +369,57 @@ describe('Stripe Integration Tests', () => {
   describe('Performance and Load Testing', () => {
     test('should handle multiple concurrent organizations efficiently', async () => {
       const startTime = Date.now();
-      
+
       // Create multiple test organizations
-      const orgIds = Array.from({ length: 10 }, (_, i) => `load-test-org-${i}-${Date.now()}`);
+      const orgIds = Array.from(
+        { length: 10 },
+        (_, i) => `load-test-org-${i}-${Date.now()}`,
+      );
       const db = getDatabase();
 
       // Setup organizations
       await Promise.all(
-        orgIds.map(orgId =>
+        orgIds.map((orgId) =>
           db.insert(organizations).values({
             id: orgId,
             name: `Load Test Org ${orgId}`,
             slug: `load-test-org-${orgId}`,
             creditBalance: '100.00',
-          })
-        )
+          }),
+        ),
       );
 
       // Process concurrent operations
-      const operations = orgIds.map(orgId =>
+      const operations = orgIds.map((orgId) =>
         StripeService.confirmPaymentAndAddCredits({
           organizationId: orgId,
           userId: TEST_USER_ID,
-          amount: 10.00,
+          amount: 10.0,
           paymentIntentId: `load-test-${orgId}-${Date.now()}`,
           // description: 'Load test payment', // Not part of CreditPurchaseOptions interface
-        })
+        }),
       );
 
       await Promise.all(operations);
 
       const duration = Date.now() - startTime;
-      console.log(`Processed ${orgIds.length} concurrent operations in ${duration}ms`);
+      console.log(
+        `Processed ${orgIds.length} concurrent operations in ${duration}ms`,
+      );
 
       // Should complete within reasonable time (5 seconds)
       expect(duration).toBeLessThan(5000);
 
       // Cleanup
       await Promise.all([
-        ...orgIds.map(orgId => db.delete(organizations).where(eq(organizations.id, orgId))),
-        ...orgIds.map(orgId => db.delete(creditTransactions).where(eq(creditTransactions.organizationId, orgId))),
+        ...orgIds.map((orgId) =>
+          db.delete(organizations).where(eq(organizations.id, orgId)),
+        ),
+        ...orgIds.map((orgId) =>
+          db
+            .delete(creditTransactions)
+            .where(eq(creditTransactions.organizationId, orgId)),
+        ),
       ]);
     });
   });

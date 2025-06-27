@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, jest } from 'bun:test';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'bun:test';
 import { NgrokService } from '../../services/NgrokService';
+import { createMockRuntime } from '../test-utils';
 import express from 'express';
 import type { Server } from 'http';
 import { spawn } from 'child_process';
@@ -81,14 +82,8 @@ describe('Webhook Integration Scenarios', () => {
       });
     });
 
-    // Initialize ngrok service with full runtime
-    const runtime = {
-      getSetting: (key: string) => {
-        // Return environment variables
-        return process.env[key];
-      },
-    } as any;
-
+    // Initialize ngrok service with core test-utils runtime
+    const runtime = createMockRuntime();
     service = new NgrokService(runtime);
   });
 

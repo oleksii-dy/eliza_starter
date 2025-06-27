@@ -7,8 +7,8 @@ import {
   type HandlerCallback,
 } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
-import { generateScript } from '../generation';
 import { EnhancedSecretManager } from '../enhanced-service';
+import { generateScript } from '../generation';
 import type { GenerationScriptMetadata } from '../types';
 import { validateEnvVar } from '../validation';
 

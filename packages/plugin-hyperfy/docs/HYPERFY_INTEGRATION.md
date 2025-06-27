@@ -9,6 +9,7 @@ The ElizaOS Hyperfy plugin provides seamless integration with the [Hyperfy frame
 Based on the [Hyperfy repository](https://github.com/lalalune/hyperfy), the framework provides:
 
 ### 🧬 Core Features
+
 - **Standalone persistent worlds** - Self-hosted on custom domains
 - **Realtime content creation** - Build directly in-world
 - **Interactive app system** - JavaScript-based dynamic applications
@@ -19,16 +20,18 @@ Based on the [Hyperfy repository](https://github.com/lalalune/hyperfy), the fram
 ## Plugin Architecture Mapping
 
 ### 1. World Connection
+
 The plugin connects to Hyperfy worlds through WebSocket:
 
 ```typescript
 // HyperfyService handles world connections
-service.connectToWorld(worldUrl) 
+service.connectToWorld(worldUrl)
   → Hyperfy WebSocket Server
   → World Instance
 ```
 
 ### 2. Physics Integration
+
 Leverages Hyperfy's PhysX implementation:
 
 ```typescript
@@ -39,6 +42,7 @@ USE_ITEM → PhysX object manipulation
 ```
 
 ### 3. Real-time Building
+
 Integrates with Hyperfy's content creation:
 
 ```typescript
@@ -50,6 +54,7 @@ EDIT_ENTITY → Hyperfy entity system
 ```
 
 ### 4. Avatar System
+
 Uses Hyperfy's VRM avatar support:
 
 ```typescript
@@ -60,6 +65,7 @@ Avatar URL → Hyperfy VRM loader
 ```
 
 ### 5. Interactive Apps
+
 Supports Hyperfy's JavaScript app system:
 
 ```typescript
@@ -74,6 +80,7 @@ entity.app → JavaScript execution
 The plugin supports Hyperfy's asset pipeline:
 
 ### Asset URL Resolution
+
 ```typescript
 // utils.ts handles multiple asset sources
 "asset://" → World-hosted assets (Hyperfy CDN)
@@ -83,6 +90,7 @@ The plugin supports Hyperfy's asset pipeline:
 ```
 
 ### Supported Asset Types
+
 - `.vrm` - Avatar models
 - `.glb/.gltf` - 3D models
 - `.hdr` - Environment maps
@@ -107,6 +115,7 @@ This clones the [Hyperfy repository](https://github.com/lalalune/hyperfy), build
 ## Environment Configuration
 
 ### Hyperfy World Server
+
 ```env
 # Connect to Hyperfy world
 HYPERFY_WORLD_URL=wss://world.hyperfy.xyz/ws
@@ -114,6 +123,7 @@ HYPERFY_ASSETS_URL=https://assets.hyperfy.xyz
 ```
 
 ### Custom Domains
+
 ```env
 # Self-hosted world
 HYPERFY_WORLD_URL=wss://my-world.com/ws
@@ -123,27 +133,35 @@ HYPERFY_ASSETS_URL=https://my-world.com/assets
 ## Key Integration Points
 
 ### 1. World Events
+
 The plugin listens to Hyperfy world events:
+
 - Entity spawned/destroyed
 - Player joined/left
 - World state changes
 - Physics updates
 
 ### 2. Networking
+
 Uses Hyperfy's real-time synchronization:
+
 - Position updates
 - Action broadcasts
 - Chat messages
 - Voice data
 
 ### 3. Persistence
+
 Integrates with Hyperfy's world persistence:
+
 - Entity positions saved
 - Build changes persisted
 - Avatar customizations stored
 
 ### 4. WebXR Compatibility
+
 Agents work alongside VR users:
+
 - Spatial audio positioning
 - Hand gesture recognition
 - VR controller interactions
@@ -151,18 +169,20 @@ Agents work alongside VR users:
 ## Advanced Features
 
 ### Physics Utilities
+
 ```typescript
 // Calculate 3D distances
-calculateDistance3D(pos1, pos2)
+calculateDistance3D(pos1, pos2);
 
 // Check interaction range
-isWithinRange(pos1, pos2, range)
+isWithinRange(pos1, pos2, range);
 
 // Generate random positions
-randomPositionInRadius(center, radius)
+randomPositionInRadius(center, radius);
 ```
 
 ### Entity Helpers
+
 ```typescript
 // Check interactability
 isInteractableEntity(entity)
@@ -174,6 +194,7 @@ formatEntity(entity)
 ```
 
 ### World Parsing
+
 ```typescript
 // Extract world ID from URL
 parseHyperfyWorldUrl("https://hyperfy.io/my-world")
@@ -185,15 +206,18 @@ parseHyperfyWorldUrl("https://hyperfy.io/my-world")
 Based on Hyperfy's roadmap:
 
 1. **Enhanced App System**
+
    - Direct JavaScript app creation by agents
    - Complex event-driven behaviors
 
 2. **Advanced Physics**
+
    - Fluid dynamics
    - Soft body physics
    - Complex constraints
 
 3. **Procedural Generation**
+
    - AI-driven world building
    - Dynamic content creation
 
@@ -221,4 +245,4 @@ When contributing to the Hyperfy plugin:
 
 ## License
 
-The Hyperfy framework is licensed under GPL-3.0. Ensure compliance when building derivative works. 
+The Hyperfy framework is licensed under GPL-3.0. Ensure compliance when building derivative works.

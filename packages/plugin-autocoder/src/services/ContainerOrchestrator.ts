@@ -37,7 +37,7 @@ export class ContainerOrchestrator extends Service {
   static _serviceName = 'container-orchestrator';
   static serviceType = 'orchestration' as const;
 
-  private dockerService!: IDockerService;
+  private dockerService: IDockerService | null = null;
   private managedContainers: Map<string, ManagedContainer> = new Map();
   private containersByTask: Map<UUID, string[]> = new Map();
   private nextPort = 8000; // Starting port for sub-agent communication
@@ -63,7 +63,7 @@ export class ContainerOrchestrator extends Service {
       const maxAttempts = 50; // Increase attempts
 
       while (attempts < maxAttempts) {
-        this.dockerService = this.runtime?.getService<IDockerService>('docker');
+        this.dockerService = this.runtime?.getService('docker') as IDockerService | null;
         if (this.dockerService) {
           elizaLogger.debug(`Docker service found on attempt ${attempts + 1}`);
           break;
@@ -113,6 +113,10 @@ export class ContainerOrchestrator extends Service {
   }
 
   async spawnSubAgent(_request: OrchestrationRequest): Promise<string> {
+    if (!this.dockerService) {
+      throw new Error('Docker service not available - container features are disabled');
+    }
+
     try {
       elizaLogger.info(
         `Spawning sub-agent for task ${_request.taskId} with role ${_request.agentRole}`
@@ -203,6 +207,10 @@ export class ContainerOrchestrator extends Service {
 
   async terminateSubAgent(_containerId: string, graceful: boolean = true): Promise<void> {
     try {
+      if (!this.dockerService) {
+        throw new Error('Docker service not initialized');
+      }
+
       const managedContainer = this.managedContainers.get(_containerId);
       if (!managedContainer) {
         elizaLogger.warn(`Container ${_containerId} not found in managed containers`);
@@ -270,6 +278,10 @@ export class ContainerOrchestrator extends Service {
 
   async getContainerStatus(_containerId: string): Promise<ContainerStatus | null> {
     try {
+      if (!this.dockerService) {
+        return null;
+      }
+
       const managedContainer = this.managedContainers.get(_containerId);
       if (!managedContainer) {
         return null;
@@ -299,6 +311,10 @@ export class ContainerOrchestrator extends Service {
   }
 
   async executeInSubAgent(_containerId: string, command: string[]): Promise<any> {
+    if (!this.dockerService) {
+      throw new Error('Docker service not initialized');
+    }
+
     const managedContainer = this.managedContainers.get(_containerId);
     if (!managedContainer) {
       throw new Error(`Container ${_containerId} not found`);
@@ -374,6 +390,10 @@ export class ContainerOrchestrator extends Service {
   }
 
   private async getImageForRole(_role: 'coder' | 'reviewer' | 'tester'): Promise<string> {
+    if (!this.dockerService) {
+      throw new Error('Docker service not initialized');
+    }
+
     const images = {
       coder: 'elizaos/autocoder-agent:latest',
       reviewer: 'elizaos/review-agent:latest',
@@ -401,9 +421,14 @@ export class ContainerOrchestrator extends Service {
     }
   }
 
-  private async buildMissingImage(_role: 'coder' | 'reviewer' | 'tester',
+  private async buildMissingImage(
+    _role: 'coder' | 'reviewer' | 'tester',
     imageName: string
   ): Promise<void> {
+    if (!this.dockerService) {
+      throw new Error('Docker service not initialized');
+    }
+
     try {
       elizaLogger.info(`Building missing Docker image: ${imageName}`);
 
@@ -482,6 +507,10 @@ export class ContainerOrchestrator extends Service {
   }
 
   private async waitForContainerReady(_containerId: string, timeoutMs: number): Promise<void> {
+    if (!this.dockerService) {
+      throw new Error('Docker service not initialized');
+    }
+
     const startTime = Date.now();
 
     while (Date.now() - startTime < timeoutMs) {
@@ -512,6 +541,10 @@ export class ContainerOrchestrator extends Service {
   }
 
   private async waitForContainerStop(_containerId: string, timeoutMs: number): Promise<void> {
+    if (!this.dockerService) {
+      throw new Error('Docker service not initialized');
+    }
+
     const startTime = Date.now();
 
     while (Date.now() - startTime < timeoutMs) {
@@ -563,7 +596,9 @@ export class ContainerOrchestrator extends Service {
 
   private async handleUnexpectedTermination(_containerId: string): Promise<void> {
     const managedContainer = this.managedContainers.get(_containerId);
-    if (!managedContainer) {return;}
+    if (!managedContainer) {
+      return;
+    }
 
     elizaLogger.warn(
       `Handling unexpected termination for ${managedContainer.agentConfig.agentName}`
@@ -580,7 +615,9 @@ export class ContainerOrchestrator extends Service {
 
   private async handleUnhealthyContainer(_containerId: string): Promise<void> {
     const managedContainer = this.managedContainers.get(_containerId);
-    if (!managedContainer) {return;}
+    if (!managedContainer) {
+      return;
+    }
 
     elizaLogger.warn(`Handling unhealthy container: ${managedContainer.agentConfig.agentName}`);
 
@@ -590,6 +627,10 @@ export class ContainerOrchestrator extends Service {
 
   private startHealthCheckMonitoring(): void {
     this.healthCheckInterval = setInterval(async () => {
+      if (!this.dockerService) {
+        return;
+      }
+
       for (const [containerId, managedContainer] of Array.from(this.managedContainers.entries())) {
         try {
           const status = await this.dockerService.getContainerStatus(containerId);
@@ -612,6 +653,10 @@ export class ContainerOrchestrator extends Service {
   }
 
   private async cleanupOrphanedContainers(): Promise<void> {
+    if (!this.dockerService) {
+      return;
+    }
+
     try {
       const containers = await this.dockerService.listContainers({
         label: 'eliza.container.type=sub-agent',

@@ -60,15 +60,27 @@ export const toggleLoopAction: Action = {
     const text = message.content.text?.toLowerCase() || '';
 
     const autonomousKeywords = [
-      'autonomous', 'auto', 'loop', 'continuous', 'start thinking', 'stop thinking'
+      'autonomous',
+      'auto',
+      'loop',
+      'continuous',
+      'start thinking',
+      'stop thinking',
     ];
 
     const actionKeywords = [
-      'start', 'stop', 'toggle', 'turn on', 'turn off', 'enable', 'disable', 'set interval'
+      'start',
+      'stop',
+      'toggle',
+      'turn on',
+      'turn off',
+      'enable',
+      'disable',
+      'set interval',
     ];
 
-    const hasAutonomousKeyword = autonomousKeywords.some(keyword => text.includes(keyword));
-    const hasActionKeyword = actionKeywords.some(keyword => text.includes(keyword));
+    const hasAutonomousKeyword = autonomousKeywords.some((keyword) => text.includes(keyword));
+    const hasActionKeyword = actionKeywords.some((keyword) => text.includes(keyword));
 
     return hasAutonomousKeyword && hasActionKeyword;
   },
@@ -96,8 +108,12 @@ export const toggleLoopAction: Action = {
         const unit = intervalMatch[2].toLowerCase();
 
         let ms = value * 1000; // Default to seconds
-        if (unit.startsWith('minute')) {ms *= 60;}
-        if (unit.startsWith('hour')) {ms *= 3600;}
+        if (unit.startsWith('minute')) {
+          ms *= 60;
+        }
+        if (unit.startsWith('hour')) {
+          ms *= 3600;
+        }
 
         service.setLoopInterval(ms);
         responseText = `Set autonomous loop interval to ${value} ${unit}${value > 1 ? 's' : ''}.`;
@@ -122,7 +138,8 @@ export const toggleLoopAction: Action = {
           responseText = 'Autonomous loop is already stopped.';
         } else {
           await service.stopLoop();
-          responseText = 'Stopped the autonomous loop. I will now only respond when directly addressed.';
+          responseText =
+            'Stopped the autonomous loop. I will now only respond when directly addressed.';
         }
       }
       // Toggle command

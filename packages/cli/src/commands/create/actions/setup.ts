@@ -154,7 +154,7 @@ export async function setupAIModelConfig(
  */
 export async function installDependencies(targetDir: string): Promise<void> {
   // Skip dependency installation in CI/test environments to save memory and time
-  if (process.env.CI === 'true' || process.env.ELIZA_TEST_MODE === 'true') {
+  if (process.env.CI === 'true' || process.env.ELIZA_TEST_MODE === 'true' || process.env.CLI_TEST_MODE === 'true') {
     console.info('Skipping dependency installation in CI/test environment...');
     return;
   }

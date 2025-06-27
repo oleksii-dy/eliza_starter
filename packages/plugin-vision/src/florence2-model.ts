@@ -11,7 +11,9 @@ export class Florence2Model {
   }
 
   async initialize(): Promise<void> {
-    if (this.initialized) {return;}
+    if (this.initialized) {
+      return;
+    }
 
     try {
       logger.info('[Florence2] Initializing local Florence-2 model with TensorFlow.js...');
@@ -159,12 +161,14 @@ export class Florence2Model {
     };
   }
 
-  async detectUIElements(imageBuffer: Buffer): Promise<Array<{
-    type: string;
-    bbox: BoundingBox;
-    confidence: number;
-    text?: string;
-  }>> {
+  async detectUIElements(imageBuffer: Buffer): Promise<
+    Array<{
+      type: string;
+      bbox: BoundingBox;
+      confidence: number;
+      text?: string;
+    }>
+  > {
     if (!this.initialized) {
       await this.initialize();
     }
@@ -181,7 +185,7 @@ export class Florence2Model {
       }
 
       // Convert Florence-2 objects to UI elements
-      return (result.objects || []).map(obj => ({
+      return (result.objects || []).map((obj) => ({
         type: this.mapToUIElementType(obj.label),
         bbox: obj.bbox,
         confidence: obj.confidence,
@@ -275,28 +279,28 @@ export class Florence2Model {
 
   private mapToUIElementType(label: string): string {
     const mapping: Record<string, string> = {
-      'button': 'button',
-      'text_field': 'input',
-      'text_area': 'textarea',
-      'checkbox': 'checkbox',
-      'radio_button': 'radio',
-      'dropdown': 'select',
-      'menu': 'menu',
-      'menu_bar': 'menubar',
-      'toolbar': 'toolbar',
-      'window': 'window',
-      'dialog': 'dialog',
-      'icon': 'icon',
-      'image': 'image',
-      'video': 'video',
-      'link': 'link',
-      'heading': 'heading',
-      'paragraph': 'text',
-      'list': 'list',
-      'table': 'table',
-      'scrollbar': 'scrollbar',
-      'tab': 'tab',
-      'panel': 'panel',
+      button: 'button',
+      text_field: 'input',
+      text_area: 'textarea',
+      checkbox: 'checkbox',
+      radio_button: 'radio',
+      dropdown: 'select',
+      menu: 'menu',
+      menu_bar: 'menubar',
+      toolbar: 'toolbar',
+      window: 'window',
+      dialog: 'dialog',
+      icon: 'icon',
+      image: 'image',
+      video: 'video',
+      link: 'link',
+      heading: 'heading',
+      paragraph: 'text',
+      list: 'list',
+      table: 'table',
+      scrollbar: 'scrollbar',
+      tab: 'tab',
+      panel: 'panel',
     };
 
     return mapping[label.toLowerCase()] || 'unknown';
@@ -311,7 +315,9 @@ export class Florence2Model {
 
     // Analyze each tile
     for (const tile of tiles) {
-      if (!tile.data) {continue;}
+      if (!tile.data) {
+        continue;
+      }
 
       const analysis = await this.analyzeTile(tile);
 
@@ -362,18 +368,25 @@ export class Florence2Model {
     };
 
     // Check containment
-    if (this.contains(box1, box2)) {return 'contains';}
-    if (this.contains(box2, box1)) {return 'contained_by';}
+    if (this.contains(box1, box2)) {
+      return 'contains';
+    }
+    if (this.contains(box2, box1)) {
+      return 'contained_by';
+    }
 
     // Check overlap
-    if (this.overlaps(box1, box2)) {return 'overlaps';}
+    if (this.overlaps(box1, box2)) {
+      return 'overlaps';
+    }
 
     // Check adjacency and direction
     const dx = center2.x - center1.x;
     const dy = center2.y - center1.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    if (distance < 100) { // Close proximity
+    if (distance < 100) {
+      // Close proximity
       if (Math.abs(dx) > Math.abs(dy)) {
         return dx > 0 ? 'right_of' : 'left_of';
       } else {

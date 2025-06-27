@@ -23,12 +23,18 @@ export {
   createMultiAgentScenario,
 } from '@elizaos/core/test-utils';
 
+// Use bun:test mock but ensure compatibility with core imports
+import { mock as bunMock } from 'bun:test';
+const mock = bunMock;
+
 import type { IAgentRuntime, State } from '@elizaos/core';
 import { createMockRuntime, createMockState } from '@elizaos/core/test-utils';
-import { mock } from 'bun:test';
 
 // Type alias for MockRuntime for backward compatibility
 export type MockRuntime = IAgentRuntime;
+
+// Export the mock function for use in other test files
+export { mock };
 
 /**
  * Helper function to create a setup for action tests

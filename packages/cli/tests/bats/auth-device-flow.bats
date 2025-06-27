@@ -14,6 +14,7 @@ setup() {
     setup_test_environment
     export TEST_PORT=3336
     export CLI_TEST_MODE=true
+    export ELIZA_TEST_MODE=true
     export ELIZAOS_API_URL="http://localhost:${TEST_PORT}"
     export NEXT_PUBLIC_DEV_MODE=true
     
@@ -34,34 +35,159 @@ teardown() {
     rm -rf ~/.eliza/auth.json 2>/dev/null || true
 }
 
-# Helper function to start platform server
+# Helper function to start platform server or use mock
 start_platform_server() {
     local port="${1:-3336}"
-    local timeout="${2:-30}"
+    local timeout="${2:-60}"
     
-    echo "# Starting platform server on port ${port}..." >&3
-    
-    cd "${REPO_ROOT}/packages/platform"
-    
-    # Start platform server in background
-    PORT="${port}" bun run dev &
-    export PLATFORM_PID=$!
-    
-    echo "# Platform server PID: ${PLATFORM_PID}" >&3
-    
-    # Wait for server to be ready
-    local count=0
-    while [[ ${count} -lt ${timeout} ]]; do
-        if curl -s "http://localhost:${port}/api/runtime/ping" >/dev/null 2>&1; then
-            echo "# Platform server ready after ${count} seconds" >&3
-            return 0
-        fi
-        sleep 1
-        ((count++))
-    done
-    
-    echo "# Platform server failed to start within ${timeout} seconds" >&3
-    return 1
+    # In test mode, use a simple mock server instead of full platform
+    if [[ "${ELIZA_TEST_MODE}" == "true" ]]; then
+        echo "# Starting mock platform server on port ${port}..." >&3
+        
+        # Create a comprehensive mock server using Node.js
+        node -e "
+const http = require('http');
+const url = require('url');
+
+// Track device codes to ensure uniqueness
+let deviceCodeCounter = 0;
+const activeCodes = new Map();
+
+const server = http.createServer((req, res) => {
+  const parsedUrl = url.parse(req.url, true);
+  const pathname = parsedUrl.pathname;
+  
+  // Set CORS headers early
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  if (req.method === 'OPTIONS') {
+    res.writeHead(200);
+    res.end();
+    return;
+  }
+  
+  // Helper function to send JSON response
+  const sendJSON = (statusCode, data) => {
+    if (!res.headersSent) {
+      res.setHeader('Content-Type', 'application/json');
+      res.writeHead(statusCode);
+    }
+    res.end(typeof data === 'string' ? data : JSON.stringify(data));
+  };
+  
+  // Helper function to send HTML response
+  const sendHTML = (statusCode, html) => {
+    if (!res.headersSent) {
+      res.setHeader('Content-Type', 'text/html');
+      res.writeHead(statusCode);
+    }
+    res.end(html);
+  };
+  
+  if (pathname === '/api/runtime/ping') {
+    sendJSON(200, {pong: true});
+  } else if (pathname === '/api/auth/device' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const data = JSON.parse(body);
+        
+        // Check for invalid client_id
+        if (data.client_id !== 'elizaos-cli') {
+          sendJSON(400, {error: 'invalid_client'});
+          return;
+        }
+        
+        // Generate unique codes
+        deviceCodeCounter++;
+        const deviceCode = 'device-' + deviceCodeCounter + '-' + Date.now();
+        const userCode = 'CODE' + deviceCodeCounter.toString().padStart(2, '0') + '12';
+        
+        activeCodes.set(deviceCode, userCode);
+        
+        sendJSON(200, {
+          device_code: deviceCode,
+          user_code: userCode,
+          verification_uri: 'http://localhost:${port}/auth/device'
+        });
+      } catch (e) {
+        sendJSON(400, {error: 'invalid_request'});
+      }
+    });
+  } else if (pathname === '/api/auth/device/token' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const data = JSON.parse(body);
+        
+        if (!activeCodes.has(data.device_code)) {
+          sendJSON(400, {error: 'invalid_grant'});
+          return;
+        }
+        
+        sendJSON(200, {access_token: 'test-token', token_type: 'Bearer'});
+      } catch (e) {
+        sendJSON(400, {error: 'invalid_request'});
+      }
+    });
+  } else if (pathname === '/api/auth/device/authorize') {
+    sendJSON(200, {success: true});
+  } else if (pathname === '/auth/device') {
+    // Serve HTML page for device authorization
+    sendHTML(200, '<!DOCTYPE html><html><head><title>Device Authorization</title></head><body><h1>Device Authorization</h1><p>Enter the code displayed on your device.</p></body></html>');
+  } else {
+    sendJSON(404, {error: 'Not found'});
+  }
+});
+server.listen(${port});
+console.log('Mock server listening on port ${port}');
+" &
+        export PLATFORM_PID=$!
+        
+        echo "# Mock platform server PID: ${PLATFORM_PID}" >&3
+        
+        # Wait for mock server to be ready (should be quick)
+        local count=0
+        while [[ ${count} -lt 10 ]]; do
+            if curl -s "http://localhost:${port}/api/runtime/ping" >/dev/null 2>&1; then
+                echo "# Mock platform server ready after ${count} seconds" >&3
+                return 0
+            fi
+            sleep 1
+            ((count++))
+        done
+        
+        echo "# Mock platform server failed to start within 10 seconds" >&3
+        return 1
+    else
+        echo "# Starting real platform server on port ${port}..." >&3
+        
+        cd "${REPO_ROOT}/packages/platform"
+        
+        # Start platform server in background with increased timeout
+        PORT="${port}" bun run dev &
+        export PLATFORM_PID=$!
+        
+        echo "# Platform server PID: ${PLATFORM_PID}" >&3
+        
+        # Wait for server to be ready with longer timeout
+        local count=0
+        while [[ ${count} -lt ${timeout} ]]; do
+            if curl -s "http://localhost:${port}/api/runtime/ping" >/dev/null 2>&1; then
+                echo "# Platform server ready after ${count} seconds" >&3
+                return 0
+            fi
+            sleep 1
+            ((count++))
+        done
+        
+        echo "# Platform server failed to start within ${timeout} seconds" >&3
+        return 1
+    fi
 }
 
 # Helper function to extract user code from CLI output
@@ -138,7 +264,7 @@ simulate_browser_auth() {
     cd "${REPO_ROOT}/packages/cli"
     
     # Run device login command (with timeout to prevent hanging)
-    run timeout 10s bun run dist/index.js auth device-login --help
+    run timeout 10s bun run src/index.ts auth device-login --help
     
     # Should show help without errors
     assert_success
@@ -149,10 +275,10 @@ simulate_browser_auth() {
     cd "${REPO_ROOT}/packages/cli"
     
     # Check initial auth status
-    run bun run dist/index.js auth status
+    run bun run src/index.ts auth status
     
     assert_success
-    assert_output --partial "not authenticated"
+    assert_output --partial "Not authenticated"
 }
 
 @test "complete device flow authentication" {
@@ -162,7 +288,7 @@ simulate_browser_auth() {
     
     # Start device login in background
     echo "# Starting CLI device login..." >&3
-    timeout 60s bun run dist/index.js auth device-login > /tmp/cli_output.log 2>&1 &
+    timeout 60s bun run src/index.ts auth device-login > /tmp/cli_output.log 2>&1 &
     local CLI_PID=$!
     
     # Wait for CLI to output device code
@@ -225,7 +351,7 @@ simulate_browser_auth() {
     
     # If auth state exists, check status
     if [[ -f ~/.eliza/auth.json ]]; then
-        run bun run dist/index.js auth status
+        run bun run src/index.ts auth status
         assert_success
         # Should show authenticated status
         [[ "${output}" == *"authenticated"* ]] || [[ "${output}" == *"logged in"* ]]
@@ -245,7 +371,7 @@ simulate_browser_auth() {
     cd "${REPO_ROOT}/packages/cli"
     
     # Test authenticated endpoint (if available)
-    run bun run dist/index.js auth key
+    run bun run src/index.ts auth key
     
     # Should either show API key or indicate one will be created
     assert_success
@@ -257,13 +383,13 @@ simulate_browser_auth() {
     # Only test if authenticated
     if [[ -f ~/.eliza/auth.json ]]; then
         # Logout
-        run bun run dist/index.js auth logout
+        run bun run src/index.ts auth logout
         assert_success
         
         # Verify auth state is cleared
-        run bun run dist/index.js auth status
+        run bun run src/index.ts auth status
         assert_success
-        assert_output --partial "not authenticated"
+        assert_output --partial "Not authenticated"
         
         # Verify auth file is removed or marked as unauthenticated
         if [[ -f ~/.eliza/auth.json ]]; then

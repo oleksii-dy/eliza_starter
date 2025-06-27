@@ -42,7 +42,7 @@ describe('API Service Integration Tests', () => {
       const _startPromise = apiService.start();
 
       // Wait a bit for the service to start
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       baseUrl = `http://${TEST_CONFIG.API_SERVICE_HOST}:${TEST_CONFIG.API_SERVICE_PORT}`;
 
@@ -114,9 +114,7 @@ describe('API Service Integration Tests', () => {
   test('Chat completions endpoint handles requests', async () => {
     const testRequest: CompletionRequest = {
       model: 'gpt-4o-mini',
-      messages: [
-        { role: 'user', content: 'What is 2+2? Answer with just the number.' }
-      ],
+      messages: [{ role: 'user', content: 'What is 2+2? Answer with just the number.' }],
       max_tokens: 10,
       temperature: 0,
     };
@@ -126,7 +124,7 @@ describe('API Service Integration Tests', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer test-api-key', // This will fail auth but test the endpoint
+          Authorization: 'Bearer test-api-key', // This will fail auth but test the endpoint
         },
         body: JSON.stringify(testRequest),
       });
@@ -163,7 +161,7 @@ describe('API Service Integration Tests', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer test-api-key',
+          Authorization: 'Bearer test-api-key',
         },
         body: JSON.stringify(testRequest),
       });
@@ -187,7 +185,7 @@ describe('API Service Integration Tests', () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer test-key',
+          Authorization: 'Bearer test-key',
         },
         body: 'invalid json',
       });
@@ -206,7 +204,6 @@ describe('API Service Integration Tests', () => {
 
       expect(response2.status).toBe(401);
       console.log('✅ Service handles missing authorization gracefully');
-
     } catch (error) {
       console.warn('⚠️  Error handling test failed:', error.message);
     }

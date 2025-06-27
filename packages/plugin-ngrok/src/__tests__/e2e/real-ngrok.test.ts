@@ -270,7 +270,8 @@ describe('Real ngrok API E2E Tests', () => {
       const callback = jest.fn().mockResolvedValue([]);
       const result = await startTunnelAction.handler(runtime, message, {} as State, {}, callback);
 
-      expect(result).toBe(true);
+      expect(result).toBeDefined();
+      expect(typeof result).toBe('object');
       expect(callback).toHaveBeenCalledWith({
         text: expect.stringContaining('started successfully'),
         metadata: {
@@ -310,7 +311,8 @@ describe('Real ngrok API E2E Tests', () => {
         callback
       );
 
-      expect(result).toBe(true);
+      expect(result).toBeDefined();
+      expect(typeof result).toBe('object');
       expect(callback).toHaveBeenCalledWith({
         text: expect.stringContaining('Ngrok tunnel is active'),
         metadata: expect.objectContaining({
@@ -345,7 +347,8 @@ describe('Real ngrok API E2E Tests', () => {
       const callback = jest.fn().mockResolvedValue([]);
       const result = await stopTunnelAction.handler(runtime, message, {} as State, {}, callback);
 
-      expect(result).toBe(true);
+      expect(result).toBeDefined();
+      expect(typeof result).toBe('object');
       expect(callback).toHaveBeenCalledWith(
         expect.objectContaining({
           text: expect.stringContaining('stopped successfully'),

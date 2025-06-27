@@ -54,7 +54,9 @@ export function loadBillingConfig(): BillingConfig {
   return {
     initialCredits: {
       amount: parseFloat(process.env.INITIAL_CREDITS_AMOUNT || '5.0'),
-      description: process.env.INITIAL_CREDITS_DESCRIPTION || 'Welcome bonus - free credits',
+      description:
+        process.env.INITIAL_CREDITS_DESCRIPTION ||
+        'Welcome bonus - free credits',
     },
 
     agentLimits: {
@@ -87,7 +89,12 @@ export function loadBillingConfig(): BillingConfig {
         priceId: process.env.STRIPE_PRICE_ID_PRO || '',
         price: parseFloat(process.env.PRO_TIER_PRICE || '99.0'),
         agentLimit: parseInt(process.env.AGENT_LIMIT_PRO || '15', 10),
-        features: ['15 AI Agents', 'Priority Support', 'Custom Plugins', 'API Access'],
+        features: [
+          '15 AI Agents',
+          'Priority Support',
+          'Custom Plugins',
+          'API Access',
+        ],
         description: 'For growing businesses',
       },
       premium: {
@@ -95,7 +102,12 @@ export function loadBillingConfig(): BillingConfig {
         priceId: process.env.STRIPE_PRICE_ID_PREMIUM || '',
         price: parseFloat(process.env.PREMIUM_TIER_PRICE || '299.0'),
         agentLimit: parseInt(process.env.AGENT_LIMIT_PREMIUM || '50', 10),
-        features: ['50 AI Agents', '24/7 Support', 'White-label Options', 'Advanced Security'],
+        features: [
+          '50 AI Agents',
+          '24/7 Support',
+          'White-label Options',
+          'Advanced Security',
+        ],
         description: 'For large organizations',
       },
       enterprise: {
@@ -103,22 +115,36 @@ export function loadBillingConfig(): BillingConfig {
         priceId: process.env.STRIPE_PRICE_ID_ENTERPRISE || '',
         price: parseFloat(process.env.ENTERPRISE_TIER_PRICE || '999.0'),
         agentLimit: parseInt(process.env.AGENT_LIMIT_ENTERPRISE || '100', 10),
-        features: ['100+ AI Agents', 'Dedicated Support', 'Custom Integrations', 'SLA'],
+        features: [
+          '100+ AI Agents',
+          'Dedicated Support',
+          'Custom Integrations',
+          'SLA',
+        ],
         description: 'For enterprise deployments',
       },
     },
 
     autoTopUp: {
-      defaultThreshold: parseFloat(process.env.AUTO_TOPUP_DEFAULT_THRESHOLD || '10.0'),
-      defaultAmount: parseFloat(process.env.AUTO_TOPUP_DEFAULT_AMOUNT || '50.0'),
-      minimumAmount: parseFloat(process.env.AUTO_TOPUP_MINIMUM_AMOUNT || '10.0'),
-      maximumAmount: parseFloat(process.env.AUTO_TOPUP_MAXIMUM_AMOUNT || '1000.0'),
+      defaultThreshold: parseFloat(
+        process.env.AUTO_TOPUP_DEFAULT_THRESHOLD || '10.0',
+      ),
+      defaultAmount: parseFloat(
+        process.env.AUTO_TOPUP_DEFAULT_AMOUNT || '50.0',
+      ),
+      minimumAmount: parseFloat(
+        process.env.AUTO_TOPUP_MINIMUM_AMOUNT || '10.0',
+      ),
+      maximumAmount: parseFloat(
+        process.env.AUTO_TOPUP_MAXIMUM_AMOUNT || '1000.0',
+      ),
     },
 
     pricing: {
       minimumCharge: parseFloat(process.env.MINIMUM_CHARGE || '0.0001'),
       currency: process.env.BILLING_CURRENCY || 'usd',
-      billingCycle: (process.env.BILLING_CYCLE as 'monthly' | 'annual') || 'monthly',
+      billingCycle:
+        (process.env.BILLING_CYCLE as 'monthly' | 'annual') || 'monthly',
     },
   };
 }
@@ -126,7 +152,10 @@ export function loadBillingConfig(): BillingConfig {
 /**
  * Get agent limit for organization based on subscription tier
  */
-export function getAgentLimitForTier(tier: string, billingConfig?: BillingConfig): number {
+export function getAgentLimitForTier(
+  tier: string,
+  billingConfig?: BillingConfig,
+): number {
   const config = billingConfig || loadBillingConfig();
 
   if (tier in config.subscriptionTiers) {
@@ -140,7 +169,10 @@ export function getAgentLimitForTier(tier: string, billingConfig?: BillingConfig
 /**
  * Validate billing configuration
  */
-export function validateBillingConfig(config: BillingConfig): { isValid: boolean; errors: string[] } {
+export function validateBillingConfig(config: BillingConfig): {
+  isValid: boolean;
+  errors: string[];
+} {
   const errors: string[] = [];
 
   // Validate initial credits
@@ -150,7 +182,7 @@ export function validateBillingConfig(config: BillingConfig): { isValid: boolean
 
   // Validate agent limits
   const limits = Object.values(config.agentLimits);
-  if (limits.some(limit => limit < 1)) {
+  if (limits.some((limit) => limit < 1)) {
     errors.push('All agent limits must be at least 1');
   }
 
@@ -204,7 +236,10 @@ export function getBillingConfig(): BillingConfig {
     if (process.env.NODE_ENV === 'development') {
       const validation = validateBillingConfig(_billingConfig);
       if (!validation.isValid) {
-        console.warn('Billing configuration validation warnings:', validation.errors);
+        console.warn(
+          'Billing configuration validation warnings:',
+          validation.errors,
+        );
       }
     }
   }

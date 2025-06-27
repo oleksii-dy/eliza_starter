@@ -2,81 +2,81 @@ name: Robot Plugin E2E Tests
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
     paths:
       - 'packages/plugin-robot/**'
       - '.github/workflows/test.yml'
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths:
       - 'packages/plugin-robot/**'
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     strategy:
       matrix:
         node-version: [20.x, 22.x]
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Setup Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-    
-    - name: Setup Bun
-      uses: oven-sh/setup-bun@v1
-      with:
-        bun-version: latest
-    
-    - name: Install dependencies
-      run: |
-        cd packages/plugin-robot
-        bun install
-    
-    - name: Set up test environment
-      run: |
-        cd packages/plugin-robot
-        echo "NODE_ENV=test" >> $GITHUB_ENV
-        echo "USE_MOCK_ROBOT=true" >> $GITHUB_ENV
-        echo "ELIZA_TEST=true" >> $GITHUB_ENV
-        echo "MOCK_SIMULATE_DELAY=true" >> $GITHUB_ENV
-        echo "MOCK_DEFAULT_DELAY=50" >> $GITHUB_ENV
-        echo "LOG_LEVEL=info" >> $GITHUB_ENV
-    
-    - name: Build plugin
-      run: |
-        cd packages/plugin-robot
-        bun run build
-    
-    - name: Run unit tests
-      run: |
-        cd packages/plugin-robot
-        bun test --passWithNoTests
-      continue-on-error: true
-    
-    - name: Run E2E tests
-      run: |
-        cd packages/plugin-robot
-        bun run test:e2e || true
-      continue-on-error: true
-    
-    - name: Upload test results
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-results-${{ matrix.node-version }}
-        path: |
-          packages/plugin-robot/test-results/
-          packages/plugin-robot/.elizadb-test/
-    
-    - name: Clean up
-      if: always()
-      run: |
-        cd packages/plugin-robot
-        rm -rf .elizadb-test/
-        rm -rf dist/ 
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: |
+          cd packages/plugin-robot
+          bun install
+
+      - name: Set up test environment
+        run: |
+          cd packages/plugin-robot
+          echo "NODE_ENV=test" >> $GITHUB_ENV
+          echo "USE_MOCK_ROBOT=true" >> $GITHUB_ENV
+          echo "ELIZA_TEST=true" >> $GITHUB_ENV
+          echo "MOCK_SIMULATE_DELAY=true" >> $GITHUB_ENV
+          echo "MOCK_DEFAULT_DELAY=50" >> $GITHUB_ENV
+          echo "LOG_LEVEL=info" >> $GITHUB_ENV
+
+      - name: Build plugin
+        run: |
+          cd packages/plugin-robot
+          bun run build
+
+      - name: Run unit tests
+        run: |
+          cd packages/plugin-robot
+          bun test --passWithNoTests
+        continue-on-error: true
+
+      - name: Run E2E tests
+        run: |
+          cd packages/plugin-robot
+          bun run test:e2e || true
+        continue-on-error: true
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.node-version }}
+          path: |
+            packages/plugin-robot/test-results/
+            packages/plugin-robot/.elizadb-test/
+
+      - name: Clean up
+        if: always()
+        run: |
+          cd packages/plugin-robot
+          rm -rf .elizadb-test/
+          rm -rf dist/

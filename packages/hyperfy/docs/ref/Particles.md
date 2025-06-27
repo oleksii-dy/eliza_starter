@@ -33,7 +33,6 @@ The shape that particles are emitted from
 
 **Rectangle**: Emits from a flat rectangle (`['rectangle', width, depth, thickness, spherize]`)
 
-
 NOTE: `thickness` is a ratio from surface to full volume, where `0` will emit from the surface of the shape and `1` will emit anywhere in the whole volume of the shape
 
 NOTE: `spherize` determines whether the direction of the particles is based on the face (false) or the center origin (true)
@@ -73,7 +72,7 @@ How long particles emit for in a single cycle. Defaults to `5`.
 
 ### `.loop`: Boolean
 
-Whether cycles (controlled by `duration`) loop. When set to `false` particles will stop emitting at the end of `duration` and also call `onEnd` if set. 
+Whether cycles (controlled by `duration`) loop. When set to `false` particles will stop emitting at the end of `duration` and also call `onEnd` if set.
 
 Defaults to `true`.
 
@@ -94,7 +93,6 @@ How long a particle will live before it is released. This property is a string b
 **Random**: Particles have a min and max range and a value is randomly chosen for each particle, eg `1~5`
 
 Defaults to `5`.
-
 
 ### `.speed`: String
 
@@ -143,7 +141,7 @@ app.configure([
     type: 'file',
     kind: 'texture',
     label: 'Image',
-  }
+  },
 ])
 
 // ...
@@ -219,7 +217,6 @@ particles.sizeOverLife = '0,1|0.5,2|1,1'
 
 A smooth transition is automatically created between all points.
 
-
 ### `.rotateOverLife`: String
 
 Optional, allows particles to rotate over their lifetime. This property uses the same lifetime syntax as seen in `.sizeOverLife` (see above). Rotation values are in degrees.
@@ -250,4 +247,3 @@ particles.onEnd = () => {
 ### `.{...Node}`
 
 Inherits all [Node](/docs/ref/Node.md) properties
-

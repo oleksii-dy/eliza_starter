@@ -7,9 +7,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sessionService } from '@/lib/auth/session';
 import { CryptoPaymentVerifier } from '@/lib/billing/crypto-payment-verifier';
 
-export async function GET(
+export async function handleGET(
   request: NextRequest,
-  { params }: { params: Promise<{ paymentId: string }> }
+  { params }: { params: Promise<{ paymentId: string }> },
 ) {
   try {
     // Get user session
@@ -31,7 +31,7 @@ export async function GET(
     console.error('Failed to get crypto payment status:', error);
     return NextResponse.json(
       { error: 'Failed to get payment status' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

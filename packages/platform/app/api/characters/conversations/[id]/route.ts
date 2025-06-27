@@ -13,7 +13,7 @@ const getAuthService = () =>
 /**
  * GET /api/characters/conversations/[id] - Get conversation by ID
  */
-export async function GET(
+export async function handleGET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {

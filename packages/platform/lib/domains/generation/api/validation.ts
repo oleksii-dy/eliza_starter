@@ -4,12 +4,12 @@
  */
 
 import { z } from 'zod';
-import { 
+import {
   generationRequestSchema as baseGenerationSchema,
   batchGenerationSchema as baseBatchSchema,
   GenerationType,
   GenerationProvider,
-  GenerationStatus
+  GenerationStatus,
 } from '../types';
 
 // Enhanced validation schema for API endpoints
@@ -18,16 +18,16 @@ export const generationRequestSchema = z.object({
   type: z.nativeEnum(GenerationType),
   prompt: z.string().min(1),
   provider: z.nativeEnum(GenerationProvider).optional(),
-  
+
   // API-specific fields
   webhook_url: z.string().url().optional(),
   client_id: z.string().optional(),
   idempotency_key: z.string().optional(),
-  
+
   // Server-set fields
   organizationId: z.string().uuid().optional(),
   userId: z.string().uuid().optional(),
-  
+
   // Optional fields
   model_name: z.string().optional(),
   quality: z.enum(['draft', 'standard', 'high']).optional(),
@@ -47,7 +47,9 @@ export const listGenerationsSchema = z.object({
   provider: z.nativeEnum(GenerationProvider).optional(),
   status: z.nativeEnum(GenerationStatus).optional(),
   project_id: z.string().uuid().optional(),
-  sort_by: z.enum(['created_at', 'updated_at', 'completed_at', 'cost']).default('created_at'),
+  sort_by: z
+    .enum(['created_at', 'updated_at', 'completed_at', 'cost'])
+    .default('created_at'),
   sort_order: z.enum(['asc', 'desc']).default('desc'),
   created_after: z.coerce.date().optional(),
   created_before: z.coerce.date().optional(),
@@ -73,25 +75,35 @@ export const webhookPayloadSchema = z.object({
     'generation.processing',
     'generation.completed',
     'generation.failed',
-    'generation.cancelled'
+    'generation.cancelled',
   ]),
   data: z.object({
     id: z.string(),
     type: z.nativeEnum(GenerationType),
-    status: z.enum(['queued', 'processing', 'completed', 'failed', 'cancelled']),
+    status: z.enum([
+      'queued',
+      'processing',
+      'completed',
+      'failed',
+      'cancelled',
+    ]),
     organizationId: z.string().uuid(),
     userId: z.string().uuid(),
     createdAt: z.date(),
     updatedAt: z.date(),
     completedAt: z.date().optional(),
     error: z.string().optional(),
-    outputs: z.array(z.object({
-      id: z.string(),
-      url: z.string().url(),
-      format: z.string(),
-      size: z.number(),
-      metadata: z.record(z.any()).optional(),
-    })).optional(),
+    outputs: z
+      .array(
+        z.object({
+          id: z.string(),
+          url: z.string().url(),
+          format: z.string(),
+          size: z.number(),
+          metadata: z.record(z.any()).optional(),
+        }),
+      )
+      .optional(),
   }),
   timestamp: z.date(),
   webhook_id: z.string(),
@@ -100,81 +112,81 @@ export const webhookPayloadSchema = z.object({
 // Validation helper functions
 export function validateGenerationRequest(data: unknown) {
   const result = generationRequestSchema.safeParse(data);
-  
+
   if (!result.success) {
     return {
       valid: false,
-      errors: result.error.errors.map(err => ({
+      errors: result.error.errors.map((err) => ({
         field: err.path.join('.'),
         message: err.message,
-        code: err.code
-      }))
+        code: err.code,
+      })),
     };
   }
 
   return {
     valid: true,
-    data: result.data
+    data: result.data,
   };
 }
 
 export function validateBatchRequest(data: unknown) {
   const result = batchGenerationSchema.safeParse(data);
-  
+
   if (!result.success) {
     return {
       valid: false,
-      errors: result.error.errors.map(err => ({
+      errors: result.error.errors.map((err) => ({
         field: err.path.join('.'),
         message: err.message,
-        code: err.code
-      }))
+        code: err.code,
+      })),
     };
   }
 
   return {
     valid: true,
-    data: result.data
+    data: result.data,
   };
 }
 
 export function validateListQuery(query: Record<string, any>) {
   const result = listGenerationsSchema.safeParse(query);
-  
+
   if (!result.success) {
     return {
       valid: false,
-      errors: result.error.errors.map(err => ({
+      errors: result.error.errors.map((err) => ({
         field: err.path.join('.'),
         message: err.message,
-        code: err.code
-      }))
+        code: err.code,
+      })),
     };
   }
 
   return {
     valid: true,
-    data: result.data
+    data: result.data,
   };
 }
 
 export function validateAnalyticsQuery(query: Record<string, any>) {
   const result = analyticsQuerySchema.safeParse(query);
-  
+
   if (!result.success) {
     return {
       valid: false,
-      errors: result.error.errors.map(err => ({
+      errors: result.error.errors.map((err) => ({
         field: err.path.join('.'),
         message: err.message,
-        code: err.code
-      }))
+        code: err.code,
+      })),
     };
   }
 
   return {
     valid: true,
-    data: result.data
+    data: result.data,
   };
 }
 
@@ -183,12 +195,12 @@ export function validateContentType(contentType: string | null): boolean {
   const allowedTypes = [
     'application/json',
     'application/x-www-form-urlencoded',
-    'multipart/form-data'
+    'multipart/form-data',
   ];
 
   if (!contentType) return false;
-  
-  return allowedTypes.some(type => contentType.includes(type));
+
+  return allowedTypes.some((type) => contentType.includes(type));
 }
 
 // File upload validation
@@ -198,14 +210,17 @@ export const fileUploadSchema = z.object({
   metadata: z.record(z.any()).optional(),
 });
 
-export function validateFileUpload(file: File): { valid: boolean; errors?: string[] } {
+export function validateFileUpload(file: File): {
+  valid: boolean;
+  errors?: string[];
+} {
   const errors: string[] = [];
-  
+
   // Check file size (10MB max)
   if (file.size > 10 * 1024 * 1024) {
     errors.push('File size must be less than 10MB');
   }
-  
+
   // Check file type
   const allowedTypes = [
     'image/jpeg',
@@ -216,16 +231,16 @@ export function validateFileUpload(file: File): { valid: boolean; errors?: strin
     'video/webm',
     'audio/mpeg',
     'audio/wav',
-    'audio/ogg'
+    'audio/ogg',
   ];
-  
+
   if (!allowedTypes.includes(file.type)) {
     errors.push(`File type ${file.type} not supported`);
   }
-  
+
   return {
     valid: errors.length === 0,
-    errors: errors.length > 0 ? errors : undefined
+    errors: errors.length > 0 ? errors : undefined,
   };
 }
 
@@ -233,78 +248,65 @@ export function validateFileUpload(file: File): { valid: boolean; errors?: strin
 export function validateRateLimit(
   userId: string,
   requestCount: number,
-  timeWindow: number
+  timeWindow: number,
 ): { allowed: boolean; resetTime?: number } {
   const maxRequests = 100; // requests per hour
   const windowMs = 60 * 60 * 1000; // 1 hour
-  
+
   if (requestCount >= maxRequests) {
     return {
       allowed: false,
-      resetTime: Date.now() + windowMs
+      resetTime: Date.now() + windowMs,
     };
   }
-  
+
   return { allowed: true };
 }
 
 // Provider-specific validation
 export function validateProviderSupport(
   type: GenerationType,
-  provider: GenerationProvider
+  provider: GenerationProvider,
 ): { supported: boolean; message?: string } {
   const providerSupport: Record<GenerationProvider, GenerationType[]> = {
     [GenerationProvider.OPENAI]: [
       GenerationType.TEXT,
       GenerationType.IMAGE,
       GenerationType.AUDIO,
-      GenerationType.CODE
+      GenerationType.CODE,
     ],
-    [GenerationProvider.ANTHROPIC]: [
-      GenerationType.TEXT,
-      GenerationType.CODE
-    ],
+    [GenerationProvider.ANTHROPIC]: [GenerationType.TEXT, GenerationType.CODE],
     [GenerationProvider.ELEVENLABS]: [
       GenerationType.AUDIO,
-      GenerationType.SPEECH
+      GenerationType.SPEECH,
     ],
-    [GenerationProvider.GOOGLE_VEO]: [
-      GenerationType.VIDEO
-    ],
-    [GenerationProvider.STABLE_DIFFUSION]: [
-      GenerationType.IMAGE
-    ],
+    [GenerationProvider.GOOGLE_VEO]: [GenerationType.VIDEO],
+    [GenerationProvider.STABLE_DIFFUSION]: [GenerationType.IMAGE],
     [GenerationProvider.FAL]: [
       GenerationType.IMAGE,
       GenerationType.VIDEO,
       GenerationType.THREE_D,
-      GenerationType.MUSIC
+      GenerationType.MUSIC,
     ],
-    [GenerationProvider.MIDJOURNEY]: [
-      GenerationType.IMAGE
-    ],
-    [GenerationProvider.RUNWAYML]: [
-      GenerationType.VIDEO
-    ],
+    [GenerationProvider.MIDJOURNEY]: [GenerationType.IMAGE],
+    [GenerationProvider.RUNWAYML]: [GenerationType.VIDEO],
     [GenerationProvider.REPLICATE]: [
       GenerationType.IMAGE,
       GenerationType.VIDEO,
-      GenerationType.AUDIO
+      GenerationType.AUDIO,
     ],
-    [GenerationProvider.READY_PLAYER_ME]: [
-      GenerationType.AVATAR
-    ],
-    [GenerationProvider.CUSTOM]: [] // All types allowed for custom providers
+    [GenerationProvider.READY_PLAYER_ME]: [GenerationType.AVATAR],
+    [GenerationProvider.CUSTOM]: [], // All types allowed for custom providers
   };
 
   const supportedTypes = providerSupport[provider] || [];
-  
+
   if (provider === GenerationProvider.CUSTOM || supportedTypes.includes(type)) {
     return { supported: true };
   }
 
   return {
     supported: false,
-    message: `Provider ${provider} does not support generation type ${type}`
+    message: `Provider ${provider} does not support generation type ${type}`,
   };
 }

@@ -12,7 +12,8 @@ const paymentRequestScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'I\'ve created a payment request for 25 USDC from bob@example.com with the note "dinner last night". They\'ll receive a notification to approve the payment.',
+        content:
+          'I\'ve created a payment request for 25 USDC from bob@example.com with the note "dinner last night". They\'ll receive a notification to approve the payment.',
         action: 'CREATE_PAYMENT_REQUEST',
       },
     ],
@@ -23,7 +24,8 @@ const paymentRequestScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'Invoice created for 0.05 ETH to client.eth. Description: "consulting services". The payment request has been sent and is awaiting approval.',
+        content:
+          'Invoice created for 0.05 ETH to client.eth. Description: "consulting services". The payment request has been sent and is awaiting approval.',
         action: 'CREATE_PAYMENT_REQUEST',
       },
     ],
@@ -34,7 +36,8 @@ const paymentRequestScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'I\'ve created payment requests of 33.33 USDC each to alice and bob. You\'ll cover 33.34 USDC. The requests have been sent for approval.',
+        content:
+          "I've created payment requests of 33.33 USDC each to alice and bob. You'll cover 33.34 USDC. The requests have been sent for approval.",
         action: 'CREATE_PAYMENT_REQUEST',
       },
     ],

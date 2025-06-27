@@ -27,19 +27,28 @@ export class PostgreSQLAdapter extends BaseDatabaseAdapter {
     }
 
     try {
-      const connectionString = this.config.url ||
-                              process.env.DATABASE_URL ||
-                              this.buildConnectionString();
+      const connectionString =
+        this.config.url ||
+        process.env.DATABASE_URL ||
+        this.buildConnectionString();
 
       if (!connectionString) {
-        throw new Error('DATABASE_URL or connection parameters are required for PostgreSQL');
+        throw new Error(
+          'DATABASE_URL or connection parameters are required for PostgreSQL',
+        );
       }
 
       console.log('🔌 Connecting to PostgreSQL database...');
 
       // Validate required password in production
-      if (process.env.NODE_ENV === 'production' && !this.config.password && !connectionString.includes('@')) {
-        throw new Error('DB_PASSWORD is required in production - empty passwords are not allowed');
+      if (
+        process.env.NODE_ENV === 'production' &&
+        !this.config.password &&
+        !connectionString.includes('@')
+      ) {
+        throw new Error(
+          'DB_PASSWORD is required in production - empty passwords are not allowed',
+        );
       }
 
       // Create postgres connection with connection pooling
@@ -48,10 +57,14 @@ export class PostgreSQLAdapter extends BaseDatabaseAdapter {
         idle_timeout: this.config.idleTimeout || 30,
         connect_timeout: 30,
         ssl: this.config.ssl ? 'require' : false,
-        prepare: process.env.NODE_ENV === 'development' ?
-          (process.env.DB_DISABLE_PREPARED_STATEMENTS === 'true' ? false : true) :
-          true,
-        onnotice: process.env.NODE_ENV === 'development' ? console.log : undefined,
+        prepare:
+          process.env.NODE_ENV === 'development'
+            ? process.env.DB_DISABLE_PREPARED_STATEMENTS === 'true'
+              ? false
+              : true
+            : true,
+        onnotice:
+          process.env.NODE_ENV === 'development' ? console.log : undefined,
       });
 
       // Create Drizzle instance
@@ -65,7 +78,6 @@ export class PostgreSQLAdapter extends BaseDatabaseAdapter {
 
       this.connected = true;
       console.log('✅ PostgreSQL database connection established');
-
     } catch (error) {
       console.error('❌ Failed to connect to PostgreSQL database:', error);
       throw error;
@@ -84,7 +96,9 @@ export class PostgreSQLAdapter extends BaseDatabaseAdapter {
 
   getDatabase(): PostgresJsDatabase<typeof schema> {
     if (!this.db) {
-      throw new Error('PostgreSQL database not connected. Call connect() first.');
+      throw new Error(
+        'PostgreSQL database not connected. Call connect() first.',
+      );
     }
     return this.db;
   }
@@ -116,7 +130,9 @@ export class PostgreSQLAdapter extends BaseDatabaseAdapter {
       throw new Error('Database not connected');
     }
 
-    console.warn('⚠️  Resetting PostgreSQL database - this will drop all data!');
+    console.warn(
+      '⚠️  Resetting PostgreSQL database - this will drop all data!',
+    );
 
     // Drop all tables in reverse dependency order
     const tablesToDrop = [
@@ -131,7 +147,7 @@ export class PostgreSQLAdapter extends BaseDatabaseAdapter {
       'api_keys',
       'user_sessions',
       'users',
-      'organizations'
+      'organizations',
     ];
 
     for (const table of tablesToDrop) {
@@ -167,7 +183,7 @@ export class PostgreSQLAdapter extends BaseDatabaseAdapter {
       user = 'postgres',
       password = '',
       database = 'elizaos_platform',
-      ssl = false
+      ssl = false,
     } = this.config;
 
     const sslParam = ssl ? '?sslmode=require' : '';

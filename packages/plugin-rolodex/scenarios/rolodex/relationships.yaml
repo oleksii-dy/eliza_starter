@@ -1,5 +1,5 @@
-name: "Relationship Building"
-description: "Test relationship extraction and evolution"
+name: 'Relationship Building'
+description: 'Test relationship extraction and evolution'
 characters:
   - alice
   - bob
@@ -7,25 +7,25 @@ characters:
 
 scenario:
   - action: alice
-    message: "Hey @bob, great meeting you at the hackathon! Your blockchain project was impressive."
-    
+    message: 'Hey @bob, great meeting you at the hackathon! Your blockchain project was impressive.'
+
   - action: bob
-    message: "Thanks @alice! I really liked your AI agent ideas too. Would love to collaborate sometime."
-    
+    message: 'Thanks @alice! I really liked your AI agent ideas too. Would love to collaborate sometime.'
+
   - action: agent
     expectation:
-      notes: "Should extract professional/collaborative relationship"
-    
+      notes: 'Should extract professional/collaborative relationship'
+
   - action: alice
-    message: "That would be awesome! I think combining our expertise could lead to something really innovative."
-    
+    message: 'That would be awesome! I think combining our expertise could lead to something really innovative.'
+
   - action: bob
     message: "Absolutely! Let's set up a call next week to brainstorm."
-    
+
   - action: alice
     message: "agent, what's my relationship with Bob?"
-    
+
   - action: agent
     expectation:
       response:
-        contains: ["professional", "collaborative", "positive"] 
+        contains: ['professional', 'collaborative', 'positive']

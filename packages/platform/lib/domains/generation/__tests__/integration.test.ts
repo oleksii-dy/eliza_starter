@@ -65,7 +65,6 @@ describe('Generation Integration Tests', () => {
     generationService = new GenerationService(
       mockDatabase as any,
       mockStorage as any,
-      mockBilling as any,
     );
 
     // Initialize providers

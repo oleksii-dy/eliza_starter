@@ -78,7 +78,9 @@ export class RobotRuntimeTestSuite implements TestSuite {
           limit: 10,
         });
 
-        const response = messages.find((m: any) => m.userId === runtime.agentId && m.id !== message.id);
+        const response = messages.find(
+          (m: any) => m.userId === runtime.agentId && m.id !== message.id
+        );
 
         if (!response) {
           throw new Error('No response received for robot command');

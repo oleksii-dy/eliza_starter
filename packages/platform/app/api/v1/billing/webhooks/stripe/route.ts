@@ -10,12 +10,15 @@ const stripe = new Stripe(config.stripe.secretKey, {
 
 const endpointSecret = config.stripe.webhookSecret;
 
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   const body = await request.text();
   const signature = request.headers.get('stripe-signature');
 
   if (!signature || !endpointSecret) {
-    return NextResponse.json({ error: 'Missing signature or endpoint secret' }, { status: 400 });
+    return NextResponse.json(
+      { error: 'Missing signature or endpoint secret' },
+      { status: 400 },
+    );
   }
 
   let event: Stripe.Event;
@@ -56,7 +59,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error('Error processing webhook:', error);
-    return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Webhook processing failed' },
+      { status: 500 },
+    );
   }
 }
 
@@ -75,9 +81,10 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
   // Add 10% margin to the credit amount (platform fee)
   const creditAmount = amount * 0.9; // Give 90% of payment as credits
 
-  const description = type === 'auto_topup'
-    ? `Auto top-up: $${amount} payment`
-    : `Credit purchase: $${amount} payment`;
+  const description =
+    type === 'auto_topup'
+      ? `Auto top-up: $${amount} payment`
+      : `Credit purchase: $${amount} payment`;
 
   await addCredits({
     organizationId,
@@ -94,7 +101,9 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
     },
   });
 
-  console.log(`Credits added for organization ${organizationId}: $${creditAmount}`);
+  console.log(
+    `Credits added for organization ${organizationId}: $${creditAmount}`,
+  );
 }
 
 async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
@@ -111,7 +120,7 @@ async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
 
 async function handleSubscriptionChange(
   subscription: Stripe.Subscription,
-  eventType: string
+  eventType: string,
 ) {
   // TODO: Implement subscription handling for recurring billing plans
   // This would update the organization's subscription status and limits

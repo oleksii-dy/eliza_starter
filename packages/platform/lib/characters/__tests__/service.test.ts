@@ -4,7 +4,11 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { characterService, CharacterService } from '../service';
-import { testDb, clearTestDatabase, createTestOrganization, createTestUser } from '@/lib/test-utils';
+import {
+  clearTestDatabase,
+  createTestOrganization,
+  createTestUser,
+} from '@/lib/test-utils';
 
 // Mock the database context functions
 vi.mock('../../database/context', () => ({
@@ -19,14 +23,14 @@ describe('CharacterService', () => {
 
   beforeEach(async () => {
     await clearTestDatabase();
-    
+
     // Create test organization and user
     const org = await createTestOrganization();
     organizationId = org.id;
-    
+
     const user = await createTestUser(organizationId);
     userId = user.id;
-    
+
     service = new CharacterService();
   });
 
@@ -48,19 +52,30 @@ describe('CharacterService', () => {
           style: 'Casual and friendly',
           system: 'You are a helpful assistant',
           knowledge: ['testing', 'AI'],
-          messageExamples: [[
-            { user: 'Hello', assistant: 'Hi there! How can I help you today?' }
-          ]],
+          messageExamples: [
+            [
+              {
+                user: 'Hello',
+                assistant: 'Hi there! How can I help you today?',
+              },
+            ],
+          ],
         },
         visibility: 'private' as const,
       };
 
-      const character = await service.createCharacter(organizationId, userId, characterData);
+      const character = await service.createCharacter(
+        organizationId,
+        userId,
+        characterData,
+      );
 
       expect(character).toBeDefined();
       expect(character.name).toBe(characterData.name);
       expect(character.slug).toBe(characterData.slug);
-      expect(character.characterConfig.bio).toBe(characterData.characterConfig.bio);
+      expect(character.characterConfig.bio).toBe(
+        characterData.characterConfig.bio,
+      );
       expect(character.visibility).toBe('private');
       expect(character.organizationId).toBe(organizationId);
       expect(character.createdBy).toBe(userId);
@@ -82,7 +97,7 @@ describe('CharacterService', () => {
 
       // Try to create second character with same slug
       await expect(
-        service.createCharacter(organizationId, userId, characterData)
+        service.createCharacter(organizationId, userId, characterData),
       ).rejects.toThrow('Character with this slug already exists');
     });
 
@@ -98,7 +113,7 @@ describe('CharacterService', () => {
       };
 
       await expect(
-        service.createCharacter(organizationId, userId, invalidCharacterData)
+        service.createCharacter(organizationId, userId, invalidCharacterData),
       ).rejects.toThrow('Invalid character configuration');
     });
   });
@@ -131,8 +146,8 @@ describe('CharacterService', () => {
       const characters = await service.getCharacters(organizationId);
 
       expect(characters).toHaveLength(2);
-      expect(characters.some(c => c.name === 'Public Character')).toBe(true);
-      expect(characters.some(c => c.name === 'Private Character')).toBe(true);
+      expect(characters.some((c) => c.name === 'Public Character')).toBe(true);
+      expect(characters.some((c) => c.name === 'Private Character')).toBe(true);
     });
 
     it('should filter by search query', async () => {
@@ -175,7 +190,10 @@ describe('CharacterService', () => {
         visibility: 'private',
       });
 
-      const character = await service.getCharacterById(organizationId, created.id);
+      const character = await service.getCharacterById(
+        organizationId,
+        created.id,
+      );
 
       expect(character).toBeDefined();
       expect(character!.id).toBe(created.id);
@@ -183,7 +201,10 @@ describe('CharacterService', () => {
     });
 
     it('should return null for non-existent character', async () => {
-      const character = await service.getCharacterById(organizationId, 'non-existent-id');
+      const character = await service.getCharacterById(
+        organizationId,
+        'non-existent-id',
+      );
 
       expect(character).toBeNull();
     });
@@ -210,7 +231,7 @@ describe('CharacterService', () => {
             bio: 'An updated character',
           },
         },
-        userId
+        userId,
       );
 
       expect(updated).toBeDefined();
@@ -238,8 +259,8 @@ describe('CharacterService', () => {
               name: '', // Invalid: empty name
             },
           },
-          userId
-        )
+          userId,
+        ),
       ).rejects.toThrow('Invalid character configuration');
     });
   });
@@ -261,7 +282,10 @@ describe('CharacterService', () => {
       expect(success).toBe(true);
 
       // Verify character is deleted
-      const character = await service.getCharacterById(organizationId, created.id);
+      const character = await service.getCharacterById(
+        organizationId,
+        created.id,
+      );
       expect(character).toBeNull();
     });
   });
@@ -288,7 +312,7 @@ describe('CharacterService', () => {
           organizationId,
           userId,
           characterId,
-          'Test Conversation'
+          'Test Conversation',
         );
 
         expect(conversation).toBeDefined();
@@ -301,7 +325,7 @@ describe('CharacterService', () => {
 
       it('should reject conversation with non-existent character', async () => {
         await expect(
-          service.startConversation(organizationId, userId, 'non-existent-id')
+          service.startConversation(organizationId, userId, 'non-existent-id'),
         ).rejects.toThrow('Character not found');
       });
     });
@@ -313,7 +337,7 @@ describe('CharacterService', () => {
         const conversation = await service.startConversation(
           organizationId,
           userId,
-          characterId
+          characterId,
         );
         conversationId = conversation.id;
       });
@@ -327,13 +351,17 @@ describe('CharacterService', () => {
             role: 'user',
             content: 'Hello, character!',
             metadata: { test: true },
-          }
+          },
         );
 
         expect(updatedConversation.messages).toHaveLength(1);
         expect(updatedConversation.messages[0].role).toBe('user');
-        expect(updatedConversation.messages[0].content).toBe('Hello, character!');
-        expect(updatedConversation.messages[0].metadata).toEqual({ test: true });
+        expect(updatedConversation.messages[0].content).toBe(
+          'Hello, character!',
+        );
+        expect(updatedConversation.messages[0].metadata).toEqual({
+          test: true,
+        });
       });
 
       it('should preserve message order', async () => {
@@ -344,10 +372,15 @@ describe('CharacterService', () => {
         });
 
         // Add second message
-        const conversation = await service.addMessage(organizationId, userId, conversationId, {
-          role: 'assistant',
-          content: 'Second message',
-        });
+        const conversation = await service.addMessage(
+          organizationId,
+          userId,
+          conversationId,
+          {
+            role: 'assistant',
+            content: 'Second message',
+          },
+        );
 
         expect(conversation.messages).toHaveLength(2);
         expect(conversation.messages[0].content).toBe('First message');
@@ -361,21 +394,28 @@ describe('CharacterService', () => {
           organizationId,
           userId,
           characterId,
-          'Conversation 1'
+          'Conversation 1',
         );
 
         const conversation2 = await service.startConversation(
           organizationId,
           userId,
           characterId,
-          'Conversation 2'
+          'Conversation 2',
         );
 
-        const conversations = await service.getUserConversations(organizationId, userId);
+        const conversations = await service.getUserConversations(
+          organizationId,
+          userId,
+        );
 
         expect(conversations).toHaveLength(2);
-        expect(conversations.some(c => c.title === 'Conversation 1')).toBe(true);
-        expect(conversations.some(c => c.title === 'Conversation 2')).toBe(true);
+        expect(conversations.some((c) => c.title === 'Conversation 1')).toBe(
+          true,
+        );
+        expect(conversations.some((c) => c.title === 'Conversation 2')).toBe(
+          true,
+        );
       });
 
       it('should filter by character ID', async () => {
@@ -383,13 +423,13 @@ describe('CharacterService', () => {
           organizationId,
           userId,
           characterId,
-          'Conversation 1'
+          'Conversation 1',
         );
 
         const conversations = await service.getUserConversations(
           organizationId,
           userId,
-          characterId
+          characterId,
         );
 
         expect(conversations).toHaveLength(1);
@@ -400,13 +440,19 @@ describe('CharacterService', () => {
 
   describe('generateUniqueSlug', () => {
     it('should generate slug from name', async () => {
-      const slug = await service.generateUniqueSlug(organizationId, 'Test Character');
+      const slug = await service.generateUniqueSlug(
+        organizationId,
+        'Test Character',
+      );
 
       expect(slug).toBe('test-character');
     });
 
     it('should handle special characters', async () => {
-      const slug = await service.generateUniqueSlug(organizationId, 'Test & Character!');
+      const slug = await service.generateUniqueSlug(
+        organizationId,
+        'Test & Character!',
+      );
 
       expect(slug).toBe('test-character');
     });
@@ -423,7 +469,10 @@ describe('CharacterService', () => {
         visibility: 'private',
       });
 
-      const slug = await service.generateUniqueSlug(organizationId, 'Test Character');
+      const slug = await service.generateUniqueSlug(
+        organizationId,
+        'Test Character',
+      );
 
       expect(slug).toBe('test-character-1');
     });
@@ -482,8 +531,12 @@ describe('CharacterService', () => {
       const result = service.validateCharacterConfig(config);
 
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Character name must be 100 characters or less');
-      expect(result.errors).toContain('Character bio must be 1000 characters or less');
+      expect(result.errors).toContain(
+        'Character name must be 100 characters or less',
+      );
+      expect(result.errors).toContain(
+        'Character bio must be 1000 characters or less',
+      );
     });
   });
 
@@ -511,7 +564,11 @@ describe('CharacterService', () => {
       });
 
       // Create conversations
-      const conversation = await service.startConversation(organizationId, userId, character1.id);
+      const conversation = await service.startConversation(
+        organizationId,
+        userId,
+        character1.id,
+      );
       await service.addMessage(organizationId, userId, conversation.id, {
         role: 'user',
         content: 'Hello',

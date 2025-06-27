@@ -5,12 +5,12 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { GenerationService } from '../services/GenerationService';
-import { 
-  GenerationType, 
-  GenerationStatus, 
+import {
+  GenerationType,
+  GenerationStatus,
   GenerationProvider,
   TextGenerationRequest,
-  ImageGenerationRequest
+  ImageGenerationRequest,
 } from '../types';
 
 // Mock dependencies
@@ -20,11 +20,11 @@ const mockDatabase = {
     findById: vi.fn(),
     update: vi.fn(),
     list: vi.fn(),
-    getAnalytics: vi.fn()
+    getAnalytics: vi.fn(),
   },
   batchGenerations: {
-    create: vi.fn()
-  }
+    create: vi.fn(),
+  },
 };
 
 const mockStorage = {
@@ -35,7 +35,7 @@ const mockBilling = {
   checkGenerationLimits: vi.fn(),
   reserveCredits: vi.fn(),
   chargeCredits: vi.fn(),
-  releaseReservedCredits: vi.fn()
+  releaseReservedCredits: vi.fn(),
 };
 
 describe('GenerationService', () => {
@@ -45,7 +45,6 @@ describe('GenerationService', () => {
     generationService = new GenerationService(
       mockDatabase as any,
       mockStorage as any,
-      mockBilling as any
     );
 
     // Reset all mocks
@@ -58,20 +57,20 @@ describe('GenerationService', () => {
 
   describe('createGeneration', () => {
     const mockRequest: TextGenerationRequest = {
-          type: GenerationType.TEXT,
-          priority: 'normal',
+      type: GenerationType.TEXT,
+      priority: 'normal',
       prompt: 'Test prompt',
       organizationId: 'org-123',
       userId: 'user-123',
       temperature: 0.7,
-      max_tokens: 1000
+      max_tokens: 1000,
     };
 
     it('should create a text generation successfully', async () => {
       // Arrange
       mockBilling.checkGenerationLimits.mockResolvedValue({
         allowed: true,
-        reason: null
+        reason: null,
       });
 
       const mockGeneration = {
@@ -79,7 +78,7 @@ describe('GenerationService', () => {
         ...mockRequest,
         provider: GenerationProvider.OPENAI,
         status: GenerationStatus.QUEUED,
-        createdAt: new Date()
+        createdAt: new Date(),
       };
 
       mockDatabase.generations.create.mockResolvedValue(mockGeneration);
@@ -93,7 +92,7 @@ describe('GenerationService', () => {
       expect(mockBilling.checkGenerationLimits).toHaveBeenCalledWith(
         'org-123',
         GenerationType.TEXT,
-        undefined
+        undefined,
       );
       expect(mockDatabase.generations.create).toHaveBeenCalled();
     });
@@ -102,7 +101,7 @@ describe('GenerationService', () => {
       // Arrange
       mockBilling.checkGenerationLimits.mockResolvedValue({
         allowed: false,
-        reason: 'Insufficient credits'
+        reason: 'Insufficient credits',
       });
 
       // Act
@@ -118,19 +117,20 @@ describe('GenerationService', () => {
     it('should handle image generation with multiple outputs', async () => {
       // Arrange
       const imageRequest: ImageGenerationRequest = {
-          type: GenerationType.IMAGE,
-          priority: 'normal',
-          aspect_ratio: '1:1',
-          quality: 'standard',prompt: 'Beautiful landscape',
+        type: GenerationType.IMAGE,
+        priority: 'normal',
+        aspect_ratio: '1:1',
+        quality: 'standard',
+        prompt: 'Beautiful landscape',
         organizationId: 'org-123',
         userId: 'user-123',
         num_images: 2,
-        resolution: '1024x1024'
+        resolution: '1024x1024',
       };
 
       mockBilling.checkGenerationLimits.mockResolvedValue({
         allowed: true,
-        reason: null
+        reason: null,
       });
 
       const mockGeneration = {
@@ -138,7 +138,7 @@ describe('GenerationService', () => {
         ...imageRequest,
         provider: GenerationProvider.OPENAI,
         status: GenerationStatus.QUEUED,
-        createdAt: new Date()
+        createdAt: new Date(),
       };
 
       mockDatabase.generations.create.mockResolvedValue(mockGeneration);
@@ -155,11 +155,11 @@ describe('GenerationService', () => {
       // Arrange
       mockBilling.checkGenerationLimits.mockResolvedValue({
         allowed: true,
-        reason: null
+        reason: null,
       });
 
       mockDatabase.generations.create.mockRejectedValue(
-        new Error('Database connection failed')
+        new Error('Database connection failed'),
       );
 
       // Act
@@ -178,11 +178,11 @@ describe('GenerationService', () => {
       const mockGeneration = {
         id: 'gen-123',
         type: GenerationType.TEXT,
-          priority: 'normal',
+        priority: 'normal',
         prompt: 'Test prompt',
         status: GenerationStatus.COMPLETED,
         organizationId: 'org-123',
-        userId: 'user-123'
+        userId: 'user-123',
       };
 
       mockDatabase.generations.findById.mockResolvedValue(mockGeneration);
@@ -215,19 +215,19 @@ describe('GenerationService', () => {
       // Arrange
       const mockGenerations = [
         { id: 'gen-1', type: GenerationType.TEXT },
-        { id: 'gen-2', type: GenerationType.IMAGE }
+        { id: 'gen-2', type: GenerationType.IMAGE },
       ];
 
       mockDatabase.generations.list.mockResolvedValue({
         data: mockGenerations,
         total: 2,
-        hasMore: false
+        hasMore: false,
       });
 
       const params = {
         organizationId: 'org-123',
         page: 1,
-        limit: 20
+        limit: 20,
       };
 
       // Act
@@ -241,28 +241,26 @@ describe('GenerationService', () => {
         page: 1,
         limit: 20,
         hasMore: false,
-        totalPages: 1
+        totalPages: 1,
       });
     });
 
     it('should filter by generation type', async () => {
       // Arrange
-      const mockGenerations = [
-        { id: 'gen-1', type: GenerationType.TEXT }
-      ];
+      const mockGenerations = [{ id: 'gen-1', type: GenerationType.TEXT }];
 
       mockDatabase.generations.list.mockResolvedValue({
         data: mockGenerations,
         total: 1,
-        hasMore: false
+        hasMore: false,
       });
 
       const params = {
         organizationId: 'org-123',
         type: GenerationType.TEXT,
-          priority: 'normal',
+        priority: 'normal',
         page: 1,
-        limit: 20
+        limit: 20,
       };
 
       // Act
@@ -281,7 +279,7 @@ describe('GenerationService', () => {
         id: 'gen-123',
         status: GenerationStatus.QUEUED,
         organizationId: 'org-123',
-        provider: GenerationProvider.OPENAI
+        provider: GenerationProvider.OPENAI,
       };
 
       mockDatabase.generations.findById.mockResolvedValue(mockGeneration);
@@ -295,10 +293,12 @@ describe('GenerationService', () => {
       expect(mockDatabase.generations.update).toHaveBeenCalledWith(
         'gen-123',
         expect.objectContaining({
-          status: GenerationStatus.CANCELLED
-        })
+          status: GenerationStatus.CANCELLED,
+        }),
       );
-      expect(mockBilling.releaseReservedCredits).toHaveBeenCalledWith('org-123');
+      expect(mockBilling.releaseReservedCredits).toHaveBeenCalledWith(
+        'org-123',
+      );
     });
 
     it('should fail to cancel completed generation', async () => {
@@ -306,7 +306,7 @@ describe('GenerationService', () => {
       const mockGeneration = {
         id: 'gen-123',
         status: GenerationStatus.COMPLETED,
-        organizationId: 'org-123'
+        organizationId: 'org-123',
       };
 
       mockDatabase.generations.findById.mockResolvedValue(mockGeneration);
@@ -332,7 +332,7 @@ describe('GenerationService', () => {
             priority: 'normal' as const,
             prompt: 'First prompt',
             organizationId: 'org-123',
-            userId: 'user-123'
+            userId: 'user-123',
           },
           {
             type: GenerationType.IMAGE as const,
@@ -343,20 +343,23 @@ describe('GenerationService', () => {
             aspect_ratio: '1:1' as const,
             quality: 'standard' as const,
             resolution: '1024x1024' as const,
-            num_images: 1
-          }
-        ]
+            num_images: 1,
+          },
+        ],
       };
 
       // Mock individual generation creation
       mockBilling.checkGenerationLimits.mockResolvedValue({
         allowed: true,
-        reason: null
+        reason: null,
       });
 
       mockDatabase.generations.create
         .mockResolvedValueOnce({ id: 'gen-1', status: GenerationStatus.QUEUED })
-        .mockResolvedValueOnce({ id: 'gen-2', status: GenerationStatus.QUEUED });
+        .mockResolvedValueOnce({
+          id: 'gen-2',
+          status: GenerationStatus.QUEUED,
+        });
 
       const mockBatch = {
         id: 'batch-123',
@@ -369,23 +372,24 @@ describe('GenerationService', () => {
         failed_generations: 0,
         generations: [
           { id: 'gen-1', status: GenerationStatus.QUEUED },
-          { id: 'gen-2', status: GenerationStatus.QUEUED }
+          { id: 'gen-2', status: GenerationStatus.QUEUED },
         ],
         createdAt: expect.any(Date),
-        updatedAt: expect.any(Date)
+        updatedAt: expect.any(Date),
       };
 
       mockDatabase.batchGenerations.create.mockResolvedValue(mockBatch);
 
       // Act
-      const result = await generationService.createBatchGeneration(batchRequest);
+      const result =
+        await generationService.createBatchGeneration(batchRequest);
 
       // Assert
       expect(result.success).toBe(true);
       expect(result.data).toMatchObject({
         id: 'batch-123',
         total_generations: 2,
-        status: GenerationStatus.QUEUED
+        status: GenerationStatus.QUEUED,
       });
       expect(mockDatabase.generations.create).toHaveBeenCalledTimes(2);
       expect(mockDatabase.batchGenerations.create).toHaveBeenCalled();
@@ -405,23 +409,23 @@ describe('GenerationService', () => {
           generations_by_type: {
             [GenerationType.TEXT]: 80,
             [GenerationType.IMAGE]: 50,
-            [GenerationType.VIDEO]: 20
+            [GenerationType.VIDEO]: 20,
           },
           generations_by_provider: {
             [GenerationProvider.OPENAI]: 100,
             [GenerationProvider.ANTHROPIC]: 30,
-            [GenerationProvider.ELEVENLABS]: 20
+            [GenerationProvider.ELEVENLABS]: 20,
           },
           generations_by_status: {
             [GenerationStatus.COMPLETED]: 140,
-            [GenerationStatus.FAILED]: 10
+            [GenerationStatus.FAILED]: 10,
           },
           total_cost: 45.67,
           total_credits_used: 1230,
           average_processing_time: 2.3,
           peak_concurrent_generations: 5,
-          success_rate: 93.3
-        }
+          success_rate: 93.3,
+        },
       };
 
       mockDatabase.generations.getAnalytics.mockResolvedValue(mockAnalytics);
@@ -430,7 +434,7 @@ describe('GenerationService', () => {
         organizationId: 'org-123',
         period: 'day' as const,
         startDate: new Date('2024-01-01'),
-        endDate: new Date('2024-01-31')
+        endDate: new Date('2024-01-31'),
       };
 
       // Act
@@ -439,7 +443,9 @@ describe('GenerationService', () => {
       // Assert
       expect(result.success).toBe(true);
       expect(result.data).toEqual(mockAnalytics);
-      expect(mockDatabase.generations.getAnalytics).toHaveBeenCalledWith(params);
+      expect(mockDatabase.generations.getAnalytics).toHaveBeenCalledWith(
+        params,
+      );
     });
   });
 
@@ -447,15 +453,15 @@ describe('GenerationService', () => {
     it('should handle unexpected errors gracefully', async () => {
       // Arrange
       const mockRequest: TextGenerationRequest = {
-          type: GenerationType.TEXT,
-          priority: 'normal',
+        type: GenerationType.TEXT,
+        priority: 'normal',
         prompt: 'Test prompt',
         organizationId: 'org-123',
-        userId: 'user-123'
+        userId: 'user-123',
       };
 
       mockBilling.checkGenerationLimits.mockRejectedValue(
-        new Error('Billing service unavailable')
+        new Error('Billing service unavailable'),
       );
 
       // Act
@@ -478,17 +484,17 @@ describe('GenerationService', () => {
     it('should select optimal provider when not specified', async () => {
       // Arrange
       const mockRequest: TextGenerationRequest = {
-          type: GenerationType.TEXT,
-          priority: 'normal',
+        type: GenerationType.TEXT,
+        priority: 'normal',
         prompt: 'Test prompt',
         organizationId: 'org-123',
-        userId: 'user-123'
+        userId: 'user-123',
         // No provider specified
       };
 
       mockBilling.checkGenerationLimits.mockResolvedValue({
         allowed: true,
-        reason: null
+        reason: null,
       });
 
       const mockGeneration = {
@@ -496,7 +502,7 @@ describe('GenerationService', () => {
         ...mockRequest,
         provider: GenerationProvider.OPENAI, // Should be auto-selected
         status: GenerationStatus.QUEUED,
-        createdAt: new Date()
+        createdAt: new Date(),
       };
 
       mockDatabase.generations.create.mockResolvedValue(mockGeneration);

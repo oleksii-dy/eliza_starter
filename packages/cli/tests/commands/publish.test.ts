@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll  } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from 'bun:test';
 import { execSync } from 'child_process';
 import { mkdtemp, rm, writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
@@ -27,7 +27,7 @@ describe('ElizaOS Publish Commands', () => {
       const cliPackageDir = join(scriptDir, '..');
       execSync('bun run build', {
         cwd: cliPackageDir,
-        stdio: 'inherit'
+        stdio: 'inherit',
       });
     }
 

@@ -60,3 +60,7 @@ docs/
 .elizadb*
 cypress/screenshots/
 .cursor/
+AGENTS.md
+.cursor/rules/elizaos
+CLAUDE.md
+.cursorignore

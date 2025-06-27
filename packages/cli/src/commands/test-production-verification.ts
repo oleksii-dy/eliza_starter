@@ -3,11 +3,11 @@ import { logger } from '@elizaos/core';
 // Lazy import for ScenarioRunner to reduce initial memory footprint
 // import { ScenarioRunner } from '../scenario-runner/index.js';
 import { loadProject } from '../project.js';
-import AgentServer from '@elizaos/server';
+// AgentServer imported dynamically
 import { MemoryOptimizer } from '../utils/memory-optimizer.js';
 
 async function initializeServer(): Promise<{
-  server: AgentServer;
+  server: any;
   runtime: import('@elizaos/core').IAgentRuntime;
   cleanup: () => Promise<void>;
 }> {
@@ -30,7 +30,8 @@ async function initializeServer(): Promise<{
 
   // Initialize server with test configuration
   MemoryOptimizer.takeSnapshot('before-server-creation');
-  const server = new AgentServer();
+  const { default: AgentServer } = (await import('@elizaos/server')) as any;
+  const server = new AgentServer() as any;
 
   // Initialize the server with a simplified configuration for testing
   await server.initialize({
@@ -206,3 +207,5 @@ export const testProductionVerificationCommand = new Command()
       await cleanup();
     }
   });
+
+export default testProductionVerificationCommand;

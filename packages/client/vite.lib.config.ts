@@ -11,7 +11,13 @@ export default defineConfig({
       outDir: 'dist/lib',
       entryRoot: 'src',
       include: ['src/**/*.ts', 'src/**/*.tsx'],
-      exclude: ['src/**/*.test.*', 'src/**/*.spec.*', 'src/vite-env.d.ts', 'src/**/*.cy.*', 'src/main.tsx'],
+      exclude: [
+        'src/**/*.test.*',
+        'src/**/*.spec.*',
+        'src/vite-env.d.ts',
+        'src/**/*.cy.*',
+        'src/main.tsx',
+      ],
     }),
   ],
   resolve: {
@@ -40,7 +46,7 @@ export default defineConfig({
       ],
       output: {
         globals: {
-          'react': 'React',
+          react: 'React',
           'react-dom': 'ReactDOM',
           'react/jsx-runtime': 'jsxRuntime',
         },

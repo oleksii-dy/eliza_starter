@@ -114,7 +114,9 @@ export class CommunicationBridge extends Service {
   }
 
   private setupWebSocketHandlers(): void {
-    if (!this.wss) {return;}
+    if (!this.wss) {
+      return;
+    }
 
     this.wss.on('connection', (ws: WebSocket, _request) => {
       elizaLogger.info('New agent connection attempt');
@@ -276,7 +278,9 @@ export class CommunicationBridge extends Service {
         from: this.runtime.agentId,
         to: _message.from,
         timestamp: Date.now(),
-        data: { /* empty */ },
+        data: {
+          /* empty */
+        },
       });
     }
   }
@@ -304,7 +308,8 @@ export class CommunicationBridge extends Service {
     }
   }
 
-  async broadcastToRole(_role: 'coder' | 'reviewer' | 'tester',
+  async broadcastToRole(
+    _role: 'coder' | 'reviewer' | 'tester',
     _message: AgentMessage
   ): Promise<number> {
     let sent = 0;
@@ -312,7 +317,9 @@ export class CommunicationBridge extends Service {
     for (const [agentId, agent] of this.connectedAgents) {
       if (agent.role === _role && agent.authenticated) {
         const success = await this.sendToAgent(agentId, _message);
-        if (success) {sent++;}
+        if (success) {
+          sent++;
+        }
       }
     }
 
@@ -325,7 +332,9 @@ export class CommunicationBridge extends Service {
     for (const [agentId, agent] of this.connectedAgents) {
       if (agent.taskId === _taskId && agent.authenticated) {
         const success = await this.sendToAgent(agentId, _message);
-        if (success) {sent++;}
+        if (success) {
+          sent++;
+        }
       }
     }
 
@@ -512,7 +521,9 @@ export class CommunicationBridge extends Service {
             from: this.runtime.agentId,
             to: agentId,
             timestamp: Date.now(),
-            data: { /* empty */ },
+            data: {
+              /* empty */
+            },
           });
         }
       }

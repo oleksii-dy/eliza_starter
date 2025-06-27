@@ -7,15 +7,15 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { 
-  VideoIcon, 
+import {
+  VideoIcon,
   PaperPlaneIcon,
   DownloadIcon,
   ReloadIcon,
   GearIcon,
   PlayIcon,
   PauseIcon,
-  MagicWandIcon
+  MagicWandIcon,
 } from '@radix-ui/react-icons';
 import { cn } from '@/lib/utils';
 
@@ -32,17 +32,21 @@ interface VideoResult {
 }
 
 const videoStyles = [
-  { id: 'cinematic', name: 'Cinematic', description: 'Movie-like quality with dramatic lighting' },
+  {
+    id: 'cinematic',
+    name: 'Cinematic',
+    description: 'Movie-like quality with dramatic lighting',
+  },
   { id: 'anime', name: 'Anime', description: 'Animated anime/manga style' },
   { id: 'realistic', name: 'Realistic', description: 'Photorealistic video' },
   { id: 'artistic', name: 'Artistic', description: 'Stylized and artistic' },
-  { id: 'cartoon', name: 'Cartoon', description: '3D cartoon animation' }
+  { id: 'cartoon', name: 'Cartoon', description: '3D cartoon animation' },
 ];
 
 const aspectRatios = [
   { id: '16:9', name: 'Landscape (16:9)', width: 1920, height: 1080 },
   { id: '9:16', name: 'Portrait (9:16)', width: 1080, height: 1920 },
-  { id: '1:1', name: 'Square (1:1)', width: 1080, height: 1080 }
+  { id: '1:1', name: 'Square (1:1)', width: 1080, height: 1080 },
 ];
 
 export default function VideoGenerationPage() {
@@ -61,7 +65,7 @@ export default function VideoGenerationPage() {
     aspectRatio: '16:9',
     duration: 5,
     fps: 24,
-    loop: false
+    loop: false,
   });
 
   const handleGenerate = async () => {
@@ -80,26 +84,27 @@ export default function VideoGenerationPage() {
         timestamp: new Date(),
         duration: settings.duration,
         cost: settings.duration * 0.15,
-        status: 'processing'
+        status: 'processing',
       };
 
-      setResults(prev => [processingResult, ...prev]);
+      setResults((prev) => [processingResult, ...prev]);
 
       // Simulate processing time
-      await new Promise(resolve => setTimeout(resolve, 8000));
-      
-      // Update with completed video (mock)
-      setResults(prev => prev.map(result => 
-        result.id === processingResult.id 
-          ? {
-              ...result,
-              status: 'completed' as const,
-              videoUrl: `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`,
-              thumbnailUrl: 'https://picsum.photos/seed/video/400/225'
-            }
-          : result
-      ));
+      await new Promise((resolve) => setTimeout(resolve, 8000));
 
+      // Update with completed video (mock)
+      setResults((prev) =>
+        prev.map((result) =>
+          result.id === processingResult.id
+            ? {
+                ...result,
+                status: 'completed' as const,
+                videoUrl: `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`,
+                thumbnailUrl: 'https://picsum.photos/seed/video/400/225',
+              }
+            : result,
+        ),
+      );
     } catch (error) {
       console.error('Generation failed:', error);
     } finally {
@@ -109,7 +114,7 @@ export default function VideoGenerationPage() {
 
   const handleDownload = async (videoUrl: string, filename: string) => {
     if (!videoUrl) return;
-    
+
     try {
       const a = document.createElement('a');
       a.href = videoUrl;
@@ -130,15 +135,19 @@ export default function VideoGenerationPage() {
   return (
     <div className="flex h-full">
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex flex-1 flex-col">
         {/* Header */}
         <div className="border-b border-stroke-weak p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-typography-strong">Video Generation</h1>
-              <p className="text-typography-weak">Create dynamic videos from text descriptions</p>
+              <h1 className="text-2xl font-bold text-typography-strong">
+                Video Generation
+              </h1>
+              <p className="text-typography-weak">
+                Create dynamic videos from text descriptions
+              </p>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
                 New
@@ -146,10 +155,10 @@ export default function VideoGenerationPage() {
               <button
                 onClick={() => setShowSettings(!showSettings)}
                 className={cn(
-                  "p-2 rounded-lg border transition-colors",
-                  showSettings 
-                    ? "bg-purple-500/10 border-purple-200 text-purple-600" 
-                    : "border-stroke-weak hover:bg-hover"
+                  'rounded-lg border p-2 transition-colors',
+                  showSettings
+                    ? 'border-purple-200 bg-purple-500/10 text-purple-600'
+                    : 'border-stroke-weak hover:bg-hover',
                 )}
               >
                 <GearIcon className="h-4 w-4" />
@@ -163,52 +172,54 @@ export default function VideoGenerationPage() {
           <div className="space-y-6">
             {/* Style Selection */}
             <div>
-              <label className="block text-sm font-medium text-typography-strong mb-3">
+              <label className="mb-3 block text-sm font-medium text-typography-strong">
                 Video Style
               </label>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
                 {videoStyles.map((style) => (
                   <button
                     key={style.id}
                     onClick={() => setSelectedStyle(style)}
                     className={cn(
-                      "p-3 rounded-lg border text-left transition-colors",
+                      'rounded-lg border p-3 text-left transition-colors',
                       selectedStyle.id === style.id
-                        ? "bg-purple-500/10 border-purple-200 text-purple-600"
-                        : "border-stroke-weak hover:bg-hover"
+                        ? 'border-purple-200 bg-purple-500/10 text-purple-600'
+                        : 'border-stroke-weak hover:bg-hover',
                     )}
                   >
-                    <div className="font-medium text-sm">{style.name}</div>
-                    <div className="text-xs text-typography-weak mt-1">{style.description}</div>
+                    <div className="text-sm font-medium">{style.name}</div>
+                    <div className="mt-1 text-xs text-typography-weak">
+                      {style.description}
+                    </div>
                   </button>
                 ))}
               </div>
             </div>
 
             {/* Prompt Input */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-typography-strong mb-2">
+                <label className="mb-2 block text-sm font-medium text-typography-strong">
                   Scene Description
                 </label>
                 <textarea
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   placeholder="A serene mountain landscape with a flowing river, birds flying overhead..."
-                  className="w-full p-4 border border-stroke-weak rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full resize-none rounded-lg border border-stroke-weak p-4 focus:outline-none focus:ring-2 focus:ring-purple-500"
                   rows={4}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-typography-strong mb-2">
+                <label className="mb-2 block text-sm font-medium text-typography-strong">
                   Motion Description (Optional)
                 </label>
                 <textarea
                   value={motionPrompt}
                   onChange={(e) => setMotionPrompt(e.target.value)}
                   placeholder="Camera pans slowly from left to right, water flows gently, birds move across the sky..."
-                  className="w-full p-4 border border-stroke-weak rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full resize-none rounded-lg border border-stroke-weak p-4 focus:outline-none focus:ring-2 focus:ring-purple-500"
                   rows={4}
                 />
               </div>
@@ -218,24 +229,40 @@ export default function VideoGenerationPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div>
-                  <label className="block text-xs text-typography-weak mb-1">Aspect Ratio</label>
+                  <label className="mb-1 block text-xs text-typography-weak">
+                    Aspect Ratio
+                  </label>
                   <select
                     value={settings.aspectRatio}
-                    onChange={(e) => setSettings(prev => ({ ...prev, aspectRatio: e.target.value }))}
-                    className="p-2 border border-stroke-weak rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    onChange={(e) =>
+                      setSettings((prev) => ({
+                        ...prev,
+                        aspectRatio: e.target.value,
+                      }))
+                    }
+                    className="rounded-lg border border-stroke-weak p-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                   >
-                    {aspectRatios.map(ratio => (
-                      <option key={ratio.id} value={ratio.id}>{ratio.name}</option>
+                    {aspectRatios.map((ratio) => (
+                      <option key={ratio.id} value={ratio.id}>
+                        {ratio.name}
+                      </option>
                     ))}
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-xs text-typography-weak mb-1">Duration</label>
+                  <label className="mb-1 block text-xs text-typography-weak">
+                    Duration
+                  </label>
                   <select
                     value={settings.duration}
-                    onChange={(e) => setSettings(prev => ({ ...prev, duration: parseInt(e.target.value) }))}
-                    className="p-2 border border-stroke-weak rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    onChange={(e) =>
+                      setSettings((prev) => ({
+                        ...prev,
+                        duration: parseInt(e.target.value),
+                      }))
+                    }
+                    className="rounded-lg border border-stroke-weak p-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                   >
                     <option value={3}>3 seconds</option>
                     <option value={5}>5 seconds</option>
@@ -253,10 +280,10 @@ export default function VideoGenerationPage() {
                 onClick={handleGenerate}
                 disabled={!prompt.trim() || isGenerating}
                 className={cn(
-                  "flex items-center gap-2 px-6 py-2 rounded-lg font-medium transition-colors",
+                  'flex items-center gap-2 rounded-lg px-6 py-2 font-medium transition-colors',
                   !prompt.trim() || isGenerating
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-purple-600 text-white hover:bg-purple-700"
+                    ? 'cursor-not-allowed bg-gray-100 text-gray-400'
+                    : 'bg-purple-600 text-white hover:bg-purple-700',
                 )}
               >
                 {isGenerating ? (
@@ -279,35 +306,44 @@ export default function VideoGenerationPage() {
         <div className="flex-1 overflow-y-auto p-6">
           <div className="space-y-6">
             {results.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="h-16 w-16 bg-purple-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="py-12 text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-purple-500/10">
                   <VideoIcon className="h-8 w-8 text-purple-600" />
                 </div>
-                <h3 className="text-lg font-medium text-typography-strong mb-2">No videos generated yet</h3>
-                <p className="text-typography-weak">Enter a prompt above to start creating videos</p>
+                <h3 className="mb-2 text-lg font-medium text-typography-strong">
+                  No videos generated yet
+                </h3>
+                <p className="text-typography-weak">
+                  Enter a prompt above to start creating videos
+                </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {results.map((result) => (
-                  <div key={result.id} className="bg-card border border-stroke-weak rounded-lg overflow-hidden">
+                  <div
+                    key={result.id}
+                    className="bg-card overflow-hidden rounded-lg border border-stroke-weak"
+                  >
                     {/* Video/Thumbnail */}
                     <div className="relative aspect-video bg-gray-100">
                       {result.status === 'processing' ? (
                         <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
                           <div className="text-center">
-                            <ReloadIcon className="h-8 w-8 animate-spin text-purple-600 mx-auto mb-2" />
-                            <p className="text-sm text-typography-weak">Processing video...</p>
+                            <ReloadIcon className="mx-auto mb-2 h-8 w-8 animate-spin text-purple-600" />
+                            <p className="text-sm text-typography-weak">
+                              Processing video...
+                            </p>
                           </div>
                         </div>
                       ) : result.status === 'completed' && result.videoUrl ? (
-                        <div className="relative w-full h-full">
+                        <div className="relative h-full w-full">
                           {playingVideo === result.id ? (
                             <video
                               src={result.videoUrl}
                               controls
                               autoPlay
                               loop={settings.loop}
-                              className="w-full h-full object-cover"
+                              className="h-full w-full object-cover"
                               onEnded={() => setPlayingVideo(null)}
                             />
                           ) : (
@@ -317,12 +353,12 @@ export default function VideoGenerationPage() {
                                 alt={result.prompt}
                                 width={1920}
                                 height={1080}
-                                className="w-full h-full object-cover"
+                                className="h-full w-full object-cover"
                               />
                               <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                                 <button
                                   onClick={() => toggleVideo(result.id)}
-                                  className="p-3 bg-white/90 rounded-full hover:bg-white transition-colors"
+                                  className="rounded-full bg-white/90 p-3 transition-colors hover:bg-white"
                                 >
                                   <PlayIcon className="h-6 w-6 text-gray-900" />
                                 </button>
@@ -332,15 +368,22 @@ export default function VideoGenerationPage() {
                         </div>
                       ) : (
                         <div className="absolute inset-0 flex items-center justify-center bg-red-50">
-                          <p className="text-sm text-red-600">Generation failed</p>
+                          <p className="text-sm text-red-600">
+                            Generation failed
+                          </p>
                         </div>
                       )}
 
                       {/* Download button */}
                       {result.status === 'completed' && result.videoUrl && (
                         <button
-                          onClick={() => handleDownload(result.videoUrl, `video_${result.id}.mp4`)}
-                          className="absolute top-2 right-2 p-2 bg-black/50 rounded-lg hover:bg-black/70 transition-colors"
+                          onClick={() =>
+                            handleDownload(
+                              result.videoUrl,
+                              `video_${result.id}.mp4`,
+                            )
+                          }
+                          className="absolute right-2 top-2 rounded-lg bg-black/50 p-2 transition-colors hover:bg-black/70"
                         >
                           <DownloadIcon className="h-4 w-4 text-white" />
                         </button>
@@ -349,19 +392,26 @@ export default function VideoGenerationPage() {
 
                     {/* Info */}
                     <div className="p-4">
-                      <p className="text-sm text-typography-strong line-clamp-2 mb-2">
+                      <p className="mb-2 line-clamp-2 text-sm text-typography-strong">
                         {result.prompt}
                       </p>
                       <div className="flex items-center justify-between text-xs text-typography-weak">
-                        <span>{result.model} • {result.duration}s</span>
+                        <span>
+                          {result.model} • {result.duration}s
+                        </span>
                         <span>${result.cost.toFixed(2)}</span>
                       </div>
-                      <div className="flex items-center justify-between text-xs text-typography-weak mt-1">
-                        <span className={cn(
-                          "capitalize",
-                          result.status === 'completed' ? 'text-green-600' :
-                          result.status === 'processing' ? 'text-yellow-600' : 'text-red-600'
-                        )}>
+                      <div className="mt-1 flex items-center justify-between text-xs text-typography-weak">
+                        <span
+                          className={cn(
+                            'capitalize',
+                            result.status === 'completed'
+                              ? 'text-green-600'
+                              : result.status === 'processing'
+                                ? 'text-yellow-600'
+                                : 'text-red-600',
+                          )}
+                        >
                           {result.status}
                         </span>
                         <span>{result.timestamp.toLocaleTimeString()}</span>
@@ -378,16 +428,18 @@ export default function VideoGenerationPage() {
       {/* Settings Sidebar */}
       {showSettings && (
         <div className="w-80 border-l border-stroke-weak bg-background p-6">
-          <h3 className="text-lg font-semibold mb-4">Video Settings</h3>
-          
+          <h3 className="mb-4 text-lg font-semibold">Video Settings</h3>
+
           <div className="space-y-6">
             {/* Model Selection */}
             <div>
-              <label className="block text-sm font-medium mb-2">Model</label>
+              <label className="mb-2 block text-sm font-medium">Model</label>
               <select
                 value={settings.model}
-                onChange={(e) => setSettings(prev => ({ ...prev, model: e.target.value }))}
-                className="w-full p-2 border border-stroke-weak rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                onChange={(e) =>
+                  setSettings((prev) => ({ ...prev, model: e.target.value }))
+                }
+                className="w-full rounded-lg border border-stroke-weak p-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
               >
                 <option value="google-veo">Google Veo</option>
                 <option value="runwayml">RunwayML</option>
@@ -397,11 +449,18 @@ export default function VideoGenerationPage() {
 
             {/* FPS */}
             <div>
-              <label className="block text-sm font-medium mb-2">Frame Rate</label>
+              <label className="mb-2 block text-sm font-medium">
+                Frame Rate
+              </label>
               <select
                 value={settings.fps}
-                onChange={(e) => setSettings(prev => ({ ...prev, fps: parseInt(e.target.value) }))}
-                className="w-full p-2 border border-stroke-weak rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                onChange={(e) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    fps: parseInt(e.target.value),
+                  }))
+                }
+                className="w-full rounded-lg border border-stroke-weak p-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
               >
                 <option value={24}>24 FPS (Cinema)</option>
                 <option value={30}>30 FPS (Standard)</option>
@@ -415,7 +474,9 @@ export default function VideoGenerationPage() {
                 type="checkbox"
                 id="loop"
                 checked={settings.loop}
-                onChange={(e) => setSettings(prev => ({ ...prev, loop: e.target.checked }))}
+                onChange={(e) =>
+                  setSettings((prev) => ({ ...prev, loop: e.target.checked }))
+                }
                 className="rounded"
               />
               <label htmlFor="loop" className="text-sm font-medium">
@@ -424,11 +485,13 @@ export default function VideoGenerationPage() {
             </div>
 
             {/* Info */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="font-medium text-blue-900 mb-2">Video Generation</h4>
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <h4 className="mb-2 font-medium text-blue-900">
+                Video Generation
+              </h4>
               <p className="text-sm text-blue-700">
-                Video generation typically takes 2-5 minutes depending on duration and complexity. 
-                Longer videos cost more credits.
+                Video generation typically takes 2-5 minutes depending on
+                duration and complexity. Longer videos cost more credits.
               </p>
             </div>
           </div>

@@ -67,7 +67,7 @@ export const rolodexComponentStorageScenario: Scenario = {
     roomName: 'Contact Management Test',
     context: 'Testing rolodex component storage with world and room creation',
     environment: {
-      plugins: ['rolodex', 'message-handling'],
+      plugins: ['@elizaos/plugin-sql', 'rolodex', 'message-handling'],
       componentTracking: true,
     },
   },

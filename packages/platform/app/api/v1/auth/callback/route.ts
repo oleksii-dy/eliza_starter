@@ -5,14 +5,19 @@ import { SessionManager } from '@/lib/server/auth/session';
 import { db } from '@/lib/server/database';
 import { loadConfig } from '@/lib/server/utils/config';
 import { createTokenPair } from '@/lib/server/utils/jwt';
-import type { ApiResponse, AuthorizationCodeExchange, LoginResponse, User } from '@/lib/server/types';
+import type {
+  ApiResponse,
+  AuthorizationCodeExchange,
+  LoginResponse,
+  User,
+} from '@/lib/server/types';
 
 const callbackSchema = z.object({
   code: z.string(),
   state: z.string().optional(),
 });
 
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   try {
     const config = loadConfig();
     const workosClient = new WorkOSClient(config.workos);
@@ -38,8 +43,11 @@ export async function POST(request: NextRequest) {
     // TODO: Validate state parameter against stored value
 
     // Exchange code for user profile
-    const { user: workosUser, organization: workosOrg, accessToken } =
-      await workosClient.exchangeCodeForProfile(code);
+    const {
+      user: workosUser,
+      organization: workosOrg,
+      accessToken,
+    } = await workosClient.exchangeCodeForProfile(code);
 
     // Convert WorkOS user to our user format
     const userProfile = workosClient.convertWorkOSUser(workosUser);
@@ -85,7 +93,7 @@ export async function POST(request: NextRequest) {
 
         // Add user to organization if not already a member
         const members = await db.getOrganizationMembers(org.id);
-        const isMember = members.some(m => m.userId === user.id);
+        const isMember = members.some((m) => m.userId === user.id);
 
         if (!isMember) {
           await db.addUserToOrganization(user.id, org.id, 'member');
@@ -94,10 +102,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Create session
-    const { sessionToken, refreshToken } = await sessionManager.createSession(user.id, {
-      ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
-      userAgent: request.headers.get('user-agent') || undefined,
-    });
+    const { sessionToken, refreshToken } = await sessionManager.createSession(
+      user.id,
+      {
+        ipAddress:
+          request.headers.get('x-forwarded-for') ||
+          request.headers.get('x-real-ip') ||
+          undefined,
+        userAgent: request.headers.get('user-agent') || undefined,
+      },
+    );
 
     // Create JWT token pair (using sessionToken as the session identifier)
     const mockSession = {
@@ -106,14 +120,18 @@ export async function POST(request: NextRequest) {
       tokenHash: sessionToken,
       expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
       createdAt: new Date(),
-      isActive: true
+      isActive: true,
     };
 
-    const { accessToken: jwtToken, refreshToken: jwtRefreshToken, expiresAt } = await createTokenPair(
+    const {
+      accessToken: jwtToken,
+      refreshToken: jwtRefreshToken,
+      expiresAt,
+    } = await createTokenPair(
       user,
       mockSession,
       config.jwtSecret,
-      organization?.id
+      organization?.id,
     );
 
     // Set secure cookies

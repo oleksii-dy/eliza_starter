@@ -143,7 +143,7 @@ export class AuthStatusChecker {
         issues,
         recommendations,
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         ready: false,
         issues: ['Failed to check authentication status'],

@@ -1,7 +1,8 @@
 import * as CryptoJS from 'crypto-js';
 
 export class SecurityManager {
-  private static readonly ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key';
+  private static readonly ENCRYPTION_KEY =
+    process.env.ENCRYPTION_KEY || 'default-key';
   private static readonly MAX_REQUEST_SIZE = 10 * 1024 * 1024; // 10MB
   private static readonly RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
   private static readonly RATE_LIMIT_MAX_REQUESTS = 100;
@@ -21,7 +22,10 @@ export class SecurityManager {
     const now = Date.now();
     const userRequests = this.requestCounts.get(identifier);
 
-    if (!userRequests || now - userRequests.window > SecurityManager.RATE_LIMIT_WINDOW) {
+    if (
+      !userRequests ||
+      now - userRequests.window > SecurityManager.RATE_LIMIT_WINDOW
+    ) {
       this.requestCounts.set(identifier, { count: 1, window: now });
       return true;
     }
@@ -42,17 +46,23 @@ export class SecurityManager {
 
   // Token encryption for storage
   static encryptToken(token: string): string {
-    return CryptoJS.AES.encrypt(token, SecurityManager.ENCRYPTION_KEY).toString();
+    return CryptoJS.AES.encrypt(
+      token,
+      SecurityManager.ENCRYPTION_KEY,
+    ).toString();
   }
 
   static decryptToken(encryptedToken: string): string {
-    const bytes = CryptoJS.AES.decrypt(encryptedToken, SecurityManager.ENCRYPTION_KEY);
+    const bytes = CryptoJS.AES.decrypt(
+      encryptedToken,
+      SecurityManager.ENCRYPTION_KEY,
+    );
     return bytes.toString(CryptoJS.enc.Utf8);
   }
 
   // CSP header generation
   static generateCSP(): string {
-    const nonce = CryptoJS.lib.WordArray.random(128/8).toString();
+    const nonce = CryptoJS.lib.WordArray.random(128 / 8).toString();
     return [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline'", // Needed for Next.js
@@ -61,7 +71,7 @@ export class SecurityManager {
       "connect-src 'self' https: wss:",
       `object-src 'none'`,
       `base-uri 'self'`,
-      `form-action 'self'`
+      `form-action 'self'`,
     ].join('; ');
   }
 }

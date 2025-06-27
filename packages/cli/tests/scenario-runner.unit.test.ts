@@ -52,7 +52,7 @@ describe('ScenarioRunner Unit Tests', () => {
           id: 'subject' as UUID,
           name: 'Test Agent',
           role: 'subject',
-          script: { steps: [] }
+          script: { steps: [] },
         },
       ],
       setup: {},
@@ -105,7 +105,7 @@ describe('ScenarioRunner Unit Tests', () => {
           id: 'tester' as UUID,
           name: 'Tester',
           role: 'assistant', // Changed from 'subject' to 'assistant'
-          script: { steps: [] }
+          script: { steps: [] },
         },
       ],
       setup: {},
@@ -134,13 +134,13 @@ describe('ScenarioRunner Unit Tests', () => {
           id: 'subject1' as UUID,
           name: 'Subject 1',
           role: 'subject',
-          script: { steps: [] }
+          script: { steps: [] },
         },
         {
           id: 'subject2' as UUID,
           name: 'Subject 2',
           role: 'subject',
-          script: { steps: [] }
+          script: { steps: [] },
         },
       ],
     };
@@ -162,13 +162,13 @@ describe('ScenarioRunner Unit Tests', () => {
           id: 'subject-actor' as UUID,
           name: 'Subject',
           role: 'subject',
-          script: { steps: [] }
+          script: { steps: [] },
         },
         {
           id: 'assistant-actor' as UUID,
           name: 'Assistant',
           role: 'assistant',
-          script: { steps: [] }
+          script: { steps: [] },
         },
       ],
       setup: {},

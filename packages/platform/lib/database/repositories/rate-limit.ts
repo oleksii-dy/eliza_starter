@@ -25,7 +25,7 @@ export class RateLimitRepository {
   async checkRateLimit(
     limitKey: string,
     maxRequests: number,
-    windowDuration: number // seconds
+    windowDuration: number, // seconds
   ): Promise<RateLimitCheck> {
     const now = new Date();
     const windowStart = new Date(now.getTime() - windowDuration * 1000);
@@ -40,7 +40,7 @@ export class RateLimitRepository {
     if (!existing) {
       // Create new rate limit record
       const windowEnd = new Date(now.getTime() + windowDuration * 1000);
-      
+
       await this.db.insert(rateLimits).values({
         limitKey,
         requestCount: 1,
@@ -62,7 +62,7 @@ export class RateLimitRepository {
     if (now > existing.windowEnd) {
       // Reset the window
       const newWindowEnd = new Date(now.getTime() + windowDuration * 1000);
-      
+
       await this.db
         .update(rateLimits)
         .set({
@@ -85,8 +85,10 @@ export class RateLimitRepository {
 
     // Window is still active, check if limit exceeded
     if (existing.requestCount >= maxRequests) {
-      const retryAfter = Math.ceil((existing.windowEnd.getTime() - now.getTime()) / 1000);
-      
+      const retryAfter = Math.ceil(
+        (existing.windowEnd.getTime() - now.getTime()) / 1000,
+      );
+
       return {
         allowed: false,
         retryAfter,
@@ -97,7 +99,7 @@ export class RateLimitRepository {
 
     // Increment the counter
     const newCount = existing.requestCount + 1;
-    
+
     await this.db
       .update(rateLimits)
       .set({
@@ -119,7 +121,7 @@ export class RateLimitRepository {
    */
   async cleanupExpired(): Promise<number> {
     const now = new Date();
-    
+
     const result = await this.db
       .delete(rateLimits)
       .where(lt(rateLimits.windowEnd, now))
@@ -141,15 +143,20 @@ export class RateLimitRepository {
     if (!existing) return null;
 
     const now = new Date();
-    
+
     if (now > existing.windowEnd) {
       // Window expired
       return null;
     }
 
-    const remainingRequests = Math.max(0, existing.maxRequests - existing.requestCount);
-    const retryAfter = remainingRequests > 0 ? 0 : 
-      Math.ceil((existing.windowEnd.getTime() - now.getTime()) / 1000);
+    const remainingRequests = Math.max(
+      0,
+      existing.maxRequests - existing.requestCount,
+    );
+    const retryAfter =
+      remainingRequests > 0
+        ? 0
+        : Math.ceil((existing.windowEnd.getTime() - now.getTime()) / 1000);
 
     return {
       allowed: remainingRequests > 0,
@@ -183,13 +190,13 @@ export class RateLimitRepository {
 
     // Get total count
     const totalLimits = await this.db.select().from(rateLimits);
-    
+
     // Get active limits (not expired)
     const activeLimits = await this.db
       .select()
       .from(rateLimits)
       .where(gte(rateLimits.windowEnd, now));
-    
+
     // Get expired limits
     const expiredLimits = await this.db
       .select()

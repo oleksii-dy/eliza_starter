@@ -28,7 +28,9 @@ const createMemorySchema = z.object({
     inReplyTo: z.string().optional(),
     attachments: z.array(z.any()).optional(),
   }),
-  type: z.enum(['conversation', 'fact', 'preference', 'skill']).default('conversation'),
+  type: z
+    .enum(['conversation', 'fact', 'preference', 'skill'])
+    .default('conversation'),
   importance: z.number().min(1).max(10).default(5),
   isUnique: z.boolean().default(false),
   roomId: z.string().optional(),
@@ -40,7 +42,7 @@ const createMemorySchema = z.object({
 // searchMemoriesSchema moved to /api/v1/memories/search/route.ts
 
 // GET /api/v1/memories - Get agent memories with user isolation
-export async function GET(request: NextRequest) {
+export async function handleGET(request: NextRequest) {
   try {
     // Authenticate user
     const session = await sessionService.getSessionFromCookies();
@@ -62,7 +64,7 @@ export async function GET(request: NextRequest) {
     });
 
     const db = await getDatabase();
-    
+
     // Verify agent belongs to user's organization
     const agent = await db
       .select({ id: agents.id, createdByUserId: agents.createdByUserId })
@@ -70,15 +72,18 @@ export async function GET(request: NextRequest) {
       .where(
         and(
           eq(agents.id, params.agentId),
-          eq(agents.organizationId, session.organizationId)
-        )
+          eq(agents.organizationId, session.organizationId),
+        ),
       )
       .limit(1);
 
     if (agent.length === 0) {
-      return NextResponse.json({
-        error: 'Agent not found or access denied'
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          error: 'Agent not found or access denied',
+        },
+        { status: 404 },
+      );
     }
 
     // Build query with triple isolation: organization + agent + user
@@ -102,7 +107,7 @@ export async function GET(request: NextRequest) {
           eq(memories.organizationId, session.organizationId), // Organization isolation
           eq(memories.agentId, params.agentId), // Agent isolation
           eq(memories.userId, session.userId), // User isolation
-        )
+        ),
       );
 
     // Add optional filters
@@ -132,7 +137,11 @@ export async function GET(request: NextRequest) {
 
     // Apply ordering and pagination
     query = query
-      .orderBy(params.order === 'asc' ? asc(memories.createdAt) : desc(memories.createdAt))
+      .orderBy(
+        params.order === 'asc'
+          ? asc(memories.createdAt)
+          : desc(memories.createdAt),
+      )
       .limit(params.limit)
       .offset(params.offset);
 
@@ -149,26 +158,31 @@ export async function GET(request: NextRequest) {
         },
         agentId: params.agentId,
         userId: session.userId,
-      }
+      },
     });
-
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({
-        error: 'Invalid query parameters',
-        details: error.errors
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Invalid query parameters',
+          details: error.errors,
+        },
+        { status: 400 },
+      );
     }
 
     console.error('Failed to fetch memories:', error);
-    return NextResponse.json({
-      error: 'Failed to fetch memories'
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to fetch memories',
+      },
+      { status: 500 },
+    );
   }
 }
 
 // POST /api/v1/memories - Create a new memory with proper scoping
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   try {
     // Authenticate user
     const session = await sessionService.getSessionFromCookies();
@@ -181,7 +195,7 @@ export async function POST(request: NextRequest) {
     const data = createMemorySchema.parse(body);
 
     const db = await getDatabase();
-    
+
     // Verify agent belongs to user's organization
     const agent = await db
       .select({ id: agents.id })
@@ -189,15 +203,18 @@ export async function POST(request: NextRequest) {
       .where(
         and(
           eq(agents.id, data.agentId),
-          eq(agents.organizationId, session.organizationId)
-        )
+          eq(agents.organizationId, session.organizationId),
+        ),
       )
       .limit(1);
 
     if (agent.length === 0) {
-      return NextResponse.json({
-        error: 'Agent not found or access denied'
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          error: 'Agent not found or access denied',
+        },
+        { status: 404 },
+      );
     }
 
     // Create the memory with triple isolation
@@ -219,23 +236,31 @@ export async function POST(request: NextRequest) {
       })
       .returning();
 
-    return NextResponse.json({
-      success: true,
-      data: { memory: newMemory }
-    }, { status: 201 });
-
+    return NextResponse.json(
+      {
+        success: true,
+        data: { memory: newMemory },
+      },
+      { status: 201 },
+    );
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({
-        error: 'Invalid request data',
-        details: error.errors
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Invalid request data',
+          details: error.errors,
+        },
+        { status: 400 },
+      );
     }
 
     console.error('Failed to create memory:', error);
-    return NextResponse.json({
-      error: 'Failed to create memory'
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to create memory',
+      },
+      { status: 500 },
+    );
   }
 }
 

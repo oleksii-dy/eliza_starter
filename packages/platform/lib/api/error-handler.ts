@@ -91,7 +91,10 @@ export class ApiErrorHandler {
   /**
    * Create a success response
    */
-  static success<T>(data: T, metadata?: Record<string, any>): NextResponse<ApiResponse<T>> {
+  static success<T>(
+    data: T,
+    metadata?: Record<string, any>,
+  ): NextResponse<ApiResponse<T>> {
     const response: ApiResponse<T> = {
       success: true,
       data,
@@ -112,7 +115,7 @@ export class ApiErrorHandler {
     code: ErrorCode,
     message: string,
     details?: Record<string, any>,
-    statusOverride?: number
+    statusOverride?: number,
   ): NextResponse<ApiResponse> {
     // Sanitize error details for security
     const sanitizedDetails = this.sanitizeErrorDetails(details);
@@ -148,41 +151,74 @@ export class ApiErrorHandler {
   static fromError(error: unknown): NextResponse<ApiResponse> {
     if (error instanceof Error) {
       // Stripe errors
-      if (error.message.includes('Stripe') || error.message.includes('stripe')) {
+      if (
+        error.message.includes('Stripe') ||
+        error.message.includes('stripe')
+      ) {
         return this.error(ErrorCode.STRIPE_ERROR, 'Payment processing error');
       }
 
       // Database errors
-      if (error.message.includes('database') || error.message.includes('connection')) {
-        return this.error(ErrorCode.DATABASE_ERROR, 'Database operation failed');
+      if (
+        error.message.includes('database') ||
+        error.message.includes('connection')
+      ) {
+        return this.error(
+          ErrorCode.DATABASE_ERROR,
+          'Database operation failed',
+        );
       }
 
       // Authentication errors
-      if (error.message.includes('Unauthorized') || error.message.includes('authentication')) {
+      if (
+        error.message.includes('Unauthorized') ||
+        error.message.includes('authentication')
+      ) {
         return this.error(ErrorCode.UNAUTHORIZED, 'Authentication required');
       }
 
       // Configuration errors
-      if (error.message.includes('not configured') || error.message.includes('missing')) {
-        return this.error(ErrorCode.BILLING_CONFIGURATION_ERROR, 'Service configuration error');
+      if (
+        error.message.includes('not configured') ||
+        error.message.includes('missing')
+      ) {
+        return this.error(
+          ErrorCode.BILLING_CONFIGURATION_ERROR,
+          'Service configuration error',
+        );
       }
 
       // Validation errors
-      if (error.message.includes('Invalid') || error.message.includes('validation')) {
-        return this.error(ErrorCode.VALIDATION_ERROR, 'Request validation failed');
+      if (
+        error.message.includes('Invalid') ||
+        error.message.includes('validation')
+      ) {
+        return this.error(
+          ErrorCode.VALIDATION_ERROR,
+          'Request validation failed',
+        );
       }
 
       // Not found errors
-      if (error.message.includes('not found') || error.message.includes('Not found')) {
+      if (
+        error.message.includes('not found') ||
+        error.message.includes('Not found')
+      ) {
         return this.error(ErrorCode.NOT_FOUND, 'Resource not found');
       }
 
       // Generic error
-      return this.error(ErrorCode.INTERNAL_SERVER_ERROR, 'An unexpected error occurred');
+      return this.error(
+        ErrorCode.INTERNAL_SERVER_ERROR,
+        'An unexpected error occurred',
+      );
     }
 
     // Non-Error objects
-    return this.error(ErrorCode.INTERNAL_SERVER_ERROR, 'An unexpected error occurred');
+    return this.error(
+      ErrorCode.INTERNAL_SERVER_ERROR,
+      'An unexpected error occurred',
+    );
   }
 
   /**
@@ -195,8 +231,14 @@ export class ApiErrorHandler {
       .replace(/token[s]?[:=]\s*\S+/gi, 'token: [REDACTED]')
       .replace(/key[s]?[:=]\s*\S+/gi, 'key: [REDACTED]')
       .replace(/secret[s]?[:=]\s*\S+/gi, 'secret: [REDACTED]')
-      .replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, '[EMAIL_REDACTED]')
-      .replace(/\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b/g, '[CARD_NUMBER_REDACTED]');
+      .replace(
+        /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
+        '[EMAIL_REDACTED]',
+      )
+      .replace(
+        /\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b/g,
+        '[CARD_NUMBER_REDACTED]',
+      );
 
     return sanitized;
   }
@@ -204,14 +246,20 @@ export class ApiErrorHandler {
   /**
    * Sanitize error details to prevent sensitive data exposure
    */
-  private static sanitizeErrorDetails(details?: Record<string, any>): Record<string, any> | undefined {
+  private static sanitizeErrorDetails(
+    details?: Record<string, any>,
+  ): Record<string, any> | undefined {
     if (!details) return undefined;
 
     const sanitized: Record<string, any> = {};
 
     for (const [key, value] of Object.entries(details)) {
       // Skip sensitive keys
-      if (['password', 'token', 'secret', 'key', 'apiKey', 'privateKey'].includes(key.toLowerCase())) {
+      if (
+        ['password', 'token', 'secret', 'key', 'apiKey', 'privateKey'].includes(
+          key.toLowerCase(),
+        )
+      ) {
         sanitized[key] = '[REDACTED]';
         continue;
       }
@@ -247,15 +295,15 @@ export class ApiErrorHandler {
    */
   static validateRequest(
     data: Record<string, any>,
-    requiredFields: string[]
+    requiredFields: string[],
   ): NextResponse<ApiResponse> | null {
-    const missingFields = requiredFields.filter(field => !data[field]);
+    const missingFields = requiredFields.filter((field) => !data[field]);
 
     if (missingFields.length > 0) {
       return this.error(
         ErrorCode.MISSING_REQUIRED_FIELD,
         'Required fields are missing',
-        { missingFields }
+        { missingFields },
       );
     }
 
@@ -266,7 +314,7 @@ export class ApiErrorHandler {
    * Handle async operation with proper error handling
    */
   static async handleAsync<T>(
-    operation: () => Promise<T>
+    operation: () => Promise<T>,
   ): Promise<NextResponse<ApiResponse<T>>> {
     try {
       const result = await operation();
@@ -281,7 +329,7 @@ export class ApiErrorHandler {
  * Utility function for wrapping API route handlers
  */
 export function withErrorHandling<T extends any[], R>(
-  handler: (...args: T) => Promise<NextResponse<ApiResponse<R>>>
+  handler: (...args: T) => Promise<NextResponse<ApiResponse<R>>>,
 ) {
   return async (...args: T): Promise<NextResponse<ApiResponse<R>>> => {
     try {

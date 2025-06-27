@@ -5,6 +5,9 @@
     "es2022": true,
     "node": true
   },
+  "globals": {
+    "navigator": "readonly"
+  },
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",

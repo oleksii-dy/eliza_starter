@@ -9,7 +9,7 @@ export const visionEnhancedProvider: Provider = {
 
   async get(runtime: IAgentRuntime, message: Memory, _state: State) {
     try {
-      const visionService = runtime.getService<VisionService>('VISION') | null;
+      const visionService = runtime.getService<VisionService>('VISION') || null;
 
       if (!visionService || !visionService.isActive()) {
         return {

@@ -1,6 +1,7 @@
 import type { HandlerCallback, IAgentRuntime, Memory, State, UUID } from '@elizaos/core';
 import { describe, expect, it } from 'bun:test';
 import { createTodoAction } from '../actions/createTodo';
+import { createMockRuntime } from '@elizaos/core/test-utils';
 
 describe('createTodoAction', () => {
   let mockRuntime: IAgentRuntime;
@@ -10,14 +11,14 @@ describe('createTodoAction', () => {
   const setupMocks = () => {
     mockCallback = async () => [];
 
-    mockRuntime = {
-      agentId: 'test-agent' as UUID,
+    // @ts-ignore - test mock
+    mockRuntime = createMockRuntime({
       worldId: 'test-world' as UUID,
       useModel: () => Promise.resolve('<response></response>'), // Empty response to trigger failure path
       composeState: () => Promise.resolve(mockState),
       db: null, // Will cause data service to handle gracefully
       getRoom: () => Promise.resolve({ worldId: 'test-world' }),
-    } as any;
+    });
 
     mockState = {
       values: {},

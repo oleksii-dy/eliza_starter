@@ -7,92 +7,91 @@
  * all systems with color detection and UI verification.
  */
 
-import { spawn } from 'child_process';
-import { readFileSync, existsSync } from 'fs';
+import { spawn } from 'child_process'
+import { readFileSync, existsSync } from 'fs'
 
 class VisualBrowserTestRunner {
   constructor() {
-    this.testStartTime = Date.now();
-    this.testResults = [];
-    this.serverUrl = 'http://localhost:4444';
-    this.wsUrl = 'ws://localhost:4444';
+    this.testStartTime = Date.now()
+    this.testResults = []
+    this.serverUrl = 'http://localhost:4444'
+    this.wsUrl = 'ws://localhost:4444'
   }
 
   async runVisualTests() {
-    console.log('🎨 COMPREHENSIVE 3D RPG VISUAL TESTING');
-    console.log('=====================================\n');
+    console.log('🎨 COMPREHENSIVE 3D RPG VISUAL TESTING')
+    console.log('=====================================\n')
 
-    console.log('🚀 Starting comprehensive visual validation...');
-    console.log(`   Server: ${this.serverUrl}`);
-    console.log(`   WebSocket: ${this.wsUrl}`);
-    console.log('   Mode: Full 3D RPG system validation\n');
+    console.log('🚀 Starting comprehensive visual validation...')
+    console.log(`   Server: ${this.serverUrl}`)
+    console.log(`   WebSocket: ${this.wsUrl}`)
+    console.log('   Mode: Full 3D RPG system validation\n')
 
     try {
       // 1. Open browser and inject test helpers
-      const browserOpened = await this.openBrowserWithTests();
+      const browserOpened = await this.openBrowserWithTests()
       if (!browserOpened) {
-        throw new Error('Failed to open browser');
+        throw new Error('Failed to open browser')
       }
 
       // 2. Wait for page load and systems initialization
-      await this.waitForSystemsReady();
+      await this.waitForSystemsReady()
 
       // 3. Run individual system tests
-      await this.runIndividualSystemTests();
+      await this.runIndividualSystemTests()
 
       // 4. Run scenario-based tests
-      await this.runScenarioTests();
+      await this.runScenarioTests()
 
       // 5. Generate final report
-      this.generateVisualTestReport();
-
+      this.generateVisualTestReport()
     } catch (error) {
-      console.error('❌ Visual testing failed:', error.message);
-      process.exit(1);
+      console.error('❌ Visual testing failed:', error.message)
+      process.exit(1)
     }
   }
 
   async openBrowserWithTests() {
-    console.log('🌐 Opening browser with test injection...');
+    console.log('🌐 Opening browser with test injection...')
 
     // Create test injection script
-    const testScript = this.createTestInjectionScript();
+    const testScript = this.createTestInjectionScript()
 
     // Try to open browser on different platforms
     const commands = [
       'open', // macOS
       'xdg-open', // Linux
-      'start' // Windows
-    ];
+      'start', // Windows
+    ]
 
-    let browserOpened = false;
+    let browserOpened = false
 
     for (const cmd of commands) {
       try {
         const browser = spawn(cmd, [this.serverUrl], {
           stdio: 'ignore',
-          detached: true
-        });
+          detached: true,
+        })
 
-        browser.unref();
-        browserOpened = true;
-        console.log(`✅ Browser opened with: ${cmd}`);
-        break;
+        browser.unref()
+        browserOpened = true
+        console.log(`✅ Browser opened with: ${cmd}`)
+        break
       } catch (error) {
         // Try next command
       }
     }
 
     if (!browserOpened) {
-      console.log('⚠️ Could not automatically open browser');
-      console.log(`   Please manually open: ${this.serverUrl}`);
-      console.log('   Then run the test injection script in console');
-      console.log('\\n--- TEST INJECTION SCRIPT ---');
-      console.log(testScript);
-      console.log('--- END SCRIPT ---\\n');
+      console.log('⚠️ Could not automatically open browser')
+      console.log(`   Please manually open: ${this.serverUrl}`)
+      console.log('   Then run the test injection script in console')
+      console.log('\\n--- TEST INJECTION SCRIPT ---')
+      console.log(testScript)
+      console.log('--- END SCRIPT ---\\n')
     }
 
-    return browserOpened;
+    return browserOpened
   }
 
   createTestInjectionScript() {
@@ -190,21 +189,21 @@ window.getEntityPosition = function(entityId) {
 };
 
 console.log('🎯 Visual test helpers injected and ready!');
-`;
+`
   }
 
   async waitForSystemsReady() {
-    console.log('⏳ Waiting for systems to initialize...');
+    console.log('⏳ Waiting for systems to initialize...')
 
     // In a real implementation, this would check the server
-    await this.wait(5000);
+    await this.wait(5000)
 
-    console.log('✅ Systems ready for testing');
+    console.log('✅ Systems ready for testing')
   }
 
   async runIndividualSystemTests() {
-    console.log('\\n🔬 INDIVIDUAL SYSTEM TESTS');
-    console.log('===========================\\n');
+    console.log('\\n🔬 INDIVIDUAL SYSTEM TESTS')
+    console.log('===========================\\n')
 
     const systemTests = [
       { name: 'Visual Representation System', test: this.testVisualSystem.bind(this) },
@@ -213,251 +212,250 @@ console.log('🎯 Visual test helpers injected and ready!');
       { name: 'Entity Spawning System', test: this.testEntitySpawning.bind(this) },
       { name: 'Movement System', test: this.testMovementSystem.bind(this) },
       { name: 'Combat System', test: this.testCombatSystem.bind(this) },
-      { name: 'UI Integration', test: this.testUIIntegration.bind(this) }
-    ];
+      { name: 'UI Integration', test: this.testUIIntegration.bind(this) },
+    ]
 
     for (const systemTest of systemTests) {
-      await this.runSystemTest(systemTest.name, systemTest.test);
-      await this.wait(2000); // Pause between tests
+      await this.runSystemTest(systemTest.name, systemTest.test)
+      await this.wait(2000) // Pause between tests
     }
   }
 
   async runSystemTest(name, testFunction) {
-    console.log(`🧪 Testing: ${name}`);
-    const startTime = Date.now();
+    console.log(`🧪 Testing: ${name}`)
+    const startTime = Date.now()
 
     try {
-      const result = await testFunction();
-      const duration = Date.now() - startTime;
+      const result = await testFunction()
+      const duration = Date.now() - startTime
 
       this.testResults.push({
         name,
         success: result.success,
         duration,
         details: result.details || 'Test completed',
-        issues: result.issues || []
-      });
+        issues: result.issues || [],
+      })
 
-      const status = result.success ? '✅' : '❌';
-      console.log(`${status} ${name}: ${result.details} (${duration}ms)`);
+      const status = result.success ? '✅' : '❌'
+      console.log(`${status} ${name}: ${result.details} (${duration}ms)`)
 
       if (result.issues && result.issues.length > 0) {
-        result.issues.forEach(issue => console.log(`   ⚠️ ${issue}`));
+        result.issues.forEach(issue => console.log(`   ⚠️ ${issue}`))
       }
-
     } catch (error) {
-      const duration = Date.now() - startTime;
+      const duration = Date.now() - startTime
       this.testResults.push({
         name,
         success: false,
         duration,
         details: error.message,
-        issues: []
-      });
+        issues: [],
+      })
 
-      console.log(`❌ ${name}: ${error.message} (${duration}ms)`);
+      console.log(`❌ ${name}: ${error.message} (${duration}ms)`)
     }
   }
 
   async testVisualSystem() {
     // Test visual representation system
-    await this.wait(1000);
+    await this.wait(1000)
     return {
       success: true,
-      details: 'Visual templates loaded, entities rendering correctly'
-    };
+      details: 'Visual templates loaded, entities rendering correctly',
+    }
   }
 
   async testBuildingSystem() {
     // Test building proxy system
-    await this.wait(1000);
+    await this.wait(1000)
     return {
       success: true,
-      details: 'Building creation, trigger zones, and navigation validated'
-    };
+      details: 'Building creation, trigger zones, and navigation validated',
+    }
   }
 
   async testColorDetection() {
     // Test color detection accuracy
-    await this.wait(1000);
+    await this.wait(1000)
     return {
       success: true,
-      details: 'Color detection working, unique colors validated'
-    };
+      details: 'Color detection working, unique colors validated',
+    }
   }
 
   async testEntitySpawning() {
     // Test entity spawning with visual validation
-    await this.wait(1000);
+    await this.wait(1000)
     return {
       success: true,
-      details: 'Entities spawn correctly with expected visual properties'
-    };
+      details: 'Entities spawn correctly with expected visual properties',
+    }
   }
 
   async testMovementSystem() {
     // Test movement and pathfinding
-    await this.wait(1500);
+    await this.wait(1500)
     return {
       success: true,
-      details: 'Movement, pathfinding, and navigation working correctly'
-    };
+      details: 'Movement, pathfinding, and navigation working correctly',
+    }
   }
 
   async testCombatSystem() {
     // Test combat mechanics
-    await this.wait(1500);
+    await this.wait(1500)
     return {
       success: true,
-      details: 'Combat, damage, death, and loot systems operational'
-    };
+      details: 'Combat, damage, death, and loot systems operational',
+    }
   }
 
   async testUIIntegration() {
     // Test UI system integration
-    await this.wait(1000);
+    await this.wait(1000)
     return {
       success: true,
-      details: 'Banking UI, inventory UI, trading UI all functional'
-    };
+      details: 'Banking UI, inventory UI, trading UI all functional',
+    }
   }
 
   async runScenarioTests() {
-    console.log('\\n🎬 SCENARIO-BASED TESTS');
-    console.log('========================\\n');
+    console.log('\\n🎬 SCENARIO-BASED TESTS')
+    console.log('========================\\n')
 
     const scenarios = [
       { name: 'Banking Scenario', duration: 30000 },
       { name: 'Combat Death Scenario', duration: 45000 },
-      { name: 'Movement Navigation Scenario', duration: 60000 }
-    ];
+      { name: 'Movement Navigation Scenario', duration: 60000 },
+    ]
 
     for (const scenario of scenarios) {
-      await this.runScenarioTest(scenario);
+      await this.runScenarioTest(scenario)
     }
   }
 
   async runScenarioTest(scenario) {
-    console.log(`🎯 Running scenario: ${scenario.name}`);
-    console.log(`   Expected duration: ${scenario.duration / 1000}s`);
-    console.log('   Testing comprehensive system integration...');
+    console.log(`🎯 Running scenario: ${scenario.name}`)
+    console.log(`   Expected duration: ${scenario.duration / 1000}s`)
+    console.log('   Testing comprehensive system integration...')
 
-    const startTime = Date.now();
+    const startTime = Date.now()
 
     // Simulate scenario execution
-    await this.wait(Math.min(scenario.duration, 5000)); // Shortened for demo
+    await this.wait(Math.min(scenario.duration, 5000)) // Shortened for demo
 
-    const duration = Date.now() - startTime;
-    const success = true; // In real implementation, this would be determined by actual tests
+    const duration = Date.now() - startTime
+    const success = true // In real implementation, this would be determined by actual tests
 
     this.testResults.push({
       name: scenario.name,
       success,
       duration,
       details: 'Scenario completed successfully with all conditions met',
-      issues: []
-    });
+      issues: [],
+    })
 
-    const status = success ? '✅' : '❌';
-    console.log(`${status} ${scenario.name}: Completed (${duration}ms)`);
+    const status = success ? '✅' : '❌'
+    console.log(`${status} ${scenario.name}: Completed (${duration}ms)`)
   }
 
   generateVisualTestReport() {
-    console.log('\\n📊 COMPREHENSIVE VISUAL TEST REPORT');
-    console.log('====================================\\n');
+    console.log('\\n📊 COMPREHENSIVE VISUAL TEST REPORT')
+    console.log('====================================\\n')
 
-    const totalTests = this.testResults.length;
-    const passedTests = this.testResults.filter(t => t.success).length;
-    const failedTests = totalTests - passedTests;
-    const successRate = totalTests > 0 ? (passedTests / totalTests) * 100 : 0;
-    const totalDuration = Date.now() - this.testStartTime;
+    const totalTests = this.testResults.length
+    const passedTests = this.testResults.filter(t => t.success).length
+    const failedTests = totalTests - passedTests
+    const successRate = totalTests > 0 ? (passedTests / totalTests) * 100 : 0
+    const totalDuration = Date.now() - this.testStartTime
 
-    console.log('📈 SUMMARY:');
-    console.log(`   Total Tests: ${totalTests}`);
-    console.log(`   Passed: ${passedTests}`);
-    console.log(`   Failed: ${failedTests}`);
-    console.log(`   Success Rate: ${successRate.toFixed(1)}%`);
-    console.log(`   Total Duration: ${(totalDuration / 1000).toFixed(1)}s\\n`);
+    console.log('📈 SUMMARY:')
+    console.log(`   Total Tests: ${totalTests}`)
+    console.log(`   Passed: ${passedTests}`)
+    console.log(`   Failed: ${failedTests}`)
+    console.log(`   Success Rate: ${successRate.toFixed(1)}%`)
+    console.log(`   Total Duration: ${(totalDuration / 1000).toFixed(1)}s\\n`)
 
-    console.log('📋 DETAILED RESULTS:');
+    console.log('📋 DETAILED RESULTS:')
     this.testResults.forEach(result => {
-      const status = result.success ? '✅' : '❌';
-      console.log(`   ${status} ${result.name}`);
-      console.log(`      ${result.details}`);
-      console.log(`      Duration: ${result.duration}ms`);
+      const status = result.success ? '✅' : '❌'
+      console.log(`   ${status} ${result.name}`)
+      console.log(`      ${result.details}`)
+      console.log(`      Duration: ${result.duration}ms`)
       if (result.issues.length > 0) {
-        result.issues.forEach(issue => console.log(`      ⚠️ ${issue}`));
+        result.issues.forEach(issue => console.log(`      ⚠️ ${issue}`))
       }
-      console.log('');
-    });
+      console.log('')
+    })
 
-    console.log('🎯 VISUAL VALIDATION CHECKLIST:');
-    console.log('Please verify the following in the browser:');
-    console.log('');
-    console.log('🏦 BANKING SYSTEM:');
-    console.log('   □ Gold bank building visible at coordinates (10, 1, 10)');
-    console.log('   □ Green trigger zones visible around bank entrance');
-    console.log('   □ Player (hot pink) can walk into bank');
-    console.log('   □ Banking UI appears when entering trigger zone');
-    console.log('   □ Bank counter interaction works');
-    console.log('');
-    console.log('⚔️ COMBAT SYSTEM:');
-    console.log('   □ Green player visible at start position');
-    console.log('   □ Red goblin visible and aggressive');
-    console.log('   □ Combat animations play correctly');
-    console.log('   □ Health decreases visually');
-    console.log('   □ Death animation and loot drop occur');
-    console.log('');
-    console.log('🚶 MOVEMENT SYSTEM:');
-    console.log('   □ Blue player navigates through waypoints');
-    console.log('   □ Yellow waypoint markers visible');
-    console.log('   □ Brown obstacles remain stationary');
-    console.log('   □ Pathfinding avoids obstacles');
-    console.log('   □ Movement animations smooth');
-    console.log('');
-    console.log('🎨 COLOR VALIDATION:');
-    console.log('   □ All entities have unique, easily distinguishable colors');
-    console.log('   □ Colors match expected values in test scenarios');
-    console.log('   □ UI elements have consistent color scheme');
-    console.log('   □ No color conflicts or confusion');
-    console.log('');
-    console.log('🖥️ UI INTEGRATION:');
-    console.log('   □ Inventory UI opens and displays correctly');
-    console.log('   □ Banking UI functional with deposit/withdraw');
-    console.log('   □ Trading UI shows market data');
-    console.log('   □ Skills UI displays progression');
-    console.log('   □ Combat UI shows health and actions');
+    console.log('🎯 VISUAL VALIDATION CHECKLIST:')
+    console.log('Please verify the following in the browser:')
+    console.log('')
+    console.log('🏦 BANKING SYSTEM:')
+    console.log('   □ Gold bank building visible at coordinates (10, 1, 10)')
+    console.log('   □ Green trigger zones visible around bank entrance')
+    console.log('   □ Player (hot pink) can walk into bank')
+    console.log('   □ Banking UI appears when entering trigger zone')
+    console.log('   □ Bank counter interaction works')
+    console.log('')
+    console.log('⚔️ COMBAT SYSTEM:')
+    console.log('   □ Green player visible at start position')
+    console.log('   □ Red goblin visible and aggressive')
+    console.log('   □ Combat animations play correctly')
+    console.log('   □ Health decreases visually')
+    console.log('   □ Death animation and loot drop occur')
+    console.log('')
+    console.log('🚶 MOVEMENT SYSTEM:')
+    console.log('   □ Blue player navigates through waypoints')
+    console.log('   □ Yellow waypoint markers visible')
+    console.log('   □ Brown obstacles remain stationary')
+    console.log('   □ Pathfinding avoids obstacles')
+    console.log('   □ Movement animations smooth')
+    console.log('')
+    console.log('🎨 COLOR VALIDATION:')
+    console.log('   □ All entities have unique, easily distinguishable colors')
+    console.log('   □ Colors match expected values in test scenarios')
+    console.log('   □ UI elements have consistent color scheme')
+    console.log('   □ No color conflicts or confusion')
+    console.log('')
+    console.log('🖥️ UI INTEGRATION:')
+    console.log('   □ Inventory UI opens and displays correctly')
+    console.log('   □ Banking UI functional with deposit/withdraw')
+    console.log('   □ Trading UI shows market data')
+    console.log('   □ Skills UI displays progression')
+    console.log('   □ Combat UI shows health and actions')
 
     if (successRate >= 90) {
-      console.log('\\n🎉 EXCELLENT: All visual tests passed!');
-      console.log('   The 3D RPG system is fully operational and visually validated.');
-      console.log('   Ready for production deployment and agent gameplay.');
+      console.log('\\n🎉 EXCELLENT: All visual tests passed!')
+      console.log('   The 3D RPG system is fully operational and visually validated.')
+      console.log('   Ready for production deployment and agent gameplay.')
     } else if (successRate >= 75) {
-      console.log('\\n✅ GOOD: Most visual tests passed');
-      console.log('   The system is mostly functional with minor issues to address.');
+      console.log('\\n✅ GOOD: Most visual tests passed')
+      console.log('   The system is mostly functional with minor issues to address.')
     } else {
-      console.log('\\n⚠️ NEEDS ATTENTION: Several visual tests failed');
-      console.log('   Review failed tests and address issues before deployment.');
+      console.log('\\n⚠️ NEEDS ATTENTION: Several visual tests failed')
+      console.log('   Review failed tests and address issues before deployment.')
     }
 
-    console.log('\\n📝 NEXT STEPS:');
-    console.log('1. Review any failed tests and address underlying issues');
-    console.log('2. Verify all visual elements are rendering correctly');
-    console.log('3. Test agent interaction with all systems');
-    console.log('4. Validate performance under load');
-    console.log('5. Deploy to production environment');
+    console.log('\\n📝 NEXT STEPS:')
+    console.log('1. Review any failed tests and address underlying issues')
+    console.log('2. Verify all visual elements are rendering correctly')
+    console.log('3. Test agent interaction with all systems')
+    console.log('4. Validate performance under load')
+    console.log('5. Deploy to production environment')
 
-    console.log('\\n✨ Visual testing completed!');
+    console.log('\\n✨ Visual testing completed!')
   }
 
   async wait(duration) {
-    return new Promise(resolve => setTimeout(resolve, duration));
+    return new Promise(resolve => setTimeout(resolve, duration))
   }
 }
 
 // Run visual tests
-const runner = new VisualBrowserTestRunner();
+const runner = new VisualBrowserTestRunner()
 runner.runVisualTests().catch(error => {
-  console.error('💥 Visual test runner failed:', error);
-  process.exit(1);
-});
+  console.error('💥 Visual test runner failed:', error)
+  process.exit(1)
+})

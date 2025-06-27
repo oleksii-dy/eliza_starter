@@ -22,7 +22,12 @@ const paymentBasicFlowScenario: Scenario = {
 
 When users request these services, inform them of the cost and process payments appropriately.
 Always be transparent about pricing and provide value for paid services.`,
-      plugins: ['@elizaos/plugin-payment', '@elizaos/plugin-research', '@elizaos/plugin-knowledge'],
+      plugins: [
+        '@elizaos/plugin-sql',
+        '@elizaos/plugin-payment',
+        '@elizaos/plugin-research',
+        '@elizaos/plugin-knowledge',
+      ],
       script: { steps: [] },
     },
     {

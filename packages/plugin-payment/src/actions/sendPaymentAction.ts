@@ -14,15 +14,19 @@ import { ethers } from 'ethers';
 
 export const sendPaymentAction: Action = {
   name: 'SEND_PAYMENT',
-  description: 'Send cryptocurrency to another address with automatic validation and confirmation. Supports action chaining by providing transaction data for receipt generation, tax reporting, or automated accounting workflows.',
+  description:
+    'Send cryptocurrency to another address with automatic validation and confirmation. Supports action chaining by providing transaction data for receipt generation, tax reporting, or automated accounting workflows.',
   similes: ['TRANSFER', 'SEND_CRYPTO', 'PAY', 'TRANSFER_FUNDS'],
 
   validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
     const text = message.content?.text?.toLowerCase() || '';
     return (
       (text.includes('send') || text.includes('transfer') || text.includes('pay')) &&
-      (text.includes('eth') || text.includes('usdc') || text.includes('sol') ||
-       text.includes('matic') || text.includes('to'))
+      (text.includes('eth') ||
+        text.includes('usdc') ||
+        text.includes('sol') ||
+        text.includes('matic') ||
+        text.includes('to'))
     );
   },
 
@@ -43,7 +47,7 @@ export const sendPaymentAction: Action = {
         return {
           text: 'Payment service is not available. Please ensure the payment plugin is properly configured.',
           values: { success: false, error: 'service_unavailable' },
-          data: { action: 'SEND_PAYMENT' }
+          data: { action: 'SEND_PAYMENT' },
         };
       }
 
@@ -59,7 +63,7 @@ export const sendPaymentAction: Action = {
         return {
           text: 'Could not parse payment details. Please specify amount, currency, and recipient address.',
           values: { success: false, error: 'invalid_payment_details' },
-          data: { action: 'SEND_PAYMENT' }
+          data: { action: 'SEND_PAYMENT' },
         };
       }
 
@@ -125,7 +129,7 @@ export const sendPaymentAction: Action = {
             amount: paymentDetails.amount,
             currency: paymentDetails.currency,
             recipient: paymentDetails.recipient,
-            status: 'completed'
+            status: 'completed',
           },
           data: {
             action: 'SEND_PAYMENT',
@@ -134,9 +138,9 @@ export const sendPaymentAction: Action = {
               amount: amount.toString(),
               method,
               recipient: paymentDetails.recipient,
-              timestamp: new Date().toISOString()
-            }
-          }
+              timestamp: new Date().toISOString(),
+            },
+          },
         };
       } else if (result.status === 'PENDING') {
         await callback?.({
@@ -152,13 +156,13 @@ export const sendPaymentAction: Action = {
             success: false,
             status: 'pending',
             paymentId: result.id,
-            requiresConfirmation: true
+            requiresConfirmation: true,
           },
           data: {
             action: 'SEND_PAYMENT',
             paymentId: result.id,
-            pendingReason: result.error
-          }
+            pendingReason: result.error,
+          },
         };
       } else {
         await callback?.({
@@ -170,13 +174,13 @@ export const sendPaymentAction: Action = {
           values: {
             success: false,
             error: result.error || 'unknown_error',
-            status: 'failed'
+            status: 'failed',
           },
           data: {
             action: 'SEND_PAYMENT',
             errorType: 'payment_failed',
-            errorDetails: result.error
-          }
+            errorDetails: result.error,
+          },
         };
       }
     } catch (error) {
@@ -189,13 +193,13 @@ export const sendPaymentAction: Action = {
         text: `Error processing payment: ${error instanceof Error ? error.message : 'Unknown error'}`,
         values: {
           success: false,
-          error: error instanceof Error ? error.message : 'unknown_error'
+          error: error instanceof Error ? error.message : 'unknown_error',
         },
         data: {
           action: 'SEND_PAYMENT',
           errorType: 'processing_error',
-          errorDetails: error instanceof Error ? error.stack : undefined
-        }
+          errorDetails: error instanceof Error ? error.stack : undefined,
+        },
       };
     }
   },
@@ -222,8 +226,9 @@ export const sendPaymentAction: Action = {
       {
         name: '{{agent}}',
         content: {
-          text: 'I\'ll transfer 50 USDC to alice.eth and then send her a confirmation message.',
-          thought: 'User wants me to send payment and follow up with a message - I should process the payment first, then use the transaction details in the message.',
+          text: "I'll transfer 50 USDC to alice.eth and then send her a confirmation message.",
+          thought:
+            'User wants me to send payment and follow up with a message - I should process the payment first, then use the transaction details in the message.',
           actions: ['SEND_PAYMENT'],
         },
       },
@@ -231,7 +236,8 @@ export const sendPaymentAction: Action = {
         name: '{{agent}}',
         content: {
           text: 'Payment completed! Now sending confirmation message to Alice...',
-          thought: 'Payment successful with transaction hash. I can now send Alice a message with the transaction details.',
+          thought:
+            'Payment successful with transaction hash. I can now send Alice a message with the transaction details.',
           actions: ['SEND_MESSAGE'],
         },
       },
@@ -239,13 +245,16 @@ export const sendPaymentAction: Action = {
     [
       {
         name: '{{user}}',
-        content: { text: 'Pay the invoice for 100 USDC to vendor.eth and update our accounting records' },
+        content: {
+          text: 'Pay the invoice for 100 USDC to vendor.eth and update our accounting records',
+        },
       },
       {
         name: '{{agent}}',
         content: {
-          text: 'I\'ll process the invoice payment and update the accounting records.',
-          thought: 'User wants payment processing followed by accounting updates - I should send the payment first, then use the transaction data for bookkeeping.',
+          text: "I'll process the invoice payment and update the accounting records.",
+          thought:
+            'User wants payment processing followed by accounting updates - I should send the payment first, then use the transaction data for bookkeeping.',
           actions: ['SEND_PAYMENT'],
         },
       },
@@ -253,7 +262,8 @@ export const sendPaymentAction: Action = {
         name: '{{agent}}',
         content: {
           text: 'Invoice payment completed! Now updating accounting records with transaction details...',
-          thought: 'Payment processed successfully. I can now update the accounting system with the transaction hash and payment details.',
+          thought:
+            'Payment processed successfully. I can now update the accounting system with the transaction hash and payment details.',
           actions: ['UPDATE_ACCOUNTING'],
         },
       },

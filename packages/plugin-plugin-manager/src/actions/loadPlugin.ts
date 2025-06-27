@@ -97,7 +97,9 @@ export const loadPluginAction: Action = {
     const pluginManager = runtime.getService<PluginManagerService>(
       PluginManagerServiceType.PLUGIN_MANAGER
     );
-    if (!pluginManager) {return false;}
+    if (!pluginManager) {
+      return false;
+    }
 
     // Check if the message text contains load-related keywords
     const text = _message.content.text?.toLowerCase() || '';

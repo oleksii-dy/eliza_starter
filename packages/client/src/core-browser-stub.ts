@@ -41,44 +41,44 @@ export interface Agent {
   name?: string;
   settings?: {
     avatar?: string | null;
-    [key: string]: any;
+    [key: string]: unknown;
   };
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface Character {
   id?: UUID;
   name?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface Memory {
   id?: UUID;
   content?: Content;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface Content {
   text?: string;
   type?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface Room {
   id?: UUID;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface Media {
   id?: UUID;
   url?: string;
   contentType?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface IAgentRuntime {
   agentId?: UUID;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // Utility functions
@@ -88,18 +88,18 @@ export function validateUuid(value: string): boolean {
 }
 
 export function getContentTypeFromMimeType(mimeType: string): ContentType {
-  if (mimeType.startsWith('image/')) return ContentType.IMAGE;
-  if (mimeType.startsWith('video/')) return ContentType.VIDEO;
-  if (mimeType.startsWith('audio/')) return ContentType.AUDIO;
-  if (mimeType.startsWith('text/')) return ContentType.TEXT;
+  if (mimeType.startsWith('image/')) {return ContentType.IMAGE;}
+  if (mimeType.startsWith('video/')) {return ContentType.VIDEO;}
+  if (mimeType.startsWith('audio/')) {return ContentType.AUDIO;}
+  if (mimeType.startsWith('text/')) {return ContentType.TEXT;}
   return ContentType.FILE;
 }
 
 // Logger stub
 export const elizaLogger = {
-  info: (...args: any[]) => console.info('[eliza]', ...args),
-  warn: (...args: any[]) => console.warn('[eliza]', ...args),
-  error: (...args: any[]) => console.error('[eliza]', ...args),
-  debug: (...args: any[]) => console.debug('[eliza]', ...args),
-  log: (...args: any[]) => console.log('[eliza]', ...args),
+  info: (...args: unknown[]) => console.info('[eliza]', ...args),
+  warn: (...args: unknown[]) => console.warn('[eliza]', ...args),
+  error: (...args: unknown[]) => console.error('[eliza]', ...args),
+  debug: (...args: unknown[]) => console.debug('[eliza]', ...args),
+  log: (...args: unknown[]) => console.log('[eliza]', ...args),
 };

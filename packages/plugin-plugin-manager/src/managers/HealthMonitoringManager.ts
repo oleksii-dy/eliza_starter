@@ -190,7 +190,9 @@ export class HealthMonitoringManager {
         message: `Plugin ${pluginId} has been recovered and reset to healthy state`,
       };
     } catch (_error) {
-      elizaLogger.error(`[HealthMonitoringManager] Failed to recover plugin ${pluginId}`, { _error });
+      elizaLogger.error(`[HealthMonitoringManager] Failed to recover plugin ${pluginId}`, {
+        _error,
+      });
       return {
         success: false,
         message: `Failed to recover plugin: ${_error instanceof Error ? _error.message : String(_error)}`,
@@ -210,7 +212,9 @@ export class HealthMonitoringManager {
     }
 
     if (metrics.status === HealthStatus.WARNING) {
-      elizaLogger.warn(`[HealthMonitoringManager] Plugin ${pluginId} is in warning state but proceeding`);
+      elizaLogger.warn(
+        `[HealthMonitoringManager] Plugin ${pluginId} is in warning state but proceeding`
+      );
     }
 
     try {
@@ -688,13 +692,17 @@ export class HealthMonitoringManager {
 
   private async checkThresholds(name: string, result: HealthCheckResult): Promise<void> {
     const threshold = this.alertThresholds.get(name);
-    if (!threshold) {return;}
+    if (!threshold) {
+      return;
+    }
 
     // Extract the metric value from the result
     const metrics = this.resultToMetrics(result);
     const metricValue = metrics[threshold.metric];
 
-    if (metricValue === undefined) {return;}
+    if (metricValue === undefined) {
+      return;
+    }
 
     // Check if threshold is breached
     let isBreached = false;
@@ -757,7 +765,10 @@ export class HealthMonitoringManager {
             callback(alert);
           } catch (_error) {
             if (_error instanceof Error) {
-              elizaLogger.error('[HealthMonitoringManager] Error in alert callback', { error: _error.message, name });
+              elizaLogger.error('[HealthMonitoringManager] Error in alert callback', {
+                error: _error.message,
+                name,
+              });
             }
           }
         }
@@ -799,7 +810,9 @@ export class HealthMonitoringManager {
       const checkKey = `plugin_${pluginId}`;
 
       // Skip if already has a periodic check
-      if (this.checkIntervals.has(checkKey)) {continue;}
+      if (this.checkIntervals.has(checkKey)) {
+        continue;
+      }
 
       // Create periodic health check for this plugin
       const interval = setInterval(async () => {

@@ -47,7 +47,7 @@ describe('Performance Comprehensive Testing', () => {
     // STEP 1: Test Dashboard Load Time
     // ==========================================
     cy.log('🏠 Step 1: Test Dashboard Load Time');
-    
+
     // Mock dashboard data with slight delay to simulate real API
     cy.intercept('GET', '**/api/dashboard/stats', {
       delay: 200,
@@ -85,22 +85,22 @@ describe('Performance Comprehensive Testing', () => {
     }).as('getDashboardActivity');
 
     const startTime = performance.now();
-    
+
     cy.visit('/dashboard', { failOnStatusCode: false });
     cy.wait('@getIdentity');
     cy.wait('@getDashboardStats');
     cy.wait('@getDashboardActivity');
-    
+
     // Verify page loads completely
     cy.get('[data-cy="dashboard-header"]').should('be.visible');
     cy.get('[data-cy="stats-section"]').should('be.visible');
     cy.get('[data-cy="quick-actions"]').should('be.visible');
     cy.get('[data-cy="recent-activity"]').should('be.visible');
-    
+
     cy.window().then((win) => {
       const loadTime = performance.now() - startTime;
       cy.log(`📊 Dashboard load time: ${loadTime.toFixed(2)}ms`);
-      
+
       // Assert reasonable load time (should be under 3 seconds)
       expect(loadTime).to.be.lessThan(3000);
     });
@@ -109,7 +109,7 @@ describe('Performance Comprehensive Testing', () => {
     // STEP 2: Test API Keys Page Load
     // ==========================================
     cy.log('🔑 Step 2: Test API Keys Page Load');
-    
+
     cy.intercept('GET', '**/api/api-keys', {
       delay: 300,
       statusCode: 200,
@@ -127,21 +127,26 @@ describe('Performance Comprehensive Testing', () => {
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           })),
-          stats: { totalKeys: 10, activeKeys: 10, expiredKeys: 0, totalUsage: 5000 },
+          stats: {
+            totalKeys: 10,
+            activeKeys: 10,
+            expiredKeys: 0,
+            totalUsage: 5000,
+          },
           availablePermissions: ['inference:*', 'storage:*', 'agents:write'],
         },
       },
     }).as('getApiKeys');
 
     const apiKeysStartTime = performance.now();
-    
+
     cy.visit('/api-keys', { failOnStatusCode: false });
     cy.wait('@getIdentity');
     cy.wait('@getApiKeys');
-    
+
     cy.get('[data-cy="api-keys-page"]').should('be.visible');
     cy.get('[data-cy="api-key-row"]').should('have.length', 10);
-    
+
     cy.window().then((win) => {
       const loadTime = performance.now() - apiKeysStartTime;
       cy.log(`📊 API Keys page load time: ${loadTime.toFixed(2)}ms`);
@@ -152,12 +157,12 @@ describe('Performance Comprehensive Testing', () => {
     // STEP 3: Test Modal Performance
     // ==========================================
     cy.log('🎭 Step 3: Test Modal Performance');
-    
+
     const modalStartTime = performance.now();
-    
+
     cy.get('[data-cy="create-api-key-button"]').click();
     cy.get('[data-cy="api-key-modal"]').should('be.visible');
-    
+
     cy.window().then((win) => {
       const modalTime = performance.now() - modalStartTime;
       cy.log(`📊 Modal open time: ${modalTime.toFixed(2)}ms`);
@@ -174,7 +179,7 @@ describe('Performance Comprehensive Testing', () => {
     // STEP 1: Test Concurrent API Calls
     // ==========================================
     cy.log('🔄 Step 1: Test Concurrent API Calls');
-    
+
     // Mock multiple API endpoints with various delays
     cy.intercept('GET', '**/api/dashboard/stats', {
       delay: 100,
@@ -195,13 +200,13 @@ describe('Performance Comprehensive Testing', () => {
     }).as('getBilling');
 
     const networkStartTime = performance.now();
-    
+
     cy.visit('/dashboard', { failOnStatusCode: false });
     cy.wait('@getIdentity');
-    
+
     // Wait for all concurrent API calls
     cy.wait(['@getStats', '@getActivity']);
-    
+
     cy.window().then((win) => {
       const networkTime = performance.now() - networkStartTime;
       cy.log(`📊 Concurrent API load time: ${networkTime.toFixed(2)}ms`);
@@ -212,7 +217,7 @@ describe('Performance Comprehensive Testing', () => {
     // STEP 2: Test Large Data Sets
     // ==========================================
     cy.log('📊 Step 2: Test Large Data Sets');
-    
+
     // Mock API with large dataset
     cy.intercept('GET', '**/api/api-keys', {
       delay: 500,
@@ -228,24 +233,31 @@ describe('Performance Comprehensive Testing', () => {
             rateLimit: 100,
             isActive: Math.random() > 0.2,
             usageCount: Math.floor(Math.random() * 10000),
-            createdAt: new Date(Date.now() - Math.random() * 86400000 * 30).toISOString(),
+            createdAt: new Date(
+              Date.now() - Math.random() * 86400000 * 30,
+            ).toISOString(),
             updatedAt: new Date().toISOString(),
           })),
-          stats: { totalKeys: 100, activeKeys: 80, expiredKeys: 20, totalUsage: 50000 },
+          stats: {
+            totalKeys: 100,
+            activeKeys: 80,
+            expiredKeys: 20,
+            totalUsage: 50000,
+          },
           availablePermissions: ['inference:*', 'storage:*', 'agents:write'],
         },
       },
     }).as('getLargeApiKeys');
 
     const largeDataStartTime = performance.now();
-    
+
     cy.visit('/api-keys', { failOnStatusCode: false });
     cy.wait('@getIdentity');
     cy.wait('@getLargeApiKeys');
-    
+
     cy.get('[data-cy="api-keys-page"]').should('be.visible');
     cy.get('[data-cy="api-key-row"]').should('have.length', 100);
-    
+
     cy.window().then((win) => {
       const largeDataTime = performance.now() - largeDataStartTime;
       cy.log(`📊 Large dataset render time: ${largeDataTime.toFixed(2)}ms`);
@@ -256,27 +268,29 @@ describe('Performance Comprehensive Testing', () => {
     // STEP 3: Test Error Recovery Performance
     // ==========================================
     cy.log('❌ Step 3: Test Error Recovery Performance');
-    
+
     // First request fails, second succeeds
-    cy.intercept('GET', '**/api/dashboard/stats', { forceNetworkError: true }).as('getStatsError');
-    
+    cy.intercept('GET', '**/api/dashboard/stats', {
+      forceNetworkError: true,
+    }).as('getStatsError');
+
     cy.visit('/dashboard', { failOnStatusCode: false });
     cy.wait('@getIdentity');
     cy.wait('@getStatsError');
-    
+
     // Mock successful retry
     cy.intercept('GET', '**/api/dashboard/stats', {
       statusCode: 200,
       body: { success: true, data: { agentCount: 5 } },
     }).as('getStatsRetry');
-    
+
     const retryStartTime = performance.now();
-    
+
     // Simulate retry by reloading
     cy.reload();
     cy.wait('@getIdentity');
     cy.wait('@getStatsRetry');
-    
+
     cy.window().then((win) => {
       const retryTime = performance.now() - retryStartTime;
       cy.log(`📊 Error recovery time: ${retryTime.toFixed(2)}ms`);
@@ -293,16 +307,20 @@ describe('Performance Comprehensive Testing', () => {
     // STEP 1: Test Memory Baseline
     // ==========================================
     cy.log('📏 Step 1: Test Memory Baseline');
-    
+
     cy.visit('/dashboard', { failOnStatusCode: false });
     cy.wait('@getIdentity');
-    
+
     cy.window().then((win) => {
       if (win.performance && win.performance.memory) {
         const memory = win.performance.memory;
-        cy.log(`📊 Initial memory usage: ${(memory.usedJSHeapSize / 1024 / 1024).toFixed(2)}MB`);
-        cy.log(`📊 Memory limit: ${(memory.jsHeapSizeLimit / 1024 / 1024).toFixed(2)}MB`);
-        
+        cy.log(
+          `📊 Initial memory usage: ${(memory.usedJSHeapSize / 1024 / 1024).toFixed(2)}MB`,
+        );
+        cy.log(
+          `📊 Memory limit: ${(memory.jsHeapSizeLimit / 1024 / 1024).toFixed(2)}MB`,
+        );
+
         // Assert reasonable memory usage (should be under 50MB)
         expect(memory.usedJSHeapSize).to.be.lessThan(50 * 1024 * 1024);
       }
@@ -312,22 +330,24 @@ describe('Performance Comprehensive Testing', () => {
     // STEP 2: Test Memory After Navigation
     // ==========================================
     cy.log('🧭 Step 2: Test Memory After Navigation');
-    
+
     // Navigate through multiple pages
     cy.visit('/api-keys', { failOnStatusCode: false });
     cy.wait('@getIdentity');
-    
+
     cy.visit('/settings/billing', { failOnStatusCode: false });
     cy.wait('@getIdentity');
-    
+
     cy.visit('/dashboard', { failOnStatusCode: false });
     cy.wait('@getIdentity');
-    
+
     cy.window().then((win) => {
       if (win.performance && win.performance.memory) {
         const memory = win.performance.memory;
-        cy.log(`📊 Memory after navigation: ${(memory.usedJSHeapSize / 1024 / 1024).toFixed(2)}MB`);
-        
+        cy.log(
+          `📊 Memory after navigation: ${(memory.usedJSHeapSize / 1024 / 1024).toFixed(2)}MB`,
+        );
+
         // Memory should not have grown excessively
         expect(memory.usedJSHeapSize).to.be.lessThan(100 * 1024 * 1024);
       }
@@ -337,10 +357,10 @@ describe('Performance Comprehensive Testing', () => {
     // STEP 3: Test Memory with Modal Operations
     // ==========================================
     cy.log('🎭 Step 3: Test Memory with Modal Operations');
-    
+
     cy.visit('/api-keys', { failOnStatusCode: false });
     cy.wait('@getIdentity');
-    
+
     // Mock API keys for testing
     cy.intercept('GET', '**/api/api-keys', {
       statusCode: 200,
@@ -353,9 +373,9 @@ describe('Performance Comprehensive Testing', () => {
         },
       },
     }).as('getApiKeys');
-    
+
     cy.wait('@getApiKeys');
-    
+
     // Open and close modals multiple times
     for (let i = 0; i < 5; i++) {
       cy.get('[data-cy="create-api-key-button"]').click();
@@ -363,12 +383,14 @@ describe('Performance Comprehensive Testing', () => {
       cy.get('body').type('{esc}');
       cy.get('[data-cy="api-key-modal"]').should('not.exist');
     }
-    
+
     cy.window().then((win) => {
       if (win.performance && win.performance.memory) {
         const memory = win.performance.memory;
-        cy.log(`📊 Memory after modal operations: ${(memory.usedJSHeapSize / 1024 / 1024).toFixed(2)}MB`);
-        
+        cy.log(
+          `📊 Memory after modal operations: ${(memory.usedJSHeapSize / 1024 / 1024).toFixed(2)}MB`,
+        );
+
         // Memory should not have leaked significantly
         expect(memory.usedJSHeapSize).to.be.lessThan(75 * 1024 * 1024);
       }
@@ -384,17 +406,19 @@ describe('Performance Comprehensive Testing', () => {
     // STEP 1: Test Initial Paint Time
     // ==========================================
     cy.log('🖼️ Step 1: Test Initial Paint Time');
-    
+
     cy.visit('/dashboard', { failOnStatusCode: false });
     cy.wait('@getIdentity');
-    
+
     cy.window().then((win) => {
-      const navigation = win.performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
-      
+      const navigation = win.performance.getEntriesByType(
+        'navigation',
+      )[0] as PerformanceNavigationTiming;
+
       if (navigation) {
         const fcp = navigation.loadEventEnd - navigation.fetchStart;
         cy.log(`📊 First Contentful Paint: ${fcp.toFixed(2)}ms`);
-        
+
         // FCP should be under 2 seconds
         expect(fcp).to.be.lessThan(2000);
       }
@@ -404,7 +428,7 @@ describe('Performance Comprehensive Testing', () => {
     // STEP 2: Test Component Render Time
     // ==========================================
     cy.log('🧩 Step 2: Test Component Render Time');
-    
+
     // Mock large dataset for stress testing
     cy.intercept('GET', '**/api/dashboard/stats', {
       statusCode: 200,
@@ -438,17 +462,17 @@ describe('Performance Comprehensive Testing', () => {
     }).as('getLargeActivity');
 
     const renderStartTime = performance.now();
-    
+
     cy.reload();
     cy.wait('@getIdentity');
     cy.wait('@getLargeStats');
     cy.wait('@getLargeActivity');
-    
+
     // Wait for all components to render
     cy.get('[data-cy="stats-section"]').should('be.visible');
     cy.get('[data-cy="activity-list"]').should('be.visible');
     cy.get('[data-cy="activity-item-agent_created"]').should('have.length', 50);
-    
+
     cy.window().then((win) => {
       const renderTime = performance.now() - renderStartTime;
       cy.log(`📊 Large dataset render time: ${renderTime.toFixed(2)}ms`);
@@ -459,10 +483,10 @@ describe('Performance Comprehensive Testing', () => {
     // STEP 3: Test Scroll Performance
     // ==========================================
     cy.log('📜 Step 3: Test Scroll Performance');
-    
+
     cy.visit('/api-keys', { failOnStatusCode: false });
     cy.wait('@getIdentity');
-    
+
     // Mock large list for scroll testing
     cy.intercept('GET', '**/api/api-keys', {
       statusCode: 200,
@@ -480,21 +504,26 @@ describe('Performance Comprehensive Testing', () => {
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           })),
-          stats: { totalKeys: 200, activeKeys: 200, expiredKeys: 0, totalUsage: 20000 },
+          stats: {
+            totalKeys: 200,
+            activeKeys: 200,
+            expiredKeys: 0,
+            totalUsage: 20000,
+          },
           availablePermissions: ['inference:*'],
         },
       },
     }).as('getScrollApiKeys');
-    
+
     cy.wait('@getScrollApiKeys');
     cy.get('[data-cy="api-key-row"]').should('have.length', 200);
-    
+
     const scrollStartTime = performance.now();
-    
+
     // Scroll through the list
     cy.get('[data-cy="api-keys-page"]').scrollTo('bottom', { duration: 1000 });
     cy.get('[data-cy="api-keys-page"]').scrollTo('top', { duration: 1000 });
-    
+
     cy.window().then((win) => {
       const scrollTime = performance.now() - scrollStartTime;
       cy.log(`📊 Scroll performance time: ${scrollTime.toFixed(2)}ms`);
@@ -511,15 +540,17 @@ describe('Performance Comprehensive Testing', () => {
     // STEP 1: Test JavaScript Bundle Size
     // ==========================================
     cy.log('📄 Step 1: Test JavaScript Bundle Size');
-    
+
     cy.visit('/dashboard', { failOnStatusCode: false });
-    
+
     cy.window().then((win) => {
-      const resources = win.performance.getEntriesByType('resource') as PerformanceResourceTiming[];
-      
+      const resources = win.performance.getEntriesByType(
+        'resource',
+      ) as PerformanceResourceTiming[];
+
       let totalJSSize = 0;
       let totalCSSSize = 0;
-      
+
       resources.forEach((resource) => {
         if (resource.name.includes('.js')) {
           totalJSSize += resource.transferSize || 0;
@@ -528,10 +559,10 @@ describe('Performance Comprehensive Testing', () => {
           totalCSSSize += resource.transferSize || 0;
         }
       });
-      
+
       cy.log(`📊 Total JS bundle size: ${(totalJSSize / 1024).toFixed(2)}KB`);
       cy.log(`📊 Total CSS bundle size: ${(totalCSSSize / 1024).toFixed(2)}KB`);
-      
+
       // Assert reasonable bundle sizes
       expect(totalJSSize).to.be.lessThan(2 * 1024 * 1024); // 2MB
       expect(totalCSSSize).to.be.lessThan(500 * 1024); // 500KB
@@ -541,7 +572,7 @@ describe('Performance Comprehensive Testing', () => {
     // STEP 2: Test Image Loading
     // ==========================================
     cy.log('🖼️ Step 2: Test Image Loading');
-    
+
     cy.get('img').each(($img) => {
       cy.wrap($img).should('be.visible');
       cy.wrap($img).should(($el) => {
@@ -554,7 +585,7 @@ describe('Performance Comprehensive Testing', () => {
     // STEP 3: Test Font Loading
     // ==========================================
     cy.log('🔤 Step 3: Test Font Loading');
-    
+
     cy.document().then((doc) => {
       const fonts = doc.fonts;
       if (fonts && fonts.ready) {
@@ -574,10 +605,10 @@ describe('Performance Comprehensive Testing', () => {
     // STEP 1: Test Largest Contentful Paint (LCP)
     // ==========================================
     cy.log('🖼️ Step 1: Test Largest Contentful Paint');
-    
+
     cy.visit('/dashboard', { failOnStatusCode: false });
     cy.wait('@getIdentity');
-    
+
     // Mock dashboard data quickly for LCP testing
     cy.intercept('GET', '**/api/dashboard/stats', {
       statusCode: 200,
@@ -597,13 +628,15 @@ describe('Performance Comprehensive Testing', () => {
     }).as('getFastStats');
 
     cy.wait('@getFastStats');
-    
+
     cy.get('[data-cy="dashboard-header"] h1').should('be.visible');
     cy.get('[data-cy="stats-section"]').should('be.visible');
-    
+
     cy.window().then((win) => {
       // LCP should be under 2.5 seconds for good performance
-      const navigation = win.performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
+      const navigation = win.performance.getEntriesByType(
+        'navigation',
+      )[0] as PerformanceNavigationTiming;
       if (navigation) {
         const lcp = navigation.loadEventEnd - navigation.fetchStart;
         cy.log(`📊 Largest Contentful Paint: ${lcp.toFixed(2)}ms`);
@@ -615,16 +648,16 @@ describe('Performance Comprehensive Testing', () => {
     // STEP 2: Test First Input Delay (FID)
     // ==========================================
     cy.log('⚡ Step 2: Test First Input Delay');
-    
+
     const inputStartTime = performance.now();
-    
+
     // Simulate user interaction
     cy.get('[data-cy="quick-action-create-agent"]').click();
-    
+
     cy.window().then((win) => {
       const inputDelay = performance.now() - inputStartTime;
       cy.log(`📊 First Input Delay: ${inputDelay.toFixed(2)}ms`);
-      
+
       // FID should be under 100ms for good performance
       expect(inputDelay).to.be.lessThan(100);
     });
@@ -633,17 +666,21 @@ describe('Performance Comprehensive Testing', () => {
     // STEP 3: Test Cumulative Layout Shift (CLS)
     // ==========================================
     cy.log('📐 Step 3: Test Cumulative Layout Shift');
-    
+
     // Wait for page to fully load and stabilize
     cy.get('[data-cy="dashboard-header"]').should('be.visible');
     cy.get('[data-cy="stats-section"]').should('be.visible');
     cy.get('[data-cy="quick-actions"]').should('be.visible');
     cy.get('[data-cy="recent-activity"]').should('be.visible');
-    
+
     // Check that layout is stable
-    cy.get('[data-cy="stats-section"]').should('have.css', 'position', 'static');
+    cy.get('[data-cy="stats-section"]').should(
+      'have.css',
+      'position',
+      'static',
+    );
     cy.get('[data-cy="quick-actions"]').should('be.visible');
-    
+
     cy.log('📊 Layout appears stable with minimal shift');
 
     cy.log('✅ Core Web Vitals Test Complete!');

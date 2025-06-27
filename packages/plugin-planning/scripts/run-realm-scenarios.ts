@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * REALM Benchmark Scenario Runner
- * 
+ *
  * This script demonstrates how to run REALM benchmarks through the proper
  * ElizaOS scenario system, integrating with existing infrastructure.
  */
@@ -12,7 +12,7 @@ import realmBenchmarkScenarios from '../scenarios/realm-benchmark-scenario';
 async function main() {
   logger.info('🎯 Starting REALM Benchmark Scenarios');
   logger.info('=====================================');
-  
+
   logger.info('\n📋 Available REALM Scenarios:');
   for (const scenario of realmBenchmarkScenarios) {
     logger.info(`  • ${scenario.name} (${scenario.id})`);
@@ -20,7 +20,7 @@ async function main() {
     logger.info(`    Tags: ${scenario.tags.join(', ')}`);
     logger.info(`    Description: ${scenario.description}\n`);
   }
-  
+
   logger.info('🚀 To run these scenarios, use the ElizaOS CLI:');
   logger.info('');
   logger.info('# Run all REALM benchmark scenarios');
@@ -35,7 +35,7 @@ async function main() {
   logger.info('# Run with verbose output');
   logger.info('elizaos scenario --plugin @elizaos/plugin-planning --verbose');
   logger.info('');
-  
+
   logger.info('📊 Expected Benchmark Results:');
   logger.info('');
   logger.info('The scenarios will test and measure:');
@@ -46,7 +46,7 @@ async function main() {
   logger.info('  • Complex project planning capabilities');
   logger.info('  • Adaptive planning under uncertainty');
   logger.info('');
-  
+
   logger.info('💡 Integration Notes:');
   logger.info('  • These scenarios use the existing REALM benchmark logic');
   logger.info('  • Results integrate with ElizaOS scenario verification system');
@@ -54,7 +54,7 @@ async function main() {
   logger.info('  • Proper multi-agent message passing');
   logger.info('  • LLM-based verification for intelligent evaluation');
   logger.info('');
-  
+
   logger.info('✅ REALM scenarios are now properly integrated with ElizaOS!');
 }
 

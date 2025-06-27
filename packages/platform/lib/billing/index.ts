@@ -38,14 +38,9 @@ export {
 } from './credit-middleware';
 
 // Types
-export type {
-  UsageContext,
-  CreditUsageResult,
-} from './credit-service';
+export type { UsageContext, CreditUsageResult } from './credit-service';
 
-export type {
-  CreditDeductionConfig,
-} from './credit-middleware';
+export type { CreditDeductionConfig } from './credit-middleware';
 
 export type {
   MarketplaceUsageContext,

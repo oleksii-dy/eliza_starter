@@ -12,7 +12,7 @@ export default [
       parser: typescriptParser,
       parserOptions: {
         ecmaVersion: 2022,
-        sourceType: 'module'
+        sourceType: 'module',
       },
       globals: {
         console: 'readonly',
@@ -38,13 +38,13 @@ export default [
         fetch: 'readonly',
         document: 'readonly',
         window: 'readonly',
-        NodeJS: 'readonly'
-      }
+        NodeJS: 'readonly',
+      },
     },
     plugins: {
       '@typescript-eslint': typescriptEslint,
-      'prettier': prettierPlugin,
-      'import': importPlugin
+      prettier: prettierPlugin,
+      import: importPlugin,
     },
     rules: {
       // TypeScript
@@ -54,10 +54,10 @@ export default [
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
-          'argsIgnorePattern': '^_',
-          'varsIgnorePattern': '^_',
-          'caughtErrorsIgnorePattern': '^_'
-        }
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
       ],
       '@typescript-eslint/no-unsafe-assignment': 'off',
       '@typescript-eslint/no-unsafe-call': 'off',
@@ -73,25 +73,25 @@ export default [
           'ts-expect-error': 'allow-with-description',
           'ts-ignore': true,
           'ts-nocheck': true,
-          'ts-check': false
-        }
+          'ts-check': false,
+        },
       ],
-      
+
       // Import
       'import/order': [
         'error',
         {
-          'groups': ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
+          groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
           'newlines-between': 'never',
-          'alphabetize': {
-            'order': 'asc',
-            'caseInsensitive': true
-          }
-        }
+          alphabetize: {
+            order: 'asc',
+            caseInsensitive: true,
+          },
+        },
       ],
       'import/no-unresolved': 'off',
       'import/named': 'off',
-      
+
       // General
       'no-console': 'off',
       'prefer-const': 'error',
@@ -103,17 +103,17 @@ export default [
       'no-unused-vars': 'off',
       'no-useless-catch': 'warn',
       'no-control-regex': 'off',
-      'radix': ['error', 'always'],
+      radix: ['error', 'always'],
       'no-case-declarations': 'error',
-      'no-useless-escape': 'error'
-    }
+      'no-useless-escape': 'error',
+    },
   },
   {
     files: ['**/__tests__/**/*.ts', '**/*.test.ts', '**/e2e/**/*.ts'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
-      'no-console': 'off'
-    }
+      'no-console': 'off',
+    },
   },
   {
     ignores: [
@@ -129,7 +129,7 @@ export default [
       'logs/**',
       '.next/**',
       '.turbo/**',
-      '*.min.js'
-    ]
-  }
-]; 
+      '*.min.js',
+    ],
+  },
+];

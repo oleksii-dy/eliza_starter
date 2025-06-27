@@ -94,11 +94,14 @@ export interface RealmBenchReport {
   averageEfficiency: number;
   results: RealmBenchResult[];
   summary: {
-    taskCategories: Record<string, {
-      count: number;
-      successRate: number;
-      averageScore: number;
-    }>;
+    taskCategories: Record<
+      string,
+      {
+        count: number;
+        successRate: number;
+        averageScore: number;
+      }
+    >;
     commonFailures: string[];
     recommendations: string[];
   };
@@ -115,7 +118,7 @@ export class RealmBenchAdapter {
 
   constructor(runtime: IAgentRuntime) {
     this.runtime = runtime;
-    
+
     const planningService = runtime.getService<PlanningService>('planning');
     if (!planningService) {
       throw new Error('Planning service is required for REALM-Bench testing');
@@ -136,7 +139,7 @@ export class RealmBenchAdapter {
 
       // Generate test cases from planning patterns
       await this.loadPlanningPatternTests(designPatternsPath);
-      
+
       // Generate test cases from multi-agent scenarios
       await this.loadMultiAgentTests(agentFrameworksPath);
 
@@ -160,14 +163,14 @@ export class RealmBenchAdapter {
       try {
         const result = await this.runTestCase(testCase);
         results.push(result);
-        
+
         logger.info(
           `[RealmBenchAdapter] Test ${testCase.task.id}: ${result.success ? 'PASS' : 'FAIL'} ` +
-          `(${result.duration}ms, ${result.stepsExecuted} steps)`
+            `(${result.duration}ms, ${result.stepsExecuted} steps)`
         );
       } catch (error) {
         logger.error(`[RealmBenchAdapter] Test ${testCase.task.id} failed:`, error);
-        
+
         results.push({
           testCaseId: testCase.task.id,
           taskId: testCase.task.id,
@@ -194,10 +197,10 @@ export class RealmBenchAdapter {
     }
 
     const report = this.generateReport(results, Date.now() - startTime);
-    
+
     logger.info(
       `[RealmBenchAdapter] Benchmark completed: ${report.passedTests}/${report.totalTests} passed ` +
-      `(${((report.passedTests / report.totalTests) * 100).toFixed(1)}%)`
+        `(${((report.passedTests / report.totalTests) * 100).toFixed(1)}%)`
     );
 
     return report;
@@ -237,7 +240,7 @@ export class RealmBenchAdapter {
 
       // Step 1: Create comprehensive plan
       const planningStartTime = Date.now();
-      
+
       const planningContext: PlanningContext = {
         goal: testCase.task.goal,
         constraints: Object.entries(testCase.task.constraints).map(([key, value]) => ({
@@ -271,7 +274,7 @@ export class RealmBenchAdapter {
 
       // Step 3: Execute the plan
       const executionStartTime = Date.now();
-      
+
       const executionResult = await this.planningService.executePlan(
         this.runtime,
         planGenerated,
@@ -290,7 +293,13 @@ export class RealmBenchAdapter {
 
       // Step 4: Evaluate results
       const success = this.evaluateTestResult(testCase, executionResult, actionsPerformed);
-      const metrics = this.calculateMetrics(testCase, planGenerated, executionResult, planningTime, executionTime);
+      const metrics = this.calculateMetrics(
+        testCase,
+        planGenerated,
+        executionResult,
+        planningTime,
+        executionTime
+      );
 
       return {
         testCaseId: testCase.task.id,
@@ -351,7 +360,8 @@ export class RealmBenchAdapter {
         goal: 'Calculate sum of numbers, multiply result, then take logarithm',
         requirements: ['mathematical calculation', 'step sequencing'],
         tools: ['sum_two_elements', 'multiply_two_elements', 'compute_log'],
-        input: 'I want to calculate the sum of 1234 and 5678 and multiply the result by 5. Then, I want to take the logarithm of this result',
+        input:
+          'I want to calculate the sum of 1234 and 5678 and multiply the result by 5. Then, I want to take the logarithm of this result',
         expectedActions: ['sum_two_elements', 'multiply_two_elements', 'compute_log'],
       },
       {
@@ -425,7 +435,12 @@ export class RealmBenchAdapter {
         name: 'Problem Solving Workflow',
         goal: 'Identify problem, generate solutions, and implement the best approach',
         requirements: ['problem identification', 'solution generation', 'implementation'],
-        tools: ['identify_problem', 'generate_solutions', 'evaluate_solutions', 'implement_solution'],
+        tools: [
+          'identify_problem',
+          'generate_solutions',
+          'evaluate_solutions',
+          'implement_solution',
+        ],
         input: 'Help me solve the performance issues in our application',
         expectedActions: ['identify_problem', 'generate_solutions', 'implement_solution'],
       },
@@ -471,7 +486,7 @@ export class RealmBenchAdapter {
    * Get available providers from runtime
    */
   private getAvailableProviders(): string[] {
-    return this.runtime.providers.map(p => p.name);
+    return this.runtime.providers.map((p) => p.name);
   }
 
   /**
@@ -497,14 +512,24 @@ export class RealmBenchAdapter {
     }
 
     // Check duration constraints
-    if (testCase.expected.metrics.maxDuration && executionResult.duration > testCase.expected.metrics.maxDuration) {
-      logger.warn(`[RealmBenchAdapter] Execution exceeded max duration: ${executionResult.duration}ms`);
+    if (
+      testCase.expected.metrics.maxDuration &&
+      executionResult.duration > testCase.expected.metrics.maxDuration
+    ) {
+      logger.warn(
+        `[RealmBenchAdapter] Execution exceeded max duration: ${executionResult.duration}ms`
+      );
       return false;
     }
 
     // Check step constraints
-    if (testCase.expected.metrics.maxSteps && executionResult.completedSteps > testCase.expected.metrics.maxSteps) {
-      logger.warn(`[RealmBenchAdapter] Execution exceeded max steps: ${executionResult.completedSteps}`);
+    if (
+      testCase.expected.metrics.maxSteps &&
+      executionResult.completedSteps > testCase.expected.metrics.maxSteps
+    ) {
+      logger.warn(
+        `[RealmBenchAdapter] Execution exceeded max steps: ${executionResult.completedSteps}`
+      );
       return false;
     }
 
@@ -522,20 +547,19 @@ export class RealmBenchAdapter {
     executionTime: number
   ): RealmBenchResult['metrics'] {
     // Plan quality based on structure and dependencies
-    const planQuality = Math.min(1.0, plan.steps.length > 0 ? 0.5 + (plan.steps.length / 10) : 0);
+    const planQuality = Math.min(1.0, plan.steps.length > 0 ? 0.5 + plan.steps.length / 10 : 0);
 
     // Goal achievement based on success and action coverage
     const requiredActions = testCase.expected.metrics.requiredActions || [];
-    const actionCoverage = requiredActions.length > 0 
-      ? executionResult.completedSteps / requiredActions.length 
-      : 1.0;
+    const actionCoverage =
+      requiredActions.length > 0 ? executionResult.completedSteps / requiredActions.length : 1.0;
     const goalAchievement = executionResult.success ? Math.min(1.0, actionCoverage) : 0;
 
     // Efficiency based on time and steps
     const expectedTime = testCase.expected.metrics.maxDuration || 30000;
     const expectedSteps = testCase.expected.metrics.maxSteps || 5;
-    const timeEfficiency = Math.max(0, 1 - (executionResult.duration / expectedTime));
-    const stepEfficiency = Math.max(0, 1 - (executionResult.completedSteps / expectedSteps));
+    const timeEfficiency = Math.max(0, 1 - executionResult.duration / expectedTime);
+    const stepEfficiency = Math.max(0, 1 - executionResult.completedSteps / expectedSteps);
     const efficiency = (timeEfficiency + stepEfficiency) / 2;
 
     return {
@@ -551,32 +575,38 @@ export class RealmBenchAdapter {
    * Generate comprehensive benchmark report
    */
   private generateReport(results: RealmBenchResult[], totalDuration: number): RealmBenchReport {
-    const passedTests = results.filter(r => r.success).length;
+    const passedTests = results.filter((r) => r.success).length;
     const failedTests = results.length - passedTests;
 
-    const averageDuration = results.length > 0 
-      ? results.reduce((sum, r) => sum + r.duration, 0) / results.length 
-      : 0;
+    const averageDuration =
+      results.length > 0 ? results.reduce((sum, r) => sum + r.duration, 0) / results.length : 0;
 
-    const averageSteps = results.length > 0 
-      ? results.reduce((sum, r) => sum + r.stepsExecuted, 0) / results.length 
-      : 0;
+    const averageSteps =
+      results.length > 0
+        ? results.reduce((sum, r) => sum + r.stepsExecuted, 0) / results.length
+        : 0;
 
-    const averagePlanQuality = results.length > 0 
-      ? results.reduce((sum, r) => sum + r.metrics.planQuality, 0) / results.length 
-      : 0;
+    const averagePlanQuality =
+      results.length > 0
+        ? results.reduce((sum, r) => sum + r.metrics.planQuality, 0) / results.length
+        : 0;
 
-    const averageGoalAchievement = results.length > 0 
-      ? results.reduce((sum, r) => sum + r.metrics.goalAchievement, 0) / results.length 
-      : 0;
+    const averageGoalAchievement =
+      results.length > 0
+        ? results.reduce((sum, r) => sum + r.metrics.goalAchievement, 0) / results.length
+        : 0;
 
-    const averageEfficiency = results.length > 0 
-      ? results.reduce((sum, r) => sum + r.metrics.efficiency, 0) / results.length 
-      : 0;
+    const averageEfficiency =
+      results.length > 0
+        ? results.reduce((sum, r) => sum + r.metrics.efficiency, 0) / results.length
+        : 0;
 
     // Analyze task categories
-    const taskCategories: Record<string, { count: number; successRate: number; averageScore: number }> = {};
-    
+    const taskCategories: Record<
+      string,
+      { count: number; successRate: number; averageScore: number }
+    > = {};
+
     for (const result of results) {
       const category = result.taskId.split('-')[0]; // Extract category from task ID
       if (!taskCategories[category]) {
@@ -587,20 +617,25 @@ export class RealmBenchAdapter {
 
     // Calculate success rates and scores for each category
     for (const [category, info] of Object.entries(taskCategories)) {
-      const categoryResults = results.filter(r => r.taskId.startsWith(category));
-      const categoryPassed = categoryResults.filter(r => r.success).length;
+      const categoryResults = results.filter((r) => r.taskId.startsWith(category));
+      const categoryPassed = categoryResults.filter((r) => r.success).length;
       info.successRate = categoryPassed / categoryResults.length;
-      info.averageScore = categoryResults.reduce((sum, r) => sum + r.metrics.goalAchievement, 0) / categoryResults.length;
+      info.averageScore =
+        categoryResults.reduce((sum, r) => sum + r.metrics.goalAchievement, 0) /
+        categoryResults.length;
     }
 
     // Identify common failures
     const commonFailures = results
-      .filter(r => !r.success)
-      .map(r => r.error || 'Unknown error')
-      .reduce((acc, error) => {
-        acc[error] = (acc[error] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
+      .filter((r) => !r.success)
+      .map((r) => r.error || 'Unknown error')
+      .reduce(
+        (acc, error) => {
+          acc[error] = (acc[error] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>
+      );
 
     const sortedFailures = Object.entries(commonFailures)
       .sort(([, a], [, b]) => b - a)
@@ -609,15 +644,15 @@ export class RealmBenchAdapter {
 
     // Generate recommendations
     const recommendations: string[] = [];
-    
+
     if (averagePlanQuality < 0.7) {
       recommendations.push('Improve plan generation quality with better prompting and validation');
     }
-    
+
     if (averageEfficiency < 0.6) {
       recommendations.push('Optimize plan execution efficiency and reduce unnecessary steps');
     }
-    
+
     if (failedTests > passedTests * 0.3) {
       recommendations.push('Address common failure patterns and improve error handling');
     }

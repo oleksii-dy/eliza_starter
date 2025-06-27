@@ -39,7 +39,7 @@ describe('Authentication Flow', () => {
       // Mock login error
       cy.intercept('POST', '**/auth/login', {
         statusCode: 401,
-        body: { success: false, error: 'Invalid credentials' }
+        body: { success: false, error: 'Invalid credentials' },
       }).as('loginError');
 
       cy.fillLoginForm('test@example.com', 'wrongpassword');

@@ -27,6 +27,9 @@ async function build() {
 
   console.log(`✅ Built ${result.outputs.length} files`);
 
+  // Copy package.json to dist for proper module resolution
+  await $`cp package.json dist/package.json`;
+  console.log('📦 Copied package.json to dist');
 
   console.log('✅ Build complete!');
 }

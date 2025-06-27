@@ -5,13 +5,23 @@
 
 import { logger } from '@/lib/logger';
 import type { UUID } from '@elizaos/core';
-import { elizaRuntimeService, type AgentInstanceInfo, type AgentStats } from './eliza-service';
+import {
+  elizaRuntimeService,
+  type AgentInstanceInfo,
+  type AgentStats,
+} from './eliza-service';
 import { getDatabase, agents, creditTransactions } from '../database';
 import { eq, and, desc } from 'drizzle-orm';
 
 export interface AgentLifecycleEvent {
   agentId: UUID;
-  event: 'deployed' | 'started' | 'stopped' | 'deleted' | 'error' | 'health_check';
+  event:
+    | 'deployed'
+    | 'started'
+    | 'stopped'
+    | 'deleted'
+    | 'error'
+    | 'health_check';
   timestamp: Date;
   organizationId: string;
   userId: string;
@@ -46,13 +56,20 @@ export class AgentLifecycleManager {
   }
 
   /**
+   * Get database instance
+   */
+  private async getDb() {
+    return await this.db;
+  }
+
+  /**
    * Deploy a new agent with full lifecycle management
    */
   async deployAgent(
     organizationId: string,
     userId: string,
     character: any,
-    plugins: string[] = []
+    plugins: string[] = [],
   ): Promise<UUID> {
     logger.info('[AgentLifecycle] Starting agent deployment', {
       organizationId,
@@ -270,7 +287,8 @@ export class AgentLifecycleManager {
     healthyAgents: number;
     recentEvents: AgentLifecycleEvent[];
   }> {
-    const agents = await elizaRuntimeService.getOrganizationAgents(organizationId);
+    const agents =
+      await elizaRuntimeService.getOrganizationAgents(organizationId);
 
     let totalCost = 0;
     let totalMessages = 0;
@@ -291,7 +309,7 @@ export class AgentLifecycleManager {
     }
 
     const recentEvents = this.eventLog
-      .filter(event => event.organizationId === organizationId)
+      .filter((event) => event.organizationId === organizationId)
       .slice(-20)
       .reverse();
 
@@ -312,7 +330,7 @@ export class AgentLifecycleManager {
     messageCount: number,
     computeTime: number,
     apiCalls: number,
-    cost: number
+    cost: number,
   ): Promise<void> {
     // Update runtime stats
     elizaRuntimeService.updateAgentStats(agentId, {
@@ -343,7 +361,7 @@ export class AgentLifecycleManager {
     const agentUsage = this.usageData.get(agentId)!;
     this.usageData.set(
       agentId,
-      agentUsage.filter(usage => usage.timestamp > thirtyDaysAgo)
+      agentUsage.filter((usage) => usage.timestamp > thirtyDaysAgo),
     );
 
     // Record in billing system if cost > 0
@@ -361,10 +379,14 @@ export class AgentLifecycleManager {
 
       for (const agent of agents) {
         try {
-          const isHealthy = await elizaRuntimeService.checkAgentHealth(agent.agentId);
+          const isHealthy = await elizaRuntimeService.checkAgentHealth(
+            agent.agentId,
+          );
 
           if (!isHealthy && agent.status === 'running') {
-            logger.warn(`[AgentLifecycle] Agent ${agent.agentId} health check failed`);
+            logger.warn(
+              `[AgentLifecycle] Agent ${agent.agentId} health check failed`,
+            );
 
             await this.logEvent({
               agentId: agent.agentId,
@@ -379,11 +401,17 @@ export class AgentLifecycleManager {
             try {
               await this.restartAgent(agent.agentId);
             } catch (restartError) {
-              logger.error(`[AgentLifecycle] Failed to restart unhealthy agent ${agent.agentId}:`, restartError as Error);
+              logger.error(
+                `[AgentLifecycle] Failed to restart unhealthy agent ${agent.agentId}:`,
+                restartError as Error,
+              );
             }
           }
         } catch (error) {
-          logger.error(`[AgentLifecycle] Health check error for agent ${agent.agentId}:`, error as Error);
+          logger.error(
+            `[AgentLifecycle] Health check error for agent ${agent.agentId}:`,
+            error as Error,
+          );
         }
       }
     }, 60000); // Check every minute
@@ -408,11 +436,14 @@ export class AgentLifecycleManager {
                 stats.messageCount,
                 1, // computeTime (would be tracked from runtime)
                 stats.interactionCount,
-                0.01 // Small cost for simulation
+                0.01, // Small cost for simulation
               );
             }
           } catch (error) {
-            logger.error(`[AgentLifecycle] Usage tracking error for agent ${agent.agentId}:`, error as Error);
+            logger.error(
+              `[AgentLifecycle] Usage tracking error for agent ${agent.agentId}:`,
+              error as Error,
+            );
           }
         }
       }
@@ -427,12 +458,15 @@ export class AgentLifecycleManager {
 
     try {
       await this.stopAgent(agentId);
-      await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+      await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait 5 seconds
       await this.startAgent(agentId);
 
       logger.info(`[AgentLifecycle] Agent ${agentId} restarted successfully`);
     } catch (error) {
-      logger.error(`[AgentLifecycle] Failed to restart agent ${agentId}:`, error as Error);
+      logger.error(
+        `[AgentLifecycle] Failed to restart agent ${agentId}:`,
+        error as Error,
+      );
       throw error;
     }
   }
@@ -442,7 +476,9 @@ export class AgentLifecycleManager {
    */
   private async handleAgentError(agentId: UUID, error: any): Promise<void> {
     const agentInfo = await elizaRuntimeService.getAgent(agentId);
-    if (!agentInfo) {return;}
+    if (!agentInfo) {
+      return;
+    }
 
     await this.updateAgentDatabase(agentId, {
       status: 'error',
@@ -463,9 +499,13 @@ export class AgentLifecycleManager {
   /**
    * Update agent database record
    */
-  private async updateAgentDatabase(agentId: UUID, updates: any): Promise<void> {
+  private async updateAgentDatabase(
+    agentId: UUID,
+    updates: any,
+  ): Promise<void> {
     try {
-      await this.db
+      const db = await this.getDb();
+      await db
         .update(agents)
         .set({
           ...updates,
@@ -473,7 +513,10 @@ export class AgentLifecycleManager {
         })
         .where(eq(agents.id, agentId));
     } catch (error) {
-      logger.error(`[AgentLifecycle] Failed to update agent database record for ${agentId}:`, error as Error);
+      logger.error(
+        `[AgentLifecycle] Failed to update agent database record for ${agentId}:`,
+        error as Error,
+      );
     }
   }
 
@@ -498,9 +541,12 @@ export class AgentLifecycleManager {
   /**
    * Get recent events for an agent
    */
-  private getRecentEvents(agentId: UUID, limit: number = 10): AgentLifecycleEvent[] {
+  private getRecentEvents(
+    agentId: UUID,
+    limit: number = 10,
+  ): AgentLifecycleEvent[] {
     return this.eventLog
-      .filter(event => event.agentId === agentId)
+      .filter((event) => event.agentId === agentId)
       .slice(-limit)
       .reverse();
   }
@@ -517,8 +563,11 @@ export class AgentLifecycleManager {
   /**
    * Validate organization limits
    */
-  private async validateOrganizationLimits(organizationId: string): Promise<void> {
-    const currentCount = await elizaRuntimeService.getOrganizationAgentCount(organizationId);
+  private async validateOrganizationLimits(
+    organizationId: string,
+  ): Promise<void> {
+    const currentCount =
+      await elizaRuntimeService.getOrganizationAgentCount(organizationId);
 
     // This would check against the organization's subscription limits
     // For now, using a simple count check
@@ -532,10 +581,13 @@ export class AgentLifecycleManager {
    */
   private async recordBillingUsage(agentId: UUID, cost: number): Promise<void> {
     const agentInfo = await elizaRuntimeService.getAgent(agentId as any);
-    if (!agentInfo) {return;}
+    if (!agentInfo) {
+      return;
+    }
 
     try {
-      await this.db.insert(creditTransactions).values({
+      const db = await this.getDb();
+      await db.insert(creditTransactions).values({
         organizationId: agentInfo.organizationId,
         userId: agentInfo.userId,
         type: 'usage',
@@ -549,7 +601,10 @@ export class AgentLifecycleManager {
         },
       });
     } catch (error) {
-      logger.error(`[AgentLifecycle] Failed to record billing usage for agent ${agentId}:`, error as Error);
+      logger.error(
+        `[AgentLifecycle] Failed to record billing usage for agent ${agentId}:`,
+        error as Error,
+      );
     }
   }
 

@@ -19,7 +19,7 @@ const createRuntime = (researchService?: ResearchService): IAgentRuntime => {
       return process.env[key] || '';
     },
 
-    getService <T extends Service>(name: string): T | null {
+    getService<T extends Service>(name: string): T | null {
       if (name === 'research' && researchService) {
         return researchService as any as T;
       }
@@ -29,7 +29,8 @@ const createRuntime = (researchService?: ResearchService): IAgentRuntime => {
     useModel: async (modelType: string, params: any) => {
       console.log('\n[DEBUG] Model call:', {
         modelType,
-        promptLength: params.messages?.[0]?.content?.length || params.text?.length || 0,
+        promptLength:
+          params.messages?.[0]?.content?.length || params.text?.length || 0,
         temperature: params.temperature,
       });
 
@@ -87,7 +88,7 @@ async function debugResearchFlow() {
   console.log('=== Query 1: Japan Elderly Population ===');
   const runtime1 = createRuntime();
   const service1 = await ResearchService.start(runtime1);
-  runtime1.getService = function <T extends Service> (name: string): T | null {
+  runtime1.getService = function <T extends Service>(name: string): T | null {
     if (name === 'research') {
       return service1 as any as T;
     }
@@ -109,7 +110,9 @@ async function debugResearchFlow() {
   await new Promise((resolve) => setTimeout(resolve, 30000));
 
   const updated1 = await service1.getProject(project1.id);
-  console.log(`Project 1 status: ${updated1?.status}, Sources: ${updated1?.sources.length}`);
+  console.log(
+    `Project 1 status: ${updated1?.status}, Sources: ${updated1?.sources.length}`
+  );
   if (updated1?.sources.length) {
     console.log('Project 1 source URLs:');
     updated1.sources.forEach((s, i) => console.log(`  ${i + 1}. ${s.url}`));
@@ -123,7 +126,7 @@ async function debugResearchFlow() {
   console.log('=== Query 2: Investment Philosophies (Fresh Service) ===');
   const runtime2 = createRuntime();
   const service2 = await ResearchService.start(runtime2);
-  runtime2.getService = function <T extends Service> (name: string): T | null {
+  runtime2.getService = function <T extends Service>(name: string): T | null {
     if (name === 'research') {
       return service2 as any as T;
     }
@@ -145,7 +148,9 @@ async function debugResearchFlow() {
   await new Promise((resolve) => setTimeout(resolve, 30000));
 
   const updated2 = await service2.getProject(project2.id);
-  console.log(`Project 2 status: ${updated2?.status}, Sources: ${updated2?.sources.length}`);
+  console.log(
+    `Project 2 status: ${updated2?.status}, Sources: ${updated2?.sources.length}`
+  );
   if (updated2?.sources.length) {
     console.log('Project 2 source URLs:');
     updated2.sources.forEach((s, i) => console.log(`  ${i + 1}. ${s.url}`));
@@ -163,7 +168,9 @@ async function debugResearchFlow() {
     );
 
     if (japanUrls.length > 0) {
-      console.error('❌ CONTAMINATION DETECTED! Found Japan-related URLs in investment query:');
+      console.error(
+        '❌ CONTAMINATION DETECTED! Found Japan-related URLs in investment query:'
+      );
       japanUrls.forEach((s) => console.error(`   - ${s.title} (${s.url})`));
     } else {
       console.log('✅ No contamination detected in URLs');

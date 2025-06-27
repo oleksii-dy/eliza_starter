@@ -12,29 +12,31 @@ const githubIssueOrchestratorExamples: ActionExample[][] = [
   [
     {
       name: 'User',
-      content: { text: 'Help me resolve GitHub issues from the elizaOS repository using sandbox development' }
+      content: {
+        text: 'Help me resolve GitHub issues from the elizaOS repository using sandbox development',
+      },
     },
     {
       name: 'Agent',
       content: {
         text: "I'll coordinate a complete GitHub issue resolution workflow using E2B sandboxes and autocoder. Let me start by fetching open issues.",
-        actions: ['GITHUB_ISSUE_ORCHESTRATOR']
-      }
-    }
+        actions: ['GITHUB_ISSUE_ORCHESTRATOR'],
+      },
+    },
   ],
   [
     {
       name: 'User',
-      content: { text: 'Set up an automated development workflow for elizaOS/eliza issues' }
+      content: { text: 'Set up an automated development workflow for elizaOS/eliza issues' },
     },
     {
       name: 'Agent',
       content: {
         text: "I'll orchestrate an automated workflow that fetches issues, spawns development agents in sandboxes, and manages the complete resolution process.",
-        actions: ['GITHUB_ISSUE_ORCHESTRATOR']
-      }
-    }
-  ]
+        actions: ['GITHUB_ISSUE_ORCHESTRATOR'],
+      },
+    },
+  ],
 ];
 
 const githubIssueOrchestratorHandler: Handler = async (
@@ -46,7 +48,7 @@ const githubIssueOrchestratorHandler: Handler = async (
 ) => {
   elizaLogger.info('GitHub Issue Orchestrator action triggered', {
     messageId: message.id,
-    content: message.content.text
+    content: message.content.text,
   });
 
   try {
@@ -74,20 +76,21 @@ const githubIssueOrchestratorHandler: Handler = async (
       const issues = await githubService.getIssues('elizaOS', 'eliza', {
         state: 'open',
         labels: ['good first issue', 'bug', 'enhancement'],
-        limit: 5
+        limit: 5,
       });
 
       if (issues.length === 0) {
-        responseText += '❌ No suitable issues found. Looking for issues with labels: good first issue, bug, enhancement\n\n';
+        responseText +=
+          '❌ No suitable issues found. Looking for issues with labels: good first issue, bug, enhancement\n\n';
 
         if (callback) {
           await callback({
             values: {
               success: false,
               reason: 'no_suitable_issues',
-              workflowId
+              workflowId,
             },
-            text: responseText
+            text: responseText,
           });
         }
         return { text: responseText, values: { success: false } };
@@ -97,7 +100,7 @@ const githubIssueOrchestratorHandler: Handler = async (
 
       issues.forEach((issue, index) => {
         responseText += `**${index + 1}.** [#${issue.number}](${issue.html_url}) - ${issue.title}\n`;
-        responseText += `   • Labels: ${issue.labels.map(l => l.name).join(', ')}\n`;
+        responseText += `   • Labels: ${issue.labels.map((l) => l.name).join(', ')}\n`;
         responseText += `   • Created by: ${issue.user.login}\n\n`;
       });
 
@@ -108,7 +111,9 @@ const githubIssueOrchestratorHandler: Handler = async (
       responseText += `**Description:**\n${selectedIssue.body.substring(0, 500)}${selectedIssue.body.length > 500 ? '...' : ''}\n\n`;
 
       // Step 2: Create E2B sandbox environment
-      elizaLogger.info('Creating E2B sandbox for development', { issueNumber: selectedIssue.number });
+      elizaLogger.info('Creating E2B sandbox for development', {
+        issueNumber: selectedIssue.number,
+      });
       responseText += '### 🏗️ Step 2: Creating Development Environment\n';
 
       const sandboxId = await e2bService.createSandbox({
@@ -118,13 +123,14 @@ const githubIssueOrchestratorHandler: Handler = async (
           issueNumber: selectedIssue.number.toString(),
           repository: 'elizaOS/eliza',
           workflowId,
-          createdBy: 'github-orchestrator'
-        }
+          createdBy: 'github-orchestrator',
+        },
       });
 
       responseText += '✅ **Sandbox Created Successfully**\n';
       responseText += `**Sandbox ID:** \`${sandboxId}\`\n`;
-      responseText += '**Environment:** ElizaOS development container with CLI, Git, and autocoder\n';
+      responseText +=
+        '**Environment:** ElizaOS development container with CLI, Git, and autocoder\n';
       responseText += '**Timeout:** 30 minutes\n\n';
 
       // Step 3: Set up repository in sandbox
@@ -182,9 +188,9 @@ else:
               success: false,
               reason: 'setup_failed',
               error: setupResult.error.value,
-              workflowId
+              workflowId,
             },
-            text: responseText
+            text: responseText,
           });
         }
         return { text: responseText, values: { success: false } };
@@ -208,28 +214,32 @@ else:
           title: selectedIssue.title,
           body: selectedIssue.body,
           url: selectedIssue.html_url,
-          labels: selectedIssue.labels.map(l => l.name)
+          labels: selectedIssue.labels.map((l) => l.name),
         },
         sandboxId,
         repository: {
           owner: 'elizaOS',
           name: 'eliza',
-          branchName: `issue-${selectedIssue.number}-resolution`
+          branchName: `issue-${selectedIssue.number}-resolution`,
         },
         status: 'development_ready',
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
       responseText += '### 🎯 Next Steps\n';
-      responseText += '1. **Coder Agent Assignment** - Specialized development agent will be notified\n';
-      responseText += '2. **Issue Analysis** - Agent will analyze requirements and create implementation plan\n';
-      responseText += '3. **Development Work** - Code implementation with testing and documentation\n';
+      responseText +=
+        '1. **Coder Agent Assignment** - Specialized development agent will be notified\n';
+      responseText +=
+        '2. **Issue Analysis** - Agent will analyze requirements and create implementation plan\n';
+      responseText +=
+        '3. **Development Work** - Code implementation with testing and documentation\n';
       responseText += '4. **Pull Request Creation** - Submit PR with comprehensive description\n';
       responseText += '5. **Code Review Cycle** - Iterative review and improvement process\n';
       responseText += '6. **Quality Assurance** - Final validation and merge\n';
       responseText += '7. **Cleanup** - Sandbox cleanup and workflow completion\n\n';
 
-      responseText += '🚀 **Workflow orchestration complete!** The development environment is ready and agents are being coordinated for issue resolution.\n\n';
+      responseText +=
+        '🚀 **Workflow orchestration complete!** The development environment is ready and agents are being coordinated for issue resolution.\n\n';
       responseText += '**Workflow Status:** `development_ready`\n';
       responseText += '**Monitor Progress:** Check GitHub issue and PR updates\n';
 
@@ -250,14 +260,14 @@ else:
             'pr_creation',
             'code_review',
             'quality_assurance',
-            'cleanup'
-          ]
+            'cleanup',
+          ],
         },
         data: {
           workflowState,
           allIssues: issues,
-          sandboxInfo: e2bService.listSandboxes().find(s => s.sandboxId === sandboxId)
-        }
+          sandboxInfo: e2bService.listSandboxes().find((s) => s.sandboxId === sandboxId),
+        },
       };
 
       if (callback) {
@@ -265,7 +275,6 @@ else:
       }
 
       return actionResult;
-
     } catch (githubError) {
       elizaLogger.error('Failed to fetch GitHub issues', { error: githubError.message });
       responseText += '❌ **GitHub Integration Failed**\n';
@@ -281,18 +290,17 @@ else:
             success: false,
             reason: 'github_error',
             error: githubError.message,
-            workflowId
+            workflowId,
           },
-          text: responseText
+          text: responseText,
         });
       }
       return { text: responseText, values: { success: false } };
     }
-
   } catch (error) {
     elizaLogger.error('GitHub Issue Orchestrator failed', {
       messageId: message.id,
-      error: error.message
+      error: error.message,
     });
 
     const errorText = `❌ **Workflow Orchestration Failed**\n\nError: ${error.message}`;
@@ -301,15 +309,15 @@ else:
       await callback({
         values: {
           success: false,
-          error: error.message
+          error: error.message,
         },
-        text: errorText
+        text: errorText,
       });
     }
 
     return {
       text: errorText,
-      values: { success: false, error: error.message }
+      values: { success: false, error: error.message },
     };
   }
 };
@@ -325,10 +333,10 @@ const githubIssueOrchestratorValidator: Validator = async (runtime, message) => 
     /github.*sandbox.*development/i,
     /issue.*resolution.*workflow/i,
     /automat.*development.*workflow/i,
-    /github.*e2b.*workflow/i
+    /github.*e2b.*workflow/i,
   ];
 
-  return orchestrationPatterns.some(pattern => pattern.test(content));
+  return orchestrationPatterns.some((pattern) => pattern.test(content));
 };
 
 export const githubIssueOrchestratorAction: Action = {
@@ -337,15 +345,21 @@ export const githubIssueOrchestratorAction: Action = {
     'ORCHESTRATE_GITHUB_WORKFLOW',
     'AUTOMATE_ISSUE_RESOLUTION',
     'COORDINATE_DEVELOPMENT_WORKFLOW',
-    'GITHUB_SANDBOX_WORKFLOW'
+    'GITHUB_SANDBOX_WORKFLOW',
   ],
-  description: 'Orchestrates the complete workflow from GitHub issue identification to sandbox-based development and resolution with multi-agent coordination',
+  description:
+    'Orchestrates the complete workflow from GitHub issue identification to sandbox-based development and resolution with multi-agent coordination',
   examples: githubIssueOrchestratorExamples,
   validate: githubIssueOrchestratorValidator,
   handler: githubIssueOrchestratorHandler,
   effects: {
-    provides: ['workflow_orchestration', 'github_issues', 'sandbox_environment', 'agent_coordination'],
+    provides: [
+      'workflow_orchestration',
+      'github_issues',
+      'sandbox_environment',
+      'agent_coordination',
+    ],
     requires: ['github_service', 'e2b_service'],
-    modifies: ['workflow_state', 'sandbox_allocation', 'agent_assignments']
-  }
+    modifies: ['workflow_state', 'sandbox_allocation', 'agent_assignments'],
+  },
 };

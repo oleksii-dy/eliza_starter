@@ -1,84 +1,136 @@
 /**
- * POST /api/billing/payment-intent
- * Create a Stripe payment intent for credit purchase
+ * Payment Intent API Route
+ * Handles creation of Stripe payment intents for credit purchases
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { authService } from '@/lib/auth/session';
-import { createPaymentIntent, createStripeCustomer } from '@/lib/server/services/billing-service';
-import { getDatabase, organizations } from '@/lib/database';
-import { eq } from 'drizzle-orm';
 import { z } from 'zod';
-import { ApiErrorHandler, ErrorCode, withErrorHandling } from '@/lib/api/error-handler';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 
-const paymentIntentSchema = z.object({
-  amount: z.number().min(5).max(10000), // $5 to $10,000
-  currency: z.string().optional().default('usd'),
-  metadata: z.record(z.string()).optional(),
+// Use dynamic imports to avoid database connection during build
+const getBillingService = () =>
+  import('@/lib/server/services/billing-service').then((m) => ({
+    createPaymentIntent: m.createPaymentIntent,
+    validatePaymentAmount: m.validatePaymentAmount,
+  }));
+const getAuthService = () =>
+  import('@/lib/auth/session').then((m) => m.authService);
+
+// Validation schema for payment intent creation
+const createPaymentIntentSchema = z.object({
+  amount: z.number().min(100).max(1000000), // Amount in cents ($1 - $10,000)
+  credits: z.number().min(1).max(1000000),
+  currency: z.enum(['usd', 'eur', 'gbp']).default('usd'),
+  metadata: z
+    .object({
+      package: z.string().optional(),
+      promotion: z.string().optional(),
+    })
+    .optional(),
 });
 
-async function postHandler(request: NextRequest) {
-  // Get current user session
-  const user = await authService.getCurrentUser();
-  if (!user) {
-    return ApiErrorHandler.error(ErrorCode.UNAUTHORIZED, 'Authentication required');
-  }
-
-  // Parse request body
-  const body = await request.json();
-  
+/**
+ * POST /api/billing/payment-intent - Create payment intent for credit purchase
+ */
+async function handlePOST(request: NextRequest) {
   try {
-    var validatedData = paymentIntentSchema.parse(body);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return ApiErrorHandler.error(
-        ErrorCode.VALIDATION_ERROR,
-        'Invalid request data',
-        { validationErrors: error.errors }
+    // Get current user session
+    const authService = await getAuthService();
+    const user = await authService.getCurrentUser();
+    if (!user) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Unauthorized',
+        },
+        { status: 401 },
       );
     }
-    throw error;
-  }
 
-  // Check if organization has a Stripe customer
-  const db = await getDatabase();
-  const [organization] = await db
-    .select({
-      stripeCustomerId: organizations.stripeCustomerId,
-      billingEmail: organizations.billingEmail,
-      name: organizations.name,
-    })
-    .from(organizations)
-    .where(eq(organizations.id, user.organizationId))
-    .limit(1);
+    // Parse and validate request body
+    const body = await request.json();
+    const validation = createPaymentIntentSchema.safeParse(body);
 
-  if (!organization) {
-    return ApiErrorHandler.error(ErrorCode.ORGANIZATION_NOT_FOUND, 'Organization not found');
-  }
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid request',
+          details: validation.error.errors,
+        },
+        { status: 400 },
+      );
+    }
 
-  // Create Stripe customer if doesn't exist
-  let stripeCustomerId = organization.stripeCustomerId;
-  if (!stripeCustomerId) {
-    stripeCustomerId = await createStripeCustomer(
-      user.organizationId,
-      organization.billingEmail || user.email,
-      organization.name
+    const { amount, credits, currency, metadata } = validation.data;
+
+    // Get billing service
+    const { createPaymentIntent, validatePaymentAmount } =
+      await getBillingService();
+
+    // Validate the payment amount matches the credits
+    const isValid = await validatePaymentAmount(amount, credits);
+    if (!isValid) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid payment amount for requested credits',
+        },
+        { status: 400 },
+      );
+    }
+
+    // Create payment intent
+    const paymentIntent = await createPaymentIntent({
+      userId: user.id,
+      organizationId: user.organizationId,
+      amount,
+      credits,
+      currency,
+      metadata: {
+        ...metadata,
+        userId: user.id,
+        organizationId: user.organizationId,
+        credits: credits.toString(),
+      },
+    });
+
+    // Return client secret for Stripe Elements
+    return NextResponse.json({
+      success: true,
+      data: {
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id,
+        amount: paymentIntent.amount,
+        currency: paymentIntent.currency,
+        credits,
+      },
+    });
+  } catch (error) {
+    console.error('Error creating payment intent:', error);
+
+    // Handle Stripe-specific errors
+    if (error instanceof Error) {
+      if (error.message.includes('Stripe')) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Payment service unavailable',
+          },
+          { status: 503 },
+        );
+      }
+    }
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to create payment intent',
+      },
+      { status: 500 },
     );
   }
-
-  // Create payment intent
-  const paymentIntent = await createPaymentIntent(
-    user.organizationId,
-    validatedData.amount,
-    validatedData.currency
-  );
-
-  return ApiErrorHandler.success({
-    clientSecret: paymentIntent.client_secret,
-    amount: validatedData.amount,
-    currency: validatedData.currency,
-    paymentIntentId: paymentIntent.id,
-  });
 }
 
-export const POST = withErrorHandling(postHandler);
+// Export with security headers and authentication
+export const { POST } = wrapHandlers({ handlePOST });

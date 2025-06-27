@@ -5,7 +5,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authService } from '@/lib/auth/session';
 import { getDatabase } from '@/lib/database';
-import { users, organizations, agents, userSessions } from '@/lib/database/schema';
+import {
+  users,
+  organizations,
+  agents,
+  userSessions,
+} from '@/lib/database/schema';
 import { eq, count, and, gte } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
@@ -13,11 +18,11 @@ export const runtime = 'nodejs';
 /**
  * GET /api/dashboard/stats - Get dashboard statistics
  */
-export async function GET(request: NextRequest) {
+export async function handleGET(request: NextRequest) {
   try {
     // Get current user session
     const user = await authService.getCurrentUser();
-    
+
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -25,7 +30,10 @@ export async function GET(request: NextRequest) {
     // Get organization
     const organization = await authService.getCurrentOrganization();
     if (!organization) {
-      return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Organization not found' },
+        { status: 404 },
+      );
     }
 
     // Get organization stats
@@ -33,10 +41,10 @@ export async function GET(request: NextRequest) {
     const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
     const db = await getDatabase();
-    
+
     // Count agents in organization
     const [agentStats] = await db
-      .select({ 
+      .select({
         total: count(),
       })
       .from(agents)
@@ -47,31 +55,35 @@ export async function GET(request: NextRequest) {
 
     // Count users in organization
     const [userStats] = await db
-      .select({ 
+      .select({
         total: count(),
       })
       .from(users)
-      .where(and(
-        eq(users.organizationId, organization.id),
-        eq(users.isActive, true)
-      ));
+      .where(
+        and(
+          eq(users.organizationId, organization.id),
+          eq(users.isActive, true),
+        ),
+      );
 
     // Count pending invites (simplified - assume 0 for now)
     const pendingInvites = 0;
 
     // Get recent API usage (simplified - use session count as proxy)
     const [sessionStats] = await db
-      .select({ 
+      .select({
         count: count(),
       })
       .from(userSessions)
-      .where(and(
-        eq(userSessions.organizationId, organization.id),
-        gte(userSessions.createdAt, yesterday)
-      ));
+      .where(
+        and(
+          eq(userSessions.organizationId, organization.id),
+          gte(userSessions.createdAt, yesterday),
+        ),
+      );
 
     const apiRequests24h = sessionStats?.count || 0;
-    
+
     // Calculate estimated cost (simplified)
     const estimatedCost = (apiRequests24h * 0.001).toFixed(2);
 
@@ -94,7 +106,7 @@ export async function GET(request: NextRequest) {
     console.error('Error fetching dashboard stats:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to fetch stats' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

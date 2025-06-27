@@ -4,7 +4,7 @@ import { auth } from '@/lib/auth';
 
 const revenueService = new RevenueSharing();
 
-export async function GET(request: NextRequest) {
+export async function handleGET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -13,15 +13,15 @@ export async function GET(request: NextRequest) {
 
     const url = new URL(request.url);
     const yearParam = url.searchParams.get('year');
-    
+
     let year = new Date().getFullYear();
-    
+
     if (yearParam) {
       year = parseInt(yearParam);
       if (isNaN(year) || year < 2020 || year > new Date().getFullYear()) {
         return NextResponse.json(
           { error: 'Invalid year. Must be between 2020 and current year.' },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     const taxReport = await revenueService.generateTaxReport(
       session.user.id,
       session.organizationId,
-      year
+      year,
     );
 
     return NextResponse.json({
@@ -38,14 +38,14 @@ export async function GET(request: NextRequest) {
       data: {
         year,
         ...taxReport,
-        generatedAt: new Date().toISOString()
+        generatedAt: new Date().toISOString(),
       },
     });
   } catch (error) {
     console.error('Failed to generate tax report:', error);
     return NextResponse.json(
       { error: 'Failed to generate tax report' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

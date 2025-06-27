@@ -31,7 +31,7 @@ async function build() {
   // Check if workers exist before building them
   try {
     await $`ls src/workers/*.ts > /dev/null 2>&1`;
-    
+
     console.log('👷 Building workers...');
     const workersResult = await Bun.build(workersConfig);
 

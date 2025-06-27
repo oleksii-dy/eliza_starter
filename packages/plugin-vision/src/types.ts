@@ -3,13 +3,6 @@ export const VisionServiceType = {
   VISION: 'VISION' as const,
 };
 
-// Extend the core service types with vision service
-declare module '@elizaos/core' {
-  interface ServiceTypeRegistry {
-    VISION: 'VISION';
-  }
-}
-
 // Vision-specific types
 export interface CameraInfo {
   id: string;
@@ -164,7 +157,8 @@ export interface VisionConfig {
   tileProcessingOrder?: 'sequential' | 'priority' | 'random';
   ocrEnabled?: boolean;
   florence2Enabled?: boolean;
-  screenRegion?: { // Optional: capture only part of screen
+  screenRegion?: {
+    // Optional: capture only part of screen
     x: number;
     y: number;
     width: number;
@@ -175,7 +169,8 @@ export interface VisionConfig {
   displayIndex?: number; // Specific display to capture
   captureAllDisplays?: boolean; // Cycle through all displays
   targetScreenFPS?: number; // Target FPS for screen capture
-  textRegions?: Array<{ // Specific regions for OCR
+  textRegions?: Array<{
+    // Specific regions for OCR
     x: number;
     y: number;
     width: number;

@@ -17,7 +17,7 @@ import {
   and,
   desc,
   count,
-  ilike
+  ilike,
 } from '../database';
 
 export interface CreateCharacterRequest {
@@ -122,7 +122,7 @@ export class CharacterService {
   async createCharacter(
     organizationId: string,
     userId: string,
-    data: CreateCharacterRequest
+    data: CreateCharacterRequest,
   ): Promise<CharacterWithStats> {
     await setDatabaseContext({
       organizationId,
@@ -131,18 +131,27 @@ export class CharacterService {
 
     try {
       // Check if slug is unique within organization
-      const existingCharacter = await this.getCharacterBySlug(organizationId, data.slug);
+      const existingCharacter = await this.getCharacterBySlug(
+        organizationId,
+        data.slug,
+      );
       if (existingCharacter) {
         throw new Error('Character with this slug already exists');
       }
 
       // Validate character configuration
-      const configValidation = this.validateCharacterConfig(data.characterConfig);
+      const configValidation = this.validateCharacterConfig(
+        data.characterConfig,
+      );
       if (!configValidation.isValid) {
-        throw new Error(`Invalid character configuration: ${configValidation.errors.join(', ')}`);
+        throw new Error(
+          `Invalid character configuration: ${configValidation.errors.join(', ')}`,
+        );
       }
 
-      const [created] = await (await this.getDb())
+      const [created] = await (
+        await this.getDb()
+      )
         .insert(agents)
         .values({
           organizationId,
@@ -177,23 +186,17 @@ export class CharacterService {
       search?: string;
       visibility?: string;
       createdBy?: string;
-    } = {}
+    } = {},
   ): Promise<CharacterWithStats[]> {
     await setDatabaseContext({ organizationId });
 
     try {
-      const {
-        limit = 50,
-        offset = 0,
-        search,
-        visibility,
-        createdBy
-      } = options;
+      const { limit = 50, offset = 0, search, visibility, createdBy } = options;
 
       // Build where conditions - only return characters (type = 'character')
       const conditions: any[] = [
         eq(agents.organizationId, organizationId),
-        eq(agents.type, 'character')
+        eq(agents.type, 'character'),
       ];
 
       if (search) {
@@ -208,7 +211,9 @@ export class CharacterService {
         conditions.push(eq(agents.createdBy, createdBy));
       }
 
-      const results = await (await this.getDb())
+      const results = await (
+        await this.getDb()
+      )
         .select()
         .from(agents)
         .where(and(...conditions))
@@ -216,7 +221,9 @@ export class CharacterService {
         .limit(limit)
         .offset(offset);
 
-      return results.map((character: Agent) => this.mapCharacterToStats(character));
+      return results.map((character: Agent) =>
+        this.mapCharacterToStats(character),
+      );
     } finally {
       await clearDatabaseContext();
     }
@@ -227,18 +234,17 @@ export class CharacterService {
    */
   async getCharacterById(
     organizationId: string,
-    characterId: string
+    characterId: string,
   ): Promise<CharacterWithStats | null> {
     await setDatabaseContext({ organizationId });
 
     try {
-      const [character] = await (await this.getDb())
+      const [character] = await (
+        await this.getDb()
+      )
         .select()
         .from(agents)
-        .where(and(
-          eq(agents.id, characterId),
-          eq(agents.type, 'character')
-        ))
+        .where(and(eq(agents.id, characterId), eq(agents.type, 'character')))
         .limit(1);
 
       return character ? this.mapCharacterToStats(character) : null;
@@ -252,19 +258,23 @@ export class CharacterService {
    */
   async getCharacterBySlug(
     organizationId: string,
-    slug: string
+    slug: string,
   ): Promise<CharacterWithStats | null> {
     await setDatabaseContext({ organizationId });
 
     try {
-      const [character] = await (await this.getDb())
+      const [character] = await (
+        await this.getDb()
+      )
         .select()
         .from(agents)
-        .where(and(
-          eq(agents.organizationId, organizationId),
-          eq(agents.slug, slug),
-          eq(agents.type, 'character')
-        ))
+        .where(
+          and(
+            eq(agents.organizationId, organizationId),
+            eq(agents.slug, slug),
+            eq(agents.type, 'character'),
+          ),
+        )
         .limit(1);
 
       return character ? this.mapCharacterToStats(character) : null;
@@ -280,7 +290,7 @@ export class CharacterService {
     organizationId: string,
     characterId: string,
     updates: UpdateCharacterRequest,
-    userId?: string
+    userId?: string,
   ): Promise<CharacterWithStats | null> {
     await setDatabaseContext({
       organizationId,
@@ -290,7 +300,10 @@ export class CharacterService {
     try {
       // Check if slug is unique (if changing)
       if (updates.slug) {
-        const existingCharacter = await this.getCharacterBySlug(organizationId, updates.slug);
+        const existingCharacter = await this.getCharacterBySlug(
+          organizationId,
+          updates.slug,
+        );
         if (existingCharacter && existingCharacter.id !== characterId) {
           throw new Error('Character with this slug already exists');
         }
@@ -298,22 +311,25 @@ export class CharacterService {
 
       // Validate character configuration if being updated
       if (updates.characterConfig) {
-        const configValidation = this.validateCharacterConfig(updates.characterConfig);
+        const configValidation = this.validateCharacterConfig(
+          updates.characterConfig,
+        );
         if (!configValidation.isValid) {
-          throw new Error(`Invalid character configuration: ${configValidation.errors.join(', ')}`);
+          throw new Error(
+            `Invalid character configuration: ${configValidation.errors.join(', ')}`,
+          );
         }
       }
 
-      const [updated] = await (await this.getDb())
+      const [updated] = await (
+        await this.getDb()
+      )
         .update(agents)
         .set({
           ...updates,
           updatedAt: Date.now(),
         })
-        .where(and(
-          eq(agents.id, characterId),
-          eq(agents.type, 'character')
-        ))
+        .where(and(eq(agents.id, characterId), eq(agents.type, 'character')))
         .returning();
 
       return updated ? this.mapCharacterToStats(updated) : null;
@@ -327,7 +343,7 @@ export class CharacterService {
    */
   async deleteCharacter(
     organizationId: string,
-    characterId: string
+    characterId: string,
   ): Promise<boolean> {
     await setDatabaseContext({
       organizationId,
@@ -337,10 +353,7 @@ export class CharacterService {
     try {
       await (await this.getDb())
         .delete(agents)
-        .where(and(
-          eq(agents.id, characterId),
-          eq(agents.type, 'character')
-        ));
+        .where(and(eq(agents.id, characterId), eq(agents.type, 'character')));
 
       return true;
     } finally {
@@ -355,19 +368,24 @@ export class CharacterService {
     organizationId: string,
     userId: string,
     characterId: string,
-    title?: string
+    title?: string,
   ): Promise<CharacterConversationWithMessages> {
     await setDatabaseContext({ organizationId, userId });
 
     try {
       // Verify character exists and is accessible
-      const character = await this.getCharacterById(organizationId, characterId);
+      const character = await this.getCharacterById(
+        organizationId,
+        characterId,
+      );
       if (!character) {
         throw new Error('Character not found');
       }
 
       // Create new conversation
-      const [conversation] = await (await this.getDb())
+      const [conversation] = await (
+        await this.getDb()
+      )
         .insert(characterConversations)
         .values({
           characterId,
@@ -392,22 +410,28 @@ export class CharacterService {
   async getConversation(
     organizationId: string,
     userId: string,
-    conversationId: string
+    conversationId: string,
   ): Promise<CharacterConversationWithMessages | null> {
     await setDatabaseContext({ organizationId, userId });
 
     try {
-      const [conversation] = await (await this.getDb())
+      const [conversation] = await (
+        await this.getDb()
+      )
         .select()
         .from(characterConversations)
-        .where(and(
-          eq(characterConversations.id, conversationId),
-          eq(characterConversations.userId, userId),
-          eq(characterConversations.organizationId, organizationId)
-        ))
+        .where(
+          and(
+            eq(characterConversations.id, conversationId),
+            eq(characterConversations.userId, userId),
+            eq(characterConversations.organizationId, organizationId),
+          ),
+        )
         .limit(1);
 
-      return conversation ? this.mapConversationWithMessages(conversation) : null;
+      return conversation
+        ? this.mapConversationWithMessages(conversation)
+        : null;
     } finally {
       await clearDatabaseContext();
     }
@@ -423,7 +447,7 @@ export class CharacterService {
     options: {
       limit?: number;
       offset?: number;
-    } = {}
+    } = {},
   ): Promise<CharacterConversationWithMessages[]> {
     await setDatabaseContext({ organizationId, userId });
 
@@ -433,14 +457,16 @@ export class CharacterService {
       const conditions: any[] = [
         eq(characterConversations.userId, userId),
         eq(characterConversations.organizationId, organizationId),
-        eq(characterConversations.isActive, true)
+        eq(characterConversations.isActive, true),
       ];
 
       if (characterId) {
         conditions.push(eq(characterConversations.characterId, characterId));
       }
 
-      const results = await (await this.getDb())
+      const results = await (
+        await this.getDb()
+      )
         .select()
         .from(characterConversations)
         .where(and(...conditions))
@@ -448,7 +474,9 @@ export class CharacterService {
         .limit(limit)
         .offset(offset);
 
-      return results.map((conv: CharacterConversation) => this.mapConversationWithMessages(conv));
+      return results.map((conv: CharacterConversation) =>
+        this.mapConversationWithMessages(conv),
+      );
     } finally {
       await clearDatabaseContext();
     }
@@ -465,13 +493,17 @@ export class CharacterService {
       role: 'user' | 'assistant' | 'system';
       content: string;
       metadata?: Record<string, any>;
-    }
+    },
   ): Promise<CharacterConversationWithMessages> {
     await setDatabaseContext({ organizationId, userId });
 
     try {
       // Get current conversation
-      const conversation = await this.getConversation(organizationId, userId, conversationId);
+      const conversation = await this.getConversation(
+        organizationId,
+        userId,
+        conversationId,
+      );
       if (!conversation) {
         throw new Error('Conversation not found');
       }
@@ -489,7 +521,9 @@ export class CharacterService {
       const updatedMessages = [...conversation.messages, newMessage];
 
       // Update conversation in database
-      const [updated] = await (await this.getDb())
+      const [updated] = await (
+        await this.getDb()
+      )
         .update(characterConversations)
         .set({
           messages: updatedMessages,
@@ -511,22 +545,30 @@ export class CharacterService {
     await setDatabaseContext({ organizationId });
 
     try {
-      const [totalResult] = await (await this.getDb())
+      const [totalResult] = await (
+        await this.getDb()
+      )
         .select({ count: count() })
         .from(agents)
-        .where(and(
-          eq(agents.organizationId, organizationId),
-          eq(agents.type, 'character')
-        ));
+        .where(
+          and(
+            eq(agents.organizationId, organizationId),
+            eq(agents.type, 'character'),
+          ),
+        );
 
-      const [activeResult] = await (await this.getDb())
+      const [activeResult] = await (
+        await this.getDb()
+      )
         .select({ count: count() })
         .from(agents)
-        .where(and(
-          eq(agents.organizationId, organizationId),
-          eq(agents.type, 'character'),
-          eq(agents.isActive, true)
-        ));
+        .where(
+          and(
+            eq(agents.organizationId, organizationId),
+            eq(agents.type, 'character'),
+            eq(agents.isActive, true),
+          ),
+        );
 
       const [conversationsResult] = await (await this.getDb())
         .select({ count: count() })
@@ -539,9 +581,14 @@ export class CharacterService {
         .from(characterConversations)
         .where(eq(characterConversations.organizationId, organizationId));
 
-      const totalMessages = allConversations.reduce((sum: number, conv: any) => {
-        return sum + (Array.isArray(conv.messages) ? conv.messages.length : 0);
-      }, 0);
+      const totalMessages = allConversations.reduce(
+        (sum: number, conv: any) => {
+          return (
+            sum + (Array.isArray(conv.messages) ? conv.messages.length : 0)
+          );
+        },
+        0,
+      );
 
       return {
         totalCharacters: totalResult?.count || 0,
@@ -559,7 +606,7 @@ export class CharacterService {
    */
   async generateUniqueSlug(
     organizationId: string,
-    baseName: string
+    baseName: string,
   ): Promise<string> {
     const baseSlug = baseName
       .toLowerCase()
@@ -587,8 +634,12 @@ export class CharacterService {
     const errors: string[] = [];
 
     // Required fields
-    if (!config.name) { errors.push('Character name is required'); }
-    if (!config.bio) { errors.push('Character bio is required'); }
+    if (!config.name) {
+      errors.push('Character name is required');
+    }
+    if (!config.bio) {
+      errors.push('Character bio is required');
+    }
 
     // Type validations
     if (config.messageExamples && !Array.isArray(config.messageExamples)) {
@@ -639,7 +690,9 @@ export class CharacterService {
   /**
    * Map conversation to conversation with messages
    */
-  private mapConversationWithMessages(conv: CharacterConversation): CharacterConversationWithMessages {
+  private mapConversationWithMessages(
+    conv: CharacterConversation,
+  ): CharacterConversationWithMessages {
     return {
       id: conv.id,
       characterId: conv.characterId,

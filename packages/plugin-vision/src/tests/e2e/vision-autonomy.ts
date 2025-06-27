@@ -27,7 +27,11 @@ export class VisionAutonomyE2ETestSuite implements TestSuite {
         let callbackResponse: any = null;
 
         // Validate the action
-        const isValid = await killAutonomousAction.validate(runtime, message, { values: {}, data: {}, text: '' });
+        const isValid = await killAutonomousAction.validate(runtime, message, {
+          values: {},
+          data: {},
+          text: '',
+        });
         if (!isValid) {
           throw new Error('killAutonomousAction validation failed');
         }
@@ -103,7 +107,7 @@ export class VisionAutonomyE2ETestSuite implements TestSuite {
             console.log(`  Scene update ${updateCount}: ${scene.description.substring(0, 50)}...`);
           }
 
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
 
         console.log('✓ Vision monitoring complete');
@@ -155,7 +159,7 @@ export class VisionAutonomyE2ETestSuite implements TestSuite {
           entityId: runtime.agentId,
           content: {
             text: 'I see a test scene',
-            actions: ['DESCRIBE_SCENE']
+            actions: ['DESCRIBE_SCENE'],
           },
           agentId: runtime.agentId,
           roomId,
@@ -164,7 +168,7 @@ export class VisionAutonomyE2ETestSuite implements TestSuite {
         await runtime.createMemory(firstResponse, 'messages');
 
         // Wait for processing
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
 
         // Second interaction - ask about previous observation
         const secondMessage: Memory = {
@@ -184,7 +188,7 @@ export class VisionAutonomyE2ETestSuite implements TestSuite {
           entityId: runtime.agentId,
           content: {
             text: 'Previously, I saw a test scene',
-            actions: ['DESCRIBE_SCENE']
+            actions: ['DESCRIBE_SCENE'],
           },
           agentId: runtime.agentId,
           roomId,
@@ -193,13 +197,13 @@ export class VisionAutonomyE2ETestSuite implements TestSuite {
         await runtime.createMemory(secondResponse, 'messages');
 
         // Wait for processing
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
 
         // Check if messages were created
         const messages = await runtime.getMemories({
           roomId,
           count: 10,
-          tableName: 'messages'
+          tableName: 'messages',
         });
 
         console.log('✓ Vision memory test complete');
@@ -244,8 +248,8 @@ export class VisionAutonomyE2ETestSuite implements TestSuite {
           const state = await runtime.composeState(message);
 
           // Check if vision context is available for decision
-          const hasVisionContext = state.text.includes('Visual Perception') ||
-                                 state.values.visionAvailable !== undefined;
+          const hasVisionContext =
+            state.text.includes('Visual Perception') || state.values.visionAvailable !== undefined;
 
           console.log(`  Scenario: "${scenario.text}"`);
           console.log(`    Has vision context: ${hasVisionContext}`);
@@ -254,7 +258,9 @@ export class VisionAutonomyE2ETestSuite implements TestSuite {
             scenariosWithVision++;
 
             if (state.values.sceneDescription) {
-              console.log(`    Scene info available: ${state.values.sceneDescription.substring(0, 50)}...`);
+              console.log(
+                `    Scene info available: ${state.values.sceneDescription.substring(0, 50)}...`
+              );
             }
           }
         }
@@ -263,7 +269,9 @@ export class VisionAutonomyE2ETestSuite implements TestSuite {
 
         // All scenarios should have vision context from the provider
         if (scenariosWithVision !== scenarios.length) {
-          throw new Error(`Vision context missing in ${scenarios.length - scenariosWithVision} scenarios`);
+          throw new Error(
+            `Vision context missing in ${scenarios.length - scenariosWithVision} scenarios`
+          );
         }
       },
     },

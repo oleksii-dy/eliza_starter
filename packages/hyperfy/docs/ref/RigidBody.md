@@ -31,4 +31,3 @@ The function to call when a child trigger collider is left.
 ### `.{...Node}`
 
 Inherits all [Node](/docs/ref/Node.md) properties
-

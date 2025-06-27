@@ -3,24 +3,27 @@ import { TodoPlugin } from '../index';
 import { createTodoDataService } from '../services/todoDataService';
 import { TodoReminderService } from '../services/reminderService';
 import { TodoIntegrationBridge } from '../services/integrationBridge';
+import { createMockRuntime } from '@elizaos/core/test-utils';
 
 // Mock runtime for testing
-const mockRuntime = {
-  agentId: 'test-agent' as any,
+// @ts-ignore - test mock
+const mockRuntime = createMockRuntime({
   db: null, // Will be skipped in services
   getService: () => null,
   useModel: () => Promise.resolve('Mock response'),
   composeState: () => Promise.resolve({ data: {} }),
   getRoom: () => Promise.resolve(null),
   emitEvent: () => Promise.resolve(),
-} as any;
+});
 
 describe('Todo Plugin E2E Simple Tests', () => {
   it('should initialize plugin successfully', async () => {
+    // @ts-ignore - test mock
     expect(() => TodoPlugin.init?.({}, mockRuntime)).not.toThrow();
   });
 
   it('should create reminder service successfully', async () => {
+    // @ts-ignore - test mock
     const service = await TodoReminderService.start(mockRuntime);
     expect(service).toBeDefined();
     expect(service.serviceName).toBe('TODO_REMINDER');
@@ -28,6 +31,7 @@ describe('Todo Plugin E2E Simple Tests', () => {
   });
 
   it('should create integration bridge successfully', async () => {
+    // @ts-ignore - test mock
     const service = await TodoIntegrationBridge.start(mockRuntime);
     expect(service).toBeDefined();
     expect(service.serviceName).toBe('TODO_INTEGRATION_BRIDGE');

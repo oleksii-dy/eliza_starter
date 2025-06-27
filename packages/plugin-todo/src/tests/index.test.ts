@@ -27,9 +27,9 @@ describe('TodoPlugin', () => {
 
   it('should have all required services', () => {
     expect(TodoPlugin.services?.some((s) => (s as any).serviceType === 'TODO_REMINDER')).toBe(true);
-    expect(TodoPlugin.services?.some((s) => (s as any).serviceType === 'TODO_INTEGRATION_BRIDGE')).toBe(
-      true
-    );
+    expect(
+      TodoPlugin.services?.some((s) => (s as any).serviceType === 'TODO_INTEGRATION_BRIDGE')
+    ).toBe(true);
 
     // Other functionality is provided as internal managers within these services:
     // - NotificationManager (within TodoReminderService)

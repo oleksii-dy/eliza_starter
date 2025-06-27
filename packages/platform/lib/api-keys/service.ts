@@ -14,7 +14,7 @@ import {
   eq,
   and,
   desc,
-  count
+  count,
 } from '../database';
 
 const { apiKeys } = schema;
@@ -93,7 +93,7 @@ export class ApiKeyService {
   async createApiKey(
     organizationId: string,
     userId: string,
-    data: CreateApiKeyRequest
+    data: CreateApiKeyRequest,
   ): Promise<{ apiKey: ApiKeyWithPrefix; key: string }> {
     await setDatabaseContext({
       organizationId,
@@ -106,7 +106,9 @@ export class ApiKeyService {
       const { key, prefix, hash } = generateApiKey();
 
       // Create API key record
-      const [created] = await (await this.getDb())
+      const [created] = await (
+        await this.getDb()
+      )
         .insert(apiKeys)
         .values({
           organizationId,
@@ -151,14 +153,16 @@ export class ApiKeyService {
       limit?: number;
       offset?: number;
       includeInactive?: boolean;
-    } = {}
+    } = {},
   ): Promise<ApiKeyWithPrefix[]> {
     await setDatabaseContext({ organizationId });
 
     try {
       const { limit = 50, offset = 0, includeInactive = false } = options;
 
-      const baseQuery = await (await this.getDb())
+      const baseQuery = await (
+        await this.getDb()
+      )
         .select({
           id: apiKeys.id,
           name: apiKeys.name,
@@ -175,9 +179,10 @@ export class ApiKeyService {
         })
         .from(apiKeys);
 
-      const results = await (includeInactive
-        ? baseQuery
-        : baseQuery.where(eq(apiKeys.isActive, true))
+      const results = await (
+        includeInactive
+          ? baseQuery
+          : baseQuery.where(eq(apiKeys.isActive, true))
       )
         .orderBy(desc(apiKeys.createdAt))
         .limit(limit)
@@ -200,12 +205,14 @@ export class ApiKeyService {
    */
   async getApiKeyById(
     organizationId: string,
-    keyId: string
+    keyId: string,
   ): Promise<ApiKeyWithPrefix | null> {
     await setDatabaseContext({ organizationId });
 
     try {
-      const [result] = await (await this.getDb())
+      const [result] = await (
+        await this.getDb()
+      )
         .select({
           id: apiKeys.id,
           name: apiKeys.name,
@@ -224,7 +231,9 @@ export class ApiKeyService {
         .where(eq(apiKeys.id, keyId))
         .limit(1);
 
-      if (!result) {return null;}
+      if (!result) {
+        return null;
+      }
 
       return {
         ...result,
@@ -250,7 +259,7 @@ export class ApiKeyService {
       permissions?: string[];
       rateLimit?: number;
       isActive?: boolean;
-    }
+    },
   ): Promise<ApiKeyWithPrefix | null> {
     await setDatabaseContext({
       organizationId,
@@ -258,7 +267,9 @@ export class ApiKeyService {
     });
 
     try {
-      const [updated] = await (await this.getDb())
+      const [updated] = await (
+        await this.getDb()
+      )
         .update(apiKeys)
         .set({
           ...updates,
@@ -267,7 +278,9 @@ export class ApiKeyService {
         .where(eq(apiKeys.id, keyId))
         .returning();
 
-      if (!updated) {return null;}
+      if (!updated) {
+        return null;
+      }
 
       return {
         id: updated.id,
@@ -291,10 +304,7 @@ export class ApiKeyService {
   /**
    * Delete API key
    */
-  async deleteApiKey(
-    organizationId: string,
-    keyId: string
-  ): Promise<boolean> {
+  async deleteApiKey(organizationId: string, keyId: string): Promise<boolean> {
     await setDatabaseContext({
       organizationId,
       isAdmin: true, // Require admin for deletion
@@ -313,9 +323,7 @@ export class ApiKeyService {
       }
 
       // Delete the key
-      await (await this.getDb())
-        .delete(apiKeys)
-        .where(eq(apiKeys.id, keyId));
+      await (await this.getDb()).delete(apiKeys).where(eq(apiKeys.id, keyId));
 
       return true;
     } finally {
@@ -335,15 +343,12 @@ export class ApiKeyService {
       // Extract prefix to optimize search
       const prefix = key.substring(0, 8);
 
-      const [result] = await (await this.getDb())
+      const [result] = await (
+        await this.getDb()
+      )
         .select()
         .from(apiKeys)
-        .where(
-          and(
-            eq(apiKeys.keyPrefix, prefix),
-            eq(apiKeys.isActive, true)
-          )
-        )
+        .where(and(eq(apiKeys.keyPrefix, prefix), eq(apiKeys.isActive, true)))
         .limit(1);
 
       if (!result) {
@@ -362,7 +367,9 @@ export class ApiKeyService {
       }
 
       // Update usage statistics
-      await (await this.getDb())
+      await (
+        await this.getDb()
+      )
         .update(apiKeys)
         .set({
           lastUsedAt: new Date(),
@@ -404,20 +411,26 @@ export class ApiKeyService {
     await setDatabaseContext({ organizationId });
 
     try {
-      const [statsResult] = await (await this.getDb())
+      const [statsResult] = await (
+        await this.getDb()
+      )
         .select({
           totalKeys: count(),
         })
         .from(apiKeys);
 
-      const [activeResult] = await (await this.getDb())
+      const [activeResult] = await (
+        await this.getDb()
+      )
         .select({
           activeKeys: count(),
         })
         .from(apiKeys)
         .where(eq(apiKeys.isActive, true));
 
-      const [expiredResult] = await (await this.getDb())
+      const [expiredResult] = await (
+        await this.getDb()
+      )
         .select({
           expiredKeys: count(),
         })
@@ -426,11 +439,13 @@ export class ApiKeyService {
           and(
             eq(apiKeys.isActive, true),
             // TODO: Add SQL function for expired keys
-          )
+          ),
         );
 
       // Get total usage
-      const [usageResult] = await (await this.getDb())
+      const [usageResult] = await (
+        await this.getDb()
+      )
         .select({
           totalUsage: apiKeys.usageCount,
         })
@@ -460,7 +475,7 @@ export class ApiKeyService {
     options: {
       scope?: string[];
       expiresIn?: string; // '24h', '1h', etc.
-    } = {}
+    } = {},
   ): Promise<string> {
     const { scope = ['agents:*', 'messaging:*'], expiresIn = '24h' } = options;
 
@@ -487,8 +502,13 @@ export class ApiKeyService {
    */
   async regenerateApiKey(
     keyId: string,
-    organizationId: string
-  ): Promise<{ apiKey: ApiKeyWithPrefix; key: string; oldKeyPrefix: string; keyPrefix: string } | null> {
+    organizationId: string,
+  ): Promise<{
+    apiKey: ApiKeyWithPrefix;
+    key: string;
+    oldKeyPrefix: string;
+    keyPrefix: string;
+  } | null> {
     await setDatabaseContext({
       organizationId,
       isAdmin: true, // Require admin for regeneration
@@ -508,7 +528,9 @@ export class ApiKeyService {
       const { key, prefix, hash } = generateApiKey();
 
       // Update the existing record with new key data
-      const [updated] = await (await this.getDb())
+      const [updated] = await (
+        await this.getDb()
+      )
         .update(apiKeys)
         .set({
           keyHash: hash,
@@ -543,7 +565,7 @@ export class ApiKeyService {
         apiKey: apiKeyWithPrefix,
         key,
         oldKeyPrefix,
-        keyPrefix: prefix
+        keyPrefix: prefix,
       };
     } finally {
       await clearDatabaseContext();
@@ -553,9 +575,15 @@ export class ApiKeyService {
   /**
    * Check if user has permission
    */
-  hasPermission(apiKey: { permissions: string[] }, requiredPermission: string): boolean {
+  hasPermission(
+    apiKey: { permissions: string[] },
+    requiredPermission: string,
+  ): boolean {
     // Check for admin permission (allows everything)
-    if (apiKey.permissions.includes('*') || apiKey.permissions.includes('admin')) {
+    if (
+      apiKey.permissions.includes('*') ||
+      apiKey.permissions.includes('admin')
+    ) {
       return true;
     }
 

@@ -78,9 +78,9 @@ const fetcher = async ({
   const baseHeaders: HeadersInit = headers
     ? { ...headers }
     : {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      };
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+    };
   if (apiKey) {
     (baseHeaders as Record<string, string>)['X-API-KEY'] = apiKey;
   }

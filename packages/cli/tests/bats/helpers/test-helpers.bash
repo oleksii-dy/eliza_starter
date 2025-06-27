@@ -34,7 +34,23 @@ export CLI_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../" && pwd)"
 export CLI_DIST_PATH="${CLI_ROOT}/dist/index.js"
 export ELIZAOS_BIN="${CLI_DIST_PATH}"
 export MONOREPO_ROOT="$(cd "${CLI_ROOT}/../../" && pwd)"
+export REPO_ROOT="$MONOREPO_ROOT"  # Alias for backward compatibility
 export TEST_TIMEOUT=30
+
+# Helper function to run CLI using bun from any directory
+run_cli_bun() {
+  local cmd_prefix=""
+  if [[ -n "$TIMEOUT_CMD" ]]; then
+    cmd_prefix="$TIMEOUT_CMD $TEST_TIMEOUT"
+  fi
+  
+  local current_dir="$(pwd)"
+  cd "$CLI_ROOT"
+  $cmd_prefix bun run src/index.ts "$@"
+  local exit_code=$?
+  cd "$current_dir"
+  return $exit_code
+}
 
 # Detect timeout command
 if command -v timeout >/dev/null 2>&1; then
@@ -78,6 +94,13 @@ run_cli() {
   case "$context" in
     "dist")
       $cmd_prefix node "$CLI_DIST_PATH" "$@"
+      ;;
+    "bun")
+      cd "$CLI_ROOT"
+      $cmd_prefix bun run src/index.ts "$@"
+      local exit_code=$?
+      cd "$TEST_DIR"
+      return $exit_code
       ;;
     "global")
       $cmd_prefix elizaos "$@"
@@ -212,6 +235,12 @@ assert_cli_failure() {
 # Process management helpers
 assert_process_running() {
   local pid="$1"
+  
+  # Validate PID format
+  if [[ -z "$pid" || ! "$pid" =~ ^[0-9]+$ ]]; then
+    fail "Invalid PID: '$pid'"
+  fi
+  
   if ! kill -0 "$pid" 2>/dev/null; then
     fail "Process $pid is not running"
   fi
@@ -228,10 +257,17 @@ start_cli_background_with_timeout() {
   
   # Start the server in a subshell with proper signal handling
   (
+    # Redirect stdout/stderr to prevent interference with PID parsing
+    exec >/dev/null 2>&1
+    
     # Start the actual server process
     case "$context" in
       "dist")
         node "$CLI_DIST_PATH" "$@" &
+        ;;
+      "bun")
+        cd "$CLI_ROOT"
+        bun run src/index.ts "$@" &
         ;;
       "global")
         elizaos "$@" &
@@ -250,6 +286,7 @@ start_cli_background_with_timeout() {
     esac
     
     local server_pid=$!
+    # Ensure we write only the PID to the file
     echo "$server_pid" > "$pidfile"
     
     # Wait for the process or timeout
@@ -270,15 +307,22 @@ start_cli_background_with_timeout() {
   
   local wrapper_pid=$!
   
-  # Wait briefly for the server to start
-  sleep 0.5
+  # Wait briefly for the server to start and PID to be written
+  sleep 1
   
-  # Read the actual server PID
-  local server_pid=$(cat "$pidfile" 2>/dev/null || echo "")
+  # Read the actual server PID and validate it
+  local server_pid=""
+  if [[ -f "$pidfile" ]]; then
+    server_pid=$(cat "$pidfile" 2>/dev/null | tr -d '[:space:]' | grep -E '^[0-9]+$' || echo "")
+  fi
   rm -f "$pidfile"
   
-  # Return both PIDs
-  echo "$server_pid:$wrapper_pid"
+  # Validate we got a valid PID
+  if [[ -z "$server_pid" || ! "$server_pid" =~ ^[0-9]+$ ]]; then
+    echo "INVALID_PID:$wrapper_pid"
+  else
+    echo "$server_pid:$wrapper_pid"
+  fi
 }
 
 # Start CLI in background (legacy - without timeout)
@@ -289,6 +333,14 @@ start_cli_background() {
   case "$context" in
     "dist")
       node "$CLI_DIST_PATH" "$@" &
+      ;;
+    "bun")
+      cd "$CLI_ROOT"
+      bun run src/index.ts "$@" &
+      local pid=$!
+      cd "$TEST_DIR"
+      echo $pid
+      return
       ;;
     "global")
       elizaos "$@" &
@@ -337,7 +389,15 @@ kill_process_gracefully() {
 # Parse PIDs from timeout function (format: "server_pid:timer_pid")
 parse_timeout_pids() {
   local combined="$1"
-  echo "${combined%%:*}"  # Return just the server PID
+  local server_pid="${combined%%:*}"
+  
+  # Handle invalid PID case
+  if [[ "$server_pid" == "INVALID_PID" ]]; then
+    echo ""
+    return 1
+  fi
+  
+  echo "$server_pid"
 }
 
 # Kill both server and timer processes

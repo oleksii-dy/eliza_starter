@@ -1,5 +1,8 @@
-export const open = jest.fn().mockResolvedValue(undefined);
+const open = () => Promise.resolve(undefined);
 
-export default {
-  open
+module.exports = {
+  open,
+  default: {
+    open,
+  },
 };

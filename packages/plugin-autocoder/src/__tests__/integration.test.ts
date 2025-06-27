@@ -32,13 +32,21 @@ describe('AutoCoder Plugin Integration', () => {
       },
       getService: (name: string) => {
         // Return mock services as needed
-        if (name === 'trust-engine') {return { getTrustLevel: () => 75 };}
-        if (name === 'role-manager') {return { validateRole: () => true };}
-        if (name === 'docker') {return { ping: () => Promise.resolve(true) };}
+        if (name === 'trust-engine') {
+          return { getTrustLevel: () => 75 };
+        }
+        if (name === 'role-manager') {
+          return { validateRole: () => true };
+        }
+        if (name === 'docker') {
+          return { ping: () => Promise.resolve(true) };
+        }
         return null;
       },
       services: new Map(),
-      registerService: () => { /* empty */ },
+      registerService: () => {
+        /* empty */
+      },
     } as any;
   });
 
@@ -62,9 +70,10 @@ describe('AutoCoder Plugin Integration', () => {
     expect(autocoderPlugin.services).toBeDefined();
     expect(autocoderPlugin.services?.length).toBeGreaterThanOrEqual(5);
 
-    const serviceNames = autocoderPlugin.services?.map((service) =>
-      typeof service === 'function' ? service.serviceName : service.component.serviceName
-    ) || [];
+    const serviceNames =
+      autocoderPlugin.services?.map((service) =>
+        typeof service === 'function' ? service.serviceName : service.component.serviceName
+      ) || [];
     expect(serviceNames).toContain('docker');
     expect(serviceNames).toContain('autocoder');
   });
@@ -86,7 +95,14 @@ describe('AutoCoder Plugin Integration', () => {
     // Services are already set up in beforeEach with trust services
 
     // Should not throw
-    await expect(autocoderPlugin.init?.({ /* empty */ }, runtime)).resolves.toBeUndefined();
+    await expect(
+      autocoderPlugin.init?.(
+        {
+          /* empty */
+        },
+        runtime
+      )
+    ).resolves.toBeUndefined();
   });
 
   it('should initialize without errors when trust services are not available', async () => {
@@ -94,17 +110,31 @@ describe('AutoCoder Plugin Integration', () => {
     const runtimeWithoutTrust = {
       ...runtime,
       getService: (name: string) => {
-        if (name === 'docker') {return { ping: () => Promise.resolve(true) };}
+        if (name === 'docker') {
+          return { ping: () => Promise.resolve(true) };
+        }
         return null; // No trust services
       },
     } as IAgentRuntime;
 
     // Should not throw
-    await expect(autocoderPlugin.init?.({ /* empty */ }, runtimeWithoutTrust)).resolves.toBeUndefined();
+    await expect(
+      autocoderPlugin.init?.(
+        {
+          /* empty */
+        },
+        runtimeWithoutTrust
+      )
+    ).resolves.toBeUndefined();
   });
 
   it('should initialize without errors and not modify runtime directly', async () => {
-    await autocoderPlugin.init?.({ /* empty */ }, runtime);
+    await autocoderPlugin.init?.(
+      {
+        /* empty */
+      },
+      runtime
+    );
 
     // Init function should complete without error
     // Actions are registered by the framework, not by the init function

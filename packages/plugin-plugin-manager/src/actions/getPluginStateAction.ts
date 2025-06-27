@@ -13,7 +13,8 @@ import { TrustService } from '@elizaos/plugin-trust';
 
 export const getPluginStateAction: Action = {
   name: 'GET_PLUGIN_STATE',
-  description: 'Get the current state of all plugins including loaded status, missing environment variables, and errors',
+  description:
+    'Get the current state of all plugins including loaded status, missing environment variables, and errors',
   similes: ['plugin state', 'plugin status', 'show plugins', 'list plugins'],
   examples: [
     [
@@ -26,7 +27,7 @@ export const getPluginStateAction: Action = {
       {
         name: '{{agentName}}',
         content: {
-          text: 'I\'ll show you the current state of all plugins.',
+          text: "I'll show you the current state of all plugins.",
           actions: ['GET_PLUGIN_STATE'],
         },
       },
@@ -56,7 +57,7 @@ export const getPluginStateAction: Action = {
       {
         name: '{{agentName}}',
         content: {
-          text: 'I\'ll check which plugins are experiencing errors.',
+          text: "I'll check which plugins are experiencing errors.",
           actions: ['GET_PLUGIN_STATE'],
         },
       },
@@ -156,12 +157,12 @@ export const getPluginStateAction: Action = {
 
       // Check permissions for various actions
       const trustService = runtime.getService<TrustService>('TRUST');
-      const canLoad = trustService ?
-        await (trustService as any).checkPermission(message.entityId, 'plugin:load') :
-        true;
-      const canUnload = trustService ?
-        await (trustService as any).checkPermission(message.entityId, 'plugin:unload') :
-        true;
+      const canLoad = trustService
+        ? await (trustService as any).checkPermission(message.entityId, 'plugin:load')
+        : true;
+      const canUnload = trustService
+        ? await (trustService as any).checkPermission(message.entityId, 'plugin:unload')
+        : true;
 
       let actionText = text;
       const suggestions: string[] = [];
@@ -173,14 +174,16 @@ export const getPluginStateAction: Action = {
         suggestions.push('Use UNLOAD_PLUGIN to unload plugins');
       }
       if (allMissingEnvVars.size > 0) {
-        suggestions.push('Use START_PLUGIN_CONFIGURATION to configure missing environment variables');
+        suggestions.push(
+          'Use START_PLUGIN_CONFIGURATION to configure missing environment variables'
+        );
       }
       if (errorPlugins.length > 0) {
         suggestions.push('Use CHECK_PLUGIN_HEALTH for detailed _error information');
       }
 
       if (suggestions.length > 0) {
-        actionText += `\n\n**Available Actions:**\n${suggestions.map(s => `- ${s}`).join('\n')}`;
+        actionText += `\n\n**Available Actions:**\n${suggestions.map((s) => `- ${s}`).join('\n')}`;
       }
 
       await callback?.({

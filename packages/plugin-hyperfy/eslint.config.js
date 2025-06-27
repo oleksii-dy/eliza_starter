@@ -18,7 +18,7 @@ export default [
         WebAssembly: 'readonly',
         TextDecoder: 'readonly',
         self: 'readonly',
-        
+
         // PhysX/Emscripten globals
         PHYSX: 'readonly',
         read: 'readonly',
@@ -27,7 +27,7 @@ export default [
         quit: 'readonly',
         print: 'readonly',
         printErr: 'readonly',
-        
+
         // Emscripten bindings
         _emscripten_bind_PxArticulationDrive_PxArticulationDrive_1: 'readonly',
         _emscripten_bind_PxArticulationDrive_PxArticulationDrive_2: 'readonly',
@@ -59,30 +59,36 @@ export default [
         _emscripten_bind_PxVec3_PxVec3_2: 'readonly',
         _emscripten_bind_PxVec4_PxVec4_1: 'readonly',
         _emscripten_bind_PxVec4_PxVec4_2: 'readonly',
-        _emscripten_bind_PxVec4_PxVec4_3: 'readonly'
-      }
-    }
+        _emscripten_bind_PxVec4_PxVec4_3: 'readonly',
+      },
+    },
   },
   {
     // Override rules for all files in this plugin
     files: ['**/*.{js,mjs,cjs,ts,tsx}'],
     rules: {
       // Relax TypeScript comment directives for legacy code
-      '@typescript-eslint/ban-ts-comment': ['warn', {
-        'ts-expect-error': 'allow-with-description',
-        'ts-ignore': 'allow-with-description',
-        'ts-nocheck': 'allow-with-description',
-      }],
+      '@typescript-eslint/ban-ts-comment': [
+        'warn',
+        {
+          'ts-expect-error': 'allow-with-description',
+          'ts-ignore': 'allow-with-description',
+          'ts-nocheck': 'allow-with-description',
+        },
+      ],
       // Configure unused vars to be warnings with common patterns
-      '@typescript-eslint/no-unused-vars': ['warn', {
-        argsIgnorePattern: '^_',
-        varsIgnorePattern: '^_',
-        caughtErrorsIgnorePattern: '^_',
-        ignoreRestSiblings: true,
-      }],
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+          ignoreRestSiblings: true,
+        },
+      ],
       'prefer-const': 'warn',
       'no-empty': ['warn', { allowEmptyCatch: true }],
-    }
+    },
   },
   {
     // Special rules for PhysX files
@@ -91,7 +97,7 @@ export default [
       'no-var': 'off',
       'no-throw-literal': 'off',
       'no-prototype-builtins': 'off',
-      'eqeqeq': 'off',
+      eqeqeq: 'off',
       'no-constant-condition': 'off',
       'no-setter-return': 'off',
       'no-async-promise-executor': 'off',
@@ -103,6 +109,6 @@ export default [
       '@typescript-eslint/no-unused-vars': 'off',
       'prefer-const': 'off',
       'no-empty': 'off',
-    }
-  }
-]; 
+    },
+  },
+];

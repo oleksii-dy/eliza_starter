@@ -26,7 +26,9 @@ export const researchPlugin: Plugin = {
   providers: researchProviders,
   schema: researchSchema,
 
-  tests: deepResearchBenchSimplifiedTests ? [deepResearchBenchSimplifiedTests] : [],
+  tests: deepResearchBenchSimplifiedTests
+    ? [deepResearchBenchSimplifiedTests]
+    : [],
 
   init: async (config: Record<string, string>, runtime: any) => {
     // Ensure API keys from environment are available

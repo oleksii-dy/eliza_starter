@@ -62,8 +62,11 @@ describe('UI Components - Simple Tests', () => {
     });
 
     it('should show placeholder text', () => {
-      cy.get('[data-testid="input-placeholder"]')
-        .should('have.attr', 'placeholder', 'Enter text...');
+      cy.get('[data-testid="input-placeholder"]').should(
+        'have.attr',
+        'placeholder',
+        'Enter text...'
+      );
     });
   });
 

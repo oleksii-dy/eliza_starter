@@ -3,7 +3,14 @@
  * Tests specifically for the "request entity too large" bug fix
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { NextRequest } from 'next/server';
 import { POST } from '../../../app/api/characters/route';
 
@@ -38,10 +45,13 @@ describe('Large Character File Regression Test', () => {
 
   it('should handle ~150KB character files without request entity too large error', async () => {
     // Create a large character config (~150KB)
-    const largeKnowledge = Array(5000).fill('').map((_, i) => 
-      `Knowledge item ${i}: This is substantial content for testing large character files. ` +
-      `Adding sufficient text to reach the target size for testing the request entity too large bug fix.`
-    );
+    const largeKnowledge = Array(5000)
+      .fill('')
+      .map(
+        (_, i) =>
+          `Knowledge item ${i}: This is substantial content for testing large character files. ` +
+          `Adding sufficient text to reach the target size for testing the request entity too large bug fix.`,
+      );
 
     const largeCharacterData = {
       name: 'Large Test Character',
@@ -52,7 +62,10 @@ describe('Large Character File Regression Test', () => {
         bio: 'A comprehensive character for testing large payload handling.',
         knowledge: largeKnowledge,
         messageExamples: Array(300).fill([
-          { user: 'Test message', assistant: 'Test response with substantial content' }
+          {
+            user: 'Test message',
+            assistant: 'Test response with substantial content',
+          },
         ]),
       },
       visibility: 'private' as const,
@@ -86,7 +99,7 @@ describe('Large Character File Regression Test', () => {
     // The critical test: should NOT return 413 "Request Entity Too Large"
     expect(response.status).not.toBe(413);
     expect(response.status).not.toBe(500);
-    
+
     // Should succeed
     expect(response.status).toBe(201);
     expect(data.success).toBe(true);
@@ -96,11 +109,14 @@ describe('Large Character File Regression Test', () => {
 
   it('should handle very large character files (>200KB)', async () => {
     // Create an extremely large character config (>200KB)
-    const extremelyLargeKnowledge = Array(8000).fill('').map((_, i) => 
-      `Extremely large knowledge item ${i}: This is very substantial content for stress testing large character files. ` +
-      `Adding even more text to reach very large target sizes for comprehensive testing of the request entity too large bug fix. ` +
-      `Additional content to ensure we exceed 200KB for stress testing purposes.`
-    );
+    const extremelyLargeKnowledge = Array(8000)
+      .fill('')
+      .map(
+        (_, i) =>
+          `Extremely large knowledge item ${i}: This is very substantial content for stress testing large character files. ` +
+          `Adding even more text to reach very large target sizes for comprehensive testing of the request entity too large bug fix. ` +
+          `Additional content to ensure we exceed 200KB for stress testing purposes.`,
+      );
 
     const extremelyLargeCharacterData = {
       name: 'Extremely Large Test Character',
@@ -111,9 +127,14 @@ describe('Large Character File Regression Test', () => {
         bio: 'An extremely comprehensive character for stress testing large payload handling with extensive content.',
         knowledge: extremelyLargeKnowledge,
         messageExamples: Array(500).fill([
-          { user: 'Stress test message with substantial content', assistant: 'Stress test response with very substantial content for comprehensive testing' }
+          {
+            user: 'Stress test message with substantial content',
+            assistant:
+              'Stress test response with very substantial content for comprehensive testing',
+          },
         ]),
-        system: 'Extremely comprehensive system prompt with detailed instructions and extensive guidelines for stress testing.',
+        system:
+          'Extremely comprehensive system prompt with detailed instructions and extensive guidelines for stress testing.',
       },
       visibility: 'public' as const,
     };
@@ -146,11 +167,13 @@ describe('Large Character File Regression Test', () => {
     // The critical test: should NOT return 413 "Request Entity Too Large"
     expect(response.status).not.toBe(413);
     expect(response.status).not.toBe(500);
-    
+
     // Should succeed
     expect(response.status).toBe(201);
     expect(data.success).toBe(true);
 
-    console.log(`✅ Successfully processed ${payloadSizeKB} KB extremely large character file`);
+    console.log(
+      `✅ Successfully processed ${payloadSizeKB} KB extremely large character file`,
+    );
   });
 });

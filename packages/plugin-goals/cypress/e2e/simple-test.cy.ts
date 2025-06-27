@@ -11,7 +11,7 @@ describe('Simple Test', () => {
     // Make a request to the server
     cy.request({
       url: '/',
-      failOnStatusCode: false
+      failOnStatusCode: false,
     }).then((response) => {
       // Any response means the server is up
       expect(response).to.have.property('status');

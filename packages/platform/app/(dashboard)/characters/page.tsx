@@ -52,7 +52,8 @@ export default function CharactersPage() {
     try {
       const params = new URLSearchParams();
       if (searchQuery) params.append('search', searchQuery);
-      if (visibilityFilter !== 'all') params.append('visibility', visibilityFilter);
+      if (visibilityFilter !== 'all')
+        params.append('visibility', visibilityFilter);
 
       const response = await fetch(`/api/characters?${params}`);
       const data = await response.json();
@@ -74,13 +75,16 @@ export default function CharactersPage() {
 
   const startConversation = async (characterId: string) => {
     try {
-      const response = await fetch(`/api/characters/${characterId}/conversations`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `/api/characters/${characterId}/conversations`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({}),
         },
-        body: JSON.stringify({}),
-      });
+      );
 
       const data = await response.json();
 
@@ -94,24 +98,24 @@ export default function CharactersPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="flex h-64 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
     <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-8">
+      <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Characters</h1>
-          <p className="text-gray-600 mt-2">
+          <p className="mt-2 text-gray-600">
             Chat with AI characters powered by your organization's credits
           </p>
         </div>
         <Link href="/characters/create">
           <Button>
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="mr-2 h-4 w-4" />
             Create Character
           </Button>
         </Link>
@@ -119,11 +123,13 @@ export default function CharactersPage() {
 
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Characters</CardTitle>
-              <Bot className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">
+                Total Characters
+              </CardTitle>
+              <Bot className="text-muted-foreground h-4 w-4" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalCharacters}</div>
@@ -131,8 +137,10 @@ export default function CharactersPage() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Characters</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">
+                Active Characters
+              </CardTitle>
+              <Users className="text-muted-foreground h-4 w-4" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.activeCharacters}</div>
@@ -140,17 +148,23 @@ export default function CharactersPage() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Conversations</CardTitle>
-              <MessageSquare className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">
+                Conversations
+              </CardTitle>
+              <MessageSquare className="text-muted-foreground h-4 w-4" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalConversations}</div>
+              <div className="text-2xl font-bold">
+                {stats.totalConversations}
+              </div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Messages</CardTitle>
-              <MessageSquare className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">
+                Total Messages
+              </CardTitle>
+              <MessageSquare className="text-muted-foreground h-4 w-4" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.totalMessages}</div>
@@ -160,7 +174,7 @@ export default function CharactersPage() {
       )}
 
       {/* Search and Filters */}
-      <div className="flex gap-4 mb-6">
+      <div className="mb-6 flex gap-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
           <Input
@@ -174,7 +188,7 @@ export default function CharactersPage() {
         <select
           value={visibilityFilter}
           onChange={(e) => setVisibilityFilter(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="all">All Visibility</option>
           <option value="public">Public</option>
@@ -184,9 +198,12 @@ export default function CharactersPage() {
       </div>
 
       {/* Characters Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {characters.map((character) => (
-          <Card key={character.id} className="hover:shadow-lg transition-shadow">
+          <Card
+            key={character.id}
+            className="transition-shadow hover:shadow-lg"
+          >
             <CardHeader>
               <div className="flex items-center gap-3">
                 <Avatar className="h-12 w-12">
@@ -197,7 +214,7 @@ export default function CharactersPage() {
                 </Avatar>
                 <div className="flex-1">
                   <CardTitle className="text-lg">{character.name}</CardTitle>
-                  <p className="text-sm text-gray-600 line-clamp-2">
+                  <p className="line-clamp-2 text-sm text-gray-600">
                     {character.characterConfig.bio}
                   </p>
                 </div>
@@ -206,15 +223,17 @@ export default function CharactersPage() {
             <CardContent>
               <div className="space-y-3">
                 {character.description && (
-                  <p className="text-sm text-gray-600 line-clamp-2">
+                  <p className="line-clamp-2 text-sm text-gray-600">
                     {character.description}
                   </p>
                 )}
-                
+
                 {character.characterConfig.personality && (
                   <div>
-                    <span className="text-xs font-medium text-gray-500">Personality:</span>
-                    <p className="text-xs text-gray-600 line-clamp-1">
+                    <span className="text-xs font-medium text-gray-500">
+                      Personality:
+                    </span>
+                    <p className="line-clamp-1 text-xs text-gray-600">
                       {character.characterConfig.personality}
                     </p>
                   </div>
@@ -222,11 +241,20 @@ export default function CharactersPage() {
 
                 <div className="flex items-center justify-between">
                   <div className="flex gap-2">
-                    <Badge variant={character.visibility === 'public' ? 'default' : 'secondary'}>
+                    <Badge
+                      variant={
+                        character.visibility === 'public'
+                          ? 'default'
+                          : 'secondary'
+                      }
+                    >
                       {character.visibility}
                     </Badge>
                     {character.isActive && (
-                      <Badge variant="outline" className="text-green-600 border-green-600">
+                      <Badge
+                        variant="outline"
+                        className="border-green-600 text-green-600"
+                      >
                         Active
                       </Badge>
                     )}
@@ -242,7 +270,7 @@ export default function CharactersPage() {
                     className="flex-1"
                     size="sm"
                   >
-                    <MessageSquare className="h-4 w-4 mr-2" />
+                    <MessageSquare className="mr-2 h-4 w-4" />
                     Chat
                   </Button>
                   <Link href={`/characters/${character.id}`} className="flex-1">
@@ -258,15 +286,19 @@ export default function CharactersPage() {
       </div>
 
       {characters.length === 0 && (
-        <div className="text-center py-12">
-          <Bot className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No characters found</h3>
-          <p className="text-gray-600 mb-4">
-            {searchQuery ? 'Try adjusting your search criteria.' : 'Create your first character to get started.'}
+        <div className="py-12 text-center">
+          <Bot className="mx-auto mb-4 h-16 w-16 text-gray-400" />
+          <h3 className="mb-2 text-lg font-medium text-gray-900">
+            No characters found
+          </h3>
+          <p className="mb-4 text-gray-600">
+            {searchQuery
+              ? 'Try adjusting your search criteria.'
+              : 'Create your first character to get started.'}
           </p>
           <Link href="/characters/create">
             <Button>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="mr-2 h-4 w-4" />
               Create Character
             </Button>
           </Link>

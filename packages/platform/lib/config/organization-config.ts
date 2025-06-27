@@ -70,7 +70,7 @@ export class OrganizationConfigService {
    */
   async getConfig(
     organizationId: string,
-    userId: string
+    userId: string,
   ): Promise<OrganizationConfig> {
     await setDatabaseContext({
       organizationId,
@@ -91,7 +91,8 @@ export class OrganizationConfigService {
       const orgData = organization[0];
 
       // Parse configuration from metadata or use defaults
-      const config = orgData.metadata?.config as OrganizationConfig || DEFAULT_ORG_CONFIG;
+      const config =
+        (orgData.metadata?.config as OrganizationConfig) || DEFAULT_ORG_CONFIG;
 
       // Ensure required fields exist
       return {
@@ -109,7 +110,7 @@ export class OrganizationConfigService {
   async updateConfig(
     organizationId: string,
     userId: string,
-    config: Partial<OrganizationConfig>
+    config: Partial<OrganizationConfig>,
   ): Promise<OrganizationConfig> {
     await setDatabaseContext({
       organizationId,
@@ -127,7 +128,9 @@ export class OrganizationConfigService {
       };
 
       // Update organization metadata
-      const [updated] = await (await this.getDb())
+      const [updated] = await (
+        await this.getDb()
+      )
         .update(organizations)
         .set({
           metadata: {
@@ -149,7 +152,7 @@ export class OrganizationConfigService {
    */
   async getRequiredPlugins(
     organizationId: string,
-    userId: string
+    userId: string,
   ): Promise<string[]> {
     const config = await this.getConfig(organizationId, userId);
     return config.requiredPlugins;
@@ -161,7 +164,7 @@ export class OrganizationConfigService {
   async updateRequiredPlugins(
     organizationId: string,
     userId: string,
-    requiredPlugins: string[]
+    requiredPlugins: string[],
   ): Promise<string[]> {
     await this.updateConfig(organizationId, userId, {
       requiredPlugins,
@@ -175,7 +178,7 @@ export class OrganizationConfigService {
   async validateAgentPlugins(
     organizationId: string,
     userId: string,
-    plugins: string[]
+    plugins: string[],
   ): Promise<{
     isValid: boolean;
     missingPlugins: string[];
@@ -190,9 +193,12 @@ export class OrganizationConfigService {
       };
     }
 
-    const requiredPlugins = await this.getRequiredPlugins(organizationId, userId);
+    const requiredPlugins = await this.getRequiredPlugins(
+      organizationId,
+      userId,
+    );
     const missingPlugins = requiredPlugins.filter(
-      (plugin) => !plugins.includes(plugin)
+      (plugin) => !plugins.includes(plugin),
     );
 
     // Merge required plugins with user-specified plugins (removing duplicates)
@@ -210,7 +216,7 @@ export class OrganizationConfigService {
    */
   async getAllowedPlugins(
     organizationId: string,
-    userId: string
+    userId: string,
   ): Promise<string[]> {
     const config = await this.getConfig(organizationId, userId);
     return config.allowedPlugins || DEFAULT_ORG_CONFIG.allowedPlugins || [];

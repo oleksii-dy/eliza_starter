@@ -1,10 +1,7 @@
 import type { IAgentRuntime, UUID } from '@elizaos/core';
 import { logger } from '@elizaos/core';
 import { and, desc, eq, isNull, or, not } from 'drizzle-orm';
-import {
-  todosTable,
-  todoTagsTable,
-} from '../schema';
+import { todosTable, todoTagsTable } from '../schema';
 
 /**
  * Core todo data structure
@@ -120,7 +117,7 @@ export class TodoDataService {
 
       return {
         ...todo,
-        tags: tags.map((t) => t.tag),
+        tags: tags.map((t: any) => t.tag),
       } as TodoData;
     } catch (error) {
       logger.error('Error getting todo:', error);
@@ -148,13 +145,24 @@ export class TodoDataService {
 
       // Apply filters
       const conditions: any[] = [];
-      if (filters?.agentId) {conditions.push(eq(todosTable.agentId, filters.agentId));}
-      if (filters?.worldId) {conditions.push(eq(todosTable.worldId, filters.worldId));}
-      if (filters?.roomId) {conditions.push(eq(todosTable.roomId, filters.roomId));}
-      if (filters?.entityId) {conditions.push(eq(todosTable.entityId, filters.entityId));}
-      if (filters?.type) {conditions.push(eq(todosTable.type, filters.type));}
-      if (filters?.isCompleted !== undefined)
-      {conditions.push(eq(todosTable.isCompleted, filters.isCompleted));}
+      if (filters?.agentId) {
+        conditions.push(eq(todosTable.agentId, filters.agentId));
+      }
+      if (filters?.worldId) {
+        conditions.push(eq(todosTable.worldId, filters.worldId));
+      }
+      if (filters?.roomId) {
+        conditions.push(eq(todosTable.roomId, filters.roomId));
+      }
+      if (filters?.entityId) {
+        conditions.push(eq(todosTable.entityId, filters.entityId));
+      }
+      if (filters?.type) {
+        conditions.push(eq(todosTable.type, filters.type));
+      }
+      if (filters?.isCompleted !== undefined) {
+        conditions.push(eq(todosTable.isCompleted, filters.isCompleted));
+      }
 
       if (conditions.length > 0) {
         query = query.where(and(...conditions));
@@ -172,7 +180,7 @@ export class TodoDataService {
 
       // Fetch tags for each todo
       const todosWithTags = await Promise.all(
-        todos.map(async (todo) => {
+        todos.map(async (todo: any) => {
           const tags = await db
             .select({ tag: todoTagsTable.tag })
             .from(todoTagsTable)
@@ -180,7 +188,7 @@ export class TodoDataService {
 
           return {
             ...todo,
-            tags: tags.map((t) => t.tag),
+            tags: tags.map((t: any) => t.tag),
           } as TodoData;
         })
       );
@@ -223,10 +231,7 @@ export class TodoDataService {
         updatedAt: new Date(),
       };
 
-      await db
-        .update(todosTable)
-        .set(updateData)
-        .where(eq(todosTable.id, todoId));
+      await db.update(todosTable).set(updateData).where(eq(todosTable.id, todoId));
 
       return true;
     } catch (error) {
@@ -265,7 +270,7 @@ export class TodoDataService {
         .from(todoTagsTable)
         .where(eq(todoTagsTable.todoId, todoId));
 
-      const existingTagSet = new Set(existingTags.map((t) => t.tag));
+      const existingTagSet = new Set(existingTags.map((t: any) => t.tag));
       const newTags = tags.filter((tag) => !existingTagSet.has(tag));
 
       if (newTags.length > 0) {
@@ -324,10 +329,18 @@ export class TodoDataService {
         not(isNull(todosTable.dueDate)),
       ];
 
-      if (filters?.agentId) {conditions.push(eq(todosTable.agentId, filters.agentId));}
-      if (filters?.worldId) {conditions.push(eq(todosTable.worldId, filters.worldId));}
-      if (filters?.roomId) {conditions.push(eq(todosTable.roomId, filters.roomId));}
-      if (filters?.entityId) {conditions.push(eq(todosTable.entityId, filters.entityId));}
+      if (filters?.agentId) {
+        conditions.push(eq(todosTable.agentId, filters.agentId));
+      }
+      if (filters?.worldId) {
+        conditions.push(eq(todosTable.worldId, filters.worldId));
+      }
+      if (filters?.roomId) {
+        conditions.push(eq(todosTable.roomId, filters.roomId));
+      }
+      if (filters?.entityId) {
+        conditions.push(eq(todosTable.entityId, filters.entityId));
+      }
 
       const todos = await db
         .select()
@@ -337,11 +350,11 @@ export class TodoDataService {
 
       // Filter overdue tasks in memory since SQL date comparison is complex
       const now = new Date();
-      const overdueTodos = todos.filter(todo => todo.dueDate && todo.dueDate < now);
+      const overdueTodos = todos.filter((todo: any) => todo.dueDate && todo.dueDate < now);
 
       // Fetch tags
       const todosWithTags = await Promise.all(
-        overdueTodos.map(async (todo) => {
+        overdueTodos.map(async (todo: any) => {
           const tags = await db
             .select({ tag: todoTagsTable.tag })
             .from(todoTagsTable)
@@ -349,7 +362,7 @@ export class TodoDataService {
 
           return {
             ...todo,
-            tags: tags.map((t) => t.tag),
+            tags: tags.map((t: any) => t.tag),
           } as TodoData;
         })
       );
@@ -375,10 +388,18 @@ export class TodoDataService {
 
       const conditions: any[] = [eq(todosTable.type, 'daily'), eq(todosTable.isCompleted, true)];
 
-      if (filters?.agentId) {conditions.push(eq(todosTable.agentId, filters.agentId));}
-      if (filters?.worldId) {conditions.push(eq(todosTable.worldId, filters.worldId));}
-      if (filters?.roomId) {conditions.push(eq(todosTable.roomId, filters.roomId));}
-      if (filters?.entityId) {conditions.push(eq(todosTable.entityId, filters.entityId));}
+      if (filters?.agentId) {
+        conditions.push(eq(todosTable.agentId, filters.agentId));
+      }
+      if (filters?.worldId) {
+        conditions.push(eq(todosTable.worldId, filters.worldId));
+      }
+      if (filters?.roomId) {
+        conditions.push(eq(todosTable.roomId, filters.roomId));
+      }
+      if (filters?.entityId) {
+        conditions.push(eq(todosTable.entityId, filters.entityId));
+      }
 
       // Reset daily todos
       await db

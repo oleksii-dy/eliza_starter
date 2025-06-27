@@ -317,6 +317,11 @@ setup_environment_test_fixtures() {
   cd ../..
 }
 
+# Cleanup test environment
+cleanup_test_environment() {
+  teardown_test_environment
+}
+
 # Export functions for use in tests
 export -f detect_runtime_environment
 export -f is_monorepo_context
@@ -326,4 +331,5 @@ export -f create_test_project_with_agents
 export -f normalize_import_path
 export -f create_standalone_project
 export -f test_file_resolution
-export -f setup_environment_test_fixtures 
+export -f setup_environment_test_fixtures
+export -f cleanup_test_environment 

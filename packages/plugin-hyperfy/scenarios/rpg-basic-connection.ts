@@ -92,47 +92,49 @@ Use the available Hyperfy actions to interact with the world. Be methodical and 
         steps: [
           {
             type: 'message',
-            content: 'I want to start my RPG adventure! Let me look around and see what is in this world.',
-            description: 'Initial world perception'
+            content:
+              'I want to start my RPG adventure! Let me look around and see what is in this world.',
+            description: 'Initial world perception',
           },
           {
             type: 'wait',
             waitTime: 3000,
-            description: 'Wait for perception to complete'
+            description: 'Wait for perception to complete',
           },
           {
             type: 'message',
-            content: 'Now I should move to explore the area. Let me walk around to see what is nearby.',
-            description: 'Request basic movement'
+            content:
+              'Now I should move to explore the area. Let me walk around to see what is nearby.',
+            description: 'Request basic movement',
           },
           {
             type: 'wait',
             waitTime: 5000,
-            description: 'Wait for movement'
+            description: 'Wait for movement',
           },
           {
             type: 'message',
             content: 'Let me look for any items I can pick up to start my inventory.',
-            description: 'Look for items to interact with'
+            description: 'Look for items to interact with',
           },
           {
             type: 'wait',
             waitTime: 3000,
-            description: 'Wait for item search'
+            description: 'Wait for item search',
           },
           {
             type: 'message',
             content: 'If I see any items, I will try to pick one up.',
-            description: 'Attempt item interaction'
-          }
-        ]
-      }
-    }
+            description: 'Attempt item interaction',
+          },
+        ],
+      },
+    },
   ],
 
   execution: {
     maxDuration: 30000, // 30 seconds
-    maxSteps: 20
+    maxSteps: 20,
   },
 
   verification: {
@@ -142,53 +144,58 @@ Use the available Hyperfy actions to interact with the world. Be methodical and 
         type: 'llm',
         description: 'Verify agent successfully connected to RPG world',
         config: {
-          successCriteria: 'Agent should have successfully connected to the Hyperfy RPG world, demonstrated at least 4 total actions, used HYPERFY_SCENE_PERCEPTION at least twice, and shown either movement or communication capabilities',
+          successCriteria:
+            'Agent should have successfully connected to the Hyperfy RPG world, demonstrated at least 4 total actions, used HYPERFY_SCENE_PERCEPTION at least twice, and shown either movement or communication capabilities',
           priority: 'high',
-          category: 'connection'
-        }
+          category: 'connection',
+        },
       },
       {
         id: 'perception-check',
         type: 'llm',
         description: 'Verify agent used scene perception',
         config: {
-          successCriteria: 'Agent should have used HYPERFY_SCENE_PERCEPTION multiple times to observe entities, NPCs, other agents, and items in the RPG world environment',
+          successCriteria:
+            'Agent should have used HYPERFY_SCENE_PERCEPTION multiple times to observe entities, NPCs, other agents, and items in the RPG world environment',
           priority: 'high',
-          category: 'perception'
-        }
+          category: 'perception',
+        },
       },
       {
         id: 'movement-check',
         type: 'llm',
         description: 'Verify agent moved in the world',
         config: {
-          successCriteria: 'Agent should have attempted movement using HYPERFY_WALK_RANDOMLY, HYPERFY_GOTO_ENTITY, or demonstrated movement by changing position coordinates significantly',
+          successCriteria:
+            'Agent should have attempted movement using HYPERFY_WALK_RANDOMLY, HYPERFY_GOTO_ENTITY, or demonstrated movement by changing position coordinates significantly',
           priority: 'medium',
-          category: 'movement'
-        }
+          category: 'movement',
+        },
       },
       {
         id: 'item-interaction-check',
         type: 'llm',
         description: 'Verify agent attempted item interaction',
         config: {
-          successCriteria: 'Agent should have attempted to interact with items using HYPERFY_USE_ITEM if items were available',
+          successCriteria:
+            'Agent should have attempted to interact with items using HYPERFY_USE_ITEM if items were available',
           priority: 'medium',
-          category: 'interaction'
-        }
+          category: 'interaction',
+        },
       },
       {
         id: 'rpg-awareness-check',
         type: 'llm',
         description: 'Verify agent demonstrated RPG game awareness',
         config: {
-          successCriteria: 'Agent should have demonstrated understanding that this is an RPG world with items, movement, and exploration mechanics',
+          successCriteria:
+            'Agent should have demonstrated understanding that this is an RPG world with items, movement, and exploration mechanics',
           priority: 'medium',
-          category: 'rpg-understanding'
-        }
-      }
-    ]
-  }
+          category: 'rpg-understanding',
+        },
+      },
+    ],
+  },
 };
 
 /**
@@ -228,27 +235,28 @@ You have 10 minutes - be efficient and goal-oriented!`,
         steps: [
           {
             type: 'message',
-            content: 'I need to reach level 2 within 10 minutes! Let me start by exploring to find monsters, NPCs, or quests.',
-            description: 'Begin level-up challenge'
+            content:
+              'I need to reach level 2 within 10 minutes! Let me start by exploring to find monsters, NPCs, or quests.',
+            description: 'Begin level-up challenge',
           },
           {
             type: 'wait',
             waitTime: 2000,
-            description: 'Initial observation'
+            description: 'Initial observation',
           },
           {
             type: 'message',
             content: 'Let me look for goblins or other monsters I can fight for experience.',
-            description: 'Search for combat targets'
-          }
-        ]
-      }
-    }
+            description: 'Search for combat targets',
+          },
+        ],
+      },
+    },
   ],
 
   execution: {
     maxDuration: 600000, // 10 minutes
-    maxSteps: 200
+    maxSteps: 200,
   },
 
   verification: {
@@ -258,10 +266,11 @@ You have 10 minutes - be efficient and goal-oriented!`,
         type: 'llm',
         description: 'Verify agent reached level 2',
         config: {
-          successCriteria: 'Agent should have reached level 2 or gained significant experience points toward level 2',
+          successCriteria:
+            'Agent should have reached level 2 or gained significant experience points toward level 2',
           priority: 'high',
-          category: 'progression'
-        }
+          category: 'progression',
+        },
       },
       {
         id: 'combat-engagement-check',
@@ -270,47 +279,47 @@ You have 10 minutes - be efficient and goal-oriented!`,
         config: {
           successCriteria: 'Agent should have found and fought monsters for combat experience',
           priority: 'high',
-          category: 'combat'
-        }
+          category: 'combat',
+        },
       },
       {
         id: 'quest-completion-check',
         type: 'llm',
         description: 'Verify agent completed or attempted quests',
         config: {
-          successCriteria: 'Agent should have found and attempted to complete quests for experience',
+          successCriteria:
+            'Agent should have found and attempted to complete quests for experience',
           priority: 'medium',
-          category: 'quests'
-        }
+          category: 'quests',
+        },
       },
       {
         id: 'strategic-gameplay-check',
         type: 'llm',
         description: 'Verify agent demonstrated strategic thinking',
         config: {
-          successCriteria: 'Agent should have shown efficient, goal-oriented behavior focused on gaining experience',
+          successCriteria:
+            'Agent should have shown efficient, goal-oriented behavior focused on gaining experience',
           priority: 'medium',
-          category: 'strategy'
-        }
+          category: 'strategy',
+        },
       },
       {
         id: 'rpg-mechanics-check',
         type: 'llm',
         description: 'Verify agent understood RPG mechanics',
         config: {
-          successCriteria: 'Agent should have demonstrated understanding of experience, levels, combat, and progression mechanics',
+          successCriteria:
+            'Agent should have demonstrated understanding of experience, levels, combat, and progression mechanics',
           priority: 'high',
-          category: 'rpg-understanding'
-        }
-      }
-    ]
-  }
+          category: 'rpg-understanding',
+        },
+      },
+    ],
+  },
 };
 
 // Export scenarios
-export const rpgBasicScenarios = [
-  basicRPGConnectionScenario,
-  singlePlayerLevelUpScenario
-];
+export const rpgBasicScenarios = [basicRPGConnectionScenario, singlePlayerLevelUpScenario];
 
 export default rpgBasicScenarios;

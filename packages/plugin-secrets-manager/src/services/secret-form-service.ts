@@ -108,7 +108,7 @@ export class SecretFormService extends Service {
       this.isEnabled = true;
     }
 
-    this.secretsManager = this.runtime.getService<EnhancedSecretManager>('SECRETS');
+    this.secretsManager = this.runtime.getService<EnhancedSecretManager>('SECRETS') as any;
     if (!this.secretsManager) {
       logger.warn(
         '[SecretFormService] SecretManager not available during initialization - will check again when needed'
@@ -128,7 +128,7 @@ export class SecretFormService extends Service {
 
   private getSecretsManager(): EnhancedSecretManager {
     if (!this.secretsManager) {
-      this.secretsManager = this.runtime.getService<EnhancedSecretManager>('SECRETS');
+      this.secretsManager = this.runtime.getService<EnhancedSecretManager>('SECRETS') as any;
     }
     if (!this.secretsManager) {
       throw new Error('SecretManager service is not available');

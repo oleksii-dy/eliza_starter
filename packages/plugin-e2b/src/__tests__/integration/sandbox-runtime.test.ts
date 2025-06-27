@@ -5,7 +5,7 @@ import {
   type Memory,
   type State,
   type Character,
-  elizaLogger
+  elizaLogger,
 } from '@elizaos/core';
 // Test utilities not available, using mock runtime
 // import { createTestAgent, cleanupTestAgents } from '@elizaos/core/test-utils';
@@ -25,16 +25,17 @@ describe.skip('Sandbox-Only Agent Runtime Tests', () => {
   const testCharacter: Character = {
     name: 'SandboxTestAgent',
     bio: 'Test agent that operates 100% in E2B sandboxes for secure code execution',
-    system: 'You are a coding assistant that always executes code in secure sandboxes. All computations must be performed in the E2B cloud environment.',
+    system:
+      'You are a coding assistant that always executes code in secure sandboxes. All computations must be performed in the E2B cloud environment.',
     messageExamples: [],
     postExamples: [],
     topics: ['programming', 'data analysis', 'computation'],
     style: {
       all: ['always use sandboxes for computation', 'prioritize security'],
       chat: ['provide code examples', 'explain sandbox usage'],
-      post: ['technical accuracy', 'security-first approach']
+      post: ['technical accuracy', 'security-first approach'],
     },
-    plugins: ['@elizaos/plugin-e2b']
+    plugins: ['@elizaos/plugin-e2b'],
   };
 
   beforeAll(async () => {
@@ -54,11 +55,11 @@ describe.skip('Sandbox-Only Agent Runtime Tests', () => {
           return new E2BService({
             agentId: createUniqueUuid(),
             character: testCharacter,
-            getSetting: (key: string) => process.env[key]
+            getSetting: (key: string) => process.env[key],
           } as IAgentRuntime);
         }
         return null;
-      }
+      },
     } as IAgentRuntime;
 
     // Get services
@@ -104,11 +105,14 @@ describe.skip('Sandbox-Only Agent Runtime Tests', () => {
     it('should execute simple Python calculations', async () => {
       const service = e2bService || improvedE2bService;
 
-      const result = await service.executeCode(`
+      const result = await service.executeCode(
+        `
 result = 2 + 2
 print(f"2 + 2 = {result}")
 result
-`, 'python');
+`,
+        'python'
+      );
 
       expect(result.error).toBeUndefined();
       expect(result.text).toContain('4');
@@ -117,11 +121,14 @@ result
     it('should execute JavaScript calculations', async () => {
       const service = e2bService || improvedE2bService;
 
-      const result = await service.executeCode(`
+      const result = await service.executeCode(
+        `
 const result = 3 * 4;
 console.log(\`3 * 4 = \${result}\`);
 result;
-`, 'javascript');
+`,
+        'javascript'
+      );
 
       // Note: JavaScript might not be supported in all E2B configurations
       // This test will help us verify what languages are actually available
@@ -136,7 +143,8 @@ result;
     it('should handle Python data analysis tasks', async () => {
       const service = e2bService || improvedE2bService;
 
-      const result = await service.executeCode(`
+      const result = await service.executeCode(
+        `
 import json
 
 # Create sample data
@@ -161,7 +169,9 @@ result = {
 
 # Output as JSON for easy parsing
 print(json.dumps(result, indent=2))
-`, 'python');
+`,
+        'python'
+      );
 
       expect(result.error).toBeUndefined();
       expect(result.text).toContain('Average score');
@@ -176,7 +186,7 @@ print(json.dumps(result, indent=2))
         id: createUniqueUuid(runtime, 'test-msg'),
         entityId: createUniqueUuid(runtime, 'test-user'),
         content: {
-          text: 'Calculate the fibonacci sequence up to the 10th number and explain the pattern'
+          text: 'Calculate the fibonacci sequence up to the 10th number and explain the pattern',
         },
         agentId: runtime.agentId,
         roomId,
@@ -200,7 +210,7 @@ print(json.dumps(result, indent=2))
         id: createUniqueUuid(runtime, 'test-msg'),
         entityId: createUniqueUuid(runtime, 'test-user'),
         content: {
-          text: 'Create a simple dataset and calculate basic statistics (mean, median, standard deviation)'
+          text: 'Create a simple dataset and calculate basic statistics (mean, median, standard deviation)',
         },
         agentId: runtime.agentId,
         roomId,
@@ -222,7 +232,7 @@ print(json.dumps(result, indent=2))
         id: createUniqueUuid(runtime, 'test-msg'),
         entityId: createUniqueUuid(runtime, 'test-user'),
         content: {
-          text: 'Solve this step by step: What is the compound interest on $1000 invested at 5% annually for 3 years?'
+          text: 'Solve this step by step: What is the compound interest on $1000 invested at 5% annually for 3 years?',
         },
         agentId: runtime.agentId,
         roomId,
@@ -274,7 +284,7 @@ print(json.dumps(result, indent=2))
       const promises = [
         service.executeCode('import time; time.sleep(0.1); print("Task 1")', 'python'),
         service.executeCode('import time; time.sleep(0.1); print("Task 2")', 'python'),
-        service.executeCode('import time; time.sleep(0.1); print("Task 3")', 'python')
+        service.executeCode('import time; time.sleep(0.1); print("Task 3")', 'python'),
       ];
 
       const results = await Promise.all(promises);
@@ -325,21 +335,25 @@ print(json.dumps(result, indent=2))
 
       // Execute code that should be remembered
       const service = e2bService || improvedE2bService;
-      await service.executeCode(`
+      await service.executeCode(
+        `
 important_result = "This calculation shows pi ≈ 3.14159"
 print(important_result)
-`, 'python');
+`,
+        'python'
+      );
 
       // Check if execution was stored in memory
       const memories = await runtime.getMemories({
         roomId: runtime.agentId, // Service executions use agentId as roomId
-        count: 10
+        count: 10,
       });
 
-      const executionMemory = memories.find(m =>
-        m.content.text?.includes('important_result') ||
-        m.content.text?.includes('pi') ||
-        m.content.source === 'e2b-execution'
+      const executionMemory = memories.find(
+        (m) =>
+          m.content.text?.includes('important_result') ||
+          m.content.text?.includes('pi') ||
+          m.content.source === 'e2b-execution'
       );
 
       if (runtime.getSetting('E2B_ENABLE_MEMORY_FORMATION') !== false) {
@@ -419,7 +433,7 @@ print("This should timeout")
         'What is 15 * 23?',
         'Calculate the square root of 144',
         'Generate the first 5 prime numbers',
-        'Sort these numbers: 5, 2, 8, 1, 9'
+        'Sort these numbers: 5, 2, 8, 1, 9',
       ];
 
       for (const query of computationalQueries) {
@@ -448,7 +462,9 @@ print("This should timeout")
       const setupMessage: Memory = {
         id: createUniqueUuid(runtime, 'test-msg-1'),
         entityId: createUniqueUuid(runtime, 'test-user'),
-        content: { text: 'Create a list of numbers: [1, 2, 3, 4, 5] and store it in a variable called my_numbers' },
+        content: {
+          text: 'Create a list of numbers: [1, 2, 3, 4, 5] and store it in a variable called my_numbers',
+        },
         agentId: runtime.agentId,
         roomId,
         createdAt: Date.now(),

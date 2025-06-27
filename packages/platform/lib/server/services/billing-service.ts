@@ -1,13 +1,13 @@
 import { eq, and, desc, sum, gte, sql } from 'drizzle-orm';
 import Stripe from 'stripe';
-import { db } from '@/lib/database';
+import { getDatabase } from '@/lib/database';
 import {
   organizations,
   creditTransactions,
   users,
   type Organization,
   type CreditTransaction,
-  type NewCreditTransaction
+  type NewCreditTransaction,
 } from '@/lib/database/schema';
 import { loadConfig } from '../utils/config';
 
@@ -38,13 +38,21 @@ interface DeductCreditsData {
   metadata?: Record<string, any>;
 }
 
-export async function getCreditBalance(organizationId: string): Promise<number> {
+export async function getCreditBalance(
+  organizationId: string,
+): Promise<number> {
   try {
     // Validate UUID format
-    if (!organizationId || !organizationId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+    if (
+      !organizationId ||
+      !organizationId.match(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+      )
+    ) {
       return 0;
     }
 
+    const db = await getDatabase();
     const [organization] = await db
       .select({ creditBalance: organizations.creditBalance })
       .from(organizations)
@@ -58,13 +66,16 @@ export async function getCreditBalance(organizationId: string): Promise<number> 
   }
 }
 
-export async function addCredits(data: AddCreditsData): Promise<CreditTransaction> {
+export async function addCredits(
+  data: AddCreditsData,
+): Promise<CreditTransaction> {
   // Validate amount is positive
   if (data.amount <= 0) {
     throw new Error('Credit amount must be greater than 0');
   }
 
-  return await db.transaction(async (tx: typeof db) => {
+  const db = await getDatabase();
+  return await db.transaction(async (tx: any) => {
     // Get current balance
     const [organization] = await tx
       .select({ creditBalance: organizations.creditBalance })
@@ -111,14 +122,22 @@ export async function addCredits(data: AddCreditsData): Promise<CreditTransactio
   });
 }
 
-export async function deductCredits(data: DeductCreditsData): Promise<CreditTransaction | null> {
+export async function deductCredits(
+  data: DeductCreditsData,
+): Promise<CreditTransaction | null> {
   try {
     // Validate organization UUID format
-    if (!data.organizationId || !data.organizationId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+    if (
+      !data.organizationId ||
+      !data.organizationId.match(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+      )
+    ) {
       throw new Error('Invalid organization ID format');
     }
 
-    return await db.transaction(async (tx: typeof db) => {
+    const db = await getDatabase();
+    return await db.transaction(async (tx: any) => {
       // First get the current balance to check before the atomic update
       const [org] = await tx
         .select({
@@ -151,7 +170,7 @@ export async function deductCredits(data: DeductCreditsData): Promise<CreditTran
           updatedAt: new Date(),
         })
         .where(
-          sql`${organizations.id} = ${data.organizationId} AND CAST(${organizations.creditBalance} AS DECIMAL) >= ${data.amount}`
+          sql`${organizations.id} = ${data.organizationId} AND CAST(${organizations.creditBalance} AS DECIMAL) >= ${data.amount}`,
         )
         .returning({
           newBalance: organizations.creditBalance,
@@ -184,10 +203,17 @@ export async function deductCredits(data: DeductCreditsData): Promise<CreditTran
 
       // Check if auto top-up should be triggered
       const threshold = parseFloat(org.creditThreshold);
-      if (org.autoTopUpEnabled && newBalance <= threshold && org.stripeCustomerId) {
+      if (
+        org.autoTopUpEnabled &&
+        newBalance <= threshold &&
+        org.stripeCustomerId
+      ) {
         // Trigger auto top-up (async, don't wait for it)
-        triggerAutoTopUp(data.organizationId, org.stripeCustomerId, parseFloat(org.autoTopUpAmount))
-          .catch(error => console.error('Auto top-up failed:', error));
+        triggerAutoTopUp(
+          data.organizationId,
+          org.stripeCustomerId,
+          parseFloat(org.autoTopUpAmount),
+        ).catch((error) => console.error('Auto top-up failed:', error));
       }
 
       return creditTransaction;
@@ -201,7 +227,7 @@ export async function deductCredits(data: DeductCreditsData): Promise<CreditTran
 async function triggerAutoTopUp(
   organizationId: string,
   stripeCustomerId: string,
-  amount: number
+  amount: number,
 ): Promise<void> {
   try {
     // Create a payment intent for auto top-up
@@ -231,7 +257,7 @@ async function triggerAutoTopUp(
 export async function createStripeCustomer(
   organizationId: string,
   email: string,
-  name: string
+  name: string,
 ): Promise<string> {
   const customer = await stripe.customers.create({
     email,
@@ -242,6 +268,7 @@ export async function createStripeCustomer(
   });
 
   // Update organization with Stripe customer ID
+  const db = await getDatabase();
   await db
     .update(organizations)
     .set({
@@ -254,11 +281,14 @@ export async function createStripeCustomer(
   return customer.id;
 }
 
-export async function ensureStripeCustomer(organizationId: string): Promise<string> {
+export async function ensureStripeCustomer(
+  organizationId: string,
+): Promise<string> {
+  const db = await getDatabase();
   const [organization] = await db
-    .select({ 
+    .select({
       stripeCustomerId: organizations.stripeCustomerId,
-      billingEmail: organizations.billingEmail 
+      billingEmail: organizations.billingEmail,
     })
     .from(organizations)
     .where(eq(organizations.id, organizationId))
@@ -290,7 +320,7 @@ export async function ensureStripeCustomer(organizationId: string): Promise<stri
 export async function createPaymentIntent(
   organizationId: string,
   amount: number,
-  currency: string = 'usd'
+  currency: string = 'usd',
 ): Promise<Stripe.PaymentIntent> {
   // Ensure customer exists
   const stripeCustomerId = await ensureStripeCustomer(organizationId);
@@ -315,7 +345,7 @@ export async function getCreditTransactions(
     type?: string;
     startDate?: Date;
     endDate?: Date;
-  } = {}
+  } = {},
 ): Promise<CreditTransaction[]> {
   const { limit = 50, offset = 0 } = options;
 
@@ -325,6 +355,7 @@ export async function getCreditTransactions(
     conditions.push(eq(creditTransactions.type, options.type));
   }
 
+  const db = await getDatabase();
   return await db
     .select()
     .from(creditTransactions)
@@ -336,7 +367,7 @@ export async function getCreditTransactions(
 
 export async function getUsageStatistics(
   organizationId: string,
-  period: 'day' | 'week' | 'month' | 'year' = 'month'
+  period: 'day' | 'week' | 'month' | 'year' = 'month',
 ): Promise<{
   totalUsage: number;
   totalCreditsAdded: number;
@@ -362,36 +393,45 @@ export async function getUsageStatistics(
       break;
   }
 
+  const db = await getDatabase();
   const transactions = await db
     .select()
     .from(creditTransactions)
-    .where(and(
-      eq(creditTransactions.organizationId, organizationId),
-      gte(creditTransactions.createdAt, startDate)
-    ));
+    .where(
+      and(
+        eq(creditTransactions.organizationId, organizationId),
+        gte(creditTransactions.createdAt, startDate),
+      ),
+    );
 
-  const stats = transactions.reduce((acc: {
-    totalUsage: number;
-    totalCreditsAdded: number;
-    totalCreditsDeducted: number;
-    transactionCount: number;
-  }, transaction: CreditTransaction) => {
-    const amount = parseFloat(transaction.amount);
+  const stats = transactions.reduce(
+    (
+      acc: {
+        totalUsage: number;
+        totalCreditsAdded: number;
+        totalCreditsDeducted: number;
+        transactionCount: number;
+      },
+      transaction: CreditTransaction,
+    ) => {
+      const amount = parseFloat(transaction.amount);
 
-    if (amount > 0) {
-      acc.totalCreditsAdded += amount;
-    } else {
-      acc.totalCreditsDeducted += Math.abs(amount);
-    }
+      if (amount > 0) {
+        acc.totalCreditsAdded += amount;
+      } else {
+        acc.totalCreditsDeducted += Math.abs(amount);
+      }
 
-    acc.transactionCount++;
-    return acc;
-  }, {
-    totalUsage: 0,
-    totalCreditsAdded: 0,
-    totalCreditsDeducted: 0,
-    transactionCount: 0,
-  });
+      acc.transactionCount++;
+      return acc;
+    },
+    {
+      totalUsage: 0,
+      totalCreditsAdded: 0,
+      totalCreditsDeducted: 0,
+      transactionCount: 0,
+    },
+  );
 
   stats.totalUsage = stats.totalCreditsDeducted;
 
@@ -399,7 +439,10 @@ export async function getUsageStatistics(
 }
 
 // Utility function to add initial free credits
-export async function addInitialCredits(organizationId: string, userId: string): Promise<void> {
+export async function addInitialCredits(
+  organizationId: string,
+  userId: string,
+): Promise<void> {
   const INITIAL_CREDIT_AMOUNT = 5.0; // $5 in credits
 
   await addCredits({

@@ -3,7 +3,10 @@
  */
 
 import { WorkOS } from '@workos-inc/node';
-import type { User as WorkOSUser, Organization as WorkOSOrg } from '@workos-inc/node';
+import type {
+  User as WorkOSUser,
+  Organization as WorkOSOrg,
+} from '@workos-inc/node';
 import type { User, Organization, WorkOSConfig } from '../types';
 
 export class WorkOSClient {
@@ -51,7 +54,9 @@ export class WorkOSClient {
     // Get organization if available
     let organization: WorkOSOrg | undefined;
     if (response.organizationId) {
-      organization = await this.client.organizations.getOrganization(response.organizationId);
+      organization = await this.client.organizations.getOrganization(
+        response.organizationId,
+      );
     }
 
     return {
@@ -82,7 +87,10 @@ export class WorkOSClient {
     return {
       name: workosOrg.name,
       // WorkOS doesn't provide slug, so we'll generate one from name
-      slug: workosOrg.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+      slug: workosOrg.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, ''),
       domain: workosOrg.domains?.[0]?.domain,
       workosOrganizationId: workosOrg.id,
     };
@@ -99,14 +107,15 @@ export class WorkOSClient {
    * List organizations for a user
    */
   async listUserOrganizations(userId: string): Promise<WorkOSOrg[]> {
-    const response = await this.client.userManagement.listOrganizationMemberships({
-      userId,
-    });
+    const response =
+      await this.client.userManagement.listOrganizationMemberships({
+        userId,
+      });
 
     const organizations = await Promise.all(
-      response.data.map(membership =>
-        this.client.organizations.getOrganization(membership.organizationId)
-      )
+      response.data.map((membership) =>
+        this.client.organizations.getOrganization(membership.organizationId),
+      ),
     );
 
     return organizations;

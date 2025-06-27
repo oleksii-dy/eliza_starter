@@ -15,11 +15,15 @@ interface CreditPurchaseProps {
   organizationId: string;
 }
 
-export function CreditPurchase({ currentBalance, organizationId: _organizationId }: CreditPurchaseProps) {
-
+export function CreditPurchase({
+  currentBalance,
+  organizationId: _organizationId,
+}: CreditPurchaseProps) {
   const [amount, setAmount] = useState(25);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'crypto'>('stripe');
+  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'crypto'>(
+    'stripe',
+  );
   const [showCryptoOnramp, setShowCryptoOnramp] = useState(false);
 
   const predefinedAmounts = [10, 25, 50, 100, 250];
@@ -56,7 +60,6 @@ export function CreditPurchase({ currentBalance, organizationId: _organizationId
 
       // Redirect to Stripe Checkout
       window.location.href = url;
-
     } catch (error) {
       console.error('Payment failed:', error);
       toast.error(error instanceof Error ? error.message : 'Payment failed');
@@ -70,7 +73,9 @@ export function CreditPurchase({ currentBalance, organizationId: _organizationId
 
   const handleCryptoPaymentComplete = () => {
     setShowCryptoOnramp(false);
-    toast.success('Crypto payment completed! Your credits will be added shortly.');
+    toast.success(
+      'Crypto payment completed! Your credits will be added shortly.',
+    );
     // Refresh the page to show updated balance
     window.location.reload();
   };
@@ -80,37 +85,49 @@ export function CreditPurchase({ currentBalance, organizationId: _organizationId
   };
 
   return (
-    <div className="bg-background dark:bg-background-dark border border-stroke-weak dark:border-stroke-weak-dark rounded-lg p-6" data-testid="credit-purchase" id="credit-purchase">
-      <div className="flex items-center mb-4">
-        <Plus className="h-5 w-5 text-brand dark:text-brand-dark mr-2" />
-        <h3 className="text-lg font-semibold text-typography-strong dark:text-typography-strong-dark" data-testid="purchase-title">
+    <div
+      className="rounded-lg border border-stroke-weak bg-background p-6 dark:border-stroke-weak-dark dark:bg-background-dark"
+      data-testid="credit-purchase"
+      id="credit-purchase"
+    >
+      <div className="mb-4 flex items-center">
+        <Plus className="mr-2 h-5 w-5 text-brand dark:text-brand-dark" />
+        <h3
+          className="text-lg font-semibold text-typography-strong dark:text-typography-strong-dark"
+          data-testid="purchase-title"
+        >
           Add Credits
         </h3>
       </div>
 
       <div className="space-y-6">
         {/* Current Balance Display */}
-        <div className="bg-fill dark:bg-fill rounded-lg p-4">
-          <p className="text-sm text-typography-weak dark:text-typography-weak-dark">Current Balance</p>
-          <p className="text-2xl font-bold text-typography-strong dark:text-typography-strong-dark" data-testid="current-balance">
+        <div className="rounded-lg bg-fill p-4 dark:bg-fill">
+          <p className="text-sm text-typography-weak dark:text-typography-weak-dark">
+            Current Balance
+          </p>
+          <p
+            className="text-2xl font-bold text-typography-strong dark:text-typography-strong-dark"
+            data-testid="current-balance"
+          >
             ${currentBalance.toFixed(2)}
           </p>
         </div>
 
         {/* Amount Selection */}
         <div>
-          <label className="block text-sm font-medium text-typography-strong dark:text-typography-strong-dark mb-3">
+          <label className="mb-3 block text-sm font-medium text-typography-strong dark:text-typography-strong-dark">
             Select Amount
           </label>
-          <div className="grid grid-cols-3 gap-2 mb-4">
+          <div className="mb-4 grid grid-cols-3 gap-2">
             {predefinedAmounts.map((preset) => (
               <button
                 key={preset}
                 onClick={() => setAmount(preset)}
-                className={`py-2 px-3 text-sm rounded-lg border transition-colors ${
+                className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
                   amount === preset
-                    ? 'bg-brand dark:bg-brand-dark text-white border-brand dark:border-brand-dark'
-                    : 'bg-background dark:bg-background-dark text-typography-strong dark:text-typography-strong-dark border-stroke-weak dark:border-stroke-weak-dark hover:bg-background-hover dark:hover:bg-background-hover-dark'
+                    ? 'border-brand bg-brand text-white dark:border-brand-dark dark:bg-brand-dark'
+                    : 'border-stroke-weak bg-background text-typography-strong hover:bg-background-hover dark:border-stroke-weak-dark dark:bg-background-dark dark:text-typography-strong-dark dark:hover:bg-background-hover-dark'
                 }`}
                 data-testid={`amount-${preset}`}
               >
@@ -121,20 +138,24 @@ export function CreditPurchase({ currentBalance, organizationId: _organizationId
 
           {/* Custom Amount Input */}
           <div>
-            <label className="block text-xs text-typography-weak dark:text-typography-weak-dark mb-1">Custom Amount</label>
+            <label className="mb-1 block text-xs text-typography-weak dark:text-typography-weak-dark">
+              Custom Amount
+            </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-typography-weak dark:text-typography-weak-dark">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 transform text-typography-weak dark:text-typography-weak-dark">
+                $
+              </span>
               <input
                 type="number"
                 min="5"
                 max="10000"
                 value={amount}
                 onChange={(e) => setAmount(Number(e.target.value))}
-                className="w-full pl-8 pr-3 py-2 border border-stroke-weak dark:border-stroke-weak-dark bg-background dark:bg-background-dark text-typography-strong dark:text-typography-strong-dark rounded-lg focus:ring-2 focus:ring-brand focus:border-brand"
+                className="w-full rounded-lg border border-stroke-weak bg-background py-2 pl-8 pr-3 text-typography-strong focus:border-brand focus:ring-2 focus:ring-brand dark:border-stroke-weak-dark dark:bg-background-dark dark:text-typography-strong-dark"
                 data-testid="custom-amount-input"
               />
             </div>
-            <p className="text-xs text-typography-weak dark:text-typography-weak-dark mt-1">
+            <p className="mt-1 text-xs text-typography-weak dark:text-typography-weak-dark">
               Minimum $5, Maximum $10,000
             </p>
           </div>
@@ -142,7 +163,7 @@ export function CreditPurchase({ currentBalance, organizationId: _organizationId
 
         {/* Payment Method Selection */}
         <div>
-          <label className="block text-sm font-medium text-typography-strong dark:text-typography-strong-dark mb-3">
+          <label className="mb-3 block text-sm font-medium text-typography-strong dark:text-typography-strong-dark">
             Payment Method
           </label>
           <div className="space-y-2">
@@ -155,8 +176,10 @@ export function CreditPurchase({ currentBalance, organizationId: _organizationId
                 className="mr-3"
                 data-testid="payment-method-stripe"
               />
-              <CreditCard className="h-4 w-4 mr-2" />
-              <span className="text-sm text-typography-strong dark:text-typography-strong-dark">Credit/Debit Card</span>
+              <CreditCard className="mr-2 h-4 w-4" />
+              <span className="text-sm text-typography-strong dark:text-typography-strong-dark">
+                Credit/Debit Card
+              </span>
             </label>
             <label className="flex items-center">
               <input
@@ -167,46 +190,59 @@ export function CreditPurchase({ currentBalance, organizationId: _organizationId
                 className="mr-3"
                 data-testid="payment-method-crypto"
               />
-              <Coins className="h-4 w-4 mr-2" />
-              <span className="text-sm text-typography-strong dark:text-typography-strong-dark">Cryptocurrency</span>
+              <Coins className="mr-2 h-4 w-4" />
+              <span className="text-sm text-typography-strong dark:text-typography-strong-dark">
+                Cryptocurrency
+              </span>
             </label>
           </div>
         </div>
 
         {/* Payment Notice */}
         {paymentMethod === 'stripe' && (
-          <div className="bg-secondary-fill dark:bg-secondary-fill border border-secondary-stroke-weak dark:border-secondary-stroke-weak rounded-lg p-4">
+          <div className="rounded-lg border border-secondary-stroke-weak bg-secondary-fill p-4 dark:border-secondary-stroke-weak dark:bg-secondary-fill">
             <p className="text-sm text-secondary-typography-strong dark:text-secondary-typography-strong-dark">
               💳 Secure payment processing powered by Stripe
             </p>
-            <p className="text-xs text-secondary-typography-weak dark:text-secondary-typography-weak-dark mt-1">
+            <p className="mt-1 text-xs text-secondary-typography-weak dark:text-secondary-typography-weak-dark">
               You'll be redirected to Stripe Checkout to complete your payment
             </p>
           </div>
         )}
 
         {paymentMethod === 'crypto' && (
-          <div className="bg-info-fill dark:bg-info-fill border border-info-stroke-weak dark:border-info-stroke-weak rounded-lg p-4">
+          <div className="rounded-lg border border-info-stroke-weak bg-info-fill p-4 dark:border-info-stroke-weak dark:bg-info-fill">
             <p className="text-sm text-info dark:text-info">
               🪙 Cryptocurrency payment via Stripe Crypto Onramp
             </p>
-            <p className="text-xs text-info-stroke-strong dark:text-info-stroke-strong mt-1">
-              Pay with Bitcoin, Ethereum, USDC, or other supported cryptocurrencies
+            <p className="mt-1 text-xs text-info-stroke-strong dark:text-info-stroke-strong">
+              Pay with Bitcoin, Ethereum, USDC, or other supported
+              cryptocurrencies
             </p>
           </div>
         )}
 
         {/* Purchase Summary */}
-        <div className="bg-secondary-fill dark:bg-secondary-fill border border-secondary-stroke-weak dark:border-secondary-stroke-weak rounded-lg p-4">
+        <div className="rounded-lg border border-secondary-stroke-weak bg-secondary-fill p-4 dark:border-secondary-stroke-weak dark:bg-secondary-fill">
           <div className="flex justify-between text-sm">
-            <span className="text-secondary-typography-strong dark:text-secondary-typography-strong-dark">Credit Amount:</span>
-            <span className="font-semibold text-secondary-typography-strong dark:text-secondary-typography-strong-dark" data-testid="purchase-amount">
+            <span className="text-secondary-typography-strong dark:text-secondary-typography-strong-dark">
+              Credit Amount:
+            </span>
+            <span
+              className="font-semibold text-secondary-typography-strong dark:text-secondary-typography-strong-dark"
+              data-testid="purchase-amount"
+            >
               ${amount.toFixed(2)}
             </span>
           </div>
-          <div className="flex justify-between text-sm mt-1">
-            <span className="text-secondary-typography-strong dark:text-secondary-typography-strong-dark">New Balance:</span>
-            <span className="font-semibold text-secondary-typography-strong dark:text-secondary-typography-strong-dark" data-testid="new-balance">
+          <div className="mt-1 flex justify-between text-sm">
+            <span className="text-secondary-typography-strong dark:text-secondary-typography-strong-dark">
+              New Balance:
+            </span>
+            <span
+              className="font-semibold text-secondary-typography-strong dark:text-secondary-typography-strong-dark"
+              data-testid="new-balance"
+            >
               ${(currentBalance + amount).toFixed(2)}
             </span>
           </div>
@@ -216,17 +252,17 @@ export function CreditPurchase({ currentBalance, organizationId: _organizationId
         <button
           onClick={handlePurchase}
           disabled={isProcessing || amount < 5}
-          className="w-full bg-brand hover:bg-brand/90 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center"
+          className="hover:bg-brand/90 flex w-full items-center justify-center rounded-lg bg-brand px-4 py-3 font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
           data-testid="purchase-button"
         >
           {isProcessing ? (
             <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Processing...
             </>
           ) : (
             <>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="mr-2 h-4 w-4" />
               Add ${amount} Credits
             </>
           )}
@@ -242,8 +278,8 @@ export function CreditPurchase({ currentBalance, organizationId: _organizationId
 
       {/* Crypto Onramp Modal */}
       {showCryptoOnramp && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-background dark:bg-background-dark rounded-lg max-w-md w-full mx-4 max-h-screen overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="mx-4 max-h-screen w-full max-w-md overflow-y-auto rounded-lg bg-background dark:bg-background-dark">
             <CryptoOnramp
               amount={amount}
               organizationId={_organizationId}

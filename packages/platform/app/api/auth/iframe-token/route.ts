@@ -10,7 +10,8 @@ import { authService } from '@/lib/auth/session';
 
 // JWT secret for iframe tokens (separate from main auth)
 const IFRAME_JWT_SECRET = new TextEncoder().encode(
-  process.env.IFRAME_JWT_SECRET || 'iframe-jwt-secret-key-at-least-32-characters-long'
+  process.env.IFRAME_JWT_SECRET ||
+    'iframe-jwt-secret-key-at-least-32-characters-long',
 );
 
 // Iframe token duration (shorter than main session)
@@ -29,7 +30,7 @@ export interface IframeTokenData {
 /**
  * POST /api/auth/iframe-token - Generate iframe authentication token
  */
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   try {
     // Get current user session
     const user = await authService.getCurrentUser();
@@ -40,7 +41,10 @@ export async function POST(request: NextRequest) {
     // Get organization
     const organization = await authService.getCurrentOrganization();
     if (!organization) {
-      return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Organization not found' },
+        { status: 404 },
+      );
     }
 
     // Generate unique token ID for tracking
@@ -61,7 +65,9 @@ export async function POST(request: NextRequest) {
     const token = await new SignJWT(tokenData as any)
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
-      .setExpirationTime(Math.floor((Date.now() + IFRAME_TOKEN_DURATION) / 1000))
+      .setExpirationTime(
+        Math.floor((Date.now() + IFRAME_TOKEN_DURATION) / 1000),
+      )
       .setIssuer('elizaos-platform-iframe')
       .setAudience('elizaos-iframe-editor')
       .setSubject(user.id)
@@ -90,8 +96,7 @@ export async function POST(request: NextRequest) {
     console.error('Error generating iframe token:', error);
     return NextResponse.json(
       { error: 'Failed to generate iframe token' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
-

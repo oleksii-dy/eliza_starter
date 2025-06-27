@@ -15,7 +15,9 @@ describe('ElizaOS Platform - Complete Test Suite', () => {
   it('Platform Coverage - Complete Test Suite Validation', () => {
     cy.log('🚀 ElizaOS Platform - Complete Test Suite Validation');
     cy.log('');
-    cy.log('This comprehensive test validates 100% platform coverage including:');
+    cy.log(
+      'This comprehensive test validates 100% platform coverage including:',
+    );
     cy.log('✅ All Pages - Landing, Dashboard, Settings, Legal, Generation');
     cy.log('✅ All Features - Authentication, Billing, Agents, API Keys');
     cy.log('✅ Dark Theme - Visual consistency and color contrast');
@@ -33,38 +35,40 @@ describe('ElizaOS Platform - Complete Test Suite', () => {
     cy.log('');
     cy.log('🔍 Test Files Created and Coverage:');
     cy.log('');
-    
+
     const testCoverage = [
       {
         file: '07-landing-page-comprehensive.cy.ts',
-        coverage: 'Landing Page - All buttons, navigation, responsive design, dark theme',
+        coverage:
+          'Landing Page - All buttons, navigation, responsive design, dark theme',
         tests: 6,
-        components: 15
+        components: 15,
       },
       {
-        file: '08-dark-theme-comprehensive.cy.ts', 
+        file: '08-dark-theme-comprehensive.cy.ts',
         coverage: 'Dark Theme - All pages, color contrast, WCAG compliance',
         tests: 8,
-        components: 25
+        components: 25,
       },
       {
         file: '09-generation-pages-comprehensive.cy.ts',
         coverage: 'Generation Studio - Text, Image, Video generation workflows',
         tests: 7,
-        components: 30
+        components: 30,
       },
       {
         file: '10-legal-and-settings-comprehensive.cy.ts',
         coverage: 'Legal Pages & Settings - Privacy, Terms, Account management',
         tests: 8,
-        components: 20
+        components: 20,
       },
       {
         file: '11-theme-switcher-comprehensive.cy.ts',
-        coverage: 'Theme Switcher - Light/Dark toggle, persistence, accessibility',
+        coverage:
+          'Theme Switcher - Light/Dark toggle, persistence, accessibility',
         tests: 6,
-        components: 8
-      }
+        components: 8,
+      },
     ];
 
     testCoverage.forEach((test, index) => {
@@ -81,7 +85,7 @@ describe('ElizaOS Platform - Complete Test Suite', () => {
     cy.log('📄 PAGE COVERAGE ANALYSIS');
     cy.log('');
     cy.log('✅ FULLY TESTED PAGES:');
-    
+
     const fullyTestedPages = [
       '/ (Landing Page) - Hero, features, navigation, CTA buttons',
       '/dashboard - Stats, activities, quick actions, responsive design',
@@ -96,7 +100,7 @@ describe('ElizaOS Platform - Complete Test Suite', () => {
       '/dashboard/generation/image - Image generation, advanced settings',
       '/dashboard/generation/video - Video generation, file upload',
       '/legal/privacy - Privacy policy content and navigation',
-      '/legal/terms - Terms of service content and navigation'
+      '/legal/terms - Terms of service content and navigation',
     ];
 
     fullyTestedPages.forEach((page, index) => {
@@ -105,12 +109,12 @@ describe('ElizaOS Platform - Complete Test Suite', () => {
 
     cy.log('');
     cy.log('🔄 PREVIOUSLY TESTED PAGES (from existing test suite):');
-    
+
     const existingTests = [
       '/dashboard/billing - Payment processing, subscription management',
       '/dashboard/analytics - Usage metrics, performance charts',
       '/dashboard/agents/create - Agent creation wizard',
-      '/dashboard/agents/marketplace - Agent discovery and installation'
+      '/dashboard/agents/marketplace - Agent discovery and installation',
     ];
 
     existingTests.forEach((page, index) => {
@@ -124,8 +128,12 @@ describe('ElizaOS Platform - Complete Test Suite', () => {
     cy.log('🌙 DARK THEME COVERAGE');
     cy.log('');
     cy.log('✅ Dark Theme Testing Includes:');
-    cy.log('   🎨 Color Contrast - Text/background ratios meet WCAG AA standards');
-    cy.log('   🃏 Card Backgrounds - Subtle contrast differences from main background');
+    cy.log(
+      '   🎨 Color Contrast - Text/background ratios meet WCAG AA standards',
+    );
+    cy.log(
+      '   🃏 Card Backgrounds - Subtle contrast differences from main background',
+    );
     cy.log('   🔘 Button States - Hover, focus, active states clearly visible');
     cy.log('   📋 Form Elements - Input fields, labels, validation messages');
     cy.log('   📊 Data Visualization - Charts, graphs, stat cards');
@@ -145,19 +153,19 @@ describe('ElizaOS Platform - Complete Test Suite', () => {
     cy.log('🧩 COMPONENT TESTING COVERAGE');
     cy.log('');
     cy.log('✅ All Interactive Components Tested:');
-    
+
     const componentCategories = [
       {
         category: 'Forms & Inputs',
         components: [
           'Text inputs with validation',
-          'Email inputs with format checking', 
+          'Email inputs with format checking',
           'Password inputs with strength meter',
           'Select dropdowns with options',
           'Checkboxes and toggles',
           'File upload with drag-and-drop',
-          'Form submission and error handling'
-        ]
+          'Form submission and error handling',
+        ],
       },
       {
         category: 'Navigation & Layout',
@@ -167,8 +175,8 @@ describe('ElizaOS Platform - Complete Test Suite', () => {
           'Breadcrumb navigation',
           'Footer links and social icons',
           'Page headers with actions',
-          'Back buttons and navigation'
-        ]
+          'Back buttons and navigation',
+        ],
       },
       {
         category: 'Data Display',
@@ -178,8 +186,8 @@ describe('ElizaOS Platform - Complete Test Suite', () => {
           'Data tables with sorting',
           'Progress indicators and loading states',
           'Charts and graphs',
-          'Usage metrics and billing info'
-        ]
+          'Usage metrics and billing info',
+        ],
       },
       {
         category: 'Interactive Elements',
@@ -189,8 +197,8 @@ describe('ElizaOS Platform - Complete Test Suite', () => {
           'Tooltips and help text',
           'Collapsible sections',
           'Tab navigation',
-          'Button groups and actions'
-        ]
+          'Button groups and actions',
+        ],
       },
       {
         category: 'Media & Content',
@@ -200,9 +208,9 @@ describe('ElizaOS Platform - Complete Test Suite', () => {
           'File download links',
           'Generated content display',
           'History and saved items',
-          'Search and filtering'
-        ]
-      }
+          'Search and filtering',
+        ],
+      },
     ];
 
     componentCategories.forEach((category) => {
@@ -219,7 +227,7 @@ describe('ElizaOS Platform - Complete Test Suite', () => {
     cy.log('❌ ERROR HANDLING COVERAGE');
     cy.log('');
     cy.log('✅ Complete Error Scenario Testing:');
-    
+
     const errorScenarios = [
       'Network failures and timeouts',
       'API server errors (4xx, 5xx)',
@@ -230,7 +238,7 @@ describe('ElizaOS Platform - Complete Test Suite', () => {
       'Generation service errors',
       'Payment processing failures',
       'Data loading failures',
-      'Retry mechanisms and recovery'
+      'Retry mechanisms and recovery',
     ];
 
     errorScenarios.forEach((scenario, index) => {
@@ -244,7 +252,9 @@ describe('ElizaOS Platform - Complete Test Suite', () => {
     cy.log('♿ ACCESSIBILITY COVERAGE');
     cy.log('');
     cy.log('✅ WCAG 2.1 AA Compliance Testing:');
-    cy.log('   ⌨️ Keyboard Navigation - Tab order, focus management, shortcuts');
+    cy.log(
+      '   ⌨️ Keyboard Navigation - Tab order, focus management, shortcuts',
+    );
     cy.log('   🏷️ ARIA Labels - Screen reader support, semantic markup');
     cy.log('   🎨 Color Contrast - 4.5:1 minimum ratio for text');
     cy.log('   📱 Responsive Text - Readable at 200% zoom');
@@ -287,33 +297,33 @@ describe('ElizaOS Platform - Complete Test Suite', () => {
     cy.log('🏷️ DATA-CY ATTRIBUTE COVERAGE');
     cy.log('');
     cy.log('✅ Comprehensive Test Selector Strategy:');
-    
+
     const dataCyCategories = [
       {
         category: 'Page Containers',
         count: 14,
-        examples: 'landing-page, dashboard-header, generation-studio-header'
+        examples: 'landing-page, dashboard-header, generation-studio-header',
       },
       {
-        category: 'Form Elements', 
+        category: 'Form Elements',
         count: 35,
-        examples: 'prompt-input, model-select, generate-button'
+        examples: 'prompt-input, model-select, generate-button',
       },
       {
         category: 'Navigation',
         count: 18,
-        examples: 'theme-switcher, back-button, quick-action-*'
+        examples: 'theme-switcher, back-button, quick-action-*',
       },
       {
         category: 'Data Display',
         count: 25,
-        examples: 'stats-section, agent-count, credit-balance'
+        examples: 'stats-section, agent-count, credit-balance',
       },
       {
         category: 'Interactive',
         count: 28,
-        examples: 'modal-close, retry-button, save-settings-button'
-      }
+        examples: 'modal-close, retry-button, save-settings-button',
+      },
     ];
 
     let totalDataCy = 0;
@@ -322,7 +332,7 @@ describe('ElizaOS Platform - Complete Test Suite', () => {
       cy.log(`   Examples: ${category.examples}`);
       totalDataCy += category.count;
     });
-    
+
     cy.log('');
     cy.log(`🎯 Total data-cy attributes: ${totalDataCy}+`);
 
@@ -410,9 +420,9 @@ describe('ElizaOS Platform - Complete Test Suite', () => {
     // STEP 1: Validate Test Environment
     // ==========================================
     cy.log('🌐 Step 1: Validate Test Environment');
-    
+
     cy.visit('/', { failOnStatusCode: false });
-    
+
     // Verify base application loads
     cy.get('body').should('be.visible');
     cy.get('html').should('have.attr', 'lang', 'en');
@@ -422,14 +432,14 @@ describe('ElizaOS Platform - Complete Test Suite', () => {
     // STEP 2: Validate CSS Custom Properties
     // ==========================================
     cy.log('🎨 Step 2: Validate CSS Custom Properties');
-    
+
     cy.window().then((win) => {
       const styles = win.getComputedStyle(win.document.documentElement);
-      
+
       // Verify dark theme CSS variables exist
       const bgColor = styles.getPropertyValue('--background').trim();
       const textColor = styles.getPropertyValue('--typography-strong').trim();
-      
+
       expect(bgColor).to.not.be.empty;
       expect(textColor).to.not.be.empty;
     });
@@ -438,15 +448,16 @@ describe('ElizaOS Platform - Complete Test Suite', () => {
     // STEP 3: Validate API Mock Infrastructure
     // ==========================================
     cy.log('🔌 Step 3: Validate API Mock Infrastructure');
-    
+
     // Test that Cypress intercepts are working
     cy.intercept('GET', '**/api/test-endpoint', {
       statusCode: 200,
-      body: { test: 'success' }
+      body: { test: 'success' },
     }).as('testIntercept');
-    
+
     cy.window().then((win) => {
-      win.fetch('/api/test-endpoint')
+      win
+        .fetch('/api/test-endpoint')
         .then(() => cy.log('✅ API mocking infrastructure working'));
     });
 
@@ -454,10 +465,10 @@ describe('ElizaOS Platform - Complete Test Suite', () => {
     // STEP 4: Validate Data-Cy Selector Strategy
     // ==========================================
     cy.log('🏷️ Step 4: Validate Data-Cy Selector Strategy');
-    
+
     // Verify our data-cy selector strategy works
     cy.get('body').should('be.visible');
-    
+
     // Test that we can add data-cy attributes dynamically
     cy.get('body').then(($body) => {
       cy.wrap($body).invoke('attr', 'data-cy', 'test-body');
@@ -474,32 +485,34 @@ describe('ElizaOS Platform - Complete Test Suite', () => {
     // STEP 1: Performance Benchmarks
     // ==========================================
     cy.log('⚡ Step 1: Performance Benchmarks for CI');
-    
+
     const startTime = Date.now();
     cy.visit('/', { failOnStatusCode: false });
-    
-    cy.get('body').should('be.visible').then(() => {
-      const loadTime = Date.now() - startTime;
-      cy.log(`📊 Page load time: ${loadTime}ms`);
-      
-      // CI-friendly performance assertions
-      expect(loadTime).to.be.lessThan(10000); // 10 second timeout for CI
-    });
+
+    cy.get('body')
+      .should('be.visible')
+      .then(() => {
+        const loadTime = Date.now() - startTime;
+        cy.log(`📊 Page load time: ${loadTime}ms`);
+
+        // CI-friendly performance assertions
+        expect(loadTime).to.be.lessThan(10000); // 10 second timeout for CI
+      });
 
     // ==========================================
     // STEP 2: Test Isolation Validation
     // ==========================================
     cy.log('🧹 Step 2: Test Isolation Validation');
-    
+
     // Verify tests start with clean state
     cy.getAllLocalStorage().should('be.empty');
     cy.getAllSessionStorage().should('be.empty');
-    
+
     // Set some state
     cy.window().then((win) => {
       win.localStorage.setItem('test-item', 'test-value');
     });
-    
+
     // Verify cleanup works
     cy.clearLocalStorage();
     cy.getAllLocalStorage().should('be.empty');
@@ -508,11 +521,11 @@ describe('ElizaOS Platform - Complete Test Suite', () => {
     // STEP 3: Cross-Browser Compatibility
     // ==========================================
     cy.log('🌐 Step 3: Cross-Browser Compatibility Check');
-    
+
     cy.window().then((win) => {
       const userAgent = win.navigator.userAgent;
       cy.log(`🔍 Browser: ${userAgent}`);
-      
+
       // Verify modern browser features
       expect(win.fetch).to.exist;
       expect(win.localStorage).to.exist;
@@ -523,7 +536,7 @@ describe('ElizaOS Platform - Complete Test Suite', () => {
     // STEP 4: Environment Configuration
     // ==========================================
     cy.log('⚙️ Step 4: Environment Configuration Check');
-    
+
     // Verify Cypress environment is configured correctly
     expect(Cypress.config('baseUrl')).to.not.be.null;
     expect(Cypress.config('viewportWidth')).to.be.greaterThan(0);

@@ -22,9 +22,7 @@ class MockDatabaseAdapter {
   async searchMemories() {
     return [];
   }
-  async createMemory() {
-
-  }
+  async createMemory() {}
   async getMemoriesByRoomIds() {
     return [];
   }
@@ -34,12 +32,8 @@ class MockDatabaseAdapter {
   async getConversation() {
     return [];
   }
-  async createConversation() {
-
-  }
-  async saveMemory() {
-
-  }
+  async createConversation() {}
+  async saveMemory() {}
 }
 
 describe('Plugin Manager E2E Tests', () => {

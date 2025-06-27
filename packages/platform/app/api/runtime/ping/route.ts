@@ -5,14 +5,14 @@
 
 import { NextResponse } from 'next/server';
 
-export async function GET() {
+export async function handleGET() {
   return NextResponse.json(
-    { 
-      pong: true, 
+    {
+      pong: true,
       timestamp: new Date().toISOString(),
-      uptime: process.uptime() 
-    }, 
-    { status: 200 }
+      uptime: process.uptime(),
+    },
+    { status: 200 },
   );
 }
 

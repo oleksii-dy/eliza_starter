@@ -1,8 +1,8 @@
 import { logger, asUUID } from '@elizaos/core';
 import type { IDatabaseAdapter, UUID } from '@elizaos/core';
-import { PgAdapter } from './pg/adapter';
-import { PgManager } from './pg/manager';
-import { connectionRegistry } from './connection-registry';
+import { PgAdapter } from './pg/adapter.js';
+import { PgManager } from './pg/manager.js';
+import { connectionRegistry } from './connection-registry.js';
 
 export interface AdaptiveConfig {
   // PostgreSQL configuration

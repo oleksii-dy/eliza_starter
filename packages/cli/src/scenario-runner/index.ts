@@ -11,7 +11,6 @@ import {
   // Role, // Available if needed
   logger,
 } from '@elizaos/core';
-import AgentServer from '@elizaos/server';
 import type {
   Scenario,
   ScenarioResult,
@@ -69,7 +68,7 @@ export class ScenarioRunner {
   // Add property to store agents map
   public agents: Map<string, IAgentRuntime> = new Map();
 
-  constructor(_server: AgentServer, primaryRuntime: IAgentRuntime) {
+  constructor(_server: any, primaryRuntime: IAgentRuntime) {
     this.primaryRuntime = primaryRuntime;
     this.verifier = new ScenarioVerifier(primaryRuntime);
     this.metricsCollector = new MetricsCollector();

@@ -17,7 +17,8 @@ const paymentTrustExemptionsScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'As a trusted user, I\'m granting you immediate access to the premium analytics service. Payment will be processed later.',
+        content:
+          "As a trusted user, I'm granting you immediate access to the premium analytics service. Payment will be processed later.",
       },
     ],
     [
@@ -27,7 +28,8 @@ const paymentTrustExemptionsScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'Premium features require payment upfront. The analytics service costs 5 USDC. Would you like to proceed with payment?',
+        content:
+          'Premium features require payment upfront. The analytics service costs 5 USDC. Would you like to proceed with payment?',
       },
     ],
   ],

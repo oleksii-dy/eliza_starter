@@ -1,4 +1,4 @@
-import { mock  } from 'bun:test';
+import { mock } from 'bun:test';
 import type { IAgentRuntime, UUID } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -6,8 +6,12 @@ export function createMockRuntime(): IAgentRuntime {
   return {
     agentId: uuidv4() as UUID,
     getSetting: mock().mockImplementation((key: string) => {
-      if (key === 'ANTHROPIC_API_KEY') {return 'test-key';}
-      if (key === 'PLUGIN_DATA_DIR') {return '/tmp/test-data';}
+      if (key === 'ANTHROPIC_API_KEY') {
+        return 'test-key';
+      }
+      if (key === 'PLUGIN_DATA_DIR') {
+        return '/tmp/test-data';
+      }
       return null;
     }),
     getService: mock().mockImplementation((name: string) => {

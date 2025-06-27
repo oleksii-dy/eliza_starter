@@ -1,6 +1,6 @@
 import { logger, type UUID } from '@elizaos/core';
-import type { PgAdapter } from './pg/adapter';
-import { PgManager } from './pg/manager';
+import type { PgAdapter } from './pg/adapter.js';
+import { PgManager } from './pg/manager.js';
 
 /**
  * Global registry for database connections to ensure all parts of the system

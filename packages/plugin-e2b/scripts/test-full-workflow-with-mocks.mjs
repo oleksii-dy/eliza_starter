@@ -15,7 +15,7 @@ console.log('🚀 Testing Complete GitHub + E2B Workflow (with GitHub mocking)..
 console.log('Environment:', {
   E2B_API_KEY: !!process.env.E2B_API_KEY,
   GITHUB_TOKEN: !!process.env.GITHUB_TOKEN,
-  OPENAI_API_KEY: !!process.env.OPENAI_API_KEY
+  OPENAI_API_KEY: !!process.env.OPENAI_API_KEY,
 });
 
 // Mock GitHub service for testing when token is invalid
@@ -25,7 +25,7 @@ class MockGitHubService {
       {
         id: 1234,
         number: 123,
-        title: "Add support for custom validation in example action",
+        title: 'Add support for custom validation in example action',
         body: `## Problem
 The example action currently uses a simple boolean validation.
 We need to support custom validation functions.
@@ -44,16 +44,16 @@ We need to support custom validation functions.
         state: 'open',
         labels: [
           { name: 'enhancement', color: 'a2eeef' },
-          { name: 'good first issue', color: '7057ff' }
+          { name: 'good first issue', color: '7057ff' },
         ],
         user: { login: 'community-user' },
         html_url: 'https://github.com/elizaos/eliza/issues/123',
-        repository: { owner: 'elizaos', name: 'eliza' }
+        repository: { owner: 'elizaos', name: 'eliza' },
       },
       {
         id: 1235,
         number: 124,
-        title: "Improve error handling in plugin loader",
+        title: 'Improve error handling in plugin loader',
         body: `## Description
 Plugin loader should handle edge cases better and provide clearer error messages.
 
@@ -65,12 +65,12 @@ Plugin loader should handle edge cases better and provide clearer error messages
         state: 'open',
         labels: [
           { name: 'bug', color: 'd73a4a' },
-          { name: 'help wanted', color: '008672' }
+          { name: 'help wanted', color: '008672' },
         ],
         user: { login: 'maintainer' },
         html_url: 'https://github.com/elizaos/eliza/issues/124',
-        repository: { owner: 'elizaos', name: 'eliza' }
-      }
+        repository: { owner: 'elizaos', name: 'eliza' },
+      },
     ];
   }
 
@@ -90,55 +90,57 @@ Plugin loader should handle edge cases better and provide clearer error messages
       state: 'open',
       head: { ref: branch },
       base: { ref: 'main' },
-      html_url: `https://github.com/elizaos/eliza/pull/${prNumber}`
+      html_url: `https://github.com/elizaos/eliza/pull/${prNumber}`,
     };
   }
 
   async addComment(issueNumber, body) {
     const commentId = Date.now();
-    console.log(`💬 [MockGitHub] Added comment to issue #${issueNumber}: ${body.substring(0, 50)}...`);
+    console.log(
+      `💬 [MockGitHub] Added comment to issue #${issueNumber}: ${body.substring(0, 50)}...`
+    );
     return {
       id: commentId,
       body,
       user: { login: 'elizaos-bot' },
-      html_url: `https://github.com/elizaos/eliza/issues/${issueNumber}#issuecomment-${commentId}`
+      html_url: `https://github.com/elizaos/eliza/issues/${issueNumber}#issuecomment-${commentId}`,
     };
   }
 }
 
 async function runCompleteWorkflow() {
   console.log('\n🎯 Starting Complete GitHub + E2B + Autocoder Workflow...');
-  
+
   const workflowStart = Date.now();
   let sandbox = null;
-  
+
   try {
     // Step 1: Initialize services
     console.log('\n🔧 Step 1: Service Initialization');
     const { Sandbox } = await import('@e2b/code-interpreter');
     const githubService = new MockGitHubService();
-    
+
     console.log('   ✅ E2B service imported');
     console.log('   ✅ GitHub service initialized (mock mode)');
-    
+
     // Step 2: Fetch GitHub issues
     console.log('\n📋 Step 2: GitHub Issue Discovery');
     const issues = await githubService.getIssues();
     console.log(`   ✅ Found ${issues.length} open issues`);
-    
+
     // Select the first issue for processing
     const selectedIssue = issues[0];
     console.log(`   🎯 Selected issue #${selectedIssue.number}: ${selectedIssue.title}`);
-    console.log(`   📝 Labels: ${selectedIssue.labels.map(l => l.name).join(', ')}`);
-    
+    console.log(`   📝 Labels: ${selectedIssue.labels.map((l) => l.name).join(', ')}`);
+
     // Step 3: Create development sandbox
     console.log('\n🧪 Step 3: E2B Sandbox Creation');
     sandbox = await Sandbox.create({
       apiKey: process.env.E2B_API_KEY,
-      timeoutMs: 120000
+      timeoutMs: 120000,
     });
     console.log(`   ✅ Development sandbox created: ${sandbox.sandboxId}`);
-    
+
     // Step 4: Repository setup and analysis
     console.log('\n📁 Step 4: Repository Setup and Analysis');
     const repoSetup = await sandbox.runCode(`
@@ -183,10 +185,10 @@ print(f"   Files to modify: {len(issue_analysis['files_to_modify'])}")
 
 {**repo_info, **issue_analysis}
 `);
-    
+
     console.log('   ✅ Repository setup completed');
     console.log(`   📊 Analysis: ${repoSetup.text}`);
-    
+
     // Step 5: Implementation phase
     console.log('\n⚡ Step 5: Code Implementation');
     const implementation = await sandbox.runCode(`
@@ -314,10 +316,10 @@ print(f"   Backward compatible: {implementation_summary['backward_compatible']}"
 
 implementation_summary
 `);
-    
+
     console.log('   ✅ Code implementation completed');
     console.log(`   📊 Implementation: ${implementation.text}`);
-    
+
     // Step 6: Testing and validation
     console.log('\n🧪 Step 6: Testing and Validation');
     const testing = await sandbox.runCode(`
@@ -367,10 +369,10 @@ print(f"\\n🎉 Final test status: {test_results['passed']}/{test_results['total
 
 test_results
 `);
-    
+
     console.log('   ✅ Testing and validation completed');
     console.log(`   📊 Test results: ${testing.text}`);
-    
+
     // Step 7: Pull request creation
     console.log('\n🔄 Step 7: Pull Request Creation');
     const prTitle = `Add custom validation support to example action (#${selectedIssue.number})`;
@@ -390,19 +392,19 @@ Implements custom validation support for the example action as requested in #${s
 - [x] Error handling tested
 
 ## Closes #${selectedIssue.number}`;
-    
+
     const pullRequest = await githubService.createPullRequest(
       prTitle,
       prBody,
       'feature/custom-validation-support'
     );
-    
+
     console.log(`   ✅ Pull request created: #${pullRequest.number}`);
     console.log(`   🔗 URL: ${pullRequest.html_url}`);
-    
+
     // Step 8: Agent communication and review
     console.log('\n🤖 Step 8: Agent Communication and Review');
-    
+
     // Main agent reviews the PR
     const reviewComment = `## Code Review
 
@@ -423,9 +425,9 @@ I've reviewed the implementation and it looks great! Here's my analysis:
 **APPROVED** - Ready to merge after addressing documentation suggestions.
 
 Great work @elizaos-bot! 🚀`;
-    
+
     await githubService.addComment(pullRequest.number, reviewComment);
-    
+
     // Autocoder agent responds to feedback
     const autocoderResponse = `## Response to Review
 
@@ -444,16 +446,16 @@ Thank you for the thorough review! I've addressed your suggestions:
 All tests still passing with improved coverage: 94.2%
 
 Ready for final approval! 🎉`;
-    
+
     await githubService.addComment(pullRequest.number, autocoderResponse);
-    
+
     console.log('   ✅ Agent review process completed');
     console.log('   💬 Code review comments exchanged');
     console.log('   🔄 Feedback addressed and improvements made');
-    
+
     // Step 9: Final metrics and cleanup
     console.log('\n📊 Step 9: Workflow Metrics and Cleanup');
-    
+
     const workflowMetrics = {
       totalDuration: Date.now() - workflowStart,
       sandboxUptime: Date.now() - workflowStart,
@@ -463,9 +465,9 @@ Ready for final approval! 🎉`;
       testsAdded: 4,
       codeLines: 150,
       reviewCycles: 1,
-      finalStatus: 'ready_for_merge'
+      finalStatus: 'ready_for_merge',
     };
-    
+
     console.log('   📈 Workflow Metrics:');
     console.log(`      Duration: ${workflowMetrics.totalDuration}ms`);
     console.log(`      Files modified: ${workflowMetrics.filesModified}`);
@@ -473,7 +475,7 @@ Ready for final approval! 🎉`;
     console.log(`      Code lines: ${workflowMetrics.codeLines}`);
     console.log(`      Review cycles: ${workflowMetrics.reviewCycles}`);
     console.log(`      Status: ${workflowMetrics.finalStatus}`);
-    
+
     return {
       success: true,
       workflow: 'github-e2b-autocoder-collaboration',
@@ -482,17 +484,16 @@ Ready for final approval! 🎉`;
       metrics: workflowMetrics,
       services: {
         e2b: 'operational',
-        github: 'mock_operational', 
-        agents: 'collaborative'
-      }
+        github: 'mock_operational',
+        agents: 'collaborative',
+      },
     };
-    
   } catch (error) {
     console.error('❌ Workflow failed:', error.message);
     return {
       success: false,
       error: error.message,
-      step: 'workflow_execution'
+      step: 'workflow_execution',
     };
   } finally {
     // Cleanup sandbox
@@ -506,7 +507,7 @@ Ready for final approval! 🎉`;
 // Execute the complete workflow
 try {
   const result = await runCompleteWorkflow();
-  
+
   if (result.success) {
     console.log('\n🎉 COMPLETE WORKFLOW SUCCESS!');
     console.log('\n✅ End-to-End Workflow Verified:');
@@ -519,30 +520,29 @@ try {
     console.log('   🤖 Multi-agent review and communication');
     console.log('   📊 Performance monitoring and metrics');
     console.log('   🧹 Resource cleanup and finalization');
-    
+
     console.log('\n📋 Workflow Results:');
     console.log(`   Issue: #${result.issue.number} - ${result.issue.title}`);
     console.log(`   PR: #${result.pullRequest.number} - ${result.pullRequest.title}`);
     console.log(`   Duration: ${result.metrics.totalDuration}ms`);
     console.log(`   Status: ${result.metrics.finalStatus}`);
-    
+
     console.log('\n🚀 System Status:');
     console.log(`   E2B Service: ${result.services.e2b}`);
     console.log(`   GitHub Service: ${result.services.github}`);
     console.log(`   Agent Coordination: ${result.services.agents}`);
-    
+
     console.log('\n✨ The GitHub + E2B + Autocoder collaboration system is FULLY OPERATIONAL!');
     console.log('   🔗 Ready to integrate with valid GitHub token');
     console.log('   🎯 All workflow steps verified and working');
     console.log('   🛡️  Comprehensive error handling and monitoring');
     console.log('   🔄 Multi-agent coordination and communication');
-    
+
     process.exit(0);
   } else {
     console.log('\n💥 Workflow failed:', result.error);
     process.exit(1);
   }
-  
 } catch (error) {
   console.error('\n💥 Fatal workflow error:', error.message);
   console.error('Stack:', error.stack?.split('\n').slice(0, 8).join('\n'));

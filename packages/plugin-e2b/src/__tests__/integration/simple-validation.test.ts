@@ -15,7 +15,7 @@ describe('E2B Plugin Production Validation', () => {
       const fs = await import('fs');
       const path = await import('path');
 
-      const pluginRoot = path.join(process.cwd());
+      const pluginRoot = path.join(__dirname, '..', '..', '..');
       const srcPath = path.join(pluginRoot, 'src');
 
       expect(fs.existsSync(srcPath)).toBe(true);
@@ -29,7 +29,7 @@ describe('E2B Plugin Production Validation', () => {
       const fs = await import('fs');
       const path = await import('path');
 
-      const configPath = path.join(process.cwd(), 'src', 'config', 'E2BConfig.ts');
+      const configPath = path.join(__dirname, '..', '..', '..', 'src', 'config', 'E2BConfig.ts');
       expect(fs.existsSync(configPath)).toBe(true);
 
       const configContent = fs.readFileSync(configPath, 'utf8');
@@ -42,7 +42,7 @@ describe('E2B Plugin Production Validation', () => {
       const fs = await import('fs');
       const path = await import('path');
 
-      const servicePath = path.join(process.cwd(), 'src', 'services', 'ImprovedE2BService.ts');
+      const servicePath = path.join(__dirname, '..', '..', '..', 'src', 'services', 'ImprovedE2BService.ts');
       expect(fs.existsSync(servicePath)).toBe(true);
 
       const serviceContent = fs.readFileSync(servicePath, 'utf8');
@@ -56,7 +56,7 @@ describe('E2B Plugin Production Validation', () => {
       const fs = await import('fs');
       const path = await import('path');
 
-      const actionsDir = path.join(process.cwd(), 'src', 'actions');
+      const actionsDir = path.join(__dirname, '..', '..', '..', 'src', 'actions');
       const actionFiles = fs.readdirSync(actionsDir);
 
       for (const file of actionFiles) {
@@ -73,7 +73,7 @@ describe('E2B Plugin Production Validation', () => {
       const fs = await import('fs');
       const path = await import('path');
 
-      const configPath = path.join(process.cwd(), 'src', 'config', 'E2BConfig.ts');
+      const configPath = path.join(__dirname, '..', '..', '..', 'src', 'config', 'E2BConfig.ts');
       const configContent = fs.readFileSync(configPath, 'utf8');
 
       expect(configContent).toContain('maxCodeSize');
@@ -86,7 +86,7 @@ describe('E2B Plugin Production Validation', () => {
       const fs = await import('fs');
       const path = await import('path');
 
-      const planPath = path.join(process.cwd(), 'IMPLEMENTATION_PLAN.md');
+      const planPath = path.join(__dirname, '..', '..', '..', 'IMPLEMENTATION_PLAN.md');
       expect(fs.existsSync(planPath)).toBe(true);
 
       const planContent = fs.readFileSync(planPath, 'utf8');
@@ -102,7 +102,7 @@ describe('E2B Plugin Production Validation', () => {
       const fs = await import('fs');
       const path = await import('path');
 
-      const srcPath = path.join(process.cwd(), 'src');
+      const srcPath = path.join(__dirname, '..', '..', '..', 'src');
 
       async function checkDirectory(dir: string): Promise<void> {
         const items = fs.readdirSync(dir);
@@ -133,13 +133,10 @@ describe('E2B Plugin Production Validation', () => {
       const fs = await import('fs');
       const path = await import('path');
 
-      const serviceFiles = [
-        'src/services/E2BService.ts',
-        'src/services/ImprovedE2BService.ts'
-      ];
+      const serviceFiles = ['src/services/E2BService.ts', 'src/services/ImprovedE2BService.ts'];
 
       for (const file of serviceFiles) {
-        const filePath = path.join(process.cwd(), file);
+        const filePath = path.join(__dirname, '..', '..', '..', file);
         if (fs.existsSync(filePath)) {
           const content = fs.readFileSync(filePath, 'utf8');
 
@@ -162,7 +159,7 @@ describe('E2B Plugin Production Validation', () => {
       const fs = await import('fs');
       const path = await import('path');
 
-      const indexPath = path.join(process.cwd(), 'src', 'index.ts');
+      const indexPath = path.join(__dirname, '..', '..', '..', 'src', 'index.ts');
       const indexContent = fs.readFileSync(indexPath, 'utf8');
 
       expect(indexContent).toContain('export');
@@ -176,10 +173,10 @@ describe('E2B Plugin Production Validation', () => {
       const fs = await import('fs');
       const path = await import('path');
 
-      const tsconfigPath = path.join(process.cwd(), 'tsconfig.json');
+      const tsconfigPath = path.join(__dirname, '..', '..', '..', 'tsconfig.json');
       expect(fs.existsSync(tsconfigPath)).toBe(true);
 
-      const packagePath = path.join(process.cwd(), 'package.json');
+      const packagePath = path.join(__dirname, '..', '..', '..', 'package.json');
       const packageContent = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
 
       expect(packageContent.main).toBeDefined();
@@ -197,19 +194,24 @@ describe('Conversation Requirements Validation', () => {
     const path = await import('path');
 
     // 1. Check for real runtime tests (even if they don't run yet)
-    const testPath = path.join(process.cwd(), 'src', '__tests__', 'integration');
+    const testPath = path.join(__dirname, '..', '..', '..', 'src', '__tests__', 'integration');
     expect(fs.existsSync(testPath)).toBe(true);
 
     // 2. Check for configuration management
-    const configPath = path.join(process.cwd(), 'src', 'config');
+    const configPath = path.join(__dirname, '..', '..', '..', 'src', 'config');
     expect(fs.existsSync(configPath)).toBe(true);
 
     // 3. Check for improved service
-    const improvedServicePath = path.join(process.cwd(), 'src', 'services', 'ImprovedE2BService.ts');
+    const improvedServicePath = path.join(
+      path.join(__dirname, '..', '..', '..'),
+      'src',
+      'services',
+      'ImprovedE2BService.ts'
+    );
     expect(fs.existsSync(improvedServicePath)).toBe(true);
 
     // 4. Check for implementation plan
-    const planPath = path.join(process.cwd(), 'IMPLEMENTATION_PLAN.md');
+    const planPath = path.join(__dirname, '..', '..', '..', 'IMPLEMENTATION_PLAN.md');
     expect(fs.existsSync(planPath)).toBe(true);
   });
 
@@ -217,7 +219,12 @@ describe('Conversation Requirements Validation', () => {
     const fs = await import('fs');
     const path = await import('path');
 
-    const improvedServicePath = path.join(process.cwd(), 'src', 'services', 'ImprovedE2BService.ts');
+    const improvedServicePath = path.join(
+      path.join(__dirname, '..', '..', '..'),
+      'src',
+      'services',
+      'ImprovedE2BService.ts'
+    );
     const serviceContent = fs.readFileSync(improvedServicePath, 'utf8');
 
     // Should have all the production features we implemented

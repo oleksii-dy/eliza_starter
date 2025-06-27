@@ -6,12 +6,27 @@
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
 import { authenticateUser } from '../../lib/server/auth/session';
 import { createTokenPair } from '../../lib/server/utils/jwt';
-import { validateApiKey, createApiKey } from '../../lib/server/services/api-key-service';
-import { addCredits, deductCredits, getCreditBalance } from '../../lib/server/services/billing-service';
-import { setDatabaseContext, clearDatabaseContext } from '../../lib/database/context';
+import {
+  validateApiKey,
+  createApiKey,
+} from '../../lib/server/services/api-key-service';
+import {
+  addCredits,
+  deductCredits,
+  getCreditBalance,
+} from '../../lib/server/services/billing-service';
+import {
+  setDatabaseContext,
+  clearDatabaseContext,
+} from '../../lib/database/context';
 import { CreditService } from '../../lib/billing/credit-service';
 import { db, getDatabase, initializeDatabase } from '../../lib/database';
-import { organizations, users, apiKeys, creditTransactions } from '../../lib/database/schema';
+import {
+  organizations,
+  users,
+  apiKeys,
+  creditTransactions,
+} from '../../lib/database/schema';
 import { eq } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
@@ -37,10 +52,16 @@ describe('Comprehensive Security Testing', () => {
 
     // Clean up any existing test data
     try {
-      await database.delete(creditTransactions).where(eq(creditTransactions.organizationId, testOrgId));
-      await database.delete(apiKeys).where(eq(apiKeys.organizationId, testOrgId));
+      await database
+        .delete(creditTransactions)
+        .where(eq(creditTransactions.organizationId, testOrgId));
+      await database
+        .delete(apiKeys)
+        .where(eq(apiKeys.organizationId, testOrgId));
       await database.delete(users).where(eq(users.organizationId, testOrgId));
-      await database.delete(organizations).where(eq(organizations.id, testOrgId));
+      await database
+        .delete(organizations)
+        .where(eq(organizations.id, testOrgId));
     } catch (error) {
       // Ignore cleanup errors
     }
@@ -77,10 +98,16 @@ describe('Comprehensive Security Testing', () => {
 
   afterEach(async () => {
     try {
-      await database.delete(creditTransactions).where(eq(creditTransactions.organizationId, testOrgId));
-      await database.delete(apiKeys).where(eq(apiKeys.organizationId, testOrgId));
+      await database
+        .delete(creditTransactions)
+        .where(eq(creditTransactions.organizationId, testOrgId));
+      await database
+        .delete(apiKeys)
+        .where(eq(apiKeys.organizationId, testOrgId));
       await database.delete(users).where(eq(users.organizationId, testOrgId));
-      await database.delete(organizations).where(eq(organizations.id, testOrgId));
+      await database
+        .delete(organizations)
+        .where(eq(organizations.id, testOrgId));
     } catch (error) {
       console.warn('Security test cleanup error:', error);
     }
@@ -93,17 +120,19 @@ describe('Comprehensive Security Testing', () => {
         'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.invalid.signature',
         '',
         'Bearer invalid-token',
-        'malformed-token-format'
+        'malformed-token-format',
       ];
 
       for (const token of invalidTokens) {
         const mockRequest = {
           headers: {
             get: (name: string) => {
-              if (name === 'authorization') {return `Bearer ${token}`;}
+              if (name === 'authorization') {
+                return `Bearer ${token}`;
+              }
               return null;
-            }
-          }
+            },
+          },
         } as any;
 
         const result = await authenticateUser(mockRequest);
@@ -119,17 +148,19 @@ describe('Comprehensive Security Testing', () => {
         email: 'test@example.com',
         organizationId: testOrgId,
         role: 'admin',
-        exp: Math.floor(Date.now() / 1000) - 3600 // Expired 1 hour ago
+        exp: Math.floor(Date.now() / 1000) - 3600, // Expired 1 hour ago
       };
 
       // This should fail during token validation
       const mockRequest = {
         headers: {
           get: (name: string) => {
-            if (name === 'authorization') {return 'Bearer expired-token';}
+            if (name === 'authorization') {
+              return 'Bearer expired-token';
+            }
             return null;
-          }
-        }
+          },
+        },
       } as any;
 
       const result = await authenticateUser(mockRequest);
@@ -167,7 +198,7 @@ describe('Comprehensive Security Testing', () => {
         'invalid-format',
         '',
         `eliza_${'x'.repeat(100)}`, // Too long
-        'fake_key_format'
+        'fake_key_format',
       ];
 
       for (const invalidKey of invalidKeys) {
@@ -211,7 +242,7 @@ describe('Comprehensive Security Testing', () => {
         "1' OR '1'='1",
         "admin'; DELETE FROM users; --",
         "' UNION SELECT password FROM users --",
-        '"; DROP DATABASE elizaos; --'
+        '"; DROP DATABASE elizaos; --',
       ];
 
       for (const maliciousInput of maliciousInputs) {
@@ -219,7 +250,7 @@ describe('Comprehensive Security Testing', () => {
           // Test database context with malicious organization ID
           await setDatabaseContext({
             organizationId: maliciousInput,
-            userId: testUserId
+            userId: testUserId,
           });
 
           // If we get here, the context was set but should be safe due to parameterized queries
@@ -235,17 +266,15 @@ describe('Comprehensive Security Testing', () => {
       // Test that credit operations are safe from SQL injection
       const maliciousOrgId = "'; DROP TABLE creditTransactions; --";
 
-      await expect(
-        getCreditBalance(maliciousOrgId)
-      ).resolves.toBe(0); // Should return 0 for invalid UUID, not crash
+      await expect(getCreditBalance(maliciousOrgId)).resolves.toBe(0); // Should return 0 for invalid UUID, not crash
 
       await expect(
         deductCredits({
           organizationId: maliciousOrgId,
           userId: testUserId,
           amount: 10.0,
-          description: 'SQL injection test'
-        })
+          description: 'SQL injection test',
+        }),
       ).rejects.toThrow(); // Should safely reject invalid input
     });
   });
@@ -256,7 +285,8 @@ describe('Comprehensive Security Testing', () => {
         // Try to access non-existent organization
         await getCreditBalance('non-existent-org-id');
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
 
         // Error messages should not contain sensitive information
         expect(errorMessage).not.toMatch(/password/i);
@@ -271,7 +301,7 @@ describe('Comprehensive Security Testing', () => {
         '<script>alert("XSS")</script>',
         'javascript:alert("XSS")',
         '"><script>evil()</script>',
-        'DROP TABLE users;'
+        'DROP TABLE users;',
       ];
 
       for (const description of maliciousDescriptions) {
@@ -280,7 +310,7 @@ describe('Comprehensive Security Testing', () => {
           userId: testUserId,
           amount: 1.0,
           description,
-          type: 'adjustment'
+          type: 'adjustment',
         });
 
         // Description should be stored safely (exact sanitization depends on implementation)
@@ -296,7 +326,7 @@ describe('Comprehensive Security Testing', () => {
         '123',
         '',
         'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
-        '00000000-0000-0000-0000-000000000000'
+        '00000000-0000-0000-0000-000000000000',
       ];
 
       for (const invalidUUID of invalidUUIDs) {
@@ -321,7 +351,7 @@ describe('Comprehensive Security Testing', () => {
         // User from first org shouldn't access second org's data
         await setDatabaseContext({
           organizationId: testOrgId,
-          userId: testUserId
+          userId: testUserId,
         });
 
         // This should only return data for testOrgId, not otherOrgId
@@ -334,7 +364,9 @@ describe('Comprehensive Security Testing', () => {
         await clearDatabaseContext();
       } finally {
         // Clean up
-        await database.delete(organizations).where(eq(organizations.id, otherOrgId));
+        await database
+          .delete(organizations)
+          .where(eq(organizations.id, otherOrgId));
       }
     });
 
@@ -357,7 +389,7 @@ describe('Comprehensive Security Testing', () => {
         await setDatabaseContext({
           organizationId: testOrgId,
           userId: regularUser,
-          isAdmin: false
+          isAdmin: false,
         });
 
         // This depends on implementation - some operations might require admin role
@@ -387,8 +419,8 @@ describe('Comprehensive Security Testing', () => {
               userId: testUserId,
               amount,
               description: 'Invalid amount test',
-              type: 'adjustment'
-            })
+              type: 'adjustment',
+            }),
           ).rejects.toThrow();
         }
       }
@@ -399,25 +431,25 @@ describe('Comprehensive Security Testing', () => {
         {
           service: '<script>alert("XSS")</script>',
           operation: 'chat',
-          tokens: 100
+          tokens: 100,
         },
         {
           service: 'openai',
-          operation: '\'; DROP TABLE usage_records; --',
-          tokens: 100
+          operation: "'; DROP TABLE usage_records; --",
+          tokens: 100,
         },
         {
           service: 'openai',
           operation: 'chat',
-          tokens: -100 // Negative tokens
-        }
+          tokens: -100, // Negative tokens
+        },
       ];
 
       for (const context of invalidContexts) {
         const result = await CreditService.deductCreditsForUsage(
           testOrgId,
           testUserId,
-          context as any
+          context as any,
         );
 
         // Should handle invalid input gracefully
@@ -433,7 +465,7 @@ describe('Comprehensive Security Testing', () => {
       // Test that database connections are secure
       const dbConfig = {
         password: process.env.DB_PASSWORD,
-        ssl: process.env.DB_SSL
+        ssl: process.env.DB_SSL,
       };
 
       if (process.env.NODE_ENV === 'production') {
@@ -452,7 +484,10 @@ describe('Comprehensive Security Testing', () => {
       expect(crypto.createHash).toBeDefined();
 
       // Test basic hashing capability
-      const hash = crypto.createHash('sha256').update(sensitiveData).digest('hex');
+      const hash = crypto
+        .createHash('sha256')
+        .update(sensitiveData)
+        .digest('hex');
       expect(hash).toBeDefined();
       expect(hash).not.toBe(sensitiveData);
     });
@@ -462,13 +497,13 @@ describe('Comprehensive Security Testing', () => {
     test('should handle large request volumes gracefully', async () => {
       // Test that system can handle multiple concurrent requests
       const concurrentRequests = Array.from({ length: 10 }, () =>
-        getCreditBalance(testOrgId)
+        getCreditBalance(testOrgId),
       );
 
       const results = await Promise.allSettled(concurrentRequests);
 
       // All requests should either succeed or fail gracefully
-      results.forEach(result => {
+      results.forEach((result) => {
         if (result.status === 'fulfilled') {
           expect(typeof result.value).toBe('number');
         } else {
@@ -488,7 +523,7 @@ describe('Comprehensive Security Testing', () => {
           userId: testUserId,
           amount: 1.0,
           description: largeDescription,
-          type: 'adjustment'
+          type: 'adjustment',
         });
 
         // Should either succeed with truncated description or fail gracefully
@@ -507,10 +542,11 @@ describe('Comprehensive Security Testing', () => {
           organizationId: 'invalid-uuid-format',
           userId: testUserId,
           amount: 1000000, // Large amount to trigger various error paths
-          description: 'Error handling test'
+          description: 'Error handling test',
         });
       } catch (error) {
-        const errorString = error instanceof Error ? error.stack || error.message : String(error);
+        const errorString =
+          error instanceof Error ? error.stack || error.message : String(error);
 
         // Error messages should not contain file paths, secrets, or internal details
         expect(errorString).not.toMatch(/\/Users\/.*\/packages\//);

@@ -4,7 +4,11 @@
  */
 
 import { getDatabase } from '../database/connection';
-import { creditTransactions, organizations, auditLogs } from '../database/schema';
+import {
+  creditTransactions,
+  organizations,
+  auditLogs,
+} from '../database/schema';
 import { eq, and, gte, lte, desc, count, sum } from 'drizzle-orm';
 
 export interface BillingMetrics {
@@ -51,7 +55,7 @@ export class BillingMetricsCollector {
   static async getBillingMetrics(
     startDate: Date,
     endDate: Date,
-    organizationId?: string
+    organizationId?: string,
   ): Promise<BillingMetrics> {
     const cacheKey = `billing-metrics-${startDate.getTime()}-${endDate.getTime()}-${organizationId || 'all'}`;
     const cached = this.getCachedData(cacheKey);
@@ -67,7 +71,9 @@ export class BillingMetricsCollector {
       ];
 
       if (organizationId) {
-        baseConditions.push(eq(creditTransactions.organizationId, organizationId));
+        baseConditions.push(
+          eq(creditTransactions.organizationId, organizationId),
+        );
       }
 
       // Get transaction counts and totals
@@ -88,7 +94,7 @@ export class BillingMetricsCollector {
             ...baseConditions,
             eq(creditTransactions.type, 'purchase'),
             // Add success criteria based on payment method
-          )
+          ),
         );
 
       // Get failed payments
@@ -98,8 +104,8 @@ export class BillingMetricsCollector {
         .where(
           and(
             ...baseConditions,
-            eq(creditTransactions.type, 'auto_topup_failed')
-          )
+            eq(creditTransactions.type, 'auto_topup_failed'),
+          ),
         );
 
       // Get auto top-ups
@@ -107,10 +113,7 @@ export class BillingMetricsCollector {
         .select({ count: count() })
         .from(creditTransactions)
         .where(
-          and(
-            ...baseConditions,
-            eq(creditTransactions.type, 'auto_topup')
-          )
+          and(...baseConditions, eq(creditTransactions.type, 'auto_topup')),
         );
 
       // Get active organizations count
@@ -118,7 +121,7 @@ export class BillingMetricsCollector {
         .select({ count: count() })
         .from(organizations)
         .where(
-          organizationId ? eq(organizations.id, organizationId) : undefined
+          organizationId ? eq(organizations.id, organizationId) : undefined,
         );
 
       const totalRevenue = parseFloat(transactionStats.totalRevenue || '0');
@@ -133,8 +136,14 @@ export class BillingMetricsCollector {
         totalCreditsIssued: totalRevenue, // Assuming 1:1 USD to credit ratio
         activeOrganizations: activeOrgs.count || 0,
         autoTopUpsTriggered: autoTopUps.count || 0,
-        webhookProcessingTime: await this.getAverageWebhookProcessingTime(startDate, endDate),
-        errorRate: this.calculateErrorRate(successfulPayments.count || 0, failedPayments.count || 0),
+        webhookProcessingTime: await this.getAverageWebhookProcessingTime(
+          startDate,
+          endDate,
+        ),
+        errorRate: this.calculateErrorRate(
+          successfulPayments.count || 0,
+          failedPayments.count || 0,
+        ),
       };
 
       this.setCachedData(cacheKey, metrics);
@@ -148,9 +157,15 @@ export class BillingMetricsCollector {
   /**
    * Get revenue metrics broken down by time periods
    */
-  static async getRevenueMetrics(organizationId?: string): Promise<RevenueMetrics> {
+  static async getRevenueMetrics(
+    organizationId?: string,
+  ): Promise<RevenueMetrics> {
     const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfDay = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
     const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const startOfYear = new Date(now.getFullYear(), 0, 1);
@@ -171,7 +186,7 @@ export class BillingMetricsCollector {
   static async getPaymentMethodMetrics(
     startDate: Date,
     endDate: Date,
-    organizationId?: string
+    organizationId?: string,
   ): Promise<PaymentMethodMetrics> {
     const db = getDatabase();
 
@@ -182,7 +197,9 @@ export class BillingMetricsCollector {
     ];
 
     if (organizationId) {
-      baseConditions.push(eq(creditTransactions.organizationId, organizationId));
+      baseConditions.push(
+        eq(creditTransactions.organizationId, organizationId),
+      );
     }
 
     const transactions = await db
@@ -223,7 +240,7 @@ export class BillingMetricsCollector {
   static async getErrorMetrics(
     startDate: Date,
     endDate: Date,
-    organizationId?: string
+    organizationId?: string,
   ): Promise<ErrorMetrics> {
     const db = getDatabase();
 
@@ -239,22 +256,12 @@ export class BillingMetricsCollector {
     const [paymentFailures] = await db
       .select({ count: count() })
       .from(auditLogs)
-      .where(
-        and(
-          ...baseConditions,
-          eq(auditLogs.action, 'payment_failed')
-        )
-      );
+      .where(and(...baseConditions, eq(auditLogs.action, 'payment_failed')));
 
     const [webhookFailures] = await db
       .select({ count: count() })
       .from(auditLogs)
-      .where(
-        and(
-          ...baseConditions,
-          eq(auditLogs.action, 'webhook_failed')
-        )
-      );
+      .where(and(...baseConditions, eq(auditLogs.action, 'webhook_failed')));
 
     const [autoTopUpFailures] = await db
       .select({ count: count() })
@@ -264,8 +271,10 @@ export class BillingMetricsCollector {
           gte(creditTransactions.createdAt, startDate),
           lte(creditTransactions.createdAt, endDate),
           eq(creditTransactions.type, 'auto_topup_failed'),
-          organizationId ? eq(creditTransactions.organizationId, organizationId) : undefined
-        )
+          organizationId
+            ? eq(creditTransactions.organizationId, organizationId)
+            : undefined,
+        ),
       );
 
     const paymentFailureCount = paymentFailures.count || 0;
@@ -277,7 +286,8 @@ export class BillingMetricsCollector {
       webhookFailures: webhookFailureCount,
       autoTopUpFailures: autoTopUpFailureCount,
       apiErrors: 0, // Would need to track API errors separately
-      totalErrors: paymentFailureCount + webhookFailureCount + autoTopUpFailureCount,
+      totalErrors:
+        paymentFailureCount + webhookFailureCount + autoTopUpFailureCount,
     };
   }
 
@@ -299,34 +309,29 @@ export class BillingMetricsCollector {
     const last30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const previous30Days = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
 
-    const [
-      currentMetrics,
-      previousMetrics,
-      revenue,
-      paymentMethods,
-      errors,
-    ] = await Promise.all([
-      this.getBillingMetrics(last30Days, now, organizationId),
-      this.getBillingMetrics(previous30Days, last30Days, organizationId),
-      this.getRevenueMetrics(organizationId),
-      this.getPaymentMethodMetrics(last30Days, now, organizationId),
-      this.getErrorMetrics(last30Days, now, organizationId),
-    ]);
+    const [currentMetrics, previousMetrics, revenue, paymentMethods, errors] =
+      await Promise.all([
+        this.getBillingMetrics(last30Days, now, organizationId),
+        this.getBillingMetrics(previous30Days, last30Days, organizationId),
+        this.getRevenueMetrics(organizationId),
+        this.getPaymentMethodMetrics(last30Days, now, organizationId),
+        this.getErrorMetrics(last30Days, now, organizationId),
+      ]);
 
     // Calculate trends
     const transactionGrowth = this.calculateGrowthRate(
       currentMetrics.totalTransactions,
-      previousMetrics.totalTransactions
+      previousMetrics.totalTransactions,
     );
 
     const revenueGrowth = this.calculateGrowthRate(
       currentMetrics.totalRevenue,
-      previousMetrics.totalRevenue
+      previousMetrics.totalRevenue,
     );
 
     const errorTrend = this.calculateGrowthRate(
       errors.totalErrors,
-      0 // Would calculate previous period errors
+      0, // Would calculate previous period errors
     );
 
     return {
@@ -347,9 +352,15 @@ export class BillingMetricsCollector {
    */
   static async getSystemHealth(): Promise<{
     status: 'healthy' | 'degraded' | 'unhealthy';
-    checks: Record<string, { status: boolean; message: string; responseTime?: number }>;
+    checks: Record<
+      string,
+      { status: boolean; message: string; responseTime?: number }
+    >;
   }> {
-    const checks: Record<string, { status: boolean; message: string; responseTime?: number }> = {};
+    const checks: Record<
+      string,
+      { status: boolean; message: string; responseTime?: number }
+    > = {};
 
     // Database health
     try {
@@ -408,9 +419,11 @@ export class BillingMetricsCollector {
     };
 
     // Overall health status
-    const healthyChecks = Object.values(checks).filter(check => check.status).length;
+    const healthyChecks = Object.values(checks).filter(
+      (check) => check.status,
+    ).length;
     const totalChecks = Object.keys(checks).length;
-    
+
     let status: 'healthy' | 'degraded' | 'unhealthy';
     if (healthyChecks === totalChecks) {
       status = 'healthy';
@@ -427,7 +440,7 @@ export class BillingMetricsCollector {
   private static async getRevenueBetween(
     startDate: Date,
     endDate: Date,
-    organizationId?: string
+    organizationId?: string,
   ): Promise<number> {
     const db = getDatabase();
 
@@ -451,19 +464,25 @@ export class BillingMetricsCollector {
 
   private static async getAverageWebhookProcessingTime(
     startDate: Date,
-    endDate: Date
+    endDate: Date,
   ): Promise<number> {
     // This would require tracking webhook processing times
     // For now, return a mock value
     return 150; // milliseconds
   }
 
-  private static calculateErrorRate(successful: number, failed: number): number {
+  private static calculateErrorRate(
+    successful: number,
+    failed: number,
+  ): number {
     const total = successful + failed;
     return total > 0 ? (failed / total) * 100 : 0;
   }
 
-  private static calculateGrowthRate(current: number, previous: number): number {
+  private static calculateGrowthRate(
+    current: number,
+    previous: number,
+  ): number {
     if (previous === 0) return current > 0 ? 100 : 0;
     return ((current - previous) / previous) * 100;
   }
@@ -508,7 +527,7 @@ export class BillingMetricsEmitter {
   static emit(event: string, data: any): void {
     const eventListeners = this.listeners.get(event);
     if (eventListeners) {
-      eventListeners.forEach(listener => {
+      eventListeners.forEach((listener) => {
         try {
           listener(data);
         } catch (error) {

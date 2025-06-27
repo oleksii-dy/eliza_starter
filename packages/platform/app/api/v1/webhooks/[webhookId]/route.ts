@@ -15,7 +15,7 @@ const updateWebhookSchema = z.object({
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ webhookId: string }> }
+  { params }: { params: Promise<{ webhookId: string }> },
 ) {
   try {
     const resolvedParams = await params;
@@ -30,7 +30,9 @@ export async function PATCH(
 
     // Find the webhook
     const webhookIndex = webhooksDB.findIndex(
-      webhook => webhook.id === webhookId && webhook.organizationId === session.user.organizationId
+      (webhook) =>
+        webhook.id === webhookId &&
+        webhook.organizationId === session.user.organizationId,
     );
 
     if (webhookIndex === -1) {
@@ -47,27 +49,32 @@ export async function PATCH(
       webhook,
       message: 'Webhook updated successfully',
     });
-
   } catch (error: any) {
     console.error('Webhook update error:', error);
-    
+
     if (error instanceof z.ZodError) {
-      return NextResponse.json({
-        error: 'Validation error',
-        details: error.errors,
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Validation error',
+          details: error.errors,
+        },
+        { status: 400 },
+      );
     }
 
-    return NextResponse.json({
-      error: 'Failed to update webhook',
-      message: error.message || 'Unknown error occurred'
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to update webhook',
+        message: error.message || 'Unknown error occurred',
+      },
+      { status: 500 },
+    );
   }
 }
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ webhookId: string }> }
+  { params }: { params: Promise<{ webhookId: string }> },
 ) {
   try {
     const resolvedParams = await params;
@@ -80,7 +87,9 @@ export async function DELETE(
 
     // Find and remove the webhook
     const webhookIndex = webhooksDB.findIndex(
-      webhook => webhook.id === webhookId && webhook.organizationId === session.user.organizationId
+      (webhook) =>
+        webhook.id === webhookId &&
+        webhook.organizationId === session.user.organizationId,
     );
 
     if (webhookIndex === -1) {
@@ -93,12 +102,14 @@ export async function DELETE(
       success: true,
       message: 'Webhook deleted successfully',
     });
-
   } catch (error: any) {
     console.error('Webhook deletion error:', error);
-    return NextResponse.json({
-      error: 'Failed to delete webhook',
-      message: error.message || 'Unknown error occurred'
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to delete webhook',
+        message: error.message || 'Unknown error occurred',
+      },
+      { status: 500 },
+    );
   }
 }

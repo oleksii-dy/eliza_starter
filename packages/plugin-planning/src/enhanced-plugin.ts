@@ -71,7 +71,7 @@ Respond in this JSON format:
       const response = await runtime.useModel('TEXT_SMALL', {
         prompt: classificationPrompt,
         temperature: 0.1, // Low temperature for consistent classification
-        maxTokens: 500
+        maxTokens: 500,
       });
 
       // Parse LLM response
@@ -113,7 +113,6 @@ Reasoning: ${analysis.reasoning}
           reasoning: analysis.reasoning,
         },
       };
-
     } catch (error) {
       console.warn('LLM classification failed, using fallback:', error);
       return fallbackClassification(text);
@@ -129,21 +128,29 @@ function fallbackClassification(text: string) {
   let complexity = 'simple';
 
   // Enhanced pattern matching
-  const enterpriseIndicators = ['enterprise', 'organization', 'company', 'business', 'stakeholder', 'board', 'executive'];
+  const enterpriseIndicators = [
+    'enterprise',
+    'organization',
+    'company',
+    'business',
+    'stakeholder',
+    'board',
+    'executive',
+  ];
   const strategicIndicators = ['plan', 'strategy', 'coordinate', 'manage', 'organize', 'workflow'];
   const researchIndicators = ['research', 'analyze', 'investigate', 'study', 'evaluate'];
   const complexityIndicators = ['integration', 'migration', 'transformation', 'implementation'];
 
-  if (enterpriseIndicators.some(ind => textLower.includes(ind))) {
+  if (enterpriseIndicators.some((ind) => textLower.includes(ind))) {
     classification = 'ENTERPRISE';
     complexity = 'enterprise';
-  } else if (strategicIndicators.some(ind => textLower.includes(ind))) {
+  } else if (strategicIndicators.some((ind) => textLower.includes(ind))) {
     classification = 'STRATEGIC';
     complexity = 'complex';
-  } else if (researchIndicators.some(ind => textLower.includes(ind))) {
+  } else if (researchIndicators.some((ind) => textLower.includes(ind))) {
     classification = 'RESEARCH_NEEDED';
     complexity = 'medium';
-  } else if (complexityIndicators.some(ind => textLower.includes(ind))) {
+  } else if (complexityIndicators.some((ind) => textLower.includes(ind))) {
     classification = 'CAPABILITY_REQUEST';
     complexity = 'medium';
   }
@@ -169,24 +176,36 @@ export const enhancedCreatePlanAction: Action = {
     const text = message.content?.text || '';
 
     // Always plan for complex requests
-    if (analysis?.requiresPlanning) {return true;}
+    if (analysis?.requiresPlanning) {
+      return true;
+    }
 
     // Plan for any request with keywords indicating complexity
-    if (text.includes('plan') ||
-        text.includes('strategy') ||
-        text.includes('coordinate') ||
-        text.includes('organize') ||
-        text.includes('project') ||
-        text.includes('enterprise') ||
-        text.includes('stakeholder')) {return true;}
+    if (
+      text.includes('plan') ||
+      text.includes('strategy') ||
+      text.includes('coordinate') ||
+      text.includes('organize') ||
+      text.includes('project') ||
+      text.includes('enterprise') ||
+      text.includes('stakeholder')
+    ) {
+      return true;
+    }
 
     // Plan for medium+ complexity or longer requests
-    if (analysis?.complexity && analysis.complexity !== 'simple') {return true;}
-    if (text.length > 80) {return true;} // Longer requests likely need planning
+    if (analysis?.complexity && analysis.complexity !== 'simple') {
+      return true;
+    }
+    if (text.length > 80) {
+      return true;
+    } // Longer requests likely need planning
 
     // Plan for multi-step indicators
     const multiStepIndicators = ['and', 'then', 'also', 'after', 'before', 'while'];
-    if (multiStepIndicators.some(indicator => text.toLowerCase().includes(indicator))) {return true;}
+    if (multiStepIndicators.some((indicator) => text.toLowerCase().includes(indicator))) {
+      return true;
+    }
 
     return false;
   },
@@ -206,13 +225,18 @@ export const enhancedCreatePlanAction: Action = {
       const availableProviders = getAvailableProviders(runtime);
 
       // Create comprehensive planning prompt
-      const planningPrompt = createPlanningPrompt(userRequest, analysis, availableActions, availableProviders);
+      const planningPrompt = createPlanningPrompt(
+        userRequest,
+        analysis,
+        availableActions,
+        availableProviders
+      );
 
       // Generate plan using LLM
       const response = await runtime.useModel('TEXT_LARGE', {
         prompt: planningPrompt,
         temperature: 0.3, // Some creativity but mostly structured
-        maxTokens: 1500
+        maxTokens: 1500,
       });
 
       // Parse the plan from LLM response
@@ -231,16 +255,15 @@ export const enhancedCreatePlanAction: Action = {
           plan,
           planCreated: true,
           planType: 'enhanced',
-          nextActions: plan.steps.map((s: any) => s.action)
+          nextActions: plan.steps.map((s: any) => s.action),
         },
         data: {
           strategicPlan: plan,
           executionSteps: plan.steps.map((s: any) => s.action),
-          planningAnalysis: analysis
+          planningAnalysis: analysis,
         },
         text: `Enhanced plan created with ${plan.steps.length} steps`,
       };
-
     } catch (error) {
       console.warn('LLM planning failed, using fallback:', error);
       return fallbackPlanning(userRequest, analysis, callback);
@@ -251,17 +274,20 @@ export const enhancedCreatePlanAction: Action = {
     [
       {
         name: 'user',
-        content: { text: 'I need to coordinate a complex project involving multiple teams and external vendors' }
+        content: {
+          text: 'I need to coordinate a complex project involving multiple teams and external vendors',
+        },
       },
       {
         name: 'agent',
         content: {
           text: "I'll create a comprehensive strategic plan that considers all stakeholders and coordinates the complex requirements.",
-          thought: 'This requires sophisticated planning with stakeholder analysis and coordination steps.',
-          actions: ['CREATE_ENHANCED_PLAN']
-        }
-      }
-    ]
+          thought:
+            'This requires sophisticated planning with stakeholder analysis and coordination steps.',
+          actions: ['CREATE_ENHANCED_PLAN'],
+        },
+      },
+    ],
   ],
 };
 
@@ -272,7 +298,10 @@ export const enhancedExecutePlanAction: Action = {
   description: 'Executes enhanced plans with intelligent step-by-step processing',
 
   validate: async (runtime, message, state) => {
-    return state?.values?.planCreated && (state?.values?.planType === 'enhanced' || state?.data?.strategicPlan);
+    return (
+      state?.values?.planCreated &&
+      (state?.values?.planType === 'enhanced' || state?.data?.strategicPlan)
+    );
   },
 
   handler: async (runtime, message, state, options, callback) => {
@@ -307,7 +336,7 @@ export const enhancedExecutePlanAction: Action = {
       }
 
       // Simulate realistic processing time
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await new Promise((resolve) => setTimeout(resolve, 150));
     }
 
     if (callback) {
@@ -323,12 +352,12 @@ export const enhancedExecutePlanAction: Action = {
         planExecuted: true,
         executionComplete: true,
         success: true,
-        executionResults
+        executionResults,
       },
       data: {
         executionResult: 'success',
         completedSteps: plan.steps.length,
-        stepResults: executionResults
+        stepResults: executionResults,
       },
       text: 'Enhanced plan execution completed successfully',
     };
@@ -352,11 +381,16 @@ function getAvailableProviders(runtime: any): string[] {
   const providers = runtime.providers || [];
   return providers.map((provider: any) => ({
     name: provider.name,
-    description: provider.description
+    description: provider.description,
   }));
 }
 
-function createPlanningPrompt(userRequest: string, analysis: any, availableActions: any[], availableProviders: any[]): string {
+function createPlanningPrompt(
+  userRequest: string,
+  analysis: any,
+  availableActions: any[],
+  availableProviders: any[]
+): string {
   return `You are an intelligent planning assistant. Create a comprehensive strategic plan for the following request:
 
 USER REQUEST: "${userRequest}"
@@ -369,9 +403,9 @@ ANALYSIS CONTEXT:
 - Constraints: ${analysis.constraints?.join(', ') || 'None identified'}
 - Dependencies: ${analysis.dependencies?.join(', ') || 'None identified'}
 
-AVAILABLE ACTIONS: ${availableActions.map(a => `${a.name} (${a.description})`).join(', ')}
+AVAILABLE ACTIONS: ${availableActions.map((a) => `${a.name} (${a.description})`).join(', ')}
 
-AVAILABLE PROVIDERS: ${availableProviders.map(p => `${p.name} (${p.description})`).join(', ')}
+AVAILABLE PROVIDERS: ${availableProviders.map((p) => `${p.name} (${p.description})`).join(', ')}
 
 Create a detailed plan that:
 1. Breaks down the request into logical, executable steps
@@ -417,7 +451,7 @@ function parsePlanFromLLMResponse(response: string, userRequest: string): any {
         complexity: planData.complexity || 'medium',
         steps: planData.steps || [
           { number: 1, action: 'ANALYZE_REQUEST', description: 'Analyze the request' },
-          { number: 2, action: 'EXECUTE_ACTION', description: 'Execute the required actions' }
+          { number: 2, action: 'EXECUTE_ACTION', description: 'Execute the required actions' },
         ],
         stakeholders: planData.stakeholders || [],
         constraints: planData.constraints || [],
@@ -438,45 +472,47 @@ function parsePlanFromLLMResponse(response: string, userRequest: string): any {
     steps: [
       { number: 1, action: 'ANALYZE_REQUEST', description: 'Analyze the user request' },
       { number: 2, action: 'EXECUTE_ACTION', description: 'Execute the required actions' },
-      { number: 3, action: 'PROVIDE_RESPONSE', description: 'Provide results to user' }
+      { number: 3, action: 'PROVIDE_RESPONSE', description: 'Provide results to user' },
     ],
     stakeholders: ['user'],
     constraints: [],
     risks: [],
     success_criteria: ['request completed'],
     estimated_duration: '15 minutes',
-    resources_needed: ['system access']
+    resources_needed: ['system access'],
   };
 }
 
 async function generateStepExecution(step: any, _plan: any, _runtime: any): Promise<any> {
   // Generate contextual execution message based on step action
   const actionMessages = {
-    'ANALYZE_REQUEST': 'Request analysis completed - identified key requirements and objectives',
-    'EXECUTE_ACTION': 'Core action execution completed successfully',
-    'PROVIDE_RESPONSE': 'Response prepared and delivered to user',
-    'COMPOSE_EMAIL': 'Email composed with all required details and context',
-    'SEND_EMAIL': 'Email sent successfully to all recipients',
-    'SEARCH_INFORMATION': 'Information search completed - relevant data gathered',
-    'ANALYZE_RESULTS': 'Analysis completed - findings synthesized and validated',
-    'GATHER_DATA': 'Data collection completed from all specified sources',
-    'CREATE_DOCUMENT': 'Document created with comprehensive content and formatting',
-    'CHECK_CALENDAR': 'Calendar reviewed - availability and conflicts identified',
-    'SCHEDULE_MEETING': 'Meeting scheduled with all stakeholders and details confirmed',
-    'STAKEHOLDER_ANALYSIS': 'Stakeholder analysis completed - all parties identified and engaged',
-    'RISK_ASSESSMENT': 'Risk assessment completed - mitigation strategies developed',
-    'RESOURCE_PLANNING': 'Resource planning completed - requirements and allocation defined',
-    'COMPLIANCE_CHECK': 'Compliance verification completed - all requirements validated'
+    ANALYZE_REQUEST: 'Request analysis completed - identified key requirements and objectives',
+    EXECUTE_ACTION: 'Core action execution completed successfully',
+    PROVIDE_RESPONSE: 'Response prepared and delivered to user',
+    COMPOSE_EMAIL: 'Email composed with all required details and context',
+    SEND_EMAIL: 'Email sent successfully to all recipients',
+    SEARCH_INFORMATION: 'Information search completed - relevant data gathered',
+    ANALYZE_RESULTS: 'Analysis completed - findings synthesized and validated',
+    GATHER_DATA: 'Data collection completed from all specified sources',
+    CREATE_DOCUMENT: 'Document created with comprehensive content and formatting',
+    CHECK_CALENDAR: 'Calendar reviewed - availability and conflicts identified',
+    SCHEDULE_MEETING: 'Meeting scheduled with all stakeholders and details confirmed',
+    STAKEHOLDER_ANALYSIS: 'Stakeholder analysis completed - all parties identified and engaged',
+    RISK_ASSESSMENT: 'Risk assessment completed - mitigation strategies developed',
+    RESOURCE_PLANNING: 'Resource planning completed - requirements and allocation defined',
+    COMPLIANCE_CHECK: 'Compliance verification completed - all requirements validated',
   };
 
-  const message = (actionMessages as any)[step.action] || `${step.action.toLowerCase().replace('_', ' ')} completed successfully`;
+  const message =
+    (actionMessages as any)[step.action] ||
+    `${step.action.toLowerCase().replace('_', ' ')} completed successfully`;
 
   return {
     step: step.number,
     action: step.action,
     message,
     timestamp: Date.now(),
-    success: true
+    success: true,
   };
 }
 
@@ -491,13 +527,25 @@ function fallbackPlanning(userRequest: string, analysis: any, callback: any): an
   }
 
   if (text.includes('research') || text.includes('analyze')) {
-    steps.push({ number: steps.length + 1, action: 'SEARCH_INFORMATION', description: 'Search for information' });
-    steps.push({ number: steps.length + 1, action: 'ANALYZE_RESULTS', description: 'Analyze results' });
+    steps.push({
+      number: steps.length + 1,
+      action: 'SEARCH_INFORMATION',
+      description: 'Search for information',
+    });
+    steps.push({
+      number: steps.length + 1,
+      action: 'ANALYZE_RESULTS',
+      description: 'Analyze results',
+    });
   }
 
   if (text.includes('document') || text.includes('report')) {
     steps.push({ number: steps.length + 1, action: 'GATHER_DATA', description: 'Gather data' });
-    steps.push({ number: steps.length + 1, action: 'CREATE_DOCUMENT', description: 'Create document' });
+    steps.push({
+      number: steps.length + 1,
+      action: 'CREATE_DOCUMENT',
+      description: 'Create document',
+    });
   }
 
   if (steps.length === 0) {

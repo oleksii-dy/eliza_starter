@@ -31,6 +31,7 @@ mock.module('@elizaos/core', () => ({
 import { RpcService } from '../../services/RpcService';
 import { Connection } from '@solana/web3.js';
 import { logger } from '@elizaos/core';
+import { createMockRuntime } from '@elizaos/core/test-utils';
 
 describe('RpcService', () => {
   let service: RpcService;
@@ -40,7 +41,7 @@ describe('RpcService', () => {
   beforeEach(() => {
     mock.restore();
 
-    mockRuntime = {
+    mockRuntime = createMockRuntime({
       getSetting: mock((key: string) => {
         const settings: Record<string, string> = {
           SOLANA_RPC_URL: 'https://api.devnet.solana.com',
@@ -49,7 +50,7 @@ describe('RpcService', () => {
         };
         return settings[key];
       }),
-    };
+    });
 
     service = new RpcService(mockRuntime);
     mockConnection = (Connection as any).mock.results[0]?.value;

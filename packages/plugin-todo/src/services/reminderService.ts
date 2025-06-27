@@ -150,7 +150,8 @@ export class TodoReminderService extends Service {
     else if (todo.type === 'daily') {
       const hour = now.getHours();
       // Morning reminder at 9 AM
-      if (hour === 9 || hour === 18) { // Evening reminder at 6 PM
+      if (hour === 9 || hour === 18) {
+        // Evening reminder at 6 PM
         // Check if completed today
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -169,7 +170,11 @@ export class TodoReminderService extends Service {
     }
   }
 
-  private async sendReminder(todo: TodoData, reminderType: string, priority: 'low' | 'medium' | 'high'): Promise<void> {
+  private async sendReminder(
+    todo: TodoData,
+    reminderType: string,
+    priority: 'low' | 'medium' | 'high'
+  ): Promise<void> {
     try {
       const title = this.formatReminderTitle(todo, reminderType);
       const body = this.formatReminderBody(todo, reminderType);
@@ -231,7 +236,9 @@ export class TodoReminderService extends Service {
       });
 
       if (result && result.success) {
-        logger.info(`Reminder delivered via rolodex to platforms: ${result.platforms?.join(', ') || 'unknown'}`);
+        logger.info(
+          `Reminder delivered via rolodex to platforms: ${result.platforms?.join(', ') || 'unknown'}`
+        );
       } else {
         logger.warn('Rolodex message delivery failed:', result?.error || 'Unknown error');
       }
@@ -261,7 +268,7 @@ export class TodoReminderService extends Service {
       case 'upcoming':
         return `Your task "${todo.name}" is due soon. Don't forget to complete it!`;
       case 'daily':
-        return 'Don\'t forget to complete your daily tasks today!';
+        return "Don't forget to complete your daily tasks today!";
       default:
         return `Reminder about your task: ${todo.name}`;
     }
@@ -290,6 +297,8 @@ export class TodoReminderService extends Service {
 
   static async stop(runtime: IAgentRuntime): Promise<void> {
     const service = runtime.getService(TodoReminderService.serviceType);
-    if (service) {await service.stop();}
+    if (service) {
+      await service.stop();
+    }
   }
 }

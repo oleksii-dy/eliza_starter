@@ -33,9 +33,11 @@ export function PlatformWrapper() {
       try {
         const isAccessible = await checkServerAccessibility();
         setIsServerAccessible(isAccessible);
-        
+
         if (!isAccessible) {
-          setServerError('Platform server is not accessible. Please ensure the platform is running.');
+          setServerError(
+            'Platform server is not accessible. Please ensure the platform is running.'
+          );
         } else {
           setServerError(null);
         }
@@ -46,7 +48,7 @@ export function PlatformWrapper() {
     };
 
     checkServer();
-    
+
     // Poll server accessibility every 5 seconds
     const interval = setInterval(checkServer, 5000);
     return () => clearInterval(interval);
@@ -66,41 +68,53 @@ export function PlatformWrapper() {
   // Show login form if not authenticated or explicitly requested
   if (!auth.isAuthenticated || showLogin) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
-        <div style={{
+      <div
+        style={{
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '20px 24px',
-          background: 'rgba(255, 255, 255, 0.1)',
-          backdropFilter: 'blur(10px)'
-        }}>
-          <div style={{
+          flexDirection: 'column',
+        }}
+      >
+        <div
+          style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '12px'
-          }}>
-            <div style={{
-              width: '32px',
-              height: '32px',
-              background: 'linear-gradient(45deg, #3b82f6, #8b5cf6)',
-              borderRadius: '8px'
-            }}></div>
-            <h1 style={{
-              margin: '0',
-              fontSize: '20px',
-              fontWeight: '700',
-              color: 'white',
-              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif'
-            }}>ElizaOS Platform</h1>
+            justifyContent: 'space-between',
+            padding: '20px 24px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(10px)',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+            }}
+          >
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                background: 'linear-gradient(45deg, #3b82f6, #8b5cf6)',
+                borderRadius: '8px',
+              }}
+            ></div>
+            <h1
+              style={{
+                margin: '0',
+                fontSize: '20px',
+                fontWeight: '700',
+                color: 'white',
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
+              }}
+            >
+              ElizaOS Platform
+            </h1>
           </div>
           {auth.isAuthenticated && (
-            <button 
+            <button
               style={{
                 padding: '8px 16px',
                 background: 'rgba(255, 255, 255, 0.2)',
@@ -109,7 +123,7 @@ export function PlatformWrapper() {
                 color: 'white',
                 fontSize: '14px',
                 cursor: 'pointer',
-                transition: 'all 0.2s ease'
+                transition: 'all 0.2s ease',
               }}
               onClick={() => setShowLogin(false)}
             >
@@ -118,50 +132,56 @@ export function PlatformWrapper() {
           )}
         </div>
 
-        <div style={{
-          flex: '1',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '40px 24px'
-        }}>
-          <div style={{
+        <div
+          style={{
+            flex: '1',
             display: 'flex',
-            flexDirection: 'column',
-            gap: '32px',
-            maxWidth: '500px',
-            width: '100%'
-          }}>
-            <div style={{
-              textAlign: 'center',
-              color: 'white'
-            }}>
-              <h2 style={{
-                margin: '0 0 12px 0',
-                fontSize: '32px',
-                fontWeight: '700',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif'
-              }}>
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '40px 24px',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '32px',
+              maxWidth: '500px',
+              width: '100%',
+            }}
+          >
+            <div
+              style={{
+                textAlign: 'center',
+                color: 'white',
+              }}
+            >
+              <h2
+                style={{
+                  margin: '0 0 12px 0',
+                  fontSize: '32px',
+                  fontWeight: '700',
+                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
+                }}
+              >
                 {auth.isAuthenticated ? 'Authentication' : 'Welcome to ElizaOS Platform'}
               </h2>
-              <p style={{
-                margin: '0',
-                fontSize: '16px',
-                opacity: '0.9',
-                lineHeight: '1.5',
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif'
-              }}>
-                {auth.isAuthenticated 
+              <p
+                style={{
+                  margin: '0',
+                  fontSize: '16px',
+                  opacity: '0.9',
+                  lineHeight: '1.5',
+                  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
+                }}
+              >
+                {auth.isAuthenticated
                   ? 'Manage your authentication settings'
-                  : 'Sign in to access your AI agents and platform features'
-                }
+                  : 'Sign in to access your AI agents and platform features'}
               </p>
             </div>
 
-            <PlatformLoginForm
-              onSuccess={handleAuthSuccess}
-              onError={handleAuthError}
-            />
+            <PlatformLoginForm onSuccess={handleAuthSuccess} onError={handleAuthError} />
           </div>
         </div>
       </div>
@@ -171,40 +191,52 @@ export function PlatformWrapper() {
   // Show server error if platform is not accessible
   if (!isServerAccessible) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        display: 'flex',
-        flexDirection: 'column',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif'
-      }}>
-        <div style={{
+      <div
+        style={{
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '20px 24px',
-          background: 'rgba(255, 255, 255, 0.1)',
-          backdropFilter: 'blur(10px)'
-        }}>
-          <div style={{
+          flexDirection: 'column',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
+        }}
+      >
+        <div
+          style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '12px'
-          }}>
-            <div style={{
-              width: '32px',
-              height: '32px',
-              background: 'linear-gradient(45deg, #3b82f6, #8b5cf6)',
-              borderRadius: '8px'
-            }}></div>
-            <h1 style={{
-              margin: '0',
-              fontSize: '20px',
-              fontWeight: '700',
-              color: 'white'
-            }}>ElizaOS Platform</h1>
+            justifyContent: 'space-between',
+            padding: '20px 24px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(10px)',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+            }}
+          >
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                background: 'linear-gradient(45deg, #3b82f6, #8b5cf6)',
+                borderRadius: '8px',
+              }}
+            ></div>
+            <h1
+              style={{
+                margin: '0',
+                fontSize: '20px',
+                fontWeight: '700',
+                color: 'white',
+              }}
+            >
+              ElizaOS Platform
+            </h1>
           </div>
-          <button 
+          <button
             style={{
               padding: '8px 16px',
               background: 'rgba(255, 255, 255, 0.2)',
@@ -213,7 +245,7 @@ export function PlatformWrapper() {
               color: 'white',
               fontSize: '14px',
               cursor: 'pointer',
-              transition: 'all 0.2s ease'
+              transition: 'all 0.2s ease',
             }}
             onClick={() => setShowLogin(true)}
           >
@@ -221,42 +253,58 @@ export function PlatformWrapper() {
           </button>
         </div>
 
-        <div style={{
-          flex: '1',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '40px 24px'
-        }}>
-          <div style={{
-            textAlign: 'center',
-            color: 'white',
-            maxWidth: '400px'
-          }}>
-            <div style={{
-              fontSize: '48px',
-              marginBottom: '16px'
-            }}>⚠️</div>
-            <h2 style={{
-              margin: '0 0 16px 0',
-              fontSize: '24px',
-              fontWeight: '600'
-            }}>Platform Not Available</h2>
-            <p style={{
-              margin: '0 0 8px 0',
-              fontSize: '16px',
-              opacity: '0.9'
-            }}>
+        <div
+          style={{
+            flex: '1',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '40px 24px',
+          }}
+        >
+          <div
+            style={{
+              textAlign: 'center',
+              color: 'white',
+              maxWidth: '400px',
+            }}
+          >
+            <div
+              style={{
+                fontSize: '48px',
+                marginBottom: '16px',
+              }}
+            >
+              ⚠️
+            </div>
+            <h2
+              style={{
+                margin: '0 0 16px 0',
+                fontSize: '24px',
+                fontWeight: '600',
+              }}
+            >
+              Platform Not Available
+            </h2>
+            <p
+              style={{
+                margin: '0 0 8px 0',
+                fontSize: '16px',
+                opacity: '0.9',
+              }}
+            >
               {serverError || 'The ElizaOS platform server is not accessible.'}
             </p>
-            <p style={{
-              margin: '0 0 24px 0',
-              fontSize: '14px',
-              opacity: '0.7'
-            }}>
+            <p
+              style={{
+                margin: '0 0 24px 0',
+                fontSize: '14px',
+                opacity: '0.7',
+              }}
+            >
               Please ensure the platform is running on {auth.getPlatformUrl()}
             </p>
-            <button 
+            <button
               style={{
                 padding: '12px 24px',
                 background: 'rgba(255, 255, 255, 0.2)',
@@ -266,7 +314,7 @@ export function PlatformWrapper() {
                 fontSize: '14px',
                 fontWeight: '500',
                 cursor: 'pointer',
-                transition: 'all 0.2s ease'
+                transition: 'all 0.2s ease',
               }}
               onClick={() => window.location.reload()}
             >
@@ -280,50 +328,68 @@ export function PlatformWrapper() {
 
   // If authenticated and server is accessible, show the platform in an iframe
   const platformUrl = auth.getPlatformUrl();
-  
+
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif'
-    }}>
-      <div style={{
+    <div
+      style={{
+        minHeight: '100vh',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '12px 24px',
-        background: '#f8fafc',
-        borderBottom: '1px solid #e2e8f0'
-      }}>
-        <div style={{
+        flexDirection: 'column',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif',
+      }}
+    >
+      <div
+        style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '12px'
-        }}>
-          <div style={{
-            width: '28px',
-            height: '28px',
-            background: 'linear-gradient(45deg, #3b82f6, #8b5cf6)',
-            borderRadius: '6px'
-          }}></div>
-          <h1 style={{
-            margin: '0',
-            fontSize: '18px',
-            fontWeight: '600',
-            color: '#1e293b'
-          }}>ElizaOS Platform</h1>
+          justifyContent: 'space-between',
+          padding: '12px 24px',
+          background: '#f8fafc',
+          borderBottom: '1px solid #e2e8f0',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+          }}
+        >
+          <div
+            style={{
+              width: '28px',
+              height: '28px',
+              background: 'linear-gradient(45deg, #3b82f6, #8b5cf6)',
+              borderRadius: '6px',
+            }}
+          ></div>
+          <h1
+            style={{
+              margin: '0',
+              fontSize: '18px',
+              fontWeight: '600',
+              color: '#1e293b',
+            }}
+          >
+            ElizaOS Platform
+          </h1>
         </div>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px'
-        }}>
-          <span style={{
-            fontSize: '14px',
-            color: '#64748b'
-          }}>{auth.user?.email}</span>
-          <button 
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+          }}
+        >
+          <span
+            style={{
+              fontSize: '14px',
+              color: '#64748b',
+            }}
+          >
+            {auth.user?.email}
+          </span>
+          <button
             style={{
               padding: '6px 12px',
               border: '1px solid #e2e8f0',
@@ -332,13 +398,13 @@ export function PlatformWrapper() {
               color: '#475569',
               fontSize: '14px',
               cursor: 'pointer',
-              transition: 'all 0.2s ease'
+              transition: 'all 0.2s ease',
             }}
             onClick={() => setShowLogin(true)}
           >
             Account
           </button>
-          <button 
+          <button
             style={{
               padding: '6px 12px',
               border: '1px solid #fecaca',
@@ -347,7 +413,7 @@ export function PlatformWrapper() {
               color: '#dc2626',
               fontSize: '14px',
               cursor: 'pointer',
-              transition: 'all 0.2s ease'
+              transition: 'all 0.2s ease',
             }}
             onClick={() => auth.signOut()}
           >
@@ -356,10 +422,12 @@ export function PlatformWrapper() {
         </div>
       </div>
 
-      <div style={{
-        flex: '1',
-        position: 'relative'
-      }}>
+      <div
+        style={{
+          flex: '1',
+          position: 'relative',
+        }}
+      >
         <iframe
           src={platformUrl}
           style={{
@@ -368,7 +436,7 @@ export function PlatformWrapper() {
             border: 'none',
             position: 'absolute',
             top: '0',
-            left: '0'
+            left: '0',
           }}
           title="ElizaOS Platform"
         />

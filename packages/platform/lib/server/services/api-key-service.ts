@@ -1,6 +1,6 @@
 import { eq, and, desc } from 'drizzle-orm';
 import { createHash, randomBytes } from 'crypto';
-import { db } from '@/lib/database';
+import { getDatabase } from '@/lib/database';
 import { apiKeys, type ApiKey, type NewApiKey } from '@/lib/database/schema';
 
 const API_KEY_PREFIX = 'eliza_';
@@ -24,7 +24,11 @@ interface UpdateApiKeyData {
   expiresAt?: string;
 }
 
-export function generateApiKey(): { keyValue: string; keyHash: string; keyPrefix: string } {
+export function generateApiKey(): {
+  keyValue: string;
+  keyHash: string;
+  keyPrefix: string;
+} {
   // Generate a cryptographically secure random key
   const randomPart = randomBytes(32).toString('hex');
   const keyValue = `${API_KEY_PREFIX}${randomPart}`;
@@ -42,7 +46,9 @@ export function hashApiKey(keyValue: string): string {
   return createHash('sha256').update(keyValue).digest('hex');
 }
 
-export async function createApiKey(data: CreateApiKeyData): Promise<{ apiKey: ApiKey; keyValue: string }> {
+export async function createApiKey(
+  data: CreateApiKeyData,
+): Promise<{ apiKey: ApiKey; keyValue: string }> {
   const { keyValue, keyHash, keyPrefix } = generateApiKey();
 
   const newApiKey: NewApiKey = {
@@ -57,6 +63,7 @@ export async function createApiKey(data: CreateApiKeyData): Promise<{ apiKey: Ap
     expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
   };
 
+  const db = await getDatabase();
   const [apiKey] = await db.insert(apiKeys).values(newApiKey).returning();
 
   return { apiKey, keyValue };
@@ -64,10 +71,11 @@ export async function createApiKey(data: CreateApiKeyData): Promise<{ apiKey: Ap
 
 export async function regenerateApiKey(
   apiKeyId: string,
-  organizationId: string
+  organizationId: string,
 ): Promise<{ apiKey: ApiKey; keyValue: string }> {
   const { keyValue, keyHash, keyPrefix } = generateApiKey();
 
+  const db = await getDatabase();
   const [apiKey] = await db
     .update(apiKeys)
     .set({
@@ -77,10 +85,9 @@ export async function regenerateApiKey(
       lastUsedAt: null,
       updatedAt: new Date(),
     })
-    .where(and(
-      eq(apiKeys.id, apiKeyId),
-      eq(apiKeys.organizationId, organizationId)
-    ))
+    .where(
+      and(eq(apiKeys.id, apiKeyId), eq(apiKeys.organizationId, organizationId)),
+    )
     .returning();
 
   if (!apiKey) {
@@ -93,6 +100,7 @@ export async function regenerateApiKey(
 export async function validateApiKey(keyValue: string): Promise<ApiKey | null> {
   const keyHash = hashApiKey(keyValue);
 
+  const db = await getDatabase();
   const [apiKey] = await db
     .select()
     .from(apiKeys)
@@ -130,7 +138,7 @@ export async function validateApiKey(keyValue: string): Promise<ApiKey | null> {
 
 export async function getUserApiKeys(
   organizationId: string,
-  userId?: string
+  userId?: string,
 ): Promise<ApiKey[]> {
   const conditions = [eq(apiKeys.organizationId, organizationId)];
 
@@ -138,6 +146,7 @@ export async function getUserApiKeys(
     conditions.push(eq(apiKeys.userId, userId));
   }
 
+  const db = await getDatabase();
   return await db
     .select()
     .from(apiKeys)
@@ -147,15 +156,15 @@ export async function getUserApiKeys(
 
 export async function getApiKeyById(
   apiKeyId: string,
-  organizationId: string
+  organizationId: string,
 ): Promise<ApiKey | null> {
+  const db = await getDatabase();
   const [apiKey] = await db
     .select()
     .from(apiKeys)
-    .where(and(
-      eq(apiKeys.id, apiKeyId),
-      eq(apiKeys.organizationId, organizationId)
-    ))
+    .where(
+      and(eq(apiKeys.id, apiKeyId), eq(apiKeys.organizationId, organizationId)),
+    )
     .limit(1);
 
   return apiKey || null;
@@ -164,18 +173,18 @@ export async function getApiKeyById(
 export async function updateApiKey(
   apiKeyId: string,
   organizationId: string,
-  data: UpdateApiKeyData
+  data: UpdateApiKeyData,
 ): Promise<ApiKey> {
+  const db = await getDatabase();
   const [apiKey] = await db
     .update(apiKeys)
     .set({
       ...data,
       updatedAt: new Date(),
     })
-    .where(and(
-      eq(apiKeys.id, apiKeyId),
-      eq(apiKeys.organizationId, organizationId)
-    ))
+    .where(
+      and(eq(apiKeys.id, apiKeyId), eq(apiKeys.organizationId, organizationId)),
+    )
     .returning();
 
   if (!apiKey) {
@@ -187,14 +196,14 @@ export async function updateApiKey(
 
 export async function deleteApiKey(
   apiKeyId: string,
-  organizationId: string
+  organizationId: string,
 ): Promise<void> {
+  const db = await getDatabase();
   const result = await db
     .delete(apiKeys)
-    .where(and(
-      eq(apiKeys.id, apiKeyId),
-      eq(apiKeys.organizationId, organizationId)
-    ));
+    .where(
+      and(eq(apiKeys.id, apiKeyId), eq(apiKeys.organizationId, organizationId)),
+    );
 
   // Note: Drizzle doesn't return affected rows count consistently
   // In production, you might want to check if the key existed first
@@ -226,7 +235,7 @@ export async function isValidPermission(permission: string): Promise<boolean> {
 
 export async function checkApiKeyPermission(
   apiKey: ApiKey,
-  requiredPermission: string
+  requiredPermission: string,
 ): Promise<boolean> {
   // Admin permission grants access to everything
   if (apiKey.permissions.includes('admin:all')) {

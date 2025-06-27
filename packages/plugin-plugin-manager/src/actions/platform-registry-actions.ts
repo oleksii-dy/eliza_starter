@@ -10,14 +10,13 @@ import {
   type State,
   type HandlerCallback,
   type ActionResult,
-  elizaLogger
+  elizaLogger,
 } from '@elizaos/core';
 import { PlatformRegistryService } from '../services/PlatformRegistryService.js';
 import type {
   CreateRegistryItemRequest,
-  UpdateRegistryItemRequest,
   RegistryQuery,
-  RegistryBuildRequest
+  RegistryBuildRequest,
 } from '../types/registry.js';
 
 // Create registry item action
@@ -28,39 +27,39 @@ export const createPlatformRegistryItemAction: Action = {
     'register platform item',
     'create registry entry',
     'publish to platform',
-    'submit to registry'
+    'submit to registry',
   ],
   examples: [
     [
       {
         name: 'User',
         content: {
-          text: 'I want to register my weather plugin in the platform registry'
-        }
+          text: 'I want to register my weather plugin in the platform registry',
+        },
       },
       {
         name: 'Assistant',
         content: {
-          text: 'I\'ll help you register your weather plugin in the ElizaOS platform registry. Let me gather the necessary information.',
-          actions: ['CREATE_PLATFORM_REGISTRY_ITEM']
-        }
-      }
+          text: "I'll help you register your weather plugin in the ElizaOS platform registry. Let me gather the necessary information.",
+          actions: ['CREATE_PLATFORM_REGISTRY_ITEM'],
+        },
+      },
     ],
     [
       {
         name: 'User',
         content: {
-          text: 'Submit my MCP server for GitHub integration to the registry'
-        }
+          text: 'Submit my MCP server for GitHub integration to the registry',
+        },
       },
       {
         name: 'Assistant',
         content: {
-          text: 'I\'ll register your GitHub integration MCP server in the platform registry.',
-          actions: ['CREATE_PLATFORM_REGISTRY_ITEM']
-        }
-      }
-    ]
+          text: "I'll register your GitHub integration MCP server in the platform registry.",
+          actions: ['CREATE_PLATFORM_REGISTRY_ITEM'],
+        },
+      },
+    ],
   ],
 
   validate: async (runtime: IAgentRuntime) => {
@@ -115,7 +114,7 @@ For workflows, also extract:
 Respond with a JSON object containing the extracted information.
 `,
         temperature: 0.1,
-        maxTokens: 2000
+        maxTokens: 2000,
       });
 
       let parsedRequest: CreateRegistryItemRequest;
@@ -132,8 +131,8 @@ Respond with a JSON object containing the extracted information.
           license: parsed.license || 'MIT',
           metadata: {
             createdBy: 'ai-assistant',
-            source: 'platform-chat'
-          }
+            source: 'platform-chat',
+          },
         };
 
         // Add type-specific data
@@ -143,38 +142,38 @@ Respond with a JSON object containing the extracted information.
             dependencies: parsed.dependencies || [],
             engines: {
               node: '>=18.0.0',
-              elizaos: '>=1.0.0'
+              elizaos: '>=1.0.0',
             },
             capabilities: {
               actions: parsed.actions || [],
               providers: parsed.providers || [],
               services: parsed.services || [],
-              evaluators: []
+              evaluators: [],
             },
             configuration: {
-              required: false
+              required: false,
             },
             testing: {
               hasTests: false,
-              framework: 'vitest'
-            }
+              framework: 'vitest',
+            },
           };
         } else if (parsedRequest.type === 'mcp') {
           parsedRequest.mcpData = {
             protocol: parsed.protocol || 'stdio',
             connection: {
               command: parsed.command || 'node',
-              args: parsed.args || ['server.js']
+              args: parsed.args || ['server.js'],
             },
             capabilities: {
               tools: parsed.tools || [],
               resources: parsed.resources || [],
-              prompts: []
+              prompts: [],
             },
             authenticationRequired: false,
             performance: {
-              averageResponseTime: 100
-            }
+              averageResponseTime: 100,
+            },
           };
         } else if (parsedRequest.type === 'workflow') {
           parsedRequest.workflowData = {
@@ -185,7 +184,7 @@ Respond with a JSON object containing the extracted information.
             integrations: parsed.integrations || [],
             complexity: 'beginner',
             estimatedSetupTime: 30,
-            requiresCredentials: []
+            requiresCredentials: [],
           };
         }
       } catch (_parseError) {
@@ -222,8 +221,8 @@ Your item is now part of the ElizaOS platform registry! 🚀`;
         metadata: {
           registryItemId: registryItem.id,
           registryItemType: registryItem.type,
-          status: registryItem.status
-        }
+          status: registryItem.status,
+        },
       });
 
       return {
@@ -232,10 +231,9 @@ Your item is now part of the ElizaOS platform registry! 🚀`;
         values: {
           registryItemId: registryItem.id,
           registryItemType: registryItem.type,
-          status: registryItem.status
-        }
+          status: registryItem.status,
+        },
       };
-
     } catch (error) {
       elizaLogger.error('Error in CREATE_PLATFORM_REGISTRY_ITEM:', error);
 
@@ -250,55 +248,50 @@ Please ensure you provide:
 
       await callback?.({
         text: errorText,
-        action: 'CREATE_PLATFORM_REGISTRY_ITEM'
+        action: 'CREATE_PLATFORM_REGISTRY_ITEM',
       });
 
       throw error;
     }
-  }
+  },
 };
 
 // Search registry items action
 export const searchPlatformRegistryAction: Action = {
   name: 'SEARCH_PLATFORM_REGISTRY',
   description: 'Search and discover items in the ElizaOS platform registry',
-  similes: [
-    'find platform items',
-    'search registry',
-    'discover plugins',
-    'browse platform'
-  ],
+  similes: ['find platform items', 'search registry', 'discover plugins', 'browse platform'],
   examples: [
     [
       {
         name: 'User',
         content: {
-          text: 'Find weather-related plugins in the registry'
-        }
+          text: 'Find weather-related plugins in the registry',
+        },
       },
       {
         name: 'Assistant',
         content: {
-          text: 'I\'ll search the platform registry for weather-related plugins.',
-          actions: ['SEARCH_PLATFORM_REGISTRY']
-        }
-      }
+          text: "I'll search the platform registry for weather-related plugins.",
+          actions: ['SEARCH_PLATFORM_REGISTRY'],
+        },
+      },
     ],
     [
       {
         name: 'User',
         content: {
-          text: 'Show me the most popular MCPs'
-        }
+          text: 'Show me the most popular MCPs',
+        },
       },
       {
         name: 'Assistant',
         content: {
           text: 'Let me find the most popular MCP servers in the registry.',
-          actions: ['SEARCH_PLATFORM_REGISTRY']
-        }
-      }
-    ]
+          actions: ['SEARCH_PLATFORM_REGISTRY'],
+        },
+      },
+    ],
   ],
 
   validate: async (runtime: IAgentRuntime) => {
@@ -336,7 +329,7 @@ Extract:
 Respond with a JSON object containing the search parameters.
 `,
         temperature: 0.1,
-        maxTokens: 1000
+        maxTokens: 1000,
       });
 
       let query: RegistryQuery;
@@ -349,7 +342,7 @@ Respond with a JSON object containing the search parameters.
           tags: parsed.tags,
           sortBy: parsed.sortBy || 'downloads',
           sortOrder: 'desc',
-          limit: Math.min(parsed.limit || 10, 20) // Cap at 20 results
+          limit: Math.min(parsed.limit || 10, 20), // Cap at 20 results
         };
       } catch (_parseError) {
         // Fallback to simple text search
@@ -358,7 +351,7 @@ Respond with a JSON object containing the search parameters.
           search: messageText,
           sortBy: 'downloads',
           sortOrder: 'desc',
-          limit: 10
+          limit: 10,
         };
       }
 
@@ -389,7 +382,7 @@ Respond with a JSON object containing the search parameters.
 
         responseText += '**Popular Categories:**\n';
         Object.entries(searchResult.aggregations.categories)
-          .sort(([,a], [,b]) => (b as number) - (a as number))
+          .sort(([, a], [, b]) => (b as number) - (a as number))
           .slice(0, 5)
           .forEach(([category, count]) => {
             responseText += `- ${category}: ${count} items\n`;
@@ -401,8 +394,8 @@ Respond with a JSON object containing the search parameters.
         action: 'SEARCH_PLATFORM_REGISTRY',
         metadata: {
           totalResults: searchResult.total,
-          searchQuery: query
-        }
+          searchQuery: query,
+        },
       });
 
       return {
@@ -410,10 +403,9 @@ Respond with a JSON object containing the search parameters.
         data: { searchResult },
         values: {
           totalResults: searchResult.total,
-          itemsShown: searchResult.items.length
-        }
+          itemsShown: searchResult.items.length,
+        },
       };
-
     } catch (error) {
       elizaLogger.error('Error in SEARCH_PLATFORM_REGISTRY:', error);
 
@@ -425,40 +417,35 @@ Try searching with simpler terms or browse the registry categories.`;
 
       await callback?.({
         text: errorText,
-        action: 'SEARCH_PLATFORM_REGISTRY'
+        action: 'SEARCH_PLATFORM_REGISTRY',
       });
 
       throw error;
     }
-  }
+  },
 };
 
 // Build platform item action
 export const buildPlatformItemAction: Action = {
   name: 'BUILD_PLATFORM_ITEM',
   description: 'Start building/generating a platform registry item using AutoCoder',
-  similes: [
-    'build platform item',
-    'generate code',
-    'start build process',
-    'create implementation'
-  ],
+  similes: ['build platform item', 'generate code', 'start build process', 'create implementation'],
   examples: [
     [
       {
         name: 'User',
         content: {
-          text: 'Build my weather plugin that I registered in the platform'
-        }
+          text: 'Build my weather plugin that I registered in the platform',
+        },
       },
       {
         name: 'Assistant',
         content: {
-          text: 'I\'ll start the build process for your weather plugin using the AutoCoder system.',
-          actions: ['BUILD_PLATFORM_ITEM']
-        }
-      }
-    ]
+          text: "I'll start the build process for your weather plugin using the AutoCoder system.",
+          actions: ['BUILD_PLATFORM_ITEM'],
+        },
+      },
+    ],
   ],
 
   validate: async (runtime: IAgentRuntime) => {
@@ -494,7 +481,7 @@ Extract:
 Respond with a JSON object.
 `,
         temperature: 0.1,
-        maxTokens: 500
+        maxTokens: 500,
       });
 
       let _itemIdentifier: string;
@@ -515,7 +502,9 @@ Respond with a JSON object.
       const userItems = await registryService.getItemsByAuthor(authorId);
 
       if (userItems.length === 0) {
-        throw new Error('No registry items found for your account. Please create one first using CREATE_PLATFORM_REGISTRY_ITEM.');
+        throw new Error(
+          'No registry items found for your account. Please create one first using CREATE_PLATFORM_REGISTRY_ITEM.'
+        );
       }
 
       // For simplicity, use the most recent item
@@ -531,9 +520,9 @@ Respond with a JSON object.
           resources: {
             cpu: '2',
             memory: '4Gi',
-            disk: '10Gi'
-          }
-        }
+            disk: '10Gi',
+          },
+        },
       };
 
       const buildJob = await registryService.requestBuild(buildRequest);
@@ -567,8 +556,8 @@ Your ${item.type} is being built in a secure sandbox environment! ⚡`;
         metadata: {
           buildJobId: buildJob.jobId,
           itemId: item.id,
-          buildStatus: buildJob.status
-        }
+          buildStatus: buildJob.status,
+        },
       });
 
       // TODO: Actually trigger AutoCoder build process
@@ -580,10 +569,9 @@ Your ${item.type} is being built in a secure sandbox environment! ⚡`;
         values: {
           buildJobId: buildJob.jobId,
           itemId: item.id,
-          buildStatus: buildJob.status
-        }
+          buildStatus: buildJob.status,
+        },
       };
-
     } catch (error) {
       elizaLogger.error('Error in BUILD_PLATFORM_ITEM:', error);
 
@@ -598,40 +586,35 @@ Please ensure:
 
       await callback?.({
         text: errorText,
-        action: 'BUILD_PLATFORM_ITEM'
+        action: 'BUILD_PLATFORM_ITEM',
       });
 
       throw error;
     }
-  }
+  },
 };
 
 // Get platform registry statistics
 export const getPlatformRegistryStatsAction: Action = {
   name: 'GET_PLATFORM_REGISTRY_STATS',
   description: 'Get comprehensive statistics about the ElizaOS platform registry',
-  similes: [
-    'platform statistics',
-    'registry stats',
-    'platform overview',
-    'registry metrics'
-  ],
+  similes: ['platform statistics', 'registry stats', 'platform overview', 'registry metrics'],
   examples: [
     [
       {
         name: 'User',
         content: {
-          text: 'Show me the platform registry statistics'
-        }
+          text: 'Show me the platform registry statistics',
+        },
       },
       {
         name: 'Assistant',
         content: {
           text: 'Here are the current ElizaOS platform registry statistics.',
-          actions: ['GET_PLATFORM_REGISTRY_STATS']
-        }
-      }
-    ]
+          actions: ['GET_PLATFORM_REGISTRY_STATS'],
+        },
+      },
+    ],
   ],
 
   validate: async (runtime: IAgentRuntime) => {
@@ -673,20 +656,28 @@ export const getPlatformRegistryStatsAction: Action = {
 
 **🏆 Top Categories**
 ${Object.entries(stats.itemsByCategory)
-    .sort(([,a], [,b]) => (b as number) - (a as number))
-    .slice(0, 5)
-    .map(([category, count], index) => `${index + 1}. **${category}**: ${count} items`)
-    .join('\n')}
+  .sort(([, a], [, b]) => (b as number) - (a as number))
+  .slice(0, 5)
+  .map(([category, count], index) => `${index + 1}. **${category}**: ${count} items`)
+  .join('\n')}
 
 **⭐ Most Downloaded**
-${stats.topItems.mostDownloaded.slice(0, 3).map((item, index) =>
-    `${index + 1}. **${item.displayName || item.name}** - ${item.stats.downloads.toLocaleString()} downloads`
-  ).join('\n')}
+${stats.topItems.mostDownloaded
+  .slice(0, 3)
+  .map(
+    (item, index) =>
+      `${index + 1}. **${item.displayName || item.name}** - ${item.stats.downloads.toLocaleString()} downloads`
+  )
+  .join('\n')}
 
 **🔥 Highest Rated**
-${stats.topItems.highestRated.slice(0, 3).map((item, index) =>
-    `${index + 1}. **${item.displayName || item.name}** - ⭐ ${item.stats.averageRating.toFixed(1)}/5`
-  ).join('\n')}
+${stats.topItems.highestRated
+  .slice(0, 3)
+  .map(
+    (item, index) =>
+      `${index + 1}. **${item.displayName || item.name}** - ⭐ ${item.stats.averageRating.toFixed(1)}/5`
+  )
+  .join('\n')}
 
 **🏗️ Build System**
 - **Total Builds**: ${stats.buildMetrics.totalBuilds}
@@ -699,7 +690,7 @@ ${stats.topItems.highestRated.slice(0, 3).map((item, index) =>
       await callback?.({
         text: responseText,
         action: 'GET_PLATFORM_REGISTRY_STATS',
-        metadata: stats
+        metadata: stats,
       });
 
       return {
@@ -708,10 +699,9 @@ ${stats.topItems.highestRated.slice(0, 3).map((item, index) =>
         values: {
           totalItems: stats.totalItems,
           totalDownloads: stats.totalDownloads,
-          buildSuccessRate: stats.buildMetrics.successRate
-        }
+          buildSuccessRate: stats.buildMetrics.successRate,
+        },
       };
-
     } catch (error) {
       elizaLogger.error('Error in GET_PLATFORM_REGISTRY_STATS:', error);
 
@@ -721,17 +711,17 @@ Error: ${error instanceof Error ? error.message : 'Unknown error'}`;
 
       await callback?.({
         text: errorText,
-        action: 'GET_PLATFORM_REGISTRY_STATS'
+        action: 'GET_PLATFORM_REGISTRY_STATS',
       });
 
       throw error;
     }
-  }
+  },
 };
 
 export const platformRegistryActions = [
   createPlatformRegistryItemAction,
   searchPlatformRegistryAction,
   buildPlatformItemAction,
-  getPlatformRegistryStatsAction
+  getPlatformRegistryStatsAction,
 ];

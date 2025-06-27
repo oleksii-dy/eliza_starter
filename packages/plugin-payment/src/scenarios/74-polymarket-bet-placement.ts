@@ -12,18 +12,20 @@ const polymarketBetPlacementScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'Placing bet on Polymarket: 100 USDC on YES for "BTC $100k by EOY" at current odds of $0.72. You\'ll receive 138.89 shares. Confirming transaction...',
+        content:
+          'Placing bet on Polymarket: 100 USDC on YES for "BTC $100k by EOY" at current odds of $0.72. You\'ll receive 138.89 shares. Confirming transaction...',
         action: 'PLACE_POLYMARKET_BET',
       },
     ],
     [
       {
         user: 'bob',
-        content: 'I want to bet 500 USDC that the Fed won\'t cut rates in March',
+        content: "I want to bet 500 USDC that the Fed won't cut rates in March",
       },
       {
         user: 'agent',
-        content: 'Processing Polymarket bet: 500 USDC on NO for "Fed rate cut in March" at $0.65 odds. This will give you 769.23 shares. Transaction requires approval due to amount.',
+        content:
+          'Processing Polymarket bet: 500 USDC on NO for "Fed rate cut in March" at $0.65 odds. This will give you 769.23 shares. Transaction requires approval due to amount.',
         action: 'PLACE_POLYMARKET_BET',
       },
     ],
@@ -34,7 +36,8 @@ const polymarketBetPlacementScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'Executing Polymarket order: 50 USDC on "Candidate A wins election" at current price $0.55. You\'ll receive 90.91 shares. Estimated profit if correct: $40.91.',
+        content:
+          'Executing Polymarket order: 50 USDC on "Candidate A wins election" at current price $0.55. You\'ll receive 90.91 shares. Estimated profit if correct: $40.91.',
         action: 'PLACE_POLYMARKET_BET',
       },
     ],

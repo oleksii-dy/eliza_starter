@@ -64,7 +64,9 @@ export class VisionBasicE2ETestSuite implements TestSuite {
         if (!visionService || !visionService.isActive()) {
           // If vision service is not active, validation should return false
           if (isValid) {
-            throw new Error('Action validation should return false when vision service is not active');
+            throw new Error(
+              'Action validation should return false when vision service is not active'
+            );
           }
           console.log('  Action validation correctly returned false (vision not active)');
 
@@ -87,8 +89,10 @@ export class VisionBasicE2ETestSuite implements TestSuite {
           console.log(`  Response: ${callbackResponse.text}`);
 
           // Verify it indicates camera not available
-          if (!callbackResponse.text.includes('cannot see') &&
-              !callbackResponse.text.includes('no camera')) {
+          if (
+            !callbackResponse.text.includes('cannot see') &&
+            !callbackResponse.text.includes('no camera')
+          ) {
             throw new Error('Response does not indicate camera unavailability');
           }
         } else {
@@ -155,7 +159,9 @@ export class VisionBasicE2ETestSuite implements TestSuite {
         if (!visionService || !visionService.isActive()) {
           // If vision service is not active, validation should return false
           if (isValid) {
-            throw new Error('Action validation should return false when vision service is not active');
+            throw new Error(
+              'Action validation should return false when vision service is not active'
+            );
           }
           console.log('  Action validation correctly returned false (vision not active)');
 
@@ -178,8 +184,10 @@ export class VisionBasicE2ETestSuite implements TestSuite {
           console.log(`  Response: ${callbackResponse.text}`);
 
           // Verify it indicates camera not available
-          if (!callbackResponse.text.includes('cannot capture') &&
-              !callbackResponse.text.includes('no camera')) {
+          if (
+            !callbackResponse.text.includes('cannot capture') &&
+            !callbackResponse.text.includes('no camera')
+          ) {
             throw new Error('Response does not indicate camera unavailability');
           }
         } else {
@@ -286,7 +294,7 @@ export class VisionBasicE2ETestSuite implements TestSuite {
         console.log(`  Initial scene: ${initialScene ? 'Available' : 'Pending...'}`);
 
         // Wait for scene processing
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
 
         // Get updated scene description
         const updatedScene = await visionService.getSceneDescription();
@@ -323,7 +331,7 @@ export class VisionBasicE2ETestSuite implements TestSuite {
 
         // Wait for scene processing to accumulate frames
         console.log('  Waiting for scene analysis...');
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        await new Promise((resolve) => setTimeout(resolve, 3000));
 
         // Get scene description
         const scene = await visionService.getSceneDescription();
@@ -340,10 +348,13 @@ export class VisionBasicE2ETestSuite implements TestSuite {
         // Verify object detection
         if (scene.objects.length > 0) {
           console.log('  Detected objects:');
-          const objectTypes = scene.objects.reduce((acc, obj) => {
-            acc[obj.type] = (acc[obj.type] || 0) + 1;
-            return acc;
-          }, {} as Record<string, number>);
+          const objectTypes = scene.objects.reduce(
+            (acc, obj) => {
+              acc[obj.type] = (acc[obj.type] || 0) + 1;
+              return acc;
+            },
+            {} as Record<string, number>
+          );
 
           for (const [type, count] of Object.entries(objectTypes)) {
             console.log(`    - ${count} ${type}(s)`);
@@ -361,10 +372,18 @@ export class VisionBasicE2ETestSuite implements TestSuite {
         if (scene.people.length > 0) {
           console.log('  Detected people:');
           for (const person of scene.people) {
-            console.log(`    - Person ${person.id}: ${person.pose} pose, facing ${person.facing}, confidence ${person.confidence.toFixed(2)}`);
+            console.log(
+              `    - Person ${person.id}: ${person.pose} pose, facing ${person.facing}, confidence ${person.confidence.toFixed(2)}`
+            );
 
             // Verify person has required fields
-            if (!person.id || !person.pose || !person.facing || person.confidence === undefined || !person.boundingBox) {
+            if (
+              !person.id ||
+              !person.pose ||
+              !person.facing ||
+              person.confidence === undefined ||
+              !person.boundingBox
+            ) {
               throw new Error('Detected person missing required fields');
             }
           }

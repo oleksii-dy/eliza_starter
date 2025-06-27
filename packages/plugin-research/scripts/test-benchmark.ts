@@ -42,7 +42,9 @@ In summary, the research demonstrates...`,
         };
       }
 
-      return { content: `Mock response for: ${lastMessage?.content?.substring(0, 100)}` };
+      return {
+        content: `Mock response for: ${lastMessage?.content?.substring(0, 100)}`,
+      };
     },
 
     // Other required methods
@@ -123,18 +125,26 @@ async function testBenchmark() {
 
           try {
             // Run the benchmark evaluation
-            const benchmarkResult = await deepResearchBenchmark.evaluateProject(updatedProject);
+            const benchmarkResult =
+              await deepResearchBenchmark.evaluateProject(updatedProject);
 
             logger.info('=== BENCHMARK RESULTS ===');
-            logger.info(`Comprehensiveness: ${benchmarkResult.comprehensiveness}`);
+            logger.info(
+              `Comprehensiveness: ${benchmarkResult.comprehensiveness}`
+            );
             logger.info(`Insight: ${benchmarkResult.insight}`);
-            logger.info(`Instruction Following: ${benchmarkResult.instructionFollowing}`);
+            logger.info(
+              `Instruction Following: ${benchmarkResult.instructionFollowing}`
+            );
             logger.info(`Readability: ${benchmarkResult.readability}`);
             logger.info(`Overall Score: ${benchmarkResult.overallScore}`);
 
             // Export the report
             const exportPath = `./benchmark_results/benchmark_${project.id}.json`;
-            const exported = await researchService.exportProject(project.id, 'deepresearch');
+            const exported = await researchService.exportProject(
+              project.id,
+              'deepresearch'
+            );
             await fs.writeFile(exportPath, exported);
             logger.info(`Report exported to: ${exportPath}`);
           } catch (benchError) {

@@ -1,3 +1,6 @@
+// Import test setup for browser environment
+import '../../../src/test/setup';
+
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { usePanelWidthState } from '../use-panel-width-state';

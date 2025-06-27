@@ -9,11 +9,23 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Skip middleware for API routes and static assets to prevent loops
-  if (pathname.startsWith('/api/') || 
-      pathname.startsWith('/_next/') || 
-      pathname.startsWith('/favicon.ico') ||
-      pathname.startsWith('/sw.js') ||
-      pathname.startsWith('/assets/')) {
+  if (
+    pathname.startsWith('/api/') ||
+    pathname.startsWith('/_next/') ||
+    pathname.startsWith('/favicon.ico') ||
+    pathname.startsWith('/sw.js') ||
+    pathname.startsWith('/assets/')
+  ) {
+    return NextResponse.next();
+  }
+
+  // CYPRESS DEV MODE BYPASS: If we're in development and have a dev auth token, skip auth checks
+  const isDev = process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_DEV_MODE === 'true';
+  const cookieStore = await cookies();
+  const authToken = cookieStore.get('auth-token')?.value;
+  
+  if (isDev && authToken === 'dev-auth-token-123') {
+    // Allow all authenticated routes in dev mode with dev token
     return NextResponse.next();
   }
 
@@ -22,10 +34,13 @@ export async function middleware(request: NextRequest) {
   // const response = securityHeadersMiddleware(request);
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-  const cookieStore = await cookies();
 
   // Allow legal pages and client-static assets to be accessed without authentication
-  if (pathname.startsWith('/legal') || pathname.startsWith('/client-static') || pathname.startsWith('/assets')) {
+  if (
+    pathname.startsWith('/legal') ||
+    pathname.startsWith('/client-static') ||
+    pathname.startsWith('/assets')
+  ) {
     return NextResponse.next();
   }
 
@@ -39,7 +54,7 @@ export async function middleware(request: NextRequest) {
 
     // Get auth token from cookies
     const authToken = cookieStore.get('auth-token')?.value;
-    
+
     // If no auth token exists, redirect to login (unless already on auth pages)
     if (!authToken) {
       const authPath = pathname.startsWith('/auth');
@@ -49,12 +64,15 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    const response = await fetch(`${request.nextUrl.origin}/api/auth/identity`, {
-      headers: {
-        Cookie: `auth-token=${authToken}`,
+    const response = await fetch(
+      `${request.nextUrl.origin}/api/auth/identity`,
+      {
+        headers: {
+          Cookie: `auth-token=${authToken}`,
+        },
+        credentials: 'include',
       },
-      credentials: 'include',
-    }).catch(() => new Response(null, { status: 500 }));
+    ).catch(() => new Response(null, { status: 500 }));
 
     const authPath = pathname.startsWith('/auth');
     const isPasswordPath =
@@ -65,12 +83,15 @@ export async function middleware(request: NextRequest) {
     if (response.status === 401) {
       const refreshToken = request.cookies.get('refresh-token')?.value;
       if (refreshToken) {
-        const refreshResponse = await fetch(`${request.nextUrl.origin}/api/auth/refresh`, {
-          headers: {
-            Cookie: `refresh-token=${refreshToken}`,
+        const refreshResponse = await fetch(
+          `${request.nextUrl.origin}/api/auth/refresh`,
+          {
+            headers: {
+              Cookie: `refresh-token=${refreshToken}`,
+            },
+            credentials: 'include',
           },
-          credentials: 'include',
-        }).catch(() => new Response(null, { status: 500 }));
+        ).catch(() => new Response(null, { status: 500 }));
 
         if (refreshResponse.status === 200) {
           // Set cookies from the refresh response
@@ -94,10 +115,12 @@ export async function middleware(request: NextRequest) {
           return response;
         }
       }
-      
+
       // Both auth token and refresh token are invalid - clear them and redirect to login
       if (!authPath) {
-        const loginRedirect = NextResponse.redirect(new URL('/auth/login', request.url));
+        const loginRedirect = NextResponse.redirect(
+          new URL('/auth/login', request.url),
+        );
         // Clear invalid cookies
         loginRedirect.cookies.delete('auth-token');
         loginRedirect.cookies.delete('refresh-token');
@@ -110,7 +133,7 @@ export async function middleware(request: NextRequest) {
       } catch {
         responseData = null;
       }
-      
+
       if (responseData?.code === 'session_expired' && !authPath) {
         const loginUrl = new URL('/auth/login', request.url);
         loginUrl.searchParams.append('error', 'session_expired');
@@ -187,7 +210,9 @@ export async function middleware(request: NextRequest) {
 
     if (userData) {
       if (
-        (authPath && !isPasswordPath && pathname !== '/dashboard')
+        authPath &&
+        !isPasswordPath &&
+        pathname !== '/dashboard'
         // Allow landing page to show for authenticated users
         // || pathname === '/'
       ) {

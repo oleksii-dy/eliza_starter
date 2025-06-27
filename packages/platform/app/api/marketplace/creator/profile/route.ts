@@ -7,7 +7,7 @@ import { eq } from 'drizzle-orm';
 
 const revenueService = new RevenueSharing();
 
-export async function GET(request: NextRequest) {
+export async function handleGET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -15,9 +15,10 @@ export async function GET(request: NextRequest) {
     }
 
     const db = await getDatabase();
-    
+
     // Get creator profile
-    const profiles = await db.select()
+    const profiles = await db
+      .select()
       .from(creatorProfiles)
       .where(eq(creatorProfiles.userId, session.user.id))
       .limit(1);
@@ -32,12 +33,12 @@ export async function GET(request: NextRequest) {
     console.error('Failed to get creator profile:', error);
     return NextResponse.json(
       { error: 'Failed to get creator profile' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -50,14 +51,14 @@ export async function POST(request: NextRequest) {
     if (!profileData.displayName) {
       return NextResponse.json(
         { error: 'Display name is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!profileData.payoutMethod) {
       return NextResponse.json(
         { error: 'Payout method is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
     if (!validMethods.includes(profileData.payoutMethod)) {
       return NextResponse.json(
         { error: 'Invalid payout method' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -74,14 +75,17 @@ export async function POST(request: NextRequest) {
     if (profileData.payoutMethod === 'stripe' && !profileData.stripeAccountId) {
       return NextResponse.json(
         { error: 'Stripe account ID is required for Stripe payouts' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    if (profileData.payoutMethod === 'crypto' && !profileData.cryptoWalletAddress) {
+    if (
+      profileData.payoutMethod === 'crypto' &&
+      !profileData.cryptoWalletAddress
+    ) {
       return NextResponse.json(
         { error: 'Crypto wallet address is required for crypto payouts' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -89,14 +93,14 @@ export async function POST(request: NextRequest) {
     if (profileData.displayName.length > 100) {
       return NextResponse.json(
         { error: 'Display name must be less than 100 characters' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (profileData.bio && profileData.bio.length > 1000) {
       return NextResponse.json(
         { error: 'Bio must be less than 1000 characters' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -113,8 +117,8 @@ export async function POST(request: NextRequest) {
         payoutMethod: profileData.payoutMethod,
         stripeAccountId: profileData.stripeAccountId,
         cryptoWalletAddress: profileData.cryptoWalletAddress,
-        cryptoWalletType: profileData.cryptoWalletType
-      }
+        cryptoWalletType: profileData.cryptoWalletType,
+      },
     );
 
     return NextResponse.json({
@@ -124,8 +128,13 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Failed to update creator profile:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to update creator profile' },
-      { status: 500 }
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Failed to update creator profile',
+      },
+      { status: 500 },
     );
   }
 }

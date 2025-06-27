@@ -1,6 +1,6 @@
 /**
  * Marketplace Billing Service
- * 
+ *
  * Integrates marketplace operations with the existing credit system:
  * - Container hosting billing
  * - Asset usage tracking
@@ -9,14 +9,17 @@
  */
 
 import { CreditService, UsageContext } from './credit-service';
-import { getCreditBalance, deductCredits } from '../server/services/billing-service';
+import {
+  getCreditBalance,
+  deductCredits,
+} from '../server/services/billing-service';
 import { getDatabase } from '../database/connection';
 import { creditTransactions } from '../database/schema';
-import { 
-  assetUsageRecords, 
+import {
+  assetUsageRecords,
   hostedContainers,
   marketplaceAssets,
-  creatorPayouts 
+  creatorPayouts,
 } from '../database/marketplace-schema';
 import { eq, and, desc, sum } from 'drizzle-orm';
 
@@ -25,9 +28,13 @@ export interface MarketplaceUsageContext extends UsageContext {
   assetId?: string;
   containerId?: string;
   creatorId?: string;
-  usageType: 'asset_purchase' | 'container_hosting' | 'asset_usage' | 'subscription';
+  usageType:
+    | 'asset_purchase'
+    | 'container_hosting'
+    | 'asset_usage'
+    | 'subscription';
   marketplaceCategory?: string;
-  
+
   // Billing details
   basePrice?: number;
   creatorShare?: number;
@@ -64,28 +71,28 @@ export class MarketplaceBillingService extends CreditService {
       case 'asset_purchase':
         totalCost = context.basePrice || 0;
         break;
-        
+
       case 'container_hosting':
         // Calculate hourly container costs with markup
         const baseCost = this.calculateContainerBaseCost(
           context.tokens || 512, // memory in MB
           1000, // default CPU units
-          1 // default storage GB
+          1, // default storage GB
         );
         totalCost = baseCost * (1 + this.MARKETPLACE_MARKUP);
         break;
-        
+
       case 'asset_usage':
         // Per-usage billing for API calls, executions, etc.
         const perUsageCost = context.basePrice || 0.001;
         const quantity = context.tokens || 1;
         totalCost = perUsageCost * quantity;
         break;
-        
+
       case 'subscription':
         totalCost = context.basePrice || 0;
         break;
-        
+
       default:
         totalCost = 0;
     }
@@ -97,7 +104,7 @@ export class MarketplaceBillingService extends CreditService {
     return {
       totalCost,
       creatorRevenue,
-      platformRevenue
+      platformRevenue,
     };
   }
 
@@ -107,14 +114,18 @@ export class MarketplaceBillingService extends CreditService {
   private static calculateContainerBaseCost(
     memory: number, // MB
     cpu: number, // CPU units (1000 = 1 vCPU)
-    storage: number // GB
+    storage: number, // GB
   ): number {
     // Approximate e2b pricing
     const memoryCostPerMBHour = 0.000001; // $0.001 per GB-hour
-    const cpuCostPerUnitHour = 0.00001; // $0.01 per vCPU-hour  
+    const cpuCostPerUnitHour = 0.00001; // $0.01 per vCPU-hour
     const storageCostPerGBHour = 0.0000001; // $0.0001 per GB-hour
 
-    return (memory * memoryCostPerMBHour) + (cpu * cpuCostPerUnitHour) + (storage * storageCostPerGBHour);
+    return (
+      memory * memoryCostPerMBHour +
+      cpu * cpuCostPerUnitHour +
+      storage * storageCostPerGBHour
+    );
   }
 
   /**
@@ -123,13 +134,14 @@ export class MarketplaceBillingService extends CreditService {
   static async processMarketplaceBilling(
     organizationId: string,
     userId: string,
-    context: MarketplaceUsageContext
+    context: MarketplaceUsageContext,
   ): Promise<MarketplaceBillingResult> {
     const db = getDatabase();
 
     try {
       // Calculate costs
-      const { totalCost, creatorRevenue, platformRevenue } = this.calculateMarketplaceCost(context);
+      const { totalCost, creatorRevenue, platformRevenue } =
+        this.calculateMarketplaceCost(context);
 
       if (totalCost <= 0) {
         return {
@@ -137,7 +149,7 @@ export class MarketplaceBillingService extends CreditService {
           remainingBalance: await getCreditBalance(organizationId),
           deductedAmount: 0,
           creatorRevenue: 0,
-          platformRevenue: 0
+          platformRevenue: 0,
         };
       }
 
@@ -150,13 +162,13 @@ export class MarketplaceBillingService extends CreditService {
           deductedAmount: 0,
           creatorRevenue: 0,
           platformRevenue: 0,
-          error: 'Insufficient credit balance'
+          error: 'Insufficient credit balance',
         };
       }
 
       // Deduct credits from user's account
       const description = this.generateMarketplaceDescription(context);
-      
+
       try {
         await deductCredits({
           organizationId,
@@ -172,9 +184,9 @@ export class MarketplaceBillingService extends CreditService {
               platformRevenue,
               usageType: context.usageType,
               assetId: context.assetId,
-              containerId: context.containerId
-            }
-          }
+              containerId: context.containerId,
+            },
+          },
         });
 
         // Record marketplace usage
@@ -195,11 +207,14 @@ export class MarketplaceBillingService extends CreditService {
             requestId: context.requestId || undefined,
             sessionId: undefined,
             userAgent: undefined,
-            ipAddress: undefined
-          }
+            ipAddress: undefined,
+          },
         };
-        
-        const usageRecord = await db.insert(assetUsageRecords).values(usageRecordData).returning();
+
+        const usageRecord = await db
+          .insert(assetUsageRecords)
+          .values(usageRecordData)
+          .returning();
 
         const remainingBalance = await getCreditBalance(organizationId);
 
@@ -209,21 +224,22 @@ export class MarketplaceBillingService extends CreditService {
           deductedAmount: totalCost,
           creatorRevenue,
           platformRevenue,
-          usageRecordId: usageRecord[0].id
+          usageRecordId: usageRecord[0].id,
         };
-
       } catch (deductError) {
-        console.error('Failed to deduct credits for marketplace usage:', deductError);
+        console.error(
+          'Failed to deduct credits for marketplace usage:',
+          deductError,
+        );
         return {
           success: false,
           remainingBalance: currentBalance,
           deductedAmount: 0,
           creatorRevenue: 0,
           platformRevenue: 0,
-          error: 'Failed to process payment'
+          error: 'Failed to process payment',
         };
       }
-
     } catch (error) {
       console.error('Failed to process marketplace billing:', error);
       return {
@@ -232,7 +248,7 @@ export class MarketplaceBillingService extends CreditService {
         deductedAmount: 0,
         creatorRevenue: 0,
         platformRevenue: 0,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -242,13 +258,14 @@ export class MarketplaceBillingService extends CreditService {
    */
   static async recordContainerUsage(
     containerId: string,
-    hoursUsed: number
+    hoursUsed: number,
   ): Promise<void> {
     const db = getDatabase();
 
     try {
       // Get container details
-      const containers = await db.select()
+      const containers = await db
+        .select()
         .from(hostedContainers)
         .where(eq(hostedContainers.id, containerId))
         .limit(1);
@@ -271,19 +288,23 @@ export class MarketplaceBillingService extends CreditService {
           assetId: container.assetId,
           containerId: container.id,
           tokens: hoursUsed, // Hours used
-          basePrice: billedCost
-        } as MarketplaceUsageContext
+          basePrice: billedCost,
+        } as MarketplaceUsageContext,
       );
 
       if (!billingResult.success) {
-        console.error(`Failed to bill container usage for ${containerId}: ${billingResult.error}`);
-        
+        console.error(
+          `Failed to bill container usage for ${containerId}: ${billingResult.error}`,
+        );
+
         // If billing fails, we should stop the container to prevent runaway costs
         // This would integrate with the ContainerHostingService
       }
-
     } catch (error) {
-      console.error(`Failed to record container usage for ${containerId}:`, error);
+      console.error(
+        `Failed to record container usage for ${containerId}:`,
+        error,
+      );
     }
   }
 
@@ -293,55 +314,65 @@ export class MarketplaceBillingService extends CreditService {
   static async getMarketplaceUsageSummary(
     organizationId: string,
     startDate?: Date,
-    endDate?: Date
+    endDate?: Date,
   ) {
     const db = getDatabase();
 
     try {
-      const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const start =
+        startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
       const end = endDate || new Date();
 
       // Get marketplace transactions
-      const transactions = await db.select()
+      const transactions = await db
+        .select()
         .from(creditTransactions)
-        .where(and(
-          eq(creditTransactions.organizationId, organizationId),
-          eq(creditTransactions.type, 'usage'),
-          desc(creditTransactions.createdAt)
-        ))
+        .where(
+          and(
+            eq(creditTransactions.organizationId, organizationId),
+            eq(creditTransactions.type, 'usage'),
+            desc(creditTransactions.createdAt),
+          ),
+        )
         .limit(100);
 
       // Filter marketplace transactions
       const marketplaceTransactions = transactions.filter(
-        (t: any) => t.metadata?.marketplace === true
+        (t: any) => t.metadata?.marketplace === true,
       );
 
       // Get usage records for detailed breakdown
-      const usageRecords = await db.select({
-        usageType: assetUsageRecords.usageType,
-        totalCost: sum(assetUsageRecords.totalCost),
-        creatorRevenue: sum(assetUsageRecords.creatorRevenue),
-        platformRevenue: sum(assetUsageRecords.platformRevenue),
-        quantity: sum(assetUsageRecords.quantity)
-      })
-      .from(assetUsageRecords)
-      .where(and(
-        eq(assetUsageRecords.organizationId, organizationId),
-        // Add date filters if we had timestamp fields
-      ))
-      .groupBy(assetUsageRecords.usageType);
+      const usageRecords = await db
+        .select({
+          usageType: assetUsageRecords.usageType,
+          totalCost: sum(assetUsageRecords.totalCost),
+          creatorRevenue: sum(assetUsageRecords.creatorRevenue),
+          platformRevenue: sum(assetUsageRecords.platformRevenue),
+          quantity: sum(assetUsageRecords.quantity),
+        })
+        .from(assetUsageRecords)
+        .where(
+          and(
+            eq(assetUsageRecords.organizationId, organizationId),
+            // Add date filters if we had timestamp fields
+          ),
+        )
+        .groupBy(assetUsageRecords.usageType);
 
       // Calculate totals
       const totalSpent = marketplaceTransactions.reduce(
-        (sum: number, t: any) => sum + Math.abs(parseFloat(t.amount)), 0
+        (sum: number, t: any) => sum + Math.abs(parseFloat(t.amount)),
+        0,
       );
 
       const totalCreatorRevenue = usageRecords.reduce(
-        (sum: number, r: any) => sum + parseFloat(r.creatorRevenue || '0'), 0
+        (sum: number, r: any) => sum + parseFloat(r.creatorRevenue || '0'),
+        0,
       );
 
       const totalPlatformRevenue = usageRecords.reduce(
-        (sum: number, r: any) => sum + parseFloat(r.platformRevenue || '0'), 0
+        (sum: number, r: any) => sum + parseFloat(r.platformRevenue || '0'),
+        0,
       );
 
       return {
@@ -355,11 +386,10 @@ export class MarketplaceBillingService extends CreditService {
           totalCost: parseFloat(r.totalCost || '0'),
           creatorRevenue: parseFloat(r.creatorRevenue || '0'),
           platformRevenue: parseFloat(r.platformRevenue || '0'),
-          quantity: parseFloat(r.quantity || '0')
+          quantity: parseFloat(r.quantity || '0'),
         })),
-        recentTransactions: marketplaceTransactions.slice(0, 10)
+        recentTransactions: marketplaceTransactions.slice(0, 10),
       };
-
     } catch (error) {
       console.error('Failed to get marketplace usage summary:', error);
       throw new Error('Failed to get marketplace usage summary');
@@ -379,7 +409,7 @@ export class MarketplaceBillingService extends CreditService {
    */
   static async canAffordMarketplaceOperation(
     organizationId: string,
-    context: MarketplaceUsageContext
+    context: MarketplaceUsageContext,
   ): Promise<boolean> {
     try {
       const estimatedCost = this.estimateMarketplaceCost(context);
@@ -390,39 +420,51 @@ export class MarketplaceBillingService extends CreditService {
     }
   }
 
-  private static generateMarketplaceDescription(context: MarketplaceUsageContext): string {
+  private static generateMarketplaceDescription(
+    context: MarketplaceUsageContext,
+  ): string {
     const { usageType, service, operation, assetId } = context;
-    
+
     let description = `Marketplace - ${usageType}`;
-    
+
     if (service && operation) {
       description += ` (${service}/${operation})`;
     }
-    
+
     if (assetId) {
       description += ` - Asset: ${assetId.slice(0, 8)}...`;
     }
-    
+
     return description;
   }
 
   private static mapUsageTypeToDb(usageType: string): string {
     switch (usageType) {
-      case 'asset_purchase': return 'purchase';
-      case 'container_hosting': return 'container_hour';
-      case 'asset_usage': return 'api_call';
-      case 'subscription': return 'subscription';
-      default: return 'usage';
+      case 'asset_purchase':
+        return 'purchase';
+      case 'container_hosting':
+        return 'container_hour';
+      case 'asset_usage':
+        return 'api_call';
+      case 'subscription':
+        return 'subscription';
+      default:
+        return 'usage';
     }
   }
 
   private static getUsageUnit(usageType: string): string {
     switch (usageType) {
-      case 'asset_purchase': return 'purchase';
-      case 'container_hosting': return 'hours';
-      case 'asset_usage': return 'calls';
-      case 'subscription': return 'months';
-      default: return 'units';
+      case 'asset_purchase':
+        return 'purchase';
+      case 'container_hosting':
+        return 'hours';
+      case 'asset_usage':
+        return 'calls';
+      case 'subscription':
+        return 'months';
+      default:
+        return 'units';
     }
   }
 }

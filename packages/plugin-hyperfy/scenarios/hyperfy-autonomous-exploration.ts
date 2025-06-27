@@ -94,15 +94,15 @@ function createExplorerAgent(
         {
           type: 'message',
           content: `${name} reporting for exploration duty!`,
-          description: 'Initial announcement'
+          description: 'Initial announcement',
         },
         {
           type: 'wait',
           waitTime: 60000, // Explore for 1 minute
-          description: 'Autonomous exploration period'
-        }
-      ]
-    }
+          description: 'Autonomous exploration period',
+        },
+      ],
+    },
   };
 }
 
@@ -167,7 +167,7 @@ export const autonomousMultiAgentExploration: Scenario = {
       'Explorer-Kappa',
       'Observer documenting discoveries',
       'You are an observer explorer. Use OODA loop to watch other agents and document interesting behaviors. Take notes on what you observe.'
-    )
+    ),
   ],
 
   setup: {
@@ -177,27 +177,27 @@ export const autonomousMultiAgentExploration: Scenario = {
           id: uuid(),
           description: 'Explore and map the virtual world',
           priority: 1,
-          progress: 0
+          progress: 0,
         },
         {
           id: uuid(),
           description: 'Interact with other agents encountered',
           priority: 2,
-          progress: 0
+          progress: 0,
         },
         {
           id: uuid(),
           description: 'Discover and document interesting locations',
           priority: 3,
-          progress: 0
-        }
-      ]
-    }
+          progress: 0,
+        },
+      ],
+    },
   },
 
   execution: {
     maxDuration: 90000, // 1.5 minutes total (including setup/teardown)
-    maxSteps: 1000 // Allow many autonomous actions
+    maxSteps: 1000, // Allow many autonomous actions
   },
 
   verification: {
@@ -207,73 +207,80 @@ export const autonomousMultiAgentExploration: Scenario = {
         type: 'llm',
         description: 'Verify all 10 agents connected successfully',
         config: {
-          successCriteria: 'All 10 explorer agents should have successfully connected to the Hyperfy world and announced their presence',
+          successCriteria:
+            'All 10 explorer agents should have successfully connected to the Hyperfy world and announced their presence',
           priority: 'critical',
-          category: 'connectivity'
-        }
+          category: 'connectivity',
+        },
       },
       {
         id: 'autonomous-behavior-active',
         type: 'llm',
         description: 'Verify autonomous OODA loops are functioning',
         config: {
-          successCriteria: 'Each agent should demonstrate autonomous behavior through the OODA loop: Observing (using HYPERFY_SCENE_PERCEPTION), Orienting (processing information), Deciding (choosing actions), and Acting (executing movements or interactions)',
+          successCriteria:
+            'Each agent should demonstrate autonomous behavior through the OODA loop: Observing (using HYPERFY_SCENE_PERCEPTION), Orienting (processing information), Deciding (choosing actions), and Acting (executing movements or interactions)',
           priority: 'high',
-          category: 'autonomy'
-        }
+          category: 'autonomy',
+        },
       },
       {
         id: 'movement-exploration',
         type: 'llm',
         description: 'Verify agents explored the world',
         config: {
-          successCriteria: 'Agents should have moved to different locations using HYPERFY_GOTO_ENTITY or HYPERFY_WALK_RANDOMLY. They should not remain stationary.',
+          successCriteria:
+            'Agents should have moved to different locations using HYPERFY_GOTO_ENTITY or HYPERFY_WALK_RANDOMLY. They should not remain stationary.',
           priority: 'high',
-          category: 'exploration'
-        }
+          category: 'exploration',
+        },
       },
       {
         id: 'diverse-behaviors',
         type: 'llm',
         description: 'Verify different agent personalities resulted in different behaviors',
         config: {
-          successCriteria: 'Different agents should exhibit their unique behaviors: Alpha should explore systematically, Beta should seek other agents, Gamma should build markers, Delta should move quickly, etc.',
+          successCriteria:
+            'Different agents should exhibit their unique behaviors: Alpha should explore systematically, Beta should seek other agents, Gamma should build markers, Delta should move quickly, etc.',
           priority: 'medium',
-          category: 'diversity'
-        }
+          category: 'diversity',
+        },
       },
       {
         id: 'multi-agent-interactions',
         type: 'llm',
         description: 'Verify agents interacted with each other',
         config: {
-          successCriteria: 'At least some agents should have noticed and interacted with other agents, especially Explorer-Beta (the social explorer)',
+          successCriteria:
+            'At least some agents should have noticed and interacted with other agents, especially Explorer-Beta (the social explorer)',
           priority: 'medium',
-          category: 'social'
-        }
+          category: 'social',
+        },
       },
       {
         id: 'performance-stability',
         type: 'llm',
         description: 'Verify system handled 10 concurrent agents',
         config: {
-          successCriteria: 'The system should remain stable with 10 agents running simultaneously. No crashes, disconnections, or severe performance degradation should occur.',
+          successCriteria:
+            'The system should remain stable with 10 agents running simultaneously. No crashes, disconnections, or severe performance degradation should occur.',
           priority: 'high',
-          category: 'performance'
-        }
+          category: 'performance',
+        },
       },
       {
         id: 'action-variety',
         type: 'llm',
         description: 'Verify variety of Hyperfy actions were used',
         config: {
-          successCriteria: 'Agents should have used various Hyperfy actions including movement (GOTO, WALK_RANDOMLY), perception (SCENE_PERCEPTION), and potentially building (EDIT_ENTITY), items (USE_ITEM), or emotes',
+          successCriteria:
+            'Agents should have used various Hyperfy actions including movement (GOTO, WALK_RANDOMLY), perception (SCENE_PERCEPTION), and potentially building (EDIT_ENTITY), items (USE_ITEM), or emotes',
           priority: 'medium',
-          category: 'actions'
-        }
-      }
-    ]
-  }
+          category: 'actions',
+        },
+      },
+    ],
+  },
 };
 
 // Export additional test configurations
@@ -282,7 +289,7 @@ export const autonomousExplorationWithObservation: Scenario = {
   id: uuid(),
   name: 'Autonomous Exploration with Puppeteer Observation',
   description: 'Same as multi-agent exploration but with visual observation window',
-  tags: [...autonomousMultiAgentExploration.tags, 'visual-observation']
+  tags: [...autonomousMultiAgentExploration.tags, 'visual-observation'],
 };
 
 // Smaller test with fewer agents for debugging
@@ -292,5 +299,5 @@ export const autonomousExplorationSmall: Scenario = {
   name: 'Autonomous Exploration (3 Agents)',
   description: 'Smaller test with only 3 agents for debugging',
   tags: [...autonomousMultiAgentExploration.tags, 'debug'],
-  actors: autonomousMultiAgentExploration.actors.slice(0, 3)
+  actors: autonomousMultiAgentExploration.actors.slice(0, 3),
 };

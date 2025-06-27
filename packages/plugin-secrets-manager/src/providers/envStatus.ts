@@ -1,5 +1,11 @@
-import type { IAgentRuntime, Memory, Provider, ProviderResult, State } from '@elizaos/core';
-import { elizaLogger as logger } from '@elizaos/core';
+import {
+  elizaLogger as logger,
+  type IAgentRuntime,
+  type Memory,
+  type Provider,
+  type ProviderResult,
+  type State,
+} from '@elizaos/core';
 import { EnhancedSecretManager } from '../enhanced-service';
 import type { EnvVarMetadata, EnvVarConfig } from '../types';
 

@@ -4,7 +4,7 @@ describe('Tokens Page', () => {
     cy.window().then((win) => {
       win.localStorage.setItem('token', 'mock-jwt-token');
     });
-    
+
     // Mock API responses
     cy.intercept('GET', '**/api/v1/api-keys', {
       statusCode: 200,
@@ -12,9 +12,9 @@ describe('Tokens Page', () => {
         success: true,
         data: {
           apiKeys: [],
-          pagination: { page: 1, limit: 10, total: 0, totalPages: 0 }
-        }
-      }
+          pagination: { page: 1, limit: 10, total: 0, totalPages: 0 },
+        },
+      },
     }).as('getApiKeys');
 
     cy.intercept('GET', '**/api/v1/auth/me', {
@@ -25,10 +25,10 @@ describe('Tokens Page', () => {
           user: {
             id: 'test-user-id',
             email: 'test@elizaos.ai',
-            name: 'Test User'
-          }
-        }
-      }
+            name: 'Test User',
+          },
+        },
+      },
     }).as('getMe');
 
     cy.visit('/settings/tokens');
@@ -36,7 +36,10 @@ describe('Tokens Page', () => {
 
   it('should display the tokens page', () => {
     cy.get('h1').should('contain', 'API Keys');
-    cy.get('p').should('contain', 'Manage your API keys for programmatic access');
+    cy.get('p').should(
+      'contain',
+      'Manage your API keys for programmatic access',
+    );
     cy.wait('@getApiKeys');
   });
 
@@ -44,7 +47,9 @@ describe('Tokens Page', () => {
     cy.wait('@getApiKeys');
     cy.get('[data-testid^="api-key-"]').should('not.exist');
     cy.contains('No API keys yet').should('be.visible');
-    cy.contains('Create your first API key to get started').should('be.visible');
+    cy.contains('Create your first API key to get started').should(
+      'be.visible',
+    );
   });
 
   describe('Creating API Keys', () => {
@@ -59,10 +64,10 @@ describe('Tokens Page', () => {
               id: 'new-key-id',
               name: 'My Test Key',
               key: 'sk_live_1234567890abcdef',
-              createdAt: new Date().toISOString()
-            }
-          }
-        }
+              createdAt: new Date().toISOString(),
+            },
+          },
+        },
       }).as('createApiKey');
 
       // Mock updated list with new key
@@ -71,15 +76,17 @@ describe('Tokens Page', () => {
         body: {
           success: true,
           data: {
-            apiKeys: [{
-              id: 'new-key-id',
-              name: 'My Test Key',
-              key: 'sk_live_...cdef',
-              createdAt: new Date().toISOString()
-            }],
-            pagination: { page: 1, limit: 10, total: 1, totalPages: 1 }
-          }
-        }
+            apiKeys: [
+              {
+                id: 'new-key-id',
+                name: 'My Test Key',
+                key: 'sk_live_...cdef',
+                createdAt: new Date().toISOString(),
+              },
+            ],
+            pagination: { page: 1, limit: 10, total: 1, totalPages: 1 },
+          },
+        },
       }).as('getUpdatedApiKeys');
 
       // Fill in the form
@@ -92,14 +99,14 @@ describe('Tokens Page', () => {
 
       // Check success message
       cy.contains('API key created successfully').should('be.visible');
-      
+
       // Check new key display
       cy.contains('Your new API key has been created').should('be.visible');
       cy.contains('sk_live_1234567890abcdef').should('be.visible');
-      
+
       // Click done
       cy.contains('Done').click();
-      
+
       // Check key appears in list
       cy.wait('@getUpdatedApiKeys');
       cy.get('[data-testid="api-key-new-key-id"]').should('be.visible');
@@ -125,8 +132,8 @@ describe('Tokens Page', () => {
         statusCode: 400,
         body: {
           success: false,
-          error: 'Invalid request'
-        }
+          error: 'Invalid request',
+        },
       }).as('createApiKeyError');
 
       cy.get('[data-testid="api-key-name-input"]').type('Test Key');
@@ -152,10 +159,10 @@ describe('Tokens Page', () => {
               id: 'new-key-id',
               name: 'Copy Test Key',
               key: 'sk_live_copytest123',
-              createdAt: new Date().toISOString()
-            }
-          }
-        }
+              createdAt: new Date().toISOString(),
+            },
+          },
+        },
       }).as('createApiKey');
 
       cy.get('[data-testid="api-key-name-input"]').type('Copy Test Key');
@@ -168,9 +175,11 @@ describe('Tokens Page', () => {
       });
 
       cy.contains('Copied to clipboard').should('be.visible');
-      
+
       // Verify clipboard was called
-      cy.window().its('navigator.clipboard.writeText').should('have.been.calledWith', 'sk_live_copytest123');
+      cy.window()
+        .its('navigator.clipboard.writeText')
+        .should('have.been.calledWith', 'sk_live_copytest123');
     });
   });
 
@@ -188,19 +197,19 @@ describe('Tokens Page', () => {
                 name: 'Production Key',
                 key: 'sk_live_...abc1',
                 createdAt: '2024-01-01T00:00:00Z',
-                lastUsed: '2024-01-15T00:00:00Z'
+                lastUsed: '2024-01-15T00:00:00Z',
               },
               {
                 id: 'key-2',
                 name: 'Development Key',
                 key: 'sk_live_...xyz2',
                 createdAt: '2024-01-05T00:00:00Z',
-                expiresAt: '2024-02-05T00:00:00Z'
-              }
+                expiresAt: '2024-02-05T00:00:00Z',
+              },
             ],
-            pagination: { page: 1, limit: 10, total: 2, totalPages: 1 }
-          }
-        }
+            pagination: { page: 1, limit: 10, total: 2, totalPages: 1 },
+          },
+        },
       }).as('getApiKeysWithData');
     });
 
@@ -230,13 +239,15 @@ describe('Tokens Page', () => {
 
       cy.get('[data-testid="copy-key-key-1"]').click();
       cy.contains('Copied to clipboard').should('be.visible');
-      cy.window().its('navigator.clipboard.writeText').should('have.been.calledWith', 'sk_live_...abc1');
+      cy.window()
+        .its('navigator.clipboard.writeText')
+        .should('have.been.calledWith', 'sk_live_...abc1');
     });
 
     it('should delete API key', () => {
       cy.intercept('DELETE', '**/api/v1/api-keys/key-1', {
         statusCode: 200,
-        body: { success: true, message: 'API key deleted' }
+        body: { success: true, message: 'API key deleted' },
       }).as('deleteApiKey');
 
       // Mock updated list without deleted key
@@ -245,15 +256,17 @@ describe('Tokens Page', () => {
         body: {
           success: true,
           data: {
-            apiKeys: [{
-              id: 'key-2',
-              name: 'Development Key',
-              key: 'sk_live_...xyz2',
-              createdAt: '2024-01-05T00:00:00Z'
-            }],
-            pagination: { page: 1, limit: 10, total: 1, totalPages: 1 }
-          }
-        }
+            apiKeys: [
+              {
+                id: 'key-2',
+                name: 'Development Key',
+                key: 'sk_live_...xyz2',
+                createdAt: '2024-01-05T00:00:00Z',
+              },
+            ],
+            pagination: { page: 1, limit: 10, total: 1, totalPages: 1 },
+          },
+        },
       }).as('getUpdatedList');
 
       cy.wait('@getApiKeysWithData');
@@ -288,7 +301,7 @@ describe('Tokens Page', () => {
     it('should handle delete errors', () => {
       cy.intercept('DELETE', '**/api/v1/api-keys/key-1', {
         statusCode: 500,
-        body: { success: false, error: 'Server error' }
+        body: { success: false, error: 'Server error' },
       }).as('deleteError');
 
       cy.wait('@getApiKeysWithData');
@@ -306,7 +319,7 @@ describe('Tokens Page', () => {
     it('should handle API loading errors', () => {
       cy.intercept('GET', '**/api/v1/api-keys', {
         statusCode: 500,
-        body: { success: false, error: 'Server error' }
+        body: { success: false, error: 'Server error' },
       }).as('getApiKeysError');
 
       cy.visit('/settings/tokens');
@@ -316,7 +329,9 @@ describe('Tokens Page', () => {
     });
 
     it('should handle network errors', () => {
-      cy.intercept('GET', '**/api/v1/api-keys', { forceNetworkError: true }).as('networkError');
+      cy.intercept('GET', '**/api/v1/api-keys', { forceNetworkError: true }).as(
+        'networkError',
+      );
 
       cy.visit('/settings/tokens');
       cy.wait('@networkError');
@@ -331,13 +346,16 @@ describe('Tokens Page', () => {
         { value: '30d', label: '30 days' },
         { value: '90d', label: '90 days' },
         { value: '1y', label: '1 year' },
-        { value: 'never', label: 'Never' }
+        { value: 'never', label: 'Never' },
       ];
 
-      expirationOptions.forEach(option => {
+      expirationOptions.forEach((option) => {
         cy.get('[data-testid="api-key-expiry-select"]').select(option.value);
-        cy.get('[data-testid="api-key-expiry-select"]').should('have.value', option.value);
+        cy.get('[data-testid="api-key-expiry-select"]').should(
+          'have.value',
+          option.value,
+        );
       });
     });
   });
-}); 
+});

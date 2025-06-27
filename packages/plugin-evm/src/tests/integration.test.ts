@@ -41,11 +41,11 @@ describe.skip('EVM Services Integration Test Suite', () => {
     // No need for mock.restore() in Bun
 
     mockMessage = {
-      id: asUUID('test-message-id'),
-      agentId: asUUID('test-agent-id'),
-      entityId: asUUID('test-user-id'),
+      id: asUUID('00000000-0000-0000-0000-000000000001'),
+      agentId: asUUID('00000000-0000-0000-0000-000000000002'),
+      entityId: asUUID('00000000-0000-0000-0000-000000000003'),
       content: { text: 'test message', action: 'TEST_ACTION' },
-      roomId: asUUID('test-room-id'),
+      roomId: asUUID('00000000-0000-0000-0000-000000000004'),
       embedding: [] as any,
       createdAt: Date.now(),
     };
@@ -54,8 +54,8 @@ describe.skip('EVM Services Integration Test Suite', () => {
       values: {},
       data: {},
       text: '',
-      agentId: asUUID('test-agent-id'),
-      roomId: asUUID('test-room-id'),
+      agentId: asUUID('00000000-0000-0000-0000-000000000002'),
+      roomId: asUUID('00000000-0000-0000-0000-000000000004'),
       bio: 'Test agent bio',
       messageDirections: 'Test message directions',
       postDirections: 'Test post directions',

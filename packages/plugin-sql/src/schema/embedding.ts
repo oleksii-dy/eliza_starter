@@ -1,4 +1,4 @@
-import { getSchemaFactory, createLazyTableProxy } from './factory';
+import { getSchemaFactory, createLazyTableProxy } from './factory.js';
 import { VECTOR_DIMS } from '@elizaos/core';
 
 export const DIMENSION_MAP = {

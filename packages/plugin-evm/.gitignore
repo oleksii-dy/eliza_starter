@@ -4,3 +4,7 @@ dist
 :memory:
 .eliza
 .elizadb*
+AGENTS.md
+.cursor/rules/elizaos
+CLAUDE.md
+.cursorignore

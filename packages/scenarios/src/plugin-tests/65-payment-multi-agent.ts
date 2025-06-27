@@ -22,7 +22,12 @@ const paymentMultiAgentScenario: Scenario = {
 You collaborate with Analysis Agent for comprehensive reports.
 When working together, you handle research and split revenue 60/40.
 Always be transparent about collaborative pricing.`,
-      plugins: ['@elizaos/plugin-payment', '@elizaos/plugin-research', '@elizaos/plugin-knowledge'],
+      plugins: [
+        '@elizaos/plugin-sql',
+        '@elizaos/plugin-payment',
+        '@elizaos/plugin-research',
+        '@elizaos/plugin-knowledge',
+      ],
       script: { steps: [] },
     },
     {
@@ -37,7 +42,7 @@ Always be transparent about collaborative pricing.`,
 You work with Research Agent on comprehensive projects.
 For collaborations, you get 40% of the revenue.
 Focus on providing analytical insights.`,
-      plugins: ['@elizaos/plugin-payment', '@elizaos/plugin-knowledge'],
+      plugins: ['@elizaos/plugin-sql', '@elizaos/plugin-payment', '@elizaos/plugin-knowledge'],
       script: {
         steps: [
           {

@@ -33,6 +33,15 @@ export interface ServiceTypeRegistry {
   KNOWLEDGE: 'knowledge';
   PLUGIN_MANAGER: 'plugin_manager';
   SECURITY: 'security';
+  VISION: 'VISION';
+  AUTONOMOUS: 'AUTONOMOUS';
+  ROBOT: 'ROBOT';
+  SIMULATION: 'SIMULATION';
+  RL_TRAINING: 'RL_TRAINING';
+  SAFETY: 'SAFETY';
+  SHELL: 'SHELL';
+  TODO_REMINDER: 'TODO_REMINDER';
+  TODO_INTEGRATION_BRIDGE: 'TODO_INTEGRATION_BRIDGE';
 }
 
 /**
@@ -105,6 +114,15 @@ export const ServiceType = {
   KNOWLEDGE: 'knowledge',
   PLUGIN_MANAGER: 'plugin_manager',
   SECURITY: 'security',
+  VISION: 'VISION',
+  AUTONOMOUS: 'AUTONOMOUS',
+  ROBOT: 'ROBOT',
+  SIMULATION: 'SIMULATION',
+  RL_TRAINING: 'RL_TRAINING',
+  SAFETY: 'SAFETY',
+  SHELL: 'SHELL',
+  TODO_REMINDER: 'TODO_REMINDER',
+  TODO_INTEGRATION_BRIDGE: 'TODO_INTEGRATION_BRIDGE',
 } as const satisfies ServiceTypeRegistry;
 
 /**

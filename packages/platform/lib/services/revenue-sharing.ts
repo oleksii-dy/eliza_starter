@@ -1,6 +1,6 @@
 /**
  * Revenue Sharing Service
- * 
+ *
  * Handles creator payouts and revenue sharing for the marketplace:
  * - Calculate creator earnings (50% revenue share)
  * - Process payouts via Stripe and crypto
@@ -8,12 +8,12 @@
  * - Handle KYC verification for creators
  */
 
-import { db } from '../database';
+import { getDatabase } from '../database';
 import {
   creatorPayouts,
   assetUsageRecords,
   creatorProfiles,
-  marketplaceAssets
+  marketplaceAssets,
 } from '../database/marketplace-schema';
 import { users } from '../database/schema';
 import { eq, and, gte, lte, sum, sql, desc } from 'drizzle-orm';
@@ -66,7 +66,7 @@ export class RevenueSharing {
 
   constructor() {
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: '2025-02-24.acacia'
+      apiVersion: '2025-02-24.acacia',
     });
   }
 
@@ -76,19 +76,24 @@ export class RevenueSharing {
   async calculateCreatorEarnings(
     creatorId: string,
     organizationId: string,
-    period: PayoutPeriod
+    period: PayoutPeriod,
   ): Promise<CreatorEarnings> {
     try {
+      const db = await getDatabase();
+
       // Get creator's assets
-      const creatorAssets = await db.select({
-        id: marketplaceAssets.id,
-        name: marketplaceAssets.name
-      })
-      .from(marketplaceAssets)
-      .where(and(
-        eq(marketplaceAssets.creatorId, creatorId),
-        eq(marketplaceAssets.organizationId, organizationId)
-      ));
+      const creatorAssets = await db
+        .select({
+          id: marketplaceAssets.id,
+          name: marketplaceAssets.name,
+        })
+        .from(marketplaceAssets)
+        .where(
+          and(
+            eq(marketplaceAssets.creatorId, creatorId),
+            eq(marketplaceAssets.organizationId, organizationId),
+          ),
+        );
 
       const assetIds = creatorAssets.map((a: any) => a.id);
 
@@ -99,31 +104,40 @@ export class RevenueSharing {
           totalRevenue: 0,
           creatorShare: 0,
           platformFee: 0,
-          assetsRevenue: []
+          assetsRevenue: [],
         };
       }
 
       // Get usage records for the period
-      const usageRecords = await db.select({
-        assetId: assetUsageRecords.assetId,
-        totalRevenue: sum(assetUsageRecords.totalCost),
-        creatorRevenue: sum(assetUsageRecords.creatorRevenue),
-        platformRevenue: sum(assetUsageRecords.platformRevenue),
-        usageCount: sql<number>`COUNT(*)`
-      })
-      .from(assetUsageRecords)
-      .where(and(
-        sql`${assetUsageRecords.assetId} = ANY(${assetIds})`,
-        gte(assetUsageRecords.createdAt, period.startDate),
-        lte(assetUsageRecords.createdAt, period.endDate)
-      ))
-      .groupBy(assetUsageRecords.assetId);
+      const usageRecords = await db
+        .select({
+          assetId: assetUsageRecords.assetId,
+          totalRevenue: sum(assetUsageRecords.totalCost),
+          creatorRevenue: sum(assetUsageRecords.creatorRevenue),
+          platformRevenue: sum(assetUsageRecords.platformRevenue),
+          usageCount: sql<number>`COUNT(*)`,
+        })
+        .from(assetUsageRecords)
+        .where(
+          and(
+            sql`${assetUsageRecords.assetId} = ANY(${assetIds})`,
+            gte(assetUsageRecords.createdAt, period.startDate),
+            lte(assetUsageRecords.createdAt, period.endDate),
+          ),
+        )
+        .groupBy(assetUsageRecords.assetId);
 
       // Calculate totals
-      const totalRevenue = usageRecords.reduce((sum: number, record: any) => 
-        sum + parseFloat(record.totalRevenue || '0'), 0);
-      const creatorShare = usageRecords.reduce((sum: number, record: any) => 
-        sum + parseFloat(record.creatorRevenue || '0'), 0);
+      const totalRevenue = usageRecords.reduce(
+        (sum: number, record: any) =>
+          sum + parseFloat(record.totalRevenue || '0'),
+        0,
+      );
+      const creatorShare = usageRecords.reduce(
+        (sum: number, record: any) =>
+          sum + parseFloat(record.creatorRevenue || '0'),
+        0,
+      );
       const platformFee = totalRevenue - creatorShare;
 
       // Map asset revenues
@@ -133,7 +147,7 @@ export class RevenueSharing {
           assetId: record.assetId,
           assetName: asset?.name || 'Unknown Asset',
           revenue: parseFloat(record.creatorRevenue || '0'),
-          usageCount: Number(record.usageCount)
+          usageCount: Number(record.usageCount),
         };
       });
 
@@ -143,7 +157,7 @@ export class RevenueSharing {
         totalRevenue,
         creatorShare,
         platformFee,
-        assetsRevenue
+        assetsRevenue,
       };
     } catch (error) {
       console.error('Failed to calculate creator earnings:', error);
@@ -156,6 +170,8 @@ export class RevenueSharing {
    */
   async processPayout(request: PayoutRequest): Promise<PayoutStatus> {
     try {
+      const db = await getDatabase();
+
       // Verify creator profile and payout settings
       const creatorProfile = await this.getCreatorProfile(request.creatorId);
       if (!creatorProfile) {
@@ -163,14 +179,16 @@ export class RevenueSharing {
       }
 
       if (!creatorProfile.isVerified) {
-        throw new Error('Creator must complete KYC verification before receiving payouts');
+        throw new Error(
+          'Creator must complete KYC verification before receiving payouts',
+        );
       }
 
       // Calculate earnings for the period
       const earnings = await this.calculateCreatorEarnings(
         request.creatorId,
         request.organizationId,
-        request.period
+        request.period,
       );
 
       if (earnings.creatorShare < this.MINIMUM_PAYOUT) {
@@ -194,10 +212,13 @@ export class RevenueSharing {
         payoutAddress: request.payoutAddress,
         status: 'processing' as const,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
-      const payoutResult = await db.insert(creatorPayouts).values(payoutData).returning();
+      const payoutResult = await db
+        .insert(creatorPayouts)
+        .values(payoutData)
+        .returning();
       const payout = payoutResult[0];
 
       // Process payment based on method
@@ -205,26 +226,39 @@ export class RevenueSharing {
       try {
         switch (request.payoutMethod) {
           case 'stripe':
-            transactionResult = await this.processStripeTransfer(payout.id, creatorProfile, request.amount);
+            transactionResult = await this.processStripeTransfer(
+              payout.id,
+              creatorProfile,
+              request.amount,
+            );
             break;
           case 'crypto':
-            transactionResult = await this.processCryptoTransfer(payout.id, request.payoutAddress, request.amount);
+            transactionResult = await this.processCryptoTransfer(
+              payout.id,
+              request.payoutAddress,
+              request.amount,
+            );
             break;
           case 'bank':
-            transactionResult = await this.processBankTransfer(payout.id, creatorProfile, request.amount);
+            transactionResult = await this.processBankTransfer(
+              payout.id,
+              creatorProfile,
+              request.amount,
+            );
             break;
           default:
             throw new Error('Unsupported payout method');
         }
 
         // Update payout record with success
-        await db.update(creatorPayouts)
+        await db
+          .update(creatorPayouts)
           .set({
             status: 'completed',
             processedAt: new Date(),
             stripeTransferId: transactionResult.stripeTransferId,
             cryptoTransactionId: transactionResult.cryptoTransactionId,
-            updatedAt: new Date()
+            updatedAt: new Date(),
           })
           .where(eq(creatorPayouts.id, payout.id));
 
@@ -236,15 +270,21 @@ export class RevenueSharing {
           status: 'completed',
           payoutMethod: request.payoutMethod,
           processedAt: new Date(),
-          transactionId: transactionResult.stripeTransferId || transactionResult.cryptoTransactionId
+          transactionId:
+            transactionResult.stripeTransferId ||
+            transactionResult.cryptoTransactionId,
         };
       } catch (paymentError) {
         // Update payout record with failure
-        await db.update(creatorPayouts)
+        await db
+          .update(creatorPayouts)
           .set({
             status: 'failed',
-            failureReason: paymentError instanceof Error ? paymentError.message : 'Payment failed',
-            updatedAt: new Date()
+            failureReason:
+              paymentError instanceof Error
+                ? paymentError.message
+                : 'Payment failed',
+            updatedAt: new Date(),
           })
           .where(eq(creatorPayouts.id, payout.id));
 
@@ -259,14 +299,22 @@ export class RevenueSharing {
   /**
    * Get payout history for a creator
    */
-  async getPayoutHistory(creatorId: string, organizationId: string): Promise<PayoutStatus[]> {
+  async getPayoutHistory(
+    creatorId: string,
+    organizationId: string,
+  ): Promise<PayoutStatus[]> {
     try {
-      const payouts = await db.select()
+      const db = await getDatabase();
+
+      const payouts = await db
+        .select()
         .from(creatorPayouts)
-        .where(and(
-          eq(creatorPayouts.creatorId, creatorId),
-          eq(creatorPayouts.organizationId, organizationId)
-        ))
+        .where(
+          and(
+            eq(creatorPayouts.creatorId, creatorId),
+            eq(creatorPayouts.organizationId, organizationId),
+          ),
+        )
         .orderBy(desc(creatorPayouts.createdAt));
 
       return payouts.map((payout: any) => ({
@@ -274,14 +322,18 @@ export class RevenueSharing {
         creatorId: payout.creatorId,
         period: {
           startDate: payout.periodStart,
-          endDate: payout.periodEnd
+          endDate: payout.periodEnd,
         },
         amount: parseFloat(payout.creatorShare),
-        status: payout.status as 'pending' | 'processing' | 'completed' | 'failed',
+        status: payout.status as
+          | 'pending'
+          | 'processing'
+          | 'completed'
+          | 'failed',
         payoutMethod: payout.payoutMethod,
         processedAt: payout.processedAt,
         failureReason: payout.failureReason,
-        transactionId: payout.stripeTransferId || payout.cryptoTransactionId
+        transactionId: payout.stripeTransferId || payout.cryptoTransactionId,
       }));
     } catch (error) {
       console.error('Failed to get payout history:', error);
@@ -305,18 +357,22 @@ export class RevenueSharing {
       stripeAccountId?: string;
       cryptoWalletAddress?: string;
       cryptoWalletType?: string;
-    }
+    },
   ): Promise<void> {
     try {
+      const db = await getDatabase();
+
       // Check if profile already exists
-      const existingProfiles = await db.select()
+      const existingProfiles = await db
+        .select()
         .from(creatorProfiles)
         .where(eq(creatorProfiles.userId, userId))
         .limit(1);
 
       if (existingProfiles.length > 0) {
         // Update existing profile
-        await db.update(creatorProfiles)
+        await db
+          .update(creatorProfiles)
           .set({
             displayName: profileData.displayName,
             bio: profileData.bio,
@@ -327,7 +383,7 @@ export class RevenueSharing {
             stripeAccountId: profileData.stripeAccountId,
             cryptoWalletAddress: profileData.cryptoWalletAddress,
             cryptoWalletType: profileData.cryptoWalletType,
-            updatedAt: new Date()
+            updatedAt: new Date(),
           })
           .where(eq(creatorProfiles.userId, userId));
       } else {
@@ -345,7 +401,7 @@ export class RevenueSharing {
           cryptoWalletAddress: profileData.cryptoWalletAddress,
           cryptoWalletType: profileData.cryptoWalletType,
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         });
       }
     } catch (error) {
@@ -360,7 +416,7 @@ export class RevenueSharing {
   private async processStripeTransfer(
     payoutId: string,
     creatorProfile: any,
-    amount: number
+    amount: number,
   ): Promise<{ stripeTransferId?: string; cryptoTransactionId?: string }> {
     try {
       if (!creatorProfile.stripeAccountId) {
@@ -374,14 +430,16 @@ export class RevenueSharing {
         destination: creatorProfile.stripeAccountId,
         metadata: {
           payoutId,
-          creatorId: creatorProfile.userId
-        }
+          creatorId: creatorProfile.userId,
+        },
       });
 
       return { stripeTransferId: transfer.id };
     } catch (error) {
       console.error('Stripe transfer failed:', error);
-      throw new Error(`Stripe transfer failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Stripe transfer failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -391,7 +449,7 @@ export class RevenueSharing {
   private async processCryptoTransfer(
     payoutId: string,
     walletAddress: string,
-    amount: number
+    amount: number,
   ): Promise<{ stripeTransferId?: string; cryptoTransactionId?: string }> {
     // Placeholder implementation
     // In production, this would integrate with a crypto payment processor
@@ -403,19 +461,23 @@ export class RevenueSharing {
 
       // Simulate crypto transaction
       const transactionId = `crypto_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
+
       // In production, this would:
       // 1. Connect to blockchain or crypto payment service
       // 2. Create and broadcast transaction
       // 3. Wait for confirmation
       // 4. Return actual transaction hash
 
-      console.log(`Crypto payout of $${amount} to ${walletAddress} - Transaction: ${transactionId}`);
+      console.log(
+        `Crypto payout of $${amount} to ${walletAddress} - Transaction: ${transactionId}`,
+      );
 
       return { cryptoTransactionId: transactionId };
     } catch (error) {
       console.error('Crypto transfer failed:', error);
-      throw new Error(`Crypto transfer failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Crypto transfer failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -425,7 +487,7 @@ export class RevenueSharing {
   private async processBankTransfer(
     payoutId: string,
     creatorProfile: any,
-    amount: number
+    amount: number,
   ): Promise<{ stripeTransferId?: string; cryptoTransactionId?: string }> {
     // Placeholder - would integrate with ACH or wire transfer service
     throw new Error('Bank transfers not yet implemented');
@@ -435,7 +497,10 @@ export class RevenueSharing {
    * Get creator profile
    */
   private async getCreatorProfile(creatorId: string): Promise<any> {
-    const profiles = await db.select()
+    const db = await getDatabase();
+
+    const profiles = await db
+      .select()
       .from(creatorProfiles)
       .where(eq(creatorProfiles.userId, creatorId))
       .limit(1);
@@ -457,7 +522,7 @@ export class RevenueSharing {
   async generateTaxReport(
     creatorId: string,
     organizationId: string,
-    year: number
+    year: number,
   ): Promise<{
     totalEarnings: number;
     totalPayouts: number;
@@ -465,34 +530,47 @@ export class RevenueSharing {
     payoutsByMonth: Array<{ month: number; amount: number }>;
   }> {
     try {
+      const db = await getDatabase();
+
       const yearStart = new Date(year, 0, 1);
       const yearEnd = new Date(year + 1, 0, 1);
 
       // Get total earnings for the year
-      const earnings = await this.calculateCreatorEarnings(creatorId, organizationId, {
-        startDate: yearStart,
-        endDate: yearEnd
-      });
+      const earnings = await this.calculateCreatorEarnings(
+        creatorId,
+        organizationId,
+        {
+          startDate: yearStart,
+          endDate: yearEnd,
+        },
+      );
 
       // Get payouts for the year
-      const payouts = await db.select()
+      const payouts = await db
+        .select()
         .from(creatorPayouts)
-        .where(and(
-          eq(creatorPayouts.creatorId, creatorId),
-          eq(creatorPayouts.organizationId, organizationId),
-          gte(creatorPayouts.processedAt, yearStart),
-          lte(creatorPayouts.processedAt, yearEnd),
-          eq(creatorPayouts.status, 'completed')
-        ));
+        .where(
+          and(
+            eq(creatorPayouts.creatorId, creatorId),
+            eq(creatorPayouts.organizationId, organizationId),
+            gte(creatorPayouts.processedAt, yearStart),
+            lte(creatorPayouts.processedAt, yearEnd),
+            eq(creatorPayouts.status, 'completed'),
+          ),
+        );
 
-      const totalPayouts = payouts.reduce((sum: number, payout: any) => 
-        sum + parseFloat(payout.creatorShare), 0);
+      const totalPayouts = payouts.reduce(
+        (sum: number, payout: any) => sum + parseFloat(payout.creatorShare),
+        0,
+      );
 
       // Group payouts by month
-      const payoutsByMonth = Array(12).fill(0).map((_, index) => ({
-        month: index + 1,
-        amount: 0
-      }));
+      const payoutsByMonth = Array(12)
+        .fill(0)
+        .map((_, index) => ({
+          month: index + 1,
+          amount: 0,
+        }));
 
       payouts.forEach((payout: any) => {
         if (payout.processedAt) {
@@ -505,7 +583,7 @@ export class RevenueSharing {
         totalEarnings: earnings.creatorShare,
         totalPayouts,
         unpaidEarnings: earnings.creatorShare - totalPayouts,
-        payoutsByMonth
+        payoutsByMonth,
       };
     } catch (error) {
       console.error('Failed to generate tax report:', error);

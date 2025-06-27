@@ -6,15 +6,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GenerationService } from '../../services/GenerationService';
 import { validateListQuery } from '../validation';
-import { getDatabaseClient } from '@/lib/database';
 import { getStorageManager } from '@/lib/services/storage';
 import { getBillingService } from '@/lib/billing';
 import { logger } from '@/lib/logger';
 import { MiddlewareContext } from '../middleware';
 
 export async function listHandler(
-  req: NextRequest, 
-  context: MiddlewareContext
+  req: NextRequest,
+  context: MiddlewareContext,
 ): Promise<NextResponse> {
   try {
     // Parse query parameters
@@ -29,9 +28,9 @@ export async function listHandler(
           success: false,
           error: 'Invalid query parameters',
           code: 'VALIDATION_ERROR',
-          details: validation.errors
+          details: validation.errors,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -42,16 +41,17 @@ export async function listHandler(
       type: validation.data?.type,
       status: validation.data?.status,
       limit: validation.data?.limit,
-      offset: validation.data?.page ? (validation.data.page - 1) * (validation.data?.limit || 10) : 0,
+      offset: validation.data?.page
+        ? (validation.data.page - 1) * (validation.data?.limit || 10)
+        : 0,
       sortBy: validation.data?.sort_by,
       sortOrder: validation.data?.sort_order,
     };
 
     // Initialize services
-    const database = getDatabaseClient();
     const storage = await getStorageManager();
     const billing = getBillingService();
-    const generationService = new GenerationService(database, storage, billing);
+    const generationService = new GenerationService(storage, billing);
 
     // List generations
     const result = await generationService.listGenerations(params);
@@ -65,21 +65,23 @@ export async function listHandler(
       userId: context.userId,
       organizationId: context.organizationId,
       count: result.data?.length || 0,
-      filters: params
+      filters: params,
     });
 
     return NextResponse.json(result);
-
   } catch (error) {
-    logger.error('List generations handler error:', error instanceof Error ? error : new Error(String(error)));
-    
+    logger.error(
+      'List generations handler error:',
+      error instanceof Error ? error : new Error(String(error)),
+    );
+
     return NextResponse.json(
       {
         success: false,
         error: 'Internal server error',
-        code: 'INTERNAL_ERROR'
+        code: 'INTERNAL_ERROR',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

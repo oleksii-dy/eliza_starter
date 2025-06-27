@@ -12,8 +12,8 @@ function asUUID(str) {
   if (!str) {
     // Generate a proper UUID format
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-      const r = Math.random() * 16 | 0;
-      const v = c == 'x' ? r : (r & 0x3 | 0x8);
+      const r = (Math.random() * 16) | 0;
+      const v = c == 'x' ? r : (r & 0x3) | 0x8;
       return v.toString(16);
     });
   }
@@ -27,7 +27,7 @@ class MockRuntime {
     this.character = {
       name: 'DemoAgent',
       bio: 'Demo agent for admin chat',
-      settings: {}
+      settings: {},
     };
     this.memories = [];
   }
@@ -38,10 +38,10 @@ class MockRuntime {
 
   async getMemories(params) {
     if (params.entityId) {
-      return this.memories.filter(m => m.entityId === params.entityId);
+      return this.memories.filter((m) => m.entityId === params.entityId);
     }
     if (params.roomId) {
-      return this.memories.filter(m => m.roomId === params.roomId);
+      return this.memories.filter((m) => m.roomId === params.roomId);
     }
     return this.memories.slice(0, params.count || 10);
   }
@@ -49,7 +49,7 @@ class MockRuntime {
   async createMemory(memory, tableName) {
     this.memories.push({
       ...memory,
-      createdAt: memory.createdAt || Date.now()
+      createdAt: memory.createdAt || Date.now(),
     });
   }
 
@@ -78,7 +78,7 @@ async function verifyAdminChat() {
     id: asUUID('test-msg-001'),
     entityId: webGuiUserId,
     roomId,
-    content: { text: 'Test message' }
+    content: { text: 'Test message' },
   };
 
   let result = await adminChatProvider.get(runtime, testMessage, undefined);
@@ -94,7 +94,7 @@ async function verifyAdminChat() {
     id: asUUID('set-admin-msg'),
     entityId: webGuiUserId,
     roomId,
-    content: { text: 'Set me as admin' }
+    content: { text: 'Set me as admin' },
   };
 
   let callbackResult = null;
@@ -130,15 +130,15 @@ async function verifyAdminChat() {
       entityId: webGuiUserId,
       roomId,
       content: { text: 'Please monitor the system every hour' },
-      createdAt: Date.now()
+      createdAt: Date.now(),
     },
     {
       id: asUUID('admin-msg-2'),
       entityId: webGuiUserId,
       roomId,
       content: { text: 'Alert me of any security issues immediately' },
-      createdAt: Date.now() + 1000
-    }
+      createdAt: Date.now() + 1000,
+    },
   ];
 
   for (const msg of adminMessages) {
@@ -157,8 +157,8 @@ async function verifyAdminChat() {
     roomId: asUUID(`autonomous-${runtime.agentId}`),
     content: {
       text: 'What should I do next?',
-      providers: ['ADMIN_CHAT']
-    }
+      providers: ['ADMIN_CHAT'],
+    },
   };
 
   result = await adminChatProvider.get(runtime, autonomousMessage, undefined);
@@ -181,7 +181,7 @@ async function verifyAdminChat() {
     entityId: asUUID('other-user-9999'),
     roomId,
     content: { text: 'Hello from regular user!' },
-    createdAt: Date.now() + 2000
+    createdAt: Date.now() + 2000,
   };
 
   await runtime.createMemory(nonAdminMessage, 'memories');
@@ -200,7 +200,7 @@ async function verifyAdminChat() {
     adminSetup: runtime.character.settings?.ADMIN_USER_ID === webGuiUserId,
     messagesFound: (result.data?.messageCount || 0) >= 2,
     correctFiltering: result.text.includes('monitor') && !result.text.includes('regular user'),
-    correctFormat: result.text.includes('Admin:')
+    correctFormat: result.text.includes('Admin:'),
   };
 
   console.log('✓ Admin setup:', checks.adminSetup);
@@ -208,7 +208,7 @@ async function verifyAdminChat() {
   console.log('✓ Correct filtering:', checks.correctFiltering);
   console.log('✓ Correct format:', checks.correctFormat);
 
-  const allPassed = Object.values(checks).every(v => v === true);
+  const allPassed = Object.values(checks).every((v) => v === true);
   console.log('');
   console.log(`🎉 RESULT: ${allPassed ? 'ALL TESTS PASSED' : 'SOME TESTS FAILED'}`);
 
@@ -227,10 +227,10 @@ async function verifyAdminChat() {
 // Run if called directly
 if (import.meta.url === `file://${process.argv[1]}`) {
   verifyAdminChat()
-    .then(success => {
+    .then((success) => {
       process.exit(success ? 0 : 1);
     })
-    .catch(error => {
+    .catch((error) => {
       console.error('Verification failed:', error);
       process.exit(1);
     });

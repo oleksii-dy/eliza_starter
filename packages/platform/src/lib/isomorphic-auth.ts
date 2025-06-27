@@ -75,10 +75,10 @@ class IsomorphicAuthService {
    */
   private async initialize(): Promise<void> {
     try {
-      this.setState({ 
-        isLoading: true, 
+      this.setState({
+        isLoading: true,
         error: null,
-        platform: this.isTauriEnvironment() ? 'tauri' : 'web'
+        platform: this.isTauriEnvironment() ? 'tauri' : 'web',
       });
 
       // Try to load existing session
@@ -142,13 +142,13 @@ class IsomorphicAuthService {
     options: {
       returnTo?: string;
       sessionId?: string;
-    } = {}
+    } = {},
   ): Promise<{ success: boolean; authUrl?: string; error?: string }> {
     try {
       const { returnTo = '/dashboard', sessionId } = options;
 
       // Check if provider is supported
-      const provider = OAUTH_PROVIDERS.find(p => p.id === providerId);
+      const provider = OAUTH_PROVIDERS.find((p) => p.id === providerId);
       if (!provider) {
         return {
           success: false,
@@ -158,7 +158,7 @@ class IsomorphicAuthService {
 
       // Detect environment
       const isTauri = this.isTauriEnvironment();
-      
+
       if (isTauri) {
         // For Tauri apps, use custom protocol handling
         return this.startTauriOAuthFlow(providerId, { returnTo, sessionId });
@@ -170,7 +170,8 @@ class IsomorphicAuthService {
       console.error('OAuth flow start failed:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'OAuth flow failed to start',
+        error:
+          error instanceof Error ? error.message : 'OAuth flow failed to start',
       };
     }
   }
@@ -180,7 +181,7 @@ class IsomorphicAuthService {
    */
   private async startWebOAuthFlow(
     providerId: string,
-    options: { returnTo?: string; sessionId?: string }
+    options: { returnTo?: string; sessionId?: string },
   ): Promise<{ success: boolean; authUrl?: string; error?: string }> {
     try {
       const response = await fetch(`/api/auth/social/${providerId}`, {
@@ -200,7 +201,7 @@ class IsomorphicAuthService {
       }
 
       const data = await response.json();
-      
+
       // Redirect to OAuth provider
       if (data.authUrl) {
         window.location.href = data.authUrl;
@@ -225,11 +226,13 @@ class IsomorphicAuthService {
    */
   private async startTauriOAuthFlow(
     providerId: string,
-    options: { returnTo?: string; sessionId?: string }
+    options: { returnTo?: string; sessionId?: string },
   ): Promise<{ success: boolean; authUrl?: string; error?: string }> {
     try {
       // Get OAuth URL from our API
-      const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.platform.elizaos.com';
+      const baseUrl =
+        process.env.NEXT_PUBLIC_API_BASE_URL ||
+        'https://api.platform.elizaos.com';
       const response = await fetch(`${baseUrl}/api/auth/social/${providerId}`, {
         method: 'POST',
         headers: {
@@ -251,7 +254,7 @@ class IsomorphicAuthService {
       }
 
       const data = await response.json();
-      
+
       if (data.authUrl) {
         // Open OAuth URL in external browser and wait for callback
         return this.handleTauriOAuthRedirect(data.authUrl, providerId, options);
@@ -265,7 +268,8 @@ class IsomorphicAuthService {
       console.error('Tauri OAuth flow failed:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Tauri OAuth flow failed',
+        error:
+          error instanceof Error ? error.message : 'Tauri OAuth flow failed',
       };
     }
   }
@@ -276,7 +280,7 @@ class IsomorphicAuthService {
   private async handleTauriOAuthRedirect(
     authUrl: string,
     providerId: string,
-    options: { returnTo?: string; sessionId?: string }
+    options: { returnTo?: string; sessionId?: string },
   ): Promise<{ success: boolean; authUrl?: string; error?: string }> {
     try {
       // Import Tauri APIs dynamically
@@ -290,17 +294,20 @@ class IsomorphicAuthService {
 
       // Start listening for the OAuth callback
       return new Promise((resolve) => {
-        const timeoutId = setTimeout(() => {
-          resolve({
-            success: false,
-            error: 'OAuth timeout - please try again',
-          });
-        }, 5 * 60 * 1000); // 5 minute timeout
+        const timeoutId = setTimeout(
+          () => {
+            resolve({
+              success: false,
+              error: 'OAuth timeout - please try again',
+            });
+          },
+          5 * 60 * 1000,
+        ); // 5 minute timeout
 
         // Listen for OAuth callback from Tauri backend
         const handleOAuthCallback = async (code: string, state: string) => {
           clearTimeout(timeoutId);
-          
+
           try {
             // Exchange code for tokens
             const session = await this.exchangeOAuthCode(code, state);
@@ -316,15 +323,18 @@ class IsomorphicAuthService {
           } catch (error) {
             resolve({
               success: false,
-              error: error instanceof Error ? error.message : 'OAuth callback failed',
+              error:
+                error instanceof Error
+                  ? error.message
+                  : 'OAuth callback failed',
             });
           }
         };
 
         // Register callback handler with Tauri
-        invoke('register_oauth_callback', { 
+        invoke('register_oauth_callback', {
           providerId,
-          callback: handleOAuthCallback 
+          callback: handleOAuthCallback,
         }).catch((error: any) => {
           clearTimeout(timeoutId);
           resolve({
@@ -345,10 +355,14 @@ class IsomorphicAuthService {
   /**
    * Exchange OAuth authorization code for session tokens
    */
-  private async exchangeOAuthCode(code: string, state: string): Promise<AuthSession | null> {
+  private async exchangeOAuthCode(
+    code: string,
+    state: string,
+  ): Promise<AuthSession | null> {
     try {
-      const baseUrl = this.isTauriEnvironment() 
-        ? (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.platform.elizaos.com')
+      const baseUrl = this.isTauriEnvironment()
+        ? process.env.NEXT_PUBLIC_API_BASE_URL ||
+          'https://api.platform.elizaos.com'
         : '';
 
       const response = await fetch(`${baseUrl}/api/auth/callback`, {
@@ -410,14 +424,15 @@ class IsomorphicAuthService {
 
       // Notify backend of logout (optional, for session cleanup)
       try {
-        const baseUrl = this.isTauriEnvironment() 
-          ? (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.platform.elizaos.com')
+        const baseUrl = this.isTauriEnvironment()
+          ? process.env.NEXT_PUBLIC_API_BASE_URL ||
+            'https://api.platform.elizaos.com'
           : '';
-        
+
         await fetch(`${baseUrl}/api/auth/logout`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${this.state.token}`,
+            Authorization: `Bearer ${this.state.token}`,
           },
         });
       } catch (error) {
@@ -440,8 +455,9 @@ class IsomorphicAuthService {
         return false;
       }
 
-      const baseUrl = this.isTauriEnvironment() 
-        ? (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.platform.elizaos.com')
+      const baseUrl = this.isTauriEnvironment()
+        ? process.env.NEXT_PUBLIC_API_BASE_URL ||
+          'https://api.platform.elizaos.com'
         : '';
 
       const response = await fetch(`${baseUrl}/api/auth/refresh`, {
@@ -483,14 +499,15 @@ class IsomorphicAuthService {
       }
 
       // Optionally verify with server
-      const baseUrl = this.isTauriEnvironment() 
-        ? (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.platform.elizaos.com')
+      const baseUrl = this.isTauriEnvironment()
+        ? process.env.NEXT_PUBLIC_API_BASE_URL ||
+          'https://api.platform.elizaos.com'
         : '';
 
       const response = await fetch(`${baseUrl}/api/auth/verify`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${session.accessToken}`,
+          Authorization: `Bearer ${session.accessToken}`,
         },
       });
 
@@ -506,20 +523,29 @@ class IsomorphicAuthService {
    */
   private async storeSession(session: AuthSession): Promise<void> {
     const sessionData = JSON.stringify(session);
-    
+
     if (this.isTauriEnvironment()) {
       try {
         // @ts-ignore - Tauri API only available in Tauri builds
         const { invoke } = await import('@tauri-apps/api/tauri');
-        await invoke('store_auth_session', { 
-          session: SecurityManager.encryptToken(sessionData) 
+        await invoke('store_auth_session', {
+          session: SecurityManager.encryptToken(sessionData),
         });
       } catch (error) {
-        console.warn('Tauri session storage failed, using localStorage:', error);
-        localStorage.setItem('elizaos_auth_session', SecurityManager.encryptToken(sessionData));
+        console.warn(
+          'Tauri session storage failed, using localStorage:',
+          error,
+        );
+        localStorage.setItem(
+          'elizaos_auth_session',
+          SecurityManager.encryptToken(sessionData),
+        );
       }
     } else {
-      localStorage.setItem('elizaos_auth_session', SecurityManager.encryptToken(sessionData));
+      localStorage.setItem(
+        'elizaos_auth_session',
+        SecurityManager.encryptToken(sessionData),
+      );
     }
   }
 
@@ -536,7 +562,10 @@ class IsomorphicAuthService {
           const { invoke } = await import('@tauri-apps/api/tauri');
           encryptedSession = await invoke('get_auth_session');
         } catch (error) {
-          console.warn('Tauri session loading failed, using localStorage:', error);
+          console.warn(
+            'Tauri session loading failed, using localStorage:',
+            error,
+          );
           encryptedSession = localStorage.getItem('elizaos_auth_session');
         }
       } else {
@@ -565,7 +594,10 @@ class IsomorphicAuthService {
         const { invoke } = await import('@tauri-apps/api/tauri');
         await invoke('clear_auth_session');
       } catch (error) {
-        console.warn('Tauri session clearing failed, using localStorage:', error);
+        console.warn(
+          'Tauri session clearing failed, using localStorage:',
+          error,
+        );
         localStorage.removeItem('elizaos_auth_session');
       }
     } else {
@@ -585,7 +617,7 @@ class IsomorphicAuthService {
    */
   private setState(updates: Partial<AuthState>): void {
     this.state = { ...this.state, ...updates };
-    this.listeners.forEach(listener => {
+    this.listeners.forEach((listener) => {
       try {
         listener(this.state);
       } catch (error) {
@@ -599,7 +631,7 @@ class IsomorphicAuthService {
    */
   subscribe(listener: AuthListener): () => void {
     this.listeners.push(listener);
-    
+
     // Return unsubscribe function
     return () => {
       const index = this.listeners.indexOf(listener);
@@ -630,7 +662,7 @@ class IsomorphicAuthService {
         // Store in web localStorage (could be enhanced with encryption)
         localStorage.setItem('auth_token', token);
       }
-      
+
       // Update state
       this.setState({ token });
     } catch (error) {

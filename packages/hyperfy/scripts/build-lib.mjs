@@ -1,20 +1,20 @@
 #!/usr/bin/env node
 
-import { build } from 'esbuild';
-import fs from 'fs-extra';
-import { resolve, dirname } from 'path';
-import { fileURLToPath } from 'url';
-import { execSync } from 'child_process';
+import { build } from 'esbuild'
+import fs from 'fs-extra'
+import { resolve, dirname } from 'path'
+import { fileURLToPath } from 'url'
+import { execSync } from 'child_process'
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const rootDir = resolve(__dirname, '../');
-const buildDir = resolve(__dirname, '../build/lib');
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const rootDir = resolve(__dirname, '../')
+const buildDir = resolve(__dirname, '../build/lib')
 
 async function buildLibrary() {
-  console.log('🔨 Building hyperfy as library...');
+  console.log('🔨 Building hyperfy as library...')
 
   // Clean build directory
-  await fs.emptyDir(buildDir);
+  await fs.emptyDir(buildDir)
 
   // Build with esbuild
   await build({
@@ -73,32 +73,32 @@ async function buildLibrary() {
     minify: false,
     keepNames: true,
     metafile: true,
-  });
+  })
 
   // Generate TypeScript declarations
-  console.log('📝 Generating TypeScript declarations...');
+  console.log('📝 Generating TypeScript declarations...')
   try {
     execSync('tsc --project tsconfig.lib.json', {
       cwd: resolve(__dirname, '..'),
       stdio: 'inherit',
-    });
+    })
   } catch (error) {
-    console.error('❌ Failed to generate TypeScript declarations:', error);
-    process.exit(1);
+    console.error('❌ Failed to generate TypeScript declarations:', error)
+    process.exit(1)
   }
 
   // Copy package.json
-  const packageJson = await fs.readJson(resolve(__dirname, '../package.json'));
-  packageJson.main = 'index.js';
-  packageJson.types = 'index.d.ts';
-  delete packageJson.scripts;
-  delete packageJson.devDependencies;
-  await fs.writeJson(resolve(__dirname, '../build/lib/package.json'), packageJson, { spaces: 2 });
+  const packageJson = await fs.readJson(resolve(__dirname, '../package.json'))
+  packageJson.main = 'index.js'
+  packageJson.types = 'index.d.ts'
+  delete packageJson.scripts
+  delete packageJson.devDependencies
+  await fs.writeJson(resolve(__dirname, '../build/lib/package.json'), packageJson, { spaces: 2 })
 
-  console.log('✅ Library build complete!');
+  console.log('✅ Library build complete!')
 }
 
 buildLibrary().catch(error => {
-  console.error('❌ Build failed:', error);
-  process.exit(1);
-}); 
+  console.error('❌ Build failed:', error)
+  process.exit(1)
+})

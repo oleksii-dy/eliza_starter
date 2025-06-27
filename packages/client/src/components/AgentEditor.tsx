@@ -33,6 +33,7 @@ export interface AgentEditorConfig {
   apiKey?: string;
   embeddedMode?: boolean;
   theme?: 'light' | 'dark' | 'auto';
+  initialRoute?: string;
   user?: {
     id: string;
     email: string;
@@ -69,15 +70,9 @@ function AppContent({ config }: { config: AgentEditorConfig }) {
   const _version = useVersion();
 
   useEffect(() => {
-    // Configure API client if URL provided
-    if (config.apiUrl) {
-      apiClient.defaults.baseURL = config.apiUrl;
-    }
-
-    // Set API key if provided
-    if (config.apiKey) {
-      apiClient.defaults.headers.common['X-API-KEY'] = config.apiKey;
-    }
+    // TODO: Configure API client if URL provided
+    // Note: apiClient is not an axios instance, so defaults don't exist
+    // Need to implement proper configuration mechanism for embedded mode
 
     // Configure logger for embedded mode
     if (config.embeddedMode) {
@@ -94,7 +89,7 @@ function AppContent({ config }: { config: AgentEditorConfig }) {
     >
       <TooltipProvider>
         <SidebarProvider defaultOpen={true}>
-          <AppSidebar />
+          <AppSidebar refreshHomePage={() => {}} />
           <SidebarInset>
             <div className="flex h-full flex-col">
               <ConnectionErrorBanner />
@@ -110,7 +105,7 @@ function AppContent({ config }: { config: AgentEditorConfig }) {
                       </Button>
                     </SheetTrigger>
                     <SheetContent side="left" className="w-80">
-                      <AppSidebar />
+                      <AppSidebar refreshHomePage={() => {}} />
                     </SheetContent>
                   </Sheet>
                 </div>
@@ -160,11 +155,15 @@ export function AgentEditor(config: AgentEditorConfig = {}) {
   };
 
   return (
-    <div className={`agent-editor-container ${themeClass} antialiased font-sans`}>
+    <div
+      className={`agent-editor-container ${themeClass} antialiased font-sans`}
+      data-cy="agent-editor-container"
+      data-theme={config.theme || 'dark'}
+    >
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <ConnectionProvider>
-            <MemoryRouter>
+            <MemoryRouter initialEntries={[config.initialRoute || '/']}>
               <AppContent config={config} />
             </MemoryRouter>
           </ConnectionProvider>

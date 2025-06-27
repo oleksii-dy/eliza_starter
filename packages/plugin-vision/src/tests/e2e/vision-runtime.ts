@@ -209,8 +209,9 @@ export class VisionRuntimeTestSuite implements TestSuite {
         }
 
         // Check if Florence-2 is enabled
-        const florence2Enabled = runtime.getSetting('FLORENCE2_ENABLED') === 'true' ||
-                               runtime.getSetting('VISION_FLORENCE2_ENABLED') === 'true';
+        const florence2Enabled =
+          runtime.getSetting('FLORENCE2_ENABLED') === 'true' ||
+          runtime.getSetting('VISION_FLORENCE2_ENABLED') === 'true';
 
         if (!florence2Enabled) {
           logger.info('[Test] Florence-2 is disabled, skipping test');
@@ -244,8 +245,9 @@ export class VisionRuntimeTestSuite implements TestSuite {
         }
 
         // Check if OCR is enabled
-        const ocrEnabled = runtime.getSetting('OCR_ENABLED') === 'true' ||
-                          runtime.getSetting('VISION_OCR_ENABLED') === 'true';
+        const ocrEnabled =
+          runtime.getSetting('OCR_ENABLED') === 'true' ||
+          runtime.getSetting('VISION_OCR_ENABLED') === 'true';
 
         if (!ocrEnabled) {
           logger.info('[Test] OCR is disabled, skipping test');
@@ -295,7 +297,9 @@ export class VisionRuntimeTestSuite implements TestSuite {
             throw new Error('Entity missing required fields');
           }
 
-          logger.info(`[Test] Entity ${entity.id}: type=${entity.type}, tracked=${entity.trackingDuration}ms`);
+          logger.info(
+            `[Test] Entity ${entity.id}: type=${entity.type}, tracked=${entity.trackingDuration}ms`
+          );
         }
 
         logger.info('[Test] ✅ Entity tracking test passed');

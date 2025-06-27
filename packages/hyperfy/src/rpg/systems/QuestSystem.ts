@@ -1,525 +1,818 @@
-// @ts-nocheck
-import { System } from '../../core/systems/System';
-import type { World } from '../../types';
-import type { PlayerEntity, StatsComponent, InventoryComponent } from '../types';
+/**
+ * Quest System - RuneScape-style quest progression and management
+ * Handles quest states, objectives, dialogue, and rewards
+ */
 
-export interface QuestObjective {
-  id: string;
-  type: 'kill' | 'collect' | 'talk' | 'reach' | 'use';
-  description: string;
-  target?: string; // NPC ID, item ID, or location ID
-  quantity?: number;
-  current: number;
-  completed: boolean;
+import { System } from '../../core/systems/System'
+import type { World, Entity } from '../../types'
+import {
+  QuestDefinition,
+  QuestStatus,
+  QuestObjective,
+  ObjectiveType,
+  DialogueNode,
+  getQuestDefinition,
+  canPlayerStartQuest,
+  getAllAvailableQuests,
+  QUEST_DEFINITIONS,
+} from './quests/QuestDefinitions'
+import { SkillType } from './skills/SkillDefinitions'
+
+export interface QuestProgress {
+  questId: string
+  status: QuestStatus
+  objectives: { [objectiveId: string]: boolean }
+  currentDialogueNode?: string
+  startedAt: number
+  completedAt?: number
 }
 
-export interface QuestReward {
-  experience?: { skill: string; amount: number }[];
-  items?: { itemId: number; quantity: number }[];
-  unlocks?: string[]; // Quest IDs, area access, etc.
-  gold?: number;
-  questPoints?: number;
+export interface QuestComponent {
+  type: 'quest'
+  activeQuests: { [questId: string]: QuestProgress }
+  completedQuests: string[]
+  questPoints: number
+  lastQuestActivity: number
 }
 
-export interface QuestDefinition {
-  id: string;
-  name: string;
-  description: string;
-  difficulty: 'novice' | 'intermediate' | 'experienced' | 'master' | 'grandmaster';
-  questPoints: number;
-  requirements?: {
-    quests?: string[];
-    skills?: { skill: string; level: number }[];
-    items?: { itemId: number; quantity: number }[];
-  };
-  startNPC?: string;
-  objectives: QuestObjective[];
-  rewards: QuestReward;
-}
-
-export interface PlayerQuestData {
-  questId: string;
-  status: 'not_started' | 'in_progress' | 'completed';
-  objectives: QuestObjective[];
-  startedAt?: number;
-  completedAt?: number;
+export interface QuestDialogueState {
+  playerId: string
+  npcId: string
+  questId: string
+  currentNodeId: string
+  context: { [key: string]: any }
 }
 
 export class QuestSystem extends System {
-  private questDefinitions: Map<string, QuestDefinition> = new Map();
-  private playerQuests: Map<string, Map<string, PlayerQuestData>> = new Map();
-  private questStartHandlers: Map<string, (player: PlayerEntity) => boolean> = new Map();
-  private questCompleteHandlers: Map<string, (player: PlayerEntity) => void> = new Map();
+  private activeDialogues: Map<string, QuestDialogueState> = new Map()
+  private questJournal: Map<string, { [questId: string]: string[] }> = new Map() // Player quest journal entries
 
   constructor(world: World) {
-    super(world);
-    this.initializeDefaultQuests();
+    super(world)
   }
 
-  private initializeDefaultQuests(): void {
-    // Tutorial quest
-    this.registerQuest({
-      id: 'tutorial',
-      name: 'Tutorial Island',
-      description: 'Learn the basics of combat and skills',
-      difficulty: 'novice',
-      questPoints: 1,
-      objectives: [
-        {
-          id: 'talk_guide',
-          type: 'talk',
-          description: 'Talk to the Survival Guide',
-          target: 'npc_survival_guide',
-          current: 0,
-          quantity: 1,
-          completed: false
-        },
-        {
-          id: 'kill_rat',
-          type: 'kill',
-          description: 'Kill a giant rat',
-          target: 'npc_giant_rat',
-          current: 0,
-          quantity: 1,
-          completed: false
-        },
-        {
-          id: 'collect_logs',
-          type: 'collect',
-          description: 'Collect 3 logs',
-          target: 'item_logs',
-          current: 0,
-          quantity: 3,
-          completed: false
-        }
-      ],
-      rewards: {
-        experience: [
-          { skill: 'attack', amount: 100 },
-          { skill: 'woodcutting', amount: 100 }
-        ],
-        items: [
-          { itemId: 1001, quantity: 1 }, // Bronze sword
-          { itemId: 1002, quantity: 1 }  // Wooden shield
-        ],
-        questPoints: 1
-      }
-    });
+  async initialize(): Promise<void> {
+    console.log('[QuestSystem] Initializing...')
 
-    // Simple Kill Goblin quest for testing
-    this.registerQuest({
-      id: 'kill_goblin_basic',
-      name: 'Goblin Slayer',
-      description: 'A local villager needs help dealing with goblins near the village.',
-      difficulty: 'novice',
-      questPoints: 1,
-      startNPC: 'quest_giver_1',
-      objectives: [
-        {
-          id: 'get_sword',
-          type: 'collect',
-          description: 'Pick up a sword from the ground',
-          target: 'item_sword',
-          current: 0,
-          quantity: 1,
-          completed: false
-        },
-        {
-          id: 'kill_goblin',
-          type: 'kill',
-          description: 'Kill 1 goblin',
-          target: 'npc_goblin',
-          current: 0,
-          quantity: 1,
-          completed: false
-        },
-        {
-          id: 'return_to_npc',
-          type: 'talk',
-          description: 'Return to the villager',
-          target: 'quest_giver_1',
-          current: 0,
-          quantity: 1,
-          completed: false
-        }
-      ],
-      rewards: {
-        experience: [
-          { skill: 'attack', amount: 50 },
-          { skill: 'hitpoints', amount: 25 }
-        ],
-        gold: 100,
-        questPoints: 1
-      }
-    });
+    // Listen for quest events
+    this.world.events.on('player:joined', this.handlePlayerJoined.bind(this))
+    this.world.events.on('quest:start', this.handleStartQuest.bind(this))
+    this.world.events.on('quest:abandon', this.handleAbandonQuest.bind(this))
+    this.world.events.on('quest:complete_objective', this.handleCompleteObjective.bind(this))
+    this.world.events.on('quest:talk_to_npc', this.handleTalkToNpc.bind(this))
+    this.world.events.on('quest:dialogue_choice', this.handleDialogueChoice.bind(this))
+    this.world.events.on('quest:check_progress', this.handleCheckProgress.bind(this))
+    this.world.events.on('quest:view_journal', this.handleViewJournal.bind(this))
+
+    // Listen for game events that might complete objectives
+    this.world.events.on('combat:npc_killed', this.handleNpcKilled.bind(this))
+    this.world.events.on('inventory:item_added', this.handleItemCollected.bind(this))
+    this.world.events.on('skills:level_up', this.handleSkillLevelUp.bind(this))
+    this.world.events.on('player:location_reached', this.handleLocationReached.bind(this))
+    this.world.events.on('inventory:item_used', this.handleItemUsed.bind(this))
+
+    console.log('[QuestSystem] Initialized with quest tracking and dialogue system')
   }
 
-  registerQuest(definition: QuestDefinition): void {
-    this.questDefinitions.set(definition.id, definition);
-    this.world.events.emit('quest:registered', { questId: definition.id });
+  private handlePlayerJoined(data: any): void {
+    const { entityId } = data
+    this.createQuestComponent(entityId)
   }
 
-  registerQuestStartHandler(questId: string, handler: (player: PlayerEntity) => boolean): void {
-    this.questStartHandlers.set(questId, handler);
-  }
-
-  registerQuestCompleteHandler(questId: string, handler: (player: PlayerEntity) => void): void {
-    this.questCompleteHandlers.set(questId, handler);
-  }
-
-  canStartQuest(player: PlayerEntity, questId: string): { canStart: boolean; reason?: string } {
-    const quest = this.questDefinitions.get(questId);
-    if (!quest) {
-      return { canStart: false, reason: 'Quest not found' };
+  public createQuestComponent(entityId: string): QuestComponent | null {
+    const entity = this.world.getEntityById(entityId)
+    if (!entity) {
+      return null
     }
 
-    const playerQuests = this.getPlayerQuests(player.id);
-    const questData = playerQuests.get(questId);
+    const questComponent: QuestComponent = {
+      type: 'quest',
+      activeQuests: {},
+      completedQuests: [],
+      questPoints: 0,
+      lastQuestActivity: Date.now(),
+    }
 
-    if (questData && questData.status !== 'not_started') {
-      return { canStart: false, reason: 'Quest already started or completed' };
+    entity.addComponent(questComponent)
+
+    // Initialize quest journal
+    this.questJournal.set(entityId, {})
+
+    return questComponent
+  }
+
+  private handleStartQuest(data: any): void {
+    const { playerId, questId } = data
+    this.startQuest(playerId, questId)
+  }
+
+  private handleAbandonQuest(data: any): void {
+    const { playerId, questId } = data
+    this.abandonQuest(playerId, questId)
+  }
+
+  private handleCompleteObjective(data: any): void {
+    const { playerId, questId, objectiveId } = data
+    this.completeObjective(playerId, questId, objectiveId)
+  }
+
+  private handleTalkToNpc(data: any): void {
+    const { playerId, npcId } = data
+    this.handleNpcInteraction(playerId, npcId)
+  }
+
+  private handleDialogueChoice(data: any): void {
+    const { playerId, choiceIndex } = data
+    this.processDialogueChoice(playerId, choiceIndex)
+  }
+
+  private handleCheckProgress(data: any): void {
+    const { playerId, questId } = data
+    const progress = this.getQuestProgress(playerId, questId)
+
+    this.world.events.emit('quest:progress_response', {
+      playerId,
+      questId,
+      progress,
+    })
+  }
+
+  private handleViewJournal(data: any): void {
+    const { playerId } = data
+    const journal = this.getQuestJournal(playerId)
+
+    this.world.events.emit('quest:journal_response', {
+      playerId,
+      journal,
+    })
+  }
+
+  public startQuest(playerId: string, questId: string): boolean {
+    const entity = this.world.getEntityById(playerId)
+    const questDef = getQuestDefinition(questId)
+
+    if (!entity || !questDef) {
+      this.world.events.emit('quest:error', {
+        playerId,
+        message: 'Quest not found',
+      })
+      return false
+    }
+
+    const questComponent = entity.getComponent('quest') as QuestComponent
+    if (!questComponent) {
+      this.world.events.emit('quest:error', {
+        playerId,
+        message: 'Quest component not found',
+      })
+      return false
+    }
+
+    // Check if quest is already started or completed
+    if (questComponent.activeQuests[questId] || questComponent.completedQuests.includes(questId)) {
+      this.world.events.emit('quest:error', {
+        playerId,
+        message: 'Quest already started or completed',
+      })
+      return false
     }
 
     // Check requirements
-    if (quest.requirements) {
-      // Check quest requirements
-      if (quest.requirements.quests) {
-        for (const reqQuestId of quest.requirements.quests) {
-          const reqQuest = playerQuests.get(reqQuestId);
-          if (!reqQuest || reqQuest.status !== 'completed') {
-            return { canStart: false, reason: `Must complete quest: ${reqQuestId}` };
-          }
-        }
-      }
-
-      // Check skill requirements
-      if (quest.requirements.skills) {
-        const statsComponent = player.getComponent<StatsComponent>('stats');
-        if (statsComponent) {
-          for (const req of quest.requirements.skills) {
-            const skill = (statsComponent as any)[req.skill];
-            if (!skill || skill.level < req.level) {
-              return { canStart: false, reason: `Requires ${req.skill} level ${req.level}` };
-            }
-          }
-        }
-      }
-
-      // Check item requirements
-      if (quest.requirements.items) {
-        const inventory = player.getComponent<InventoryComponent>('inventory');
-        if (inventory) {
-          for (const req of quest.requirements.items) {
-            const count = this.countItems(inventory.items, req.itemId);
-            if (count < req.quantity) {
-              return { canStart: false, reason: `Requires ${req.quantity} of item ${req.itemId}` };
-            }
-          }
-        }
-      }
+    if (!this.canPlayerStartQuest(playerId, questId)) {
+      this.world.events.emit('quest:error', {
+        playerId,
+        message: 'Quest requirements not met',
+      })
+      return false
     }
 
-    // Check custom start handler
-    const startHandler = this.questStartHandlers.get(questId);
-    if (startHandler && !startHandler(player)) {
-      return { canStart: false, reason: 'Quest cannot be started at this time' };
-    }
+    // Initialize quest progress
+    const objectives: { [objectiveId: string]: boolean } = {}
+    questDef.objectives.forEach(obj => {
+      objectives[obj.id] = false
+    })
 
-    return { canStart: true };
-  }
-
-  startQuest(player: PlayerEntity, questId: string): boolean {
-    const canStart = this.canStartQuest(player, questId);
-    if (!canStart.canStart) {
-      this.world.events.emit('quest:start_failed', {
-        playerId: player.id,
-        questId,
-        reason: canStart.reason
-      });
-      return false;
-    }
-
-    const quest = this.questDefinitions.get(questId)!;
-    const questData: PlayerQuestData = {
+    const questProgress: QuestProgress = {
       questId,
-      status: 'in_progress',
-      objectives: quest.objectives.map(obj => ({ ...obj, current: 0, completed: false })),
-      startedAt: Date.now()
-    };
+      status: QuestStatus.IN_PROGRESS,
+      objectives,
+      startedAt: Date.now(),
+    }
 
-    const playerQuests = this.getPlayerQuests(player.id);
-    playerQuests.set(questId, questData);
+    questComponent.activeQuests[questId] = questProgress
+    questComponent.lastQuestActivity = Date.now()
+
+    // Add initial journal entry
+    this.addJournalEntry(playerId, questId, `Started quest: ${questDef.name}`)
+    this.addJournalEntry(playerId, questId, questDef.description)
+
+    // Start dialogue with quest giver if applicable
+    if (questDef.startNpcId && questDef.dialogue.start) {
+      this.startDialogue(playerId, questDef.startNpcId, questId, 'start')
+    }
 
     this.world.events.emit('quest:started', {
-      playerId: player.id,
+      playerId,
       questId,
-      questName: quest.name
-    });
+      questName: questDef.name,
+      difficulty: questDef.difficulty,
+    })
 
-    return true;
+    return true
   }
 
-  updateObjective(
-    player: PlayerEntity,
-    questId: string,
-    objectiveId: string,
-    progress: number
-  ): void {
-    const playerQuests = this.getPlayerQuests(player.id);
-    const questData = playerQuests.get(questId);
-
-    if (!questData || questData.status !== 'in_progress') {
-      return;
+  public abandonQuest(playerId: string, questId: string): boolean {
+    const entity = this.world.getEntityById(playerId)
+    if (!entity) {
+      return false
     }
 
-    const objective = questData.objectives.find(obj => obj.id === objectiveId);
-    if (!objective || objective.completed) {
-      return;
+    const questComponent = entity.getComponent('quest') as QuestComponent
+    if (!questComponent || !questComponent.activeQuests[questId]) {
+      this.world.events.emit('quest:error', {
+        playerId,
+        message: 'Quest not active',
+      })
+      return false
     }
 
-    objective.current = Math.min(progress, objective.quantity || 1);
+    // Remove from active quests
+    delete questComponent.activeQuests[questId]
+    questComponent.lastQuestActivity = Date.now()
 
-    if (objective.current >= (objective.quantity || 1)) {
-      objective.completed = true;
-      this.world.events.emit('quest:objective_complete', {
-        playerId: player.id,
-        questId,
-        objectiveId,
-        objectiveDescription: objective.description
-      });
-    }
+    // Clear any active dialogue
+    this.activeDialogues.delete(playerId)
 
-    // Check if all objectives are complete
-    if (questData.objectives.every(obj => obj.completed)) {
-      this.completeQuest(player, questId);
-    }
+    // Add journal entry
+    this.addJournalEntry(playerId, questId, 'Quest abandoned')
+
+    this.world.events.emit('quest:abandoned', {
+      playerId,
+      questId,
+    })
+
+    return true
   }
 
-  private completeQuest(player: PlayerEntity, questId: string): void {
-    const playerQuests = this.getPlayerQuests(player.id);
-    const questData = playerQuests.get(questId);
-    const quest = this.questDefinitions.get(questId);
+  public completeObjective(playerId: string, questId: string, objectiveId: string): boolean {
+    const entity = this.world.getEntityById(playerId)
+    const questDef = getQuestDefinition(questId)
 
-    if (!questData || !quest || questData.status !== 'in_progress') {
-      return;
+    if (!entity || !questDef) {
+      return false
     }
 
-    questData.status = 'completed';
-    questData.completedAt = Date.now();
+    const questComponent = entity.getComponent('quest') as QuestComponent
+    const questProgress = questComponent?.activeQuests[questId]
 
-    // Grant rewards
-    this.grantRewards(player, quest.rewards);
-
-    // Call complete handler if exists
-    const completeHandler = this.questCompleteHandlers.get(questId);
-    if (completeHandler) {
-      completeHandler(player);
+    if (!questProgress) {
+      return false
     }
+
+    // Mark objective as complete
+    questProgress.objectives[objectiveId] = true
+    questComponent.lastQuestActivity = Date.now()
+
+    const objective = questDef.objectives.find(obj => obj.id === objectiveId)
+    if (objective) {
+      this.addJournalEntry(playerId, questId, `✓ ${objective.description}`)
+    }
+
+    this.world.events.emit('quest:objective_completed', {
+      playerId,
+      questId,
+      objectiveId,
+      description: objective?.description,
+    })
+
+    // Check if quest is complete
+    const allObjectivesComplete = questDef.objectives.every(obj => questProgress.objectives[obj.id])
+
+    if (allObjectivesComplete) {
+      this.completeQuest(playerId, questId)
+    }
+
+    return true
+  }
+
+  private completeQuest(playerId: string, questId: string): void {
+    const entity = this.world.getEntityById(playerId)
+    const questDef = getQuestDefinition(questId)
+
+    if (!entity || !questDef) {
+      return
+    }
+
+    const questComponent = entity.getComponent('quest') as QuestComponent
+    if (!questComponent) {
+      return
+    }
+
+    const questProgress = questComponent.activeQuests[questId]
+    if (!questProgress) {
+      return
+    }
+
+    // Mark as completed
+    questProgress.status = QuestStatus.COMPLETED
+    questProgress.completedAt = Date.now()
+
+    // Move to completed quests
+    questComponent.completedQuests.push(questId)
+    delete questComponent.activeQuests[questId]
+
+    // Add quest points
+    questComponent.questPoints += questDef.questPoints
+
+    // Give rewards
+    this.giveQuestRewards(playerId, questDef)
+
+    // Add journal entry
+    this.addJournalEntry(playerId, questId, `Quest completed! Gained ${questDef.questPoints} quest points.`)
 
     this.world.events.emit('quest:completed', {
-      playerId: player.id,
+      playerId,
       questId,
-      questName: quest.name,
-      rewards: quest.rewards
-    });
+      questName: questDef.name,
+      questPoints: questDef.questPoints,
+      experienceRewards: questDef.experienceRewards,
+      itemRewards: questDef.itemRewards,
+      coinReward: questDef.coinReward,
+      unlocks: questDef.unlocks,
+    })
   }
 
-  private grantRewards(player: PlayerEntity, rewards: QuestReward): void {
-    // Grant experience
-    if (rewards.experience) {
-      const skillsSystem = this.world.systems.find(s => s.constructor.name === 'SkillsSystem');
-      if (skillsSystem) {
-        for (const exp of rewards.experience) {
-          (skillsSystem as any).addExperience(player, exp.skill, exp.amount);
+  private giveQuestRewards(playerId: string, questDef: QuestDefinition): void {
+    const inventorySystem = this.world.systems.find(s => s.constructor.name === 'InventorySystem')
+    const skillsSystem = this.world.systems.find(s => s.constructor.name === 'EnhancedSkillsSystem')
+
+    // Give experience rewards
+    if (skillsSystem) {
+      Object.entries(questDef.experienceRewards).forEach(([skill, xp]) => {
+        ;(skillsSystem as any).addExperience(playerId, skill as SkillType, xp)
+      })
+    }
+
+    // Give item rewards
+    if (inventorySystem) {
+      questDef.itemRewards.forEach(reward => {
+        ;(inventorySystem as any).addItem(playerId, reward.itemId, reward.quantity)
+      })
+
+      // Give coin reward
+      if (questDef.coinReward > 0) {
+        ;(inventorySystem as any).addItem(playerId, 'coins', questDef.coinReward)
+      }
+    }
+
+    // Handle unlocks (this would integrate with other systems)
+    questDef.unlocks.forEach(unlock => {
+      this.world.events.emit('quest:unlock', {
+        playerId,
+        unlock,
+        questId: questDef.id,
+      })
+    })
+  }
+
+  public handleNpcInteraction(playerId: string, npcId: string): void {
+    // Check if any active quests have dialogue for this NPC
+    const entity = this.world.getEntityById(playerId)
+    if (!entity) {
+      return
+    }
+
+    const questComponent = entity.getComponent('quest') as QuestComponent
+    if (!questComponent) {
+      return
+    }
+
+    // Check active quests for NPC dialogue
+    for (const [questId, progress] of Object.entries(questComponent.activeQuests)) {
+      const questDef = getQuestDefinition(questId)
+      if (!questDef) {
+        continue
+      }
+
+      // Check if this NPC is relevant to current objectives
+      const relevantObjective = questDef.objectives.find(
+        obj => obj.type === ObjectiveType.TALK_TO_NPC && obj.target === npcId && !progress.objectives[obj.id]
+      )
+
+      if (relevantObjective) {
+        // Start dialogue for this quest
+        this.startDialogue(playerId, npcId, questId, 'start')
+        return
+      }
+    }
+
+    // Check if NPC starts any new quests
+    const availableQuests = Object.values(QUEST_DEFINITIONS).filter(
+      quest =>
+        quest.startNpcId === npcId &&
+        !questComponent.completedQuests.includes(quest.id) &&
+        !questComponent.activeQuests[quest.id] &&
+        this.canPlayerStartQuest(playerId, quest.id)
+    )
+
+    if (availableQuests.length > 0) {
+      const quest = availableQuests[0] // Start first available quest
+      this.startDialogue(playerId, npcId, quest.id, 'start')
+    }
+  }
+
+  private startDialogue(playerId: string, npcId: string, questId: string, nodeId: string): void {
+    const questDef = getQuestDefinition(questId)
+    if (!questDef || !questDef.dialogue[nodeId]) {
+      return
+    }
+
+    const dialogueState: QuestDialogueState = {
+      playerId,
+      npcId,
+      questId,
+      currentNodeId: nodeId,
+      context: {},
+    }
+
+    this.activeDialogues.set(playerId, dialogueState)
+
+    const node = questDef.dialogue[nodeId]
+    this.sendDialogue(playerId, node)
+  }
+
+  private sendDialogue(playerId: string, node: DialogueNode): void {
+    this.world.events.emit('quest:dialogue', {
+      playerId,
+      speaker: node.speaker,
+      text: node.text,
+      choices: node.choices || [],
+      nodeId: node.id,
+    })
+  }
+
+  public processDialogueChoice(playerId: string, choiceIndex: number): void {
+    const dialogueState = this.activeDialogues.get(playerId)
+    if (!dialogueState) {
+      return
+    }
+
+    const questDef = getQuestDefinition(dialogueState.questId)
+    if (!questDef) {
+      return
+    }
+
+    const currentNode = questDef.dialogue[dialogueState.currentNodeId]
+    if (!currentNode || !currentNode.choices) {
+      return
+    }
+
+    const choice = currentNode.choices[choiceIndex]
+    if (!choice) {
+      return
+    }
+
+    // Check choice condition
+    if (choice.condition && !choice.condition(playerId)) {
+      this.world.events.emit('quest:error', {
+        playerId,
+        message: 'Choice not available',
+      })
+      return
+    }
+
+    // Move to next dialogue node
+    const nextNode = questDef.dialogue[choice.nextNodeId]
+    if (nextNode) {
+      dialogueState.currentNodeId = choice.nextNodeId
+
+      // Execute any actions
+      if (nextNode.action) {
+        this.executeDialogueAction(playerId, dialogueState.questId, nextNode.action)
+      }
+
+      this.sendDialogue(playerId, nextNode)
+    } else {
+      // End dialogue
+      this.activeDialogues.delete(playerId)
+    }
+  }
+
+  private executeDialogueAction(playerId: string, questId: string, action: any): void {
+    switch (action.type) {
+      case 'complete_objective':
+        if (action.objectiveId) {
+          this.completeObjective(playerId, questId, action.objectiveId)
         }
-      }
-    }
-
-    // Grant items
-    if (rewards.items) {
-      const inventorySystem = this.world.systems.find(s => s.constructor.name === 'InventorySystem');
-      if (inventorySystem) {
-        for (const item of rewards.items) {
-          (inventorySystem as any).addItem(player, item.itemId, item.quantity);
-        }
-      }
-    }
-
-    // Grant gold
-    if (rewards.gold) {
-      const inventory = player.getComponent('inventory');
-      if (inventory) {
-        // Add gold (assuming gold is item ID 995)
-        const inventorySystem = this.world.systems.find(s => s.constructor.name === 'InventorySystem');
-        if (inventorySystem) {
-          (inventorySystem as any).addItem(player, 995, rewards.gold);
-        }
-      }
-    }
-
-    // Handle unlocks
-    if (rewards.unlocks) {
-      for (const unlock of rewards.unlocks) {
-        this.world.events.emit('quest:unlock', {
-          playerId: player.id,
-          unlock
-        });
-      }
-    }
-  }
-
-  getPlayerQuests(playerId: string): Map<string, PlayerQuestData> {
-    if (!this.playerQuests.has(playerId)) {
-      this.playerQuests.set(playerId, new Map());
-    }
-    return this.playerQuests.get(playerId)!;
-  }
-
-  getQuestProgress(player: PlayerEntity, questId: string): PlayerQuestData | null {
-    const playerQuests = this.getPlayerQuests(player.id);
-    return playerQuests.get(questId) || null;
-  }
-
-  getAllQuests(): QuestDefinition[] {
-    return Array.from(this.questDefinitions.values());
-  }
-
-  getAvailableQuests(player: PlayerEntity): QuestDefinition[] {
-    return this.getAllQuests().filter(quest => {
-      const playerQuests = this.getPlayerQuests(player.id);
-      const questData = playerQuests.get(quest.id);
-      return !questData || questData.status === 'not_started';
-    });
-  }
-
-  getActiveQuests(player: PlayerEntity): QuestDefinition[] {
-    const playerQuests = this.getPlayerQuests(player.id);
-    return Array.from(playerQuests.values())
-      .filter(data => data.status === 'in_progress')
-      .map(data => this.questDefinitions.get(data.questId)!)
-      .filter(quest => quest !== undefined);
-  }
-
-  getCompletedQuests(player: PlayerEntity): QuestDefinition[] {
-    const playerQuests = this.getPlayerQuests(player.id);
-    return Array.from(playerQuests.values())
-      .filter(data => data.status === 'completed')
-      .map(data => this.questDefinitions.get(data.questId)!)
-      .filter(quest => quest !== undefined);
-  }
-
-  getTotalQuestPoints(player: PlayerEntity): number {
-    const completedQuests = this.getCompletedQuests(player);
-    return completedQuests.reduce((total, quest) => total + quest.questPoints, 0);
-  }
-
-  private countItems(items: any[], itemId: number): number {
-    let count = 0;
-    for (const item of items) {
-      if (item && item.id === itemId) {
-        count += item.quantity || 1;
-      }
-    }
-    return count;
-  }
-
-  // Event handlers for quest progress
-  handleNPCKill(player: PlayerEntity, npcId: string): void {
-    const activeQuests = this.getActiveQuests(player);
-
-    for (const quest of activeQuests) {
-      const questData = this.getQuestProgress(player, quest.id)!;
-
-      for (const objective of questData.objectives) {
-        if (objective.type === 'kill' && objective.target === npcId && !objective.completed) {
-          this.updateObjective(player, quest.id, objective.id, objective.current + 1);
-        }
-      }
-    }
-  }
-
-  handleItemCollected(player: PlayerEntity, itemId: string, _quantity: number): void {
-    const activeQuests = this.getActiveQuests(player);
-
-    for (const quest of activeQuests) {
-      const questData = this.getQuestProgress(player, quest.id)!;
-
-      for (const objective of questData.objectives) {
-        if (objective.type === 'collect' && objective.target === itemId && !objective.completed) {
-          const inventory = player.getComponent<InventoryComponent>('inventory');
-          if (inventory) {
-            const currentCount = this.countItems(inventory.items, parseInt(itemId.replace('item_', ''), 10));
-            this.updateObjective(player, quest.id, objective.id, currentCount);
+        break
+      case 'give_item':
+        if (action.itemId && action.quantity) {
+          const inventorySystem = this.world.systems.find(s => s.constructor.name === 'InventorySystem')
+          if (inventorySystem) {
+            ;(inventorySystem as any).addItem(playerId, action.itemId, action.quantity)
           }
         }
-      }
-    }
-  }
-
-  handleNPCTalk(player: PlayerEntity, npcId: string): void {
-    const activeQuests = this.getActiveQuests(player);
-
-    for (const quest of activeQuests) {
-      const questData = this.getQuestProgress(player, quest.id)!;
-
-      for (const objective of questData.objectives) {
-        if (objective.type === 'talk' && objective.target === npcId && !objective.completed) {
-          this.updateObjective(player, quest.id, objective.id, 1);
+        break
+      case 'teleport':
+        if (action.location) {
+          this.world.events.emit('player:teleport', {
+            playerId,
+            location: action.location,
+          })
         }
-      }
+        break
     }
   }
 
-  handleLocationReached(player: PlayerEntity, locationId: string): void {
-    const activeQuests = this.getActiveQuests(player);
+  // Event handlers for objective completion
+  private handleNpcKilled(data: any): void {
+    const { killerId, npcId } = data
+    this.checkKillObjectives(killerId, npcId)
+  }
 
-    for (const quest of activeQuests) {
-      const questData = this.getQuestProgress(player, quest.id)!;
+  private handleItemCollected(data: any): void {
+    const { playerId, itemId, quantity } = data
+    this.checkCollectionObjectives(playerId, itemId, quantity)
+  }
 
-      for (const objective of questData.objectives) {
-        if (objective.type === 'reach' && objective.target === locationId && !objective.completed) {
-          this.updateObjective(player, quest.id, objective.id, 1);
+  private handleSkillLevelUp(data: any): void {
+    const { playerId, skill, newLevel } = data
+    this.checkSkillObjectives(playerId, skill, newLevel)
+  }
+
+  private handleLocationReached(data: any): void {
+    const { playerId, locationId } = data
+    this.checkLocationObjectives(playerId, locationId)
+  }
+
+  private handleItemUsed(data: any): void {
+    const { playerId, itemId } = data
+    this.checkItemUseObjectives(playerId, itemId)
+  }
+
+  private checkKillObjectives(playerId: string, npcId: string): void {
+    const entity = this.world.getEntityById(playerId)
+    if (!entity) {
+      return
+    }
+
+    const questComponent = entity.getComponent('quest') as QuestComponent
+    if (!questComponent) {
+      return
+    }
+
+    Object.entries(questComponent.activeQuests).forEach(([questId, progress]) => {
+      const questDef = getQuestDefinition(questId)
+      if (!questDef) {
+        return
+      }
+
+      questDef.objectives.forEach(obj => {
+        if (obj.type === ObjectiveType.KILL_NPCS && obj.target === npcId && !progress.objectives[obj.id]) {
+          // Track kill count (simplified - in real implementation would track counts)
+          this.completeObjective(playerId, questId, obj.id)
         }
-      }
-    }
+      })
+    })
   }
 
-  handleItemUsed(player: PlayerEntity, itemId: string, _targetId?: string): void {
-    const activeQuests = this.getActiveQuests(player);
+  private checkCollectionObjectives(playerId: string, itemId: string, quantity: number): void {
+    const entity = this.world.getEntityById(playerId)
+    if (!entity) {
+      return
+    }
 
-    for (const quest of activeQuests) {
-      const questData = this.getQuestProgress(player, quest.id)!;
+    const questComponent = entity.getComponent('quest') as QuestComponent
+    if (!questComponent) {
+      return
+    }
 
-      for (const objective of questData.objectives) {
-        if (objective.type === 'use' && objective.target === itemId && !objective.completed) {
-          this.updateObjective(player, quest.id, objective.id, objective.current + 1);
+    Object.entries(questComponent.activeQuests).forEach(([questId, progress]) => {
+      const questDef = getQuestDefinition(questId)
+      if (!questDef) {
+        return
+      }
+
+      questDef.objectives.forEach(obj => {
+        if (obj.type === ObjectiveType.COLLECT_ITEMS && obj.target === itemId && !progress.objectives[obj.id]) {
+          // Check if player has required quantity
+          const inventorySystem = this.world.systems.find(s => s.constructor.name === 'InventorySystem')
+          if (inventorySystem) {
+            const hasItems = (inventorySystem as any).hasItem(playerId, itemId, obj.quantity || 1)
+            if (hasItems) {
+              this.completeObjective(playerId, questId, obj.id)
+            }
+          }
         }
-      }
-    }
+      })
+    })
   }
 
-  update(_deltaTime: number): void {
-    // Quest system doesn't need regular updates
+  private checkSkillObjectives(playerId: string, skill: SkillType, newLevel: number): void {
+    const entity = this.world.getEntityById(playerId)
+    if (!entity) {
+      return
+    }
+
+    const questComponent = entity.getComponent('quest') as QuestComponent
+    if (!questComponent) {
+      return
+    }
+
+    Object.entries(questComponent.activeQuests).forEach(([questId, progress]) => {
+      const questDef = getQuestDefinition(questId)
+      if (!questDef) {
+        return
+      }
+
+      questDef.objectives.forEach(obj => {
+        if (
+          obj.type === ObjectiveType.SKILL_LEVEL &&
+          obj.skillType === skill &&
+          newLevel >= (obj.level || 1) &&
+          !progress.objectives[obj.id]
+        ) {
+          this.completeObjective(playerId, questId, obj.id)
+        }
+      })
+    })
+  }
+
+  private checkLocationObjectives(playerId: string, locationId: string): void {
+    const entity = this.world.getEntityById(playerId)
+    if (!entity) {
+      return
+    }
+
+    const questComponent = entity.getComponent('quest') as QuestComponent
+    if (!questComponent) {
+      return
+    }
+
+    Object.entries(questComponent.activeQuests).forEach(([questId, progress]) => {
+      const questDef = getQuestDefinition(questId)
+      if (!questDef) {
+        return
+      }
+
+      questDef.objectives.forEach(obj => {
+        if (obj.type === ObjectiveType.REACH_LOCATION && obj.target === locationId && !progress.objectives[obj.id]) {
+          this.completeObjective(playerId, questId, obj.id)
+        }
+      })
+    })
+  }
+
+  private checkItemUseObjectives(playerId: string, itemId: string): void {
+    const entity = this.world.getEntityById(playerId)
+    if (!entity) {
+      return
+    }
+
+    const questComponent = entity.getComponent('quest') as QuestComponent
+    if (!questComponent) {
+      return
+    }
+
+    Object.entries(questComponent.activeQuests).forEach(([questId, progress]) => {
+      const questDef = getQuestDefinition(questId)
+      if (!questDef) {
+        return
+      }
+
+      questDef.objectives.forEach(obj => {
+        if (obj.type === ObjectiveType.USE_ITEM && obj.target === itemId && !progress.objectives[obj.id]) {
+          this.completeObjective(playerId, questId, obj.id)
+        }
+      })
+    })
+  }
+
+  private canPlayerStartQuest(playerId: string, questId: string): boolean {
+    const skillsSystem = this.world.systems.find(s => s.constructor.name === 'EnhancedSkillsSystem')
+    const equipmentSystem = this.world.systems.find(s => s.constructor.name === 'EquipmentSystem')
+
+    const getSkillLevel = (playerId: string, skill: SkillType) => {
+      return skillsSystem ? (skillsSystem as any).getSkillLevel(playerId, skill) : 1
+    }
+
+    const isQuestCompleted = (playerId: string, questId: string) => {
+      return this.isQuestCompleted(playerId, questId)
+    }
+
+    const getCombatLevel = (playerId: string) => {
+      return equipmentSystem ? (equipmentSystem as any).getCombatLevel(playerId) : 3
+    }
+
+    return canPlayerStartQuest(playerId, questId, getSkillLevel, isQuestCompleted, getCombatLevel)
+  }
+
+  private addJournalEntry(playerId: string, questId: string, entry: string): void {
+    const playerJournal = this.questJournal.get(playerId) || {}
+    if (!playerJournal[questId]) {
+      playerJournal[questId] = []
+    }
+
+    playerJournal[questId].push(`[${new Date().toLocaleTimeString()}] ${entry}`)
+    this.questJournal.set(playerId, playerJournal)
+  }
+
+  // Public query methods
+  public getQuestProgress(playerId: string, questId: string): QuestProgress | null {
+    const entity = this.world.getEntityById(playerId)
+    if (!entity) {
+      return null
+    }
+
+    const questComponent = entity.getComponent('quest') as QuestComponent
+    return questComponent?.activeQuests[questId] || null
+  }
+
+  public isQuestCompleted(playerId: string, questId: string): boolean {
+    const entity = this.world.getEntityById(playerId)
+    if (!entity) {
+      return false
+    }
+
+    const questComponent = entity.getComponent('quest') as QuestComponent
+    return questComponent?.completedQuests.includes(questId) || false
+  }
+
+  public getActiveQuests(playerId: string): QuestProgress[] {
+    const entity = this.world.getEntityById(playerId)
+    if (!entity) {
+      return []
+    }
+
+    const questComponent = entity.getComponent('quest') as QuestComponent
+    return questComponent ? Object.values(questComponent.activeQuests) : []
+  }
+
+  public getCompletedQuests(playerId: string): string[] {
+    const entity = this.world.getEntityById(playerId)
+    if (!entity) {
+      return []
+    }
+
+    const questComponent = entity.getComponent('quest') as QuestComponent
+    return questComponent?.completedQuests || []
+  }
+
+  public getQuestPoints(playerId: string): number {
+    const entity = this.world.getEntityById(playerId)
+    if (!entity) {
+      return 0
+    }
+
+    const questComponent = entity.getComponent('quest') as QuestComponent
+    return questComponent?.questPoints || 0
+  }
+
+  public getAvailableQuests(playerId: string): QuestDefinition[] {
+    const skillsSystem = this.world.systems.find(s => s.constructor.name === 'EnhancedSkillsSystem')
+    const equipmentSystem = this.world.systems.find(s => s.constructor.name === 'EquipmentSystem')
+
+    const getSkillLevel = (playerId: string, skill: SkillType) => {
+      return skillsSystem ? (skillsSystem as any).getSkillLevel(playerId, skill) : 1
+    }
+
+    const isQuestCompleted = (playerId: string, questId: string) => {
+      return this.isQuestCompleted(playerId, questId)
+    }
+
+    const getCombatLevel = (playerId: string) => {
+      return equipmentSystem ? (equipmentSystem as any).getCombatLevel(playerId) : 3
+    }
+
+    return getAllAvailableQuests(playerId, getSkillLevel, isQuestCompleted, getCombatLevel)
+  }
+
+  public getQuestJournal(playerId: string): { [questId: string]: string[] } {
+    return this.questJournal.get(playerId) || {}
+  }
+
+  public getQuestComponent(playerId: string): QuestComponent | null {
+    const entity = this.world.getEntityById(playerId)
+    return entity ? (entity.getComponent('quest') as QuestComponent) : null
+  }
+
+  update(deltaTime: number): void {
+    // Quest system doesn't need regular updates - event driven
   }
 
   serialize(): any {
-    const data: any = {
-      playerQuests: {}
-    };
-
-    for (const [playerId, quests] of this.playerQuests) {
-      data.playerQuests[playerId] = Array.from(quests.entries());
+    return {
+      activeDialogues: Object.fromEntries(this.activeDialogues),
+      questJournal: Object.fromEntries(this.questJournal),
     }
-
-    return data;
   }
 
   deserialize(data: any): void {
-    if (data.playerQuests) {
-      for (const [playerId, questsArray] of Object.entries(data.playerQuests)) {
-        const questMap = new Map<string, PlayerQuestData>(questsArray as any);
-        this.playerQuests.set(playerId, questMap);
-      }
+    if (data.activeDialogues) {
+      this.activeDialogues = new Map(Object.entries(data.activeDialogues))
+    }
+    if (data.questJournal) {
+      this.questJournal = new Map(Object.entries(data.questJournal))
     }
   }
 }

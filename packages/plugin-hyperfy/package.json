@@ -76,7 +76,7 @@
     "clean": "rm -rf dist && rm -rf .turbo",
     "lint": "eslint src --fix && prettier --write ./src",
     "typecheck": "tsc --noEmit",
-    "test": "elizaos test",
+    "test": "bun test src/",
     "scenario:explore": "node scripts/run-autonomous-exploration.js",
     "scenario:explore:observe": "node scripts/run-autonomous-exploration.js --observe",
     "scenario:explore:quick": "elizaos scenario run scenarios/hyperfy-autonomous-exploration.ts"

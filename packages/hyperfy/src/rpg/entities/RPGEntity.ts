@@ -1,22 +1,22 @@
-import { Entity } from '../../core/entities/Entity';
-import type { World } from '../../types/index.js';
-import type { Component } from '../types.js';
+import { Entity } from '../../core/entities/Entity'
+import type { World } from '../../types/index.js'
+import type { Component } from '../types.js'
 
 /**
  * RPG-specific entity that extends the base Entity class
  * with additional RPG functionality
  */
 export class RPGEntity extends Entity {
-  components: Map<string, Component>;
+  components: Map<string, Component>
   visualOverride?: {
-    color?: string;
-    size?: { width: number; height: number; depth: number };
-    animation?: string;
-  };
+    color?: string
+    size?: { width: number; height: number; depth: number }
+    animation?: string
+  }
 
   // Declare inherited properties for TypeScript
-  declare world: World;
-  declare data: any;
+  declare world: World
+  declare data: any
 
   constructor(world: World, type: string, data: any) {
     // Ensure data has required fields for Entity
@@ -26,11 +26,11 @@ export class RPGEntity extends Entity {
       name: data.name || type,
       position: data.position ? [data.position.x, data.position.y, data.position.z] : [0, 0, 0],
       quaternion: data.quaternion || [0, 0, 0, 1],
-      ...data
-    };
+      ...data,
+    }
 
-    super(world, entityData);
-    this.components = new Map();
+    super(world, entityData)
+    this.components = new Map()
   }
 
   /**
@@ -38,37 +38,37 @@ export class RPGEntity extends Entity {
    */
   override addComponent(type: string, data?: any): Component {
     // If data already has a type property, use it directly
-    const component = data && data.type ? data : { type, entityId: this.data.id, ...data } as Component;
-    this.components.set(type, component);
-    return component;
+    const component = data && data.type ? data : ({ type, entityId: this.data.id, ...data } as Component)
+    this.components.set(type, component)
+    return component
   }
 
   /**
    * Get a component by type
    */
   override getComponent<T extends Component>(type: string): T | null {
-    return this.components.get(type) as T || null;
+    return (this.components.get(type) as T) || null
   }
 
   /**
    * Remove a component by type
    */
   override removeComponent(type: string): void {
-    this.components.delete(type);
+    this.components.delete(type)
   }
 
   /**
    * Check if entity has a component
    */
   override hasComponent(type: string): boolean {
-    return this.components.has(type);
+    return this.components.has(type)
   }
 
   /**
    * Get all components
    */
   getAllComponents(): Component[] {
-    return Array.from(this.components.values());
+    return Array.from(this.components.values())
   }
 
   /**
@@ -96,27 +96,27 @@ export class RPGEntity extends Entity {
    * Serialize entity data
    */
   override serialize(): any {
-    const data = super.serialize();
+    const data = super.serialize()
 
     // Add component data
-    const componentData: any = {};
+    const componentData: any = {}
     this.components.forEach((component, type) => {
-      componentData[type] = component;
-    });
+      componentData[type] = component
+    })
 
     return {
       ...data,
-      components: componentData
-    };
+      components: componentData,
+    }
   }
 
   override destroy(local?: boolean): void {
     // Clean up components
     for (const [type, _] of this.components) {
-      this.removeComponent(type);
+      this.removeComponent(type)
     }
 
     // Call parent destroy
-    super.destroy(local);
+    super.destroy(local)
   }
 }

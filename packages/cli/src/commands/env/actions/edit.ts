@@ -44,9 +44,9 @@ export async function editEnvVars(options: EditEnvOptions, fromMainMenu = false)
     const addNew = yes
       ? false
       : await clack.confirm({
-          message: 'Would you like to add a new environment variable?',
-          initialValue: true,
-        });
+        message: 'Would you like to add a new environment variable?',
+        initialValue: true,
+      });
 
     if (clack.isCancel(addNew)) {
       clack.cancel('Operation cancelled.');

@@ -9,14 +9,26 @@ import { getCreditTransactions } from '@/lib/server/services/billing-service';
 import { z } from 'zod';
 
 const transactionsQuerySchema = z.object({
-  limit: z.string().optional().transform(val => val ? parseInt(val, 10) : 50),
-  offset: z.string().optional().transform(val => val ? parseInt(val, 10) : 0),
+  limit: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : 50)),
+  offset: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val, 10) : 0)),
   type: z.string().optional(),
-  startDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
-  endDate: z.string().optional().transform(val => val ? new Date(val) : undefined),
+  startDate: z
+    .string()
+    .optional()
+    .transform((val) => (val ? new Date(val) : undefined)),
+  endDate: z
+    .string()
+    .optional()
+    .transform((val) => (val ? new Date(val) : undefined)),
 });
 
-export async function GET(request: NextRequest) {
+export async function handleGET(request: NextRequest) {
   try {
     // Get user session
     const session = await sessionService.getSessionFromCookies();
@@ -44,14 +56,14 @@ export async function GET(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid query parameters', details: error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     console.error('Failed to get transactions:', error);
     return NextResponse.json(
       { error: 'Failed to get transactions' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

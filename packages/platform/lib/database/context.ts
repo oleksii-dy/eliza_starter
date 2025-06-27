@@ -17,10 +17,14 @@ export interface DatabaseContext {
  * Set the database context for RLS policies
  * This must be called before any database operations that rely on RLS
  */
-export async function setDatabaseContext(context: DatabaseContext): Promise<void> {
+export async function setDatabaseContext(
+  context: DatabaseContext,
+): Promise<void> {
   // Skip database context in test environment to avoid RLS issues
   if (process.env.NODE_ENV === 'test') {
-    console.log(`🔐 Database context (test mode): org=${context.organizationId}, user=${context.userId || 'none'}, admin=${context.isAdmin || false}`);
+    console.log(
+      `🔐 Database context (test mode): org=${context.organizationId}, user=${context.userId || 'none'}, admin=${context.isAdmin || false}`,
+    );
     return;
   }
 
@@ -36,7 +40,8 @@ export async function setDatabaseContext(context: DatabaseContext): Promise<void
   }
 
   // UUID format validation for organization and user IDs
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!uuidRegex.test(context.organizationId)) {
     throw new Error('Invalid organizationId format: must be a valid UUID');
   }
@@ -54,34 +59,56 @@ export async function setDatabaseContext(context: DatabaseContext): Promise<void
     // For PGlite, use the underlying client's exec method instead of execute
     if (db && typeof (db as any)._client?.exec === 'function') {
       // PGlite direct execution
-      await (db as any)._client.exec(`SET SESSION "app.current_organization_id" = '${orgId}'`);
+      await (db as any)._client.exec(
+        `SET SESSION "app.current_organization_id" = '${orgId}'`,
+      );
       if (context.userId) {
-        await (db as any)._client.exec(`SET SESSION "app.current_user_id" = '${userId}'`);
+        await (db as any)._client.exec(
+          `SET SESSION "app.current_user_id" = '${userId}'`,
+        );
       } else {
-        await (db as any)._client.exec('SET SESSION "app.current_user_id" = \'\'');
+        await (db as any)._client.exec(
+          'SET SESSION "app.current_user_id" = \'\'',
+        );
       }
-      await (db as any)._client.exec(`SET SESSION "app.current_user_is_admin" = '${adminValue}'`);
+      await (db as any)._client.exec(
+        `SET SESSION "app.current_user_is_admin" = '${adminValue}'`,
+      );
     } else if (typeof (db as any).execute === 'function') {
       // Standard Drizzle execute for other adapters
-      await (db as any).execute(sql.raw(`SET SESSION "app.current_organization_id" = '${orgId}'`));
+      await (db as any).execute(
+        sql.raw(`SET SESSION "app.current_organization_id" = '${orgId}'`),
+      );
       if (context.userId) {
-        await (db as any).execute(sql.raw(`SET SESSION "app.current_user_id" = '${userId}'`));
+        await (db as any).execute(
+          sql.raw(`SET SESSION "app.current_user_id" = '${userId}'`),
+        );
       } else {
-        await (db as any).execute(sql.raw('SET SESSION "app.current_user_id" = \'\''));
+        await (db as any).execute(
+          sql.raw('SET SESSION "app.current_user_id" = \'\''),
+        );
       }
-      await (db as any).execute(sql.raw(`SET SESSION "app.current_user_is_admin" = '${adminValue}'`));
+      await (db as any).execute(
+        sql.raw(`SET SESSION "app.current_user_is_admin" = '${adminValue}'`),
+      );
     } else {
       // Skip context setting for adapters that don't support it
-      console.log(`🔐 Database context skipped (adapter doesn't support raw SQL execution): org=${context.organizationId}, user=${context.userId || 'none'}, admin=${context.isAdmin || false}`);
+      console.log(
+        `🔐 Database context skipped (adapter doesn't support raw SQL execution): org=${context.organizationId}, user=${context.userId || 'none'}, admin=${context.isAdmin || false}`,
+      );
       return;
     }
 
-    console.log(`🔐 Database context set: org=${context.organizationId}, user=${context.userId || 'none'}, admin=${context.isAdmin || false}`);
+    console.log(
+      `🔐 Database context set: org=${context.organizationId}, user=${context.userId || 'none'}, admin=${context.isAdmin || false}`,
+    );
   } catch (error) {
     console.error('❌ Failed to set database context:', error);
     // Don't throw in development mode to avoid breaking dev login
     if (process.env.NODE_ENV === 'development') {
-      console.log('🔐 Database context set failed in development - continuing anyway');
+      console.log(
+        '🔐 Database context set failed in development - continuing anyway',
+      );
       return;
     }
     throw new Error('Failed to set database context');
@@ -104,17 +131,31 @@ export async function clearDatabaseContext(): Promise<void> {
     // For PGlite, use the underlying client's exec method instead of execute
     if (db && typeof (db as any)._client?.exec === 'function') {
       // PGlite direct execution
-      await (db as any)._client.exec('SET SESSION "app.current_organization_id" = \'\'');
-      await (db as any)._client.exec('SET SESSION "app.current_user_id" = \'\'');
-      await (db as any)._client.exec('SET SESSION "app.current_user_is_admin" = \'false\'');
+      await (db as any)._client.exec(
+        'SET SESSION "app.current_organization_id" = \'\'',
+      );
+      await (db as any)._client.exec(
+        'SET SESSION "app.current_user_id" = \'\'',
+      );
+      await (db as any)._client.exec(
+        'SET SESSION "app.current_user_is_admin" = \'false\'',
+      );
     } else if (typeof (db as any).execute === 'function') {
       // Standard Drizzle execute for other adapters
-      await (db as any).execute(sql.raw('SET SESSION "app.current_organization_id" = \'\''));
-      await (db as any).execute(sql.raw('SET SESSION "app.current_user_id" = \'\''));
-      await (db as any).execute(sql.raw('SET SESSION "app.current_user_is_admin" = \'false\''));
+      await (db as any).execute(
+        sql.raw('SET SESSION "app.current_organization_id" = \'\''),
+      );
+      await (db as any).execute(
+        sql.raw('SET SESSION "app.current_user_id" = \'\''),
+      );
+      await (db as any).execute(
+        sql.raw('SET SESSION "app.current_user_is_admin" = \'false\''),
+      );
     } else {
       // Skip context clearing for adapters that don't support it
-      console.log('🔓 Database context cleared (skipped - adapter doesn\'t support raw SQL execution)');
+      console.log(
+        "🔓 Database context cleared (skipped - adapter doesn't support raw SQL execution)",
+      );
       return;
     }
 
@@ -123,7 +164,9 @@ export async function clearDatabaseContext(): Promise<void> {
     console.error('❌ Failed to clear database context:', error);
     // Don't throw in development mode to avoid breaking dev login
     if (process.env.NODE_ENV === 'development') {
-      console.log('🔓 Database context clear failed in development - continuing anyway');
+      console.log(
+        '🔓 Database context clear failed in development - continuing anyway',
+      );
       return;
     }
     throw new Error('Failed to clear database context');
@@ -143,11 +186,13 @@ export async function getDatabaseContext(): Promise<DatabaseContext | null> {
 
   try {
     // Use proper select query instead of execute for getting data
-    const results = await db.select({
-      organizationId: sql`current_setting('app.current_organization_id', true)`,
-      userId: sql`current_setting('app.current_user_id', true)`, 
-      isAdmin: sql`current_setting('app.current_user_is_admin', true)`
-    }).limit(1);
+    const results = await db
+      .select({
+        organizationId: sql`current_setting('app.current_organization_id', true)`,
+        userId: sql`current_setting('app.current_user_id', true)`,
+        isAdmin: sql`current_setting('app.current_user_is_admin', true)`,
+      })
+      .limit(1);
 
     if (!results || results.length === 0) {
       return null;
@@ -160,14 +205,19 @@ export async function getDatabaseContext(): Promise<DatabaseContext | null> {
 
     return {
       organizationId: result.organizationId as string,
-      userId: result.userId && result.userId !== '' ? (result.userId as string) : undefined,
+      userId:
+        result.userId && result.userId !== ''
+          ? (result.userId as string)
+          : undefined,
       isAdmin: result.isAdmin === 'true',
     };
   } catch (error) {
     console.error('❌ Failed to get database context:', error);
     // In development mode, return null instead of throwing to avoid breaking the flow
     if (process.env.NODE_ENV === 'development') {
-      console.log('🔐 Database context get failed in development - returning null');
+      console.log(
+        '🔐 Database context get failed in development - returning null',
+      );
       return null;
     }
     return null;
@@ -180,7 +230,7 @@ export async function getDatabaseContext(): Promise<DatabaseContext | null> {
  */
 export async function withDatabaseContext<T>(
   context: DatabaseContext,
-  fn: () => Promise<T>
+  fn: () => Promise<T>,
 ): Promise<T> {
   const previousContext = await getDatabaseContext();
 
@@ -225,11 +275,9 @@ export async function setSystemContext(organizationId: string): Promise<void> {
  * For use with API routes and server actions
  */
 export function withDatabaseContextMiddleware(
-  getContext: () => Promise<DatabaseContext>
+  getContext: () => Promise<DatabaseContext>,
 ) {
-  return function <T extends any[], R> (
-    fn: (...args: T) => Promise<R>
-  ) {
+  return function <T extends any[], R>(fn: (...args: T) => Promise<R>) {
     return async (...args: T): Promise<R> => {
       const context = await getContext();
       return withDatabaseContext(context, () => fn(...args));
@@ -245,7 +293,9 @@ export async function validateDatabaseContext(): Promise<DatabaseContext> {
   const context = await getDatabaseContext();
 
   if (!context || !context.organizationId) {
-    throw new Error('Database context not set. Organization ID is required for all operations.');
+    throw new Error(
+      'Database context not set. Organization ID is required for all operations.',
+    );
   }
 
   return context;

@@ -111,7 +111,11 @@ export const auton8nIntegrationTests: TestCase[] = [
 
         // Verify it's loaded
         const updatedState = pluginManager.getPlugin(pluginId);
-        assert.strictEqual(updatedState?.status, PluginStatusValues.LOADED, 'Plugin should be loaded');
+        assert.strictEqual(
+          updatedState?.status,
+          PluginStatusValues.LOADED,
+          'Plugin should be loaded'
+        );
 
         // Simulate step execution
         console.log(`[Auton8n] Executing ${pluginState?.name}...`);

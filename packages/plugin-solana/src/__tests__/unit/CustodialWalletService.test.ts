@@ -2,6 +2,7 @@ import { describe, expect, it, mock, beforeEach, afterEach } from 'bun:test';
 import { CustodialWalletService, EntityType } from '../../services/CustodialWalletService';
 import { Connection, Keypair, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { logger } from '@elizaos/core';
+import { createMockRuntime } from '@elizaos/core/test-utils';
 import * as crypto from 'crypto';
 
 // Mock dependencies
@@ -101,7 +102,7 @@ describe('CustodialWalletService', () => {
       getAccountInfo: mock(),
     };
 
-    mockRuntime = {
+    mockRuntime = createMockRuntime({
       getSetting: mock((key: string) => {
         const settings: Record<string, string> = {
           SOLANA_RPC_URL: 'https://api.devnet.solana.com',
@@ -112,7 +113,7 @@ describe('CustodialWalletService', () => {
         return settings[key];
       }),
       getService: mock(() => null), // No services available in tests
-    };
+    });
 
     // Crypto is mocked at module level
 

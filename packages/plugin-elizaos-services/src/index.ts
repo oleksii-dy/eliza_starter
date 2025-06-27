@@ -41,7 +41,7 @@ import { ElizaOSServicesTestSuite } from './tests';
 import { RealIntegrationTestSuite } from './tests/real-integration.test';
 import { StorageIntegrationTestSuite } from './tests/storage-integration.test';
 import { ValidationSummaryTestSuite } from './tests/validation-summary.test';
-import { sandboxPlugin } from './sandbox/index.js';
+import { sandboxPlugin as _sandboxPlugin } from './sandbox/index.js';
 import {
   getAvailableProvider,
   getProviderApiKey,

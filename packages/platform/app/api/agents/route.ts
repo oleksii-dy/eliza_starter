@@ -4,17 +4,24 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
+
 // Use dynamic imports to avoid database connection during build
-const getAgentService = () => import('@/lib/agents/service').then(m => m.agentService);
-const getAuthService = () => import('@/lib/auth/session').then(m => m.authService);
-import { createAgentSchema, sanitizeRequestBody } from '@/lib/security/sanitization';
+const getAgentService = () =>
+  import('@/lib/agents/service').then((m) => m.agentService);
+const getAuthService = () =>
+  import('@/lib/auth/session').then((m) => m.authService);
+import {
+  createAgentSchema,
+  sanitizeRequestBody,
+} from '@/lib/security/sanitization';
 
 // Using imported validation schema with sanitization
 
 /**
  * GET /api/agents - List agents for current organization
  */
-export async function GET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     // Get current user session
     const authService = await getAuthService();
@@ -51,17 +58,17 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         agents,
-        stats
-      }
+        stats,
+      },
     });
   } catch (error) {
     console.error('Error fetching agents:', error);
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to fetch agents'
+        error: 'Failed to fetch agents',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -69,7 +76,7 @@ export async function GET(request: NextRequest) {
 /**
  * POST /api/agents - Create new agent
  */
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     // Get current user session
     const authService = await getAuthService();
@@ -102,9 +109,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Invalid request data',
-          details: validation.error.errors
+          details: validation.error.errors,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -114,46 +121,45 @@ export async function POST(request: NextRequest) {
     const agentService = await getAgentService();
 
     // Validate character configuration
-    const characterValidation = agentService.validateCharacterConfig(data.character);
+    const characterValidation = agentService.validateCharacterConfig(
+      data.character,
+    );
     if (!characterValidation.isValid) {
       return NextResponse.json(
         {
           error: 'Invalid character configuration',
-          details: characterValidation.errors
+          details: characterValidation.errors,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Create the agent
-    const agent = await agentService.createAgent(
-      user.organizationId,
-      user.id,
-      {
-        name: data.name,
-        description: data.description,
-        slug: data.slug,
-        character: data.character,
-        plugins: data.plugins,
-        runtimeConfig: data.runtimeConfig || {},
-        visibility: data.visibility,
-      }
-    );
+    const agent = await agentService.createAgent(user.organizationId, user.id, {
+      name: data.name,
+      description: data.description,
+      slug: data.slug,
+      character: data.character,
+      plugins: data.plugins,
+      runtimeConfig: data.runtimeConfig || {},
+      visibility: data.visibility,
+    });
 
     return NextResponse.json({ agent }, { status: 201 });
   } catch (error) {
     console.error('Error creating agent:', error);
 
     if (error instanceof Error && error.message.includes('already exists')) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 409 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 409 });
     }
 
     return NextResponse.json(
       { error: 'Failed to create agent' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
+
+// Export with security headers and authentication
+// These routes require auth by default via ROUTE_OVERRIDES in route-wrapper
+export const { GET, POST } = wrapHandlers({ handleGET, handlePOST });

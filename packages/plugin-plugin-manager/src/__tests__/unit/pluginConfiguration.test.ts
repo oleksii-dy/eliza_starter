@@ -13,8 +13,8 @@ describe('Plugin Configuration System', () => {
   it('should have correct plugin structure', () => {
     expect(pluginManagerPlugin.name).toBe('plugin-manager');
     expect(pluginManagerPlugin.description).toContain('health monitoring');
-    expect(pluginManagerPlugin.services).toHaveLength(1); // Only PluginManagerService
-    expect(pluginManagerPlugin.actions).toHaveLength(16); // 12 original + 4 new info actions
+    expect(pluginManagerPlugin.services).toHaveLength(2); // PluginManagerService and PlatformRegistryService
+    expect(pluginManagerPlugin.actions).toHaveLength(20); // 16 core actions + 4 platform registry actions
     expect(pluginManagerPlugin.providers).toHaveLength(0); // All providers migrated to actions
     // Evaluator was removed as it didn't fit the evaluator pattern
     expect(pluginManagerPlugin.evaluators).toBeUndefined();

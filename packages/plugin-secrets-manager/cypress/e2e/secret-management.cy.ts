@@ -17,7 +17,7 @@ describe('Secret Management System E2E Tests', () => {
     it('should start ngrok tunnel successfully', () => {
       cy.request('POST', '/api/ngrok/start', {
         port: 3000,
-        agentId: testAgentId
+        agentId: testAgentId,
       }).then((response) => {
         expect(response.status).to.eq(200);
         expect(response.body).to.have.property('url');
@@ -27,7 +27,7 @@ describe('Secret Management System E2E Tests', () => {
 
     it('should verify tunnel status', () => {
       cy.request('GET', '/api/ngrok/status', {
-        agentId: testAgentId
+        agentId: testAgentId,
       }).then((response) => {
         expect(response.status).to.eq(200);
         expect(response.body).to.have.property('active');
@@ -37,7 +37,7 @@ describe('Secret Management System E2E Tests', () => {
 
     it('should stop ngrok tunnel gracefully', () => {
       cy.request('POST', '/api/ngrok/stop', {
-        agentId: testAgentId
+        agentId: testAgentId,
       }).then((response) => {
         expect(response.status).to.eq(200);
         expect(response.body).to.have.property('message');
@@ -58,16 +58,16 @@ describe('Secret Management System E2E Tests', () => {
               type: 'credential',
               description: 'OpenAI API key for AI model access',
               required: true,
-              encrypted: true
-            }
-          }
+              encrypted: true,
+            },
+          },
         ],
         title: 'OpenAI Configuration',
         description: 'Please provide your OpenAI API key securely',
         mode: 'requester',
         expiresIn: 300000, // 5 minutes
         maxSubmissions: 1,
-        requireVerification: false
+        requireVerification: false,
       };
 
       cy.request('POST', '/api/secrets/form/create', {
@@ -76,8 +76,8 @@ describe('Secret Management System E2E Tests', () => {
         context: {
           level: 'user',
           userId: testUserId,
-          agentId: testAgentId
-        }
+          agentId: testAgentId,
+        },
       }).then((response) => {
         expect(response.status).to.eq(200);
         expect(response.body).to.have.property('url');
@@ -118,7 +118,7 @@ describe('Secret Management System E2E Tests', () => {
     it('should create OAuth challenge for Google', () => {
       cy.request('POST', '/api/secrets/oauth/challenge', {
         userId: testUserId,
-        provider: 'google'
+        provider: 'google',
       }).then((response) => {
         expect(response.status).to.eq(200);
         expect(response.body).to.have.property('challengeId');
@@ -130,7 +130,7 @@ describe('Secret Management System E2E Tests', () => {
     it('should create OAuth challenge for GitHub', () => {
       cy.request('POST', '/api/secrets/oauth/challenge', {
         userId: testUserId,
-        provider: 'github'
+        provider: 'github',
       }).then((response) => {
         expect(response.status).to.eq(200);
         expect(response.body).to.have.property('challengeId');
@@ -144,13 +144,13 @@ describe('Secret Management System E2E Tests', () => {
       const mockCallback = {
         provider: 'google',
         code: 'mock-auth-code',
-        state: 'mock-state-value'
+        state: 'mock-state-value',
       };
 
       cy.request({
         method: 'GET',
         url: `/oauth/callback/google?code=${mockCallback.code}&state=${mockCallback.state}`,
-        failOnStatusCode: false
+        failOnStatusCode: false,
       }).then((response) => {
         // In a real scenario, this would redirect to success page
         expect(response.status).to.be.oneOf([200, 302]);
@@ -168,25 +168,25 @@ describe('Secret Management System E2E Tests', () => {
         context: {
           level: 'user',
           userId: testUserId,
-          agentId: testAgentId
+          agentId: testAgentId,
         },
         channel: {
           type: 'memory',
           roomId: testRoomId,
-          userId: testUserId
+          userId: testUserId,
         },
         options: {
           title: 'Multi-Service Configuration',
           description: 'Please provide Discord and GitHub tokens',
           requireVerification: true,
           verificationMethods: ['oauth'],
-          expiresIn: 600000 // 10 minutes
-        }
+          expiresIn: 600000, // 10 minutes
+        },
       };
 
       cy.request('POST', '/api/secrets/request', {
         agentId: testAgentId,
-        request: secretRequest
+        request: secretRequest,
       }).then((response) => {
         expect(response.status).to.eq(200);
         expect(response.body).to.have.property('requestId');
@@ -199,7 +199,7 @@ describe('Secret Management System E2E Tests', () => {
     it('should handle user acceptance of secret request', () => {
       cy.request('POST', `/api/secrets/request/${requestId}/response`, {
         userId: testUserId,
-        action: 'accept'
+        action: 'accept',
       }).then((response) => {
         expect(response.status).to.eq(200);
         expect(response.body).to.have.property('success', true);
@@ -209,13 +209,15 @@ describe('Secret Management System E2E Tests', () => {
     });
 
     it('should track request analytics', () => {
-      cy.request('GET', `/api/secrets/analytics/requests?agentId=${testAgentId}`).then((response) => {
-        expect(response.status).to.eq(200);
-        expect(response.body).to.have.property('total');
-        expect(response.body).to.have.property('pending');
-        expect(response.body).to.have.property('completed');
-        expect(response.body.total).to.be.greaterThan(0);
-      });
+      cy.request('GET', `/api/secrets/analytics/requests?agentId=${testAgentId}`).then(
+        (response) => {
+          expect(response.status).to.eq(200);
+          expect(response.body).to.have.property('total');
+          expect(response.body).to.have.property('pending');
+          expect(response.body).to.have.property('completed');
+          expect(response.body.total).to.be.greaterThan(0);
+        }
+      );
     });
   });
 
@@ -226,22 +228,22 @@ describe('Secret Management System E2E Tests', () => {
         secretKeys: ['API_KEY', 'SECRET_TOKEN'],
         context: {
           level: 'world',
-          agentId: testAgentId
+          agentId: testAgentId,
         },
         channel: {
           type: 'memory',
-          roomId: testRoomId
+          roomId: testRoomId,
         },
         options: {
           batchMode: 'parallel',
           title: 'Batch Configuration Setup',
-          description: 'Configure API keys for multiple users'
-        }
+          description: 'Configure API keys for multiple users',
+        },
       };
 
       cy.request('POST', '/api/secrets/batch-request', {
         agentId: testAgentId,
-        request: batchRequest
+        request: batchRequest,
       }).then((response) => {
         expect(response.status).to.eq(200);
         expect(response.body).to.have.property('batchId');
@@ -251,22 +253,26 @@ describe('Secret Management System E2E Tests', () => {
     });
 
     it('should provide plugin dependency insights', () => {
-      cy.request('GET', `/api/secrets/insights/dependencies?agentId=${testAgentId}`).then((response) => {
-        expect(response.status).to.eq(200);
-        expect(response.body).to.have.property('missingSecrets');
-        expect(response.body).to.have.property('pluginRequirements');
-        expect(response.body).to.have.property('recommendations');
-      });
+      cy.request('GET', `/api/secrets/insights/dependencies?agentId=${testAgentId}`).then(
+        (response) => {
+          expect(response.status).to.eq(200);
+          expect(response.body).to.have.property('missingSecrets');
+          expect(response.body).to.have.property('pluginRequirements');
+          expect(response.body).to.have.property('recommendations');
+        }
+      );
     });
 
     it('should generate comprehensive analytics report', () => {
-      cy.request('GET', `/api/secrets/analytics/comprehensive?agentId=${testAgentId}`).then((response) => {
-        expect(response.status).to.eq(200);
-        expect(response.body).to.have.property('summary');
-        expect(response.body).to.have.property('trends');
-        expect(response.body).to.have.property('userBehavior');
-        expect(response.body).to.have.property('securityMetrics');
-      });
+      cy.request('GET', `/api/secrets/analytics/comprehensive?agentId=${testAgentId}`).then(
+        (response) => {
+          expect(response.status).to.eq(200);
+          expect(response.body).to.have.property('summary');
+          expect(response.body).to.have.property('trends');
+          expect(response.body).to.have.property('userBehavior');
+          expect(response.body).to.have.property('securityMetrics');
+        }
+      );
     });
   });
 
@@ -278,13 +284,13 @@ describe('Secret Management System E2E Tests', () => {
         roomId: testRoomId,
         content: {
           text: 'I need to set up my OpenAI API key',
-          source: 'user'
-        }
+          source: 'user',
+        },
       };
 
       cy.request('POST', '/api/agents/message', {
         agentId: testAgentId,
-        message: agentMessage
+        message: agentMessage,
       }).then((response) => {
         expect(response.status).to.eq(200);
         // The agent should recognize this as a secret request and create a secure portal
@@ -298,13 +304,13 @@ describe('Secret Management System E2E Tests', () => {
         roomId: testRoomId,
         content: {
           text: 'The bot needs my Discord token, GitHub token, and database configuration to work properly',
-          source: 'user'
-        }
+          source: 'user',
+        },
       };
 
       cy.request('POST', '/api/agents/message', {
         agentId: testAgentId,
-        message: complexMessage
+        message: complexMessage,
       }).then((response) => {
         expect(response.status).to.eq(200);
         // Should trigger verification due to multiple sensitive tokens
@@ -318,7 +324,7 @@ describe('Secret Management System E2E Tests', () => {
 
       cy.request({
         url: invalidUrl,
-        failOnStatusCode: false
+        failOnStatusCode: false,
       }).then((response) => {
         expect(response.status).to.eq(404);
       });
@@ -330,13 +336,13 @@ describe('Secret Management System E2E Tests', () => {
         secrets: [{ key: 'TEST_KEY', config: { type: 'secret' } }],
         title: 'Short Test',
         mode: 'requester',
-        expiresIn: 1000 // 1 second
+        expiresIn: 1000, // 1 second
       };
 
       cy.request('POST', '/api/secrets/form/create', {
         agentId: testAgentId,
         request: shortRequest,
-        context: { level: 'user', userId: testUserId }
+        context: { level: 'user', userId: testUserId },
       }).then((response) => {
         const portalUrl = response.body.url;
 
@@ -346,7 +352,7 @@ describe('Secret Management System E2E Tests', () => {
         // Try to access expired portal
         cy.request({
           url: portalUrl,
-          failOnStatusCode: false
+          failOnStatusCode: false,
         }).then((expiredResponse) => {
           expect(expiredResponse.status).to.eq(410); // Gone
         });
@@ -360,13 +366,13 @@ describe('Secret Management System E2E Tests', () => {
           method: 'POST',
           url: '/api/ngrok/start',
           body: { port: 3000 + i, agentId: testAgentId },
-          failOnStatusCode: false
+          failOnStatusCode: false,
         })
       );
 
       // Some should be rate limited
       cy.wrap(requests).then((responses: any[]) => {
-        const rateLimited = responses.some(r => r.status === 429);
+        const rateLimited = responses.some((r) => r.status === 429);
         expect(rateLimited).to.be.true;
       });
     });
@@ -377,7 +383,7 @@ describe('Secret Management System E2E Tests', () => {
         method: 'POST',
         url: '/api/secrets/form/submit',
         body: { data: 'test' },
-        failOnStatusCode: false
+        failOnStatusCode: false,
       }).then((response) => {
         expect(response.status).to.eq(403); // Forbidden
       });
@@ -389,19 +395,19 @@ describe('Secret Management System E2E Tests', () => {
       const concurrentRequests = Array.from({ length: 10 }, (_, i) => ({
         secrets: [{ key: `TEST_KEY_${i}`, config: { type: 'secret' } }],
         title: `Concurrent Test ${i}`,
-        mode: 'requester'
+        mode: 'requester',
       }));
 
-      const promises = concurrentRequests.map(request =>
+      const promises = concurrentRequests.map((request) =>
         cy.request('POST', '/api/secrets/form/create', {
           agentId: testAgentId,
           request,
-          context: { level: 'user', userId: `user-${Math.random()}` }
+          context: { level: 'user', userId: `user-${Math.random()}` },
         })
       );
 
       cy.wrap(Promise.all(promises)).then((responses: any[]) => {
-        responses.forEach(response => {
+        responses.forEach((response) => {
           expect(response.status).to.eq(200);
           expect(response.body).to.have.property('url');
         });
@@ -416,9 +422,9 @@ describe('Secret Management System E2E Tests', () => {
         request: {
           secrets: [{ key: 'PERF_TEST', config: { type: 'secret' } }],
           title: 'Performance Test',
-          mode: 'requester'
+          mode: 'requester',
         },
-        context: { level: 'user', userId: testUserId }
+        context: { level: 'user', userId: testUserId },
       }).then((response) => {
         const endTime = Date.now();
         const duration = endTime - startTime;
@@ -436,14 +442,14 @@ describe('Secret Management System E2E Tests', () => {
         method: 'POST',
         url: '/api/ngrok/stop',
         body: { agentId: testAgentId },
-        failOnStatusCode: false
+        failOnStatusCode: false,
       });
 
       // Clear test data
       cy.request({
         method: 'DELETE',
         url: `/api/secrets/test-cleanup?agentId=${testAgentId}`,
-        failOnStatusCode: false
+        failOnStatusCode: false,
       });
     });
   });

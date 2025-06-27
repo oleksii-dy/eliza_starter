@@ -32,8 +32,6 @@ import {
   paymentRequests,
   userWallets,
   dailySpending,
-  type NewPaymentTransaction,
-  type NewPaymentRequest,
 } from '../database/schema';
 import { decrypt, encrypt } from '../utils/encryption';
 
@@ -102,7 +100,7 @@ export class PaymentService extends Service implements IPaymentService {
     // Get optional services
     this.trustService = runtime.getService('trust');
     this.taskService = runtime.getService('task');
-    this.secretFormService = runtime.getService('SECRET_FORMS');
+    this.secretFormService = runtime.getService('SECRET_FORMS') as any;
 
     // Start monitoring
     this.startPaymentMonitoring();
@@ -332,8 +330,12 @@ export class PaymentService extends Service implements IPaymentService {
   }
 
   private shouldRequireConfirmation(request: PaymentRequest): boolean {
-    if (request.requiresConfirmation) {return true;}
-    if (!this.settings.requireConfirmation) {return false;}
+    if (request.requiresConfirmation) {
+      return true;
+    }
+    if (!this.settings.requireConfirmation) {
+      return false;
+    }
 
     const amountNum = Number(request.amount) / 1e6; // Assume 6 decimals
     if (this.settings.autoApprovalEnabled && amountNum <= this.settings.autoApprovalThreshold) {
@@ -383,10 +385,12 @@ export class PaymentService extends Service implements IPaymentService {
         minimumTrustLevel: request.minimumTrustLevel,
         metadata: {
           ...request.metadata,
-          ...(verificationCode ? {
-            verificationCode,
-            verificationCodeExpiry: Date.now() + 300000, // 5 minutes
-          } : {})
+          ...(verificationCode
+            ? {
+              verificationCode,
+              verificationCodeExpiry: Date.now() + 300000, // 5 minutes
+            }
+            : {}),
         },
         expiresAt: request.expiresAt ? new Date(request.expiresAt) : undefined,
       };
@@ -524,7 +528,10 @@ export class PaymentService extends Service implements IPaymentService {
         this.emitPaymentEvent(PaymentEventType.PAYMENT_FAILED, failedTx as any);
       }
 
-      return this.createFailedResult(request, error instanceof Error ? error.message : 'Unknown error');
+      return this.createFailedResult(
+        request,
+        error instanceof Error ? error.message : 'Unknown error'
+      );
     }
   }
 
@@ -689,7 +696,9 @@ export class PaymentService extends Service implements IPaymentService {
   ): Promise<boolean> {
     try {
       const adapter = this.getAdapterForMethod(method);
-      if (!adapter) {return false;}
+      if (!adapter) {
+        return false;
+      }
 
       const wallet = await this.getUserWallet(userId, method);
       const balance = await adapter.getBalance(wallet.address, method);
@@ -805,9 +814,7 @@ export class PaymentService extends Service implements IPaymentService {
         .where(eq(paymentTransactions.id, paymentId));
 
       // Delete pending payment request
-      await this.db
-        .delete(paymentRequests)
-        .where(eq(paymentRequests.transactionId, paymentId));
+      await this.db.delete(paymentRequests).where(eq(paymentRequests.transactionId, paymentId));
 
       this.emitPaymentEvent(PaymentEventType.PAYMENT_CANCELLED, transaction as any);
 
@@ -848,9 +855,7 @@ export class PaymentService extends Service implements IPaymentService {
       }
 
       // Delete pending request
-      await this.db
-        .delete(paymentRequests)
-        .where(eq(paymentRequests.transactionId, paymentId));
+      await this.db.delete(paymentRequests).where(eq(paymentRequests.transactionId, paymentId));
 
       // Reconstruct the original request
       const request: PaymentRequest = {
@@ -978,7 +983,6 @@ export class PaymentService extends Service implements IPaymentService {
 
     const encryptedPrivateKey = encrypt(newWallet.privateKey, encryptionKey);
 
-    const walletId = asUUID(uuidv4());
     await this.db.insert(userWallets).values({
       userId,
       address: newWallet.address,
@@ -1035,7 +1039,9 @@ export class PaymentService extends Service implements IPaymentService {
   }
 
   private async getTrustScore(userId: UUID): Promise<number> {
-    if (!this.trustService) {return 0;}
+    if (!this.trustService) {
+      return 0;
+    }
 
     try {
       return await this.trustService.getTrustScore(userId);
@@ -1097,7 +1103,9 @@ export class PaymentService extends Service implements IPaymentService {
   private async checkBalance(request: PaymentRequest): Promise<boolean> {
     try {
       const adapter = this.getAdapterForMethod(request.method);
-      if (!adapter) {return false;}
+      if (!adapter) {
+        return false;
+      }
 
       const wallet = await this.getUserWallet(request.userId, request.method);
       const balance = await adapter.getBalance(wallet.address, request.method);
@@ -1146,7 +1154,9 @@ export class PaymentService extends Service implements IPaymentService {
     request: PaymentRequest,
     transactionId: UUID
   ): Promise<void> {
-    if (!this.secretFormService) {return;}
+    if (!this.secretFormService) {
+      return;
+    }
 
     try {
       // Generate a secure verification code
@@ -1169,7 +1179,7 @@ export class PaymentService extends Service implements IPaymentService {
             ...currentMetadata,
             verificationCode,
             verificationCodeExpiry: Date.now() + 300000, // 5 minutes
-          }
+          },
         } as any)
         .where(eq(paymentRequests.transactionId, transactionId));
 
@@ -1213,7 +1223,8 @@ export class PaymentService extends Service implements IPaymentService {
           if (
             storedCode &&
             submission.data.authorization_code === storedCode &&
-            expiry && Date.now() < expiry
+            expiry &&
+            Date.now() < expiry
           ) {
             await this.confirmPayment(transactionId, {
               paymentId: transactionId,
@@ -1236,11 +1247,14 @@ export class PaymentService extends Service implements IPaymentService {
       });
 
       // TODO: Implement notification service integration to send code
-      logger.warn('[PaymentService] Verification code generated but notification service not implemented', {
-        paymentId: transactionId,
-        // For testing only - remove in production
-        testCode: process.env.NODE_ENV === 'test' ? verificationCode : undefined,
-      });
+      logger.warn(
+        '[PaymentService] Verification code generated but notification service not implemented',
+        {
+          paymentId: transactionId,
+          // For testing only - remove in production
+          testCode: process.env.NODE_ENV === 'test' ? verificationCode : undefined,
+        }
+      );
     } catch (error) {
       logger.error('[PaymentService] Failed to create verification form', error);
     }
@@ -1261,7 +1275,11 @@ export class PaymentService extends Service implements IPaymentService {
     return service;
   }
 
-  private async updateDailySpending(userId: UUID, amount: bigint, method: PaymentMethod): Promise<void> {
+  private async updateDailySpending(
+    userId: UUID,
+    amount: bigint,
+    method: PaymentMethod
+  ): Promise<void> {
     try {
       const amountUsd = await this.convertToUSD(amount, method);
 

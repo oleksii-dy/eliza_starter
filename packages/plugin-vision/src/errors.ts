@@ -6,12 +6,7 @@ export class VisionError extends Error {
   public readonly context?: Record<string, any>;
   public readonly recoverable: boolean;
 
-  constructor(
-    message: string,
-    code: string,
-    recoverable = false,
-    context?: Record<string, any>
-  ) {
+  constructor(message: string, code: string, recoverable = false, context?: Record<string, any>) {
     super(message);
     this.name = 'VisionError';
     this.code = code;
@@ -101,7 +96,9 @@ export class ErrorRecoveryManager {
       recover: async (error) => {
         logger.warn('[ErrorRecovery] Attempting camera recovery:', error.message);
         // Wait before retry
-        await new Promise(resolve => setTimeout(resolve, 1000 * (this.errorCounts.get(error.code) || 1)));
+        await new Promise((resolve) =>
+          setTimeout(resolve, 1000 * (this.errorCounts.get(error.code) || 1))
+        );
         logger.info('[ErrorRecovery] Camera recovery attempt complete');
       },
     });
@@ -121,8 +118,11 @@ export class ErrorRecoveryManager {
         const apiError = error as APIError;
         logger.warn('[ErrorRecovery] API error recovery:', error.message);
         // Exponential backoff
-        const delay = Math.min(1000 * Math.pow(2, this.errorCounts.get(`${error.code}_${apiError.endpoint}`) || 0), 30000);
-        await new Promise(resolve => setTimeout(resolve, delay));
+        const delay = Math.min(
+          1000 * Math.pow(2, this.errorCounts.get(`${error.code}_${apiError.endpoint}`) || 0),
+          30000
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
       },
     });
 
@@ -132,7 +132,7 @@ export class ErrorRecoveryManager {
       recover: async (error) => {
         logger.warn('[ErrorRecovery] Screen capture recovery:', error.message);
         // Brief pause before retry
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise((resolve) => setTimeout(resolve, 500));
       },
     });
   }
@@ -291,6 +291,6 @@ export class VisionErrorHandler {
   }
 
   resetAllCircuitBreakers(): void {
-    this.circuitBreakers.forEach(breaker => breaker.reset());
+    this.circuitBreakers.forEach((breaker) => breaker.reset());
   }
 }

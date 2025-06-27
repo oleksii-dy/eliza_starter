@@ -86,7 +86,9 @@ export function isAllowedCommand(command: string): boolean {
  * Sanitizes environment variables to prevent injection
  */
 export function sanitizeEnv(env: Record<string, string>): Record<string, string> {
-  const sanitized: Record<string, string> = { /* empty */ };
+  const sanitized: Record<string, string> = {
+    /* empty */
+  };
 
   for (const [key, value] of Object.entries(env)) {
     // Only allow alphanumeric keys with underscores
@@ -140,7 +142,9 @@ export function createSafeCommand(
  */
 export function escapeShellArg(arg: string): string {
   // If empty, return empty quotes
-  if (!arg) {return "''";}
+  if (!arg) {
+    return "''";
+  }
 
   // If it's a simple alphanumeric string, no escaping needed
   if (/^[a-zA-Z0-9_\-./]+$/.test(arg)) {

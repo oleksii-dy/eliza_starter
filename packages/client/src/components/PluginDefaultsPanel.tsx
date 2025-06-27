@@ -443,34 +443,34 @@ export default function PluginDefaultsPanel({
                         {/* Custom Action Defaults */}
                         {defaults.customDefaults &&
                           Object.keys(defaults.customDefaults).length > 0 && (
-                            <div className="mt-4">
-                              <h4 className="font-medium text-sm mb-2">Custom Action Defaults</h4>
-                              <div className="space-y-2">
-                                {Object.entries(defaults.customDefaults).map(
-                                  ([actionName, customDefault]) => (
-                                    <div
-                                      key={actionName}
-                                      className="flex items-center justify-between text-xs p-2 rounded border"
-                                    >
-                                      <div>
-                                        <span className="font-medium">{actionName}</span>
-                                        {customDefault.disabledReason && (
-                                          <div className="text-gray-500 mt-1">
-                                            {customDefault.disabledReason}
-                                          </div>
-                                        )}
-                                      </div>
-                                      <Badge
-                                        variant={customDefault.enabled ? 'default' : 'secondary'}
-                                      >
-                                        {customDefault.enabled ? 'Enabled' : 'Disabled'}
-                                      </Badge>
+                          <div className="mt-4">
+                            <h4 className="font-medium text-sm mb-2">Custom Action Defaults</h4>
+                            <div className="space-y-2">
+                              {Object.entries(defaults.customDefaults).map(
+                                ([actionName, customDefault]) => (
+                                  <div
+                                    key={actionName}
+                                    className="flex items-center justify-between text-xs p-2 rounded border"
+                                  >
+                                    <div>
+                                      <span className="font-medium">{actionName}</span>
+                                      {customDefault.disabledReason && (
+                                        <div className="text-gray-500 mt-1">
+                                          {customDefault.disabledReason}
+                                        </div>
+                                      )}
                                     </div>
-                                  )
-                                )}
-                              </div>
+                                    <Badge
+                                      variant={customDefault.enabled ? 'default' : 'secondary'}
+                                    >
+                                      {customDefault.enabled ? 'Enabled' : 'Disabled'}
+                                    </Badge>
+                                  </div>
+                                )
+                              )}
                             </div>
-                          )}
+                          </div>
+                        )}
                       </CardContent>
                     </CollapsibleContent>
                   </Collapsible>

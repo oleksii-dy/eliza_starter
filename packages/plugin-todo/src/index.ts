@@ -41,7 +41,7 @@ export const TodoPlugin: Plugin = {
     completeTodoAction,
     confirmTodoAction,
     updateTodoAction,
-    cancelTodoAction
+    cancelTodoAction,
   ],
   services: [TodoReminderService, TodoIntegrationBridge],
   routes,

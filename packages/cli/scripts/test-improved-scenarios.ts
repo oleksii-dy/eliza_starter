@@ -49,15 +49,15 @@ class ImprovedScenarioRunner {
         description: 'Tests basic scenario execution framework functionality',
         functionalTest: this.testBasicScenarioFramework.bind(this),
         targetSuccessRate: 0.8,
-        maxRetries: 10
+        maxRetries: 10,
       },
       {
         id: 'message-processing-test',
-        name: 'Message Processing Test', 
+        name: 'Message Processing Test',
         description: 'Tests agent message processing capabilities',
         functionalTest: this.testMessageProcessing.bind(this),
         targetSuccessRate: 0.8,
-        maxRetries: 10
+        maxRetries: 10,
       },
       {
         id: 'scenario-lifecycle-test',
@@ -65,17 +65,17 @@ class ImprovedScenarioRunner {
         description: 'Tests complete scenario execution lifecycle',
         functionalTest: this.testScenarioLifecycle.bind(this),
         targetSuccessRate: 0.8,
-        maxRetries: 10
-      }
+        maxRetries: 10,
+      },
     ];
 
     for (const scenario of scenarios) {
       console.log(`\n🧪 Testing: ${scenario.name}`);
       console.log(`   Description: ${scenario.description}`);
-      
+
       const results = await this.testScenario(scenario);
       this.results.set(scenario.id, results);
-      
+
       this.logScenarioResults(results);
     }
 
@@ -88,7 +88,7 @@ class ImprovedScenarioRunner {
 
     for (let runNumber = 1; runNumber <= scenario.maxRetries; runNumber++) {
       console.log(`   Run ${runNumber}/${scenario.maxRetries}...`);
-      
+
       const run = await this.executeTest(scenario, runNumber);
       runs.push(run);
 
@@ -96,9 +96,9 @@ class ImprovedScenarioRunner {
         errors.push(`Run ${runNumber}: ${run.error}`);
       }
 
-      const successfulRuns = runs.filter(r => r.success).length;
+      const successfulRuns = runs.filter((r) => r.success).length;
       const currentSuccessRate = successfulRuns / runs.length;
-      
+
       console.log(`      Result: ${run.success ? '✅ SUCCESS' : '❌ FAILED'} (${run.duration}ms)`);
       console.log(`      Current Success Rate: ${(currentSuccessRate * 100).toFixed(1)}%`);
 
@@ -110,11 +110,11 @@ class ImprovedScenarioRunner {
 
       // Brief pause between runs
       if (runNumber < scenario.maxRetries) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     }
 
-    const successfulRuns = runs.filter(r => r.success).length;
+    const successfulRuns = runs.filter((r) => r.success).length;
     const successRate = successfulRuns / runs.length;
     const averageDuration = runs.reduce((sum, r) => sum + r.duration, 0) / runs.length;
     const passed = successRate >= scenario.targetSuccessRate;
@@ -125,32 +125,32 @@ class ImprovedScenarioRunner {
       successRate,
       averageDuration,
       passed,
-      errors
+      errors,
     };
   }
 
   private async executeTest(scenario: ScenarioConfig, runNumber: number): Promise<TestRun> {
     const startTime = Date.now();
-    
+
     try {
       const success = await scenario.functionalTest();
       const duration = Date.now() - startTime;
-      
+
       return {
         runNumber,
         timestamp: startTime,
         duration,
-        success
+        success,
       };
     } catch (error: any) {
       const duration = Date.now() - startTime;
-      
+
       return {
         runNumber,
         timestamp: startTime,
         duration,
         success: false,
-        error: error.message || String(error)
+        error: error.message || String(error),
       };
     }
   }
@@ -159,8 +159,10 @@ class ImprovedScenarioRunner {
   private async testBasicScenarioFramework(): Promise<boolean> {
     try {
       // Test that the scenario execution framework can be imported and instantiated
-      const { executeRealScenario } = await import('../src/scenario-runner/real-scenario-execution.js');
-      
+      const { executeRealScenario } = await import(
+        '../src/scenario-runner/real-scenario-execution.js'
+      );
+
       if (typeof executeRealScenario !== 'function') {
         return false;
       }
@@ -169,21 +171,23 @@ class ImprovedScenarioRunner {
       const testScenario = {
         id: 'basic-test',
         name: 'Basic Test',
-        characters: [{ 
-          id: 'test-agent',
-          name: 'TestAgent',
-          bio: 'Test',
-          system: 'Test',
-          plugins: [],
-          settings: { ANTHROPIC_API_KEY: 'test-key', OPENAI_API_KEY: 'test-key' }
-        }],
+        characters: [
+          {
+            id: 'test-agent',
+            name: 'TestAgent',
+            bio: 'Test',
+            system: 'Test',
+            plugins: [],
+            settings: { ANTHROPIC_API_KEY: 'test-key', OPENAI_API_KEY: 'test-key' },
+          },
+        ],
         script: { steps: [] },
-        verification: { rules: [] }
+        verification: { rules: [] },
       };
 
       // Quick execution test (should not crash)
       const result = await executeRealScenario(testScenario, { timeout: 5000, maxSteps: 1 });
-      
+
       // Success if it executes without throwing and produces a result
       return result && typeof result.passed === 'boolean';
     } catch (error) {
@@ -193,37 +197,42 @@ class ImprovedScenarioRunner {
 
   private async testMessageProcessing(): Promise<boolean> {
     try {
-      const { executeRealScenario } = await import('../src/scenario-runner/real-scenario-execution.js');
+      const { executeRealScenario } = await import(
+        '../src/scenario-runner/real-scenario-execution.js'
+      );
       const { asUUID } = await import('@elizaos/core');
       const { v4: uuidv4 } = await import('uuid');
 
       const messageScenario = {
         id: 'message-test',
         name: 'Message Processing Test',
-        characters: [{
-          id: asUUID(uuidv4()),
-          name: 'MessageAgent',
-          bio: 'Message test agent',
-          system: 'Process messages',
-          plugins: [],
-          settings: { ANTHROPIC_API_KEY: 'test-key', OPENAI_API_KEY: 'test-key' }
-        }],
+        characters: [
+          {
+            id: asUUID(uuidv4()),
+            name: 'MessageAgent',
+            bio: 'Message test agent',
+            system: 'Process messages',
+            plugins: [],
+            settings: { ANTHROPIC_API_KEY: 'test-key', OPENAI_API_KEY: 'test-key' },
+          },
+        ],
         script: {
           steps: [
             { type: 'message', from: 'user', content: 'Test message' },
-            { type: 'wait', duration: 100 }
-          ]
+            { type: 'wait', duration: 100 },
+          ],
         },
-        verification: { rules: [] }
+        verification: { rules: [] },
       };
 
       const result = await executeRealScenario(messageScenario, { timeout: 10000, maxSteps: 5 });
-      
+
       // Success criteria: message was processed, transcript has entries, no critical errors
-      const messagesSent = result.transcript?.filter(t => t.type === 'message_sent').length || 0;
-      const messagesReceived = result.transcript?.filter(t => t.type === 'message_received').length || 0;
-      const criticalErrors = result.transcript?.filter(t => t.type === 'step_error').length || 0;
-      
+      const messagesSent = result.transcript?.filter((t) => t.type === 'message_sent').length || 0;
+      const messagesReceived =
+        result.transcript?.filter((t) => t.type === 'message_received').length || 0;
+      const criticalErrors = result.transcript?.filter((t) => t.type === 'step_error').length || 0;
+
       return messagesSent >= 1 && messagesReceived >= 1 && criticalErrors === 0;
     } catch (error) {
       return false;
@@ -232,40 +241,45 @@ class ImprovedScenarioRunner {
 
   private async testScenarioLifecycle(): Promise<boolean> {
     try {
-      const { executeRealScenario } = await import('../src/scenario-runner/real-scenario-execution.js');
+      const { executeRealScenario } = await import(
+        '../src/scenario-runner/real-scenario-execution.js'
+      );
       const { asUUID } = await import('@elizaos/core');
       const { v4: uuidv4 } = await import('uuid');
 
       const lifecycleScenario = {
         id: 'lifecycle-test',
         name: 'Lifecycle Test',
-        characters: [{
-          id: asUUID(uuidv4()),
-          name: 'LifecycleAgent',
-          bio: 'Lifecycle test agent',
-          system: 'Complete lifecycle',
-          plugins: [],
-          settings: { ANTHROPIC_API_KEY: 'test-key', OPENAI_API_KEY: 'test-key' }
-        }],
+        characters: [
+          {
+            id: asUUID(uuidv4()),
+            name: 'LifecycleAgent',
+            bio: 'Lifecycle test agent',
+            system: 'Complete lifecycle',
+            plugins: [],
+            settings: { ANTHROPIC_API_KEY: 'test-key', OPENAI_API_KEY: 'test-key' },
+          },
+        ],
         script: {
           steps: [
             { type: 'message', from: 'user', content: 'Start test' },
             { type: 'wait', duration: 100 },
             { type: 'message', from: 'user', content: 'End test' },
-            { type: 'wait', duration: 100 }
-          ]
+            { type: 'wait', duration: 100 },
+          ],
         },
-        verification: { rules: [] }
+        verification: { rules: [] },
       };
 
       const result = await executeRealScenario(lifecycleScenario, { timeout: 15000, maxSteps: 10 });
-      
+
       // Success criteria: complete lifecycle execution
-      const stepsCompleted = result.transcript?.filter(t => t.type === 'step_complete').length || 0;
+      const stepsCompleted =
+        result.transcript?.filter((t) => t.type === 'step_complete').length || 0;
       const systemErrors = result.errors?.length || 0;
       const hasTranscript = (result.transcript?.length || 0) > 0;
       const hasTimingData = result.duration > 0;
-      
+
       return stepsCompleted >= 2 && systemErrors === 0 && hasTranscript && hasTimingData;
     } catch (error) {
       return false;
@@ -274,15 +288,19 @@ class ImprovedScenarioRunner {
 
   private logScenarioResults(results: ScenarioResults): void {
     const { scenario, successRate, runs, passed, averageDuration } = results;
-    
+
     console.log(`\n📊 Results for ${scenario.name}:`);
-    console.log(`   Success Rate: ${(successRate * 100).toFixed(1)}% (${runs.filter(r => r.success).length}/${runs.length} runs)`);
+    console.log(
+      `   Success Rate: ${(successRate * 100).toFixed(1)}% (${runs.filter((r) => r.success).length}/${runs.length} runs)`
+    );
     console.log(`   Average Duration: ${averageDuration.toFixed(0)}ms`);
-    console.log(`   Status: ${passed ? '🎉 PASSED' : '❌ FAILED'} (target: ${(scenario.targetSuccessRate * 100).toFixed(0)}%)`);
-    
+    console.log(
+      `   Status: ${passed ? '🎉 PASSED' : '❌ FAILED'} (target: ${(scenario.targetSuccessRate * 100).toFixed(0)}%)`
+    );
+
     if (results.errors.length > 0) {
       console.log(`   Recent Errors:`);
-      results.errors.slice(-2).forEach(error => {
+      results.errors.slice(-2).forEach((error) => {
         console.log(`     • ${error.substring(0, 100)}...`);
       });
     }
@@ -296,24 +314,24 @@ class ImprovedScenarioRunner {
     const report = {
       timestamp: new Date().toISOString(),
       targetSuccessRate: 0.8,
-      scenarios: Array.from(this.results.values()).map(result => ({
+      scenarios: Array.from(this.results.values()).map((result) => ({
         id: result.scenario.id,
         name: result.scenario.name,
         successRate: result.successRate,
         passed: result.passed,
         runs: result.runs.length,
-        averageDuration: result.averageDuration
+        averageDuration: result.averageDuration,
       })),
       summary: {
         totalScenarios: this.results.size,
-        passedScenarios: Array.from(this.results.values()).filter(r => r.passed).length,
-        overallSuccessRate: 0
-      }
+        passedScenarios: Array.from(this.results.values()).filter((r) => r.passed).length,
+        overallSuccessRate: 0,
+      },
     };
 
     // Calculate overall success rate
-    const allRuns = Array.from(this.results.values()).flatMap(r => r.runs);
-    const successfulRuns = allRuns.filter(r => r.success).length;
+    const allRuns = Array.from(this.results.values()).flatMap((r) => r.runs);
+    const successfulRuns = allRuns.filter((r) => r.success).length;
     report.summary.overallSuccessRate = successfulRuns / allRuns.length;
 
     // Log summary
@@ -323,8 +341,12 @@ class ImprovedScenarioRunner {
     }
 
     console.log(`\n📊 Overall Statistics:`);
-    console.log(`   Scenarios Passing Target: ${report.summary.passedScenarios}/${report.summary.totalScenarios}`);
-    console.log(`   Overall Success Rate: ${(report.summary.overallSuccessRate * 100).toFixed(1)}%`);
+    console.log(
+      `   Scenarios Passing Target: ${report.summary.passedScenarios}/${report.summary.totalScenarios}`
+    );
+    console.log(
+      `   Overall Success Rate: ${(report.summary.overallSuccessRate * 100).toFixed(1)}%`
+    );
     console.log(`   Total Test Runs: ${allRuns.length}`);
 
     // Save report
@@ -350,7 +372,7 @@ async function main() {
   await runner.runAllScenarios();
 }
 
-main().catch(error => {
+main().catch((error) => {
   console.error('💥 Improved scenario testing failed:', error);
   process.exit(1);
 });

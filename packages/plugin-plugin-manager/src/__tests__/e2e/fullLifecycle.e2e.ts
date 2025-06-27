@@ -42,7 +42,9 @@ export const fullLifecycleE2ETest: TestSuite = {
         // Override runtime settings to inject the token for this test
         const originalGetSetting = runtime.getSetting;
         runtime.getSetting = (key: string) => {
-          if (key === 'GITHUB_TOKEN') {return GITHUB_TOKEN;}
+          if (key === 'GITHUB_TOKEN') {
+            return GITHUB_TOKEN;
+          }
           return originalGetSetting.call(runtime, key);
         };
 

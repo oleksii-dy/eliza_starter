@@ -14,7 +14,7 @@ const signupSchema = z.object({
   password: z.string().min(8).optional(), // Optional for dev mode
 });
 
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   try {
     const body = await request.json();
 
@@ -25,16 +25,16 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           error: 'Invalid input',
-          details: validation.error.flatten()
+          details: validation.error.flatten(),
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const { email, firstName, lastName, organizationName } = validation.data;
 
     const db = await getDatabase();
-    
+
     // Check if user already exists
     const existingUser = await db
       .select({ id: users.id })
@@ -47,9 +47,9 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           error: 'User already exists with this email',
-          code: 'USER_EXISTS'
+          code: 'USER_EXISTS',
         },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
         creditBalance: '10.0', // Start with $10 in free credits
         maxAgents: 5,
         maxUsers: 10,
-        subscriptionStatus: 'active'
+        subscriptionStatus: 'active',
       })
       .returning();
 
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
         organizationId: organization.id,
         role: 'owner', // First user is owner
         workosUserId: `dev-${uuidv4()}`, // Dev mode WorkOS ID
-        emailVerified: true // Auto-verify in dev mode
+        emailVerified: true, // Auto-verify in dev mode
       })
       .returning();
 
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
       userId: user.id,
       email: user.email,
       organizationId: user.organizationId,
-      role: user.role
+      role: user.role,
     });
 
     // Create session record in database
@@ -108,10 +108,13 @@ export async function POST(request: NextRequest) {
       organizationId: user.organizationId,
       sessionToken: accessToken,
       refreshToken,
-      ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
+      ipAddress:
+        request.headers.get('x-forwarded-for') ||
+        request.headers.get('x-real-ip') ||
+        'unknown',
       userAgent: request.headers.get('user-agent') || 'unknown',
       expiresAt: sessionExpiry,
-      lastActiveAt: new Date()
+      lastActiveAt: new Date(),
     });
 
     // Return user data and tokens
@@ -126,30 +129,30 @@ export async function POST(request: NextRequest) {
             lastName: user.lastName,
             organizationId: user.organizationId,
             role: user.role,
-            emailVerified: user.emailVerified
+            emailVerified: user.emailVerified,
           },
           organization: {
             id: organization.id,
             name: organization.name,
             slug: organization.slug,
             creditBalance: organization.creditBalance,
-            subscriptionTier: organization.subscriptionTier
+            subscriptionTier: organization.subscriptionTier,
           },
           tokens: {
             accessToken,
-            refreshToken
-          }
-        }
+            refreshToken,
+          },
+        },
       },
       {
         status: 201,
         headers: {
           'Set-Cookie': [
             `auth-token=${accessToken}; HttpOnly; ${(process.env.NODE_ENV as string) === 'production' ? 'Secure; ' : ''}SameSite=Strict; Path=/; Max-Age=3600`,
-            `refresh-token=${refreshToken}; HttpOnly; ${(process.env.NODE_ENV as string) === 'production' ? 'Secure; ' : ''}SameSite=Strict; Path=/; Max-Age=604800`
-          ].join(', ')
-        }
-      }
+            `refresh-token=${refreshToken}; HttpOnly; ${(process.env.NODE_ENV as string) === 'production' ? 'Secure; ' : ''}SameSite=Strict; Path=/; Max-Age=604800`,
+          ].join(', '),
+        },
+      },
     );
   } catch (error) {
     console.error('Signup error:', error);
@@ -157,9 +160,10 @@ export async function POST(request: NextRequest) {
       {
         success: false,
         error: 'Internal server error',
-        details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+        details:
+          process.env.NODE_ENV === 'development' ? String(error) : undefined,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -8,16 +8,29 @@ describe('Plugin Configuration Management', () => {
     cy.visit('/');
 
     // Setup intercepts for API calls
-    cy.intercept('GET', '/api/agents/*/configurations', { fixture: 'plugin-configurations.json' }).as('getConfigurations');
-    cy.intercept('POST', '/api/agents/*/configurations/*/components/*/*/enable', { fixture: 'component-enable-response.json' }).as('enableComponent');
-    cy.intercept('POST', '/api/agents/*/configurations/*/components/*/*/disable', { fixture: 'component-disable-response.json' }).as('disableComponent');
-    cy.intercept('POST', '/api/agents/*/configurations/*/components/*/*/toggle', { fixture: 'component-toggle-response.json' }).as('toggleComponent');
-    cy.intercept('GET', '/api/agents/*/configurations/*/runtime-status', { fixture: 'runtime-status.json' }).as('getRuntimeStatus');
+    cy.intercept('GET', '/api/agents/*/configurations', {
+      fixture: 'plugin-configurations.json',
+    }).as('getConfigurations');
+    cy.intercept('POST', '/api/agents/*/configurations/*/components/*/*/enable', {
+      fixture: 'component-enable-response.json',
+    }).as('enableComponent');
+    cy.intercept('POST', '/api/agents/*/configurations/*/components/*/*/disable', {
+      fixture: 'component-disable-response.json',
+    }).as('disableComponent');
+    cy.intercept('POST', '/api/agents/*/configurations/*/components/*/*/toggle', {
+      fixture: 'component-toggle-response.json',
+    }).as('toggleComponent');
+    cy.intercept('GET', '/api/agents/*/configurations/*/runtime-status', {
+      fixture: 'runtime-status.json',
+    }).as('getRuntimeStatus');
 
     // Get agent ID from the UI or use a test agent
-    cy.get('[data-testid="agent-card"]').first().should('exist').then(($el) => {
-      agentId = $el.attr('data-agent-id') || 'test-agent-id';
-    });
+    cy.get('[data-testid="agent-card"]')
+      .first()
+      .should('exist')
+      .then(($el) => {
+        agentId = $el.attr('data-agent-id') || 'test-agent-id';
+      });
   });
 
   describe('Plugin Configuration Panel Access', () => {
@@ -39,7 +52,7 @@ describe('Plugin Configuration Management', () => {
       // Delay the API response
       cy.intercept('GET', '/api/agents/*/configurations', {
         delay: 1000,
-        fixture: 'plugin-configurations.json'
+        fixture: 'plugin-configurations.json',
       }).as('getConfigurationsDelayed');
 
       // Open the panel
@@ -102,7 +115,9 @@ describe('Plugin Configuration Management', () => {
 
       // Runtime status button should be visible
       cy.get('@firstPlugin').find('[data-testid="runtime-status-button"]').should('be.visible');
-      cy.get('@firstPlugin').find('[data-testid="runtime-status-button"]').should('contain', 'Show Runtime Status');
+      cy.get('@firstPlugin')
+        .find('[data-testid="runtime-status-button"]')
+        .should('contain', 'Show Runtime Status');
     });
   });
 
@@ -135,11 +150,15 @@ describe('Plugin Configuration Management', () => {
     it('should expand and collapse component type sections', () => {
       // Expand actions section
       cy.get('[data-testid="section-actions"]').find('[data-testid="section-trigger"]').click();
-      cy.get('[data-testid="section-actions"]').find('[data-testid="section-content"]').should('be.visible');
+      cy.get('[data-testid="section-actions"]')
+        .find('[data-testid="section-content"]')
+        .should('be.visible');
 
       // Collapse actions section
       cy.get('[data-testid="section-actions"]').find('[data-testid="section-trigger"]').click();
-      cy.get('[data-testid="section-actions"]').find('[data-testid="section-content"]').should('not.be.visible');
+      cy.get('[data-testid="section-actions"]')
+        .find('[data-testid="section-content"]')
+        .should('not.be.visible');
     });
   });
 
@@ -172,27 +191,29 @@ describe('Plugin Configuration Management', () => {
       cy.get('[data-testid^="component-toggle-"]').first().as('firstToggle');
 
       // Get initial state
-      cy.get('@firstToggle').invoke('text').then((initialState) => {
-        // Click the toggle button
-        cy.get('@firstToggle').click();
+      cy.get('@firstToggle')
+        .invoke('text')
+        .then((initialState) => {
+          // Click the toggle button
+          cy.get('@firstToggle').click();
 
-        // Wait for API call
-        cy.wait('@toggleComponent');
+          // Wait for API call
+          cy.wait('@toggleComponent');
 
-        // Check that state changed
-        cy.get('@firstToggle').should('not.contain.text', initialState);
+          // Check that state changed
+          cy.get('@firstToggle').should('not.contain.text', initialState);
 
-        // Check for success toast
-        cy.get('[data-testid="toast"]').should('be.visible');
-        cy.get('[data-testid="toast"]').should('contain', 'toggled successfully');
-      });
+          // Check for success toast
+          cy.get('[data-testid="toast"]').should('be.visible');
+          cy.get('[data-testid="toast"]').should('contain', 'toggled successfully');
+        });
     });
 
     it('should show loading state during component toggle', () => {
       // Delay the API response
       cy.intercept('POST', '/api/agents/*/configurations/*/components/*/*/toggle', {
         delay: 1000,
-        fixture: 'component-toggle-response.json'
+        fixture: 'component-toggle-response.json',
       }).as('toggleComponentDelayed');
 
       // Click toggle button
@@ -212,7 +233,7 @@ describe('Plugin Configuration Management', () => {
       // Mock API error
       cy.intercept('POST', '/api/agents/*/configurations/*/components/*/*/toggle', {
         statusCode: 500,
-        body: { success: false, error: { message: 'Toggle failed' } }
+        body: { success: false, error: { message: 'Toggle failed' } },
       }).as('toggleComponentError');
 
       // Click toggle button
@@ -309,14 +330,16 @@ describe('Plugin Configuration Management', () => {
       cy.get('[data-testid^="component-badge-"]').first().as('firstBadge');
 
       // Get initial badge text
-      cy.get('@firstBadge').invoke('text').then((initialText) => {
-        // Toggle the component
-        cy.get('[data-testid^="component-toggle-"]').first().click();
-        cy.wait('@toggleComponent');
+      cy.get('@firstBadge')
+        .invoke('text')
+        .then((initialText) => {
+          // Toggle the component
+          cy.get('[data-testid^="component-toggle-"]').first().click();
+          cy.wait('@toggleComponent');
 
-        // Badge should update
-        cy.get('@firstBadge').should('not.contain.text', initialText);
-      });
+          // Badge should update
+          cy.get('@firstBadge').should('not.contain.text', initialText);
+        });
     });
   });
 
@@ -336,8 +359,8 @@ describe('Plugin Configuration Management', () => {
             pluginName: 'test-plugin',
             componentType: 'action',
             componentName: 'TEST_ACTION',
-            timestamp: new Date().toISOString()
-          }
+            timestamp: new Date().toISOString(),
+          },
         });
         win.dispatchEvent(event);
       });
@@ -362,8 +385,8 @@ describe('Plugin Configuration Management', () => {
             pluginName: 'test-plugin',
             componentType: 'action',
             componentName: 'TEST_ACTION',
-            timestamp: new Date().toISOString()
-          }
+            timestamp: new Date().toISOString(),
+          },
         });
         win.dispatchEvent(event);
       });

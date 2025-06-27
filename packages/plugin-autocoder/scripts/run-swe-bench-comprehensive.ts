@@ -264,8 +264,7 @@ async function runComprehensiveBenchmark() {
       tests_passed_count: testsPassedCount,
       test_pass_rate: `${((testsPassedCount / instances.length) * 100).toFixed(1)}%`,
       compilation_success_count: compilationSuccessCount,
-      compilation_success_rate:
-        `${((compilationSuccessCount / instances.length) * 100).toFixed(1)}%`,
+      compilation_success_rate: `${((compilationSuccessCount / instances.length) * 100).toFixed(1)}%`,
       validation_statistics: {
         instances_with_passing_validation: totalValidationPassed,
         first_pass_success_count: firstPassInstances,

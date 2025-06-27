@@ -24,7 +24,7 @@ const server = http.createServer((req, res) => {
     '.ttf': 'application/font-ttf',
     '.eot': 'application/vnd.ms-fontobject',
     '.otf': 'application/font-otf',
-    '.wasm': 'application/wasm'
+    '.wasm': 'application/wasm',
   };
 
   const contentType = mimeTypes[extname] || 'application/octet-stream';
@@ -36,14 +36,12 @@ const server = http.createServer((req, res) => {
           res.writeHead(404, { 'Content-Type': contentType });
           res.end(content, 'utf-8');
         });
-      }
-      else {
+      } else {
         res.writeHead(500);
         res.end(`Sorry, check with the site admin for error: ${error.code} ..\n`);
         res.end();
       }
-    }
-    else {
+    } else {
       res.writeHead(200, { 'Content-Type': contentType });
       res.end(content, 'utf-8');
     }

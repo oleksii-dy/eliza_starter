@@ -1,9 +1,8 @@
 import type { Scenario } from './types.js';
-import { asUUID } from '@elizaos/core';
-import { v4 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 export const researchTaskScenario: Scenario = {
-  id: 'research-task-completion',
+  id: uuidv4() as any,
   name: 'Research Task Completion',
   description:
     "Test the agent's ability to conduct research on a given topic and provide comprehensive findings",
@@ -12,12 +11,12 @@ export const researchTaskScenario: Scenario = {
 
   actors: [
     {
-      id: asUUID(v4()),
+      id: uuidv4() as any,
       name: 'Research Agent',
       role: 'subject',
     },
     {
-      id: asUUID(v4()),
+      id: uuidv4() as any,
       name: 'User',
       role: 'assistant',
       script: {

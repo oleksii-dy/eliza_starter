@@ -339,7 +339,7 @@ describe('envStatusProvider Additional Coverage', () => {
 
     mockRuntime = {
       character: { name: 'TestAgent' },
-      get: mock().mockReturnValue(mockEnv),
+      getService: mock().mockReturnValue(mockEnv),
     } as any;
 
     mockLogger = {

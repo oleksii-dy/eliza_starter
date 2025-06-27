@@ -25,7 +25,7 @@ async function runTestOnly() {
     agentId: 'test-agent',
     getSetting: (key: string) => process.env[key],
     logger: elizaLogger,
-    getService: () => null
+    getService: () => null,
   } as unknown as IAgentRuntime;
 
   // Create runner with test-only configuration
@@ -36,7 +36,7 @@ async function runTestOnly() {
     max_parallel_instances: 1,
     cleanup_after_run: false,
     useEnhancedGenerator: true,
-    useClaudeCode: false
+    useClaudeCode: false,
   });
 
   await runner.initialize();
@@ -47,7 +47,7 @@ async function runTestOnly() {
     max_instances: 1,
     save_artifacts: true,
     skip_evaluation: true, // Skip the problematic evaluation step
-    language_filter: ['TypeScript', 'JavaScript']
+    language_filter: ['TypeScript', 'JavaScript'],
   });
 
   // Create analysis
@@ -55,10 +55,7 @@ async function runTestOnly() {
   await fs.mkdir(analysisDir, { recursive: true });
 
   // Save report
-  await fs.writeFile(
-    path.join(analysisDir, 'report.json'),
-    JSON.stringify(report, null, 2)
-  );
+  await fs.writeFile(path.join(analysisDir, 'report.json'), JSON.stringify(report, null, 2));
 
   // Check results
   const result = report.results.per_instance_results?.[0];
@@ -73,19 +70,18 @@ async function runTestOnly() {
 - **Execution Time**: ${(result.execution_time / 1000).toFixed(1)}s
 
 ### Summary
-${result.tests_passed ?
-    '✅ Tests are passing! The fix appears to be working correctly.' :
-    '❌ Tests are still failing. Further investigation needed.'}
+${
+  result.tests_passed
+    ? '✅ Tests are passing! The fix appears to be working correctly.'
+    : '❌ Tests are still failing. Further investigation needed.'
+}
 
 ### Details
 - Check \`.swe-bench-work-single/repos/${INSTANCE_ID}\` for the patched code
 - Check \`.swe-bench-work-single/artifacts/${INSTANCE_ID}\` for generated patches
 `;
 
-    await fs.writeFile(
-      path.join(analysisDir, 'README.md'),
-      summary
-    );
+    await fs.writeFile(path.join(analysisDir, 'README.md'), summary);
 
     elizaLogger.info(`📊 Analysis saved to: ${analysisDir}`);
 
@@ -98,7 +94,7 @@ ${result.tests_passed ?
 }
 
 // Run the script
-runTestOnly().catch(error => {
+runTestOnly().catch((error) => {
   elizaLogger.error('Fatal error:', error);
   console.error('Stack trace:', error.stack);
   process.exit(1);

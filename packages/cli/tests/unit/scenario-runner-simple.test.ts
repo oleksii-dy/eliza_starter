@@ -97,7 +97,9 @@ describe('ScenarioRunner - Simple Tests', () => {
         },
       };
 
-      expect(() => runner.validateScenario(scenario)).toThrow('Scenario must have at least one actor');
+      expect(() => runner.validateScenario(scenario)).toThrow(
+        'Scenario must have at least one actor'
+      );
     });
 
     it('should require exactly one subject actor', () => {
@@ -127,7 +129,9 @@ describe('ScenarioRunner - Simple Tests', () => {
         },
       };
 
-      expect(() => runner.validateScenario(scenario)).toThrow('Scenario must have exactly one subject actor');
+      expect(() => runner.validateScenario(scenario)).toThrow(
+        'Scenario must have exactly one subject actor'
+      );
     });
 
     it('should reject multiple subject actors', () => {
@@ -163,7 +167,9 @@ describe('ScenarioRunner - Simple Tests', () => {
         },
       };
 
-      expect(() => runner.validateScenario(scenario)).toThrow('Scenario can only have one subject actor');
+      expect(() => runner.validateScenario(scenario)).toThrow(
+        'Scenario can only have one subject actor'
+      );
     });
 
     it('should require verification rules', () => {
@@ -186,7 +192,9 @@ describe('ScenarioRunner - Simple Tests', () => {
         },
       };
 
-      expect(() => runner.validateScenario(scenario)).toThrow('Scenario must have at least one verification rule');
+      expect(() => runner.validateScenario(scenario)).toThrow(
+        'Scenario must have at least one verification rule'
+      );
     });
 
     it('should require rule IDs', () => {
@@ -216,7 +224,9 @@ describe('ScenarioRunner - Simple Tests', () => {
         },
       };
 
-      expect(() => runner.validateScenario(scenario)).toThrow('All verification rules must have an ID');
+      expect(() => runner.validateScenario(scenario)).toThrow(
+        'All verification rules must have an ID'
+      );
     });
 
     it('should validate a proper scenario successfully', () => {
@@ -230,9 +240,7 @@ describe('ScenarioRunner - Simple Tests', () => {
             name: 'Subject Actor',
             role: 'subject',
             script: {
-              steps: [
-                { type: 'message', content: 'Hello world' },
-              ],
+              steps: [{ type: 'message', content: 'Hello world' }],
             },
           },
           {
@@ -240,9 +248,7 @@ describe('ScenarioRunner - Simple Tests', () => {
             name: 'Assistant Actor',
             role: 'assistant',
             script: {
-              steps: [
-                { type: 'message', content: 'Hello back' },
-              ],
+              steps: [{ type: 'message', content: 'Hello back' }],
             },
           },
         ],
@@ -276,12 +282,7 @@ describe('ScenarioRunner - Simple Tests', () => {
       const testArray = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
       const chunks = runner.chunkArray(testArray, 3);
 
-      expect(chunks).toEqual([
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9],
-        [10],
-      ]);
+      expect(chunks).toEqual([[1, 2, 3], [4, 5, 6], [7, 8, 9], [10]]);
     });
 
     it('should handle empty arrays', () => {
@@ -299,11 +300,27 @@ describe('ScenarioRunner - Simple Tests', () => {
     it('should provide clear error messages for common issues', () => {
       const scenarios = [
         {
-          scenario: { id: '', name: 'Test', description: 'Test', actors: [], setup: {}, execution: {}, verification: { rules: [] } },
+          scenario: {
+            id: '',
+            name: 'Test',
+            description: 'Test',
+            actors: [],
+            setup: {},
+            execution: {},
+            verification: { rules: [] },
+          },
           expectedError: 'Scenario must have an ID',
         },
         {
-          scenario: { id: 'test', name: 'Test', description: 'Test', actors: [], setup: {}, execution: {}, verification: { rules: [] } },
+          scenario: {
+            id: 'test',
+            name: 'Test',
+            description: 'Test',
+            actors: [],
+            setup: {},
+            execution: {},
+            verification: { rules: [] },
+          },
           expectedError: 'Scenario must have at least one actor',
         },
       ];

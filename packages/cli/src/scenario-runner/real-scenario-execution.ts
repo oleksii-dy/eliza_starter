@@ -89,7 +89,7 @@ export class RealAgentFactory {
           essentialPlugins.push(openaiPlugin);
           logger.info('[RealAgentFactory] Added OpenAI plugin for LLM capabilities');
         }
-      } catch (error) {
+      } catch (_error) {
         logger.debug('[RealAgentFactory] OpenAI plugin not available, continuing without it');
       }
     }
@@ -196,8 +196,8 @@ export class RealAgentFactory {
         configurable: true,
       });
       logger.debug('[RealAgentFactory] Added Drizzle database interface to runtime');
-    } catch (error) {
-      logger.warn('[RealAgentFactory] Could not add db property to runtime:', error);
+    } catch (_error) {
+      logger.warn('[RealAgentFactory] Could not add db property to runtime:', _error);
     }
 
     this.createdAgents.set(agentId, runtime);
@@ -226,8 +226,8 @@ export class RealAgentFactory {
         }
 
         logger.debug(`[RealAgentFactory] Cleaned up agent: ${agentId}`);
-      } catch (error) {
-        logger.warn(`[RealAgentFactory] Error cleaning up agent ${agentId}:`, error);
+      } catch (_error) {
+        logger.warn(`[RealAgentFactory] Error cleaning up agent ${agentId}:`, _error);
       }
     }
 
@@ -296,9 +296,9 @@ export class RealScenarioExecutor {
         `[RealScenarioExecutor] Scenario completed: ${scenario.name} (${passed ? 'PASSED' : 'FAILED'})`
       );
       return result;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error(`[RealScenarioExecutor] Scenario failed: ${scenario.name}`, error);
+    } catch (_error) {
+      const errorMessage = _error instanceof Error ? _error.message : String(_error);
+      logger.error(`[RealScenarioExecutor] Scenario failed: ${scenario.name}`, _error);
 
       return {
         scenarioId: scenario.id,
@@ -336,7 +336,7 @@ export class RealScenarioExecutor {
                 try {
                   const sqlModule = (await import('@elizaos/plugin-sql')) as any;
                   plugin = sqlModule.plugin;
-                } catch (error) {
+                } catch (_error) {
                   logger.debug(`[RealScenarioExecutor] Plugin ${pluginName} not available`);
                   continue;
                 }
@@ -345,7 +345,7 @@ export class RealScenarioExecutor {
                 try {
                   const openaiModule = await import('@elizaos/plugin-openai');
                   plugin = (openaiModule as any).default || (openaiModule as any).plugin;
-                } catch (error) {
+                } catch (_error) {
                   logger.debug(`[RealScenarioExecutor] Plugin ${pluginName} not available`);
                   continue;
                 }
@@ -358,8 +358,11 @@ export class RealScenarioExecutor {
                   logger.info(
                     '[RealScenarioExecutor] Loaded Anthropic plugin for LLM capabilities'
                   );
-                } catch (error) {
-                  logger.debug(`[RealScenarioExecutor] Plugin ${pluginName} not available:`, error);
+                } catch (_error) {
+                  logger.debug(
+                    `[RealScenarioExecutor] Plugin ${pluginName} not available:`,
+                    _error
+                  );
                   continue;
                 }
                 break;
@@ -367,7 +370,7 @@ export class RealScenarioExecutor {
                 try {
                   const messageModule = await import('@elizaos/plugin-message-handling');
                   plugin = (messageModule as any).default || (messageModule as any).plugin;
-                } catch (error) {
+                } catch (_error) {
                   logger.debug(`[RealScenarioExecutor] Plugin ${pluginName} not available`);
                   continue;
                 }
@@ -377,8 +380,11 @@ export class RealScenarioExecutor {
                   const githubModule = await import('@elizaos/plugin-github');
                   plugin = (githubModule as any).default || (githubModule as any).plugin;
                   logger.info('[RealScenarioExecutor] Loaded GitHub plugin for GitHub integration');
-                } catch (error) {
-                  logger.debug(`[RealScenarioExecutor] Plugin ${pluginName} not available:`, error);
+                } catch (_error) {
+                  logger.debug(
+                    `[RealScenarioExecutor] Plugin ${pluginName} not available:`,
+                    _error
+                  );
                   continue;
                 }
                 break;
@@ -402,8 +408,11 @@ export class RealScenarioExecutor {
                   }
 
                   logger.info('[RealScenarioExecutor] Loaded Todo plugin for task management');
-                } catch (error) {
-                  logger.debug(`[RealScenarioExecutor] Plugin ${pluginName} not available:`, error);
+                } catch (_error) {
+                  logger.debug(
+                    `[RealScenarioExecutor] Plugin ${pluginName} not available:`,
+                    _error
+                  );
                   continue;
                 }
                 break;
@@ -413,8 +422,11 @@ export class RealScenarioExecutor {
                   plugin =
                     (autocoderModule as any).default || (autocoderModule as any).autocoderPlugin;
                   logger.info('[RealScenarioExecutor] Loaded Autocoder plugin for plugin creation');
-                } catch (error) {
-                  logger.debug(`[RealScenarioExecutor] Plugin ${pluginName} not available:`, error);
+                } catch (_error) {
+                  logger.debug(
+                    `[RealScenarioExecutor] Plugin ${pluginName} not available:`,
+                    _error
+                  );
                   continue;
                 }
                 break;
@@ -427,8 +439,8 @@ export class RealScenarioExecutor {
               plugins.push(plugin);
               logger.debug(`[RealScenarioExecutor] Loaded plugin: ${pluginName}`);
             }
-          } catch (error) {
-            logger.warn(`[RealScenarioExecutor] Failed to load plugin ${pluginName}:`, error);
+          } catch (_error) {
+            logger.warn(`[RealScenarioExecutor] Failed to load plugin ${pluginName}:`, _error);
           }
         }
       }
@@ -484,14 +496,14 @@ export class RealScenarioExecutor {
           stepType: step.type,
           timestamp: Date.now(),
         });
-      } catch (error) {
-        logger.error(`[RealScenarioExecutor] Step ${this.stepCount} failed:`, error);
+      } catch (_error) {
+        logger.error(`[RealScenarioExecutor] Step ${this.stepCount} failed:`, _error);
 
         this.messageTranscript.push({
           type: 'step_error',
           stepNumber: this.stepCount,
           stepType: step.type,
-          error: error instanceof Error ? error.message : String(error),
+          error: _error instanceof Error ? _error.message : String(_error),
           timestamp: Date.now(),
         });
       }
@@ -618,12 +630,12 @@ export class RealScenarioExecutor {
           `[RealScenarioExecutor] Captured agent response: ${response.text.substring(0, 100)}...`
         );
       }
-    } catch (error) {
-      logger.warn(`[RealScenarioExecutor] Error processing message: ${error}`);
+    } catch (_error) {
+      logger.warn(`[RealScenarioExecutor] Error processing message: ${_error}`);
       this.messageTranscript.push({
         type: 'message_error',
         timestamp: Date.now(),
-        content: `Agent processing failed: ${error instanceof Error ? error.message : String(error)}`,
+        content: `Agent processing failed: ${_error instanceof Error ? _error.message : String(_error)}`,
         agentId: senderId,
       });
     }
@@ -651,8 +663,8 @@ export class RealScenarioExecutor {
         try {
           const todosBefore = await tableOps.get('todos');
           logger.info(`[DEBUG] Todos before processing: ${todosBefore.length} records`);
-        } catch (error) {
-          logger.debug(`[DEBUG] Could not get todos before processing: ${error}`);
+        } catch (_error) {
+          logger.debug(`[DEBUG] Could not get todos before processing: ${_error}`);
         }
       }
 
@@ -673,8 +685,8 @@ export class RealScenarioExecutor {
               `[DEBUG]   ${i + 1}. ${todo.name} (${todo.type}, completed: ${todo.isCompleted})`
             );
           });
-        } catch (error) {
-          logger.debug(`[DEBUG] Could not get todos after processing: ${error}`);
+        } catch (_error) {
+          logger.debug(`[DEBUG] Could not get todos after processing: ${_error}`);
         }
       }
 
@@ -734,8 +746,8 @@ export class RealScenarioExecutor {
       }
 
       return null;
-    } catch (error) {
-      logger.error('[RealScenarioExecutor] Failed to process message with agent:', error);
+    } catch (_error) {
+      logger.error('[RealScenarioExecutor] Failed to process message with agent:', _error);
       return null;
     }
   }
@@ -830,14 +842,14 @@ export class RealScenarioExecutor {
         score: result.score,
         reason: result.reason,
       };
-    } catch (error) {
-      logger.error(`[RealScenarioExecutor] Rule verification failed: ${rule.id}`, error);
+    } catch (_error) {
+      logger.error(`[RealScenarioExecutor] Rule verification failed: ${rule.id}`, _error);
       return {
         ruleId: rule.id,
         ruleName: rule.description || rule.id,
         passed: false,
         score: 0,
-        reason: `Verification error: ${error instanceof Error ? error.message : String(error)}`,
+        reason: `Verification error: ${_error instanceof Error ? _error.message : String(_error)}`,
       };
     }
   }
@@ -929,12 +941,12 @@ Respond with a JSON object containing:
       );
 
       return evaluation;
-    } catch (error) {
-      logger.error(`[RealScenarioExecutor] LLM verification failed for rule ${rule.id}:`, error);
+    } catch (_error) {
+      logger.error(`[RealScenarioExecutor] LLM verification failed for rule ${rule.id}:`, _error);
       return {
         passed: false,
         score: 0.0,
-        reason: `LLM verification error: ${error instanceof Error ? error.message : String(error)}`,
+        reason: `LLM verification error: ${_error instanceof Error ? _error.message : String(_error)}`,
       };
     }
   }
@@ -987,12 +999,12 @@ Respond with a JSON object containing:
       } else {
         return { passed: false, score: 0.0, reason: 'Could not parse LLM evaluation response' };
       }
-    } catch (error) {
-      logger.warn('[RealScenarioExecutor] Failed to parse LLM evaluation response:', error);
+    } catch (_error) {
+      logger.warn('[RealScenarioExecutor] Failed to parse LLM evaluation response:', _error);
       return {
         passed: false,
         score: 0.0,
-        reason: `Failed to parse evaluation response: ${error instanceof Error ? error.message : String(error)}`,
+        reason: `Failed to parse evaluation response: ${_error instanceof Error ? _error.message : String(_error)}`,
       };
     }
   }
@@ -1028,8 +1040,8 @@ Respond with a JSON object containing:
         const todos = await tableOps.get('todos');
         evidence.todos = todos || [];
         evidence.todoCount = evidence.todos.length;
-      } catch (error) {
-        logger.debug('[RealScenarioExecutor] Could not get todos from database:', error);
+      } catch (_error) {
+        logger.debug('[RealScenarioExecutor] Could not get todos from database:', _error);
       }
 
       // Check messages/memories
@@ -1041,8 +1053,8 @@ Respond with a JSON object containing:
         evidence.memoryCount = memories?.length || 0;
         evidence.agentResponseCount =
           memories?.filter((m: any) => m.entityId === agent.agentId)?.length || 0;
-      } catch (error) {
-        logger.debug('[RealScenarioExecutor] Could not get memories from database:', error);
+      } catch (_error) {
+        logger.debug('[RealScenarioExecutor] Could not get memories from database:', _error);
       }
 
       // Check for action execution logs in memory content and also text patterns
@@ -1085,8 +1097,8 @@ Respond with a JSON object containing:
                   m.content.text.includes('COMPLETE_TODO'))
               ),
             })) || [];
-      } catch (error) {
-        logger.debug('[RealScenarioExecutor] Could not get action logs from database:', error);
+      } catch (_error) {
+        logger.debug('[RealScenarioExecutor] Could not get action logs from database:', _error);
       }
 
       logger.info('[DEBUG] Database Evidence Collected:', {
@@ -1097,8 +1109,8 @@ Respond with a JSON object containing:
         todos: evidence.todos,
         actionExecutionDetails: evidence.actionExecutionLogs,
       });
-    } catch (error) {
-      logger.warn('[RealScenarioExecutor] Error collecting database evidence:', error);
+    } catch (_error) {
+      logger.warn('[RealScenarioExecutor] Error collecting database evidence:', _error);
     }
 
     return evidence;
@@ -1539,8 +1551,8 @@ Respond with a JSON object containing:
         if (adapter && typeof adapter.close === 'function') {
           await adapter.close();
         }
-      } catch (error) {
-        logger.warn(`[RealScenarioExecutor] Error cleaning up agent ${agentKey}:`, error);
+      } catch (_error) {
+        logger.warn(`[RealScenarioExecutor] Error cleaning up agent ${agentKey}:`, _error);
       }
     }
 
@@ -1572,8 +1584,8 @@ Respond with a JSON object containing:
       });
 
       logger.info(`[DEBUG] ===== END SCENARIO STATE: ${phase} =====`);
-    } catch (error) {
-      logger.error('[DEBUG] Failed to log scenario state:', error);
+    } catch (_error) {
+      logger.error('[DEBUG] Failed to log scenario state:', _error);
     }
   }
 
@@ -1619,21 +1631,21 @@ Respond with a JSON object containing:
                 `[DEBUG]     ${i + 1}. ${todo.name} (${todo.type}, completed: ${todo.isCompleted})`
               );
             });
-          } catch (error) {
-            logger.debug(`[DEBUG]   Todos Table: Not accessible (${error})`);
+          } catch (_error) {
+            logger.debug('[DEBUG]   Todos Table: Not accessible ($_error))');
           }
 
           // Log todo_tags table contents
           try {
             const tags = await tableOps.get('todo_tags');
             logger.info(`[DEBUG]   Todo Tags Table: ${tags.length} records`);
-          } catch (error) {
-            logger.debug(`[DEBUG]   Todo Tags Table: Not accessible (${error})`);
+          } catch (_error) {
+            logger.debug('[DEBUG]   Todo Tags Table: Not accessible ($_error))');
           }
         }
       }
-    } catch (error) {
-      logger.error(`[DEBUG] Failed to log agent ${agentKey} state:`, error);
+    } catch (_error) {
+      logger.error(`[DEBUG] Failed to log agent ${agentKey} state:`, _error);
     }
   }
 
@@ -1692,8 +1704,8 @@ Respond with a JSON object containing:
             const dataDump = await adapter.generateDataDump();
             report += `### Agent ${agentKey} Database\n\n`;
             report += `\`\`\`json\n${JSON.stringify(dataDump, null, 2)}\n\`\`\`\n\n`;
-          } catch (error) {
-            report += `### Agent ${agentKey} Database\n\nError: ${error}\n\n`;
+          } catch (_error) {
+            report += `### Agent ${agentKey} Database\n\nError: ${_error}\n\n`;
           }
         }
       }
@@ -1714,8 +1726,8 @@ Respond with a JSON object containing:
       const fs = await import('fs');
       await fs.promises.writeFile(filepath, report, 'utf8');
       logger.info(`[DEBUG] Generated debug report: ${filepath}`);
-    } catch (error) {
-      logger.error('[DEBUG] Failed to generate debug report:', error);
+    } catch (_error) {
+      logger.error('[DEBUG] Failed to generate debug report:', _error);
     }
   }
 }

@@ -9,23 +9,21 @@ import {
   parseJSONObjectFromText,
 } from '@elizaos/core';
 import type { TrustProfile } from '../types/trust';
-import { TrustEngineServiceWrapper } from '..';
-
 export const evaluateTrustAction: Action = {
   name: 'EVALUATE_TRUST',
   description:
     'Evaluates the trust score and profile for a specified entity. Returns detailed trust metrics including dimensions, trends, and confidence levels. Can be chained with RECORD_TRUST_INTERACTION to log trust-affecting behaviors or REQUEST_ELEVATION to check permission eligibility.',
 
   validate: async (runtime: IAgentRuntime, _message: Memory) => {
-    const trustEngine = runtime.getService<TrustEngineServiceWrapper>('trust-engine');
-    return !!trustEngine;
+    const trustService = runtime.getService<any>('trust');
+    return !!trustService;
   },
 
   handler: async (runtime: IAgentRuntime, message: Memory): Promise<ActionResult> => {
-    const trustEngine = runtime.getService<TrustEngineServiceWrapper>('trust-engine');
+    const trustService = runtime.getService<any>('trust');
 
-    if (!trustEngine) {
-      throw new Error('Trust engine service not available');
+    if (!trustService) {
+      throw new Error('Trust service not available');
     }
 
     // Parse the request
@@ -91,10 +89,7 @@ export const evaluateTrustAction: Action = {
         roomId: message.roomId,
       };
 
-      const trustProfile: TrustProfile = await trustEngine.calculateTrust(
-        targetEntityId,
-        trustContext
-      );
+      const trustProfile = await trustService.getTrustScore(targetEntityId);
 
       // Format response based on detail level
       const detailed = requestData?.detailed ?? false;
@@ -105,24 +100,23 @@ export const evaluateTrustAction: Action = {
           .join('\n');
 
         const trendText =
-          trustProfile.trend.direction === 'increasing'
-            ? `📈 Increasing (+${trustProfile.trend.changeRate.toFixed(1)} pts/day)`
-            : trustProfile.trend.direction === 'decreasing'
-              ? `📉 Decreasing (${trustProfile.trend.changeRate.toFixed(1)} pts/day)`
+          trustProfile.trend === 'improving'
+            ? '📈 Improving'
+            : trustProfile.trend === 'declining'
+              ? '📉 Declining'
               : '➡️ Stable';
 
         return {
           text: `Trust Profile for ${targetEntityId}:
 
-Overall Trust: ${trustProfile.overallTrust}/100
+Overall Trust: ${trustProfile.overall}/100
 Confidence: ${(trustProfile.confidence * 100).toFixed(0)}%
-Interactions: ${trustProfile.interactionCount}
 Trend: ${trendText}
 
 Trust Dimensions:
 ${dimensionText}
 
-Last Updated: ${new Date(trustProfile.lastCalculated).toLocaleString()}`,
+Last Updated: ${new Date(trustProfile.lastUpdated).toLocaleString()}`,
           data: {
             actionName: 'EVALUATE_TRUST',
             entityId: targetEntityId,
@@ -131,35 +125,34 @@ Last Updated: ${new Date(trustProfile.lastCalculated).toLocaleString()}`,
           },
           values: {
             success: true,
-            trustScore: trustProfile.overallTrust,
+            trustScore: trustProfile.overall,
             confidence: trustProfile.confidence,
-            interactionCount: trustProfile.interactionCount,
           },
         };
       } else {
         const trustLevel =
-          trustProfile.overallTrust >= 80
+          trustProfile.overall >= 80
             ? 'High'
-            : trustProfile.overallTrust >= 60
+            : trustProfile.overall >= 60
               ? 'Good'
-              : trustProfile.overallTrust >= 40
+              : trustProfile.overall >= 40
                 ? 'Moderate'
-                : trustProfile.overallTrust >= 20
+                : trustProfile.overall >= 20
                   ? 'Low'
                   : 'Very Low';
 
         return {
-          text: `Trust Level: ${trustLevel} (${trustProfile.overallTrust}/100) based on ${trustProfile.interactionCount} interactions`,
+          text: `Trust Level: ${trustLevel} (${trustProfile.overall}/100)`,
           data: {
             actionName: 'EVALUATE_TRUST',
             entityId: targetEntityId,
-            trustScore: trustProfile.overallTrust,
+            trustScore: trustProfile.overall,
             trustLevel,
             confidence: trustProfile.confidence,
           },
           values: {
             success: true,
-            trustScore: trustProfile.overallTrust,
+            trustScore: trustProfile.overall,
             trustLevel,
             confidence: trustProfile.confidence,
           },

@@ -48,7 +48,7 @@ export class DeviceFlowService {
     scope: string,
     expiresIn: number = 600,
     userAgent?: string,
-    ipAddress?: string
+    ipAddress?: string,
   ): Promise<{
     device_code: string;
     user_code: string;
@@ -94,8 +94,9 @@ export class DeviceFlowService {
     error?: string;
   }> {
     // Get device auth with user information from database
-    const deviceAuthWithUser = await deviceCodeRepository.getByDeviceCodeWithUser(deviceCode);
-    
+    const deviceAuthWithUser =
+      await deviceCodeRepository.getByDeviceCodeWithUser(deviceCode);
+
     if (!deviceAuthWithUser) {
       return { success: false, error: 'invalid_grant' };
     }
@@ -115,23 +116,28 @@ export class DeviceFlowService {
 
     // Validate that we have real user data
     if (!deviceAuth.user || !deviceAuth.authorizedByUserId) {
-      console.error(`[DEVICE AUTH] Missing user data for authorized device code: ${deviceCode}`);
+      console.error(
+        `[DEVICE AUTH] Missing user data for authorized device code: ${deviceCode}`,
+      );
       return { success: false, error: 'invalid_grant' };
     }
 
     // Build user info from database user record
     const user = {
       id: deviceAuth.user.id,
-      name: deviceAuth.user.firstName && deviceAuth.user.lastName 
-        ? `${deviceAuth.user.firstName} ${deviceAuth.user.lastName}`.trim()
-        : deviceAuth.user.email.split('@')[0], // Fallback to email username
+      name:
+        deviceAuth.user.firstName && deviceAuth.user.lastName
+          ? `${deviceAuth.user.firstName} ${deviceAuth.user.lastName}`.trim()
+          : deviceAuth.user.email.split('@')[0], // Fallback to email username
       email: deviceAuth.user.email,
     };
 
     // Clean up after successful token exchange
     await deviceCodeRepository.delete(deviceCode);
 
-    console.log(`[DEVICE AUTH] Token exchange successful for user: ${user.email} (${user.id})`);
+    console.log(
+      `[DEVICE AUTH] Token exchange successful for user: ${user.email} (${user.id})`,
+    );
 
     return {
       success: true,
@@ -148,13 +154,13 @@ export class DeviceFlowService {
   async authorizeDevice(
     userCode: string,
     userId: string,
-    userInfo: { id: string; name: string; email: string }
+    userInfo: { id: string; name: string; email: string },
   ): Promise<{
     success: boolean;
     error?: string;
   }> {
     const deviceAuth = await deviceCodeRepository.getByUserCode(userCode);
-    
+
     if (!deviceAuth) {
       return { success: false, error: 'Invalid or expired user code' };
     }
@@ -176,7 +182,7 @@ export class DeviceFlowService {
     const success = await deviceCodeRepository.authorize(
       deviceAuth.deviceCode,
       userId,
-      accessToken
+      accessToken,
     );
 
     if (!success) {
@@ -210,7 +216,7 @@ export const deviceCodes = {
   get: async (deviceCode: string) => {
     const result = await deviceCodeRepository.getByDeviceCode(deviceCode);
     if (!result) return null;
-    
+
     return {
       user_code: result.userCode,
       device_code: result.deviceCode,
@@ -218,28 +224,37 @@ export const deviceCodes = {
       scope: result.scope,
       created_at: result.createdAt.getTime(),
       expires_at: result.expiresAt.getTime(),
-      authorization: result.isAuthorized && result.accessToken ? {
-        access_token: result.accessToken,
-        user: {
-          id: result.authorizedByUserId || 'unknown',
-          name: 'Device User',
-          email: 'device@example.com',
-        },
-      } : undefined,
+      authorization:
+        result.isAuthorized && result.accessToken
+          ? {
+              access_token: result.accessToken,
+              user: {
+                id: result.authorizedByUserId || 'unknown',
+                name: 'Device User',
+                email: 'device@example.com',
+              },
+            }
+          : undefined,
     };
   },
   set: () => {
-    console.warn('deviceCodes.set() is deprecated. Use deviceFlowService.createDeviceAuth()');
+    console.warn(
+      'deviceCodes.set() is deprecated. Use deviceFlowService.createDeviceAuth()',
+    );
   },
   delete: async (deviceCode: string) => {
     return await deviceCodeRepository.delete(deviceCode);
   },
   entries: () => {
-    console.warn('deviceCodes.entries() is deprecated. Use deviceCodeRepository methods');
+    console.warn(
+      'deviceCodes.entries() is deprecated. Use deviceCodeRepository methods',
+    );
     return [];
   },
   forEach: () => {
-    console.warn('deviceCodes.forEach() is deprecated. Use deviceCodeRepository methods');
+    console.warn(
+      'deviceCodes.forEach() is deprecated. Use deviceCodeRepository methods',
+    );
   },
   size: 0, // Deprecated
 };
@@ -253,4 +268,4 @@ if (typeof setInterval !== 'undefined') {
       console.error('Device code cleanup failed:', error);
     }
   }, 60000); // Every minute
-} 
+}

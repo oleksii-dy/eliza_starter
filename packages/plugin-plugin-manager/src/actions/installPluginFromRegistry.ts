@@ -68,12 +68,9 @@ export const installPluginFromRegistryAction: Action = {
       );
 
       if (pluginInfo.status === 'needs_configuration') {
-        const configMessage =
-          `Plugin ${pluginInfo.name} has been installed but requires configuration:\n${
-            pluginInfo.requiredEnvVars
-              .map((v) => `- ${v.name}: ${v.description}${v.sensitive ? ' (sensitive)' : ''}`)
-              .join('\n')
-          }\n\nUse "configure plugin" to set up the required environment variables.`;
+        const configMessage = `Plugin ${pluginInfo.name} has been installed but requires configuration:\n${pluginInfo.requiredEnvVars
+          .map((v) => `- ${v.name}: ${v.description}${v.sensitive ? ' (sensitive)' : ''}`)
+          .join('\n')}\n\nUse "configure plugin" to set up the required environment variables.`;
 
         if (callback) {
           await callback({

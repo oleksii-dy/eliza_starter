@@ -18,7 +18,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [accountDeleted, setAccountDeleted] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+
   const handleUserLogout = async () => {
     await handleLogout();
   };
@@ -86,25 +86,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen w-full bg-background">
       {/* Skip Link for Accessibility */}
-      <a 
-        href="#main-content" 
-        className="skip-link"
-        data-cy="skip-link"
-      >
+      <a href="#main-content" className="skip-link" data-cy="skip-link">
         Skip to main content
       </a>
 
       {/* Sidebar */}
-      <Sidebar 
-        isOpen={sidebarOpen} 
-        onToggle={() => setSidebarOpen(!sidebarOpen)} 
+      <Sidebar
+        isOpen={sidebarOpen}
+        onToggle={() => setSidebarOpen(!sidebarOpen)}
       />
 
       {/* Main Content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header */}
         <Header>
-          <UserMenu 
+          <UserMenu
             sidebarOpen={sidebarOpen}
             onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
             onLogout={handleUserLogout}
@@ -112,15 +108,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </Header>
 
         {/* Main Content Area */}
-        <main 
-          id="main-content" 
+        <main
+          id="main-content"
           className="flex-1 overflow-y-auto bg-background"
           role="main"
           aria-label="Main content"
         >
-          <div className="h-full px-4 py-6 md:px-6 md:py-8">
-            {children}
-          </div>
+          <div className="h-full px-4 py-6 md:px-6 md:py-8">{children}</div>
         </main>
       </div>
 

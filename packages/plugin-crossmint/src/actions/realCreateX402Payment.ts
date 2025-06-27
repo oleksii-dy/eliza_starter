@@ -18,10 +18,13 @@ import { RealX402Service } from '../services/RealX402Service';
 export const realCreateX402PaymentAction: Action = {
   name: 'REAL_CREATE_X402_PAYMENT',
   similes: ['CREATE_PAYMENT', 'REQUEST_PAYMENT', 'X402_PAYMENT'],
-  description: 'Create a real X.402 compliant payment request using Coinbase specification. Can be chained with CHECK_PAYMENT_STATUS to monitor completion or TRANSFER after payment confirmation',
+  description:
+    'Create a real X.402 compliant payment request using Coinbase specification. Can be chained with CHECK_PAYMENT_STATUS to monitor completion or TRANSFER after payment confirmation',
 
   validate: async (runtime: IAgentRuntime, _message: Memory) => {
-    const walletService = runtime.getService<HybridCrossMintUniversalWalletService>('hybrid-crossmint-universal-wallet');
+    const walletService = runtime.getService<HybridCrossMintUniversalWalletService>(
+      'hybrid-crossmint-universal-wallet'
+    );
     const x402Service = runtime.getService<RealX402Service>('real-x402');
     return !!(walletService && x402Service);
   },
@@ -34,7 +37,9 @@ export const realCreateX402PaymentAction: Action = {
     callback?: HandlerCallback
   ): Promise<ActionResult> => {
     try {
-      const walletService = runtime.getService<HybridCrossMintUniversalWalletService>('hybrid-crossmint-universal-wallet');
+      const walletService = runtime.getService<HybridCrossMintUniversalWalletService>(
+        'hybrid-crossmint-universal-wallet'
+      );
       const x402Service = runtime.getService<RealX402Service>('real-x402');
 
       if (!walletService || !x402Service) {
@@ -88,8 +93,9 @@ export const realCreateX402PaymentAction: Action = {
       // Get or create recipient address
       if (!paymentDetails.recipient) {
         // For enterprise use, we might use a default treasury address
-        paymentDetails.recipient = runtime.getSetting('CROSSMINT_TREASURY_ADDRESS') ||
-                                  '0x742d35Cc6639C0532fBa4c81D63eD2c0c57C1234'; // Default
+        paymentDetails.recipient =
+          runtime.getSetting('CROSSMINT_TREASURY_ADDRESS') ||
+          '0x742d35Cc6639C0532fBa4c81D63eD2c0c57C1234'; // Default
       }
 
       // Create real X.402 payment request
@@ -205,7 +211,8 @@ This payment request is fully compliant with Coinbase's X.402 specification.`;
         name: '{{agent}}',
         content: {
           text: "I'll create a production X.402 payment request and monitor its status.",
-          thought: 'Create real X.402 payment using Coinbase specification, then chain to payment status monitoring for completion tracking',
+          thought:
+            'Create real X.402 payment using Coinbase specification, then chain to payment status monitoring for completion tracking',
           actions: ['REAL_CREATE_X402_PAYMENT', 'CHECK_PAYMENT_STATUS'],
         },
       },
@@ -222,7 +229,8 @@ This payment request is fully compliant with Coinbase's X.402 specification.`;
         name: '{{agent}}',
         content: {
           text: "I'll create the payment request and handle the fund transfer after payment.",
-          thought: 'First create the real X.402 payment request, then chain to transfer action which will execute automatically once payment is confirmed',
+          thought:
+            'First create the real X.402 payment request, then chain to transfer action which will execute automatically once payment is confirmed',
           actions: ['REAL_CREATE_X402_PAYMENT', 'TRANSFER'],
         },
       },
@@ -239,7 +247,8 @@ This payment request is fully compliant with Coinbase's X.402 specification.`;
         name: '{{agent}}',
         content: {
           text: "I'll create the enterprise payment request and mint the premium NFT after payment.",
-          thought: 'Use real X.402 service for enterprise-grade payment processing, then chain to NFT minting for premium access token',
+          thought:
+            'Use real X.402 service for enterprise-grade payment processing, then chain to NFT minting for premium access token',
           actions: ['REAL_CREATE_X402_PAYMENT', 'MINT_NFT'],
         },
       },
@@ -254,7 +263,7 @@ This payment request is fully compliant with Coinbase's X.402 specification.`;
       {
         name: '{{agent}}',
         content: {
-          text: '✅ X.402 Payment Request Created\n\n**Payment ID:** x402-1234...\n**Amount:** 25 USDC\n**Scheme:** coinbase\n**Network:** ethereum\n**Payment Link:** x402://pay?amount=25&currency=USDC\n\nThis payment request is fully compliant with Coinbase\'s X.402 specification.',
+          text: "✅ X.402 Payment Request Created\n\n**Payment ID:** x402-1234...\n**Amount:** 25 USDC\n**Scheme:** coinbase\n**Network:** ethereum\n**Payment Link:** x402://pay?amount=25&currency=USDC\n\nThis payment request is fully compliant with Coinbase's X.402 specification.",
           thought: 'Created real X.402 payment request for 25 USDC using coinbase scheme',
           actions: ['REAL_CREATE_X402_PAYMENT'],
         },
@@ -270,7 +279,7 @@ This payment request is fully compliant with Coinbase's X.402 specification.`;
       {
         name: '{{agent}}',
         content: {
-          text: '✅ X.402 Payment Request Created\n\n**Payment ID:** x402-5678...\n**Amount:** 0.1 SOL\n**Scheme:** solana\n**Network:** solana\n**Payment Link:** x402://pay?amount=0.1&currency=SOL\n\nThis payment request is fully compliant with Coinbase\'s X.402 specification.',
+          text: "✅ X.402 Payment Request Created\n\n**Payment ID:** x402-5678...\n**Amount:** 0.1 SOL\n**Scheme:** solana\n**Network:** solana\n**Payment Link:** x402://pay?amount=0.1&currency=SOL\n\nThis payment request is fully compliant with Coinbase's X.402 specification.",
           thought: 'Created real X.402 payment request for 0.1 SOL using solana scheme',
           actions: ['REAL_CREATE_X402_PAYMENT'],
         },

@@ -88,7 +88,7 @@ class PlatformAuthService {
 
       // Check for existing session
       const session = await this.getStoredSession();
-      if (session && await this.isSessionValid(session)) {
+      if (session && (await this.isSessionValid(session))) {
         this.setState({
           isAuthenticated: true,
           user: session.user,
@@ -155,7 +155,7 @@ class PlatformAuthService {
   ): Promise<OAuthResult> {
     try {
       // Validate provider
-      const provider = OAUTH_PROVIDERS.find(p => p.id === providerId);
+      const provider = OAUTH_PROVIDERS.find((p) => p.id === providerId);
       if (!provider) {
         return {
           success: false,
@@ -178,13 +178,15 @@ class PlatformAuthService {
       const response = await fetch(oauthUrl, {
         method: 'GET',
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
         },
         redirect: 'manual', // Don't follow redirects automatically
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        const errorData = (await response.json().catch(() => ({ message: 'Unknown error' }))) as {
+          message?: string;
+        };
         return {
           success: false,
           error: errorData.message || 'Failed to initiate OAuth flow',
@@ -193,10 +195,10 @@ class PlatformAuthService {
 
       // Get the actual OAuth URL from the platform
       const redirectUrl = response.headers.get('location') || response.url;
-      
+
       // Open OAuth URL in external browser
       await open(redirectUrl);
-      
+
       return { success: true };
     } catch (error) {
       console.error('OAuth flow failed:', error);
@@ -224,8 +226,8 @@ class PlatformAuthService {
         throw new Error(`OAuth callback failed: ${response.status}`);
       }
 
-      const data = await response.json();
-      
+      const data = (await response.json()) as { session?: AuthSession };
+
       if (data.session) {
         await this.setSession(data.session);
         return true;
@@ -293,7 +295,7 @@ class PlatformAuthService {
         return false;
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as { session?: AuthSession };
       if (data.session) {
         await this.setSession(data.session);
         return true;
@@ -372,10 +374,10 @@ class PlatformAuthService {
       const response = await fetch(`${this.platformUrl}/api/auth/verify`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${session.accessToken}`,
+          Authorization: `Bearer ${session.accessToken}`,
         },
       });
-      
+
       return response.ok;
     } catch (error) {
       console.warn('Session verification failed:', error);
@@ -405,7 +407,7 @@ class PlatformAuthService {
    */
   subscribe(listener: AuthListener): () => void {
     this.listeners.push(listener);
-    
+
     return () => {
       const index = this.listeners.indexOf(listener);
       if (index > -1) {
@@ -419,7 +421,7 @@ class PlatformAuthService {
    */
   private setState(updates: Partial<AuthState>): void {
     this.state = { ...this.state, ...updates };
-    this.listeners.forEach(listener => {
+    this.listeners.forEach((listener) => {
       try {
         listener(this.state);
       } catch (error) {

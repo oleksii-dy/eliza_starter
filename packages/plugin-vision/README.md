@@ -5,6 +5,7 @@ A powerful visual perception plugin for ElizaOS that provides agents with real-t
 ## Features
 
 ### Phase 1 (Implemented)
+
 - ✅ Camera detection and connection (platform-specific)
 - ✅ Real-time frame capture and processing
 - ✅ Scene description using Vision Language Models (VLM)
@@ -16,6 +17,7 @@ A powerful visual perception plugin for ElizaOS that provides agents with real-t
 - ✅ Integration with autonomy plugin (kill switch)
 
 ### Phase 2 (Implemented)
+
 - ✅ Enhanced object detection with COCO-like classification
 - ✅ Advanced pose detection with keypoint estimation
 - ✅ Improved person detection and tracking
@@ -24,6 +26,7 @@ A powerful visual perception plugin for ElizaOS that provides agents with real-t
 - ✅ Fallback to motion detection when CV is disabled
 
 ### Phase 3 (Planned)
+
 - 🔄 WebAssembly (WASM) integration for browser compatibility
 - 🔄 Real-time object tracking with IDs
 - 🔄 Face detection and recognition
@@ -78,28 +81,33 @@ ENABLE_POSE_DETECTION=true
 ## Actions
 
 ### DESCRIBE_SCENE
+
 Analyzes the current visual scene and provides a detailed description.
 
 **Similes**: `ANALYZE_SCENE`, `WHAT_DO_YOU_SEE`, `VISION_CHECK`, `LOOK_AROUND`
 
 **Example**:
+
 ```
 User: "What do you see?"
 Agent: "Looking through the camera, I see a home office setup with a person sitting at a desk. There are 2 monitors, a keyboard, and various desk accessories. I detected 5 objects total: 1 person, 2 monitors, 1 keyboard, and 1 chair."
 ```
 
 ### CAPTURE_IMAGE
+
 Captures the current frame and returns it as a base64 image attachment.
 
 **Similes**: `TAKE_PHOTO`, `SCREENSHOT`, `CAPTURE_FRAME`, `TAKE_PICTURE`
 
 **Example**:
+
 ```
 User: "Take a photo"
 Agent: "I've captured an image from the camera." [Image attached]
 ```
 
 ### KILL_AUTONOMOUS
+
 Stops the autonomous agent loop (useful for debugging with autonomy plugin).
 
 **Similes**: `STOP_AUTONOMOUS`, `HALT_AUTONOMOUS`, `KILL_AUTO_LOOP`
@@ -133,12 +141,14 @@ The vision provider is **non-dynamic** (always active) and provides:
 ## Detection Modes
 
 ### Motion-Based Detection (Default)
+
 - Lightweight and fast
 - Detects movement between frames
 - Groups motion blocks into objects
 - Basic size-based classification
 
 ### Advanced Computer Vision (Optional)
+
 Enable with `ENABLE_OBJECT_DETECTION=true` and/or `ENABLE_POSE_DETECTION=true`
 
 - **Object Detection**: Enhanced object recognition with COCO-like classes
@@ -156,11 +166,12 @@ When used with `@elizaos/plugin-autonomy`, the vision plugin enables:
 - Scene-based decision making
 
 Example autonomous behavior:
+
 ```typescript
 // Agent autonomously monitors environment
-"I notice someone just entered the room."
-"The lighting has changed significantly."
-"A new object has appeared on the desk."
+'I notice someone just entered the room.';
+'The lighting has changed significantly.';
+'A new object has appeared on the desk.';
 ```
 
 ## Performance Considerations
@@ -204,18 +215,21 @@ npm run test:e2e:local
 ## Troubleshooting
 
 ### No Camera Detected
+
 1. Ensure camera tools are installed (imagesnap/fswebcam/ffmpeg)
 2. Check camera permissions in system settings
 3. Try without CAMERA_NAME to use default camera
 4. Verify camera is not in use by another application
 
 ### Poor Object Detection
+
 1. Ensure good lighting conditions
 2. Adjust PIXEL_CHANGE_THRESHOLD (lower = more sensitive)
 3. Enable advanced CV with ENABLE_OBJECT_DETECTION=true
 4. Check camera resolution (higher is better for detection)
 
 ### High CPU Usage
+
 1. Increase frame processing interval in code
 2. Disable advanced CV features if not needed
 3. Reduce camera resolution
@@ -224,12 +238,14 @@ npm run test:e2e:local
 ## Future Roadmap
 
 ### Phase 3: WebAssembly Integration
+
 - TensorFlow.js WASM backend
 - Browser-compatible vision processing
 - Real-time object tracking
 - Face detection and recognition
 
 ### Phase 4: Advanced Features
+
 - Gesture recognition
 - Emotion detection
 - Scene understanding

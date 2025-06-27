@@ -1,5 +1,4 @@
 import { type IAgentRuntime, type UUID } from '@elizaos/core';
-import AgentServer from '@elizaos/server';
 import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
 import { v4 as uuidv4 } from 'uuid';
 import { ScenarioRunner } from '../../../src/scenario-runner/index.js';
@@ -17,7 +16,7 @@ mock.module('@elizaos/server', () => ({
   AgentServer: mockAgentServer,
 }));
 mock.module('@elizaos/core', () => ({}));
-mock.module('../../../src/scenario-runner/agent-manager.js', () => ({
+mock.module('../../../src/scenario-runner/AgentManager.js', () => ({
   AgentManager: mockAgentManager,
 }));
 mock.module('../../../src/scenario-runner/verification.js', () => ({
@@ -29,12 +28,12 @@ mock.module('../../../src/scenario-runner/metrics.js', () => ({
 mock.module('../../../src/scenario-runner/integration-test.js', () => ({
   integrationTest: mockIntegrationTest,
 }));
-mock.module('../../../src/scenario-runner/llm-scenario-generator.js', () => ({
-  llmScenarioGenerator: mockLlmScenarioGenerator,
+mock.module('../../../src/scenario-runner/LlmScenarioGenerator.js', () => ({
+  LLMScenarioGenerator: mockLlmScenarioGenerator,
 }));
 
 describe('ScenarioRunner', () => {
-  let server: AgentServer;
+  let server: any;
   let runtime: IAgentRuntime;
   let runner: ScenarioRunner;
   let mockScenario: Scenario;

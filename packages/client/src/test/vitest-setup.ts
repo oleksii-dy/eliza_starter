@@ -106,7 +106,7 @@ afterEach(() => {
 
 // React 19 specific setup - add missing APIs for testing-library compatibility
 try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
+
   const ReactCompat = require('react');
 
   // Add React.createRef polyfill for React 19 compatibility with testing-library

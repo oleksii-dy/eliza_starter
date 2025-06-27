@@ -3,20 +3,20 @@
  * Handles multi-modal generation via FAL.ai API
  */
 
-import { 
-  GenerationRequest, 
-  GenerationType, 
+import {
+  GenerationRequest,
+  GenerationType,
   GenerationProvider,
   ImageGenerationRequest,
   VideoGenerationRequest,
   ThreeDGenerationRequest,
-  MusicGenerationRequest
+  MusicGenerationRequest,
 } from '../../types';
-import { 
-  BaseGenerationProvider, 
-  ProviderGenerationResult, 
-  ProviderConfig, 
-  ProviderCapabilities 
+import {
+  BaseGenerationProvider,
+  ProviderGenerationResult,
+  ProviderConfig,
+  ProviderCapabilities,
 } from './BaseGenerationProvider';
 
 export class FALProvider extends BaseGenerationProvider {
@@ -27,9 +27,9 @@ export class FALProvider extends BaseGenerationProvider {
         baseUrl: config?.baseUrl || 'https://fal.run/fal-ai',
         timeout: config?.timeout || 120000,
         retryAttempts: config?.retryAttempts || 3,
-        rateLimitPerSecond: config?.rateLimitPerSecond || 3
+        rateLimitPerSecond: config?.rateLimitPerSecond || 3,
       },
-      GenerationProvider.FAL
+      GenerationProvider.FAL,
     );
   }
 
@@ -39,7 +39,7 @@ export class FALProvider extends BaseGenerationProvider {
         GenerationType.IMAGE,
         GenerationType.VIDEO,
         GenerationType.THREE_D,
-        GenerationType.MUSIC
+        GenerationType.MUSIC,
       ],
       maxPromptLength: 3000,
       maxOutputs: 8,
@@ -57,12 +57,14 @@ export class FALProvider extends BaseGenerationProvider {
         [GenerationType.AVATAR]: [],
         [GenerationType.SPEECH]: [],
         [GenerationType.CODE]: [],
-        [GenerationType.DOCUMENT]: []
-      }
+        [GenerationType.DOCUMENT]: [],
+      },
     };
   }
 
-  async generate(request: GenerationRequest): Promise<ProviderGenerationResult> {
+  async generate(
+    request: GenerationRequest,
+  ): Promise<ProviderGenerationResult> {
     const validation = this.validateRequest(request);
     if (!validation.valid) {
       throw new Error(`Invalid request: ${validation.errors.join(', ')}`);
@@ -80,26 +82,32 @@ export class FALProvider extends BaseGenerationProvider {
       case GenerationType.MUSIC:
         return this.generateMusic(request as MusicGenerationRequest);
       default:
-        throw new Error(`Generation type ${request.type} not supported by FAL provider`);
+        throw new Error(
+          `Generation type ${request.type} not supported by FAL provider`,
+        );
     }
   }
 
-  private async generateImage(request: ImageGenerationRequest): Promise<ProviderGenerationResult> {
+  private async generateImage(
+    request: ImageGenerationRequest,
+  ): Promise<ProviderGenerationResult> {
     // Mock implementation for FAL image generation
-    const outputs = Array(request.num_images || 1).fill(null).map((_, i) => ({
-      id: this.generateOutputId(),
-      url: `https://mock-fal.ai/image-${Date.now()}-${i}.png`,
-      format: 'png',
-      size: this.calculateImageSize(request.resolution || '1024x1024'),
-      metadata: {
-        model: 'flux-pro',
-        prompt: request.prompt,
-        negative_prompt: request.negative_prompt,
-        guidance_scale: request.guidance_scale || 3.5,
-        num_inference_steps: request.steps || 28,
-        seed: request.seed || Math.floor(Math.random() * 1000000)
-      }
-    }));
+    const outputs = Array(request.num_images || 1)
+      .fill(null)
+      .map((_, i) => ({
+        id: this.generateOutputId(),
+        url: `https://mock-fal.ai/image-${Date.now()}-${i}.png`,
+        format: 'png',
+        size: this.calculateImageSize(request.resolution || '1024x1024'),
+        metadata: {
+          model: 'flux-pro',
+          prompt: request.prompt,
+          negative_prompt: request.negative_prompt,
+          guidance_scale: request.guidance_scale || 3.5,
+          num_inference_steps: request.steps || 28,
+          seed: request.seed || Math.floor(Math.random() * 1000000),
+        },
+      }));
 
     return {
       outputs,
@@ -107,17 +115,22 @@ export class FALProvider extends BaseGenerationProvider {
       credits_used: (request.num_images || 1) * 4,
       metadata: {
         model: 'flux-pro',
-        total_images: request.num_images || 1
-      }
+        total_images: request.num_images || 1,
+      },
     };
   }
 
-  private async generateVideo(request: VideoGenerationRequest): Promise<ProviderGenerationResult> {
+  private async generateVideo(
+    request: VideoGenerationRequest,
+  ): Promise<ProviderGenerationResult> {
     const output = {
       id: this.generateOutputId(),
       url: `https://mock-fal.ai/video-${Date.now()}.mp4`,
       format: 'mp4',
-      size: this.calculateVideoSize(request.duration || 5, request.resolution || '1080p'),
+      size: this.calculateVideoSize(
+        request.duration || 5,
+        request.resolution || '1080p',
+      ),
       thumbnailUrl: `https://mock-fal.ai/thumbnail-${Date.now()}.jpg`,
       metadata: {
         model: 'stable-video-diffusion',
@@ -127,8 +140,8 @@ export class FALProvider extends BaseGenerationProvider {
         resolution: request.resolution || '1080p',
         motion_bucket_id: 127,
         cond_aug: 0.02,
-        seed: Math.floor(Math.random() * 1000000)
-      }
+        seed: Math.floor(Math.random() * 1000000),
+      },
     };
 
     return {
@@ -137,12 +150,14 @@ export class FALProvider extends BaseGenerationProvider {
       credits_used: Math.ceil((request.duration || 5) * 3),
       metadata: {
         model: 'stable-video-diffusion',
-        duration: request.duration || 5
-      }
+        duration: request.duration || 5,
+      },
     };
   }
 
-  private async generate3D(request: ThreeDGenerationRequest): Promise<ProviderGenerationResult> {
+  private async generate3D(
+    request: ThreeDGenerationRequest,
+  ): Promise<ProviderGenerationResult> {
     const output = {
       id: this.generateOutputId(),
       url: `https://mock-fal.ai/model-${Date.now()}.${request.output_format || 'glb'}`,
@@ -153,8 +168,8 @@ export class FALProvider extends BaseGenerationProvider {
         prompt: request.prompt,
         output_format: request.output_format || 'glb',
         texture_resolution: request.texture_resolution || '1024',
-        polygon_count: request.polygon_count || 'medium'
-      }
+        polygon_count: request.polygon_count || 'medium',
+      },
     };
 
     return {
@@ -162,12 +177,14 @@ export class FALProvider extends BaseGenerationProvider {
       cost: 0.25,
       credits_used: 15,
       metadata: {
-        model: 'instantmesh'
-      }
+        model: 'instantmesh',
+      },
     };
   }
 
-  private async generateMusic(request: MusicGenerationRequest): Promise<ProviderGenerationResult> {
+  private async generateMusic(
+    request: MusicGenerationRequest,
+  ): Promise<ProviderGenerationResult> {
     const output = {
       id: this.generateOutputId(),
       url: `https://mock-fal.ai/music-${Date.now()}.mp3`,
@@ -183,8 +200,8 @@ export class FALProvider extends BaseGenerationProvider {
         key: request.key,
         top_k: 250,
         top_p: 0.0,
-        temperature: 1.0
-      }
+        temperature: 1.0,
+      },
     };
 
     return {
@@ -193,12 +210,14 @@ export class FALProvider extends BaseGenerationProvider {
       credits_used: Math.ceil((request.duration || 30) / 10),
       metadata: {
         model: 'musicgen-large',
-        duration: request.duration || 30
-      }
+        duration: request.duration || 30,
+      },
     };
   }
 
-  async getProgress(generationId: string): Promise<{ progress: number; status: string }> {
+  async getProgress(
+    generationId: string,
+  ): Promise<{ progress: number; status: string }> {
     // Mock progress tracking
     return { progress: 75, status: 'processing' };
   }
@@ -235,18 +254,19 @@ export class FALProvider extends BaseGenerationProvider {
       '512x512': 512 * 512 * 3,
       '1024x1024': 1024 * 1024 * 3,
       '1536x1536': 1536 * 1536 * 3,
-      '2048x2048': 2048 * 2048 * 3
+      '2048x2048': 2048 * 2048 * 3,
     };
     return sizeMap[resolution] || 1024 * 1024 * 3;
   }
 
   private calculateVideoSize(duration: number, resolution: string): number {
     const baseSizePerSecond: Record<string, number> = {
-      '720p': 1024 * 1024 * 2,   // 2MB per second
-      '1080p': 1024 * 1024 * 5,  // 5MB per second
-      '4k': 1024 * 1024 * 20     // 20MB per second
+      '720p': 1024 * 1024 * 2, // 2MB per second
+      '1080p': 1024 * 1024 * 5, // 5MB per second
+      '4k': 1024 * 1024 * 20, // 20MB per second
     };
-    const sizePerSecond = baseSizePerSecond[resolution] || baseSizePerSecond['1080p'];
+    const sizePerSecond =
+      baseSizePerSecond[resolution] || baseSizePerSecond['1080p'];
     return duration * sizePerSecond;
   }
 }

@@ -15,7 +15,7 @@ const getAgentLifecycleManager = () =>
 /**
  * POST /api/v1/agents/[id]/stop - Stop a running agent
  */
-export async function POST(
+export async function handlePOST(
   request: NextRequest,
   props: { params: Promise<{ id: string }> },
 ) {
@@ -24,7 +24,7 @@ export async function POST(
     if (process.env.NEXT_PHASE === 'phase-production-build') {
       return NextResponse.json(
         { error: 'API not available during build time' },
-        { status: 503 }
+        { status: 503 },
       );
     }
 

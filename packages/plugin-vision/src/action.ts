@@ -254,7 +254,8 @@ export const describeSceneAction: Action = {
 export const captureImageAction: Action = {
   name: 'CAPTURE_IMAGE',
   similes: ['TAKE_PHOTO', 'SCREENSHOT', 'CAPTURE_FRAME', 'TAKE_PICTURE'],
-  description: 'Captures the current frame from the camera and saves it as an image attachment. Returns image data with camera info and timestamp for action chaining. Can be combined with DESCRIBE_SCENE for analysis or NAME_ENTITY for identification workflows.',
+  description:
+    'Captures the current frame from the camera and saves it as an image attachment. Returns image data with camera info and timestamp for action chaining. Can be combined with DESCRIBE_SCENE for analysis or NAME_ENTITY for identification workflows.',
   enabled: false, // Disabled by default - privacy-sensitive, can capture images
   validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
     const visionService = runtime.getService<VisionService>('VISION');
@@ -952,7 +953,7 @@ export const identifyPersonAction: Action = {
 
           // Add more context if available
           if (person.appearances.length > 5) {
-            identifications.push('I\'ve been tracking them consistently.');
+            identifications.push("I've been tracking them consistently.");
           }
         } else {
           unknownCount++;
@@ -961,7 +962,7 @@ export const identifyPersonAction: Action = {
 
           if (person.attributes.faceId) {
             identifications.push(
-              'I\'ve captured their face profile but they haven\'t been named yet.'
+              "I've captured their face profile but they haven't been named yet."
             );
           }
         }

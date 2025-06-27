@@ -82,7 +82,7 @@ teardown() {
   create_test_character "valid-char.json"
   
   # Try loading with the CLI (just validate, don't start)
-  run run_cli "dist" start --help
+  run run_cli "bun" start --help
   assert_cli_success
   assert_output --partial "character"
 }

@@ -9,30 +9,27 @@ export default function Dropdown({
   menuItems,
   showIcon = true,
 }: {
-	children: React.ReactNode;
-	menuItems: Array<{
-		id: string;
-		icon?: React.ReactNode;
-		label: string;
-		href?: string;
-		kbd?: string;
-		handleClick?: () => void;
-	}>;
-	showIcon?: boolean;
+  children: React.ReactNode;
+  menuItems: Array<{
+    id: string;
+    icon?: React.ReactNode;
+    label: string;
+    href?: string;
+    kbd?: string;
+    handleClick?: () => void;
+  }>;
+  showIcon?: boolean;
 }) {
   return (
     <div className="relative">
-      <Menu
-        as="div"
-        className="relative inline-block text-left"
-      >
-        <MenuButton className="flex items-center gap-2 hover:text-typography-strong transition-effect">
-          {children} {showIcon && <ChevronDownIcon className="w-4 h-4" />}
+      <Menu as="div" className="relative inline-block text-left">
+        <MenuButton className="transition-effect flex items-center gap-2 hover:text-typography-strong">
+          {children} {showIcon && <ChevronDownIcon className="h-4 w-4" />}
         </MenuButton>
 
         <MenuItems
           transition
-          className="absolute right-0 mt-2 w-56 origin-top-right rounded-lg border border-stroke-weak bg-fill-solid p-1 shadow-lg focus:outline-none group z-50"
+          className="group absolute right-0 z-50 mt-2 w-56 origin-top-right rounded-lg border border-stroke-weak bg-fill-solid p-1 shadow-lg focus:outline-none"
         >
           {menuItems.map((item) => (
             <DropdownMenuItem

@@ -4,8 +4,20 @@
  */
 
 import { CreditService } from '@/lib/billing/credit-service';
-import { agents, apiKeys, creditTransactions, db, organizations, usageRecords, users } from '@/lib/database';
-import { deductCredits, getCreditBalance } from '@/lib/server/services/billing-service';
+import {
+  agents,
+  apiKeys,
+  creditTransactions,
+  db,
+  getDatabase,
+  organizations,
+  usageRecords,
+  users,
+} from '@/lib/database';
+import {
+  deductCredits,
+  getCreditBalance,
+} from '@/lib/server/services/billing-service';
 import { trackUsage } from '@/lib/server/services/usage-tracking-service';
 import { beforeAll, beforeEach, describe, expect, test } from '@jest/globals';
 import { eq, sql } from 'drizzle-orm';
@@ -16,6 +28,7 @@ describe('Agent Billing Scenario Tests', () => {
   let testUserId: string;
   let testAgentId: string;
   let testApiKeyId: string;
+  let database: any;
 
   beforeAll(async () => {
     // Ensure test environment
@@ -32,86 +45,118 @@ describe('Agent Billing Scenario Tests', () => {
     testAgentId = uuidv4();
     testApiKeyId = uuidv4();
 
+    database = await getDatabase();
+
     // Clean up test data (if any exist from previous runs)
     try {
-      await db.delete(usageRecords).where(eq(usageRecords.organizationId, testOrgId));
-      await db.delete(creditTransactions).where(eq(creditTransactions.organizationId, testOrgId));
-      await db.delete(apiKeys).where(eq(apiKeys.organizationId, testOrgId));
-      await db.delete(agents).where(eq(agents.organizationId, testOrgId));
-      await db.delete(users).where(eq(users.organizationId, testOrgId));
-      await db.delete(organizations).where(eq(organizations.id, testOrgId));
+      await database
+        .delete(usageRecords)
+        .where(eq(usageRecords.organizationId, testOrgId));
+      await database
+        .delete(creditTransactions)
+        .where(eq(creditTransactions.organizationId, testOrgId));
+      await database
+        .delete(apiKeys)
+        .where(eq(apiKeys.organizationId, testOrgId));
+      await database.delete(agents).where(eq(agents.organizationId, testOrgId));
+      await database.delete(users).where(eq(users.organizationId, testOrgId));
+      await database
+        .delete(organizations)
+        .where(eq(organizations.id, testOrgId));
     } catch (error) {
       // Ignore cleanup errors for non-existent data
     }
 
     // Create test organization with credits
-    const [org] = await db.insert(organizations).values({
-      id: testOrgId,
-      name: 'Test Scenario Organization',
-      slug: `test-scenario-org-${testOrgId}`,
-      creditBalance: '25.0', // $25 starting balance
-      creditThreshold: '5.0',
-      autoTopUpEnabled: false,
-      autoTopUpAmount: '20.0',
-    }).returning();
+    const [org] = await database
+      .insert(organizations)
+      .values({
+        id: testOrgId,
+        name: 'Test Scenario Organization',
+        slug: `test-scenario-org-${testOrgId}`,
+        creditBalance: '25.0', // $25 starting balance
+        creditThreshold: '5.0',
+        autoTopUpEnabled: false,
+        autoTopUpAmount: '20.0',
+      })
+      .returning();
 
     // Create test user
-    const [user] = await db.insert(users).values({
-      id: testUserId,
-      organizationId: testOrgId,
-      email: 'scenario-test@example.com',
-      firstName: 'Scenario',
-      lastName: 'Tester',
-      role: 'admin',
-    }).returning();
+    const [user] = await database
+      .insert(users)
+      .values({
+        id: testUserId,
+        organizationId: testOrgId,
+        email: 'scenario-test@example.com',
+        firstName: 'Scenario',
+        lastName: 'Tester',
+        role: 'admin',
+      })
+      .returning();
 
     // Create test agent
-    const [agent] = await db.insert(agents).values({
-      id: testAgentId,
-      organizationId: testOrgId,
-      createdByUserId: testUserId,
-      name: 'Test Billing Agent',
-      slug: 'test-billing-agent',
-      description: 'Agent for testing billing scenarios',
-      character: {
-        name: 'Test Agent',
-        bio: 'I am a test agent for billing scenarios',
-        personality: ['helpful', 'efficient'],
-        messageExamples: [
-          [{ user: 'user', content: { text: 'Hello' } }],
-          [{ user: 'assistant', content: { text: 'Hi there!' } }],
-        ],
-      },
-      plugins: ['@elizaos/plugin-openai'],
-      deploymentStatus: 'deployed',
-      visibility: 'private',
-    }).returning();
+    const [agent] = await database
+      .insert(agents)
+      .values({
+        id: testAgentId,
+        organizationId: testOrgId,
+        createdByUserId: testUserId,
+        name: 'Test Billing Agent',
+        slug: 'test-billing-agent',
+        description: 'Agent for testing billing scenarios',
+        character: {
+          name: 'Test Agent',
+          bio: 'I am a test agent for billing scenarios',
+          personality: ['helpful', 'efficient'],
+          messageExamples: [
+            [{ user: 'user', content: { text: 'Hello' } }],
+            [{ user: 'assistant', content: { text: 'Hi there!' } }],
+          ],
+        },
+        plugins: ['@elizaos/plugin-openai'],
+        deploymentStatus: 'deployed',
+        visibility: 'private',
+      })
+      .returning();
 
     // Create test API key
-    const [apiKey] = await db.insert(apiKeys).values({
-      id: testApiKeyId,
-      organizationId: testOrgId,
-      userId: testUserId,
-      name: 'Test API Key',
-      description: 'API key for billing test scenarios',
-      keyHash: `test-key-hash-${testApiKeyId}`,
-      keyPrefix: `sk_test_${testApiKeyId.substring(0, 8)}`,
-      permissions: ['inference:openai', 'inference:anthropic'],
-      rateLimit: 1000,
-      isActive: true,
-    }).returning();
+    const [apiKey] = await database
+      .insert(apiKeys)
+      .values({
+        id: testApiKeyId,
+        organizationId: testOrgId,
+        userId: testUserId,
+        name: 'Test API Key',
+        description: 'API key for billing test scenarios',
+        keyHash: `test-key-hash-${testApiKeyId}`,
+        keyPrefix: `sk_test_${testApiKeyId.substring(0, 8)}`,
+        permissions: ['inference:openai', 'inference:anthropic'],
+        rateLimit: 1000,
+        isActive: true,
+      })
+      .returning();
   });
 
   afterEach(async () => {
     // Clean up test data if IDs are defined
     if (testOrgId) {
       try {
-        await db.delete(usageRecords).where(eq(usageRecords.organizationId, testOrgId));
-        await db.delete(creditTransactions).where(eq(creditTransactions.organizationId, testOrgId));
-        await db.delete(apiKeys).where(eq(apiKeys.organizationId, testOrgId));
-        await db.delete(agents).where(eq(agents.organizationId, testOrgId));
-        await db.delete(users).where(eq(users.organizationId, testOrgId));
-        await db.delete(organizations).where(eq(organizations.id, testOrgId));
+        await database
+          .delete(usageRecords)
+          .where(eq(usageRecords.organizationId, testOrgId));
+        await database
+          .delete(creditTransactions)
+          .where(eq(creditTransactions.organizationId, testOrgId));
+        await database
+          .delete(apiKeys)
+          .where(eq(apiKeys.organizationId, testOrgId));
+        await database
+          .delete(agents)
+          .where(eq(agents.organizationId, testOrgId));
+        await database.delete(users).where(eq(users.organizationId, testOrgId));
+        await database
+          .delete(organizations)
+          .where(eq(organizations.id, testOrgId));
       } catch (error) {
         // Ignore cleanup errors - test data may not exist
       }
@@ -127,19 +172,22 @@ describe('Agent Billing Scenario Tests', () => {
       const conversationSteps = [
         {
           userMessage: 'Hello, how are you?',
-          agentResponse: 'Hello! I\'m doing well, thank you for asking. How can I help you today?',
+          agentResponse:
+            "Hello! I'm doing well, thank you for asking. How can I help you today?",
           inputTokens: 50,
           outputTokens: 75,
         },
         {
           userMessage: 'Can you help me write a short email?',
-          agentResponse: 'Of course! I\'d be happy to help you write an email. What\'s the purpose of the email and who are you sending it to?',
+          agentResponse:
+            "Of course! I'd be happy to help you write an email. What's the purpose of the email and who are you sending it to?",
           inputTokens: 60,
           outputTokens: 85,
         },
         {
-          userMessage: 'It\'s a thank you email to my colleague',
-          agentResponse: 'Great! Here\'s a professional thank you email:\n\nSubject: Thank You\n\nDear [Colleague\'s Name],\n\nI wanted to take a moment to express my sincere gratitude for your help with [specific task/project]. Your assistance made a significant difference, and I truly appreciate your time and expertise.\n\nThank you again for your support.\n\nBest regards,\n[Your Name]',
+          userMessage: "It's a thank you email to my colleague",
+          agentResponse:
+            "Great! Here's a professional thank you email:\n\nSubject: Thank You\n\nDear [Colleague's Name],\n\nI wanted to take a moment to express my sincere gratitude for your help with [specific task/project]. Your assistance made a significant difference, and I truly appreciate your time and expertise.\n\nThank you again for your support.\n\nBest regards,\n[Your Name]",
           inputTokens: 70,
           outputTokens: 120,
         },
@@ -164,7 +212,7 @@ describe('Agent Billing Scenario Tests', () => {
             outputTokens: step.outputTokens,
             requestId,
             agentId: testAgentId,
-          }
+          },
         );
 
         expect(billingResult.success).toBe(true);
@@ -197,24 +245,30 @@ describe('Agent Billing Scenario Tests', () => {
       expect(finalBalance).toBeCloseTo(25.0 - totalCost, 4);
 
       // Verify usage records were created
-      const usageRecordsCreated = await db
+      const usageRecordsCreated = await database
         .select()
         .from(usageRecords)
         .where(eq(usageRecords.organizationId, testOrgId));
 
       expect(usageRecordsCreated).toHaveLength(3);
-      expect(usageRecordsCreated.every((r: any) => r.metadata?.agentId === testAgentId)).toBe(true);
+      expect(
+        usageRecordsCreated.every(
+          (r: any) => r.metadata?.agentId === testAgentId,
+        ),
+      ).toBe(true);
       expect(usageRecordsCreated.every((r: any) => r.success)).toBe(true);
 
       // Verify credit transactions were created
-      const transactions = await db
+      const transactions = await database
         .select()
         .from(creditTransactions)
         .where(eq(creditTransactions.organizationId, testOrgId));
 
       expect(transactions).toHaveLength(3);
       expect(transactions.every((t: any) => t.type === 'usage')).toBe(true);
-      expect(transactions.every((t: any) => t.metadata?.agentId === testAgentId)).toBe(true);
+      expect(
+        transactions.every((t: any) => t.metadata?.agentId === testAgentId),
+      ).toBe(true);
     });
 
     test('should handle expensive conversation and low balance warning', async () => {
@@ -223,8 +277,8 @@ describe('Agent Billing Scenario Tests', () => {
         service: 'openai',
         operation: 'chat',
         modelName: 'gpt-4', // More expensive model
-        inputTokens: 2000,   // Large input
-        outputTokens: 1500,  // Large output
+        inputTokens: 2000, // Large input
+        outputTokens: 1500, // Large output
         agentId: testAgentId,
         requestId: 'expensive-conversation',
       };
@@ -232,7 +286,7 @@ describe('Agent Billing Scenario Tests', () => {
       const result = await CreditService.deductCreditsForUsage(
         testOrgId,
         testUserId,
-        expensiveRequest
+        expensiveRequest,
       );
 
       expect(result.success).toBe(true);
@@ -270,7 +324,7 @@ describe('Agent Billing Scenario Tests', () => {
           inputTokens: 20000,
           outputTokens: 10000,
           agentId: testAgentId,
-        }
+        },
       );
 
       expect(result.success).toBe(false);
@@ -304,7 +358,7 @@ describe('Agent Billing Scenario Tests', () => {
           inputTokens: 500,
           outputTokens: 300,
           agentId: testAgentId,
-        }
+        },
       );
 
       expect(result.success).toBe(true);
@@ -320,22 +374,24 @@ describe('Agent Billing Scenario Tests', () => {
     test('should track billing across multiple agents', async () => {
       // Create a second agent
       const testAgent2Id = uuidv4();
-      const [agent2] = await db.insert(agents).values({
-        id: testAgent2Id,
-        organizationId: testOrgId,
-        createdByUserId: testUserId,
-        name: 'Test Agent 2',
-        slug: 'test-agent-2',
-        description: 'Second agent for testing',
-        character: {
+      const [agent2] = await database
+        .insert(agents)
+        .values({
+          id: testAgent2Id,
+          organizationId: testOrgId,
+          createdByUserId: testUserId,
           name: 'Test Agent 2',
-          bio: 'I am the second test agent',
-        },
-        plugins: ['@elizaos/plugin-anthropic'],
-        deploymentStatus: 'deployed',
-        visibility: 'private',
-      }).returning();
-
+          slug: 'test-agent-2',
+          description: 'Second agent for testing',
+          character: {
+            name: 'Test Agent 2',
+            bio: 'I am the second test agent',
+          },
+          plugins: ['@elizaos/plugin-anthropic'],
+          deploymentStatus: 'deployed',
+          visibility: 'private',
+        })
+        .returning();
 
       // Simulate usage from both agents
       const agent1Result = await CreditService.deductCreditsForUsage(
@@ -349,7 +405,7 @@ describe('Agent Billing Scenario Tests', () => {
           outputTokens: 500,
           agentId: testAgentId,
           requestId: 'agent1-request',
-        }
+        },
       );
 
       const agent2Result = await CreditService.deductCreditsForUsage(
@@ -363,22 +419,26 @@ describe('Agent Billing Scenario Tests', () => {
           outputTokens: 400,
           agentId: agent2.id,
           requestId: 'agent2-request',
-        }
+        },
       );
 
       expect(agent1Result.success).toBe(true);
       expect(agent2Result.success).toBe(true);
 
       // Verify transactions are attributed to correct agents
-      const transactions = await db
+      const transactions = await database
         .select()
         .from(creditTransactions)
         .where(eq(creditTransactions.organizationId, testOrgId));
 
       expect(transactions).toHaveLength(2);
 
-      const agent1Transaction = transactions.find((t: any) => t.metadata?.agentId === testAgentId);
-      const agent2Transaction = transactions.find((t: any) => t.metadata?.agentId === agent2.id);
+      const agent1Transaction = transactions.find(
+        (t: any) => t.metadata?.agentId === testAgentId,
+      );
+      const agent2Transaction = transactions.find(
+        (t: any) => t.metadata?.agentId === agent2.id,
+      );
 
       expect(agent1Transaction).toBeDefined();
       expect(agent2Transaction).toBeDefined();
@@ -432,7 +492,7 @@ describe('Agent Billing Scenario Tests', () => {
             outputTokens: step.outputTokens,
             agentId: testAgentId,
             requestId: `dev-${step.phase}-${index}`,
-          }
+          },
         );
 
         expect(result.success).toBe(true);
@@ -469,15 +529,29 @@ describe('Agent Billing Scenario Tests', () => {
       expect(summary.operationCount).toBe(3);
 
       // Verify development metadata is preserved
-      const usageRecordsCreated = await db
+      const usageRecordsCreated = await database
         .select()
         .from(usageRecords)
         .where(eq(usageRecords.organizationId, testOrgId));
 
-      expect(usageRecordsCreated.every((r: any) => r.metadata.isDevelopment)).toBe(true);
-      expect(usageRecordsCreated.some((r: any) => r.metadata.developmentPhase === 'testing')).toBe(true);
-      expect(usageRecordsCreated.some((r: any) => r.metadata.developmentPhase === 'refinement')).toBe(true);
-      expect(usageRecordsCreated.some((r: any) => r.metadata.developmentPhase === 'validation')).toBe(true);
+      expect(
+        usageRecordsCreated.every((r: any) => r.metadata.isDevelopment),
+      ).toBe(true);
+      expect(
+        usageRecordsCreated.some(
+          (r: any) => r.metadata.developmentPhase === 'testing',
+        ),
+      ).toBe(true);
+      expect(
+        usageRecordsCreated.some(
+          (r: any) => r.metadata.developmentPhase === 'refinement',
+        ),
+      ).toBe(true);
+      expect(
+        usageRecordsCreated.some(
+          (r: any) => r.metadata.developmentPhase === 'validation',
+        ),
+      ).toBe(true);
     });
 
     test('should handle production vs development billing differently', async () => {
@@ -492,7 +566,7 @@ describe('Agent Billing Scenario Tests', () => {
           inputTokens: 1000,
           outputTokens: 500,
           agentId: testAgentId,
-        }
+        },
       );
 
       // Production usage (full billing)
@@ -506,13 +580,16 @@ describe('Agent Billing Scenario Tests', () => {
           inputTokens: 1000,
           outputTokens: 500,
           agentId: testAgentId,
-        }
+        },
       );
 
       // Both should succeed and cost the same (for now)
       expect(devResult.success).toBe(true);
       expect(prodResult.success).toBe(true);
-      expect(devResult.deductedAmount).toBeCloseTo(prodResult.deductedAmount, 5);
+      expect(devResult.deductedAmount).toBeCloseTo(
+        prodResult.deductedAmount,
+        5,
+      );
 
       // TODO: Implement different billing tiers for development vs production
     });
@@ -546,13 +623,15 @@ describe('Agent Billing Scenario Tests', () => {
       expect(balance).toBe(25.0);
 
       // Verify error was tracked
-      const errorRecords = await db
+      const errorRecords = await database
         .select()
         .from(usageRecords)
         .where(sql`metadata->>'errorType' IS NOT NULL`);
 
       expect(errorRecords.length).toBeGreaterThan(0);
-      const errorRecord = errorRecords.find((r: any) => r.metadata.errorType === 'rate_limit');
+      const errorRecord = errorRecords.find(
+        (r: any) => r.metadata.errorType === 'rate_limit',
+      );
       expect(errorRecord).toBeDefined();
       expect(parseFloat(errorRecord!.cost)).toBe(0);
       expect(errorRecord!.errorMessage).toBe('API rate limit exceeded');
@@ -574,7 +653,7 @@ describe('Agent Billing Scenario Tests', () => {
             inputTokens: 100,
             outputTokens: 50,
             agentId: testAgentId,
-          }
+          },
         );
         expect(result1.success).toBe(true);
 
@@ -589,7 +668,7 @@ describe('Agent Billing Scenario Tests', () => {
             inputTokens: 100,
             outputTokens: 50,
             agentId: testAgentId,
-          }
+          },
         );
       } catch (error) {
         // Expected to fail for invalid org

@@ -100,6 +100,7 @@ import {
   PublicKey,
 } from '@solana/web3.js';
 import { logger } from '@elizaos/core';
+import { createMockRuntime } from '@elizaos/core/test-utils';
 
 describe('TransactionService', () => {
   let service: TransactionService;
@@ -137,7 +138,7 @@ describe('TransactionService', () => {
       getTransaction: mock(),
     };
 
-    mockRuntime = {
+    mockRuntime = createMockRuntime({
       getSetting: mock((key: string) => {
         const settings: Record<string, string> = {
           SOLANA_RPC_URL: 'https://api.devnet.solana.com',
@@ -148,7 +149,7 @@ describe('TransactionService', () => {
       getService: mock(() => ({
         getAgentKeypair: mock().mockResolvedValue(mockKeypair),
       })),
-    };
+    });
 
     service = new TransactionService(mockRuntime);
     // Replace the connection with our mock

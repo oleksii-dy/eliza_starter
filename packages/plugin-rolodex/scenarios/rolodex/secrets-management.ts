@@ -2,12 +2,14 @@ import type { Scenario } from '../types';
 
 export const secretsManagementScenario: Scenario = {
   name: 'Secrets Management with Admin',
-  description: 'Admin provides API keys to agents which then use them to perform authenticated actions',
+  description:
+    'Admin provides API keys to agents which then use them to perform authenticated actions',
 
   messages: [
     {
       role: 'user',
-      content: 'Admin: I need to give you some API keys for the weather and news services. Store these securely: WEATHER_API_KEY=wk_123456789 and NEWS_API_KEY=nk_987654321',
+      content:
+        'Admin: I need to give you some API keys for the weather and news services. Store these securely: WEATHER_API_KEY=wk_123456789 and NEWS_API_KEY=nk_987654321',
     },
     {
       role: 'assistant',
@@ -34,7 +36,7 @@ export const secretsManagementScenario: Scenario = {
     },
     {
       role: 'user',
-      content: 'Try to access the finance API (which I haven\'t given you keys for).',
+      content: "Try to access the finance API (which I haven't given you keys for).",
     },
     {
       role: 'assistant',
@@ -43,7 +45,7 @@ export const secretsManagementScenario: Scenario = {
     },
     {
       role: 'user',
-      content: 'Admin: Here\'s the finance API key: FINANCE_API_KEY=fk_555666777',
+      content: "Admin: Here's the finance API key: FINANCE_API_KEY=fk_555666777",
     },
     {
       role: 'assistant',
@@ -77,8 +79,8 @@ export const secretsManagementScenario: Scenario = {
     const financeService = runtime.getService('finance');
 
     return {
-      success: Object.values(storedSecrets).every(v => v),
-      secretsStored: Object.keys(storedSecrets).filter(k => storedSecrets[k]).length,
+      success: Object.values(storedSecrets).every((v) => v),
+      secretsStored: Object.keys(storedSecrets).filter((k) => storedSecrets[k]).length,
       servicesAvailable: {
         weather: !!weatherService,
         news: !!newsService,

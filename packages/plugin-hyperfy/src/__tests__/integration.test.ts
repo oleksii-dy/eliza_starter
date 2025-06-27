@@ -15,7 +15,7 @@ import { HandlerCallback, IAgentRuntime, Memory, State, UUID, logger } from '@el
 
 // Set up spies on logger
 beforeAll(() => {
-  setupLoggerSpies();
+  setupLoggerSpies(mock);
 });
 
 afterAll(() => {

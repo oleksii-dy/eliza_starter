@@ -12,7 +12,7 @@ const createPaymentIntentSchema = z.object({
   currency: z.string().optional().default('usd'),
 });
 
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   try {
     const { user, organization } = await authenticateUser(request);
     if (!user || !organization) {

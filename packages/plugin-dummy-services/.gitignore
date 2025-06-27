@@ -5,3 +5,7 @@ data
 .elizadb-test
 .elizadb
 .env
+AGENTS.md
+.cursor/rules/elizaos
+CLAUDE.md
+.cursorignore

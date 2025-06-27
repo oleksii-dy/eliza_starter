@@ -67,7 +67,9 @@ class ScreenCaptureWorker {
 
     logger.info(`[ScreenCaptureWorker] Initialized with ${this.displays.length} displays`);
     this.displays.forEach((d, i) => {
-      logger.info(`  Display ${i}: ${d.name} (${d.width}x${d.height}) ${d.isPrimary ? '[PRIMARY]' : ''}`);
+      logger.info(
+        `  Display ${i}: ${d.name} (${d.width}x${d.height}) ${d.isPrimary ? '[PRIMARY]' : ''}`
+      );
     });
   }
 
@@ -131,7 +133,9 @@ class ScreenCaptureWorker {
         return displays;
       } else if (platform === 'win32') {
         // Windows: Use wmic
-        const { stdout } = await execAsync('wmic path Win32_DesktopMonitor get DeviceID,ScreenWidth,ScreenHeight /format:csv');
+        const { stdout } = await execAsync(
+          'wmic path Win32_DesktopMonitor get DeviceID,ScreenWidth,ScreenHeight /format:csv'
+        );
         const displays: DisplayInfo[] = [];
         const lines = stdout.trim().split('\n').slice(2); // Skip headers
 
@@ -154,30 +158,36 @@ class ScreenCaptureWorker {
           }
         });
 
-        return displays.length > 0 ? displays : [{
-          id: 'primary',
-          name: 'Primary Display',
-          width: 1920,
-          height: 1080,
-          x: 0,
-          y: 0,
-          isPrimary: true,
-        }];
+        return displays.length > 0
+          ? displays
+          : [
+              {
+                id: 'primary',
+                name: 'Primary Display',
+                width: 1920,
+                height: 1080,
+                x: 0,
+                y: 0,
+                isPrimary: true,
+              },
+            ];
       }
     } catch (error) {
       logger.error('[ScreenCaptureWorker] Failed to get display info:', error);
     }
 
     // Fallback
-    return [{
-      id: 'default',
-      name: 'Default Display',
-      width: 1920,
-      height: 1080,
-      x: 0,
-      y: 0,
-      isPrimary: true,
-    }];
+    return [
+      {
+        id: 'default',
+        name: 'Default Display',
+        width: 1920,
+        height: 1080,
+        x: 0,
+        y: 0,
+        isPrimary: true,
+      },
+    ];
   }
 
   async run(): Promise<void> {
@@ -196,7 +206,9 @@ class ScreenCaptureWorker {
         const now = Date.now();
         if (now - this.lastFPSReport >= 1000) {
           const fps = this.frameCount / ((now - this.lastFPSReport) / 1000);
-          logger.info(`[ScreenCaptureWorker] FPS: ${fps.toFixed(2)}, Display: ${this.currentDisplayIndex}`);
+          logger.info(
+            `[ScreenCaptureWorker] FPS: ${fps.toFixed(2)}, Display: ${this.currentDisplayIndex}`
+          );
 
           parentPort?.postMessage({
             type: 'fps',
@@ -219,19 +231,22 @@ class ScreenCaptureWorker {
           const frameTime = 1000 / this.config.targetFPS;
           const elapsed = Date.now() - startTime;
           if (elapsed < frameTime) {
-            await new Promise(resolve => setTimeout(resolve, frameTime - elapsed));
+            await new Promise((resolve) => setTimeout(resolve, frameTime - elapsed));
           }
         }
       } catch (error) {
         logger.error('[ScreenCaptureWorker] Capture error:', error);
-        await new Promise(resolve => setTimeout(resolve, 100)); // Brief pause on error
+        await new Promise((resolve) => setTimeout(resolve, 100)); // Brief pause on error
       }
     }
   }
 
   private async captureFrame(): Promise<void> {
     const display = this.displays[this.currentDisplayIndex];
-    const tempFile = path.join(process.cwd(), `temp_screen_${Date.now()}_${this.currentDisplayIndex}.png`);
+    const tempFile = path.join(
+      process.cwd(),
+      `temp_screen_${Date.now()}_${this.currentDisplayIndex}.png`
+    );
 
     try {
       // Capture the screen
@@ -246,10 +261,7 @@ class ScreenCaptureWorker {
       const height = metadata.height || display.height;
 
       // Convert to raw RGBA for shared buffer
-      const rawData = await image
-        .ensureAlpha()
-        .raw()
-        .toBuffer();
+      const rawData = await image.ensureAlpha().raw().toBuffer();
 
       // Wait for write lock
       while (Atomics.compareExchange(this.atomicState, this.WRITE_LOCK_INDEX, 0, 1) !== 0) {
@@ -299,7 +311,9 @@ class ScreenCaptureWorker {
         // Linux: Use scrot with geometry for specific display
         if (display.x !== 0 || display.y !== 0) {
           // Multi-monitor setup
-          await execAsync(`scrot -a ${display.x},${display.y},${display.width},${display.height} "${outputPath}"`);
+          await execAsync(
+            `scrot -a ${display.x},${display.y},${display.width},${display.height} "${outputPath}"`
+          );
         } else {
           await execAsync(`scrot "${outputPath}"`);
         }

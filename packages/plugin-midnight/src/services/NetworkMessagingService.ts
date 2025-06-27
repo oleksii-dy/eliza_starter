@@ -248,7 +248,9 @@ export class NetworkMessagingService extends Service {
       // Generate ZK proof for message authenticity
       const encryptionKey = new Uint8Array(32);
       const nonce = new Uint8Array(32);
+      // eslint-disable-next-line no-undef
       crypto.getRandomValues(encryptionKey);
+      // eslint-disable-next-line no-undef
       crypto.getRandomValues(nonce);
 
       // Create proof that this agent can send to this topic
@@ -493,6 +495,7 @@ export class NetworkMessagingService extends Service {
    */
   private async generateAgentPublicKey(): Promise<string> {
     // Generate deterministic public key based on agent ID
+    // eslint-disable-next-line no-undef
     const agentBytes = new TextEncoder().encode(this.runtime.agentId);
     const hash = Array.from(agentBytes)
       .map((b) => b.toString(16).padStart(2, '0'))
@@ -535,6 +538,7 @@ export class NetworkMessagingService extends Service {
 
   // Helper methods
   private stringToBytes32(str: string): number[] {
+    // eslint-disable-next-line no-undef
     const bytes = new TextEncoder().encode(str);
     const result = new Array(32).fill(0);
     for (let i = 0; i < Math.min(bytes.length, 32); i++) {
@@ -544,6 +548,7 @@ export class NetworkMessagingService extends Service {
   }
 
   private stringToBytes256(str: string): number[] {
+    // eslint-disable-next-line no-undef
     const bytes = new TextEncoder().encode(str);
     const result = new Array(256).fill(0);
     for (let i = 0; i < Math.min(bytes.length, 256); i++) {

@@ -17,22 +17,22 @@ async function testRealGitHubIntegration() {
   try {
     const { Octokit } = await import('@octokit/rest');
     const { Sandbox } = await import('@e2b/code-interpreter');
-    
+
     console.log('\n🔧 Step 1: Initialize Real Services');
-    
+
     // Initialize GitHub API
     const octokit = new Octokit({
       auth: process.env.GITHUB_TOKEN,
-      userAgent: 'ElizaOS-E2B-Plugin'
+      userAgent: 'ElizaOS-E2B-Plugin',
     });
-    
+
     // Test GitHub authentication
     const { data: user } = await octokit.rest.users.getAuthenticated();
     console.log(`   ✅ GitHub authenticated as: ${user.login} (${user.name})`);
     console.log(`   📊 Public repos: ${user.public_repos}, Followers: ${user.followers}`);
-    
+
     console.log('\n📋 Step 2: Fetch Real GitHub Issues');
-    
+
     // Fetch real issues from elizaOS repository
     const { data: issues } = await octokit.rest.issues.listForRepo({
       owner: 'elizaos',
@@ -40,36 +40,36 @@ async function testRealGitHubIntegration() {
       state: 'open',
       per_page: 5,
       sort: 'created',
-      direction: 'desc'
+      direction: 'desc',
     });
-    
+
     console.log(`   ✅ Fetched ${issues.length} real issues from elizaOS/eliza`);
-    
+
     if (issues.length > 0) {
       console.log('   📋 Recent Issues:');
       issues.slice(0, 3).forEach((issue, index) => {
-        const labels = issue.labels.map(l => l.name).join(', ') || 'No labels';
+        const labels = issue.labels.map((l) => l.name).join(', ') || 'No labels';
         console.log(`      ${index + 1}. #${issue.number}: ${issue.title}`);
         console.log(`         👤 ${issue.user.login} | 🏷️  ${labels}`);
       });
     }
-    
+
     console.log('\n🧪 Step 3: Create E2B Development Sandbox');
-    
+
     // Create E2B sandbox for development
     const sandbox = await Sandbox.create({
       apiKey: process.env.E2B_API_KEY,
-      timeoutMs: 60000
+      timeoutMs: 60000,
     });
-    
+
     console.log(`   ✅ E2B sandbox created: ${sandbox.sandboxId}`);
-    
+
     console.log('\n⚡ Step 4: Simulate Issue Analysis and Development');
-    
+
     if (issues.length > 0) {
       const selectedIssue = issues[0];
       console.log(`   🎯 Analyzing issue #${selectedIssue.number}: ${selectedIssue.title}`);
-      
+
       // Simulate issue analysis in sandbox
       const analysisResult = await sandbox.runCode(`
 import re
@@ -80,7 +80,7 @@ issue_data = {
     "number": ${selectedIssue.number},
     "title": """${selectedIssue.title.replace(/"/g, '\\"')}""",
     "body": """${(selectedIssue.body || 'No description').substring(0, 500).replace(/"/g, '\\"')}""",
-    "labels": ${JSON.stringify(selectedIssue.labels.map(l => l.name))},
+    "labels": ${JSON.stringify(selectedIssue.labels.map((l) => l.name))},
     "user": "${selectedIssue.user.login}"
 }
 
@@ -140,12 +140,12 @@ print(f"   Tests needed: {analysis['tests_needed']}")
 
 analysis
 `);
-      
+
       console.log('   ✅ Issue analysis completed');
       console.log(`   📊 Analysis: ${analysisResult.text}`);
-      
+
       console.log('\n💻 Step 5: Simulate Development Environment Setup');
-      
+
       // Simulate setting up development environment
       const envSetupResult = await sandbox.runCode(`
 import os
@@ -198,12 +198,12 @@ print(f"   Workflow steps: {len(workflow_steps)} steps")
 
 environment_ready
 `);
-      
+
       console.log('   ✅ Development environment setup simulated');
       console.log(`   📊 Environment: ${envSetupResult.text}`);
-      
+
       console.log('\n🔄 Step 6: Simulate Pull Request Workflow');
-      
+
       // Simulate creating PR (using API but not actually creating one)
       const prData = {
         title: `Fix: Address issue #${selectedIssue.number} - ${selectedIssue.title.substring(0, 50)}...`,
@@ -224,17 +224,17 @@ This PR addresses issue #${selectedIssue.number}.
 
 ## Closes #${selectedIssue.number}`,
         head: `feature/fix-issue-${selectedIssue.number}`,
-        base: 'develop'
+        base: 'develop',
       };
-      
+
       console.log('   🔄 Pull Request would be created with:');
       console.log(`      Title: ${prData.title}`);
       console.log(`      Branch: ${prData.head} → ${prData.base}`);
       console.log(`      Closes: #${selectedIssue.number}`);
-      
+
       // Simulate adding a comment to the original issue
       console.log('\n💬 Step 7: Simulate Agent Communication');
-      
+
       // We can actually add a test comment to demonstrate the API works
       // But let's just simulate it to avoid spam
       const commentData = {
@@ -247,45 +247,44 @@ I've analyzed this issue and created a development plan:
 - **Approach**: Incremental development with comprehensive testing
 - **Status**: Ready for implementation
 
-This comment is from the ElizaOS E2B integration test system.`
+This comment is from the ElizaOS E2B integration test system.`,
       };
-      
+
       console.log('   💬 Would add comment to issue:');
       console.log(`      ${commentData.body.substring(0, 100)}...`);
     }
-    
+
     // Clean up sandbox
     await sandbox.kill();
     console.log('   🧹 E2B sandbox cleaned up');
-    
+
     console.log('\n🎉 Real GitHub + E2B Integration Test PASSED!');
-    
+
     return {
       success: true,
       github: {
         authenticated: true,
         user: user.login,
         issuesFetched: issues.length,
-        apiWorking: true
+        apiWorking: true,
       },
       e2b: {
         sandboxCreated: true,
         codeExecuted: true,
-        analysisCompleted: true
+        analysisCompleted: true,
       },
       integration: {
         issueAnalysis: true,
         developmentWorkflow: true,
         prSimulation: true,
-        agentCommunication: true
-      }
+        agentCommunication: true,
+      },
     };
-    
   } catch (error) {
     console.error('❌ Real integration test failed:', error.message);
     return {
       success: false,
-      error: error.message
+      error: error.message,
     };
   }
 }
@@ -302,7 +301,7 @@ if (result.success) {
   console.log('   ✅ Development environment simulation');
   console.log('   ✅ Pull request workflow planning');
   console.log('   ✅ Agent communication protocols');
-  
+
   console.log('\n🚀 System Capabilities Confirmed:');
   console.log('   🔗 GitHub OAuth authentication working');
   console.log('   📋 Real issue fetching from elizaOS/eliza');
@@ -310,7 +309,7 @@ if (result.success) {
   console.log('   ⚡ Code analysis and execution capabilities');
   console.log('   🔄 Complete PR workflow support');
   console.log('   🤖 Multi-agent coordination ready');
-  
+
   console.log('\n🎊 The GitHub + E2B + Autocoder system is PRODUCTION READY!');
   process.exit(0);
 } else {

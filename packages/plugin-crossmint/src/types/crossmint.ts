@@ -141,7 +141,12 @@ export interface CrossMintCollection {
 // CrossMint Webhook Types
 export interface CrossMintWebhookEvent {
   id: string;
-  type: 'payment.completed' | 'payment.failed' | 'transaction.confirmed' | 'wallet.created' | 'nft.minted';
+  type:
+    | 'payment.completed'
+    | 'payment.failed'
+    | 'transaction.confirmed'
+    | 'wallet.created'
+    | 'nft.minted';
   data: any;
   timestamp: string;
   signature?: string;
@@ -230,5 +235,5 @@ export const CROSSMINT_CURRENCIES = {
   BNB: 'BNB',
 } as const;
 
-export type CrossMintNetwork = typeof CROSSMINT_NETWORKS[keyof typeof CROSSMINT_NETWORKS];
-export type CrossMintCurrency = typeof CROSSMINT_CURRENCIES[keyof typeof CROSSMINT_CURRENCIES];
+export type CrossMintNetwork = (typeof CROSSMINT_NETWORKS)[keyof typeof CROSSMINT_NETWORKS];
+export type CrossMintCurrency = (typeof CROSSMINT_CURRENCIES)[keyof typeof CROSSMINT_CURRENCIES];

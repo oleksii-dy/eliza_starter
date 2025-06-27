@@ -18,10 +18,13 @@ import { CrossMintError } from '../types/crossmint';
 export const transferAction: Action = {
   name: 'CROSSMINT_TRANSFER',
   similes: ['SEND_TOKENS', 'TRANSFER_FUNDS', 'SEND_PAYMENT'],
-  description: 'Transfer tokens using CrossMint MPC wallets. Can be chained with CHECK_PAYMENT_STATUS to verify completion or CREATE_CROSSMINT_WALLET to create recipient wallet first',
+  description:
+    'Transfer tokens using CrossMint MPC wallets. Can be chained with CHECK_PAYMENT_STATUS to verify completion or CREATE_CROSSMINT_WALLET to create recipient wallet first',
 
   validate: async (runtime: IAgentRuntime, _message: Memory) => {
-    const crossmintService = runtime.getService<CrossMintUniversalWalletService>('crossmint-universal-wallet');
+    const crossmintService = runtime.getService<CrossMintUniversalWalletService>(
+      'crossmint-universal-wallet'
+    );
     return !!crossmintService;
   },
 
@@ -33,7 +36,9 @@ export const transferAction: Action = {
     callback?: HandlerCallback
   ): Promise<ActionResult> => {
     try {
-      const crossmintService = runtime.getService<CrossMintUniversalWalletService>('crossmint-universal-wallet');
+      const crossmintService = runtime.getService<CrossMintUniversalWalletService>(
+        'crossmint-universal-wallet'
+      );
       if (!crossmintService) {
         throw new CrossMintError('CrossMint service not available');
       }
@@ -68,7 +73,9 @@ export const transferAction: Action = {
 
       // Validate required fields
       if (!transferDetails.to || !transferDetails.amount) {
-        throw new CrossMintError('Missing required transfer details (recipient address and amount)');
+        throw new CrossMintError(
+          'Missing required transfer details (recipient address and amount)'
+        );
       }
 
       // Set defaults
@@ -77,7 +84,9 @@ export const transferAction: Action = {
 
       // Validate network support
       if (!crossmintService.isChainSupported(transferDetails.network)) {
-        throw new CrossMintError(`Network ${transferDetails.network} is not supported by CrossMint`);
+        throw new CrossMintError(
+          `Network ${transferDetails.network} is not supported by CrossMint`
+        );
       }
 
       // Execute transfer
@@ -85,7 +94,10 @@ export const transferAction: Action = {
         to: transferDetails.to,
         amount: transferDetails.amount,
         chain: transferDetails.network,
-        tokenAddress: transferDetails.currency === 'ETH' || transferDetails.currency === 'SOL' ? undefined : transferDetails.currency,
+        tokenAddress:
+          transferDetails.currency === 'ETH' || transferDetails.currency === 'SOL'
+            ? undefined
+            : transferDetails.currency,
         memo: transferDetails.memo,
       });
 
@@ -98,7 +110,8 @@ export const transferAction: Action = {
 **To:** ${transferDetails.to}
 ${transferDetails.memo ? `**Memo:** ${transferDetails.memo}` : ''}
 
-${result.status === 'confirmed'
+${
+  result.status === 'confirmed'
     ? 'Transaction confirmed on blockchain.'
     : 'Transaction submitted and pending confirmation.'
 }`;
@@ -167,7 +180,8 @@ ${result.status === 'confirmed'
         name: '{{agent}}',
         content: {
           text: "I'll create a new wallet for Alice and then transfer 50 USDC to it.",
-          thought: 'User wants me to create a wallet for Alice first, then transfer USDC to that new wallet. I need to chain CREATE_CROSSMINT_WALLET followed by CROSSMINT_TRANSFER using the wallet address from the first action.',
+          thought:
+            'User wants me to create a wallet for Alice first, then transfer USDC to that new wallet. I need to chain CREATE_CROSSMINT_WALLET followed by CROSSMINT_TRANSFER using the wallet address from the first action.',
           actions: ['CREATE_CROSSMINT_WALLET', 'CROSSMINT_TRANSFER'],
         },
       },
@@ -184,7 +198,8 @@ ${result.status === 'confirmed'
         name: '{{agent}}',
         content: {
           text: "I'll send 2 ETH to the address and verify the transaction status.",
-          thought: 'User wants me to transfer ETH and then check the payment status. I should first execute the transfer with CROSSMINT_TRANSFER, then use the transaction hash from that result to check status with CHECK_PAYMENT_STATUS.',
+          thought:
+            'User wants me to transfer ETH and then check the payment status. I should first execute the transfer with CROSSMINT_TRANSFER, then use the transaction hash from that result to check status with CHECK_PAYMENT_STATUS.',
           actions: ['CROSSMINT_TRANSFER', 'CHECK_PAYMENT_STATUS'],
         },
       },
@@ -201,7 +216,8 @@ ${result.status === 'confirmed'
         name: '{{agent}}',
         content: {
           text: "I'll create a new wallet for Bob, transfer 1000 USDC to it, and monitor the payment status.",
-          thought: 'This requires a three-step workflow: 1) Create wallet for Bob with CREATE_CROSSMINT_WALLET, 2) Transfer 1000 USDC to the new wallet address using CROSSMINT_TRANSFER, 3) Monitor the transaction with CHECK_PAYMENT_STATUS using the transaction hash.',
+          thought:
+            'This requires a three-step workflow: 1) Create wallet for Bob with CREATE_CROSSMINT_WALLET, 2) Transfer 1000 USDC to the new wallet address using CROSSMINT_TRANSFER, 3) Monitor the transaction with CHECK_PAYMENT_STATUS using the transaction hash.',
           actions: ['CREATE_CROSSMINT_WALLET', 'CROSSMINT_TRANSFER', 'CHECK_PAYMENT_STATUS'],
         },
       },

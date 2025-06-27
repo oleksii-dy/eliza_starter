@@ -1,63 +1,51 @@
 ---
 id: web-socket-connection
-title: "WebSocket Connection"
-description: "WebSocket connection for real-time communication."
-sidebar_label: "WebSocket Connection"
+title: 'WebSocket Connection'
+description: 'WebSocket connection for real-time communication.'
+sidebar_label: 'WebSocket Connection'
 hide_title: true
 hide_table_of_contents: true
 api: eJztWF9vIjcQ/yoj5w0tkKhv+0YjWqXK3UUhp3s4ImHsYdd3XnvP9kI4xHevxl4CATZq1aov5SV4PeOZ3/wfZcMCLzzLv7IVzr0V3zGw54xJ9MKpOihrWM6+4HwSSSCsMSjoGhbWgUOu+0FVCMJWVWOU4EQbwNRMTa93u+f+/Hjf6+UwW/l8ONRWcF1aH/Jfrq+vh0ntQNnhLL0bL9EE3+vl9PmvCbq6uoJbrdAECBYm6JboIHHkU9OH2TerzAz68IdVBjg4a6uhKLkxqKcGYDabffPW0HFDfwCmjHju5JTlMGVNo+SUZTsSL9CEtzQibVtRybQ+zDTyJZLaezr8d3or9J4XUfMEjQQO7U2XzoAvIUn1wSlTHOh8B07j0XWQDK/wrcCzQB3+aNCH/so6Lfs+8BBBP6ZrEI1zFNNI+Ov+OlVF+dFmRbC7TDnMj9Y/vzrLpeA+EIqPuNr5DeY7QhcKj0Z2eiMRP574JPtn/vfRog6icMgDylErlyrZB17Vh+9t40QXJHVebChtU5RdYHksZE/Ur3vy854eAhdlRX6PPM/vpe+trWqNKSM+tHGonRXovTIFtaVI7opIW2Z/w3dnwRyl5hf6TAkJTS3fyctYrNHMzfZNyRzftUCPr1svtNfn+4stxia4daqZXb/WtgCk6y5kGpeok+GmqeboDuOrdkl6LmMqX3RF/rQ1vaWdZv9Zk9A568ieMR0AqUa77Ii8HXgkBq70WeexjDn0tTUePcs37Ob6hn7ezsXJSgVRUp49OBussNpT9M9NS/LSXCtfomTbbcYqDKWVLGcFBpaxmoeS5Wy4H8JZm300mzescZrlrAyhPpl67Hha3xMZJMXP1lVsjVES2z5nTJmFJUOCChpZzsZa/eTwaQKjh7sTSaOHO5BWNCSEvw791yfLm8H14OYa+jCChcYXNdcI3EjwgmtOH6M7iHGFheMVrqz7PqAQPpXKk0JQHiR6VRiU1HPnCI1HCSsVSuAQ7dRrcI0x5OSkWBkfuBE4gLGRtVUmeOBa21UEFzuaMkU2NRU3vKBjxKRMQEetxxRJ/g6bh1A66lfA4XE8eUqcCy6wxYo7qNYV3KifGIVZCCXCwpJmkiltxZVJk6LXm6x9wIoWlXTqr5REsDW66EcfIaFZKmdNDFEEi1VMZBIwKtrNBeIJtFqgWIvWwXvuA5np4QesrFvvH1bxO76iKXGiKDVNZQp6suugJTdSR9ft+k5yYpuSLcRGKhsV0eGw60bWGlGU4NcmlOjVKzqpOL35TWnqjdpymSwiwgm4p/GYmJ9c4wNKGL+gaGIejg9cd+yB1/qjp4/nN1RYKg6Ja3D3iWWMzEpJn5KaZUxYE7gIVC20qRwWy22SFdYsOyhN2kgLFcpmPhC2GiJxW59+Y9HX1oeKmwOJ+16xX3GPy3ATkaAJl038solfNvHLJn7ZxC+b+P9qEw/rmoYlld2w1lwZtm3n7qbdnI/+fUWDiC43mzn3+Nnp7ZaufzTo1iz/+pyxJXeKVlT6OlzHfx8/se32T36zTQM=
-sidebar_class_name: "get api-method"
+sidebar_class_name: 'get api-method'
 info_path: docs/rest/eliza-os-api
 custom_edit_url: null
 ---
 
-import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
-import ParamsDetails from "@theme/ParamsDetails";
-import RequestSchema from "@theme/RequestSchema";
-import StatusCodes from "@theme/StatusCodes";
-import OperationTabs from "@theme/OperationTabs";
-import TabItem from "@theme/TabItem";
-import Heading from "@theme/Heading";
+import MethodEndpoint from '@theme/ApiExplorer/MethodEndpoint';
+import ParamsDetails from '@theme/ParamsDetails';
+import RequestSchema from '@theme/RequestSchema';
+import StatusCodes from '@theme/StatusCodes';
+import OperationTabs from '@theme/OperationTabs';
+import TabItem from '@theme/TabItem';
+import Heading from '@theme/Heading';
 
-<Heading
-  as={"h1"}
-  className={"openapi__heading"}
-  children={"WebSocket Connection"}
->
-</Heading>
+<Heading as={'h1'} className={'openapi__heading'} children={'WebSocket Connection'}></Heading>
 
-<MethodEndpoint
-  method={"get"}
-  path={"/websocket"}
-  context={"endpoint"}
->
-  
-</MethodEndpoint>
+<MethodEndpoint method={'get'} path={'/websocket'} context={'endpoint'}></MethodEndpoint>
 
-
-
-WebSocket connection for real-time communication. 
+WebSocket connection for real-time communication.
 
 **Connection URL**: `ws://localhost:3000/socket.io/`
 
 **Events**:
-
 
 **Connection URL**: `ws://localhost:3000/socket.io/`
 
 **Events**:
 
 ### Client to Server Events:
+
 - `join` - Join a room/channel
+
   ```json
   \{
     "roomId": "uuid",
     "agentId": "uuid"
   \}
   ```
-
 
 - `leave` - Leave a room/channel
+
   ```json
   \{
     "roomId": "uuid",
@@ -65,8 +53,8 @@ WebSocket connection for real-time communication.
   \}
   ```
 
-
 - `message` - Send a message
+
   ```json
   \{
     "text": "string",
@@ -76,7 +64,6 @@ WebSocket connection for real-time communication.
   \}
   ```
 
-
 - `request-world-state` - Request current state
   ```json
   \{
@@ -84,9 +71,10 @@ WebSocket connection for real-time communication.
   \}
   ```
 
-
 ### Server to Client Events:
+
 - `messageBroadcast` - New message broadcast
+
   ```json
   \{
     "senderId": "uuid",
@@ -103,8 +91,8 @@ WebSocket connection for real-time communication.
   \}
   ```
 
-
 - `messageComplete` - Message processing complete
+
   ```json
   \{
     "channelId": "uuid",
@@ -112,8 +100,8 @@ WebSocket connection for real-time communication.
   \}
   ```
 
-
 - `world-state` - World state update
+
   ```json
   \{
     "agents": \{\},
@@ -123,8 +111,8 @@ WebSocket connection for real-time communication.
   \}
   ```
 
-
 - `logEntry` - Real-time log entry
+
   ```json
   \{
     "level": "number",
@@ -135,7 +123,6 @@ WebSocket connection for real-time communication.
   \}
   ```
 
-
 - `error` - Error event
   ```json
   \{
@@ -144,27 +131,12 @@ WebSocket connection for real-time communication.
   \}
   ```
 
+<ParamsDetails parameters={undefined}></ParamsDetails>
 
-<ParamsDetails
-  parameters={undefined}
->
-  
-</ParamsDetails>
-
-<RequestSchema
-  title={"Body"}
-  body={undefined}
->
-  
-</RequestSchema>
+<RequestSchema title={'Body'} body={undefined}></RequestSchema>
 
 <StatusCodes
   id={undefined}
   label={undefined}
-  responses={{"101":{"description":"Switching Protocols - WebSocket connection established"}}}
->
-  
-</StatusCodes>
-
-
-      
+  responses={{ '101': { description: 'Switching Protocols - WebSocket connection established' } }}
+></StatusCodes>

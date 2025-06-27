@@ -8,13 +8,18 @@ export class Florence2WorkerModel {
     this.initialized = true;
   }
 
-  async analyzeTile(tile: { data: Buffer; width: number; height: number }): Promise<Florence2Result> {
+  async analyzeTile(tile: {
+    data: Buffer;
+    width: number;
+    height: number;
+  }): Promise<Florence2Result> {
     // Simple analysis without TensorFlow
     const metadata = await sharp(tile.data).metadata();
     const stats = await sharp(tile.data).stats();
 
     // Determine scene characteristics
-    const brightness = (stats.channels[0].mean + stats.channels[1].mean + stats.channels[2].mean) / 3;
+    const brightness =
+      (stats.channels[0].mean + stats.channels[1].mean + stats.channels[2].mean) / 3;
     const isLight = brightness > 180;
 
     // Generate caption based on tile characteristics

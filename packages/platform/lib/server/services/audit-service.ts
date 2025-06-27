@@ -1,5 +1,5 @@
 import { eq, desc } from 'drizzle-orm';
-import { db } from '@/lib/database';
+import { getDatabase } from '@/lib/database';
 import { auditLogs, type NewAuditLog } from '@/lib/database/schema';
 
 interface AuditLogData {
@@ -32,6 +32,7 @@ export async function auditLog(data: AuditLogData): Promise<void> {
       metadata: data.metadata || {},
     };
 
+    const db = await getDatabase();
     await db.insert(auditLogs).values(auditEntry);
   } catch (error) {
     // Log audit failures but don't throw - we don't want audit failures to break the main flow
@@ -49,12 +50,13 @@ export async function getAuditLogs(
     offset?: number;
     startDate?: Date;
     endDate?: Date;
-  } = {}
+  } = {},
 ) {
   const { limit = 100, offset = 0 } = options;
 
   // This would need proper filtering implementation based on options
   // For now, returning basic query structure
+  const db = await getDatabase();
   return await db
     .select()
     .from(auditLogs)

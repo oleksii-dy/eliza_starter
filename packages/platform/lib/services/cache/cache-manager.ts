@@ -25,13 +25,13 @@ class CacheManager {
       if (finalConfig.type === 'redis') {
         const redisService = new RedisCacheService(
           finalConfig.redis!.url,
-          finalConfig.redis
+          finalConfig.redis,
         );
-        
+
         // Test connection
         await redisService.connect();
         const isConnected = await redisService.ping();
-        
+
         if (!isConnected) {
           throw new Error('Redis ping failed');
         }
@@ -39,8 +39,10 @@ class CacheManager {
         this.instance = redisService;
         console.log('[CacheManager] Using Redis cache service');
       } else {
-        const dbPath = finalConfig.pglite?.database || path.join(process.cwd(), 'data', 'cache.db');
-        
+        const dbPath =
+          finalConfig.pglite?.database ||
+          path.join(process.cwd(), 'data', 'cache.db');
+
         // Ensure cache directory exists
         const { mkdirSync } = require('fs');
         const { dirname } = require('path');
@@ -48,9 +50,9 @@ class CacheManager {
 
         this.instance = new PGLiteCacheService(
           dbPath,
-          finalConfig.pglite?.cleanupIntervalMs
+          finalConfig.pglite?.cleanupIntervalMs,
         );
-        
+
         // Test connection
         const isConnected = await this.instance.ping();
         if (!isConnected) {
@@ -62,21 +64,28 @@ class CacheManager {
 
       return this.instance;
     } catch (error) {
-      console.error('[CacheManager] Failed to initialize cache service:', error);
-      
+      console.error(
+        '[CacheManager] Failed to initialize cache service:',
+        error,
+      );
+
       // Fallback to SQLite if Redis fails
       if (finalConfig.type === 'redis') {
         console.log('[CacheManager] Falling back to SQLite cache');
         return this.initializeFallbackCache();
       }
-      
-      throw new CacheConnectionError('Failed to initialize cache service', error as Error);
+
+      throw new CacheConnectionError(
+        'Failed to initialize cache service',
+        error as Error,
+      );
     }
   }
 
   private static autoDetectConfig(): CacheConfig {
     const isProduction = process.env.NODE_ENV === 'production';
-    const redisUrl = process.env.REDIS_URL || process.env.UPSTASH_REDIS_REST_URL;
+    const redisUrl =
+      process.env.REDIS_URL || process.env.UPSTASH_REDIS_REST_URL;
 
     if (isProduction && redisUrl) {
       return {
@@ -110,13 +119,16 @@ class CacheManager {
     };
 
     const dbPath = fallbackConfig.pglite!.database;
-    
+
     // Ensure cache directory exists
     const { mkdirSync } = require('fs');
     const { dirname } = require('path');
     mkdirSync(dirname(dbPath), { recursive: true });
 
-    this.instance = new PGLiteCacheService(dbPath, fallbackConfig.pglite!.cleanupIntervalMs);
+    this.instance = new PGLiteCacheService(
+      dbPath,
+      fallbackConfig.pglite!.cleanupIntervalMs,
+    );
     this.config = fallbackConfig;
 
     return this.instance;
@@ -135,7 +147,7 @@ class CacheManager {
         console.error('[CacheManager] Error closing cache service:', error);
       }
     }
-    
+
     this.instance = null;
     this.config = null;
   }

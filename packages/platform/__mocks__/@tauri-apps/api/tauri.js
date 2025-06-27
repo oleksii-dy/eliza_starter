@@ -1,5 +1,9 @@
-export const invoke = jest.fn().mockRejectedValue(new Error('Tauri not available in test environment'));
+const invoke = () =>
+  Promise.reject(new Error('Tauri not available in test environment'));
 
-export default {
-  invoke
+module.exports = {
+  invoke,
+  default: {
+    invoke,
+  },
 };

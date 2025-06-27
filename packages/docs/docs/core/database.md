@@ -1,7 +1,9 @@
 ---
 sidebar_position: 7
 title: Database System
-description: Understanding ElizaOS database system - persistent storage and data management for agents
+description:
+  Understanding ElizaOS database system - persistent storage and data management
+  for agents
 keywords:
   [
     database,
@@ -14,13 +16,18 @@ keywords:
     relationships,
     multi-tenant,
     embeddings,
+    pgvector,
+    bun:sqlite,
   ]
 image: /img/database.jpg
 ---
 
 # 💾 Database System
 
-The ElizaOS database system provides persistent storage capabilities for agents. It handles memory storage, entity relationships, knowledge management, and more through a flexible adapter-based architecture with built-in multi-tenancy support.
+The ElizaOS database system provides persistent storage capabilities for agents.
+It handles memory storage, entity relationships, knowledge management, and more
+through a flexible adapter-based architecture with built-in multi-tenancy
+support.
 
 ## Overview
 
@@ -29,13 +36,13 @@ graph TB
     %% Main Components
     Runtime([Agent Runtime])
     DbAdapter([Database Adapter])
-    DbConnection[("Database (PGLite/PostgreSQL)")]
+    DbConnection[("Database (PostgreSQL)")]
 
     %% Data Models in compact form
     DataModels["Data Models: Entities, Components, Memories, Relationships, Rooms, Worlds, Tasks, Cache"]
 
     %% Vector Search
-    VectorStore[(Vector Store)]
+    VectorStore[(Vector Store with pgvector)]
 
     %% Memories Knowledge
     MemoriesKnowledge[(Memories / Knowledge)]
@@ -64,34 +71,54 @@ graph TB
     class MemoriesKnowledge memories;
 ```
 
-ElizaOS uses a unified database architecture based on Drizzle ORM with adapters that implement the [`IDatabaseAdapter`](/api/interfaces/IDatabaseAdapter) interface. The current release includes support for:
+ElizaOS uses a unified database architecture based on Drizzle ORM with adapters
+that implement the [`IDatabaseAdapter`](/api/interfaces/IDatabaseAdapter)
+interface. The primary database system is:
 
-| Adapter        | Best For                    | Key Features                                                      |
-| -------------- | --------------------------- | ----------------------------------------------------------------- |
-| **PGLite**     | Local development & testing | Lightweight PostgreSQL implementation running in Node.js process  |
-| **PostgreSQL** | Production deployments      | Full PostgreSQL with vector search, scaling, and high reliability |
+| Database       | Usage            | Key Features                                                                             |
+| -------------- | ---------------- | ---------------------------------------------------------------------------------------- |
+| **PostgreSQL** | Primary database | Full PostgreSQL with pgvector extension for vector search, scaling, and high reliability |
+
+### Additional Storage Options
+
+- **bun:sqlite**: Some plugins (e.g., `plugin-rolodex`, `hyperfy`) use Bun's
+  built-in SQLite for local storage (also supports pgvector)
+- **PGLite**: The `platform` package specifically uses PGLite for local
+  development due to Next.js compatibility issues with Bun
+
+> **Note**: The main ElizaOS system (`@elizaos/plugin-sql`) uses PostgreSQL with
+> pgvector exclusively. PGLite support has been removed in favor of PostgreSQL
+> for better performance and production readiness.
 
 ## Multi-Tenancy Architecture
 
-ElizaOS implements a multi-tenant architecture where each agent operates in its own isolated data space:
+ElizaOS implements a multi-tenant architecture where each agent operates in its
+own isolated data space:
 
-- **Agent Isolation**: Each agent has its own `agentId` that scopes all database operations
+- **Agent Isolation**: Each agent has its own `agentId` that scopes all database
+  operations
 - **Data Segregation**: All queries are automatically filtered by the agent's ID
-- **Shared Infrastructure**: Multiple agents can share the same database instance while maintaining complete data isolation
-- **Embedding Consistency**: Each agent must use consistent embedding dimensions throughout its lifecycle
+- **Shared Infrastructure**: Multiple agents can share the same database
+  instance while maintaining complete data isolation
+- **Embedding Consistency**: Each agent must use consistent embedding dimensions
+  throughout its lifecycle
 
-> ⚠️ **Important**: Each agent MUST use the same embedding model throughout its lifetime. Mixing different embedding models (e.g., OpenAI with Google embeddings) within the same agent will cause vector search failures and inconsistent results.
+> ⚠️ **Important**: Each agent MUST use the same embedding model throughout its
+> lifetime. Mixing different embedding models (e.g., OpenAI with Google
+> embeddings) within the same agent will cause vector search failures and
+> inconsistent results.
 
 ## Core Functionality
 
-All database adapters extend the `BaseDrizzleAdapter` abstract class, which provides a comprehensive set of methods for managing all aspects of agent data:
+All database adapters extend the `BaseDrizzleAdapter` abstract class, which
+provides a comprehensive set of methods for managing all aspects of agent data:
 
 ### Entity System
 
 | Method                   | Description                           |
 | ------------------------ | ------------------------------------- |
 | `createEntities()`       | Create new entities                   |
-| `getEntitiesByIds()`       | Retrieve entities by IDs              |
+| `getEntitiesByIds()`     | Retrieve entities by IDs              |
 | `getEntitiesForRoom()`   | Get all entities in a room            |
 | `updateEntity()`         | Update entity attributes              |
 | `deleteEntity()`         | Delete an entity                      |
@@ -227,7 +254,8 @@ All database adapters extend the `BaseDrizzleAdapter` abstract class, which prov
 
 ## Architecture
 
-ElizaOS uses a singleton pattern for database connections to ensure efficient resource usage:
+ElizaOS uses a singleton pattern for database connections to ensure efficient
+resource usage:
 
 ```
 ┌─────────────────────────────────────┐
@@ -258,7 +286,9 @@ ElizaOS uses a singleton pattern for database connections to ensure efficient re
 └───────────────┘ └─────────────────┘
 ```
 
-Each adapter is associated with a singleton connection manager that ensures only one database connection is maintained per process, regardless of how many agents are running.
+Each adapter is associated with a singleton connection manager that ensures only
+one database connection is maintained per process, regardless of how many agents
+are running.
 
 ## Implementation
 
@@ -274,7 +304,8 @@ const project = {
 };
 ```
 
-The SQL plugin automatically selects and initializes the appropriate database adapter based on environment settings:
+The SQL plugin automatically selects and initializes the appropriate database
+adapter based on environment settings:
 
 ```typescript
 function createDatabaseAdapter(
@@ -299,7 +330,8 @@ Configure the database adapter using environment variables or settings:
 
 ```typescript
 // For PostgreSQL
-process.env.POSTGRES_URL = 'postgresql://username:password@localhost:5432/elizaos';
+process.env.POSTGRES_URL =
+  'postgresql://username:password@localhost:5432/elizaos';
 
 // For PGLite (default)
 process.env.SQLITE_DATA_DIR = './.elizadb'; // Optional, defaults to './.elizadb'
@@ -307,7 +339,8 @@ process.env.SQLITE_DATA_DIR = './.elizadb'; // Optional, defaults to './.elizadb
 
 ### Embedding Dimension Management
 
-The embedding dimension is set during agent initialization based on the text embedding model:
+The embedding dimension is set during agent initialization based on the text
+embedding model:
 
 ```typescript
 // The dimension is automatically determined by the embedding model
@@ -321,7 +354,9 @@ The embedding dimension is set during agent initialization based on the text emb
 // when creating the first memory with embeddings
 ```
 
-> ⚠️ **Critical**: Once an agent starts using a specific embedding model, it MUST continue using the same model. Switching embedding models mid-operation will result in:
+> ⚠️ **Critical**: Once an agent starts using a specific embedding model, it
+> MUST continue using the same model. Switching embedding models mid-operation
+> will result in:
 >
 > - Vector search failures
 > - Inconsistent similarity scores
@@ -330,7 +365,8 @@ The embedding dimension is set during agent initialization based on the text emb
 
 ### Retry Logic & Error Handling
 
-The database system includes built-in retry logic with exponential backoff and jitter:
+The database system includes built-in retry logic with exponential backoff and
+jitter:
 
 ```typescript
 protected async withRetry<T>(operation: () => Promise<T>): Promise<T> {
@@ -429,7 +465,8 @@ The schema is managed by Drizzle ORM and includes the following key tables:
 - **entities**: The fundamental objects in the system (users, agents, etc.)
 - **components**: Modular data attached to entities (profiles, settings, etc.)
 - **memories**: Conversation history and other remembered information
-- **embeddings**: Vector embeddings for semantic search (supports multiple dimensions)
+- **embeddings**: Vector embeddings for semantic search (supports multiple
+  dimensions)
 - **relationships**: Connections between entities
 - **rooms**: Conversation channels
 - **participants**: Entity participation in rooms
@@ -454,16 +491,20 @@ ElizaOS uses an entity-component architecture where:
 - Components are pieces of data attached to entities
 - This allows for flexible data modeling and extension
 
-For example, a user entity might have profile, preferences, and authentication components.
+For example, a user entity might have profile, preferences, and authentication
+components.
 
 ## Vector Search
 
-Both adapters support vector-based semantic search with embedding dimension flexibility:
+Both PostgreSQL and bun:sqlite support vector-based semantic search with
+embedding dimension flexibility:
 
 - **PostgreSQL**: Uses pgvector extension for optimized vector operations
+- **bun:sqlite**: Also uses pgvector for vector similarity search
 - **PGLite**: Implements vector search using cosine distance calculations
 
-The system supports multiple embedding dimensions (384, 512, 768, 1024, 1536, 3072) but each agent must use only one consistently:
+The system supports multiple embedding dimensions (384, 512, 768, 1024,
+1536, 3072) but each agent must use only one consistently:
 
 ```typescript
 // The embedding dimension is automatically set based on the first embedding stored
@@ -480,19 +521,19 @@ const DIMENSION_MAP = {
 
 ## FAQ
 
-### How do I choose between PGLite and PostgreSQL?
+### How do I choose a database?
 
-- Use **PGLite** for:
+For the main ElizaOS system:
 
-  - Local development and testing
-  - Single-user deployments
-  - Situations where installing PostgreSQL is impractical
+- **Always use PostgreSQL** with the pgvector extension
+- Configure via the `POSTGRES_URL` environment variable
 
-- Use **PostgreSQL** for:
-  - Production deployments
-  - Multi-user systems
-  - High-volume data
-  - When you need advanced scaling features
+For specific use cases:
+
+- **Plugin development**: Some plugins may use `bun:sqlite` for local data
+  storage
+- **Platform package**: Uses PGLite for local development only (Next.js
+  compatibility)
 
 ### How do I configure the database connection?
 
@@ -502,11 +543,8 @@ For PostgreSQL, set the `POSTGRES_URL` environment variable:
 POSTGRES_URL=postgresql://username:password@localhost:5432/elizaos
 ```
 
-For PGLite, set the data directory (optional):
-
-```
-SQLITE_DATA_DIR=./my-data
-```
+The system will automatically use PostgreSQL when this environment variable is
+set.
 
 ### What about embedding model consistency?
 
@@ -535,7 +573,8 @@ SQLITE_DATA_DIR=./my-data
 
 For PostgreSQL, use standard PostgreSQL tools like pgAdmin or psql.
 
-For PGLite, the data is stored in the specified data directory. You can use the PGLite Studio or standard PostgreSQL clients that support local connections.
+For PGLite, the data is stored in the specified data directory. You can use the
+PGLite Studio or standard PostgreSQL clients that support local connections.
 
 ### How do I handle agent deletion?
 
@@ -565,7 +604,9 @@ This ensures no orphaned data remains in the database.
 
 ### Will other database adapters be supported in the future?
 
-The adapter interface is designed to be extensible. Future releases may include support for additional databases, but all will need to implement the full `IDatabaseAdapter` interface as defined in the `BaseDrizzleAdapter`.
+The adapter interface is designed to be extensible. Future releases may include
+support for additional databases, but all will need to implement the full
+`IDatabaseAdapter` interface as defined in the `BaseDrizzleAdapter`.
 
 ## Further Reading
 

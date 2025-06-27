@@ -1,120 +1,120 @@
-
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { createRPGClientWorld } from '../core/createRPGClientWorld';
-import type { World } from '../types';
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import { createRPGClientWorld } from '../core/createRPGClientWorld'
+import type { World } from '../types'
 
 // Configuration
-const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:4445';
-const PLAYER_NAME = import.meta.env.VITE_PLAYER_NAME || `Player${Math.floor(Math.random() * 1000)}`;
+const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:4445'
+const PLAYER_NAME = import.meta.env.VITE_PLAYER_NAME || `Player${Math.floor(Math.random() * 1000)}`
 
 // Global world instance
-let world: World | null = null;
+let world: World | null = null
 
 /**
  * RPG Client Application
  */
 function RPGClient() {
-  const [connected, setConnected] = React.useState(false);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState<string | null>(null);
-  const [playerInfo, setPlayerInfo] = React.useState<any>(null);
+  const [connected, setConnected] = React.useState(false)
+  const [loading, setLoading] = React.useState(true)
+  const [error, setError] = React.useState<string | null>(null)
+  const [playerInfo, setPlayerInfo] = React.useState<any>(null)
 
   React.useEffect(() => {
-    initializeWorld();
-  }, []);
+    initializeWorld()
+  }, [])
 
   async function initializeWorld() {
     try {
-      console.log('[RPGClient] Creating world...');
-      world = await createRPGClientWorld();
+      console.log('[RPGClient] Creating world...')
+      world = await createRPGClientWorld()
 
       // Initialize world
       await world.init({
         storage: null,
-        renderer: 'webgl2'
-      });
+        renderer: 'webgl2',
+      })
 
       // Set up event listeners
       world.on?.('player', (player: any) => {
-        console.log('[RPGClient] Local player created:', player);
+        console.log('[RPGClient] Local player created:', player)
         setPlayerInfo({
           id: player.id,
           name: player.name,
-          position: player.position
-        });
-      });
+          position: player.position,
+        })
+      })
 
       world.on?.('disconnect', () => {
-        console.log('[RPGClient] Disconnected from server');
-        setConnected(false);
-      });
+        console.log('[RPGClient] Disconnected from server')
+        setConnected(false)
+      })
 
       world.on?.('kick', (reason: string) => {
-        console.log('[RPGClient] Kicked:', reason);
-        setError(`Kicked from server: ${reason}`);
-        setConnected(false);
-      });
+        console.log('[RPGClient] Kicked:', reason)
+        setError(`Kicked from server: ${reason}`)
+        setConnected(false)
+      })
 
       // Connect to server
-      console.log(`[RPGClient] Connecting to ${WS_URL}...`);
-      const network = world.network;
+      console.log(`[RPGClient] Connecting to ${WS_URL}...`)
+      const network = world.network
       if (network && 'init' in network) {
         await (network as any).init({
           wsUrl: WS_URL,
           name: PLAYER_NAME,
-          avatar: null
-        });
-        setConnected(true);
-        setLoading(false);
+          avatar: null,
+        })
+        setConnected(true)
+        setLoading(false)
       }
 
       // Start game loop
-      startGameLoop();
-
+      startGameLoop()
     } catch (err) {
-      console.error('[RPGClient] Failed to initialize:', err);
-      setError(err instanceof Error ? err.message : 'Failed to initialize');
-      setLoading(false);
+      console.error('[RPGClient] Failed to initialize:', err)
+      setError(err instanceof Error ? err.message : 'Failed to initialize')
+      setLoading(false)
     }
   }
 
   function startGameLoop() {
-    if (!world) {return;}
+    if (!world) {
+      return
+    }
 
     function loop(time: number) {
       if (world) {
-        world.tick(time);
+        world.tick(time)
       }
-      requestAnimationFrame(loop);
+      requestAnimationFrame(loop)
     }
 
-    requestAnimationFrame(loop);
+    requestAnimationFrame(loop)
   }
 
   // Render UI
   if (loading) {
     return (
-      <div className="rpg-client-loading">
+      <div className='rpg-client-loading'>
         <h2>Loading RPG World...</h2>
         <p>Connecting to {WS_URL}</p>
       </div>
-    );
+    )
   }
 
   if (error) {
     return (
-      <div className="rpg-client-error">
+      <div className='rpg-client-error'>
         <h2>Error</h2>
         <p>{error}</p>
         <button onClick={() => window.location.reload()}>Reload</button>
       </div>
-    );
+    )
   }
 
   return (
-    <div className="rpg-client">
-      <div className="rpg-client-status">
+    <div className='rpg-client'>
+      <div className='rpg-client-status'>
         <h3>RuneScape RPG</h3>
         <p>Status: {connected ? 'Connected' : 'Disconnected'}</p>
         {playerInfo && (
@@ -125,38 +125,38 @@ function RPGClient() {
         )}
       </div>
 
-      <canvas id="rpg-canvas" className="rpg-client-canvas" />
+      <canvas id='rpg-canvas' className='rpg-client-canvas' />
 
-      <div className="rpg-client-ui">
+      <div className='rpg-client-ui'>
         {/* Game UI components would go here */}
-        <div className="inventory-panel">
+        <div className='inventory-panel'>
           <h4>Inventory</h4>
           {/* Inventory slots */}
         </div>
 
-        <div className="skills-panel">
+        <div className='skills-panel'>
           <h4>Skills</h4>
           {/* Skill levels */}
         </div>
 
-        <div className="chat-panel">
+        <div className='chat-panel'>
           <h4>Chat</h4>
           {/* Chat messages */}
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 // Mount the application
-const container = document.getElementById('root');
+const container = document.getElementById('root')
 if (container) {
-  const root = ReactDOM.createRoot(container);
+  const root = ReactDOM.createRoot(container)
   root.render(
     <React.StrictMode>
       <RPGClient />
     </React.StrictMode>
-  );
+  )
 }
 
 // CSS styles
@@ -234,9 +234,9 @@ const styles = `
   .rpg-client-error button:hover {
     background: #ff6666;
   }
-`;
+`
 
 // Inject styles
-const styleElement = document.createElement('style');
-styleElement.textContent = styles;
-document.head.appendChild(styleElement);
+const styleElement = document.createElement('style')
+styleElement.textContent = styles
+document.head.appendChild(styleElement)

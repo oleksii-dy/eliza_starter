@@ -53,6 +53,7 @@ const pluginNameMapping: Record<string, string> = {
   e2b: '@elizaos/plugin-e2b',
   'code-execution': '@elizaos/plugin-e2b',
   'code-interpreter': '@elizaos/plugin-e2b',
+  payment: '@elizaos/plugin-payment',
 };
 
 /**

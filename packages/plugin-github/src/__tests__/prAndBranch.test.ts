@@ -4,7 +4,32 @@ import { Octokit } from '@octokit/rest';
 import type { IAgentRuntime } from '@elizaos/core';
 
 // Mock Octokit
-mock.module('@octokit/rest');
+mock.module('@octokit/rest', () => ({
+  Octokit: class MockOctokit {
+    constructor() {
+      this.repos = {
+        getContent: mock(),
+        createOrUpdateFileContents: mock(),
+        deleteFile: mock(),
+        listBranches: mock(),
+        getBranch: mock(),
+        get: mock(),
+      };
+      this.git = {
+        createRef: mock(),
+        deleteRef: mock(),
+        getRef: mock(),
+        compareCommits: mock(),
+      };
+      this.pulls = {
+        create: mock(),
+        list: mock(),
+        get: mock(),
+        merge: mock(),
+      };
+    }
+  },
+}));
 
 describe('PR and Branch Management Tests', () => {
   let mockRuntime: any;
@@ -211,7 +236,19 @@ describe('PR and Branch Management Tests', () => {
     };
 
     // Create GitHubService instance
-    githubService = new GitHubService(mockRuntime);
+    // Temporarily mock the runtime to return a valid token for service creation
+    const tempRuntime = {
+      ...mockRuntime,
+      getSetting: mock((key: string) => {
+        if (key === 'GITHUB_TOKEN') return 'test-token';
+        return null;
+      }),
+    };
+    
+    githubService = new GitHubService(tempRuntime);
+    
+    // After creation, replace the octokit instance with our mock
+    (githubService as any).octokit = mockOctokit;
   });
 
   describe('File Operations', () => {

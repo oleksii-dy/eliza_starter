@@ -46,16 +46,16 @@ const SCENARIOS: ScenarioConfig[] = [
     scriptPath: 'scripts/tests/test-github-todo-scenario.ts',
     targetSuccessRate: 0.8,
     maxRetries: 10,
-    timeout: 180000 // 3 minutes
+    timeout: 180000, // 3 minutes
   },
   {
-    id: 'production-plugin-config', 
+    id: 'production-plugin-config',
     name: 'Production Plugin Configuration',
     description: 'Tests production-ready plugin configuration system',
     scriptPath: 'scripts/tests/test-production-plugin-scenario.ts',
     targetSuccessRate: 0.8,
     maxRetries: 10,
-    timeout: 240000 // 4 minutes
+    timeout: 240000, // 4 minutes
   },
   {
     id: 'autocoder-plugin',
@@ -64,8 +64,8 @@ const SCENARIOS: ScenarioConfig[] = [
     scriptPath: 'scripts/test-autocoder.ts',
     targetSuccessRate: 0.8,
     maxRetries: 10,
-    timeout: 300000 // 5 minutes
-  }
+    timeout: 300000, // 5 minutes
+  },
 ];
 
 class ScenarioTestRunner {
@@ -80,16 +80,16 @@ class ScenarioTestRunner {
     console.log('🎯 Starting Individual Scenario Testing with Success Rate Tracking\n');
     console.log(`Target Success Rate: 80% or higher`);
     console.log(`Test runs per scenario: Up to 10 attempts`);
-    console.log('=' .repeat(70));
+    console.log('='.repeat(70));
 
     for (const scenario of SCENARIOS) {
       console.log(`\n🧪 Testing Scenario: ${scenario.name}`);
       console.log(`   Description: ${scenario.description}`);
       console.log(`   Target: ${(scenario.targetSuccessRate * 100).toFixed(0)}% success rate`);
-      
+
       const results = await this.testScenario(scenario);
       this.results.set(scenario.id, results);
-      
+
       this.logScenarioResults(results);
     }
 
@@ -99,13 +99,13 @@ class ScenarioTestRunner {
   private async testScenario(scenario: ScenarioConfig): Promise<ScenarioResults> {
     const runs: TestRun[] = [];
     const errors: string[] = [];
-    
+
     // Create individual test script if it doesn't exist
     await this.ensureTestScript(scenario);
 
     for (let runNumber = 1; runNumber <= scenario.maxRetries; runNumber++) {
       console.log(`   Run ${runNumber}/${scenario.maxRetries}...`);
-      
+
       const run = await this.executeScenarioRun(scenario, runNumber);
       runs.push(run);
 
@@ -114,9 +114,9 @@ class ScenarioTestRunner {
       }
 
       // Calculate current success rate
-      const successfulRuns = runs.filter(r => r.success).length;
+      const successfulRuns = runs.filter((r) => r.success).length;
       const currentSuccessRate = successfulRuns / runs.length;
-      
+
       console.log(`      Result: ${run.success ? '✅ SUCCESS' : '❌ FAILED'} (${run.duration}ms)`);
       console.log(`      Current Success Rate: ${(currentSuccessRate * 100).toFixed(1)}%`);
 
@@ -128,11 +128,11 @@ class ScenarioTestRunner {
 
       // Brief pause between runs
       if (runNumber < scenario.maxRetries) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
       }
     }
 
-    const successfulRuns = runs.filter(r => r.success).length;
+    const successfulRuns = runs.filter((r) => r.success).length;
     const successRate = successfulRuns / runs.length;
     const averageDuration = runs.reduce((sum, r) => sum + r.duration, 0) / runs.length;
     const passed = successRate >= scenario.targetSuccessRate;
@@ -143,34 +143,34 @@ class ScenarioTestRunner {
       successRate,
       averageDuration,
       passed,
-      errors
+      errors,
     };
   }
 
   private async executeScenarioRun(scenario: ScenarioConfig, runNumber: number): Promise<TestRun> {
     const startTime = Date.now();
-    
+
     try {
       // Run the scenario test script
       const command = `bun run ${scenario.scriptPath}`;
-      
+
       execSync(command, {
         stdio: 'pipe', // Capture output instead of inheriting
         timeout: scenario.timeout,
-        cwd: process.cwd()
+        cwd: process.cwd(),
       });
 
       const duration = Date.now() - startTime;
-      
+
       return {
         runNumber,
         timestamp: startTime,
         duration,
-        success: true
+        success: true,
       };
     } catch (error: any) {
       const duration = Date.now() - startTime;
-      
+
       let errorMessage = 'Unknown error';
       if (error.message) {
         errorMessage = error.message;
@@ -185,19 +185,19 @@ class ScenarioTestRunner {
         timestamp: startTime,
         duration,
         success: false,
-        error: errorMessage.substring(0, 200) // Truncate long error messages
+        error: errorMessage.substring(0, 200), // Truncate long error messages
       };
     }
   }
 
   private async ensureTestScript(scenario: ScenarioConfig): Promise<void> {
     const scriptPath = join(process.cwd(), scenario.scriptPath);
-    
+
     if (!existsSync(scriptPath)) {
       console.log(`   📝 Creating test script: ${scenario.scriptPath}`);
-      
+
       let scriptContent = '';
-      
+
       switch (scenario.id) {
         case 'github-todo-workflow':
           scriptContent = await this.generateGitHubTodoTestScript();
@@ -216,7 +216,7 @@ class ScenarioTestRunner {
       // Ensure directory exists
       const scriptDir = join(process.cwd(), 'scripts/tests');
       execSync(`mkdir -p "${scriptDir}"`, { stdio: 'inherit' });
-      
+
       await writeFile(scriptPath, scriptContent);
       console.log(`   ✅ Created test script: ${scenario.scriptPath}`);
     }
@@ -342,15 +342,19 @@ test${scenario.id.replace(/-/g, '')}();
 
   private logScenarioResults(results: ScenarioResults): void {
     const { scenario, successRate, runs, passed, averageDuration } = results;
-    
+
     console.log(`\n📊 Results for ${scenario.name}:`);
-    console.log(`   Success Rate: ${(successRate * 100).toFixed(1)}% (${runs.filter(r => r.success).length}/${runs.length} runs)`);
+    console.log(
+      `   Success Rate: ${(successRate * 100).toFixed(1)}% (${runs.filter((r) => r.success).length}/${runs.length} runs)`
+    );
     console.log(`   Average Duration: ${averageDuration.toFixed(0)}ms`);
-    console.log(`   Status: ${passed ? '🎉 PASSED' : '❌ FAILED'} (target: ${(scenario.targetSuccessRate * 100).toFixed(0)}%)`);
-    
+    console.log(
+      `   Status: ${passed ? '🎉 PASSED' : '❌ FAILED'} (target: ${(scenario.targetSuccessRate * 100).toFixed(0)}%)`
+    );
+
     if (results.errors.length > 0) {
       console.log(`   Recent Errors:`);
-      results.errors.slice(-3).forEach(error => {
+      results.errors.slice(-3).forEach((error) => {
         console.log(`     • ${error}`);
       });
     }
@@ -364,25 +368,25 @@ test${scenario.id.replace(/-/g, '')}();
     const report = {
       timestamp: new Date().toISOString(),
       targetSuccessRate: 0.8,
-      scenarios: Array.from(this.results.values()).map(result => ({
+      scenarios: Array.from(this.results.values()).map((result) => ({
         id: result.scenario.id,
         name: result.scenario.name,
         successRate: result.successRate,
         passed: result.passed,
         runs: result.runs.length,
         averageDuration: result.averageDuration,
-        errors: result.errors.length
+        errors: result.errors.length,
       })),
       summary: {
         totalScenarios: this.results.size,
-        passedScenarios: Array.from(this.results.values()).filter(r => r.passed).length,
-        overallSuccessRate: 0
-      }
+        passedScenarios: Array.from(this.results.values()).filter((r) => r.passed).length,
+        overallSuccessRate: 0,
+      },
     };
 
     // Calculate overall success rate
-    const allRuns = Array.from(this.results.values()).flatMap(r => r.runs);
-    const successfulRuns = allRuns.filter(r => r.success).length;
+    const allRuns = Array.from(this.results.values()).flatMap((r) => r.runs);
+    const successfulRuns = allRuns.filter((r) => r.success).length;
     report.summary.overallSuccessRate = successfulRuns / allRuns.length;
 
     // Log summary
@@ -392,8 +396,12 @@ test${scenario.id.replace(/-/g, '')}();
     }
 
     console.log(`\n📊 Overall Statistics:`);
-    console.log(`   Scenarios Passing Target: ${report.summary.passedScenarios}/${report.summary.totalScenarios}`);
-    console.log(`   Overall Success Rate: ${(report.summary.overallSuccessRate * 100).toFixed(1)}%`);
+    console.log(
+      `   Scenarios Passing Target: ${report.summary.passedScenarios}/${report.summary.totalScenarios}`
+    );
+    console.log(
+      `   Overall Success Rate: ${(report.summary.overallSuccessRate * 100).toFixed(1)}%`
+    );
     console.log(`   Total Test Runs: ${allRuns.length}`);
 
     // Save detailed report
@@ -418,7 +426,7 @@ async function main() {
   await runner.runAllScenarios();
 }
 
-main().catch(error => {
+main().catch((error) => {
   console.error('💥 Individual scenario testing failed:', error);
   process.exit(1);
 });

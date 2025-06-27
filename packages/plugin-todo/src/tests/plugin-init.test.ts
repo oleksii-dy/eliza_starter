@@ -1,17 +1,17 @@
 import { describe, it, expect } from 'bun:test';
 import { TodoPlugin } from '../index';
-import type { IAgentRuntime, UUID } from '@elizaos/core';
+import { createMockRuntime } from '@elizaos/core/test-utils';
+import type { IAgentRuntime } from '@elizaos/core';
 
 describe('TodoPlugin Initialization', () => {
   let mockRuntime: IAgentRuntime;
 
   const setupMocks = () => {
-    mockRuntime = {
-      agentId: 'test-agent' as UUID,
-      getSetting: () => undefined,
+    // @ts-ignore - test mock
+    mockRuntime = createMockRuntime({
       db: null, // No database available
       getService: () => null, // No services available in test
-    } as any;
+    });
   };
 
   it('should have correct plugin metadata', () => {
@@ -31,7 +31,7 @@ describe('TodoPlugin Initialization', () => {
 
   it('should have all required actions', () => {
     expect(TodoPlugin.actions).toHaveLength(5);
-    const actionNames = TodoPlugin.actions!.map(action => action.name);
+    const actionNames = TodoPlugin.actions!.map((action) => action.name);
     expect(actionNames).toContain('CREATE_TODO');
     expect(actionNames).toContain('COMPLETE_TODO');
     expect(actionNames).toContain('CONFIRM_TODO');
@@ -47,7 +47,6 @@ describe('TodoPlugin Initialization', () => {
   it('should have test dependencies', () => {
     expect(TodoPlugin.testDependencies).toContain('@elizaos/plugin-sql');
   });
-
 
   it('should have schema with correct tables', () => {
     expect(TodoPlugin.schema).toBeDefined();

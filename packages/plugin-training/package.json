@@ -32,7 +32,7 @@
     "clean": "rm -rf dist && rm -rf .turbo",
     "lint": "eslint src --fix && prettier --write ./src",
     "typecheck": "tsc --noEmit",
-    "test": "elizaos test",
+    "test": "bun test src/",
     "cli": "node dist/cli/index.js",
     "cli:help": "node dist/cli/index.js --help",
     "cli:reasoning": "node dist/cli/index.js reasoning",

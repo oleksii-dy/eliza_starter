@@ -81,7 +81,9 @@ export default function CopyPageButton(): JSX.Element | null {
   };
 
   const getRawUrl = (url: string): string | null => {
-    if (!url) {return null;}
+    if (!url) {
+      return null;
+    }
     const githubEditRegex = /github\.com\/([^/]+)\/([^/]+)\/(edit|tree)\/([^/]+)\/(.+)/;
     const match = url.match(githubEditRegex);
     if (match) {
@@ -102,7 +104,9 @@ export default function CopyPageButton(): JSX.Element | null {
       try {
         const localUrl = url.startsWith('/') ? url : `/${url}`;
         const response = await fetch(localUrl);
-        if (response.ok) {return await response.text();}
+        if (response.ok) {
+          return await response.text();
+        }
       } catch (error) {
         // console.error('Error fetching local content:', error);
       }

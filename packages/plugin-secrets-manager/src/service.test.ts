@@ -579,7 +579,7 @@ describe('EnvManagerService Edge Cases', () => {
 
     await EnvManagerService.stop(runtime);
 
-    expect(runtime.getService).toHaveBeenCalledWith('ENV_MANAGER');
+    expect(runtime.getService).toHaveBeenCalledWith('SECRETS');
   });
 
   it('should handle static stop method when service not found', async () => {

@@ -189,13 +189,17 @@ export class ConfigurationManager {
 
   private getBooleanSetting(key: string, defaultValue: boolean): boolean {
     const value = this.getSetting(key);
-    if (value === undefined) {return defaultValue;}
+    if (value === undefined) {
+      return defaultValue;
+    }
     return value.toLowerCase() === 'true';
   }
 
   private getNumberSetting(key: string, defaultValue: number): number {
     const value = this.getSetting(key);
-    if (value === undefined) {return defaultValue;}
+    if (value === undefined) {
+      return defaultValue;
+    }
     const parsed = Number(value);
     return isNaN(parsed) ? defaultValue : parsed;
   }

@@ -3,12 +3,28 @@
  * These tests validate the platform functionality without relying on core runtime infrastructure
  */
 
-import { describe, test, expect, beforeAll, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  test,
+  expect,
+  beforeAll,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import { db, getDatabase } from '@/lib/database';
-import { users, organizations, apiKeys, creditTransactions, usageRecords } from '@/lib/database/schema';
+import {
+  users,
+  organizations,
+  apiKeys,
+  creditTransactions,
+  usageRecords,
+} from '@/lib/database/schema';
 import { eq } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
-import { createApiKey, validateApiKey } from '@/lib/server/services/api-key-service';
+import {
+  createApiKey,
+  validateApiKey,
+} from '@/lib/server/services/api-key-service';
 import { deductCredits } from '@/lib/server/services/billing-service';
 import { trackUsage } from '@/lib/server/services/usage-tracking-service';
 
@@ -52,11 +68,19 @@ describe('Platform Database Integration', () => {
   afterAll(async () => {
     try {
       // Clean up test data in correct order to handle foreign key constraints
-      await database.delete(usageRecords).where(eq(usageRecords.organizationId, testOrgId));
-      await database.delete(creditTransactions).where(eq(creditTransactions.organizationId, testOrgId));
-      await database.delete(apiKeys).where(eq(apiKeys.organizationId, testOrgId));
+      await database
+        .delete(usageRecords)
+        .where(eq(usageRecords.organizationId, testOrgId));
+      await database
+        .delete(creditTransactions)
+        .where(eq(creditTransactions.organizationId, testOrgId));
+      await database
+        .delete(apiKeys)
+        .where(eq(apiKeys.organizationId, testOrgId));
       await database.delete(users).where(eq(users.id, testUserId));
-      await database.delete(organizations).where(eq(organizations.id, testOrgId));
+      await database
+        .delete(organizations)
+        .where(eq(organizations.id, testOrgId));
     } catch (error) {
       console.warn('Error cleaning up test data:', error);
     }
@@ -120,7 +144,7 @@ describe('Platform Database Integration', () => {
 
   it('should maintain database integrity', async () => {
     // Verify organization exists
-    const orgResult = await db
+    const orgResult = await database
       .select()
       .from(organizations)
       .where(eq(organizations.id, testOrgId))
@@ -130,7 +154,7 @@ describe('Platform Database Integration', () => {
     expect(orgResult[0].name).toBe('Test Organization');
 
     // Verify user exists
-    const userResult = await db
+    const userResult = await database
       .select()
       .from(users)
       .where(eq(users.id, testUserId))
@@ -144,7 +168,7 @@ describe('Platform Database Integration', () => {
     const startTime = Date.now();
 
     // Test query performance
-    const result = await db
+    const result = await database
       .select({
         orgName: organizations.name,
         userEmail: users.email,

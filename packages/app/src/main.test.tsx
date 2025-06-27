@@ -9,7 +9,6 @@ import { Window } from 'happy-dom';
 const window = new Window();
 const document = window.document;
 
-
 (globalThis as any).window = window;
 
 (globalThis as any).document = document;
@@ -169,7 +168,6 @@ function ElizaWrapper() {
 describe('ElizaWrapper', () => {
   it('should render without crashing', () => {
     // Mock the fetch function to simulate network error
-
 
     (globalThis as any).fetch = () => Promise.reject(new Error('Network error'));
 

@@ -13,7 +13,7 @@ import {
   and,
   desc,
   count,
-  ilike
+  ilike,
 } from '../database';
 
 import { OrganizationConfigService } from '../config/organization-config';
@@ -113,7 +113,7 @@ export class AgentService {
   async createAgent(
     organizationId: string,
     userId: string,
-    data: CreateAgentRequest
+    data: CreateAgentRequest,
   ): Promise<AgentWithStats> {
     await setDatabaseContext({
       organizationId,
@@ -123,15 +123,26 @@ export class AgentService {
     try {
       // Check if slug is unique within organization
       try {
-        const existingAgent = await this.getAgentBySlug(organizationId, data.slug);
+        const existingAgent = await this.getAgentBySlug(
+          organizationId,
+          data.slug,
+        );
         if (existingAgent) {
           throw new Error('Agent with this slug already exists');
         }
       } catch (error) {
         // Handle database errors in test environment
-        if (process.env.NODE_ENV === 'test' && (error as Error).message?.includes('does not exist')) {
-          console.warn('Database schema issue during slug check in test environment, proceeding:', (error as Error).message);
-        } else if ((error as Error).message !== 'Agent with this slug already exists') {
+        if (
+          process.env.NODE_ENV === 'test' &&
+          (error as Error).message?.includes('does not exist')
+        ) {
+          console.warn(
+            'Database schema issue during slug check in test environment, proceeding:',
+            (error as Error).message,
+          );
+        } else if (
+          (error as Error).message !== 'Agent with this slug already exists'
+        ) {
           throw error;
         }
       }
@@ -142,16 +153,19 @@ export class AgentService {
         pluginValidation = await this.configService.validateAgentPlugins(
           organizationId,
           userId,
-          data.plugins
+          data.plugins,
         );
       } catch (error) {
         // Handle validation errors in test environment
         if (process.env.NODE_ENV === 'test') {
-          console.warn('Plugin validation failed in test environment, using provided plugins:', (error as Error).message);
+          console.warn(
+            'Plugin validation failed in test environment, using provided plugins:',
+            (error as Error).message,
+          );
           pluginValidation = {
             isValid: true,
             mergedPlugins: data.plugins || [],
-            missingPlugins: []
+            missingPlugins: [],
           };
         } else {
           throw error;
@@ -160,12 +174,13 @@ export class AgentService {
 
       if (!pluginValidation.isValid) {
         throw new Error(
-          `Missing required plugins: ${pluginValidation.missingPlugins.join(', ')}`
+          `Missing required plugins: ${pluginValidation.missingPlugins.join(', ')}`,
         );
       }
 
       try {
-        const [created] = await this.db
+        const db = await this.getDb();
+        const [created] = await db
           .insert(agents)
           .values({
             organizationId,
@@ -185,8 +200,14 @@ export class AgentService {
         return this.mapAgentToStats(created);
       } catch (dbError) {
         // Handle database column issues in test environment
-        if (process.env.NODE_ENV === 'test' && (dbError as Error).message?.includes('does not exist')) {
-          console.warn('Database schema issue in test environment, creating minimal agent:', (dbError as Error).message);
+        if (
+          process.env.NODE_ENV === 'test' &&
+          (dbError as Error).message?.includes('does not exist')
+        ) {
+          console.warn(
+            'Database schema issue in test environment, creating minimal agent:',
+            (dbError as Error).message,
+          );
           // Return a mock agent object for tests
           return {
             id: `test-agent-${Date.now()}`,
@@ -231,7 +252,7 @@ export class AgentService {
       status?: string;
       visibility?: string;
       createdBy?: string;
-    } = {}
+    } = {},
   ): Promise<AgentWithStats[]> {
     await setDatabaseContext({ organizationId });
 
@@ -242,7 +263,7 @@ export class AgentService {
         search,
         status,
         visibility,
-        createdBy
+        createdBy,
       } = options;
 
       // Build where conditions array
@@ -253,7 +274,7 @@ export class AgentService {
       }
 
       // Note: deploymentStatus not yet in schema, but visibility and createdBy are available
-      
+
       // if (status) {
       //   conditions.push(eq(agents.deploymentStatus, status));
       // }
@@ -267,7 +288,8 @@ export class AgentService {
       }
 
       try {
-        const results = await this.db
+        const db = await this.getDb();
+        const results = await db
           .select()
           .from(agents)
           .where(and(...conditions))
@@ -277,8 +299,14 @@ export class AgentService {
         return results.map((agent: Agent) => this.mapAgentToStats(agent));
       } catch (error) {
         // Handle database column issues in test environment
-        if (process.env.NODE_ENV === 'test' && (error as Error).message?.includes('does not exist')) {
-          console.warn('Database schema issue in test environment, returning empty results:', (error as Error).message);
+        if (
+          process.env.NODE_ENV === 'test' &&
+          (error as Error).message?.includes('does not exist')
+        ) {
+          console.warn(
+            'Database schema issue in test environment, returning empty results:',
+            (error as Error).message,
+          );
           return [];
         }
         throw error;
@@ -293,12 +321,13 @@ export class AgentService {
    */
   async getAgentById(
     organizationId: string,
-    agentId: string
+    agentId: string,
   ): Promise<AgentWithStats | null> {
     await setDatabaseContext({ organizationId });
 
     try {
-      const [agent] = await this.db
+      const db = await this.getDb();
+      const [agent] = await db
         .select()
         .from(agents)
         .where(eq(agents.id, agentId))
@@ -315,29 +344,36 @@ export class AgentService {
    */
   async getAgentBySlug(
     organizationId: string,
-    slug: string
+    slug: string,
   ): Promise<AgentWithStats | null> {
     await setDatabaseContext({ organizationId });
 
     try {
       try {
         // Now using proper slug field from updated schema
-        const [agent] = await this.db
+        const db = await this.getDb();
+        const [agent] = await db
           .select()
           .from(agents)
           .where(
             and(
               eq(agents.organizationId, organizationId),
-              eq(agents.slug, slug)
-            )
+              eq(agents.slug, slug),
+            ),
           )
           .limit(1);
 
         return agent ? this.mapAgentToStats(agent) : null;
       } catch (error) {
         // Handle database column issues in test environment
-        if (process.env.NODE_ENV === 'test' && (error as Error).message?.includes('does not exist')) {
-          console.warn('Database schema issue in getAgentBySlug test environment, returning null:', (error as Error).message);
+        if (
+          process.env.NODE_ENV === 'test' &&
+          (error as Error).message?.includes('does not exist')
+        ) {
+          console.warn(
+            'Database schema issue in getAgentBySlug test environment, returning null:',
+            (error as Error).message,
+          );
           return null;
         }
         throw error;
@@ -354,7 +390,7 @@ export class AgentService {
     organizationId: string,
     agentId: string,
     updates: UpdateAgentRequest,
-    userId?: string
+    userId?: string,
   ): Promise<AgentWithStats | null> {
     await setDatabaseContext({
       organizationId,
@@ -364,7 +400,10 @@ export class AgentService {
     try {
       // Check if slug is unique (if changing)
       if (updates.slug) {
-        const existingAgent = await this.getAgentBySlug(organizationId, updates.slug);
+        const existingAgent = await this.getAgentBySlug(
+          organizationId,
+          updates.slug,
+        );
         if (existingAgent && existingAgent.id !== agentId) {
           throw new Error('Agent with this slug already exists');
         }
@@ -375,12 +414,12 @@ export class AgentService {
         const pluginValidation = await this.configService.validateAgentPlugins(
           organizationId,
           userId || '',
-          updates.plugins
+          updates.plugins,
         );
 
         if (!pluginValidation.isValid) {
           throw new Error(
-            `Missing required plugins: ${pluginValidation.missingPlugins.join(', ')}`
+            `Missing required plugins: ${pluginValidation.missingPlugins.join(', ')}`,
           );
         }
 
@@ -388,7 +427,8 @@ export class AgentService {
         updates.plugins = pluginValidation.mergedPlugins;
       }
 
-      const [updated] = await this.db
+      const db = await this.getDb();
+      const [updated] = await db
         .update(agents)
         .set({
           ...updates,
@@ -408,7 +448,7 @@ export class AgentService {
    */
   async getRequiredPlugins(
     organizationId: string,
-    userId: string
+    userId: string,
   ): Promise<string[]> {
     return this.configService.getRequiredPlugins(organizationId, userId);
   }
@@ -416,29 +456,22 @@ export class AgentService {
   /**
    * Get organization configuration
    */
-  async getOrganizationConfig(
-    organizationId: string,
-    userId: string
-  ) {
+  async getOrganizationConfig(organizationId: string, userId: string) {
     return this.configService.getConfig(organizationId, userId);
   }
 
   /**
    * Delete agent
    */
-  async deleteAgent(
-    organizationId: string,
-    agentId: string
-  ): Promise<boolean> {
+  async deleteAgent(organizationId: string, agentId: string): Promise<boolean> {
     await setDatabaseContext({
       organizationId,
       isAdmin: true, // Require admin for deletion
     });
 
     try {
-      await this.db
-        .delete(agents)
-        .where(eq(agents.id, agentId));
+      const db = await this.getDb();
+      await db.delete(agents).where(eq(agents.id, agentId));
 
       return true; // If no error was thrown, deletion was successful
     } finally {
@@ -451,7 +484,7 @@ export class AgentService {
    */
   async deployAgent(
     organizationId: string,
-    agentId: string
+    agentId: string,
   ): Promise<DeploymentResult> {
     await setDatabaseContext({ organizationId });
 
@@ -462,7 +495,8 @@ export class AgentService {
       }
 
       // Update deployment status to deploying
-      await this.db
+      const db = await this.getDb();
+      await db
         .update(agents)
         .set({
           // deploymentStatus: 'deploying', // TODO: Add to schema
@@ -473,18 +507,24 @@ export class AgentService {
 
       try {
         // Import the real ElizaOS runtime service
-        const { agentLifecycleManager } = await import('../runtime/agent-lifecycle');
+        const { agentLifecycleManager } = await import(
+          '../runtime/agent-lifecycle'
+        );
 
         // Deploy agent using real ElizaOS runtime
         const runtimeAgentId = await agentLifecycleManager.deployAgent(
           organizationId,
           agent.createdByUserId,
-          typeof agent.character === 'string' ? JSON.parse(agent.character) : agent.character,
-          Array.isArray(agent.plugins) ? agent.plugins : JSON.parse(agent.plugins || '[]')
+          typeof agent.character === 'string'
+            ? JSON.parse(agent.character)
+            : agent.character,
+          Array.isArray(agent.plugins)
+            ? agent.plugins
+            : JSON.parse(agent.plugins || '[]'),
         );
 
         // Update deployment status to deployed
-        await this.db
+        await db
           .update(agents)
           .set({
             // deploymentStatus: 'deployed', // TODO: Add to schema
@@ -498,22 +538,28 @@ export class AgentService {
         return {
           success: true,
           deploymentUrl: undefined, // No external URL for internal runtime
-          runtimeAgentId
+          runtimeAgentId,
         };
       } catch (deploymentError) {
         // Update deployment status to failed
-        await this.db
+        await db
           .update(agents)
           .set({
             // deploymentStatus: 'failed', // TODO: Add to schema
-            deploymentError: deploymentError instanceof Error ? deploymentError.message : 'Deployment failed',
+            deploymentError:
+              deploymentError instanceof Error
+                ? deploymentError.message
+                : 'Deployment failed',
             updatedAt: new Date(),
           })
           .where(eq(agents.id, agentId));
 
         return {
           success: false,
-          error: deploymentError instanceof Error ? deploymentError.message : 'Deployment failed'
+          error:
+            deploymentError instanceof Error
+              ? deploymentError.message
+              : 'Deployment failed',
         };
       }
     } finally {
@@ -524,15 +570,13 @@ export class AgentService {
   /**
    * Stop agent deployment
    */
-  async stopAgent(
-    organizationId: string,
-    agentId: string
-  ): Promise<boolean> {
+  async stopAgent(organizationId: string, agentId: string): Promise<boolean> {
     await setDatabaseContext({ organizationId });
 
     try {
       // Get agent details first
-      const [agent] = await this.db
+      const db = await this.getDb();
+      const [agent] = await db
         .select()
         .from(agents)
         .where(eq(agents.id, agentId))
@@ -545,21 +589,28 @@ export class AgentService {
       if (agent.runtimeAgentId) {
         try {
           // Import the real ElizaOS runtime service
-          const { agentLifecycleManager } = await import('../runtime/agent-lifecycle');
+          const { agentLifecycleManager } = await import(
+            '../runtime/agent-lifecycle'
+          );
 
           // Stop agent using real ElizaOS runtime
           await agentLifecycleManager.stopAgent(agent.runtimeAgentId as any);
         } catch (error) {
           if (process.env.NODE_ENV === 'test') {
-            console.warn('ElizaOS runtime not available in test environment, skipping agent stop');
+            console.warn(
+              'ElizaOS runtime not available in test environment, skipping agent stop',
+            );
           } else {
-            console.warn('Failed to stop agent in runtime:', (error as Error).message);
+            console.warn(
+              'Failed to stop agent in runtime:',
+              (error as Error).message,
+            );
           }
         }
       }
 
       // Update database status
-      await this.db
+      await db
         .update(agents)
         .set({
           // deploymentStatus: 'draft', // TODO: Add to schema
@@ -582,26 +633,31 @@ export class AgentService {
     await setDatabaseContext({ organizationId });
 
     try {
-      const [totalResult] = await this.db
+      const db = await this.getDb();
+      const [totalResult] = await db
         .select({ count: count() })
         .from(agents)
         .where(eq(agents.organizationId, organizationId));
 
-      const [activeResult] = await this.db
+      const [activeResult] = await db
         .select({ count: count() })
         .from(agents)
-        .where(and(
-          eq(agents.organizationId, organizationId),
-          eq(agents.isActive, true) // Using isActive as proxy for deployed
-        ));
+        .where(
+          and(
+            eq(agents.organizationId, organizationId),
+            eq(agents.isActive, true), // Using isActive as proxy for deployed
+          ),
+        );
 
-      const [draftResult] = await this.db
+      const [draftResult] = await db
         .select({ count: count() })
         .from(agents)
-        .where(and(
-          eq(agents.organizationId, organizationId),
-          eq(agents.isActive, false) // Using isActive as proxy for draft
-        ));
+        .where(
+          and(
+            eq(agents.organizationId, organizationId),
+            eq(agents.isActive, false), // Using isActive as proxy for draft
+          ),
+        );
 
       // Calculate actual totals from runtime service
       let totalInteractions = 0;
@@ -609,10 +665,13 @@ export class AgentService {
 
       try {
         // Import the real ElizaOS runtime service
-        const { elizaRuntimeService } = await import('../runtime/eliza-service');
+        const { elizaRuntimeService } = await import(
+          '../runtime/eliza-service'
+        );
 
         // Get organization agents and their stats
-        const orgAgents = await elizaRuntimeService.getOrganizationAgents(organizationId);
+        const orgAgents =
+          await elizaRuntimeService.getOrganizationAgents(organizationId);
 
         for (const agent of orgAgents) {
           const stats = await elizaRuntimeService.getAgentStats(agent.agentId);
@@ -624,9 +683,14 @@ export class AgentService {
       } catch (error) {
         // In test environments or when ElizaOS runtime is not available, gracefully skip runtime stats
         if (process.env.NODE_ENV === 'test') {
-          console.warn('Runtime stats not available in test environment, using defaults');
+          console.warn(
+            'Runtime stats not available in test environment, using defaults',
+          );
         } else {
-          console.warn('Failed to get runtime stats:', (error as Error).message);
+          console.warn(
+            'Failed to get runtime stats:',
+            (error as Error).message,
+          );
         }
       }
 
@@ -647,7 +711,7 @@ export class AgentService {
    */
   async generateUniqueSlug(
     organizationId: string,
-    baseName: string
+    baseName: string,
   ): Promise<string> {
     const baseSlug = baseName
       .toLowerCase()
@@ -675,11 +739,18 @@ export class AgentService {
     const errors: string[] = [];
 
     // Required fields
-    if (!character.name) {errors.push('Character name is required');}
-    if (!character.bio) {errors.push('Character bio is required');}
+    if (!character.name) {
+      errors.push('Character name is required');
+    }
+    if (!character.bio) {
+      errors.push('Character bio is required');
+    }
 
     // Optional but recommended fields
-    if (character.messageExamples && !Array.isArray(character.messageExamples)) {
+    if (
+      character.messageExamples &&
+      !Array.isArray(character.messageExamples)
+    ) {
       errors.push('Message examples must be an array');
     }
 

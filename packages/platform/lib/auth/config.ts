@@ -3,8 +3,4 @@
  * Provides compatibility for different import paths
  */
 
-export {
-  authOptions,
-  getServerSession,
-  getSession
-} from './auth-config';
+export { authOptions, getServerSession, getSession } from './auth-config';

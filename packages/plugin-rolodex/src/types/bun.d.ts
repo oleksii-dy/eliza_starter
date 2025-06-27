@@ -4,7 +4,7 @@ declare module 'bun:sqlite' {
     run: (sql: string) => any;
     close: () => void;
   }
-  
+
   export default class Database {
     constructor(path: string);
     query: (sql: string) => any;

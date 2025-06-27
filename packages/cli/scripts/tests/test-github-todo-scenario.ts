@@ -9,12 +9,12 @@ import { githubTodoWorkflowScenario } from '../../scenarios/plugin-tests/02-gith
 
 async function testGitHubTodoWorkflow() {
   console.log('🔄 Testing GitHub Todo Workflow Scenario...');
-  
+
   try {
     const result = await executeRealScenario(githubTodoWorkflowScenario, {
       verbose: false,
       timeout: 120000,
-      maxSteps: 15
+      maxSteps: 15,
     });
 
     console.log(`📊 Result: ${result.passed ? 'PASSED' : 'FAILED'}`);

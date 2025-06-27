@@ -1,7 +1,4 @@
-import {
-  Service,
-  type IAgentRuntime,
-} from '@elizaos/core';
+import { Service, type IAgentRuntime } from '@elizaos/core';
 import { Anthropic } from '@anthropic-ai/sdk';
 // import EnhancedSecretManager from '@elizaos/plugin-secrets-manager';
 import * as fs from 'fs-extra';
@@ -304,7 +301,9 @@ export class PluginCreationService extends Service {
 
   private async processJob(jobId: string, apiKeyOverride?: string): Promise<void> {
     const job = this.jobs.get(jobId);
-    if (!job) {return;}
+    if (!job) {
+      return;
+    }
 
     try {
       job.status = 'running';
@@ -341,7 +340,9 @@ export class PluginCreationService extends Service {
 
       // Clean up on failure
       if (job.outputPath) {
-        await fs.rm(job.outputPath, { recursive: true, force: true }).catch(() => { /* empty */ });
+        await fs.rm(job.outputPath, { recursive: true, force: true }).catch(() => {
+          /* empty */
+        });
       }
     } finally {
       // Clear timeout
@@ -390,7 +391,7 @@ export class PluginCreationService extends Service {
       if (content.type === 'text') {
         await this.parseAndWriteAIResponse(job, content.text);
       }
-    } catch (error) {
+    } catch (_error) {
       job.logs.push('AI generation failed, falling back to templates');
       await this.generatePluginWithTemplates(job);
     }
@@ -472,8 +473,13 @@ export class PluginCreationService extends Service {
             acc[dep] = 'latest';
             return acc;
           },
-          { /* empty */ } as Record<string, string>
-        ) || { /* empty */ }),
+          {
+            /* empty */
+          } as Record<string, string>
+        ) ||
+          {
+            /* empty */
+          }),
       },
       devDependencies: {
         typescript: '^5.0.0',

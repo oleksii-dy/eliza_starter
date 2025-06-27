@@ -3,7 +3,7 @@
  * This runs at the very beginning to prevent dependency loading issues
  */
 
-import { mock  } from 'bun:test';
+import { mock } from 'bun:test';
 
 // Set up global environment variables for testing
 process.env.NODE_ENV = 'test';

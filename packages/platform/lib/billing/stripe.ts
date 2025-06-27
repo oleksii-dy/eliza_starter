@@ -8,9 +8,18 @@ import { getDatabase } from '../database/connection';
 import { creditTransactions, organizations } from '../database/schema';
 import { eq, desc, and, gte, lte } from 'drizzle-orm';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-02-24.acacia',
-});
+// Initialize Stripe only if the secret key is available
+let stripe: Stripe | null = null;
+
+if (process.env.STRIPE_SECRET_KEY) {
+  stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2025-02-24.acacia',
+  });
+} else {
+  console.warn(
+    'Stripe configuration is missing. Billing features will be disabled.',
+  );
+}
 
 export interface CreatePaymentIntentOptions {
   amount: number; // in cents
@@ -43,6 +52,12 @@ export class StripeService {
   static async createPaymentIntent(
     options: CreatePaymentIntentOptions,
   ): Promise<Stripe.PaymentIntent> {
+    if (!stripe) {
+      throw new Error(
+        'Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.',
+      );
+    }
+
     const {
       amount,
       currency = 'usd',
@@ -79,6 +94,12 @@ export class StripeService {
   static async createCheckoutSession(
     options: CreateCheckoutSessionOptions,
   ): Promise<Stripe.Checkout.Session> {
+    if (!stripe) {
+      throw new Error(
+        'Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.',
+      );
+    }
+
     const {
       priceId,
       organizationId,
@@ -128,6 +149,11 @@ export class StripeService {
       // Use database transaction for atomic operation
       await db.transaction(async (tx: any) => {
         // Verify payment intent
+        if (!stripe) {
+          throw new Error(
+            'Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.',
+          );
+        }
         const paymentIntent =
           await stripe.paymentIntents.retrieve(paymentIntentId);
 
@@ -331,9 +357,12 @@ export class StripeService {
         .from(creditTransactions)
         .where(eq(creditTransactions.organizationId, organizationId));
 
-      const transactionBalance = transactions.reduce((total: number, transaction: any) => {
-        return total + parseFloat(transaction.amount);
-      }, 0);
+      const transactionBalance = transactions.reduce(
+        (total: number, transaction: any) => {
+          return total + parseFloat(transaction.amount);
+        },
+        0,
+      );
 
       const difference = Math.abs(organizationBalance - transactionBalance);
       const isConsistent = difference < 0.01; // Allow for floating point precision
@@ -419,7 +448,10 @@ export class StripeService {
 
       const monthlyUsage = monthlyTransactions
         .filter((t: any) => t.type === 'usage')
-        .reduce((total: number, t: any) => total + Math.abs(parseFloat(t.amount)), 0);
+        .reduce(
+          (total: number, t: any) => total + Math.abs(parseFloat(t.amount)),
+          0,
+        );
 
       const monthlyPurchases = monthlyTransactions
         .filter((t: any) => t.type === 'purchase')
@@ -537,6 +569,12 @@ export class StripeService {
     organizationId: string,
     email: string,
   ): Promise<Stripe.Customer> {
+    if (!stripe) {
+      throw new Error(
+        'Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.',
+      );
+    }
+
     try {
       // Try to find existing customer
       const customers = await stripe.customers.list({
@@ -570,7 +608,17 @@ export class StripeService {
     payload: string,
     signature: string,
   ): Stripe.Event {
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+    if (!stripe) {
+      throw new Error(
+        'Stripe is not configured. Please set STRIPE_SECRET_KEY environment variable.',
+      );
+    }
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      throw new Error(
+        'Stripe webhook secret is not configured. Please set STRIPE_WEBHOOK_SECRET environment variable.',
+      );
+    }
 
     try {
       return stripe.webhooks.constructEvent(payload, signature, webhookSecret);

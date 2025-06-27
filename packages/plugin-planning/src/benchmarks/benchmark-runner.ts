@@ -108,7 +108,9 @@ export class BenchmarkRunner {
     this.memoryTracker.start();
 
     logger.info('[BenchmarkRunner] Starting comprehensive planning benchmarks');
-    logger.info(`[BenchmarkRunner] REALM-Bench: ${this.config.runRealmBench ? 'enabled' : 'disabled'}`);
+    logger.info(
+      `[BenchmarkRunner] REALM-Bench: ${this.config.runRealmBench ? 'enabled' : 'disabled'}`
+    );
     logger.info(`[BenchmarkRunner] API-Bank: ${this.config.runApiBank ? 'enabled' : 'disabled'}`);
 
     try {
@@ -149,12 +151,11 @@ export class BenchmarkRunner {
 
       logger.info(
         '[BenchmarkRunner] Benchmarks completed successfully: ' +
-        `${finalResults.overallMetrics.totalPassed}/${finalResults.overallMetrics.totalTests} passed ` +
-        `(${(finalResults.overallMetrics.overallSuccessRate * 100).toFixed(1)}%)`
+          `${finalResults.overallMetrics.totalPassed}/${finalResults.overallMetrics.totalTests} passed ` +
+          `(${(finalResults.overallMetrics.overallSuccessRate * 100).toFixed(1)}%)`
       );
 
       return finalResults;
-
     } catch (error) {
       logger.error('[BenchmarkRunner] Benchmark execution failed:', error);
       throw new Error(`Benchmark execution failed: ${(error as Error).message}`);
@@ -194,9 +195,9 @@ export class BenchmarkRunner {
 
       // Validate provider availability
       if (this.config.enabledProviders) {
-        const availableProviders = this.runtime.providers.map(p => p.name);
+        const availableProviders = this.runtime.providers.map((p) => p.name);
         const missingProviders = this.config.enabledProviders.filter(
-          name => !availableProviders.includes(name)
+          (name) => !availableProviders.includes(name)
         );
 
         if (missingProviders.length > 0) {
@@ -205,9 +206,12 @@ export class BenchmarkRunner {
       }
 
       logger.info('[BenchmarkRunner] Runtime initialized successfully');
-      logger.info(`[BenchmarkRunner] Available providers: ${this.runtime.providers.map(p => p.name).join(', ')}`);
-      logger.info(`[BenchmarkRunner] Available actions: ${this.runtime.actions.map(a => a.name).join(', ')}`);
-
+      logger.info(
+        `[BenchmarkRunner] Available providers: ${this.runtime.providers.map((p) => p.name).join(', ')}`
+      );
+      logger.info(
+        `[BenchmarkRunner] Available actions: ${this.runtime.actions.map((a) => a.name).join(', ')}`
+      );
     } catch (error) {
       logger.error('[BenchmarkRunner] Runtime initialization failed:', error);
       throw new Error(`Failed to initialize runtime: ${(error as Error).message}`);
@@ -347,7 +351,7 @@ export class BenchmarkRunner {
     if (results.realmBenchResults) {
       const realm = results.realmBenchResults;
 
-      // Check category performance  
+      // Check category performance
       Object.entries(realm.summary.taskCategories).forEach(([category, stats]) => {
         if (stats.successRate > 0.8) {
           strengths.push(`Strong performance in ${category} planning tasks`);
@@ -446,7 +450,9 @@ export class BenchmarkRunner {
     }
 
     if (comparison.strengthsAndWeaknesses.weaknesses.length > 0) {
-      keyFindings.push(`${comparison.strengthsAndWeaknesses.weaknesses.length} improvement areas identified`);
+      keyFindings.push(
+        `${comparison.strengthsAndWeaknesses.weaknesses.length} improvement areas identified`
+      );
     }
 
     return {
@@ -474,8 +480,9 @@ export class BenchmarkRunner {
       await fs.promises.writeFile(summaryPath, summaryMarkdown);
 
       logger.info(`[BenchmarkRunner] Results saved to ${this.config.outputDir}`);
-      logger.info(`[BenchmarkRunner] Summary: ${results.summary.status} (${results.summary.performanceScore}/100)`);
-
+      logger.info(
+        `[BenchmarkRunner] Summary: ${results.summary.status} (${results.summary.performanceScore}/100)`
+      );
     } catch (error) {
       logger.error('[BenchmarkRunner] Failed to save results:', error);
       throw new Error(`Failed to save results: ${(error as Error).message}`);
@@ -498,7 +505,7 @@ export class BenchmarkRunner {
 - **Duration**: ${(metadata.duration / 1000).toFixed(1)}s
 
 ## Key Findings
-${summary.keyFindings.map(finding => `- ${finding}`).join('\n')}
+${summary.keyFindings.map((finding) => `- ${finding}`).join('\n')}
 
 ## Performance Metrics
 - **Average Planning Time**: ${overallMetrics.averagePlanningTime.toFixed(0)}ms
@@ -507,28 +514,36 @@ ${summary.keyFindings.map(finding => `- ${finding}`).join('\n')}
 - **Average Memory Usage**: ${(overallMetrics.memoryUsage.average / 1024 / 1024).toFixed(1)}MB
 
 ## Strengths
-${comparison.strengthsAndWeaknesses.strengths.map(strength => `- ${strength}`).join('\n')}
+${comparison.strengthsAndWeaknesses.strengths.map((strength) => `- ${strength}`).join('\n')}
 
 ## Areas for Improvement
-${comparison.strengthsAndWeaknesses.weaknesses.map(weakness => `- ${weakness}`).join('\n')}
+${comparison.strengthsAndWeaknesses.weaknesses.map((weakness) => `- ${weakness}`).join('\n')}
 
 ## Recommendations
-${comparison.strengthsAndWeaknesses.recommendations.map(rec => `- ${rec}`).join('\n')}
+${comparison.strengthsAndWeaknesses.recommendations.map((rec) => `- ${rec}`).join('\n')}
 
-${results.realmBenchResults ? `
+${
+  results.realmBenchResults
+    ? `
 ## REALM-Bench Results
 - **Tests**: ${results.realmBenchResults.totalTests} (${results.realmBenchResults.passedTests} passed)
-- **Success Rate**: ${(results.realmBenchResults.passedTests / results.realmBenchResults.totalTests * 100).toFixed(1)}%
+- **Success Rate**: ${((results.realmBenchResults.passedTests / results.realmBenchResults.totalTests) * 100).toFixed(1)}%
 - **Plan Quality**: ${(results.realmBenchResults.averagePlanQuality * 100).toFixed(1)}%
-` : ''}
+`
+    : ''
+}
 
-${results.apiBankResults ? `
+${
+  results.apiBankResults
+    ? `
 ## API-Bank Results
 - **Tests**: ${results.apiBankResults.totalTests} (${results.apiBankResults.passedTests} passed)
-- **Success Rate**: ${(results.apiBankResults.passedTests / results.apiBankResults.totalTests * 100).toFixed(1)}%
+- **Success Rate**: ${((results.apiBankResults.passedTests / results.apiBankResults.totalTests) * 100).toFixed(1)}%
 - **API Call Accuracy**: ${(results.apiBankResults.overallMetrics.averageApiCallAccuracy * 100).toFixed(1)}%
 - **Response Quality**: ${(results.apiBankResults.overallMetrics.averageResponseQuality * 100).toFixed(1)}%
-` : ''}
+`
+    : ''
+}
 
 ---
 *Generated on ${metadata.timestamp}*
@@ -569,7 +584,9 @@ class MemoryTracker {
   }
 
   start(): void {
-    if (!this.enabled) {return;}
+    if (!this.enabled) {
+      return;
+    }
 
     this.measurements = [];
     this.interval = setInterval(() => {
@@ -591,7 +608,8 @@ class MemoryTracker {
     }
 
     const peakUsage = Math.max(...this.measurements);
-    const averageUsage = this.measurements.reduce((sum, val) => sum + val, 0) / this.measurements.length;
+    const averageUsage =
+      this.measurements.reduce((sum, val) => sum + val, 0) / this.measurements.length;
 
     return { peakUsage, averageUsage };
   }

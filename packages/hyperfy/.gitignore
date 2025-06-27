@@ -67,3 +67,7 @@ test-results/
 playwright-report/
 # Drizzle
 drizzle/
+AGENTS.md
+.cursor/rules/elizaos
+CLAUDE.md
+.cursorignore

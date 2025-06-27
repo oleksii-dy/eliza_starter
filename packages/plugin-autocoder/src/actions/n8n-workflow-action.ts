@@ -1,9 +1,4 @@
-import { Action,
-  IAgentRuntime,
-  Memory,
-  State,
-  HandlerCallback,
-  ActionResult } from '@elizaos/core';
+import { Action, IAgentRuntime, Memory, State, HandlerCallback, ActionResult } from '@elizaos/core';
 import { N8nWorkflowService } from '../services/N8nWorkflowService';
 import { validatePrompt } from '../utils/validation';
 import { z } from 'zod';
@@ -242,7 +237,7 @@ export const checkN8nWorkflowStatusAction: Action = {
   similes: ['n8n status', 'workflow progress', 'check n8n workflow'],
   validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
     const service = runtime.getService<N8nWorkflowService>('n8n-workflow');
-    return service && service.getActiveJobs().length > 0;
+    return !!(service && service.getActiveJobs().length > 0);
   },
   handler: async (
     runtime: IAgentRuntime,
@@ -252,6 +247,12 @@ export const checkN8nWorkflowStatusAction: Action = {
     _callback?: HandlerCallback
   ): Promise<ActionResult> => {
     const service = runtime.getService<N8nWorkflowService>('n8n-workflow');
+    if (!service) {
+      return {
+        text: 'N8n workflow service not available.',
+        data: { error: 'Service not available' },
+      };
+    }
     const jobs = service.getAllJobs();
 
     if (jobs.length === 0) {

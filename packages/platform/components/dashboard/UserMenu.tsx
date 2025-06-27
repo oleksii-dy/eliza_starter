@@ -10,10 +10,10 @@ interface UserMenuProps {
   onLogout: () => Promise<void>;
 }
 
-export function UserMenu({ 
-  sidebarOpen, 
-  onToggleSidebar, 
-  onLogout 
+export function UserMenu({
+  sidebarOpen,
+  onToggleSidebar,
+  onLogout,
 }: UserMenuProps) {
   const menuItems = [
     {
@@ -32,10 +32,7 @@ export function UserMenu({
 
   return (
     <div className="flex items-center space-x-4">
-      <MobileMenuButton 
-        isOpen={sidebarOpen} 
-        onToggle={onToggleSidebar} 
-      />
+      <MobileMenuButton isOpen={sidebarOpen} onToggle={onToggleSidebar} />
       <Dropdown menuItems={menuItems}>Account</Dropdown>
     </div>
   );

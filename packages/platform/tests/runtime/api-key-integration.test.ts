@@ -4,13 +4,29 @@
  */
 
 import { db, getDatabase } from '@/lib/database';
-import { apiKeys, creditTransactions, organizations, usageRecords, users } from '@/lib/database/schema';
+import {
+  apiKeys,
+  creditTransactions,
+  organizations,
+  usageRecords,
+  users,
+} from '@/lib/database/schema';
 import { createApiKey } from '@/lib/server/services/api-key-service';
 import { addCredits } from '@/lib/server/services/billing-service';
 import { trackUsage } from '@/lib/server/services/usage-tracking-service';
 import { IAgentRuntime } from '@elizaos/core';
-import { createTestRuntime, RuntimeTestHarness } from '@elizaos/core/test-utils';
-import { afterAll, beforeAll, beforeEach, describe, expect, test } from '@jest/globals';
+import {
+  createTestRuntime,
+  RuntimeTestHarness,
+} from '@elizaos/core/test-utils';
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+} from '@jest/globals';
 import { eq } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -35,25 +51,29 @@ describe('API Key Integration with ElizaOS Runtime', () => {
 
     // Create test runtime - handle ESM compatibility issues
     try {
-      const { runtime: testRuntime, harness: testHarness } = await createTestRuntime({
-        character: {
-          name: 'TestAgent',
-          bio: ['Test agent for API key integration'],
-          system: 'You are a test agent.',
-          messageExamples: [],
-          postExamples: [],
-          topics: ['testing'],
-          knowledge: [],
-          plugins: [],
-        },
-      });
+      const { runtime: testRuntime, harness: testHarness } =
+        await createTestRuntime({
+          character: {
+            name: 'TestAgent',
+            bio: ['Test agent for API key integration'],
+            system: 'You are a test agent.',
+            messageExamples: [],
+            postExamples: [],
+            topics: ['testing'],
+            knowledge: [],
+            plugins: [],
+          },
+        });
 
       runtime = testRuntime;
       harness = testHarness;
 
       console.log('Test runtime created successfully');
     } catch (error) {
-      console.warn('Runtime creation failed (ESM compatibility issue):', (error as Error).message);
+      console.warn(
+        'Runtime creation failed (ESM compatibility issue):',
+        (error as Error).message,
+      );
       // Tests will skip when runtime is null
     }
   });
@@ -73,32 +93,44 @@ describe('API Key Integration with ElizaOS Runtime', () => {
 
     // Clean up test data (in case of leftover data)
     try {
-      await database.delete(usageRecords).where(eq(usageRecords.organizationId, TEST_ORG_ID));
-      await database.delete(apiKeys).where(eq(apiKeys.organizationId, TEST_ORG_ID));
+      await database
+        .delete(usageRecords)
+        .where(eq(usageRecords.organizationId, TEST_ORG_ID));
+      await database
+        .delete(apiKeys)
+        .where(eq(apiKeys.organizationId, TEST_ORG_ID));
       await database.delete(users).where(eq(users.organizationId, TEST_ORG_ID));
-      await database.delete(organizations).where(eq(organizations.id, TEST_ORG_ID));
+      await database
+        .delete(organizations)
+        .where(eq(organizations.id, TEST_ORG_ID));
     } catch (error) {
       // Ignore cleanup errors for non-existent data
     }
 
     // Create test organization
-    const [org] = await database.insert(organizations).values({
-      id: TEST_ORG_ID,
-      name: 'Test Organization',
-      slug: TEST_ORG_ID,
-      creditBalance: '100.0', // $100 in test credits
-    }).returning();
+    const [org] = await database
+      .insert(organizations)
+      .values({
+        id: TEST_ORG_ID,
+        name: 'Test Organization',
+        slug: TEST_ORG_ID,
+        creditBalance: '100.0', // $100 in test credits
+      })
+      .returning();
     testOrgId = org.id;
 
     // Create test user
-    const [user] = await database.insert(users).values({
-      id: TEST_USER_ID,
-      organizationId: testOrgId,
-      email: 'test@example.com',
-      firstName: 'Test',
-      lastName: 'User',
-      role: 'admin',
-    }).returning();
+    const [user] = await database
+      .insert(users)
+      .values({
+        id: TEST_USER_ID,
+        organizationId: testOrgId,
+        email: 'test@example.com',
+        firstName: 'Test',
+        lastName: 'User',
+        role: 'admin',
+      })
+      .returning();
     testUserId = user.id;
 
     // Create test API key
@@ -226,15 +258,18 @@ describe('API Key Integration with ElizaOS Runtime', () => {
       expect(runtime.character.name).toBe('TestAgent');
 
       // Test runtime database operations
-      await runtime.createMemory({
-        id: '12345678-1234-5678-9abc-123456789001' as const,
-        entityId: '87654321-4321-8765-cba9-876543210001' as const,
-        roomId: uuidv4() as any,
-        content: {
-          text: 'Test memory for API key integration',
-          source: 'api-key-test',
+      await runtime.createMemory(
+        {
+          id: '12345678-1234-5678-9abc-123456789001' as const,
+          entityId: '87654321-4321-8765-cba9-876543210001' as const,
+          roomId: uuidv4() as any,
+          content: {
+            text: 'Test memory for API key integration',
+            source: 'api-key-test',
+          },
         },
-      }, 'memories');
+        'memories',
+      );
 
       const memories = await runtime.getMemories({
         roomId: uuidv4() as any,
@@ -244,7 +279,9 @@ describe('API Key Integration with ElizaOS Runtime', () => {
 
       expect(memories).toBeDefined();
       expect(memories.length).toBeGreaterThan(0);
-      expect(memories[0].content.text).toBe('Test memory for API key integration');
+      expect(memories[0].content.text).toBe(
+        'Test memory for API key integration',
+      );
     });
 
     test('should use runtime for model calls', async () => {
@@ -298,7 +335,10 @@ describe('API Key Integration with ElizaOS Runtime', () => {
         const runtimeRecord = records.find((r: any) => r.metadata.runtimeTest);
         expect(runtimeRecord).toBeDefined();
       } catch (error) {
-        console.warn('Model test failed, likely due to API configuration:', error);
+        console.warn(
+          'Model test failed, likely due to API configuration:',
+          error,
+        );
       }
     });
   });
@@ -336,9 +376,11 @@ describe('API Key Integration with ElizaOS Runtime', () => {
           completion_tokens: 25,
           total_tokens: 75,
         },
-        choices: [{
-          message: { content: 'Mock response for testing' }
-        }]
+        choices: [
+          {
+            message: { content: 'Mock response for testing' },
+          },
+        ],
       };
 
       const duration = Date.now() - startTime;
@@ -436,13 +478,13 @@ describe('API Key Integration with ElizaOS Runtime', () => {
               concurrentTest: true,
               requestIndex: i,
             },
-          })
+          }),
         );
       }
 
       const results = await Promise.all(promises);
       expect(results).toHaveLength(requestCount);
-      expect(results.every(id => typeof id === 'string')).toBe(true);
+      expect(results.every((id) => typeof id === 'string')).toBe(true);
 
       // Verify all records were created
       const records = await database
@@ -450,12 +492,16 @@ describe('API Key Integration with ElizaOS Runtime', () => {
         .from(usageRecords)
         .where(eq(usageRecords.organizationId, testOrgId));
 
-      const concurrentRecords = records.filter((r: any) => r.metadata.concurrentTest);
+      const concurrentRecords = records.filter(
+        (r: any) => r.metadata.concurrentTest,
+      );
       expect(concurrentRecords).toHaveLength(requestCount);
 
       // Verify data integrity
       for (let i = 0; i < requestCount; i++) {
-        const record = concurrentRecords.find((r: any) => r.metadata.requestIndex === i);
+        const record = concurrentRecords.find(
+          (r: any) => r.metadata.requestIndex === i,
+        );
         expect(record).toBeDefined();
         expect(record.inputTokens).toBe(10 + i);
         expect(record.outputTokens).toBe(5 + i);
@@ -471,15 +517,23 @@ afterAll(async () => {
   try {
     if (!database) database = await getDatabase();
     // First, clean up dependent records
-    await database.delete(usageRecords).where(eq(usageRecords.organizationId, TEST_ORG_ID));
+    await database
+      .delete(usageRecords)
+      .where(eq(usageRecords.organizationId, TEST_ORG_ID));
 
     // Clean up credit transactions before users (foreign key dependency)
-    await database.delete(creditTransactions).where(eq(creditTransactions.organizationId, TEST_ORG_ID));
+    await database
+      .delete(creditTransactions)
+      .where(eq(creditTransactions.organizationId, TEST_ORG_ID));
 
     // Then clean up API keys and users
-    await database.delete(apiKeys).where(eq(apiKeys.organizationId, TEST_ORG_ID));
+    await database
+      .delete(apiKeys)
+      .where(eq(apiKeys.organizationId, TEST_ORG_ID));
     await database.delete(users).where(eq(users.organizationId, TEST_ORG_ID));
-    await database.delete(organizations).where(eq(organizations.id, TEST_ORG_ID));
+    await database
+      .delete(organizations)
+      .where(eq(organizations.id, TEST_ORG_ID));
   } catch (error) {
     console.warn('Error cleaning up test data:', error);
   }

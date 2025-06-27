@@ -120,3 +120,6 @@ agent
   .option('-r, --remote-url <url>', 'URL of the remote agent runtime')
   .option('-p, --port <port>', 'Port to listen on', (val) => Number.parseInt(val, 10))
   .action(clearAgentMemories);
+
+// Export default for compatibility
+export default agent;

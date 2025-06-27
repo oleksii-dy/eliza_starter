@@ -10,7 +10,7 @@ function asUUID(str: string): UUID {
   }
   // Otherwise create a deterministic UUID from the string
   const hash = str.split('').reduce((a, b) => {
-    a = ((a << 5) - a) + b.charCodeAt(0);
+    a = (a << 5) - a + b.charCodeAt(0);
     return a & a;
   }, 0);
   const hex = Math.abs(hash).toString(16).padStart(8, '0');
@@ -36,20 +36,20 @@ describe('Admin Chat Real Runtime Tests', () => {
       messageExamples: [
         [
           { name: 'user', content: { text: 'Hello' } },
-          { name: 'AdminTestAgent', content: { text: 'Hello! How can I help you today?' } }
-        ]
+          { name: 'AdminTestAgent', content: { text: 'Hello! How can I help you today?' } },
+        ],
       ],
       postExamples: ['Working on admin chat testing'],
       topics: ['testing', 'admin', 'autonomy'],
       knowledge: [],
       plugins: [],
-      settings: {}
+      settings: {},
     };
 
     const testResult = await createTestRuntime({
       character: testCharacter,
       plugins: [autoPlugin],
-      apiKeys: { OPENAI_API_KEY: 'test-key' }
+      apiKeys: { OPENAI_API_KEY: 'test-key' },
     });
 
     runtime = testResult.runtime;
@@ -77,7 +77,7 @@ describe('Admin Chat Real Runtime Tests', () => {
         id: asUUID('initial-test-msg'),
         entityId: webGuiUserId,
         roomId: testRoomId,
-        content: { text: 'Initial test message' }
+        content: { text: 'Initial test message' },
       };
 
       let result = await adminChatProvider.get(runtime, initialTestMessage, {} as any);
@@ -92,7 +92,7 @@ describe('Admin Chat Real Runtime Tests', () => {
         id: asUUID('set-admin-message'),
         entityId: webGuiUserId,
         roomId: testRoomId,
-        content: { text: 'Set me as admin' }
+        content: { text: 'Set me as admin' },
       };
 
       // Store the setup message in real database
@@ -133,9 +133,9 @@ describe('Admin Chat Real Runtime Tests', () => {
           roomId: testRoomId,
           content: {
             text: 'Monitor the system status every 30 minutes and report any issues',
-            source: 'web_gui'
+            source: 'web_gui',
           },
-          createdAt: Date.now()
+          createdAt: Date.now(),
         },
         {
           id: asUUID('admin-msg-2'),
@@ -143,9 +143,9 @@ describe('Admin Chat Real Runtime Tests', () => {
           roomId: testRoomId,
           content: {
             text: 'Prioritize security alerts and user support requests immediately',
-            source: 'web_gui'
+            source: 'web_gui',
           },
-          createdAt: Date.now() + 1000
+          createdAt: Date.now() + 1000,
         },
         {
           id: asUUID('admin-msg-3'),
@@ -153,10 +153,10 @@ describe('Admin Chat Real Runtime Tests', () => {
           roomId: testRoomId,
           content: {
             text: 'If system performance drops below 95%, alert me via admin chat',
-            source: 'web_gui'
+            source: 'web_gui',
           },
-          createdAt: Date.now() + 2000
-        }
+          createdAt: Date.now() + 2000,
+        },
       ];
 
       for (const msg of adminMessages) {
@@ -174,8 +174,8 @@ describe('Admin Chat Real Runtime Tests', () => {
         content: {
           text: 'What should I do next?',
           thought: 'Checking for admin guidance in autonomous mode',
-          providers: ['ADMIN_CHAT']
-        }
+          providers: ['ADMIN_CHAT'],
+        },
       };
 
       result = await adminChatProvider.get(runtime, autonomousMessage, {} as any);
@@ -200,9 +200,9 @@ describe('Admin Chat Real Runtime Tests', () => {
         roomId: testRoomId,
         content: {
           text: 'Hello agent, I am just a regular user!',
-          source: 'web_gui'
+          source: 'web_gui',
         },
-        createdAt: Date.now() + 3000
+        createdAt: Date.now() + 3000,
       };
 
       await runtime.createMemory(nonAdminMessage, 'memories');
@@ -222,16 +222,18 @@ describe('Admin Chat Real Runtime Tests', () => {
       const allMemories = await runtime.getMemories({
         roomId: testRoomId,
         count: 10,
-        tableName: 'memories'
+        tableName: 'memories',
       });
 
-      const adminMemories = allMemories.filter(m => m.entityId === webGuiUserId);
-      const nonAdminMemories = allMemories.filter(m => m.entityId === nonAdminUserId);
+      const adminMemories = allMemories.filter((m) => m.entityId === webGuiUserId);
+      const nonAdminMemories = allMemories.filter((m) => m.entityId === nonAdminUserId);
 
       expect(adminMemories.length).toBeGreaterThanOrEqual(4); // Setup + 3 admin messages
       expect(nonAdminMemories.length).toBe(1);
 
-      console.log(`✅ Database contains ${adminMemories.length} admin messages and ${nonAdminMemories.length} non-admin messages`);
+      console.log(
+        `✅ Database contains ${adminMemories.length} admin messages and ${nonAdminMemories.length} non-admin messages`
+      );
 
       // FINAL VERIFICATION
       console.log('📝 Final verification: Complete real admin chat flow');
@@ -239,9 +241,10 @@ describe('Admin Chat Real Runtime Tests', () => {
       const finalVerification = {
         adminSetupSuccessful: runtime.character.settings?.ADMIN_USER_ID === webGuiUserId,
         adminMessagesRetrieved: (result.data?.messageCount || 0) >= 4,
-        correctFiltering: result.text?.includes('Monitor the system') && !result.text?.includes('regular user'),
+        correctFiltering:
+          result.text?.includes('Monitor the system') && !result.text?.includes('regular user'),
         databasePersistence: adminMemories.length >= 4,
-        metadataCorrect: result.data?.lastMessageFrom === 'admin'
+        metadataCorrect: result.data?.lastMessageFrom === 'admin',
       };
 
       console.log('📊 Final Verification Results:');
@@ -277,15 +280,15 @@ describe('Admin Chat Real Runtime Tests', () => {
           entityId: webGuiUserId,
           roomId: room1,
           content: { text: 'Handle general inquiries with patience' },
-          createdAt: Date.now()
+          createdAt: Date.now(),
         },
         {
           id: asUUID('room2-admin-msg'),
           entityId: webGuiUserId,
           roomId: room2,
           content: { text: 'Escalate critical support issues immediately' },
-          createdAt: Date.now() + 1000
-        }
+          createdAt: Date.now() + 1000,
+        },
       ];
 
       for (const msg of multiRoomMessages) {
@@ -296,7 +299,7 @@ describe('Admin Chat Real Runtime Tests', () => {
         id: asUUID('multi-room-test'),
         entityId: runtime.agentId,
         roomId: asUUID('test-room-multi'),
-        content: { text: 'Check admin guidance across rooms' }
+        content: { text: 'Check admin guidance across rooms' },
       };
 
       const result = await adminChatProvider.get(runtime, testMessage, {} as any);

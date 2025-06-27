@@ -7,7 +7,7 @@ export const runtime = 'nodejs';
 // Mock storage for demo purposes - in a real app, this would be actual file storage
 const filesDB: any[] = [];
 
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.organizationId) {
@@ -24,11 +24,14 @@ export async function POST(request: NextRequest) {
     // Validate file size (max 10MB for demo)
     const maxSize = 10 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
-      return NextResponse.json({
-        error: 'File too large',
-        maxSize,
-        actualSize: file.size
-      }, { status: 413 });
+      return NextResponse.json(
+        {
+          error: 'File too large',
+          maxSize,
+          actualSize: file.size,
+        },
+        { status: 413 },
+      );
     }
 
     // Generate unique file ID and mock URL
@@ -60,13 +63,15 @@ export async function POST(request: NextRequest) {
         uploadedAt: fileRecord.uploadedAt,
       },
     });
-
   } catch (error: any) {
     console.error('File upload error:', error);
-    return NextResponse.json({
-      error: 'Upload failed',
-      message: error.message || 'Unknown error occurred'
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Upload failed',
+        message: error.message || 'Unknown error occurred',
+      },
+      { status: 500 },
+    );
   }
 }
 

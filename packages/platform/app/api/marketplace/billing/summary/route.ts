@@ -3,7 +3,7 @@ import { MarketplaceBillingService } from '@/lib/billing/marketplace-billing-ser
 import { getCreditBalance } from '@/lib/server/services/billing-service';
 import { auth } from '@/lib/auth';
 
-export async function GET(request: NextRequest) {
+export async function handleGET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -11,40 +11,41 @@ export async function GET(request: NextRequest) {
     }
 
     const url = new URL(request.url);
-    
+
     // Parse date range
     let startDate: Date | undefined;
     let endDate: Date | undefined;
-    
+
     const startParam = url.searchParams.get('startDate');
     const endParam = url.searchParams.get('endDate');
-    
+
     if (startParam) {
       startDate = new Date(startParam);
       if (isNaN(startDate.getTime())) {
         return NextResponse.json(
           { error: 'Invalid startDate format' },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
-    
+
     if (endParam) {
       endDate = new Date(endParam);
       if (isNaN(endDate.getTime())) {
         return NextResponse.json(
           { error: 'Invalid endDate format' },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
 
     // Get marketplace usage summary
-    const usageSummary = await MarketplaceBillingService.getMarketplaceUsageSummary(
-      session.organizationId,
-      startDate,
-      endDate
-    );
+    const usageSummary =
+      await MarketplaceBillingService.getMarketplaceUsageSummary(
+        session.organizationId,
+        startDate,
+        endDate,
+      );
 
     // Get current credit balance
     const currentBalance = await getCreditBalance(session.organizationId);
@@ -53,8 +54,10 @@ export async function GET(request: NextRequest) {
     const spendingTrend = usageSummary.usageBreakdown.map((usage: any) => ({
       category: usage.usageType,
       amount: usage.totalCost,
-      percentage: usageSummary.totalSpent > 0 ? 
-        (usage.totalCost / usageSummary.totalSpent) * 100 : 0
+      percentage:
+        usageSummary.totalSpent > 0
+          ? (usage.totalCost / usageSummary.totalSpent) * 100
+          : 0,
     }));
 
     return NextResponse.json({
@@ -66,26 +69,26 @@ export async function GET(request: NextRequest) {
           totalSpent: usageSummary.totalSpent,
           totalCreatorRevenue: usageSummary.totalCreatorRevenue,
           totalPlatformRevenue: usageSummary.totalPlatformRevenue,
-          transactionCount: usageSummary.transactionCount
+          transactionCount: usageSummary.transactionCount,
         },
         breakdown: {
           byUsageType: usageSummary.usageBreakdown,
-          spendingTrend
+          spendingTrend,
         },
         recentTransactions: usageSummary.recentTransactions.map((t: any) => ({
           id: t.id,
           amount: parseFloat(t.amount),
           description: t.description,
           createdAt: t.createdAt,
-          metadata: t.metadata
-        }))
+          metadata: t.metadata,
+        })),
       },
     });
   } catch (error) {
     console.error('Failed to get marketplace billing summary:', error);
     return NextResponse.json(
       { error: 'Failed to get billing summary' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

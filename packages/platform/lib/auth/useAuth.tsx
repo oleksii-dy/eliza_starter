@@ -65,7 +65,7 @@ function useStandaloneAuth(): AuthContextType {
       const response = await fetch('/api/auth/identity', {
         credentials: 'include',
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
           'Content-Type': 'application/json',
         },
       });
@@ -80,11 +80,13 @@ function useStandaloneAuth(): AuthContextType {
           firstName: userData.first_name,
           lastName: userData.last_name,
           role: userData.role,
-          organization: userData.organization ? {
-            id: userData.organization.id,
-            name: userData.organization.name,
-            slug: userData.organization.slug,
-          } : undefined,
+          organization: userData.organization
+            ? {
+                id: userData.organization.id,
+                name: userData.organization.name,
+                slug: userData.organization.slug,
+              }
+            : undefined,
         });
 
         // Set session data
@@ -94,7 +96,6 @@ function useStandaloneAuth(): AuthContextType {
           email: userData.email,
           accessToken: userData.accessToken, // If provided by the API
         });
-
       } else if (response.status === 401) {
         // User is not authenticated
         setUser(null);
@@ -104,7 +105,9 @@ function useStandaloneAuth(): AuthContextType {
       }
     } catch (err) {
       console.error('Auth check error:', err);
-      setError(err instanceof Error ? err.message : 'Authentication check failed');
+      setError(
+        err instanceof Error ? err.message : 'Authentication check failed',
+      );
       setUser(null);
       setSession(null);
     } finally {
@@ -190,15 +193,15 @@ function useStandaloneAuth(): AuthContextType {
 
 // Higher-order component for authentication
 export function withAuth<P extends object>(
-  Component: React.ComponentType<P>
+  Component: React.ComponentType<P>,
 ): React.ComponentType<P> {
   return function AuthenticatedComponent(props: P) {
     const { user, loading } = useAuth();
 
     if (loading) {
       return (
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600"></div>
         </div>
       );
     }
@@ -218,7 +221,7 @@ export function useAuthenticatedFetch() {
 
   const authenticatedFetch = async (
     url: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
   ): Promise<Response> => {
     const headers = {
       'Content-Type': 'application/json',
@@ -258,36 +261,58 @@ export function useUserScopedApi() {
 
   return {
     // Get user's messages for a specific agent
-    getMessages: async (agentId: string, params?: {
-      limit?: number;
-      offset?: number;
-      conversationId?: string;
-    }) => {
+    getMessages: async (
+      agentId: string,
+      params?: {
+        limit?: number;
+        offset?: number;
+        conversationId?: string;
+      },
+    ) => {
       const searchParams = new URLSearchParams();
       searchParams.append('agentId', agentId);
-      if (params?.limit) {searchParams.append('limit', params.limit.toString());}
-      if (params?.offset) {searchParams.append('offset', params.offset.toString());}
-      if (params?.conversationId) {searchParams.append('conversationId', params.conversationId);}
+      if (params?.limit) {
+        searchParams.append('limit', params.limit.toString());
+      }
+      if (params?.offset) {
+        searchParams.append('offset', params.offset.toString());
+      }
+      if (params?.conversationId) {
+        searchParams.append('conversationId', params.conversationId);
+      }
 
       const response = await authFetch(`/api/v1/messages?${searchParams}`);
       return response.json();
     },
 
     // Get user's memories for a specific agent
-    getMemories: async (agentId: string, params?: {
-      limit?: number;
-      offset?: number;
-      type?: string;
-      roomId?: string;
-      minImportance?: number;
-    }) => {
+    getMemories: async (
+      agentId: string,
+      params?: {
+        limit?: number;
+        offset?: number;
+        type?: string;
+        roomId?: string;
+        minImportance?: number;
+      },
+    ) => {
       const searchParams = new URLSearchParams();
       searchParams.append('agentId', agentId);
-      if (params?.limit) {searchParams.append('limit', params.limit.toString());}
-      if (params?.offset) {searchParams.append('offset', params.offset.toString());}
-      if (params?.type) {searchParams.append('type', params.type);}
-      if (params?.roomId) {searchParams.append('roomId', params.roomId);}
-      if (params?.minImportance) {searchParams.append('minImportance', params.minImportance.toString());}
+      if (params?.limit) {
+        searchParams.append('limit', params.limit.toString());
+      }
+      if (params?.offset) {
+        searchParams.append('offset', params.offset.toString());
+      }
+      if (params?.type) {
+        searchParams.append('type', params.type);
+      }
+      if (params?.roomId) {
+        searchParams.append('roomId', params.roomId);
+      }
+      if (params?.minImportance) {
+        searchParams.append('minImportance', params.minImportance.toString());
+      }
 
       const response = await authFetch(`/api/v1/memories?${searchParams}`);
       return response.json();

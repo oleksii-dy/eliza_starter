@@ -23,11 +23,7 @@ import {
 
 import { PaymentService } from './PaymentService';
 import { PriceOracleService } from './PriceOracleService';
-import {
-  PaymentMethod,
-  PaymentStatus,
-  type IWalletAdapter as _IWalletAdapter,
-} from '../types';
+import { PaymentMethod, PaymentStatus, type IWalletAdapter as _IWalletAdapter } from '../types';
 
 /**
  * Universal Payment Service - Minimal implementation
@@ -39,15 +35,25 @@ export class UniversalPaymentService extends Service implements IUniversalWallet
 
   public readonly serviceName = 'universal-payment';
   public readonly serviceType = ServiceType.WALLET;
-  public readonly capabilityDescription = 'Universal payment service with multi-chain wallet support';
+  public readonly capabilityDescription =
+    'Universal payment service with multi-chain wallet support';
 
   protected runtime: IAgentRuntime;
 
-  readonly chainSupport = ['ethereum', 'polygon', 'arbitrum', 'optimism', 'base', 'bsc', 'avalanche', 'solana'];
+  readonly chainSupport = [
+    'ethereum',
+    'polygon',
+    'arbitrum',
+    'optimism',
+    'base',
+    'bsc',
+    'avalanche',
+    'solana',
+  ];
   readonly capabilities: WalletCapability[] = [
-        'transfer' as WalletCapability,
-        'getBalance' as WalletCapability,
-        'getPortfolio' as WalletCapability,
+    'transfer' as WalletCapability,
+    'getBalance' as WalletCapability,
+    'getPortfolio' as WalletCapability,
   ];
 
   private defaultChain: string = 'ethereum';
@@ -60,7 +66,8 @@ export class UniversalPaymentService extends Service implements IUniversalWallet
 
     // Get payment services after runtime is set
     this.paymentService = this.runtime.getService<PaymentService>('payment') || undefined;
-    this.priceOracleService = this.runtime.getService<PriceOracleService>('priceOracle') || undefined;
+    this.priceOracleService =
+      this.runtime.getService<PriceOracleService>('priceOracle') || undefined;
   }
 
   // Core required methods
@@ -211,7 +218,9 @@ export class UniversalPaymentService extends Service implements IUniversalWallet
       // Convert to PaymentService request format
       const paymentRequest = {
         id: request.id,
-        userId: (request as any).userId || (`00000000-0000-0000-0000-${Date.now().toString().padStart(12, '0')}` as UUID),
+        userId:
+          (request as any).userId ||
+          (`00000000-0000-0000-0000-${Date.now().toString().padStart(12, '0')}` as UUID),
         agentId: this.runtime.agentId,
         actionName: 'universal-payment',
         amount: BigInt(request.amount),

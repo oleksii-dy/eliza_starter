@@ -24,7 +24,7 @@ async function build() {
     // Compile TypeScript
     console.log('2. Compiling TypeScript...');
     const { stdout, stderr } = await execAsync('npx tsc --project tsconfig.build.json', {
-      cwd: rootDir
+      cwd: rootDir,
     });
 
     if (stderr) {
@@ -55,14 +55,10 @@ async function build() {
       dependencies: pkgJson.dependencies,
       peerDependencies: pkgJson.peerDependencies,
     };
-    await fs.writeFile(
-      path.join(distPath, 'package.json'),
-      JSON.stringify(distPkgJson, null, 2)
-    );
+    await fs.writeFile(path.join(distPath, 'package.json'), JSON.stringify(distPkgJson, null, 2));
 
     console.log('\n✅ Build complete!');
     console.log(`   Output: ${distPath}`);
-
   } catch (error) {
     console.error('\n❌ Build failed:', error.message);
     process.exit(1);

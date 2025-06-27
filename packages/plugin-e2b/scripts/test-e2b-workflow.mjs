@@ -15,27 +15,27 @@ dotenv.config({ path: envPath });
 console.log('Environment loaded:', {
   E2B_API_KEY: !!process.env.E2B_API_KEY,
   OPENAI_API_KEY: !!process.env.OPENAI_API_KEY,
-  ANTHROPIC_API_KEY: !!process.env.ANTHROPIC_API_KEY
+  ANTHROPIC_API_KEY: !!process.env.ANTHROPIC_API_KEY,
 });
 
 console.log('🚀 Testing E2B Autocoder Development Workflow...');
 
 async function testE2BDevelopmentWorkflow() {
   console.log('\n🧪 Starting E2B Development Environment Test...');
-  
+
   try {
     const { Sandbox } = await import('@e2b/code-interpreter');
-    
+
     console.log('✅ E2B code-interpreter imported');
-    
+
     // Create a sandbox for development work
     const sandbox = await Sandbox.create({
       apiKey: process.env.E2B_API_KEY,
-      timeoutMs: 60000 // 1 minute timeout for development tasks
+      timeoutMs: 60000, // 1 minute timeout for development tasks
     });
-    
+
     console.log(`✅ E2B development sandbox created: ${sandbox.sandboxId}`);
-    
+
     // Test 1: Environment Setup and Tool Verification
     console.log('\n🔧 Test 1: Development Environment Setup...');
     const envSetup = await sandbox.runCode(`
@@ -75,10 +75,10 @@ print(f"  User: {os.environ.get('USER', 'unknown')}")
 
 tools
 `);
-    
+
     console.log('✅ Environment setup completed');
     console.log('   - Tools check result:', envSetup.text);
-    
+
     // Test 2: Simulate Repository Clone and Analysis
     console.log('\n📁 Test 2: Repository Simulation and Analysis...');
     const repoAnalysis = await sandbox.runCode(`
@@ -170,10 +170,10 @@ print("  - Configured for bun build system")
 
 "Repository structure created and analyzed successfully"
 `);
-    
+
     console.log('✅ Repository analysis completed');
     console.log('   - Analysis result:', repoAnalysis.text);
-    
+
     // Test 3: Simulate Code Development Process
     console.log('\n⚡ Test 3: Code Development Simulation...');
     const codeDevelopment = await sandbox.runCode(`
@@ -315,10 +315,10 @@ print("  - Ready for code review and testing")
 
 "Development workflow simulation completed successfully"
 `);
-    
+
     console.log('✅ Code development simulation completed');
     console.log('   - Development result:', codeDevelopment.text);
-    
+
     // Test 4: Simulate Testing and Build Process
     console.log('\n🧪 Test 4: Testing and Build Simulation...');
     const testingProcess = await sandbox.runCode(`
@@ -385,10 +385,10 @@ print("  Status: Ready for review (after fixing test failure)")
 
 "Testing and build simulation completed"
 `);
-    
+
     console.log('✅ Testing and build simulation completed');
     console.log('   - Testing result:', testingProcess.text);
-    
+
     // Test 5: Simulate Agent Communication and Review Process
     console.log('\n🤖 Test 5: Agent Communication Simulation...');
     const agentCommunication = await sandbox.runCode(`
@@ -456,14 +456,14 @@ print("✅ Pull request approved and ready for merge")
 
 "Agent communication simulation completed successfully"
 `);
-    
+
     console.log('✅ Agent communication simulation completed');
     console.log('   - Communication result:', agentCommunication.text);
-    
+
     // Clean up
     await sandbox.kill();
     console.log('✅ Development sandbox cleaned up');
-    
+
     return {
       success: true,
       sandboxId: sandbox.sandboxId,
@@ -472,10 +472,9 @@ print("✅ Pull request approved and ready for merge")
         repositoryAnalysis: true,
         codeDevelopment: true,
         testingProcess: true,
-        agentCommunication: true
-      }
+        agentCommunication: true,
+      },
     };
-    
   } catch (error) {
     console.error('❌ E2B Development Workflow test failed:', error.message);
     return { success: false, error: error.message };
@@ -486,7 +485,7 @@ print("✅ Pull request approved and ready for merge")
 try {
   console.log('🎯 Starting comprehensive E2B Development Workflow test...');
   const result = await testE2BDevelopmentWorkflow();
-  
+
   if (result.success) {
     console.log('\\n🎉 E2B Development Workflow Test PASSED!');
     console.log('\\n✅ All workflow components verified:');
@@ -495,7 +494,7 @@ try {
     console.log('   ⚡ Issue-driven code development process');
     console.log('   🧪 Automated testing and build pipeline');
     console.log('   🤖 Multi-agent communication and review workflow');
-    
+
     console.log('\\n🚀 Key Capabilities Demonstrated:');
     console.log('   • E2B sandbox creation and management');
     console.log('   • Development environment tool verification');
@@ -506,14 +505,14 @@ try {
     console.log('   • Build process and quality checks');
     console.log('   • Agent-to-agent communication protocols');
     console.log('   • Code review and approval workflows');
-    
+
     console.log('\\n🔮 Ready for Integration:');
     console.log('   • GitHub issue fetching (requires valid token)');
     console.log('   • Real repository cloning and analysis');
     console.log('   • Actual code commits and PR creation');
     console.log('   • Live agent communication via GitHub comments');
     console.log('   • Production deployment workflows');
-    
+
     console.log('\\n✨ E2B Autocoder Development Workflow is fully functional!');
     process.exit(0);
   } else {
@@ -521,7 +520,6 @@ try {
     console.log('Error:', result.error);
     process.exit(1);
   }
-  
 } catch (error) {
   console.error('\\n💥 Fatal error during E2B workflow test:', error.message);
   console.error('Stack:', error.stack?.split('\\n').slice(0, 8).join('\\n'));

@@ -4,7 +4,11 @@
  */
 
 // Server-only module (TODO: add server-only import when package is available)
-import { getDatabaseAdapter, resetDatabaseAdapter, type DatabaseAdapter } from './adapters/factory';
+import {
+  getDatabaseAdapter,
+  resetDatabaseAdapter,
+  type DatabaseAdapter,
+} from './adapters/factory';
 import { initializeDbProxy } from './index';
 import * as pgSchema from './schema';
 import * as pgliteSchema from './schema-pglite';
@@ -31,7 +35,9 @@ export async function initializeDatabase(config?: {
     // Initialize the database proxy for backwards compatibility
     initializeDbProxy(adapter.getDatabase());
 
-    console.log(`✅ Database initialized with ${adapter.engine.toUpperCase()} adapter`);
+    console.log(
+      `✅ Database initialized with ${adapter.engine.toUpperCase()} adapter`,
+    );
     return adapter;
   } catch (error) {
     console.error('❌ Failed to initialize database:', error);
@@ -44,7 +50,9 @@ export async function initializeDatabase(config?: {
  */
 export function getDatabase() {
   if (!adapter) {
-    throw new Error('Database not initialized. Call initializeDatabase() first.');
+    throw new Error(
+      'Database not initialized. Call initializeDatabase() first.',
+    );
   }
   return adapter.getDatabase();
 }
@@ -54,7 +62,9 @@ export function getDatabase() {
  */
 export function getSql() {
   if (!adapter) {
-    throw new Error('Database not initialized. Call initializeDatabase() first.');
+    throw new Error(
+      'Database not initialized. Call initializeDatabase() first.',
+    );
   }
   return adapter.getSqlClient();
 }
@@ -64,7 +74,9 @@ export function getSql() {
  */
 export function getDatabaseAdapterInstance(): DatabaseAdapter {
   if (!adapter) {
-    throw new Error('Database not initialized. Call initializeDatabase() first.');
+    throw new Error(
+      'Database not initialized. Call initializeDatabase() first.',
+    );
   }
   return adapter;
 }
@@ -222,7 +234,7 @@ export const schema = new Proxy({} as Record<string, unknown>, {
   get(target, prop) {
     const currentSchema = getSchema();
     return (currentSchema as Record<string, any>)[prop as string];
-  }
+  },
 });
 
 export default getDatabase;

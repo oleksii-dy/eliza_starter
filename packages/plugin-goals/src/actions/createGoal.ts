@@ -389,7 +389,8 @@ export const createGoalAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll create a goal to learn French fluently and then show you all your goals.",
-          thought: 'The user wants to create a new goal and see their complete goal list. I need to chain CREATE_GOAL with LIST_GOALS to complete this workflow in the proper sequence.',
+          thought:
+            'The user wants to create a new goal and see their complete goal list. I need to chain CREATE_GOAL with LIST_GOALS to complete this workflow in the proper sequence.',
           actions: ['CREATE_GOAL', 'LIST_GOALS'],
         },
       },
@@ -406,7 +407,8 @@ export const createGoalAction: Action = {
         name: '{{agent}}',
         content: {
           text: "I'll create a goal to run a marathon and then ask for your confirmation to ensure it's exactly what you want.",
-          thought: 'The user wants goal creation followed by confirmation. This demonstrates the create-confirm workflow pattern where we create the goal and then verify it with the user before finalizing.',
+          thought:
+            'The user wants goal creation followed by confirmation. This demonstrates the create-confirm workflow pattern where we create the goal and then verify it with the user before finalizing.',
           actions: ['CREATE_GOAL', 'CONFIRM_GOAL'],
         },
       },

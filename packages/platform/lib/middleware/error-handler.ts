@@ -22,7 +22,7 @@ export class TypedApiError extends Error {
     statusCode: HttpStatusCode = 500,
     code: ErrorCode = 'INTERNAL_ERROR',
     details?: Record<string, unknown>,
-    isOperational = true
+    isOperational = true,
   ) {
     super(message);
     this.name = 'TypedApiError';
@@ -80,7 +80,7 @@ export class InsufficientCreditsError extends TypedApiError {
       `Insufficient credits. Required: ${required}, Available: ${available}`,
       402,
       'INSUFFICIENT_CREDITS',
-      { required, available }
+      { required, available },
     );
   }
 }
@@ -91,7 +91,7 @@ export class InsufficientCreditsError extends TypedApiError {
 
 function formatErrorResponse(error: unknown, requestId?: string): ApiError {
   const timestamp = new Date().toISOString();
-  
+
   if (error instanceof TypedApiError) {
     return {
       message: error.message,
@@ -100,14 +100,14 @@ function formatErrorResponse(error: unknown, requestId?: string): ApiError {
       statusCode: error.statusCode,
     };
   }
-  
+
   if (error instanceof z.ZodError) {
     return {
       message: 'Validation failed',
       code: 'VALIDATION_ERROR',
       statusCode: 400,
       details: {
-        issues: error.errors.map(issue => ({
+        issues: error.errors.map((issue) => ({
           path: issue.path.join('.'),
           message: issue.message,
           code: issue.code,
@@ -115,25 +115,30 @@ function formatErrorResponse(error: unknown, requestId?: string): ApiError {
       },
     };
   }
-  
+
   if (error instanceof Error) {
     // Log unexpected errors
     logger.error('Unexpected error', error, {
       requestId,
     });
-    
+
     return {
-      message: process.env.NODE_ENV === 'production' 
-        ? 'Internal server error' 
-        : error.message,
+      message:
+        process.env.NODE_ENV === 'production'
+          ? 'Internal server error'
+          : error.message,
       code: 'INTERNAL_ERROR',
       statusCode: 500,
     };
   }
-  
+
   // Fallback for unknown error types
-  logger.error('Unknown error type', error instanceof Error ? error : new Error(String(error)), { requestId });
-  
+  logger.error(
+    'Unknown error type',
+    error instanceof Error ? error : new Error(String(error)),
+    { requestId },
+  );
+
   return {
     message: 'An unexpected error occurred',
     code: 'INTERNAL_ERROR',
@@ -149,13 +154,13 @@ export function createErrorHandler() {
   return async (
     error: unknown,
     request: NextRequest,
-    context?: { params?: Record<string, string> }
+    context?: { params?: Record<string, string> },
   ): Promise<NextResponse<any>> => {
-    const requestId = request.headers.get('x-request-id') || 
-                     crypto.randomUUID();
-    
+    const requestId =
+      request.headers.get('x-request-id') || crypto.randomUUID();
+
     const errorResponse = formatErrorResponse(error, requestId);
-    
+
     // Add request context to logs
     logger.error('API Error', new Error(errorResponse.message), {
       errorResponse,
@@ -165,7 +170,7 @@ export function createErrorHandler() {
       requestId,
       params: context?.params,
     });
-    
+
     // Add security headers
     const response = NextResponse.json(
       {
@@ -174,15 +179,17 @@ export function createErrorHandler() {
         requestId,
         timestamp: new Date().toISOString(),
       },
-      { status: errorResponse.statusCode }
+      { status: errorResponse.statusCode },
     );
-    
+
     // Add CORS headers if needed
     if (request.headers.get('origin')) {
-      response.headers.set('Access-Control-Allow-Origin', 
-        process.env.CORS_ORIGIN || '*');
+      response.headers.set(
+        'Access-Control-Allow-Origin',
+        process.env.CORS_ORIGIN || '*',
+      );
     }
-    
+
     return response;
   };
 }
@@ -193,19 +200,22 @@ export function createErrorHandler() {
 
 type AsyncHandler<T = unknown> = (
   request: NextRequest,
-  context?: { params?: Record<string, string> }
+  context?: { params?: Record<string, string> },
 ) => Promise<NextResponse<T>>;
 
 export function withErrorHandling<T = unknown>(
-  handler: AsyncHandler<T>
+  handler: AsyncHandler<T>,
 ): AsyncHandler<T> {
   const errorHandler = createErrorHandler();
-  
-  return async (request: NextRequest, context?: { params?: Record<string, string> }): Promise<NextResponse<T>> => {
+
+  return async (
+    request: NextRequest,
+    context?: { params?: Record<string, string> },
+  ): Promise<NextResponse<T>> => {
     try {
       return await handler(request, context);
     } catch (error) {
-      return await errorHandler(error, request, context) as NextResponse<T>;
+      return (await errorHandler(error, request, context)) as NextResponse<T>;
     }
   };
 }
@@ -219,12 +229,12 @@ export function withValidation<T extends z.ZodType>(
   handler: (
     request: NextRequest,
     validatedData: z.infer<T>,
-    context?: { params?: Record<string, string> }
-  ) => Promise<NextResponse>
+    context?: { params?: Record<string, string> },
+  ) => Promise<NextResponse>,
 ) {
   return withErrorHandling(async (request: NextRequest, context) => {
     let data: unknown;
-    
+
     // Parse JSON body for POST/PUT requests
     if (['POST', 'PUT', 'PATCH'].includes(request.method)) {
       try {
@@ -237,7 +247,7 @@ export function withValidation<T extends z.ZodType>(
       const searchParams = new URL(request.url).searchParams;
       data = Object.fromEntries(searchParams.entries());
     }
-    
+
     const validatedData = schema.parse(data);
     return handler(request, validatedData, context);
   });
@@ -249,18 +259,20 @@ export function withValidation<T extends z.ZodType>(
 
 export function withSizeLimit(maxSizeBytes: number = 1024 * 1024) {
   return function <T>(handler: AsyncHandler<T>): AsyncHandler<T> {
-    return withErrorHandling(async (request: NextRequest, context): Promise<NextResponse<T>> => {
-      const contentLength = request.headers.get('content-length');
-      
-      if (contentLength && parseInt(contentLength, 10) > maxSizeBytes) {
-        throw new ValidationError(
-          `Request too large. Maximum size: ${maxSizeBytes} bytes`,
-          { maxSize: maxSizeBytes, actualSize: parseInt(contentLength, 10) }
-        );
-      }
-      
-      return handler(request, context);
-    });
+    return withErrorHandling(
+      async (request: NextRequest, context): Promise<NextResponse<T>> => {
+        const contentLength = request.headers.get('content-length');
+
+        if (contentLength && parseInt(contentLength, 10) > maxSizeBytes) {
+          throw new ValidationError(
+            `Request too large. Maximum size: ${maxSizeBytes} bytes`,
+            { maxSize: maxSizeBytes, actualSize: parseInt(contentLength, 10) },
+          );
+        }
+
+        return handler(request, context);
+      },
+    );
   };
 }
 
@@ -276,32 +288,35 @@ interface RateLimitConfig {
 
 export function withRateLimit(config: RateLimitConfig) {
   const requests = new Map<string, { count: number; resetTime: number }>();
-  
+
   return function <T>(handler: AsyncHandler<T>): AsyncHandler<T> {
-    return withErrorHandling(async (request: NextRequest, context): Promise<NextResponse<T>> => {
-      const key = config.keyGenerator?.(request) || 
-                  request.headers.get('x-forwarded-for') || 
-                  request.headers.get('x-real-ip') ||
-                  'anonymous';
-      
-      const now = Date.now();
-      const clientData = requests.get(key);
-      
-      if (!clientData || now > clientData.resetTime) {
-        requests.set(key, {
-          count: 1,
-          resetTime: now + config.windowMs,
-        });
-      } else if (clientData.count >= config.maxRequests) {
-        throw new RateLimitError(
-          `Rate limit exceeded. Try again in ${Math.ceil((clientData.resetTime - now) / 1000)} seconds`
-        );
-      } else {
-        clientData.count++;
-      }
-      
-      return handler(request, context);
-    });
+    return withErrorHandling(
+      async (request: NextRequest, context): Promise<NextResponse<T>> => {
+        const key =
+          config.keyGenerator?.(request) ||
+          request.headers.get('x-forwarded-for') ||
+          request.headers.get('x-real-ip') ||
+          'anonymous';
+
+        const now = Date.now();
+        const clientData = requests.get(key);
+
+        if (!clientData || now > clientData.resetTime) {
+          requests.set(key, {
+            count: 1,
+            resetTime: now + config.windowMs,
+          });
+        } else if (clientData.count >= config.maxRequests) {
+          throw new RateLimitError(
+            `Rate limit exceeded. Try again in ${Math.ceil((clientData.resetTime - now) / 1000)} seconds`,
+          );
+        } else {
+          clientData.count++;
+        }
+
+        return handler(request, context);
+      },
+    );
   };
 }
 
@@ -328,8 +343,13 @@ export function isZodError(error: unknown): error is z.ZodError {
 export function createSuccessResponse<T>(
   data: T,
   status: HttpStatusCode = 200,
-  message?: string
-): NextResponse<{ success: boolean; data: T; message?: string; timestamp: string }> {
+  message?: string,
+): NextResponse<{
+  success: boolean;
+  data: T;
+  message?: string;
+  timestamp: string;
+}> {
   return NextResponse.json(
     {
       success: true,
@@ -337,7 +357,7 @@ export function createSuccessResponse<T>(
       message,
       timestamp: new Date().toISOString(),
     },
-    { status }
+    { status },
   );
 }
 
@@ -345,7 +365,7 @@ export function createErrorResponse(
   message: string,
   statusCode: HttpStatusCode = 500,
   code: ErrorCode = 'INTERNAL_ERROR',
-  details?: Record<string, unknown>
+  details?: Record<string, unknown>,
 ): NextResponse<{ success: false; error: ApiError; timestamp: string }> {
   return NextResponse.json(
     {
@@ -358,6 +378,6 @@ export function createErrorResponse(
       },
       timestamp: new Date().toISOString(),
     },
-    { status: statusCode }
+    { status: statusCode },
   );
 }

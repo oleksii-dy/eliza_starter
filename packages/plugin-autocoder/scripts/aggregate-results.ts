@@ -85,7 +85,7 @@ async function findLatestResults(): Promise<string | null> {
   try {
     const files = await fs.readdir(resultsDir);
     const resultFiles = files
-      .filter(f => f.startsWith('results-') && f.endsWith('.json'))
+      .filter((f) => f.startsWith('results-') && f.endsWith('.json'))
       .sort()
       .reverse();
 
@@ -108,11 +108,11 @@ function analyzeResults(results: BenchmarkResult[]): ComprehensiveReport {
   const startTime = new Date();
 
   // Basic metrics
-  const successfulResults = results.filter(r => r.success);
+  const successfulResults = results.filter((r) => r.success);
   const totalCost = results.reduce((sum, r) => sum + (r.token_usage?.cost || 0), 0);
   const totalTokens = results.reduce((sum, r) => sum + (r.token_usage?.total || 0), 0);
   const totalTime = results.reduce((sum, r) => sum + r.execution_time, 0);
-  const compilationSuccesses = results.filter(r => r.compilation_success).length;
+  const compilationSuccesses = results.filter((r) => r.compilation_success).length;
 
   // Success by repository
   const successByRepo: Record<string, { total: number; successful: number; rate: number }> = {};
@@ -154,24 +154,39 @@ function analyzeResults(results: BenchmarkResult[]): ComprehensiveReport {
 
   // Performance metrics
   const sortedByTime = [...results].sort((a, b) => a.execution_time - b.execution_time);
-  const sortedByCost = [...results].sort((a, b) => (b.token_usage?.cost || 0) - (a.token_usage?.cost || 0));
+  const sortedByCost = [...results].sort(
+    (a, b) => (b.token_usage?.cost || 0) - (a.token_usage?.cost || 0)
+  );
   const sortedByIterations = [...results].sort((a, b) => b.iterations - a.iterations);
 
   // Patch analysis
-  const patchSizes = results.map(r => r.patch.length).filter(size => size > 0);
-  const averagePatchSize = patchSizes.length > 0 ? patchSizes.reduce((a, b) => a + b, 0) / patchSizes.length : 0;
-  const largestPatchResult = results.reduce((max, r) => r.patch.length > max.patch.length ? r : max, results[0]);
-  const smallestPatchResult = results.filter(r => r.patch.length > 0).reduce((min, r) => r.patch.length < min.patch.length ? r : min, results.find(r => r.patch.length > 0) || results[0]);
+  const patchSizes = results.map((r) => r.patch.length).filter((size) => size > 0);
+  const averagePatchSize =
+    patchSizes.length > 0 ? patchSizes.reduce((a, b) => a + b, 0) / patchSizes.length : 0;
+  const largestPatchResult = results.reduce(
+    (max, r) => (r.patch.length > max.patch.length ? r : max),
+    results[0]
+  );
+  const smallestPatchResult = results
+    .filter((r) => r.patch.length > 0)
+    .reduce(
+      (min, r) => (r.patch.length < min.patch.length ? r : min),
+      results.find((r) => r.patch.length > 0) || results[0]
+    );
 
   // Generate recommendations
   const recommendations: string[] = [];
   const successRate = successfulResults.length / results.length;
 
   if (successRate < 0.3) {
-    recommendations.push('⚠️ Low success rate detected. Consider reviewing patch generation strategy.');
+    recommendations.push(
+      '⚠️ Low success rate detected. Consider reviewing patch generation strategy.'
+    );
   }
   if (totalCost / results.length > 2.0) {
-    recommendations.push('💰 High average cost per instance. Consider optimizing prompt efficiency.');
+    recommendations.push(
+      '💰 High average cost per instance. Consider optimizing prompt efficiency.'
+    );
   }
   if (totalTime / results.length > 300000) {
     recommendations.push('⏱️ High average execution time. Consider timeout optimization.');
@@ -184,7 +199,9 @@ function analyzeResults(results: BenchmarkResult[]): ComprehensiveReport {
     .slice(0, 3);
 
   if (topRepos.length > 0) {
-    recommendations.push(`🏆 Top performing repositories: ${topRepos.map(([repo, data]) => `${repo} (${(data.rate * 100).toFixed(1)}%)`).join(', ')}`);
+    recommendations.push(
+      `🏆 Top performing repositories: ${topRepos.map(([repo, data]) => `${repo} (${(data.rate * 100).toFixed(1)}%)`).join(', ')}`
+    );
   }
 
   return {
@@ -200,7 +217,8 @@ function analyzeResults(results: BenchmarkResult[]): ComprehensiveReport {
       successful_instances: successfulResults.length,
       failed_instances: results.length - successfulResults.length,
       compilation_success_rate: compilationSuccesses / results.length,
-      test_pass_rate: results.filter(r => r.test_results && r.test_results.passed > 0).length / results.length,
+      test_pass_rate:
+        results.filter((r) => r.test_results && r.test_results.passed > 0).length / results.length,
       total_cost: totalCost,
       average_cost_per_instance: totalCost / results.length,
       total_tokens: totalTokens,
@@ -211,15 +229,33 @@ function analyzeResults(results: BenchmarkResult[]): ComprehensiveReport {
       success_by_repo: successByRepo,
       common_failures: commonFailures,
       performance_metrics: {
-        fastest_instance: { id: sortedByTime[0]?.instance_id || '', time: sortedByTime[0]?.execution_time || 0 },
-        slowest_instance: { id: sortedByTime[sortedByTime.length - 1]?.instance_id || '', time: sortedByTime[sortedByTime.length - 1]?.execution_time || 0 },
-        most_expensive: { id: sortedByCost[0]?.instance_id || '', cost: sortedByCost[0]?.token_usage?.cost || 0 },
-        most_iterations: { id: sortedByIterations[0]?.instance_id || '', iterations: sortedByIterations[0]?.iterations || 0 },
+        fastest_instance: {
+          id: sortedByTime[0]?.instance_id || '',
+          time: sortedByTime[0]?.execution_time || 0,
+        },
+        slowest_instance: {
+          id: sortedByTime[sortedByTime.length - 1]?.instance_id || '',
+          time: sortedByTime[sortedByTime.length - 1]?.execution_time || 0,
+        },
+        most_expensive: {
+          id: sortedByCost[0]?.instance_id || '',
+          cost: sortedByCost[0]?.token_usage?.cost || 0,
+        },
+        most_iterations: {
+          id: sortedByIterations[0]?.instance_id || '',
+          iterations: sortedByIterations[0]?.iterations || 0,
+        },
       },
       patch_analysis: {
         average_patch_size: averagePatchSize,
-        largest_patch: { id: largestPatchResult?.instance_id || '', size: largestPatchResult?.patch.length || 0 },
-        smallest_patch: { id: smallestPatchResult?.instance_id || '', size: smallestPatchResult?.patch.length || 0 },
+        largest_patch: {
+          id: largestPatchResult?.instance_id || '',
+          size: largestPatchResult?.patch.length || 0,
+        },
+        smallest_patch: {
+          id: smallestPatchResult?.instance_id || '',
+          size: smallestPatchResult?.patch.length || 0,
+        },
       },
     },
     recommendations,
@@ -273,14 +309,20 @@ async function generateReport(): Promise<void> {
 
   // Print key metrics
   console.log('\n🎯 KEY METRICS:');
-  console.log(`├─ Success Rate: ${(report.performance.success_rate * 100).toFixed(1)}% (${report.performance.successful_instances}/${report.metadata.total_instances})`);
+  console.log(
+    `├─ Success Rate: ${(report.performance.success_rate * 100).toFixed(1)}% (${report.performance.successful_instances}/${report.metadata.total_instances})`
+  );
   console.log(`├─ Total Cost: $${report.performance.total_cost.toFixed(2)}`);
-  console.log(`├─ Average Time: ${(report.metadata.average_time_per_instance / 1000).toFixed(1)}s per instance`);
-  console.log(`└─ Compilation Success: ${(report.performance.compilation_success_rate * 100).toFixed(1)}%`);
+  console.log(
+    `├─ Average Time: ${(report.metadata.average_time_per_instance / 1000).toFixed(1)}s per instance`
+  );
+  console.log(
+    `└─ Compilation Success: ${(report.performance.compilation_success_rate * 100).toFixed(1)}%`
+  );
 
   if (report.recommendations.length > 0) {
     console.log('\n💡 RECOMMENDATIONS:');
-    report.recommendations.forEach(rec => console.log(`   ${rec}`));
+    report.recommendations.forEach((rec) => console.log(`   ${rec}`));
   }
 }
 
@@ -319,20 +361,26 @@ function generateMarkdownSummary(report: ComprehensiveReport): string {
 | Repository | Success Rate | Successful | Total |
 |------------|--------------|------------|-------|
 ${Object.entries(report.analysis.success_by_repo)
-    .sort((a, b) => b[1].rate - a[1].rate)
-    .slice(0, 10)
-    .map(([repo, data]) => `| ${repo} | ${(data.rate * 100).toFixed(1)}% | ${data.successful} | ${data.total} |`)
-    .join('\n')}
+  .sort((a, b) => b[1].rate - a[1].rate)
+  .slice(0, 10)
+  .map(
+    ([repo, data]) =>
+      `| ${repo} | ${(data.rate * 100).toFixed(1)}% | ${data.successful} | ${data.total} |`
+  )
+  .join('\n')}
 
 ## Common Failure Patterns
 
-${report.analysis.common_failures.slice(0, 5).map((failure, i) =>
-    `${i + 1}. **${failure.count} instances:** ${failure.error.substring(0, 80)}...`
-  ).join('\n')}
+${report.analysis.common_failures
+  .slice(0, 5)
+  .map(
+    (failure, i) => `${i + 1}. **${failure.count} instances:** ${failure.error.substring(0, 80)}...`
+  )
+  .join('\n')}
 
 ## Recommendations
 
-${report.recommendations.map(rec => `- ${rec}`).join('\n')}
+${report.recommendations.map((rec) => `- ${rec}`).join('\n')}
 
 ## Detailed Results
 

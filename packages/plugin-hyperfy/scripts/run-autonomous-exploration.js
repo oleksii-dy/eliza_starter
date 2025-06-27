@@ -41,7 +41,7 @@ async function cleanup() {
   }
 
   // Give processes time to shut down gracefully
-  await new Promise(resolve => setTimeout(resolve, 2000));
+  await new Promise((resolve) => setTimeout(resolve, 2000));
 
   process.exit(0);
 }
@@ -69,7 +69,7 @@ async function startHyperfy() {
 
   hyperfyProcess = spawn('npm', ['run', 'dev'], {
     cwd: HYPERFY_DIR,
-    stdio: ['ignore', 'pipe', 'pipe']
+    stdio: ['ignore', 'pipe', 'pipe'],
   });
 
   // Log Hyperfy output
@@ -88,7 +88,7 @@ async function startHyperfy() {
 
   // Wait for Hyperfy to be ready
   console.log('⏳ Waiting for Hyperfy to start (30 seconds)...');
-  await new Promise(resolve => setTimeout(resolve, 30000));
+  await new Promise((resolve) => setTimeout(resolve, 30000));
 
   console.log('✅ Hyperfy should be running at http://localhost:3000');
 }
@@ -96,12 +96,12 @@ async function startHyperfy() {
 async function runScenario() {
   console.log('\n🤖 Running autonomous exploration scenario...');
 
-  const enableObservation = process.argv.includes('--observe') ||
-                          process.env.ENABLE_OBSERVATION_WINDOW === 'true';
+  const enableObservation =
+    process.argv.includes('--observe') || process.env.ENABLE_OBSERVATION_WINDOW === 'true';
 
   const env = {
     ...process.env,
-    ENABLE_OBSERVATION_WINDOW: enableObservation ? 'true' : 'false'
+    ENABLE_OBSERVATION_WINDOW: enableObservation ? 'true' : 'false',
   };
 
   if (enableObservation) {
@@ -112,7 +112,7 @@ async function runScenario() {
   scenarioProcess = spawn('elizaos', ['scenario', 'run', SCENARIO_FILE], {
     cwd: rootDir,
     env,
-    stdio: 'inherit'
+    stdio: 'inherit',
   });
 
   scenarioProcess.on('error', (error) => {
@@ -138,14 +138,14 @@ async function main() {
 
   console.log('Options:');
   console.log('  --observe    Open Puppeteer window to watch agents');
-  console.log('  --skip-setup Skip Hyperfy setup (assumes it\'s already running)\n');
+  console.log("  --skip-setup Skip Hyperfy setup (assumes it's already running)\n");
 
   try {
     if (!process.argv.includes('--skip-setup')) {
       await checkHyperfy();
       await startHyperfy();
     } else {
-      console.log('⚡ Skipping Hyperfy setup (assuming it\'s already running)');
+      console.log("⚡ Skipping Hyperfy setup (assuming it's already running)");
     }
 
     await runScenario();

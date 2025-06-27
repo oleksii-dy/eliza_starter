@@ -45,7 +45,7 @@ CROSSMINT_WEBHOOK_ENDPOINT=https://your-domain.com/webhooks/crossmint
 import { crossmintPlugin } from '@elizaos/plugin-crossmint';
 
 export const character = {
-  name: "CrossMint Agent",
+  name: 'CrossMint Agent',
   plugins: [crossmintPlugin],
   // ... other configuration
 };
@@ -54,6 +54,7 @@ export const character = {
 ### Available Actions
 
 #### CREATE_X402_PAYMENT
+
 Create HTTP-native payment requests using X.402 protocol:
 
 ```
@@ -62,6 +63,7 @@ Create HTTP-native payment requests using X.402 protocol:
 ```
 
 #### CROSSMINT_TRANSFER
+
 Transfer tokens using MPC wallets:
 
 ```
@@ -70,6 +72,7 @@ Transfer tokens using MPC wallets:
 ```
 
 #### CREATE_CROSSMINT_WALLET
+
 Create MPC or custodial wallets:
 
 ```
@@ -78,6 +81,7 @@ Create MPC or custodial wallets:
 ```
 
 #### MINT_NFT
+
 Mint NFTs using CrossMint infrastructure:
 
 ```
@@ -86,6 +90,7 @@ Mint NFTs using CrossMint infrastructure:
 ```
 
 #### CHECK_PAYMENT_STATUS
+
 Verify X.402 payment completion:
 
 ```

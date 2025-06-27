@@ -110,7 +110,7 @@ export class WeaponOrientationSystem {
       metadata,
     }
 
-    console.log(`✅ Weapon configuration generated successfully`)
+    console.log('✅ Weapon configuration generated successfully')
     console.log(`   Attachment points: ${attachmentPoints.length}`)
     console.log(`   Physics mass: ${physicsProperties.mass.toFixed(2)}kg`)
     console.log(`   Base damage: ${metadata.damage}`)
@@ -233,7 +233,10 @@ export class WeaponOrientationSystem {
     const { boundingBox } = weaponAnalysis
 
     // Base damage calculation based on weapon size and type
-    const sizeMultiplier = Math.sqrt(boundingBox.dimensions.x * boundingBox.dimensions.y * boundingBox.dimensions.z)
+    const sizeMultiplier = Math.max(
+      0.5, // Minimum size multiplier to ensure reasonable damage
+      Math.sqrt(boundingBox.dimensions.x * boundingBox.dimensions.y * boundingBox.dimensions.z)
+    )
     const baseDamage = template.baseDamage * sizeMultiplier
 
     // Range calculation
@@ -359,6 +362,7 @@ export class WeaponOrientationSystem {
       restOffset: { x: 0, y: 0, z: 0 },
       combatOffset: { x: 0.2, y: 0.1, z: 0 },
       sheathedOffset: { x: 0, y: 0, z: Math.PI },
+      blockOffset: { x: 0.1, y: 0.2, z: 0 },
       sheathedAttachments: [
         {
           socketType: 'belt',
@@ -408,6 +412,7 @@ export class WeaponOrientationSystem {
       animations: {
         idle: ['idle_axe'],
         attack: ['chop_overhead', 'chop_side'],
+        block: ['block_axe'],
         sheath: ['sheath_axe'],
         unsheath: ['unsheath_axe'],
       },
@@ -446,6 +451,42 @@ export class WeaponOrientationSystem {
         attack: ['staff_thrust', 'staff_sweep'],
         sheath: ['sheath_staff'],
         unsheath: ['unsheath_staff'],
+      },
+    })
+
+    // Bow template
+    this.weaponConfigurations.set('bow', {
+      density: 0.6, // Wood density
+      minMass: 0.5,
+      baseDamage: 20,
+      baseRange: 2.5,
+      attackSpeed: 0.9,
+      durability: 90,
+      enchantmentSlots: 2,
+      valueMultiplier: 12,
+      requirements: { dexterity: 12, level: 3 },
+      damping: 0.05,
+      angularDamping: 0.1,
+      restitution: 0.5,
+      friction: 0.4,
+      centerOfMassOffset: { x: 0, y: 0, z: 0 },
+      restOffset: { x: 0, y: 0, z: 0 },
+      combatOffset: { x: 0, y: 0.1, z: 0 },
+      sheathedOffset: { x: 0, y: 0, z: Math.PI / 2 },
+      sheathedAttachments: [
+        {
+          socketType: 'back',
+          boneName: 'shoulder_left',
+          offset: { x: -0.1, y: 0, z: -0.05 },
+          rotation: { x: 0, y: 0, z: Math.PI / 4, w: 1 },
+          priority: 75,
+        },
+      ],
+      animations: {
+        idle: ['idle_bow'],
+        attack: ['draw_bow', 'shoot_bow'],
+        sheath: ['sheath_bow'],
+        unsheath: ['unsheath_bow'],
       },
     })
 
@@ -524,7 +565,7 @@ export class WeaponOrientationSystem {
       }
     }
 
-    console.log(`✅ Batch configuration generation complete`)
+    console.log('✅ Batch configuration generation complete')
     return configurations
   }
 }

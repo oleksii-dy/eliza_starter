@@ -60,12 +60,9 @@ export class TrustService extends Service {
   async initialize(runtime: IAgentRuntime): Promise<void> {
     this.runtime = runtime;
 
-    // Get database service
-    const dbService = runtime.getService('trust-database');
-    if (!dbService || !('trustDatabase' in dbService)) {
-      throw new Error('Trust database service not available');
-    }
-    this.trustDatabase = (dbService as any).trustDatabase;
+    // Initialize trust database
+    this.trustDatabase = new TrustDatabase();
+    await this.trustDatabase.initialize(runtime);
 
     // Initialize managers
     this.trustEngine = new TrustEngine();

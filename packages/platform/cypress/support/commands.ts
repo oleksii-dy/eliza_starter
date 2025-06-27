@@ -204,6 +204,97 @@ Cypress.Commands.add('visitAuthenticated', (url: string) => {
   cy.wait('@getIdentity');
 });
 
+// Improved dev login command
+Cypress.Commands.add('devLogin', () => {
+  // Set authentication cookie AND localStorage for full compatibility
+  cy.setCookie('auth-token', 'dev-auth-token-123');
+  
+  // Set authentication state directly without API calls to speed up tests
+  cy.window().then((win) => {
+    win.localStorage.setItem('auth-token', 'dev-auth-token-123');
+    win.localStorage.setItem('user', JSON.stringify({
+      id: 'a0000000-0000-4000-8000-000000000001',
+      email: 'dev@elizaos.ai',
+      firstName: 'Developer',
+      lastName: 'User',
+      organizationId: 'a0000000-0000-4000-8000-000000000002',
+      role: 'owner',
+      emailVerified: true,
+    }));
+  });
+
+  // Mock all auth-related API calls to avoid network delays
+  // Mock the exact endpoint that layout.tsx calls
+  cy.intercept('GET', 'http://localhost:3333/api/auth/identity', {
+    statusCode: 200,
+    body: {
+      id: 'a0000000-0000-4000-8000-000000000001',
+      email: 'dev@elizaos.ai',
+      firstName: 'Developer',
+      lastName: 'User',
+      organizationId: 'a0000000-0000-4000-8000-000000000002',
+      role: 'owner',
+      emailVerified: true,
+      deleted_at: null, // Important for layout logic
+    },
+  }).as('identityLayout');
+
+  // Also mock the newer API pattern
+  cy.intercept('GET', '**/api/auth/identity', {
+    statusCode: 200,
+    body: {
+      success: true,
+      data: {
+        user: {
+          id: 'a0000000-0000-4000-8000-000000000001',
+          email: 'dev@elizaos.ai',
+          firstName: 'Developer',
+          lastName: 'User',
+          organizationId: 'a0000000-0000-4000-8000-000000000002',
+          role: 'owner',
+          emailVerified: true,
+        },
+        organization: {
+          id: 'a0000000-0000-4000-8000-000000000002',
+          name: 'ElizaOS Development',
+          slug: 'elizaos-dev',
+          creditBalance: '1000.0',
+          subscriptionTier: 'premium',
+        },
+      },
+    },
+  }).as('identity');
+
+  cy.intercept('GET', '/api/auth/session', {
+    statusCode: 200,
+    body: {
+      success: true,
+      data: {
+        userId: 'a0000000-0000-4000-8000-000000000001',
+        email: 'dev@elizaos.ai',
+        organizationId: 'a0000000-0000-4000-8000-000000000002'
+      }
+    }
+  }).as('session');
+
+  cy.intercept('GET', '/api/v1/organizations/config', {
+    statusCode: 200,
+    body: {
+      requiredPlugins: ['@elizaos/plugin-sql', '@elizaos/plugin-openai']
+    }
+  }).as('orgConfig');
+
+  cy.intercept('POST', '/api/api-keys', {
+    statusCode: 200,
+    body: {
+      success: true,
+      data: {
+        key: 'test-api-key-123'
+      }
+    }
+  }).as('apiKey');
+});
+
 // API Mocking Commands
 Cypress.Commands.add(
   'mockApiSuccess',
@@ -238,6 +329,8 @@ Cypress.Commands.add('clearAuthState', () => {
   cy.window().then((win) => {
     win.sessionStorage.clear();
   });
+  // Explicitly clear auth-token cookie
+  cy.clearCookie('auth-token');
 });
 
 Cypress.Commands.add('waitForPageLoad', () => {
@@ -278,108 +371,6 @@ Cypress.Commands.add('cleanupTestData', () => {
       'X-Test-Mode': 'true',
     },
   });
-});
-
-// Dev Login Command
-Cypress.Commands.add('devLogin', () => {
-  // Clear any existing auth state completely
-  cy.clearAuthState();
-  
-  // Clear all cookies for the domain to ensure no leftover auth state
-  cy.clearCookies();
-  
-  // Set up ALL intercepts FIRST before any navigation
-  cy.intercept('GET', '**/api/auth/identity', {
-    statusCode: 200,
-    body: {
-      success: true,
-      data: {
-        user: {
-          id: 'a0000000-0000-4000-8000-000000000001',
-          email: 'dev@elizaos.ai',
-          firstName: 'Developer',
-          lastName: 'User',
-          organizationId: 'a0000000-0000-4000-8000-000000000002',
-          role: 'owner',
-          emailVerified: true
-        },
-        organization: {
-          id: 'a0000000-0000-4000-8000-000000000002',
-          name: 'ElizaOS Development',
-          slug: 'elizaos-dev',
-          creditBalance: '1000.0',
-          subscriptionTier: 'premium'
-        }
-      }
-    }
-  }).as('identity');
-
-  // Mock dashboard stats API
-  cy.intercept('GET', '**/api/dashboard/stats', {
-    statusCode: 200,
-    body: {
-      success: true,
-      data: {
-        agentCount: 3,
-        userCount: 1,
-        creditBalance: '1000.00',
-        subscriptionTier: 'Premium',
-        apiRequests24h: 156,
-        totalCost24h: '2.45',
-        activeAgents: 2,
-        pendingInvites: 0
-      }
-    }
-  }).as('dashboardStats');
-
-  // Mock dashboard activity API
-  cy.intercept('GET', '**/api/dashboard/activity*', {
-    statusCode: 200,
-    body: {
-      success: true,
-      data: [
-        {
-          id: '1',
-          type: 'agent_created',
-          title: 'New agent created',
-          description: 'Customer Support Bot was created',
-          timestamp: '2 hours ago'
-        },
-        {
-          id: '2', 
-          type: 'api_key_created',
-          title: 'API key generated',
-          description: 'New production API key created',
-          timestamp: '5 hours ago'
-        }
-      ]
-    }
-  }).as('dashboardActivity');
-
-  cy.intercept('GET', '**/api/agents', {
-    statusCode: 200,
-    body: { success: true, data: { agents: [], stats: {} } }
-  }).as('agents');
-  
-  // Visit the login page, allowing for redirects and errors
-  cy.visit('/auth/login', { failOnStatusCode: false });
-  
-  // Wait for the page to load and dev button to be visible
-  cy.contains('Log in to your account').should('be.visible');
-  cy.get('[data-cy="dev-mode-section"]').should('be.visible');
-  cy.get('[data-cy="dev-login-btn"]').should('be.visible');
-  
-  // Click the dev login button
-  cy.get('[data-cy="dev-login-btn"]').click();
-  
-  // Wait for redirect to dashboard with longer timeout
-  cy.url({ timeout: 15000 }).should('include', '/dashboard');
-  
-  // Verify we're authenticated
-  cy.getCookie('auth-token').should('exist');
-  
-  // Wait for dashboard to load
-  cy.contains('Dashboard').should('be.visible');
 });
 
 // Export to make TypeScript happy

@@ -5,9 +5,7 @@
     "moduleResolution": "node",
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "lib": [
-      "ES2021.String"
-    ],
+    "lib": ["ES2021.String"],
     "forceConsistentCasingInFileNames": true,
     "allowSyntheticDefaultImports": true,
     "rootDir": "./src",
@@ -16,17 +14,8 @@
     "emitDeclarationOnly": true,
     "noEmit": false,
     "sourceMap": true,
-    "typeRoots": [
-      "./node_modules/@types"
-    ]
+    "typeRoots": ["./node_modules/@types"]
   },
-  "include": [
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "dist",
-    "node_modules",
-    "src/**/*.test.ts",
-    "src/__tests__/**"
-  ]
+  "include": ["src/**/*.ts"],
+  "exclude": ["dist", "node_modules", "src/**/*.test.ts", "src/__tests__/**"]
 }

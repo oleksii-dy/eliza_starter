@@ -41,3 +41,7 @@ test-deepresearch-results.jsonl
 .turbo
 .cursor
 .claude
+AGENTS.md
+.cursor/rules/elizaos
+CLAUDE.md
+.cursorignore

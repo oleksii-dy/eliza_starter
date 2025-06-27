@@ -13,7 +13,7 @@ const colors = {
   green: '\x1b[32m',
   red: '\x1b[31m',
   yellow: '\x1b[33m',
-  blue: '\x1b[34m'
+  blue: '\x1b[34m',
 };
 
 function log(message, color = 'reset') {
@@ -70,7 +70,7 @@ async function runTests() {
       stdio: 'pipe',
       shell: true,
       cwd: process.cwd(),
-      detached: true
+      detached: true,
     });
 
     // Capture server output
@@ -90,7 +90,7 @@ async function runTests() {
     const cypressProcess = spawn('npm', ['run', 'cypress:run'], {
       stdio: 'inherit',
       shell: true,
-      cwd: process.cwd()
+      cwd: process.cwd(),
     });
 
     // Wait for Cypress to complete
@@ -109,7 +109,6 @@ async function runTests() {
         reject(err);
       });
     });
-
   } catch (error) {
     log(`\n❌ Test failed: ${error.message}`, 'red');
     exitCode = 1;
@@ -122,7 +121,10 @@ async function runTests() {
       try {
         process.kill(-serverProcess.pid);
       } catch (e) {
-        log(`Could not kill server process group: ${e.message}. Fallback to single process kill.`, 'yellow');
+        log(
+          `Could not kill server process group: ${e.message}. Fallback to single process kill.`,
+          'yellow'
+        );
         serverProcess.kill();
       }
     }

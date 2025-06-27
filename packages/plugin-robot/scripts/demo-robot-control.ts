@@ -18,30 +18,28 @@ const robotPlugin = {
 
   services: [
     'RobotService - 24 DOF control, teaching, safety features',
-    'VisionService - Camera integration with robot control'
+    'VisionService - Camera integration with robot control',
   ],
 
   actions: [
     'ROBOT_COMMAND - Direct joint control',
     'ROBOT_TEACH - Teaching by demonstration',
     'DESCRIBE_SCENE - Vision analysis',
-    'CAPTURE_IMAGE - Camera capture'
+    'CAPTURE_IMAGE - Camera capture',
   ],
 
-  providers: [
-    'ROBOT_STATE - Real-time robot state information'
-  ]
+  providers: ['ROBOT_STATE - Real-time robot state information'],
 };
 
 console.log('Plugin Configuration:');
 console.log('- Name:', robotPlugin.name);
 console.log('- Description:', robotPlugin.description);
 console.log('\nServices:');
-robotPlugin.services.forEach(s => console.log('  •', s));
+robotPlugin.services.forEach((s) => console.log('  •', s));
 console.log('\nActions:');
-robotPlugin.actions.forEach(a => console.log('  •', a));
+robotPlugin.actions.forEach((a) => console.log('  •', a));
 console.log('\nProviders:');
-robotPlugin.providers.forEach(p => console.log('  •', p));
+robotPlugin.providers.forEach((p) => console.log('  •', p));
 
 console.log('\n===========================================');
 console.log('Example Usage:');
@@ -51,28 +49,28 @@ console.log('===========================================\n');
 const examples = [
   {
     user: 'Move the robot head yaw to 30 degrees',
-    agent: '🎯 Moving head_yaw to 0.52 radians'
+    agent: '🎯 Moving head_yaw to 0.52 radians',
   },
   {
     user: 'Emergency stop!',
-    agent: '🛑 Emergency stop activated! All robot movements halted.'
+    agent: '🛑 Emergency stop activated! All robot movements halted.',
   },
   {
     user: 'Start teaching the robot',
-    agent: '🎓 Teaching mode activated! Move the robot to desired positions...'
+    agent: '🎓 Teaching mode activated! Move the robot to desired positions...',
   },
   {
     user: 'Record this pose as standing position',
-    agent: '📸 Recorded pose: "standing position"'
+    agent: '📸 Recorded pose: "standing position"',
   },
   {
     user: 'Save this motion as wave hello',
-    agent: '💾 Motion saved: "wave hello"'
+    agent: '💾 Motion saved: "wave hello"',
   },
   {
     user: 'Execute motion wave hello',
-    agent: '🎬 Executing motion: "wave hello"'
-  }
+    agent: '🎬 Executing motion: "wave hello"',
+  },
 ];
 
 examples.forEach((example, i) => {
@@ -96,15 +94,15 @@ const robotState = {
     { name: 'head_pitch', position: 0.0 },
     { name: 'left_shoulder_pitch', position: 0.0 },
     { name: 'right_shoulder_pitch', position: 0.0 },
-    '... and 20 more joints'
-  ]
+    '... and 20 more joints',
+  ],
 };
 
 console.log('Robot Status:', robotState.status);
 console.log('Mode:', robotState.mode);
 console.log('Emergency Stop:', robotState.emergencyStop ? 'ACTIVE ⚠️' : 'Released ✅');
 console.log('\nJoint Positions:');
-robotState.joints.slice(0, 4).forEach(joint => {
+robotState.joints.slice(0, 4).forEach((joint) => {
   if (typeof joint === 'string') {
     console.log(joint);
   } else {

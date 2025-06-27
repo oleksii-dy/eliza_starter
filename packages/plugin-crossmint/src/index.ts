@@ -1,8 +1,4 @@
-import {
-  type Plugin,
-  type IAgentRuntime,
-  logger,
-} from '@elizaos/core';
+import { type Plugin, type IAgentRuntime, logger } from '@elizaos/core';
 
 // Services
 import { RealCrossMintService } from './services/RealCrossMintService';
@@ -39,7 +35,8 @@ export * from './types/crossmint';
  */
 export const crossmintPlugin: Plugin = {
   name: '@elizaos/plugin-crossmint',
-  description: 'Enterprise blockchain platform with MPC wallets, X.402 payments, and cross-chain infrastructure',
+  description:
+    'Enterprise blockchain platform with MPC wallets, X.402 payments, and cross-chain infrastructure',
 
   // Plugin configuration
   config: {
@@ -113,11 +110,7 @@ export const crossmintPlugin: Plugin = {
   ],
 
   // Providers
-  providers: [
-    crossmintWalletProvider,
-    crossmintPortfolioProvider,
-    crossmintPaymentsProvider,
-  ],
+  providers: [crossmintWalletProvider, crossmintPortfolioProvider, crossmintPaymentsProvider],
 
   // Plugin initialization
   async init(config: Record<string, string>, runtime: IAgentRuntime) {
@@ -125,14 +118,12 @@ export const crossmintPlugin: Plugin = {
 
     // Validate required configuration
     const requiredSettings = ['CROSSMINT_API_KEY', 'CROSSMINT_PROJECT_ID'];
-    const missingSettings = requiredSettings.filter(
-      setting => !runtime.getSetting(setting)
-    );
+    const missingSettings = requiredSettings.filter((setting) => !runtime.getSetting(setting));
 
     if (missingSettings.length > 0) {
       logger.warn(
         `CrossMint plugin missing required settings: ${missingSettings.join(', ')}. ` +
-        'The plugin will be available but may not function correctly until these are configured.'
+          'The plugin will be available but may not function correctly until these are configured.'
       );
       return;
     }
@@ -144,7 +135,9 @@ export const crossmintPlugin: Plugin = {
     logger.info('CrossMint capabilities:');
     logger.info('  - MPC (Multi-Party Computation) wallets');
     logger.info('  - X.402 payment protocol support');
-    logger.info('  - Cross-chain transfers (Ethereum, Polygon, Arbitrum, Optimism, Base, BSC, Solana)');
+    logger.info(
+      '  - Cross-chain transfers (Ethereum, Polygon, Arbitrum, Optimism, Base, BSC, Solana)'
+    );
     logger.info('  - NFT minting and management');
     logger.info('  - Enterprise blockchain infrastructure');
     logger.info('  - Real-time payment verification');

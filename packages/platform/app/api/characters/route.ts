@@ -20,10 +20,16 @@ const createCharacterSchema = z.object({
   characterConfig: z.object({
     name: z.string().min(1).max(100),
     bio: z.string().min(1).max(1000),
-    messageExamples: z.array(z.array(z.object({
-      user: z.string(),
-      assistant: z.string(),
-    }))).optional(),
+    messageExamples: z
+      .array(
+        z.array(
+          z.object({
+            user: z.string(),
+            assistant: z.string(),
+          }),
+        ),
+      )
+      .optional(),
     knowledge: z.array(z.string()).optional(),
     personality: z.string().max(500).optional(),
     style: z.string().max(500).optional(),
@@ -35,12 +41,12 @@ const createCharacterSchema = z.object({
 /**
  * GET /api/characters - List characters for current organization
  */
-export async function GET(request: NextRequest) {
+export async function handleGET(request: NextRequest) {
   // During build time, return a stub response to prevent database access
   if (process.env.NEXT_PHASE === 'phase-production-build') {
     return NextResponse.json(
       { error: 'API not available during build time' },
-      { status: 503 }
+      { status: 503 },
     );
   }
 
@@ -62,13 +68,16 @@ export async function GET(request: NextRequest) {
 
     // Get characters and stats
     const characterService = await getCharacterService();
-    const characters = await characterService.getCharacters(user.organizationId, {
-      limit,
-      offset,
-      search,
-      visibility,
-      createdBy,
-    });
+    const characters = await characterService.getCharacters(
+      user.organizationId,
+      {
+        limit,
+        offset,
+        search,
+        visibility,
+        createdBy,
+      },
+    );
 
     const stats = await characterService.getCharacterStats(user.organizationId);
 
@@ -76,17 +85,17 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         characters,
-        stats
-      }
+        stats,
+      },
     });
   } catch (error) {
     console.error('Error fetching characters:', error);
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to fetch characters'
+        error: 'Failed to fetch characters',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -94,12 +103,12 @@ export async function GET(request: NextRequest) {
 /**
  * POST /api/characters - Create new character
  */
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   // During build time, return a stub response to prevent database access
   if (process.env.NEXT_PHASE === 'phase-production-build') {
     return NextResponse.json(
       { error: 'API not available during build time' },
-      { status: 503 }
+      { status: 503 },
     );
   }
 
@@ -119,9 +128,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Invalid request data',
-          details: validation.error.errors
+          details: validation.error.errors,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -132,26 +141,26 @@ export async function POST(request: NextRequest) {
     const character = await characterService.createCharacter(
       user.organizationId,
       user.id,
-      data
+      data,
     );
 
-    return NextResponse.json({ 
-      success: true,
-      data: character 
-    }, { status: 201 });
+    return NextResponse.json(
+      {
+        success: true,
+        data: character,
+      },
+      { status: 201 },
+    );
   } catch (error) {
     console.error('Error creating character:', error);
 
     if (error instanceof Error && error.message.includes('already exists')) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 409 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 409 });
     }
 
     return NextResponse.json(
       { error: 'Failed to create character' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

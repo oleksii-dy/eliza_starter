@@ -156,8 +156,8 @@ describe('AgentKit Actions', () => {
 
       expect(result).toBeDefined();
       expect(typeof result).toBe('object');
-      expect((result as any).success).toBe(false);
-      expect((result as any).error).toBe('Network error');
+      expect((result as any).data.success).toBe(false);
+      expect((result as any).data.error).toBe('Network error');
       expect(mockCallback).toHaveBeenCalledWith({
         text: expect.stringContaining('Error executing action get_balance'),
         content: { error: 'Network error' },

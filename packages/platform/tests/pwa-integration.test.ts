@@ -19,9 +19,9 @@ describe('Progressive Web App Integration', () => {
     dom = new JSDOM('<!DOCTYPE html><html><head></head><body></body></html>', {
       url: 'https://platform.elizaos.com',
       pretendToBeVisual: true,
-      resources: 'usable'
+      resources: 'usable',
     });
-    
+
     window = dom.window as any;
     document = window.document;
 
@@ -53,8 +53,15 @@ describe('Progressive Web App Integration', () => {
       // Icons validation
       expect(manifest.icons).toBeInstanceOf(Array);
       expect(manifest.icons.length).toBeGreaterThan(0);
-      
-      const requiredIconSizes = ['72x72', '96x96', '128x128', '144x144', '192x192', '512x512'];
+
+      const requiredIconSizes = [
+        '72x72',
+        '96x96',
+        '128x128',
+        '144x144',
+        '192x192',
+        '512x512',
+      ];
       for (const size of requiredIconSizes) {
         const icon = manifest.icons.find((icon: any) => icon.sizes === size);
         expect(icon).toBeDefined();
@@ -65,12 +72,16 @@ describe('Progressive Web App Integration', () => {
       // Shortcuts validation
       expect(manifest.shortcuts).toBeInstanceOf(Array);
       expect(manifest.shortcuts).toHaveLength(2);
-      
-      const dashboardShortcut = manifest.shortcuts.find((s: any) => s.name === 'Dashboard');
+
+      const dashboardShortcut = manifest.shortcuts.find(
+        (s: any) => s.name === 'Dashboard',
+      );
       expect(dashboardShortcut).toBeDefined();
       expect(dashboardShortcut.url).toBe('/dashboard');
 
-      const newAgentShortcut = manifest.shortcuts.find((s: any) => s.name === 'New Agent');
+      const newAgentShortcut = manifest.shortcuts.find(
+        (s: any) => s.name === 'New Agent',
+      );
       expect(newAgentShortcut).toBeDefined();
       expect(newAgentShortcut.url).toBe('/dashboard/agents/create');
     });
@@ -108,12 +119,12 @@ describe('Progressive Web App Integration', () => {
       const mockServiceWorker = {
         register: jest.fn().mockResolvedValue({}),
         ready: Promise.resolve({}),
-        controller: null
+        controller: null,
       };
 
       Object.defineProperty(window.navigator, 'serviceWorker', {
         value: mockServiceWorker,
-        writable: true
+        writable: true,
       });
 
       // Test service worker registration logic
@@ -130,7 +141,7 @@ describe('Progressive Web App Integration', () => {
       const mockEvent = {
         preventDefault: jest.fn(),
         prompt: jest.fn().mockResolvedValue({ outcome: 'accepted' }),
-        userChoice: Promise.resolve({ outcome: 'accepted' })
+        userChoice: Promise.resolve({ outcome: 'accepted' }),
       };
 
       window.addEventListener('beforeinstallprompt', (e) => {
@@ -165,25 +176,30 @@ describe('Progressive Web App Integration', () => {
       // Test standalone mode detection
       Object.defineProperty(window.navigator, 'standalone', {
         value: true,
-        writable: true
+        writable: true,
       });
 
       // Test display mode detection
       const mediaQuery = {
         matches: true,
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
 
       window.matchMedia = jest.fn().mockImplementation((query) => {
         if (query === '(display-mode: standalone)') {
           return mediaQuery;
         }
-        return { matches: false, addEventListener: jest.fn(), removeEventListener: jest.fn() };
+        return {
+          matches: false,
+          addEventListener: jest.fn(),
+          removeEventListener: jest.fn(),
+        };
       });
 
-      const isStandalone = (window.navigator as any).standalone || 
-                          window.matchMedia('(display-mode: standalone)').matches;
+      const isStandalone =
+        (window.navigator as any).standalone ||
+        window.matchMedia('(display-mode: standalone)').matches;
 
       expect(isStandalone).toBe(true);
     });
@@ -198,9 +214,10 @@ describe('Progressive Web App Integration', () => {
 
       // Test PWA detection (when not Tauri)
       delete (window as any).__TAURI__;
-      const isPWA = !('__TAURI__' in window) && 
-                   ((window.navigator as any).standalone || 
-                    window.matchMedia('(display-mode: standalone)').matches);
+      const isPWA =
+        !('__TAURI__' in window) &&
+        ((window.navigator as any).standalone ||
+          window.matchMedia('(display-mode: standalone)').matches);
 
       expect(isPWA).toBe(true);
     });
@@ -211,7 +228,7 @@ describe('Progressive Web App Integration', () => {
       // Mock navigator.onLine
       Object.defineProperty(window.navigator, 'onLine', {
         value: false,
-        writable: true
+        writable: true,
       });
 
       let offlineHandled = false;
@@ -229,7 +246,7 @@ describe('Progressive Web App Integration', () => {
     test('should handle online state', () => {
       Object.defineProperty(window.navigator, 'onLine', {
         value: true,
-        writable: true
+        writable: true,
       });
 
       let onlineHandled = false;
@@ -271,15 +288,15 @@ describe('Progressive Web App Integration', () => {
           waiting: null,
           active: { state: 'activated' },
           addEventListener: jest.fn(),
-          update: jest.fn()
+          update: jest.fn(),
         }),
         ready: Promise.resolve({}),
-        controller: null
+        controller: null,
       };
 
       Object.defineProperty(window.navigator, 'serviceWorker', {
         value: mockServiceWorker,
-        writable: true
+        writable: true,
       });
 
       // Test update detection
@@ -293,7 +310,7 @@ describe('Progressive Web App Integration', () => {
             updateAvailable = true;
             handler();
           }
-        }
+        },
       };
 
       registration.addEventListener('updatefound', () => {
@@ -309,7 +326,8 @@ describe('Progressive Web App Integration', () => {
       // Test viewport meta tag
       const viewportMeta = document.createElement('meta');
       viewportMeta.name = 'viewport';
-      viewportMeta.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=false';
+      viewportMeta.content =
+        'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=false';
       document.head.appendChild(viewportMeta);
 
       expect(viewportMeta.content).toContain('width=device-width');
@@ -321,17 +339,17 @@ describe('Progressive Web App Integration', () => {
       const screenSizes = [
         { width: 375, height: 812 }, // Mobile
         { width: 768, height: 1024 }, // Tablet
-        { width: 1280, height: 720 }  // Desktop
+        { width: 1280, height: 720 }, // Desktop
       ];
 
-      screenSizes.forEach(size => {
+      screenSizes.forEach((size) => {
         Object.defineProperty(window, 'innerWidth', {
           value: size.width,
-          writable: true
+          writable: true,
         });
         Object.defineProperty(window, 'innerHeight', {
           value: size.height,
-          writable: true
+          writable: true,
         });
 
         // Test responsive breakpoints

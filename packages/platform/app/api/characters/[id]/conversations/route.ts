@@ -19,7 +19,7 @@ const startConversationSchema = z.object({
 /**
  * GET /api/characters/[id]/conversations - Get user's conversations with character
  */
-export async function GET(
+export async function handleGET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -93,7 +93,7 @@ export async function GET(
 /**
  * POST /api/characters/[id]/conversations - Start new conversation with character
  */
-export async function POST(
+export async function handlePOST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {

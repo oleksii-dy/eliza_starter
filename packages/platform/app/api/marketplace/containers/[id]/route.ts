@@ -4,9 +4,9 @@ import { auth } from '@/lib/auth';
 
 const containerService = new ContainerHostingService();
 
-export async function GET(
+export async function handleGET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await auth();
@@ -18,7 +18,10 @@ export async function GET(
     const containerId = resolvedParams.id;
 
     // Get container status
-    const container = await containerService.getContainerStatus(containerId, session.user.id);
+    const container = await containerService.getContainerStatus(
+      containerId,
+      session.user.id,
+    );
 
     return NextResponse.json({
       success: true,
@@ -27,15 +30,20 @@ export async function GET(
   } catch (error) {
     console.error('Failed to get container status:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to get container status' },
-      { status: 500 }
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Failed to get container status',
+      },
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const session = await auth();
@@ -56,8 +64,11 @@ export async function DELETE(
   } catch (error) {
     console.error('Failed to stop container:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to stop container' },
-      { status: 500 }
+      {
+        error:
+          error instanceof Error ? error.message : 'Failed to stop container',
+      },
+      { status: 500 },
     );
   }
 }

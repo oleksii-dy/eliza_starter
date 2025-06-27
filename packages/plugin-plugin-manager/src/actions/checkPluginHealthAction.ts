@@ -81,7 +81,7 @@ export const checkPluginHealthAction: Action = {
       {
         name: '{{agentName}}',
         content: {
-          text: 'I\'ll check the health status of all plugins.',
+          text: "I'll check the health status of all plugins.",
           actions: ['CHECK_PLUGIN_HEALTH'],
         },
       },
@@ -111,7 +111,7 @@ export const checkPluginHealthAction: Action = {
       {
         name: '{{agentName}}',
         content: {
-          text: 'I\'ll check the health status of the discord plugin.',
+          text: "I'll check the health status of the discord plugin.",
           actions: ['CHECK_PLUGIN_HEALTH'],
         },
       },
@@ -150,7 +150,7 @@ export const checkPluginHealthAction: Action = {
         const pluginName = pluginMatch[1] || pluginMatch[2];
         // Try to find plugin ID by name
         const allPlugins = pluginManager.getAllPlugins();
-        const matchingPlugin = allPlugins.find(p =>
+        const matchingPlugin = allPlugins.find((p) =>
           p.name.toLowerCase().includes(pluginName.toLowerCase())
         );
 
@@ -198,15 +198,15 @@ export const checkPluginHealthAction: Action = {
 
       // Check if user has permission to recover plugins
       const trustService = runtime.getService<TrustService>('TRUST');
-      const canRecover = trustService ?
-        await (trustService as any).checkPermission(message.entityId, 'plugin:recover') :
-        true; // Default to true if trust service not available
+      const canRecover = trustService
+        ? await (trustService as any).checkPermission(message.entityId, 'plugin:recover')
+        : true; // Default to true if trust service not available
 
       let actionText = statusText;
       if (statusCounts.unhealthy > 0 && canRecover) {
         actionText += '\n\nYou can use RECOVER_PLUGIN to attempt recovery of unhealthy plugins.';
       } else if (statusCounts.unhealthy > 0 && !canRecover) {
-        actionText += '\n\nYou don\'t have permission to recover plugins. Contact an admin.';
+        actionText += "\n\nYou don't have permission to recover plugins. Contact an admin.";
       }
 
       await callback?.({

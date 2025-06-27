@@ -102,47 +102,50 @@ Be methodical and thorough. This is a classic RPG quest structure - talk, kill, 
         steps: [
           {
             type: 'message',
-            content: 'I need to find a quest to complete! Let me look around for NPCs who might have quests for me.',
-            description: 'Search for quest givers'
+            content:
+              'I need to find a quest to complete! Let me look around for NPCs who might have quests for me.',
+            description: 'Search for quest givers',
           },
           {
             type: 'wait',
             waitTime: 3000,
-            description: 'Wait for NPC detection'
+            description: 'Wait for NPC detection',
           },
           {
             type: 'message',
-            content: 'I should look for a Guard NPC who might have the Goblin Menace quest. Let me approach and talk to them.',
-            description: 'Find and talk to quest giver'
+            content:
+              'I should look for a Guard NPC who might have the Goblin Menace quest. Let me approach and talk to them.',
+            description: 'Find and talk to quest giver',
           },
           {
             type: 'wait',
             waitTime: 5000,
-            description: 'Wait for quest interaction'
+            description: 'Wait for quest interaction',
           },
           {
             type: 'message',
-            content: 'Now I need to find and kill 5 goblins to get their ears. Let me search for goblins nearby.',
-            description: 'Search for combat targets'
+            content:
+              'Now I need to find and kill 5 goblins to get their ears. Let me search for goblins nearby.',
+            description: 'Search for combat targets',
           },
           {
             type: 'wait',
             waitTime: 3000,
-            description: 'Wait for monster detection'
+            description: 'Wait for monster detection',
           },
           {
             type: 'message',
             content: 'Time to fight! I need to kill goblins and collect their ears.',
-            description: 'Begin combat phase'
-          }
-        ]
-      }
-    }
+            description: 'Begin combat phase',
+          },
+        ],
+      },
+    },
   ],
 
   execution: {
     maxDuration: 600000, // 10 minutes
-    maxSteps: 150
+    maxSteps: 150,
   },
 
   verification: {
@@ -152,53 +155,58 @@ Be methodical and thorough. This is a classic RPG quest structure - talk, kill, 
         type: 'llm',
         description: 'Verify agent found and talked to quest giver',
         config: {
-          successCriteria: 'Agent should have found an NPC (like a Guard) and initiated dialogue to receive a quest',
+          successCriteria:
+            'Agent should have found an NPC (like a Guard) and initiated dialogue to receive a quest',
           priority: 'high',
-          category: 'quest-start'
-        }
+          category: 'quest-start',
+        },
       },
       {
         id: 'monster-hunting-check',
         type: 'llm',
         description: 'Verify agent hunted monsters for quest items',
         config: {
-          successCriteria: 'Agent should have actively searched for and engaged goblins or other monsters in combat',
+          successCriteria:
+            'Agent should have actively searched for and engaged goblins or other monsters in combat',
           priority: 'high',
-          category: 'combat'
-        }
+          category: 'combat',
+        },
       },
       {
         id: 'item-collection-check',
         type: 'llm',
         description: 'Verify agent collected quest items',
         config: {
-          successCriteria: 'Agent should have attempted to collect drops or quest items from defeated enemies',
+          successCriteria:
+            'Agent should have attempted to collect drops or quest items from defeated enemies',
           priority: 'high',
-          category: 'collection'
-        }
+          category: 'collection',
+        },
       },
       {
         id: 'quest-completion-check',
         type: 'llm',
         description: 'Verify agent attempted quest completion',
         config: {
-          successCriteria: 'Agent should have returned to the quest giver or attempted to complete the quest objectives',
+          successCriteria:
+            'Agent should have returned to the quest giver or attempted to complete the quest objectives',
           priority: 'high',
-          category: 'quest-end'
-        }
+          category: 'quest-end',
+        },
       },
       {
         id: 'quest-awareness-check',
         type: 'llm',
         description: 'Verify agent understood quest mechanics',
         config: {
-          successCriteria: 'Agent should have demonstrated understanding of quest structure: talk -> kill -> collect -> return',
+          successCriteria:
+            'Agent should have demonstrated understanding of quest structure: talk -> kill -> collect -> return',
           priority: 'medium',
-          category: 'quest-understanding'
-        }
-      }
-    ]
-  }
+          category: 'quest-understanding',
+        },
+      },
+    ],
+  },
 };
 
 /**
@@ -241,21 +249,23 @@ Remember: Trading is a social activity that requires communication and mutual ag
         steps: [
           {
             type: 'message',
-            content: 'I am a merchant looking to trade! Let me look around for other players who might want to trade items.',
-            description: 'Search for trading partners'
+            content:
+              'I am a merchant looking to trade! Let me look around for other players who might want to trade items.',
+            description: 'Search for trading partners',
           },
           {
             type: 'wait',
             waitTime: 3000,
-            description: 'Wait for player detection'
+            description: 'Wait for player detection',
           },
           {
             type: 'message',
-            content: 'I should gather some items first if I don\'t have any, then find another player to trade with.',
-            description: 'Prepare for trading'
-          }
-        ]
-      }
+            content:
+              "I should gather some items first if I don't have any, then find another player to trade with.",
+            description: 'Prepare for trading',
+          },
+        ],
+      },
     },
     {
       id: uuid(),
@@ -285,27 +295,29 @@ Remember: Good trading builds relationships and helps both parties get what they
         steps: [
           {
             type: 'message',
-            content: 'I am ready to trade my goods! Let me look for other players who might be interested in trading.',
-            description: 'Search for trading partners'
+            content:
+              'I am ready to trade my goods! Let me look for other players who might be interested in trading.',
+            description: 'Search for trading partners',
           },
           {
             type: 'wait',
             waitTime: 3000,
-            description: 'Wait for player detection'
+            description: 'Wait for player detection',
           },
           {
             type: 'message',
-            content: 'I should gather some items and be ready to respond to trade offers from other players.',
-            description: 'Prepare inventory for trading'
-          }
-        ]
-      }
-    }
+            content:
+              'I should gather some items and be ready to respond to trade offers from other players.',
+            description: 'Prepare inventory for trading',
+          },
+        ],
+      },
+    },
   ],
 
   execution: {
     maxDuration: 600000, // 10 minutes
-    maxSteps: 200
+    maxSteps: 200,
   },
 
   verification: {
@@ -315,67 +327,73 @@ Remember: Good trading builds relationships and helps both parties get what they
         type: 'llm',
         description: 'Verify agents found each other',
         config: {
-          successCriteria: 'Both agents should have detected each other through HYPERFY_SCENE_PERCEPTION, moved within reasonable proximity (under 15 units), and demonstrated awareness of other agents in the world',
+          successCriteria:
+            'Both agents should have detected each other through HYPERFY_SCENE_PERCEPTION, moved within reasonable proximity (under 15 units), and demonstrated awareness of other agents in the world',
           priority: 'high',
-          category: 'player-interaction'
-        }
+          category: 'player-interaction',
+        },
       },
       {
         id: 'trade-initiation-check',
         type: 'llm',
         description: 'Verify trade conversation started',
         config: {
-          successCriteria: 'At least one agent should have initiated a trade conversation with specific item offers',
+          successCriteria:
+            'At least one agent should have initiated a trade conversation with specific item offers',
           priority: 'high',
-          category: 'trade-start'
-        }
+          category: 'trade-start',
+        },
       },
       {
         id: 'item-offers-check',
         type: 'llm',
         description: 'Verify agents made specific item offers',
         config: {
-          successCriteria: 'Both agents should have made specific offers of items they have and requests for items they want',
+          successCriteria:
+            'Both agents should have made specific offers of items they have and requests for items they want',
           priority: 'high',
-          category: 'trade-negotiation'
-        }
+          category: 'trade-negotiation',
+        },
       },
       {
         id: 'trade-completion-check',
         type: 'llm',
         description: 'Verify successful trade execution',
         config: {
-          successCriteria: 'Agents should have successfully completed an item exchange or trade transaction',
+          successCriteria:
+            'Agents should have successfully completed an item exchange or trade transaction',
           priority: 'high',
-          category: 'trade-completion'
-        }
+          category: 'trade-completion',
+        },
       },
       {
         id: 'social-interaction-check',
         type: 'llm',
         description: 'Verify positive social interaction',
         config: {
-          successCriteria: 'Agents should have demonstrated friendly, collaborative communication during the trading process',
+          successCriteria:
+            'Agents should have demonstrated friendly, collaborative communication during the trading process',
           priority: 'medium',
-          category: 'social'
-        }
+          category: 'social',
+        },
       },
       {
         id: 'trading-mechanics-check',
         type: 'llm',
         description: 'Verify understanding of trading mechanics',
         config: {
-          successCriteria: 'Agents should have demonstrated understanding that trading requires mutual agreement and item exchange',
+          successCriteria:
+            'Agents should have demonstrated understanding that trading requires mutual agreement and item exchange',
           priority: 'medium',
-          category: 'trade-understanding'
-        }
-      }
-    ]
-  }
+          category: 'trade-understanding',
+        },
+      },
+    ],
+  },
 };
 
 /**
- * Scenario 5: Advanced Multi-Agent Quest Cooperation  
+ * Scenario 5: Advanced Multi-Agent Quest Cooperation
  * Multiple agents work together to complete a complex quest
  */
 export const cooperativeQuestScenario: RPGQuestScenario = {
@@ -414,21 +432,23 @@ Use leadership and clear communication to organize the team effectively.`,
         steps: [
           {
             type: 'message',
-            content: 'I need to assemble a team for a challenging quest! Let me find other players who want to join a cooperative quest.',
-            description: 'Recruit team members'
+            content:
+              'I need to assemble a team for a challenging quest! Let me find other players who want to join a cooperative quest.',
+            description: 'Recruit team members',
           },
           {
             type: 'wait',
             waitTime: 4000,
-            description: 'Wait for player recruitment'
+            description: 'Wait for player recruitment',
           },
           {
             type: 'message',
-            content: 'Let me organize our team strategy and assign roles for the Goblin War Party quest.',
-            description: 'Coordinate team strategy'
-          }
-        ]
-      }
+            content:
+              'Let me organize our team strategy and assign roles for the Goblin War Party quest.',
+            description: 'Coordinate team strategy',
+          },
+        ],
+      },
     },
     {
       id: uuid(),
@@ -459,20 +479,20 @@ You're the muscle of the operation - focus on combat effectiveness while support
           {
             type: 'message',
             content: 'I am ready for combat! Looking for a team that needs a warrior for quests.',
-            description: 'Offer combat services'
+            description: 'Offer combat services',
           },
           {
             type: 'wait',
             waitTime: 3000,
-            description: 'Wait for team invitation'
+            description: 'Wait for team invitation',
           },
           {
             type: 'message',
             content: 'I will focus on fighting monsters and protecting the team during our quest.',
-            description: 'Accept combat role'
-          }
-        ]
-      }
+            description: 'Accept combat role',
+          },
+        ],
+      },
     },
     {
       id: uuid(),
@@ -502,27 +522,29 @@ You're the backbone of resource management - keep the team supplied and organize
         steps: [
           {
             type: 'message',
-            content: 'I am excellent at gathering resources! Looking for a team that needs support and item collection.',
-            description: 'Offer gathering services'
+            content:
+              'I am excellent at gathering resources! Looking for a team that needs support and item collection.',
+            description: 'Offer gathering services',
           },
           {
             type: 'wait',
             waitTime: 3000,
-            description: 'Wait for team invitation'
+            description: 'Wait for team invitation',
           },
           {
             type: 'message',
-            content: 'I will focus on collecting quest items and supporting our team with resources.',
-            description: 'Accept support role'
-          }
-        ]
-      }
-    }
+            content:
+              'I will focus on collecting quest items and supporting our team with resources.',
+            description: 'Accept support role',
+          },
+        ],
+      },
+    },
   ],
 
   execution: {
     maxDuration: 900000, // 15 minutes for complex cooperation
-    maxSteps: 300
+    maxSteps: 300,
   },
 
   verification: {
@@ -532,60 +554,65 @@ You're the backbone of resource management - keep the team supplied and organize
         type: 'llm',
         description: 'Verify agents formed a cooperative team',
         config: {
-          successCriteria: 'QuestLeaderAgent should have successfully recruited other agents into a team for the quest',
+          successCriteria:
+            'QuestLeaderAgent should have successfully recruited other agents into a team for the quest',
           priority: 'high',
-          category: 'team-building'
-        }
+          category: 'team-building',
+        },
       },
       {
         id: 'role-assignment-check',
         type: 'llm',
         description: 'Verify agents took on specialized roles',
         config: {
-          successCriteria: 'Agents should have accepted and performed specialized roles (leader, warrior, gatherer)',
+          successCriteria:
+            'Agents should have accepted and performed specialized roles (leader, warrior, gatherer)',
           priority: 'high',
-          category: 'role-specialization'
-        }
+          category: 'role-specialization',
+        },
       },
       {
         id: 'coordination-check',
         type: 'llm',
         description: 'Verify team coordination and communication',
         config: {
-          successCriteria: 'Agents should have actively communicated progress, shared information, and coordinated actions',
+          successCriteria:
+            'Agents should have actively communicated progress, shared information, and coordinated actions',
           priority: 'high',
-          category: 'teamwork'
-        }
+          category: 'teamwork',
+        },
       },
       {
         id: 'quest-progress-check',
         type: 'llm',
         description: 'Verify meaningful quest progress was made',
         config: {
-          successCriteria: 'Team should have made significant progress on quest objectives through coordinated effort',
+          successCriteria:
+            'Team should have made significant progress on quest objectives through coordinated effort',
           priority: 'high',
-          category: 'quest-progress'
-        }
+          category: 'quest-progress',
+        },
       },
       {
         id: 'cooperation-effectiveness-check',
         type: 'llm',
         description: 'Verify effective cooperation and teamwork',
         config: {
-          successCriteria: 'Agents should have demonstrated that cooperation was more effective than individual effort',
+          successCriteria:
+            'Agents should have demonstrated that cooperation was more effective than individual effort',
           priority: 'medium',
-          category: 'cooperation-benefit'
-        }
-      }
-    ]
-  }
+          category: 'cooperation-benefit',
+        },
+      },
+    ],
+  },
 };
 
 // Export quest scenarios
 export const rpgQuestScenarios = [
   questCompletionScenario,
   multiAgentTradingScenario,
-  cooperativeQuestScenario
+  cooperativeQuestScenario,
 ];
 
 export default rpgQuestScenarios;

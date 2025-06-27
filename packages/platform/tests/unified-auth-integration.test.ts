@@ -1,16 +1,15 @@
 /**
  * Integration tests for unified authentication flow
- * @jest-environment node
  */
 
-import { describe, test, expect, beforeEach, jest } from '@jest/globals';
+import { describe, test, expect, beforeEach, mock } from 'bun:test';
 
 // Mock DOM APIs for Node environment
 const localStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
+  getItem: mock(),
+  setItem: mock(),
+  removeItem: mock(),
+  clear: mock(),
 };
 
 // Mock global objects
@@ -20,7 +19,7 @@ Object.defineProperty(global, 'window', {
     location: {
       href: 'http://localhost:3333',
     },
-    open: jest.fn(),
+    open: mock(),
   },
   writable: true,
 });
@@ -33,14 +32,13 @@ Object.defineProperty(global, 'localStorage', {
 
 // Helper function to create a properly typed fetch mock
 function createFetchMock() {
-  const mockFetch = jest.fn() as unknown as typeof fetch;
-  (mockFetch as any).preconnect = jest.fn();
+  const mockFetch = mock() as unknown as typeof fetch;
+  (mockFetch as any).preconnect = mock();
   return mockFetch;
 }
 
 // Mock fetch
 const mockFetch = createFetchMock();
-(global.fetch as unknown as jest.Mock).mockReset();
 global.fetch = mockFetch;
 
 describe('Unified Authentication Integration', () => {
@@ -48,14 +46,13 @@ describe('Unified Authentication Integration', () => {
 
   beforeEach(async () => {
     // Clear all mocks
-    jest.clearAllMocks();
-    localStorageMock.clear();
+    localStorageMock.clear.mockClear();
+    localStorageMock.getItem.mockClear();
+    localStorageMock.setItem.mockClear();
+    localStorageMock.removeItem.mockClear();
 
     // Reset fetch mock
-    (global.fetch as unknown as jest.Mock).mockReset();
-
-    // Reset modules to get fresh instance
-    jest.resetModules();
+    (mockFetch as any).mockClear();
 
     // Re-import auth service
     const authModule = await import('../src/lib/unified-auth');
@@ -105,22 +102,19 @@ describe('Unified Authentication Integration', () => {
       );
 
       expect(success).toBe(true);
-      expect(mockFetch).toHaveBeenCalledWith(
-        '/api/auth/callback',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ code: 'auth-code', state: 'state-data' }),
-          credentials: 'include',
+      expect(mockFetch).toHaveBeenCalledWith('/api/auth/callback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      );
+        body: JSON.stringify({ code: 'auth-code', state: 'state-data' }),
+        credentials: 'include',
+      });
     });
 
     test('should handle OAuth errors gracefully', async () => {
       // Mock failed callback API
-      const fetchMock = mockFetch as jest.MockedFunction<typeof fetch>;
+      const fetchMock = mockFetch as any;
       fetchMock.mockResolvedValue({
         ok: false,
         status: 401,
@@ -171,7 +165,7 @@ describe('Unified Authentication Integration', () => {
 
     test('should refresh tokens when needed', async () => {
       // Mock successful refresh API
-      const fetchMock = mockFetch as jest.MockedFunction<typeof fetch>;
+      const fetchMock = mockFetch as any;
       fetchMock.mockResolvedValue({
         ok: true,
         json: async () => ({
@@ -191,13 +185,10 @@ describe('Unified Authentication Integration', () => {
       const success = await unifiedAuth.refreshToken();
 
       expect(success).toBe(true);
-      expect(mockFetch).toHaveBeenCalledWith(
-        '/api/auth/refresh',
-        {
-          method: 'POST',
-          credentials: 'include',
-        },
-      );
+      expect(mockFetch).toHaveBeenCalledWith('/api/auth/refresh', {
+        method: 'POST',
+        credentials: 'include',
+      });
     });
 
     test('should sign out and clear sessions', async () => {
@@ -216,13 +207,10 @@ describe('Unified Authentication Integration', () => {
       );
 
       // Verify logout API was called
-      expect(mockFetch).toHaveBeenCalledWith(
-        '/api/auth/logout',
-        {
-          method: 'POST',
-          credentials: 'include',
-        },
-      );
+      expect(mockFetch).toHaveBeenCalledWith('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
     });
   });
 
@@ -231,13 +219,10 @@ describe('Unified Authentication Integration', () => {
       // Mock Tauri environment
       Object.defineProperty(global.window, '__TAURI__', {
         value: {
-          invoke: jest.fn(),
+          invoke: mock(),
         },
         writable: true,
       });
-
-      // Reset modules and re-import
-      jest.resetModules();
       const authModule = await import('../src/lib/unified-auth');
       const tauriAuth = authModule.unifiedAuth;
 
@@ -281,7 +266,7 @@ describe('Unified Authentication Integration', () => {
   describe('Error Handling', () => {
     test('should handle network failures gracefully', async () => {
       // Mock network failure
-      const fetchMock = global.fetch as jest.MockedFunction<typeof fetch>;
+      const fetchMock = global.fetch as any;
       fetchMock.mockRejectedValue(new Error('Network error') as any);
 
       const result = await unifiedAuth.startOAuthFlow('google');
@@ -306,7 +291,7 @@ describe('Unified Authentication Integration', () => {
 
   describe('State Management', () => {
     test('should notify listeners of state changes', async () => {
-      const listener = jest.fn();
+      const listener = mock();
 
       const unsubscribe = unifiedAuth.subscribe(listener);
 

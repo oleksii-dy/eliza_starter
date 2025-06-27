@@ -12,7 +12,7 @@ const paymentSendRealMoneyScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'I\'ll send 0.001 ETH to bob.eth. Let me process this transaction for you.',
+        content: "I'll send 0.001 ETH to bob.eth. Let me process this transaction for you.",
         action: 'SEND_PAYMENT',
       },
     ],
@@ -23,7 +23,8 @@ const paymentSendRealMoneyScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'Processing transfer of 10 USDC to the specified address. This requires confirmation due to the amount.',
+        content:
+          'Processing transfer of 10 USDC to the specified address. This requires confirmation due to the amount.',
         action: 'SEND_PAYMENT',
       },
     ],
@@ -34,7 +35,7 @@ const paymentSendRealMoneyScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'I\'ll send 5 SOL to the Solana address. Processing the transaction now.',
+        content: "I'll send 5 SOL to the Solana address. Processing the transaction now.",
         action: 'SEND_PAYMENT',
       },
     ],

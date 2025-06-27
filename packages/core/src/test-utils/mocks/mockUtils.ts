@@ -9,6 +9,12 @@ export interface MockFunction<T = any> {
   mockRejectedValue: (error: any) => MockFunction<T>;
   mockImplementation: (fn: (...args: any[]) => T) => MockFunction<T>;
   calls: any[][];
+  
+  // Bun:test compatibility properties
+  mock: {
+    calls: any[][];
+    results: any[];
+  };
 }
 
 export function mock<T = any>(implementation?: (...args: any[]) => T): MockFunction<T> {
@@ -39,6 +45,12 @@ export function mock<T = any>(implementation?: (...args: any[]) => T): MockFunct
   } as MockFunction<T>;
 
   fn.calls = calls;
+  
+  // Add bun:test compatibility
+  fn.mock = {
+    calls,
+    results: [],
+  };
 
   fn.mockReturnValue = (value: T) => {
     mockReturnValueValue = value;

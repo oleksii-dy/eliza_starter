@@ -15,10 +15,7 @@
     },
     "dialogue": {
       "greeting": "Please help us! The goblins are becoming a real problem.",
-      "idle": [
-        "Those goblins are causing trouble...",
-        "I hope someone can help us soon."
-      ]
+      "idle": ["Those goblins are causing trouble...", "I hope someone can help us soon."]
     }
   },
   {
@@ -37,10 +34,7 @@
     },
     "dialogue": {
       "greeting": "Welcome, young adventurer. Our village could use your help.",
-      "idle": [
-        "The goblins have been getting bolder lately...",
-        "I remember when I was young like you..."
-      ]
+      "idle": ["The goblins have been getting bolder lately...", "I remember when I was young like you..."]
     }
   },
   {
@@ -59,10 +53,7 @@
     },
     "dialogue": {
       "greeting": "Ah, an adventurer! The city guard could use someone with your skills.",
-      "idle": [
-        "Crime has been on the rise lately.",
-        "We're always looking for capable individuals."
-      ]
+      "idle": ["Crime has been on the rise lately.", "We're always looking for capable individuals."]
     }
   },
   {
@@ -81,10 +72,7 @@
     },
     "dialogue": {
       "greeting": "Greetings, adventurer. I sense magical potential in you.",
-      "idle": [
-        "The flow of magic has been... disturbed lately.",
-        "These ancient texts hold many secrets."
-      ]
+      "idle": ["The flow of magic has been... disturbed lately.", "These ancient texts hold many secrets."]
     }
   }
-] 
+]

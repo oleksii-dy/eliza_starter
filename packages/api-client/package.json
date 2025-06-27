@@ -10,9 +10,9 @@
     "build": "bun run build.ts",
     "dev": "bun run build.ts --watch",
     "clean": "rm -rf dist && rm -rf .turbo",
-    "lint": "eslint src --fix && prettier --write ./src",
+    "lint": "eslint src --fix && prettier --write src",
     "typecheck": "tsc --noEmit",
-    "test": "elizaos test"
+    "test": "bun test src/"
   },
   "dependencies": {
     "@elizaos/core": "workspace:*"

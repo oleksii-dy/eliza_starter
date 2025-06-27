@@ -116,3 +116,5 @@ export * from './actions/upgrade';
 export * from './actions/generate';
 export * from './types';
 export * from './utils/naming';
+
+export default plugins;

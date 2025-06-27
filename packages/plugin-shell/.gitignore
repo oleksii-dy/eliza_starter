@@ -55,3 +55,7 @@ temp/
 .elizadb/
 pglite/
 cache/
+AGENTS.md
+.cursor/rules/elizaos
+CLAUDE.md
+.cursorignore

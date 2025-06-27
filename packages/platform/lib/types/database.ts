@@ -3,14 +3,14 @@
  * Provides strongly-typed interfaces to replace Record<string, any> patterns
  */
 
-import type { 
+import type {
   Agent,
   User,
   Organization,
   CreditTransaction,
   Generation,
   CryptoPayment,
-  WalletConnection
+  WalletConnection,
 } from '@/lib/database/schema';
 
 // ============================================================================
@@ -76,21 +76,30 @@ export interface CharacterSettings {
 
 export interface CharacterSecrets {
   apiKeys?: Record<string, string>;
-  credentials?: Record<string, {
-    username: string;
-    password: string;
-    metadata?: Record<string, unknown>;
-  }>;
-  tokens?: Record<string, {
-    value: string;
-    expiresAt?: string;
-    scopes?: string[];
-  }>;
-  webhooks?: Record<string, {
-    url: string;
-    secret: string;
-    events: string[];
-  }>;
+  credentials?: Record<
+    string,
+    {
+      username: string;
+      password: string;
+      metadata?: Record<string, unknown>;
+    }
+  >;
+  tokens?: Record<
+    string,
+    {
+      value: string;
+      expiresAt?: string;
+      scopes?: string[];
+    }
+  >;
+  webhooks?: Record<
+    string,
+    {
+      url: string;
+      secret: string;
+      events: string[];
+    }
+  >;
 }
 
 export interface StrictCharacterConfig {
@@ -174,13 +183,13 @@ export interface GenerationParameters {
   quality?: 'standard' | 'high';
   style?: string;
   negative_prompt?: string;
-  
+
   // Video generation
   duration?: number;
   fps?: number;
   motion_prompt?: string;
   seed_image_url?: string;
-  
+
   // Audio generation
   voice_id?: string;
   output_format?: 'mp3' | 'wav' | 'flac' | 'ogg';
@@ -190,14 +199,14 @@ export interface GenerationParameters {
     style?: number;
     use_speaker_boost?: boolean;
   };
-  
+
   // Text generation
   max_tokens?: number;
   top_p?: number;
   frequency_penalty?: number;
   presence_penalty?: number;
   stop_sequences?: string[];
-  
+
   // Common
   seed?: number;
   guidance_scale?: number;
@@ -233,7 +242,7 @@ export interface GenerationMetadata {
   userId: string;
   projectId?: string;
   batchId?: string;
-  
+
   // Quality metrics
   qualityScore?: number;
   userRating?: number;
@@ -243,16 +252,16 @@ export interface GenerationMetadata {
     totalTime: number;
     retryCount: number;
   };
-  
+
   // Cost tracking
   providerCost?: number;
   markupMultiplier?: number;
   creditsCharged?: number;
-  
+
   // A/B testing
   experimentId?: string;
   variant?: string;
-  
+
   // Error information
   errorCategory?: string;
   errorDetails?: Record<string, unknown>;
@@ -299,21 +308,21 @@ export interface TransactionMetadata extends StripeMetadata {
   amount_usd?: number;
   chain_id?: number;
   wallet_address?: string;
-  
+
   // Auto top-up
   isAutoTopUp?: boolean;
   autoTopUpThreshold?: number;
-  
+
   // Promotions and discounts
   promotionCode?: string;
   discountAmount?: number;
   discountPercentage?: number;
-  
+
   // Usage context
   generationId?: string;
   serviceType?: string;
   usageCategory?: string;
-  
+
   // Testing flags
   errorTest?: boolean;
   concurrentTest?: boolean;
@@ -333,7 +342,7 @@ export interface UserProfile {
   timezone?: string;
   locale?: string;
   preferredLanguage?: string;
-  
+
   // Preferences
   notifications?: {
     email: boolean;
@@ -341,7 +350,7 @@ export interface UserProfile {
     sms: boolean;
     marketing: boolean;
   };
-  
+
   // Usage preferences
   defaultVisibility?: 'private' | 'organization' | 'public';
   preferredModels?: string[];
@@ -355,7 +364,7 @@ export interface OrganizationSettings {
     email: string;
     phone?: string;
   };
-  
+
   // Features
   features?: {
     agentSharing: boolean;
@@ -364,7 +373,7 @@ export interface OrganizationSettings {
     apiAccess: boolean;
     ssoEnabled: boolean;
   };
-  
+
   // Limits
   limits?: {
     maxAgents: number;
@@ -372,7 +381,7 @@ export interface OrganizationSettings {
     maxStorageGB: number;
     maxTeamMembers: number;
   };
-  
+
   // Security
   security?: {
     requireMFA: boolean;
@@ -380,7 +389,7 @@ export interface OrganizationSettings {
     ipWhitelist?: string[];
     auditLogRetentionDays: number;
   };
-  
+
   // Branding
   branding?: {
     logoUrl?: string;
@@ -445,7 +454,7 @@ export interface WebSocketEventData {
     status: 'starting' | 'running' | 'stopping' | 'stopped' | 'error';
     message?: string;
   };
-  
+
   // Generation events
   generationUpdated?: {
     generationId: string;
@@ -455,7 +464,7 @@ export interface WebSocketEventData {
     outputs?: GenerationOutput[];
     error?: string;
   };
-  
+
   // Credit events
   creditsUpdated?: {
     organizationId: string;
@@ -463,7 +472,7 @@ export interface WebSocketEventData {
     change: number;
     reason: string;
   };
-  
+
   // System events
   systemMaintenance?: {
     type: 'scheduled' | 'emergency';
@@ -483,7 +492,10 @@ export type StrictAgent = Omit<Agent, 'character' | 'runtimeConfig'> & {
   runtimeConfig?: StrictRuntimeConfig;
 };
 
-export type StrictGeneration = Omit<Generation, 'parameters' | 'outputs' | 'metadata'> & {
+export type StrictGeneration = Omit<
+  Generation,
+  'parameters' | 'outputs' | 'metadata'
+> & {
   parameters: GenerationParameters;
   outputs: GenerationOutput[];
   metadata: GenerationMetadata;
@@ -535,7 +547,9 @@ export interface CreditTransactionWithContext extends StrictCreditTransaction {
 // Type Guards
 // ============================================================================
 
-export function isStrictCharacterConfig(obj: unknown): obj is StrictCharacterConfig {
+export function isStrictCharacterConfig(
+  obj: unknown,
+): obj is StrictCharacterConfig {
   return (
     typeof obj === 'object' &&
     obj !== null &&
@@ -544,14 +558,20 @@ export function isStrictCharacterConfig(obj: unknown): obj is StrictCharacterCon
   );
 }
 
-export function isStrictRuntimeConfig(obj: unknown): obj is StrictRuntimeConfig {
+export function isStrictRuntimeConfig(
+  obj: unknown,
+): obj is StrictRuntimeConfig {
   return typeof obj === 'object' && obj !== null;
 }
 
-export function isGenerationParameters(obj: unknown): obj is GenerationParameters {
+export function isGenerationParameters(
+  obj: unknown,
+): obj is GenerationParameters {
   return typeof obj === 'object' && obj !== null;
 }
 
-export function isTransactionMetadata(obj: unknown): obj is TransactionMetadata {
+export function isTransactionMetadata(
+  obj: unknown,
+): obj is TransactionMetadata {
   return typeof obj === 'object' && obj !== null;
 }

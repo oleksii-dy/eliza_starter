@@ -9,7 +9,7 @@ import { selectDatabase, selectAIModel } from './utils';
 import { createProject, createPlugin, createAgent, createTEEProject } from './actions';
 import type { CreateOptions } from './types';
 
-export const create = new Command('create')
+const createCommand = new Command('create')
   .description('Create a new ElizaOS project, plugin, agent, or TEE project')
   .argument('[name]', 'name of the project/plugin/agent to create')
   .option('--dir <dir>', 'directory to create the project in', '.')
@@ -174,3 +174,6 @@ export const create = new Command('create')
       process.exit(1);
     }
   });
+
+export const create = createCommand;
+export default createCommand;

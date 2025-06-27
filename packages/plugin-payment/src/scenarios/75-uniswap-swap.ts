@@ -12,7 +12,8 @@ const uniswapSwapScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'Initiating Uniswap swap: 1 ETH → USDC. Current rate: 1 ETH = 2,245.67 USDC. Expected output: 2,234.21 USDC after 0.5% slippage. Gas estimate: 0.015 ETH.',
+        content:
+          'Initiating Uniswap swap: 1 ETH → USDC. Current rate: 1 ETH = 2,245.67 USDC. Expected output: 2,234.21 USDC after 0.5% slippage. Gas estimate: 0.015 ETH.',
         action: 'UNISWAP_SWAP',
       },
     ],
@@ -23,7 +24,8 @@ const uniswapSwapScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'Processing Uniswap V3 swap: 1000 USDC → DAI. Using 0.1% slippage tolerance. Rate: 1 USDC = 0.9998 DAI. You\'ll receive 999.60 DAI. Routing through USDC/DAI 0.01% pool.',
+        content:
+          "Processing Uniswap V3 swap: 1000 USDC → DAI. Using 0.1% slippage tolerance. Rate: 1 USDC = 0.9998 DAI. You'll receive 999.60 DAI. Routing through USDC/DAI 0.01% pool.",
         action: 'UNISWAP_SWAP',
       },
     ],
@@ -34,7 +36,8 @@ const uniswapSwapScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'Executing swap on Uniswap (Polygon): 500 MATIC → WETH. Best route found: MATIC → USDC → WETH. Expected: 0.1823 WETH. Network: Polygon, Gas: ~0.5 MATIC.',
+        content:
+          'Executing swap on Uniswap (Polygon): 500 MATIC → WETH. Best route found: MATIC → USDC → WETH. Expected: 0.1823 WETH. Network: Polygon, Gas: ~0.5 MATIC.',
         action: 'UNISWAP_SWAP',
       },
     ],

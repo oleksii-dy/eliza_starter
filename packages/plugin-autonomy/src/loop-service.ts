@@ -88,7 +88,6 @@ export class AutonomousLoopService extends Service {
       // Process the message through the normal runtime flow
       // This will trigger providers, actions, and evaluators naturally
       await this.runtime.processMessage(autonomousMessage);
-
     } catch (error) {
       console.error('[AutonomousLoop] Error in loop execution:', error);
       // Don't stop the loop on individual errors, just log and continue

@@ -27,7 +27,7 @@ const cryptoOnrampSchema = z.object({
   cancelUrl: z.string().url(),
 });
 
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   try {
     // Get user session
     const session = await sessionService.getSessionFromCookies();
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     const validatedData = cryptoOnrampSchema.parse(body);
 
     const db = await getDatabase();
-    
+
     // Get organization details
     const [organization] = await db
       .select({
@@ -53,7 +53,10 @@ export async function POST(request: NextRequest) {
       .limit(1);
 
     if (!organization) {
-      return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Organization not found' },
+        { status: 404 },
+      );
     }
 
     // Ensure Stripe customer exists
@@ -62,7 +65,7 @@ export async function POST(request: NextRequest) {
       customerId = await createStripeCustomer(
         session.organizationId,
         organization.billingEmail || session?.email || '',
-        organization.name
+        organization.name,
       );
     }
 
@@ -72,9 +75,12 @@ export async function POST(request: NextRequest) {
         destination_currency: validatedData.cryptoCurrency,
         destination_exchange_amount: validatedData.amount.toString(),
         destination_network: 'ethereum', // Can be made configurable
-        wallet_address: process.env.ELIZA_CRYPTO_WALLET_ADDRESS || '0x742DE48ac8D2C57A1cfE3cE8e65C0F92fAe93cA5', // Platform wallet address
+        wallet_address:
+          process.env.ELIZA_CRYPTO_WALLET_ADDRESS ||
+          '0x742DE48ac8D2C57A1cfE3cE8e65C0F92fAe93cA5', // Platform wallet address
       },
-      customer_ip_address: request.headers.get('x-forwarded-for') || '127.0.0.1',
+      customer_ip_address:
+        request.headers.get('x-forwarded-for') || '127.0.0.1',
       customer_information: {
         customer_id: customerId,
         email: organization.billingEmail || session?.email || '',
@@ -101,14 +107,14 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid request data', details: error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     console.error('Failed to create crypto onramp session:', error);
     return NextResponse.json(
       { error: 'Failed to create crypto onramp session' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

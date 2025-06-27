@@ -1,4 +1,4 @@
-import { mock  } from 'bun:test';
+import { mock } from 'bun:test';
 
 // Mock @elizaos/core
 mock.module('@elizaos/core', () => ({
@@ -174,7 +174,8 @@ mock.module('viem', () => ({
           throw new Error('Cannot transfer zero amount');
         }
         // Check for large transfers (> 100 ETH is considered too much for test wallet)
-        if (args.value && args.value >= BigInt('100000000000000000000')) { // >= 100 ETH
+        if (args.value && args.value >= BigInt('100000000000000000000')) {
+          // >= 100 ETH
           throw new Error('insufficient funds for gas * price + value');
         }
         // Return proper 64-character hash
@@ -241,21 +242,29 @@ mock.module('viem', () => ({
   }),
   parseUnits: mock((value, decimals = 18) => {
     if (typeof value === 'string') {
-      return BigInt(Math.floor(parseFloat(value) * (10 ** decimals)));
+      return BigInt(Math.floor(parseFloat(value) * 10 ** decimals));
     }
     return BigInt(0);
   }),
   isAddress: mock((address) => {
-    if (typeof address !== 'string') {return false;}
-    if (address.toLowerCase() === 'invalid-address') {return false;}
-    return address.startsWith('0x') && address.length === 42 && /^0x[a-fA-F0-9]{40}$/i.test(address);
+    if (typeof address !== 'string') {
+      return false;
+    }
+    if (address.toLowerCase() === 'invalid-address') {
+      return false;
+    }
+    return (
+      address.startsWith('0x') && address.length === 42 && /^0x[a-fA-F0-9]{40}$/i.test(address)
+    );
   }),
   getContract: mock().mockReturnValue({
     read: {},
     write: {},
     address: '0x1234567890123456789012345678901234567890',
   }),
-  encodeFunctionData: mock().mockReturnValue('0xa9059cbb0000000000000000000000000000000000000000000000000000000000000000'),
+  encodeFunctionData: mock().mockReturnValue(
+    '0xa9059cbb0000000000000000000000000000000000000000000000000000000000000000'
+  ),
   decodeFunctionResult: mock(),
   parseAbi: mock().mockReturnValue([]),
 }));
@@ -269,7 +278,9 @@ mock.module('viem/accounts', () => ({
     signTransaction: mock(),
     signTypedData: mock(),
   })),
-  generatePrivateKey: mock(() => '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'),
+  generatePrivateKey: mock(
+    () => '0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
+  ),
 }));
 
 // Mock viem/chains
@@ -356,13 +367,15 @@ mock.module('@lifi/sdk', () => ({
       },
     }),
     getRoutes: mock().mockResolvedValue({
-      routes: [{
-        id: 'test-route',
-        fromChainId: 1,
-        toChainId: 10,
-        fromAmount: '1000000000000000000',
-        toAmount: '990000000000000000',
-      }],
+      routes: [
+        {
+          id: 'test-route',
+          fromChainId: 1,
+          toChainId: 10,
+          fromAmount: '1000000000000000000',
+          toAmount: '990000000000000000',
+        },
+      ],
     }),
   })),
   LiFi: mock().mockImplementation(() => ({
@@ -395,21 +408,25 @@ mock.module('@lifi/sdk', () => ({
       },
     }),
     getRoutes: mock().mockResolvedValue({
-      routes: [{
-        id: 'test-route',
-        fromChainId: 1,
-        toChainId: 10,
-        fromAmount: '1000000000000000000',
-        toAmount: '990000000000000000',
-        steps: [{
-          type: 'swap',
-          tool: 'uniswap',
-          estimate: {
-            fromAmount: '1000000000000000000',
-            toAmount: '990000000000000000',
-          },
-        }],
-      }],
+      routes: [
+        {
+          id: 'test-route',
+          fromChainId: 1,
+          toChainId: 10,
+          fromAmount: '1000000000000000000',
+          toAmount: '990000000000000000',
+          steps: [
+            {
+              type: 'swap',
+              tool: 'uniswap',
+              estimate: {
+                fromAmount: '1000000000000000000',
+                toAmount: '990000000000000000',
+              },
+            },
+          ],
+        },
+      ],
     }),
     executeRoute: mock().mockResolvedValue({
       transactionHash: `0x${'c'.repeat(64)}`,
@@ -422,22 +439,22 @@ mock.module('@lifi/sdk', () => ({
   ]),
   getToken: mock().mockImplementation(async (chainId, tokenSymbolOrAddress) => {
     const tokens: Record<string, any> = {
-      'ETH': {
+      ETH: {
         symbol: 'ETH',
         decimals: 18,
         address: '0x0000000000000000000000000000000000000000',
       },
-      'USDC': {
+      USDC: {
         symbol: 'USDC',
         decimals: 6,
         address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
       },
-      'USDT': {
+      USDT: {
         symbol: 'USDT',
         decimals: 6,
         address: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
       },
-      'WETH': {
+      WETH: {
         symbol: 'WETH',
         decimals: 18,
         address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',

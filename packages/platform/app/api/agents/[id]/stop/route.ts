@@ -4,13 +4,15 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 // Use dynamic imports to avoid database connection during build
-const getAgentService = () => import('@/lib/agents/service').then(m => m.agentService);
-const getAuthService = () => import('@/lib/auth/session').then(m => m.authService);
+const getAgentService = () =>
+  import('@/lib/agents/service').then((m) => m.agentService);
+const getAuthService = () =>
+  import('@/lib/auth/session').then((m) => m.authService);
 
 /**
  * POST /api/agents/[id]/stop - Stop a deployed agent
  */
-export async function POST(
+export async function handlePOST(
   request: NextRequest,
   props: { params: Promise<{ id: string }> },
 ) {

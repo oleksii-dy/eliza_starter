@@ -4,28 +4,35 @@ import { completeTodoAction } from '../actions/completeTodo';
 import { confirmTodoAction } from '../actions/confirmTodo';
 import { updateTodoAction } from '../actions/updateTodo';
 import { cancelTodoAction } from '../actions/cancelTodo';
+import { createMockRuntime } from '@elizaos/core/test-utils';
 import type { IAgentRuntime, Memory, UUID } from '@elizaos/core';
 
 describe('Todo Actions', () => {
-  const mockRuntime: IAgentRuntime = {
-    agentId: 'test-agent' as UUID,
+  // @ts-ignore - test mock
+  const mockRuntime: IAgentRuntime = createMockRuntime({
     useModel: () => Promise.resolve('<response></response>'),
     composeState: () => Promise.resolve({ data: {} }),
     db: null,
     getRoom: () => Promise.resolve({ worldId: 'test-world' }),
-  } as any;
+  });
 
   const mockMessage: Memory = {
     entityId: 'user-1' as UUID,
     roomId: 'room-1' as UUID,
-    content: { text: 'test message', source: 'test' }
+    content: { text: 'test message', source: 'test' },
   } as any;
 
   describe('Action Properties', () => {
     it('should have all actions with required properties', () => {
-      const actions = [createTodoAction, completeTodoAction, confirmTodoAction, updateTodoAction, cancelTodoAction];
+      const actions = [
+        createTodoAction,
+        completeTodoAction,
+        confirmTodoAction,
+        updateTodoAction,
+        cancelTodoAction,
+      ];
 
-      actions.forEach(action => {
+      actions.forEach((action) => {
         expect(action.name).toBeDefined();
         expect(typeof action.name).toBe('string');
         expect(action.description).toBeDefined();
@@ -38,8 +45,14 @@ describe('Todo Actions', () => {
     });
 
     it('should have unique action names', () => {
-      const actions = [createTodoAction, completeTodoAction, confirmTodoAction, updateTodoAction, cancelTodoAction];
-      const names = actions.map(action => action.name);
+      const actions = [
+        createTodoAction,
+        completeTodoAction,
+        confirmTodoAction,
+        updateTodoAction,
+        cancelTodoAction,
+      ];
+      const names = actions.map((action) => action.name);
       const uniqueNames = new Set(names);
       expect(uniqueNames.size).toBe(actions.length);
     });
@@ -54,7 +67,7 @@ describe('Todo Actions', () => {
     it('should handle missing context gracefully', async () => {
       const messageWithoutRoom: Memory = {
         entityId: 'user-1' as UUID,
-        content: { text: 'test message', source: 'test' }
+        content: { text: 'test message', source: 'test' },
       } as any;
 
       let callbackCalled = false;
@@ -132,17 +145,23 @@ describe('Todo Actions', () => {
 
   describe('Action Examples', () => {
     it('should have proper example structures', () => {
-      const actions = [createTodoAction, completeTodoAction, confirmTodoAction, updateTodoAction, cancelTodoAction];
+      const actions = [
+        createTodoAction,
+        completeTodoAction,
+        confirmTodoAction,
+        updateTodoAction,
+        cancelTodoAction,
+      ];
 
-      actions.forEach(action => {
+      actions.forEach((action) => {
         expect(action.examples).toBeDefined();
         expect(Array.isArray(action.examples)).toBe(true);
 
         if (action.examples && action.examples.length > 0) {
-          action.examples.forEach(example => {
+          action.examples.forEach((example) => {
             expect(Array.isArray(example)).toBe(true);
 
-            example.forEach(message => {
+            example.forEach((message) => {
               expect(message).toHaveProperty('name');
               expect(message).toHaveProperty('content');
               expect(typeof message.name).toBe('string');

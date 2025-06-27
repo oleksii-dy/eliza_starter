@@ -98,17 +98,22 @@ describe('McpViewer', () => {
   });
 
   it('should display connection statistics', async () => {
+    let getAllByText: any;
     await act(async () => {
-      render(<McpViewer agentId="test-agent" />);
+      const result = render(<McpViewer agentId="test-agent" />);
+      getAllByText = result.getAllByText;
     });
 
     await waitFor(
       () => {
-        expect(screen.getByText('Total')).toBeInTheDocument();
-        expect(screen.getByText('2')).toBeInTheDocument();
-        expect(screen.getByText('Connected')).toBeInTheDocument();
-        // Use getAllByText since '1' appears multiple times
-        const ones = screen.getAllByText('1');
+        // Use getAllByText since elements appear multiple times
+        const totals = getAllByText('Total');
+        expect(totals.length).toBeGreaterThan(0);
+        const twos = getAllByText('2');
+        expect(twos.length).toBeGreaterThan(0);
+        const connected = getAllByText('Connected');
+        expect(connected.length).toBeGreaterThan(0);
+        const ones = getAllByText('1');
         expect(ones.length).toBeGreaterThan(0);
       },
       { timeout: 3000 }
@@ -118,70 +123,77 @@ describe('McpViewer', () => {
   it('should handle server selection', async () => {
     const user = userEvent.setup({ delay: null });
 
+    let getByText: any;
     await act(async () => {
-      render(<McpViewer agentId="test-agent" />);
+      const result = render(<McpViewer agentId="test-agent" />);
+      getByText = result.getByText;
     });
 
     await waitFor(
       () => {
-        expect(screen.getByText('test-server-1')).toBeInTheDocument();
+        expect(getByText('test-server-1')).toBeInTheDocument();
       },
       { timeout: 3000 }
     );
 
     await act(async () => {
-      await user.click(screen.getByText('test-server-1'));
+      await user.click(getByText('test-server-1'));
     });
 
-    expect(screen.getByText('Tools (2)')).toBeInTheDocument();
-    expect(screen.getByText('Resources (1)')).toBeInTheDocument();
+    expect(getByText('Tools (2)')).toBeInTheDocument();
+    expect(getByText('Resources (1)')).toBeInTheDocument();
   });
 
   it('should switch between tools and resources tabs', async () => {
     const user = userEvent.setup({ delay: null });
 
+    let getByText: any;
     await act(async () => {
-      render(<McpViewer agentId="test-agent" />);
+      const result = render(<McpViewer agentId="test-agent" />);
+      getByText = result.getByText;
     });
 
     await waitFor(
       () => {
-        expect(screen.getByText('test-server-1')).toBeInTheDocument();
+        expect(getByText('test-server-1')).toBeInTheDocument();
       },
       { timeout: 3000 }
     );
 
     await act(async () => {
-      await user.click(screen.getByText('test-server-1'));
+      await user.click(getByText('test-server-1'));
     });
 
     // Tools tab should be active by default
-    expect(screen.getByText('tool1')).toBeInTheDocument();
-    expect(screen.getByText('tool2')).toBeInTheDocument();
+    expect(getByText('tool1')).toBeInTheDocument();
+    expect(getByText('tool2')).toBeInTheDocument();
 
     // Switch to resources tab
     await act(async () => {
-      await user.click(screen.getByText('Resources (1)'));
+      await user.click(getByText('Resources (1)'));
     });
 
-    expect(screen.getByText('Resource 1')).toBeInTheDocument();
+    expect(getByText('Resource 1')).toBeInTheDocument();
   });
 
   it('should handle reconnection', async () => {
     const user = userEvent.setup({ delay: null });
 
+    let getByText: any, getAllByText: any;
     await act(async () => {
-      render(<McpViewer agentId="test-agent" />);
+      const result = render(<McpViewer agentId="test-agent" />);
+      getByText = result.getByText;
+      getAllByText = result.getAllByText;
     });
 
     await waitFor(
       () => {
-        expect(screen.getByText('test-server-2')).toBeInTheDocument();
+        expect(getByText('test-server-2')).toBeInTheDocument();
       },
       { timeout: 3000 }
     );
 
-    const reconnectButton = screen.getAllByText('Reconnect')[0];
+    const reconnectButton = getAllByText('Reconnect')[0];
 
     await act(async () => {
       await user.click(reconnectButton);
@@ -209,32 +221,35 @@ describe('McpViewer', () => {
       });
     });
 
+    let getByText: any, getByPlaceholderText: any;
     await act(async () => {
-      render(<McpViewer agentId="test-agent" />);
+      const result = render(<McpViewer agentId="test-agent" />);
+      getByText = result.getByText;
+      getByPlaceholderText = result.getByPlaceholderText;
     });
 
     await waitFor(
       () => {
-        expect(screen.getByText('test-server-1')).toBeInTheDocument();
+        expect(getByText('test-server-1')).toBeInTheDocument();
       },
       { timeout: 3000 }
     );
 
     await act(async () => {
-      await user.click(screen.getByText('test-server-1'));
-      await user.click(screen.getByText('tool2'));
+      await user.click(getByText('test-server-1'));
+      await user.click(getByText('tool2'));
     });
 
-    const input = screen.getByPlaceholderText('arg1');
+    const input = getByPlaceholderText('arg1');
 
     await act(async () => {
       await user.type(input, 'test value');
-      await user.click(screen.getByText('Execute Tool'));
+      await user.click(getByText('Execute Tool'));
     });
 
     await waitFor(
       () => {
-        expect(screen.getByText(/Tool executed successfully/)).toBeInTheDocument();
+        expect(getByText(/Tool executed successfully/)).toBeInTheDocument();
       },
       { timeout: 3000 }
     );
@@ -261,26 +276,28 @@ describe('McpViewer', () => {
       });
     });
 
+    let getByText: any;
     await act(async () => {
-      render(<McpViewer agentId="test-agent" />);
+      const result = render(<McpViewer agentId="test-agent" />);
+      getByText = result.getByText;
     });
 
     await waitFor(
       () => {
-        expect(screen.getByText('test-server-1')).toBeInTheDocument();
+        expect(getByText('test-server-1')).toBeInTheDocument();
       },
       { timeout: 3000 }
     );
 
     await act(async () => {
-      await user.click(screen.getByText('test-server-1'));
-      await user.click(screen.getByText('Resources (1)'));
-      await user.click(screen.getByText('Resource 1'));
+      await user.click(getByText('test-server-1'));
+      await user.click(getByText('Resources (1)'));
+      await user.click(getByText('Resource 1'));
     });
 
     await waitFor(
       () => {
-        expect(screen.getByText('Resource content')).toBeInTheDocument();
+        expect(getByText('Resource content')).toBeInTheDocument();
       },
       { timeout: 3000 }
     );
@@ -289,36 +306,40 @@ describe('McpViewer', () => {
   it('should handle errors gracefully', async () => {
     mockFetch.mockRejectedValue(new Error('Network error'));
 
+    let getByText: any;
     await act(async () => {
-      render(<McpViewer agentId="test-agent" />);
+      const result = render(<McpViewer agentId="test-agent" />);
+      getByText = result.getByText;
     });
 
     await waitFor(
       () => {
-        expect(screen.getByText('Error')).toBeInTheDocument();
-        expect(screen.getByText('Network error')).toBeInTheDocument();
+        expect(getByText('Error')).toBeInTheDocument();
+        expect(getByText('Network error')).toBeInTheDocument();
       },
       { timeout: 3000 }
     );
 
-    expect(screen.getByText('Retry')).toBeInTheDocument();
+    expect(getByText('Retry')).toBeInTheDocument();
   });
 
   it('should display empty state when no server is selected', async () => {
+    let getByText: any;
     await act(async () => {
-      render(<McpViewer agentId="test-agent" />);
+      const result = render(<McpViewer agentId="test-agent" />);
+      getByText = result.getByText;
     });
 
     // Wait for servers to load
     await waitFor(
       () => {
-        expect(screen.getByText('test-server-1')).toBeInTheDocument();
+        expect(getByText('test-server-1')).toBeInTheDocument();
       },
       { timeout: 3000 }
     );
 
     // The empty state message should be visible when no server is selected
-    expect(screen.getByText('Select a server to view its tools and resources')).toBeInTheDocument();
+    expect(getByText('Select a server to view its tools and resources')).toBeInTheDocument();
   });
 
   it('should handle empty servers list', async () => {
@@ -334,13 +355,15 @@ describe('McpViewer', () => {
       }),
     });
 
+    let getByText: any;
     await act(async () => {
-      render(<McpViewer agentId="test-agent" />);
+      const result = render(<McpViewer agentId="test-agent" />);
+      getByText = result.getByText;
     });
 
     await waitFor(
       () => {
-        expect(screen.getByText('No MCP servers configured')).toBeInTheDocument();
+        expect(getByText('No MCP servers configured')).toBeInTheDocument();
       },
       { timeout: 3000 }
     );

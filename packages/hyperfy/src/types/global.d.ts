@@ -5,14 +5,14 @@
 // Extend global scope
 declare global {
   // Global variables
-  const PHYSX: any;
-  var env: Record<string, string> | undefined;
-  var physx: any;
-  var PhysX: any;
-  var ses: any;
-  var repairIntrinsics: any;
-  var lockdown: any;
-  var harden: any;
+  const PHYSX: any
+  var env: Record<string, string> | undefined
+  var physx: any
+  var PhysX: any
+  var ses: any
+  var repairIntrinsics: any
+  var lockdown: any
+  var harden: any
 
   // Window extensions
   interface Window {
@@ -43,7 +43,7 @@ declare module '*/storage' {
   export const storage: {
     get(key: string, defaultValue?: any): any
     set(key: string, value: any): void
-  };
+  }
 }
 
-export {};
+export {}

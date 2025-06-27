@@ -168,7 +168,8 @@ async function testFindingExtraction() {
         project.query,
         testCase.content,
         {
-          queryIntent: 'Research space situational awareness and data extraction',
+          queryIntent:
+            'Research space situational awareness and data extraction',
           keyTopics: ['SSA', 'data'],
         }
       );

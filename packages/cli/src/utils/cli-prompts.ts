@@ -23,9 +23,9 @@ export async function promptWithNav(
     defaultValue: initial,
     validate: validate
       ? (val) => {
-          const result = validate(val);
-          return typeof result === 'string' ? result : undefined;
-        }
+        const result = validate(val);
+        return typeof result === 'string' ? result : undefined;
+      }
       : undefined,
   });
 

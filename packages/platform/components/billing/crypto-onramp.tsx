@@ -30,7 +30,12 @@ const supportedCryptos: SupportedCrypto[] = [
   { symbol: 'USDT', name: 'Tether', network: 'ethereum', icon: '₮' },
 ];
 
-export function CryptoOnramp({ amount, organizationId: _organizationId, onPaymentComplete, onCancel }: CryptoOnrampProps) {
+export function CryptoOnramp({
+  amount,
+  organizationId: _organizationId,
+  onPaymentComplete,
+  onCancel,
+}: CryptoOnrampProps) {
   const [selectedCrypto, setSelectedCrypto] = useState<string>('ethereum');
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
@@ -56,7 +61,9 @@ export function CryptoOnramp({ amount, organizationId: _organizationId, onPaymen
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to create crypto onramp session');
+        throw new Error(
+          error.error || 'Failed to create crypto onramp session',
+        );
       }
 
       const data = await response.json();
@@ -64,19 +71,26 @@ export function CryptoOnramp({ amount, organizationId: _organizationId, onPaymen
       if (data.success && data.data.url) {
         setPaymentUrl(data.data.url);
         // Open in new window or redirect
-        window.open(data.data.url, '_blank', 'width=600,height=800,scrollbars=yes,resizable=yes');
-        
-        toast.success('Crypto payment window opened! Complete your payment to add credits.');
-        
+        window.open(
+          data.data.url,
+          '_blank',
+          'width=600,height=800,scrollbars=yes,resizable=yes',
+        );
+
+        toast.success(
+          'Crypto payment window opened! Complete your payment to add credits.',
+        );
+
         // Start polling for payment completion
         startPaymentPolling(data.data.sessionId);
       } else {
         throw new Error('Invalid response from crypto onramp service');
       }
-
     } catch (error) {
       console.error('Crypto payment failed:', error);
-      toast.error(error instanceof Error ? error.message : 'Crypto payment failed');
+      toast.error(
+        error instanceof Error ? error.message : 'Crypto payment failed',
+      );
       setIsProcessing(false);
     }
   };
@@ -86,27 +100,33 @@ export function CryptoOnramp({ amount, organizationId: _organizationId, onPaymen
     const pollInterval = setInterval(async () => {
       try {
         // Check payment status using the session ID
-        const statusResponse = await fetch(`/api/billing/crypto-onramp/${sessionId}/status`);
+        const statusResponse = await fetch(
+          `/api/billing/crypto-onramp/${sessionId}/status`,
+        );
         if (!statusResponse.ok) {
           throw new Error('Failed to check payment status');
         }
 
         const statusData = await statusResponse.json();
-        
+
         if (statusData.status === 'completed') {
           clearInterval(pollInterval);
           setIsProcessing(false);
-          toast.success('Crypto payment confirmed! Credits have been added to your account.');
+          toast.success(
+            'Crypto payment confirmed! Credits have been added to your account.',
+          );
           if (onPaymentComplete) {
             onPaymentComplete();
           }
-        } else if (statusData.status === 'failed' || statusData.status === 'expired') {
+        } else if (
+          statusData.status === 'failed' ||
+          statusData.status === 'expired'
+        ) {
           clearInterval(pollInterval);
           setIsProcessing(false);
           toast.error('Crypto payment failed or expired. Please try again.');
         }
         // Continue polling if status is still 'pending'
-        
       } catch (error) {
         console.error('Error polling payment status:', error);
       }
@@ -119,12 +139,14 @@ export function CryptoOnramp({ amount, organizationId: _organizationId, onPaymen
     }, 300000);
   };
 
-  const selectedCryptoData = supportedCryptos.find(crypto => crypto.network === selectedCrypto);
+  const selectedCryptoData = supportedCryptos.find(
+    (crypto) => crypto.network === selectedCrypto,
+  );
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6">
-      <div className="flex items-center mb-4">
-        <CreditCard className="h-5 w-5 text-purple-600 mr-2" />
+    <div className="rounded-lg border border-gray-200 bg-white p-6">
+      <div className="mb-4 flex items-center">
+        <CreditCard className="mr-2 h-5 w-5 text-purple-600" />
         <h3 className="text-lg font-semibold text-gray-900">
           Pay with Cryptocurrency
         </h3>
@@ -133,7 +155,7 @@ export function CryptoOnramp({ amount, organizationId: _organizationId, onPaymen
       <div className="space-y-6">
         {/* Crypto Selection */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3">
+          <label className="mb-3 block text-sm font-medium text-gray-700">
             Select Cryptocurrency
           </label>
           <div className="grid grid-cols-2 gap-2">
@@ -141,15 +163,15 @@ export function CryptoOnramp({ amount, organizationId: _organizationId, onPaymen
               <button
                 key={crypto.network}
                 onClick={() => setSelectedCrypto(crypto.network)}
-                className={`p-3 rounded-lg border transition-colors text-left ${
+                className={`rounded-lg border p-3 text-left transition-colors ${
                   selectedCrypto === crypto.network
-                    ? 'bg-purple-50 border-purple-300 text-purple-900'
-                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                    ? 'border-purple-300 bg-purple-50 text-purple-900'
+                    : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
                 }`}
                 data-testid={`crypto-${crypto.symbol.toLowerCase()}`}
               >
                 <div className="flex items-center">
-                  <span className="text-2xl mr-3">{crypto.icon}</span>
+                  <span className="mr-3 text-2xl">{crypto.icon}</span>
                   <div>
                     <div className="font-medium">{crypto.symbol}</div>
                     <div className="text-xs text-gray-500">{crypto.name}</div>
@@ -161,27 +183,32 @@ export function CryptoOnramp({ amount, organizationId: _organizationId, onPaymen
         </div>
 
         {/* Payment Summary */}
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-          <div className="flex justify-between text-sm mb-2">
+        <div className="rounded-lg border border-purple-200 bg-purple-50 p-4">
+          <div className="mb-2 flex justify-between text-sm">
             <span className="text-purple-800">Purchase Amount:</span>
-            <span className="font-semibold text-purple-900">${amount.toFixed(2)} USD</span>
+            <span className="font-semibold text-purple-900">
+              ${amount.toFixed(2)} USD
+            </span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-purple-800">Payment Method:</span>
-            <span className="font-semibold text-purple-900 flex items-center">
+            <span className="flex items-center font-semibold text-purple-900">
               {selectedCryptoData?.icon} {selectedCryptoData?.symbol}
             </span>
           </div>
         </div>
 
         {/* Security Notice */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
           <div className="flex items-start">
-            <Shield className="h-5 w-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
+            <Shield className="mr-3 mt-0.5 h-5 w-5 flex-shrink-0 text-blue-600" />
             <div>
-              <p className="text-sm text-blue-800 font-medium">Secure Crypto Payment</p>
-              <p className="text-xs text-blue-600 mt-1">
-                Powered by Stripe's secure crypto onramp. Your crypto will be converted to USD and added as platform credits.
+              <p className="text-sm font-medium text-blue-800">
+                Secure Crypto Payment
+              </p>
+              <p className="mt-1 text-xs text-blue-600">
+                Powered by Stripe's secure crypto onramp. Your crypto will be
+                converted to USD and added as platform credits.
               </p>
             </div>
           </div>
@@ -190,15 +217,15 @@ export function CryptoOnramp({ amount, organizationId: _organizationId, onPaymen
         {/* Features */}
         <div className="grid grid-cols-1 gap-2 text-sm text-gray-600">
           <div className="flex items-center">
-            <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+            <div className="mr-2 h-2 w-2 rounded-full bg-green-500"></div>
             <span>Instant credit conversion</span>
           </div>
           <div className="flex items-center">
-            <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+            <div className="mr-2 h-2 w-2 rounded-full bg-green-500"></div>
             <span>Multiple cryptocurrencies supported</span>
           </div>
           <div className="flex items-center">
-            <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+            <div className="mr-2 h-2 w-2 rounded-full bg-green-500"></div>
             <span>Secure blockchain transactions</span>
           </div>
         </div>
@@ -208,27 +235,27 @@ export function CryptoOnramp({ amount, organizationId: _organizationId, onPaymen
           <button
             onClick={handleCryptoPayment}
             disabled={isProcessing}
-            className="flex-1 bg-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            className="flex flex-1 items-center justify-center rounded-lg bg-purple-600 px-4 py-3 font-medium text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
             data-testid="crypto-pay-button"
           >
             {isProcessing ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Processing...
               </>
             ) : (
               <>
-                <ArrowUpRight className="h-4 w-4 mr-2" />
+                <ArrowUpRight className="mr-2 h-4 w-4" />
                 Pay ${amount} with {selectedCryptoData?.symbol}
               </>
             )}
           </button>
-          
+
           {onCancel && (
             <button
               onClick={onCancel}
               disabled={isProcessing}
-              className="px-4 py-3 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+              className="rounded-lg border border-gray-300 px-4 py-3 text-gray-600 hover:bg-gray-50 disabled:opacity-50"
             >
               Cancel
             </button>
@@ -237,13 +264,13 @@ export function CryptoOnramp({ amount, organizationId: _organizationId, onPaymen
 
         {/* Payment URL Display (for testing) */}
         {paymentUrl && (
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-            <p className="text-xs text-gray-600 mb-2">Payment URL:</p>
-            <a 
-              href={paymentUrl} 
-              target="_blank" 
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+            <p className="mb-2 text-xs text-gray-600">Payment URL:</p>
+            <a
+              href={paymentUrl}
+              target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-blue-600 hover:text-blue-800 break-all"
+              className="break-all text-xs text-blue-600 hover:text-blue-800"
             >
               {paymentUrl}
             </a>

@@ -74,7 +74,7 @@
     "clean": "rm -rf dist && rm -rf .turbo",
     "lint": "eslint src --fix && prettier --write ./src",
     "typecheck": "tsc --noEmit",
-    "test": "elizaos test",
+    "test": "bun test src/",
     "benchmarks": "bun ./scripts/run-benchmarks.ts",
     "swe-bench:comprehensive": "bun ./scripts/run-swe-bench-comprehensive.ts",
     "swe-bench:real": "bun ./scripts/run-swe-bench-real.ts",

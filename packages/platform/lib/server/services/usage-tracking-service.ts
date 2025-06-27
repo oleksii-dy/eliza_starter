@@ -1,5 +1,5 @@
 import { eq, and, desc, gte, sql, lt, sum, count, avg } from 'drizzle-orm';
-import { db } from '@/lib/database';
+import { getDatabase } from '@/lib/database';
 import { usageRecords, type NewUsageRecord } from '@/lib/database/schema';
 
 interface TrackUsageData {
@@ -42,7 +42,11 @@ export async function trackUsage(data: TrackUsageData): Promise<string> {
     metadata: data.metadata || {},
   };
 
-  const [record] = await db.insert(usageRecords).values(newUsageRecord).returning();
+  const db = await getDatabase();
+  const [record] = await db
+    .insert(usageRecords)
+    .values(newUsageRecord)
+    .returning();
 
   return record.id;
 }
@@ -55,7 +59,7 @@ export async function getUsageStatistics(
     model?: string;
     apiKeyId?: string;
     limit?: number;
-  } = {}
+  } = {},
 ): Promise<{
   totalRequests: number;
   successfulRequests: number;
@@ -109,6 +113,7 @@ export async function getUsageStatistics(
   }
 
   // Get aggregate statistics
+  const db = await getDatabase();
   const [statsResult] = await db
     .select({
       totalRequests: count().as('total_requests'),
@@ -121,7 +126,8 @@ export async function getUsageStatistics(
     .where(and(...conditions));
 
   // Get failed requests count separately
-  const [failedResult] = await db
+  const db2 = await getDatabase();
+  const [failedResult] = await db2
     .select({
       failedRequests: count().as('failed_requests'),
     })
@@ -129,7 +135,8 @@ export async function getUsageStatistics(
     .where(and(...conditions, eq(usageRecords.success, false)));
 
   // Get breakdown by provider and model
-  const breakdownResults = await db
+  const db3 = await getDatabase();
+  const breakdownResults = await db3
     .select({
       provider: usageRecords.provider,
       model: usageRecords.model,
@@ -144,24 +151,28 @@ export async function getUsageStatistics(
 
   return {
     totalRequests: parseInt(statsResult?.totalRequests || '0'),
-    successfulRequests: parseInt(statsResult?.totalRequests || '0') - parseInt(failedResult?.failedRequests || '0'),
+    successfulRequests:
+      parseInt(statsResult?.totalRequests || '0') -
+      parseInt(failedResult?.failedRequests || '0'),
     failedRequests: parseInt(failedResult?.failedRequests || '0'),
     totalTokens: parseInt(statsResult?.totalTokens || '0'),
     totalCost: parseFloat(statsResult?.totalCost || '0'),
     averageLatency: parseFloat(statsResult?.averageLatency || '0'),
-    breakdown: breakdownResults.map((result: {
-      provider: string;
-      model: string;
-      requests: any;
-      tokens: any;
-      cost: any;
-    }) => ({
-      provider: result.provider,
-      model: result.model,
-      requests: parseInt(result.requests),
-      tokens: parseInt(result.tokens || '0'),
-      cost: parseFloat(result.cost || '0'),
-    })),
+    breakdown: breakdownResults.map(
+      (result: {
+        provider: string;
+        model: string;
+        requests: any;
+        tokens: any;
+        cost: any;
+      }) => ({
+        provider: result.provider,
+        model: result.model,
+        requests: parseInt(result.requests),
+        tokens: parseInt(result.tokens || '0'),
+        cost: parseFloat(result.cost || '0'),
+      }),
+    ),
   };
 }
 
@@ -173,7 +184,7 @@ export async function getUsageTimeSeries(
     model?: string;
     apiKeyId?: string;
     granularity?: 'minute' | 'hour' | 'day';
-  } = {}
+  } = {},
 ): Promise<{
   timestamps: string[];
   requests: number[];
@@ -233,9 +244,13 @@ export async function getUsageTimeSeries(
       truncateFormat = 'hour';
   }
 
+  const db = await getDatabase();
   const timeSeriesResults = await db
     .select({
-      timestamp: sql`date_trunc(${truncateFormat}, ${usageRecords.createdAt})`.as('timestamp'),
+      timestamp:
+        sql`date_trunc(${truncateFormat}, ${usageRecords.createdAt})`.as(
+          'timestamp',
+        ),
       requests: count().as('requests'),
       tokens: sum(usageRecords.totalTokens).as('tokens'),
       cost: sum(usageRecords.cost).as('cost'),
@@ -246,17 +261,29 @@ export async function getUsageTimeSeries(
     .orderBy(sql`date_trunc(${truncateFormat}, ${usageRecords.createdAt})`);
 
   return {
-    timestamps: timeSeriesResults.map((result: { timestamp: Date; requests: any; tokens: any; cost: any }) => result.timestamp.toISOString()),
-    requests: timeSeriesResults.map((result: { timestamp: Date; requests: any; tokens: any; cost: any }) => parseInt(result.requests)),
-    tokens: timeSeriesResults.map((result: { timestamp: Date; requests: any; tokens: any; cost: any }) => parseInt(result.tokens || '0')),
-    costs: timeSeriesResults.map((result: { timestamp: Date; requests: any; tokens: any; cost: any }) => parseFloat(result.cost || '0')),
+    timestamps: timeSeriesResults.map(
+      (result: { timestamp: Date; requests: any; tokens: any; cost: any }) =>
+        result.timestamp.toISOString(),
+    ),
+    requests: timeSeriesResults.map(
+      (result: { timestamp: Date; requests: any; tokens: any; cost: any }) =>
+        parseInt(result.requests),
+    ),
+    tokens: timeSeriesResults.map(
+      (result: { timestamp: Date; requests: any; tokens: any; cost: any }) =>
+        parseInt(result.tokens || '0'),
+    ),
+    costs: timeSeriesResults.map(
+      (result: { timestamp: Date; requests: any; tokens: any; cost: any }) =>
+        parseFloat(result.cost || '0'),
+    ),
   };
 }
 
 export async function getRateLimitStatus(
   organizationId: string,
   apiKeyId: string,
-  windowMs: number = 60000 // 1 minute default
+  windowMs: number = 60000, // 1 minute default
 ): Promise<{
   requestCount: number;
   limit: number;
@@ -266,16 +293,19 @@ export async function getRateLimitStatus(
   const windowStart = new Date(Date.now() - windowMs);
 
   // Count recent requests for this API key
+  const db = await getDatabase();
   const [result] = await db
     .select({
       requestCount: count().as('request_count'),
     })
     .from(usageRecords)
-    .where(and(
-      eq(usageRecords.organizationId, organizationId),
-      eq(usageRecords.apiKeyId, apiKeyId),
-      gte(usageRecords.createdAt, windowStart)
-    ));
+    .where(
+      and(
+        eq(usageRecords.organizationId, organizationId),
+        eq(usageRecords.apiKeyId, apiKeyId),
+        gte(usageRecords.createdAt, windowStart),
+      ),
+    );
 
   // Get the API key's rate limit from the database
   // This would need to be implemented based on your API key schema

@@ -62,6 +62,7 @@ The payment plugin is a sophisticated financial infrastructure layer for ElizaOS
 ## Features
 
 ### Payment Processing
+
 - Automatic balance checking before payment execution
 - Configurable payment confirmations
 - Trust-based payment exemptions (owners, admins)
@@ -69,12 +70,14 @@ The payment plugin is a sophisticated financial infrastructure layer for ElizaOS
 - Transaction monitoring and status updates
 
 ### Multi-Currency Support
+
 - USDC (Ethereum & Solana)
 - Native tokens (ETH, SOL, MATIC, etc.)
 - Layer 2 tokens (ARB, OP, BASE)
 - Automatic currency conversion via price oracles
 
 ### Database Integration
+
 - Transaction history tracking
 - User wallet management
 - Payment request queue
@@ -83,6 +86,7 @@ The payment plugin is a sophisticated financial infrastructure layer for ElizaOS
 - Webhook support
 
 ### Security Features
+
 - Encrypted private key storage
 - Trust score integration
 - Confirmation codes for high-value transactions
@@ -156,7 +160,7 @@ import { createPaymentMiddleware, PaymentMethod } from '@elizaos/plugin-payment'
 // Your action handler
 const myActionHandler = async (runtime, message, state, options, callback) => {
   // Perform your action logic
-  await callback({ text: "Service completed successfully!" });
+  await callback({ text: 'Service completed successfully!' });
   return true;
 };
 
@@ -169,7 +173,7 @@ const paidActionHandler = createPaymentMiddleware({
   metadata: {
     service: 'premium-analysis',
     validityPeriod: 3600000, // 1 hour
-  }
+  },
 })(myActionHandler);
 
 // Register as action
@@ -199,7 +203,7 @@ const request: PaymentRequest = {
   requiresConfirmation: true,
   metadata: {
     description: 'Premium API access',
-  }
+  },
 };
 
 const result = await paymentService.processPayment(request, runtime);
@@ -227,13 +231,13 @@ The main payment orchestrator that handles:
 ```typescript
 class PaymentService extends Service implements IPaymentService {
   // Processes payment requests through validation, confirmation, and execution
-  async processPayment(request: PaymentRequest, runtime: IAgentRuntime): Promise<PaymentResult>
-  
+  async processPayment(request: PaymentRequest, runtime: IAgentRuntime): Promise<PaymentResult>;
+
   // Monitors pending transactions and updates their status
-  private async checkPendingTransactions(): Promise<void>
-  
+  private async checkPendingTransactions(): Promise<void>;
+
   // Creates user wallets if they don't exist
-  private async getUserWallet(userId: UUID, method: PaymentMethod): Promise<WalletInfo>
+  private async getUserWallet(userId: UUID, method: PaymentMethod): Promise<WalletInfo>;
 }
 ```
 
@@ -260,13 +264,13 @@ Manages token prices with multiple data sources:
 ```typescript
 class PriceOracleService extends Service implements IPriceOracleService {
   // Fetches from CoinGecko API, plugin oracles, or cache
-  async getTokenPrice(address: string, network: string): Promise<TokenPrice>
-  
+  async getTokenPrice(address: string, network: string): Promise<TokenPrice>;
+
   // Converts token amounts to USD
-  async convertToUSD(amount: bigint, method: PaymentMethod): Promise<number>
-  
+  async convertToUSD(amount: bigint, method: PaymentMethod): Promise<number>;
+
   // Caches prices in database with expiration
-  async updatePriceCache(price: TokenPrice): Promise<void>
+  async updatePriceCache(price: TokenPrice): Promise<void>;
 }
 ```
 
@@ -357,24 +361,24 @@ For high-value transactions or when confirmation is required:
 interface IPaymentService {
   // Process a payment request
   processPayment(request: PaymentRequest, runtime: IAgentRuntime): Promise<PaymentResult>;
-  
+
   // Check payment status
   checkPaymentStatus(paymentId: UUID, runtime: IAgentRuntime): Promise<PaymentStatus>;
-  
+
   // Get user balances across all methods
   getUserBalance(userId: UUID, runtime: IAgentRuntime): Promise<Map<PaymentMethod, bigint>>;
-  
+
   // Get payment history
   getPaymentHistory(
-    userId: UUID, 
-    limit: number, 
-    offset: number, 
+    userId: UUID,
+    limit: number,
+    offset: number,
     runtime: IAgentRuntime
   ): Promise<PaymentResult[]>;
-  
+
   // Cancel pending payment
   cancelPayment(paymentId: UUID): Promise<boolean>;
-  
+
   // Confirm pending payment
   confirmPayment(paymentId: UUID, confirmation: PaymentConfirmation): Promise<PaymentResult>;
 }
@@ -384,14 +388,14 @@ interface IPaymentService {
 
 ```typescript
 interface PaymentMiddlewareOptions {
-  amount: bigint;                    // Amount in smallest unit
-  method?: PaymentMethod;            // Default: USDC_ETH
-  requiresConfirmation?: boolean;    // Require user confirmation
-  trustRequired?: boolean;           // Check trust score
-  minimumTrustLevel?: number;        // Min trust score required
-  skipForOwner?: boolean;            // Skip payment for owners
-  skipForAdmin?: boolean;            // Skip payment for admins
-  metadata?: Record<string, any>;    // Additional metadata
+  amount: bigint; // Amount in smallest unit
+  method?: PaymentMethod; // Default: USDC_ETH
+  requiresConfirmation?: boolean; // Require user confirmation
+  trustRequired?: boolean; // Check trust score
+  minimumTrustLevel?: number; // Min trust score required
+  skipForOwner?: boolean; // Skip payment for owners
+  skipForAdmin?: boolean; // Skip payment for admins
+  metadata?: Record<string, any>; // Additional metadata
 }
 ```
 
@@ -419,19 +423,19 @@ const translationAction: Action = {
     metadata: {
       service: 'translation',
       ratePerWord: 0.01,
-    }
+    },
   })(async (runtime, message, state, options, callback) => {
     const document = message.content.text;
     const translation = await translateDocument(document);
-    
+
     await callback({
       text: `Translation complete:\n\n${translation}`,
-      metadata: { 
+      metadata: {
         wordCount: document.split(' ').length,
-        language: 'es'
-      }
+        language: 'es',
+      },
     });
-  })
+  }),
 };
 ```
 
@@ -444,7 +448,7 @@ const subscriptionMiddleware = createPaymentMiddleware({
   metadata: {
     service: 'premium-subscription',
     validityPeriod: 30 * 24 * 60 * 60 * 1000, // 30 days
-  }
+  },
 });
 
 // Recent payments within validity period are automatically accepted
@@ -472,11 +476,13 @@ npm test
 ### Common Issues
 
 1. **"Payment service not available"**
+
    - Ensure payment plugin is registered
    - Check database connection
    - Verify wallet plugin is loaded
 
 2. **"Insufficient funds"**
+
    - Check wallet balance
    - Verify correct payment method
    - Ensure wallet has gas for fees
@@ -500,8 +506,8 @@ elizaLogger.level = 'debug';
 Check payment status:
 
 ```sql
-SELECT * FROM payment_transactions 
-WHERE payer_id = 'user-uuid' 
+SELECT * FROM payment_transactions
+WHERE payer_id = 'user-uuid'
 ORDER BY created_at DESC;
 ```
 

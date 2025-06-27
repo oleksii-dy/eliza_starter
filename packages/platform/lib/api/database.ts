@@ -57,7 +57,7 @@ import { hashPassword } from './auth';
     name: 'Test User',
     password: hashedPassword,
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
   };
   users.set(testUser.id, testUser);
 })();
@@ -65,12 +65,14 @@ import { hashPassword } from './auth';
 // User operations
 export const db = {
   users: {
-    create: async (data: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> => {
+    create: async (
+      data: Omit<User, 'id' | 'createdAt' | 'updatedAt'>,
+    ): Promise<User> => {
       const user: User = {
         ...data,
         id: crypto.randomUUID(),
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
       users.set(user.id, user);
       return user;
@@ -90,15 +92,15 @@ export const db = {
       const updated = { ...user, ...data, updatedAt: new Date() };
       users.set(id, updated);
       return updated;
-    }
+    },
   },
-  
+
   apiKeys: {
     create: async (data: Omit<ApiKey, 'id' | 'createdAt'>): Promise<ApiKey> => {
       const apiKey: ApiKey = {
         ...data,
         id: crypto.randomUUID(),
-        createdAt: new Date()
+        createdAt: new Date(),
       };
       apiKeys.set(apiKey.id, apiKey);
       return apiKey;
@@ -125,17 +127,19 @@ export const db = {
         apiKey.lastUsed = new Date();
         apiKeys.set(id, apiKey);
       }
-    }
+    },
   },
-  
+
   organizations: {
-    create: async (data: Omit<Organization, 'id' | 'slug' | 'createdAt' | 'updatedAt'>): Promise<Organization> => {
+    create: async (
+      data: Omit<Organization, 'id' | 'slug' | 'createdAt' | 'updatedAt'>,
+    ): Promise<Organization> => {
       const org: Organization = {
         ...data,
         id: crypto.randomUUID(),
         slug: data.name.toLowerCase().replace(/\s+/g, '-'),
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
       organizations.set(org.id, org);
       return org;
@@ -146,9 +150,9 @@ export const db = {
         if (org.ownerId === ownerId) userOrgs.push(org);
       }
       return userOrgs;
-    }
+    },
   },
-  
+
   subscriptions: {
     findByUserId: async (userId: string): Promise<Subscription | null> => {
       for (const sub of Array.from(subscriptions.values())) {
@@ -159,10 +163,10 @@ export const db = {
     create: async (data: Omit<Subscription, 'id'>): Promise<Subscription> => {
       const sub: Subscription = {
         ...data,
-        id: crypto.randomUUID()
+        id: crypto.randomUUID(),
       };
       subscriptions.set(sub.id, sub);
       return sub;
-    }
-  }
-}; 
+    },
+  },
+};

@@ -8,7 +8,7 @@ import { sessionService } from './session';
 export {
   workosAuth,
   mapWorkOSRoleToAppRole,
-  getDomainFromEmail
+  getDomainFromEmail,
 } from './workos';
 
 // Session management
@@ -18,7 +18,7 @@ export {
   type SessionData,
   type AuthTokens,
   SessionService,
-  AuthService
+  AuthService,
 } from './session';
 
 // Convenience re-exports for auth route usage
@@ -31,7 +31,7 @@ export async function auth() {
     if (!session) {
       return null;
     }
-    
+
     return {
       user: {
         id: session.userId,

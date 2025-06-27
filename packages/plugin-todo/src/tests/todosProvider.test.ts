@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'bun:test';
 import { todosProvider } from '../providers/todos';
+import { createMockRuntime } from '@elizaos/core/test-utils';
 import type { IAgentRuntime, Memory, State, UUID } from '@elizaos/core';
 
 describe('todosProvider', () => {
@@ -7,12 +8,12 @@ describe('todosProvider', () => {
   let mockState: State;
 
   const setupMocks = () => {
-    mockRuntime = {
-      agentId: 'test-agent' as UUID,
+    // @ts-ignore - test mock
+    mockRuntime = createMockRuntime({
       worldId: 'world-1' as UUID,
       getRoom: () => Promise.resolve({ worldId: 'world-1' }),
       db: null, // Will cause data service to handle gracefully
-    } as any;
+    });
 
     mockState = {
       values: {},

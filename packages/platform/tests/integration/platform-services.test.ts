@@ -3,7 +3,14 @@
  * Tests core platform functionality without requiring full ElizaOS runtime
  */
 
-import { describe, test, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
+import {
+  describe,
+  test,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+} from '@jest/globals';
 import { v4 as uuidv4 } from 'uuid';
 
 // Mock the database and services for testing
@@ -109,7 +116,7 @@ describe('Platform Services Integration', () => {
 
     test('should calculate platform margin', () => {
       const baseAmount = 10.0; // $10 API cost
-      const platformMargin = 0.10; // 10%
+      const platformMargin = 0.1; // 10%
       const totalCost = baseAmount * (1 + platformMargin);
 
       expect(totalCost).toBe(11.0); // $11 total with 10% margin
@@ -126,8 +133,8 @@ describe('Platform Services Integration', () => {
       ];
 
       const totalRequests = usageRecords.length;
-      const successfulRequests = usageRecords.filter(r => r.success).length;
-      const failedRequests = usageRecords.filter(r => !r.success).length;
+      const successfulRequests = usageRecords.filter((r) => r.success).length;
+      const failedRequests = usageRecords.filter((r) => !r.success).length;
       const totalTokens = usageRecords.reduce((sum, r) => sum + r.tokens, 0);
       const totalCost = usageRecords.reduce((sum, r) => sum + r.cost, 0);
 
@@ -162,7 +169,7 @@ describe('Platform Services Integration', () => {
       ];
 
       const currentRequests = recentRequests.filter(
-        req => req.timestamp >= windowStart
+        (req) => req.timestamp >= windowStart,
       );
 
       expect(currentRequests.length).toBe(2);
@@ -219,8 +226,9 @@ describe('Platform Services Integration', () => {
 
       // Calculate cost (mock pricing: $0.00015 per 1K tokens for gpt-4o-mini)
       const costPer1kTokens = 0.00015;
-      const baseCost = (mockResponse.usage.total_tokens / 1000) * costPer1kTokens;
-      const platformMargin = 0.10;
+      const baseCost =
+        (mockResponse.usage.total_tokens / 1000) * costPer1kTokens;
+      const platformMargin = 0.1;
       const totalCost = baseCost * (1 + platformMargin);
 
       expect(baseCost).toBeCloseTo(0.0000045, 7);

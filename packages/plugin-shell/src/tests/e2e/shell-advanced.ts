@@ -28,15 +28,24 @@ export class ShellAdvancedE2ETestSuite implements TestSuite {
         };
 
         let response: any = null;
-        await runShellCommandAction.handler(runtime, pipeMessage, state, {}, async (resp) => {
-          response = resp;
-          return [];
-        });
+        await runShellCommandAction.handler(
+          runtime,
+          pipeMessage,
+          state,
+          {},
+          async (resp) => {
+            response = resp;
+            return [];
+          }
+        );
 
         const attachment = response.attachments[0];
         const outputData = JSON.parse(attachment.text);
 
-        if (!outputData.stdout.includes('line2') || outputData.stdout.includes('line1')) {
+        if (
+          !outputData.stdout.includes('line2') ||
+          outputData.stdout.includes('line1')
+        ) {
           throw new Error(`Pipe command failed. Output: ${outputData.stdout}`);
         }
 
@@ -64,15 +73,24 @@ export class ShellAdvancedE2ETestSuite implements TestSuite {
         };
 
         let response: any = null;
-        await runShellCommandAction.handler(runtime, successMessage, state, {}, async (resp) => {
-          response = resp;
-          return [];
-        });
+        await runShellCommandAction.handler(
+          runtime,
+          successMessage,
+          state,
+          {},
+          async (resp) => {
+            response = resp;
+            return [];
+          }
+        );
 
         let attachment = response.attachments[0];
         let outputData = JSON.parse(attachment.text);
 
-        if (!outputData.stdout.includes('first') || !outputData.stdout.includes('second')) {
+        if (
+          !outputData.stdout.includes('first') ||
+          !outputData.stdout.includes('second')
+        ) {
           throw new Error('&& operator failed on success case');
         }
 
@@ -86,10 +104,16 @@ export class ShellAdvancedE2ETestSuite implements TestSuite {
           createdAt: Date.now(),
         };
 
-        await runShellCommandAction.handler(runtime, failMessage, state, {}, async (resp) => {
-          response = resp;
-          return [];
-        });
+        await runShellCommandAction.handler(
+          runtime,
+          failMessage,
+          state,
+          {},
+          async (resp) => {
+            response = resp;
+            return [];
+          }
+        );
 
         attachment = response.attachments[0];
         outputData = JSON.parse(attachment.text);
@@ -132,12 +156,22 @@ export class ShellAdvancedE2ETestSuite implements TestSuite {
             createdAt: Date.now(),
           };
 
-          await runShellCommandAction.handler(runtime, createStructureMsg, state, {}, async () => {
-            return [];
-          });
+          await runShellCommandAction.handler(
+            runtime,
+            createStructureMsg,
+            state,
+            {},
+            async () => {
+              return [];
+            }
+          );
 
           // Verify we're in the new directory
-          if (!shellService.getCurrentWorkingDirectory().includes(path.basename(workDir))) {
+          if (
+            !shellService
+              .getCurrentWorkingDirectory()
+              .includes(path.basename(workDir))
+          ) {
             throw new Error('Failed to change to workflow directory');
           }
 
@@ -153,9 +187,15 @@ export class ShellAdvancedE2ETestSuite implements TestSuite {
             createdAt: Date.now(),
           };
 
-          await runShellCommandAction.handler(runtime, createFilesMsg, state, {}, async () => {
-            return [];
-          });
+          await runShellCommandAction.handler(
+            runtime,
+            createFilesMsg,
+            state,
+            {},
+            async () => {
+              return [];
+            }
+          );
 
           // Step 3: Create package.json
           const packageJsonContent = {
@@ -175,9 +215,15 @@ export class ShellAdvancedE2ETestSuite implements TestSuite {
             createdAt: Date.now(),
           };
 
-          await runShellCommandAction.handler(runtime, createPackageMsg, state, {}, async () => {
-            return [];
-          });
+          await runShellCommandAction.handler(
+            runtime,
+            createPackageMsg,
+            state,
+            {},
+            async () => {
+              return [];
+            }
+          );
 
           // Step 4: List and verify structure
           const verifyMsg: Memory = {
@@ -192,10 +238,16 @@ export class ShellAdvancedE2ETestSuite implements TestSuite {
           };
 
           let response: any = null;
-          await runShellCommandAction.handler(runtime, verifyMsg, state, {}, async (resp) => {
-            response = resp;
-            return [];
-          });
+          await runShellCommandAction.handler(
+            runtime,
+            verifyMsg,
+            state,
+            {},
+            async (resp) => {
+              response = resp;
+              return [];
+            }
+          );
 
           const attachment = response.attachments[0];
           const outputData = JSON.parse(attachment.text);
@@ -209,7 +261,11 @@ export class ShellAdvancedE2ETestSuite implements TestSuite {
           const actualFiles = outputData.stdout.trim().split('\n').sort();
 
           for (const expectedFile of expectedFiles) {
-            if (!actualFiles.some((f) => f.includes(expectedFile.replace('./', '')))) {
+            if (
+              !actualFiles.some((f: any) =>
+                f.includes(expectedFile.replace('./', ''))
+              )
+            ) {
               throw new Error(`Expected file not found: ${expectedFile}`);
             }
           }
@@ -243,10 +299,16 @@ export class ShellAdvancedE2ETestSuite implements TestSuite {
         };
 
         let response: any = null;
-        await runShellCommandAction.handler(runtime, bgMessage, state, {}, async (resp) => {
-          response = resp;
-          return [];
-        });
+        await runShellCommandAction.handler(
+          runtime,
+          bgMessage,
+          state,
+          {},
+          async (resp) => {
+            response = resp;
+            return [];
+          }
+        );
 
         const attachment = response.attachments[0];
         const outputData = JSON.parse(attachment.text);
@@ -281,7 +343,9 @@ export class ShellAdvancedE2ETestSuite implements TestSuite {
           // Setup test files
           await shellService.executeCommand(`mkdir -p ${testDir}`);
           await shellService.executeCommand(`cd ${testDir}`);
-          await shellService.executeCommand('touch file1.txt file2.txt file3.log test.json');
+          await shellService.executeCommand(
+            'touch file1.txt file2.txt file3.log test.json'
+          );
 
           // Test wildcard patterns
           const wildcardMsg: Memory = {
@@ -294,10 +358,16 @@ export class ShellAdvancedE2ETestSuite implements TestSuite {
           };
 
           let response: any = null;
-          await runShellCommandAction.handler(runtime, wildcardMsg, state, {}, async (resp) => {
-            response = resp;
-            return [];
-          });
+          await runShellCommandAction.handler(
+            runtime,
+            wildcardMsg,
+            state,
+            {},
+            async (resp) => {
+              response = resp;
+              return [];
+            }
+          );
 
           const attachment = response.attachments[0];
           const outputData = JSON.parse(attachment.text);
@@ -320,10 +390,16 @@ export class ShellAdvancedE2ETestSuite implements TestSuite {
             createdAt: Date.now(),
           };
 
-          await runShellCommandAction.handler(runtime, findMsg, state, {}, async (resp) => {
-            response = resp;
-            return [];
-          });
+          await runShellCommandAction.handler(
+            runtime,
+            findMsg,
+            state,
+            {},
+            async (resp) => {
+              response = resp;
+              return [];
+            }
+          );
 
           const findAttachment = response.attachments[0];
           const findData = JSON.parse(findAttachment.text);
@@ -368,24 +444,34 @@ echo "Script started"
 echo "Arguments: $@"
 echo "Script completed"`;
 
-          await shellService.executeCommand(`echo '${scriptContent}' > test.sh`);
+          await shellService.executeCommand(
+            `echo '${scriptContent}' > test.sh`
+          );
           await shellService.executeCommand('chmod +x test.sh');
 
           // Request script execution using natural language
           const nlMessage: Memory = {
             id: createUniqueUuid(runtime, 'test-nl-script'),
             entityId: runtime.agentId,
-            content: { text: 'Can you run the test.sh script with arguments "hello world"?' },
+            content: {
+              text: 'Can you run the test.sh script with arguments "hello world"?',
+            },
             agentId: runtime.agentId,
             roomId,
             createdAt: Date.now(),
           };
 
           let response: any = null;
-          await runShellCommandAction.handler(runtime, nlMessage, state, {}, async (resp) => {
-            response = resp;
-            return [];
-          });
+          await runShellCommandAction.handler(
+            runtime,
+            nlMessage,
+            state,
+            {},
+            async (resp) => {
+              response = resp;
+              return [];
+            }
+          );
 
           const attachment = response.attachments[0];
           const outputData = JSON.parse(attachment.text);
@@ -404,7 +490,9 @@ echo "Script completed"`;
         } finally {
           // Cleanup
           await shellService.executeCommand(`cd ${path.dirname(scriptDir)}`);
-          await shellService.executeCommand(`rm -rf ${path.basename(scriptDir)}`);
+          await shellService.executeCommand(
+            `rm -rf ${path.basename(scriptDir)}`
+          );
         }
       },
     },

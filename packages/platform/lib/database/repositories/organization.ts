@@ -4,7 +4,13 @@
 
 import { eq, and, desc, asc } from 'drizzle-orm';
 import { getDatabase } from '../index';
-import { organizations, users, agents, type Organization, type NewOrganization } from '../index';
+import {
+  organizations,
+  users,
+  agents,
+  type Organization,
+  type NewOrganization,
+} from '../index';
 import { validateDatabaseContext, getCurrentOrganizationId } from '../context';
 
 export class OrganizationRepository {
@@ -19,10 +25,7 @@ export class OrganizationRepository {
     await validateDatabaseContext();
     const db = await this.getDb();
 
-    const [organization] = await db
-      .select()
-      .from(organizations)
-      .limit(1);
+    const [organization] = await db.select().from(organizations).limit(1);
 
     return organization || null;
   }
@@ -31,7 +34,8 @@ export class OrganizationRepository {
    * Get organization by ID (admin only)
    */
   async getById(id: string): Promise<Organization | null> {
-    const [organization] = await this.getDb()
+    const db = await this.getDb();
+    const [organization] = await db
       .select()
       .from(organizations)
       .where(eq(organizations.id, id))
@@ -44,7 +48,8 @@ export class OrganizationRepository {
    * Get organization by slug
    */
   async getBySlug(slug: string): Promise<Organization | null> {
-    const [organization] = await this.getDb()
+    const db = await this.getDb();
+    const [organization] = await db
       .select()
       .from(organizations)
       .where(eq(organizations.slug, slug))
@@ -56,8 +61,11 @@ export class OrganizationRepository {
   /**
    * Get organization by WorkOS organization ID
    */
-  async getByWorkosId(workosOrganizationId: string): Promise<Organization | null> {
-    const [organization] = await this.getDb()
+  async getByWorkosId(
+    workosOrganizationId: string,
+  ): Promise<Organization | null> {
+    const db = await this.getDb();
+    const [organization] = await db
       .select()
       .from(organizations)
       .where(eq(organizations.workosOrganizationId, workosOrganizationId))
@@ -69,8 +77,11 @@ export class OrganizationRepository {
   /**
    * Get organization by Stripe customer ID
    */
-  async getByStripeCustomerId(stripeCustomerId: string): Promise<Organization | null> {
-    const [organization] = await this.getDb()
+  async getByStripeCustomerId(
+    stripeCustomerId: string,
+  ): Promise<Organization | null> {
+    const db = await this.getDb();
+    const [organization] = await db
       .select()
       .from(organizations)
       .where(eq(organizations.stripeCustomerId, stripeCustomerId))
@@ -83,7 +94,8 @@ export class OrganizationRepository {
    * Create a new organization
    */
   async create(data: NewOrganization): Promise<Organization> {
-    const [organization] = await this.getDb()
+    const db = await this.getDb();
+    const [organization] = await db
       .insert(organizations)
       .values({
         ...data,
@@ -97,10 +109,13 @@ export class OrganizationRepository {
   /**
    * Update current organization
    */
-  async updateCurrent(data: Partial<NewOrganization>): Promise<Organization | null> {
+  async updateCurrent(
+    data: Partial<NewOrganization>,
+  ): Promise<Organization | null> {
     await validateDatabaseContext();
 
-    const [organization] = await this.getDb()
+    const db = await this.getDb();
+    const [organization] = await db
       .update(organizations)
       .set({
         ...data,
@@ -114,8 +129,12 @@ export class OrganizationRepository {
   /**
    * Update organization by ID (admin only)
    */
-  async updateById(id: string, data: Partial<NewOrganization>): Promise<Organization | null> {
-    const [organization] = await this.getDb()
+  async updateById(
+    id: string,
+    data: Partial<NewOrganization>,
+  ): Promise<Organization | null> {
+    const db = await this.getDb();
+    const [organization] = await db
       .update(organizations)
       .set({
         ...data,
@@ -133,12 +152,11 @@ export class OrganizationRepository {
   async deleteCurrent(): Promise<boolean> {
     await validateDatabaseContext();
 
-    const result = await this.getDb()
-      .update(organizations)
-      .set({
-        subscriptionStatus: 'cancelled',
-        updatedAt: new Date(),
-      });
+    const db = await this.getDb();
+    const result = await db.update(organizations).set({
+      subscriptionStatus: 'cancelled',
+      updatedAt: new Date(),
+    });
 
     return true; // If no error was thrown, update was successful
   }
@@ -149,7 +167,8 @@ export class OrganizationRepository {
   async updateCreditBalance(amount: string): Promise<Organization | null> {
     await validateDatabaseContext();
 
-    const [organization] = await this.getDb()
+    const db = await this.getDb();
+    const [organization] = await db
       .update(organizations)
       .set({
         creditBalance: amount,
@@ -166,7 +185,8 @@ export class OrganizationRepository {
   async addCredits(amount: string): Promise<Organization | null> {
     await validateDatabaseContext();
 
-    const [organization] = await this.getDb()
+    const db = await this.getDb();
+    const [organization] = await db
       .update(organizations)
       .set({
         creditBalance: `credit_balance + ${amount}`,
@@ -183,7 +203,8 @@ export class OrganizationRepository {
   async deductCredits(amount: string): Promise<Organization | null> {
     await validateDatabaseContext();
 
-    const [organization] = await this.getDb()
+    const db = await this.getDb();
+    const [organization] = await db
       .update(organizations)
       .set({
         creditBalance: `credit_balance - ${amount}`,
@@ -199,7 +220,9 @@ export class OrganizationRepository {
    */
   async hasEnoughCredits(requiredAmount: string): Promise<boolean> {
     const organization = await this.getCurrent();
-    if (!organization) {return false;}
+    if (!organization) {
+      return false;
+    }
 
     const currentBalance = parseFloat(organization.creditBalance);
     const required = parseFloat(requiredAmount);
@@ -224,13 +247,14 @@ export class OrganizationRepository {
     }
 
     // Get user count
-    const [userCountResult] = await this.getDb()
+    const db = await this.getDb();
+    const [userCountResult] = await db
       .select({ count: users.id })
       .from(users)
       .where(eq(users.organizationId, organizationId));
 
     // Get agent count
-    const [agentCountResult] = await this.getDb()
+    const [agentCountResult] = await db
       .select({ count: agents.id })
       .from(agents)
       .where(eq(agents.organizationId, organizationId));
@@ -283,7 +307,8 @@ export class OrganizationRepository {
   }): Promise<Organization | null> {
     await validateDatabaseContext();
 
-    const [organization] = await this.getDb()
+    const db = await this.getDb();
+    const [organization] = await db
       .update(organizations)
       .set({
         ...data,

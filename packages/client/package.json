@@ -33,7 +33,7 @@
     "test": "bun test",
     "test:coverage": "bun test --coverage",
     "test:quick": "./scripts/test-quick.sh",
-    "test:unit": "bun test --coverage",
+    "test:unit": "bun test",
     "test:unit:watch": "bun test --watch",
     "test:component": "cypress run --component",
     "test:e2e": "cypress run --e2e",

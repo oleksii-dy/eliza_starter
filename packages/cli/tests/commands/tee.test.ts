@@ -1,4 +1,14 @@
-import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll, mock, spyOn } from 'bun:test';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+  mock,
+  spyOn,
+} from 'bun:test';
 import { Command } from 'commander';
 import * as childProcess from 'node:child_process';
 import { teeCommand } from '../../src/commands/tee';
@@ -23,12 +33,15 @@ describe('TEE Command', () => {
 
   beforeAll(() => {
     // Use spyOn to mock childProcess.spawn
-    mockSpawn = spyOn(childProcess, 'spawn').mockImplementation(() => ({
-      on: mock(),
-      kill: mock(),
-      stdout: { on: mock() },
-      stderr: { on: mock() },
-    }) as any);
+    mockSpawn = spyOn(childProcess, 'spawn').mockImplementation(
+      () =>
+        ({
+          on: mock(),
+          kill: mock(),
+          stdout: { on: mock() },
+          stderr: { on: mock() },
+        }) as any
+    );
   });
 
   afterAll(() => {

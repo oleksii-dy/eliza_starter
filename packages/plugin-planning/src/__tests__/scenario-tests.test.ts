@@ -528,7 +528,9 @@ describe('Planning Plugin Scenario Tests', () => {
 
       const emptyState: State = { values: {}, data: {}, text: '' };
       await expect(
-        analyzeInputAction.handler(runtime, message, emptyState, { abortSignal: abortController.signal })
+        analyzeInputAction.handler(runtime, message, emptyState, {
+          abortSignal: abortController.signal,
+        })
       ).rejects.toThrow('Analysis aborted');
     });
   });
@@ -631,7 +633,7 @@ describe('Planning Plugin Scenario Tests', () => {
       const state = await runtime.composeState(message, [
         'messageClassifier',
         'taskComplexity',
-        'priorityDetector'
+        'priorityDetector',
       ]);
 
       // Should classify as strategic planning
@@ -666,14 +668,18 @@ describe('Planning Plugin Scenario Tests', () => {
       const state = await runtime.composeState(message, [
         'messageClassifier',
         'resourceAvailability',
-        'taskComplexity'
+        'taskComplexity',
       ]);
 
       // Should detect as analysis task (actual behavior)
-      expect(['processing', 'analysis']).toContain(state.data.providers.messageClassifier.classification);
+      expect(['processing', 'analysis']).toContain(
+        state.data.providers.messageClassifier.classification
+      );
 
       // Should identify resource requirements
-      expect(state.data.providers.resourceAvailability?.resourcesNeeded).toContain('data_processing');
+      expect(state.data.providers.resourceAvailability?.resourcesNeeded).toContain(
+        'data_processing'
+      );
 
       // Complex task requiring multiple steps
       expect(state.data.providers.taskComplexity?.complexity).toBe('high');
@@ -690,14 +696,13 @@ describe('Planning Plugin Scenario Tests', () => {
         },
       };
 
-      const state = await runtime.composeState(message, [
-        'messageClassifier',
-        'priorityDetector'
-      ]);
+      const state = await runtime.composeState(message, ['messageClassifier', 'priorityDetector']);
 
       // Should have coordination in required capabilities if defined
       if (state.data.providers.messageClassifier?.requiredCapabilities) {
-        expect(state.data.providers.messageClassifier.requiredCapabilities).toContain('coordination');
+        expect(state.data.providers.messageClassifier.requiredCapabilities).toContain(
+          'coordination'
+        );
       }
 
       // Should be high priority due to stakeholder involvement
@@ -724,17 +729,16 @@ describe('Planning Plugin Scenario Tests', () => {
         },
       };
 
-      const state = await runtime.composeState(message, [
-        'messageClassifier',
-        'priorityDetector'
-      ]);
+      const state = await runtime.composeState(message, ['messageClassifier', 'priorityDetector']);
 
       // Should detect urgency and high priority
       expect(state.values.isPriority).toBe(true);
       expect(state.data.providers.priorityDetector?.priority).toBe('critical');
 
       // Should classify as execution or strategic task
-      expect(['execution', 'strategic', 'general']).toContain(state.data.providers.messageClassifier.classification);
+      expect(['execution', 'strategic', 'general']).toContain(
+        state.data.providers.messageClassifier.classification
+      );
 
       // Should identify multiple parallel actions needed
       const result1 = await analyzeInputAction.handler(runtime, message, state, {});
@@ -757,10 +761,7 @@ describe('Planning Plugin Scenario Tests', () => {
         },
       };
 
-      const state = await runtime.composeState(message, [
-        'messageClassifier',
-        'taskComplexity'
-      ]);
+      const state = await runtime.composeState(message, ['messageClassifier', 'taskComplexity']);
 
       // Should classify as analysis
       expect(state.data.providers.messageClassifier.classification).toBe('analysis');
@@ -795,13 +796,12 @@ describe('Planning Plugin Scenario Tests', () => {
         },
       };
 
-      const state = await runtime.composeState(message, [
-        'messageClassifier',
-        'taskComplexity'
-      ]);
+      const state = await runtime.composeState(message, ['messageClassifier', 'taskComplexity']);
 
       // Should identify as strategic or general task (actual behavior for long complex messages)
-      expect(['strategic', 'general']).toContain(state.data.providers.messageClassifier.classification);
+      expect(['strategic', 'general']).toContain(
+        state.data.providers.messageClassifier.classification
+      );
       expect(state.data.providers.taskComplexity?.requiresAutomation).toBe(true);
 
       // Should identify conditional logic requirements
@@ -838,12 +838,16 @@ describe('Planning Plugin Scenario Tests', () => {
 
       const state = await runtime.composeState(message, [
         'messageClassifier',
-        'resourceAvailability'
+        'resourceAvailability',
       ]);
 
       // Should identify as analysis or strategic task (both are reasonable)
-      expect(['analysis', 'strategic', 'general']).toContain(state.data.providers.messageClassifier.classification);
-      expect(state.data.providers.resourceAvailability?.resourcesNeeded).toContain('cloud_infrastructure');
+      expect(['analysis', 'strategic', 'general']).toContain(
+        state.data.providers.messageClassifier.classification
+      );
+      expect(state.data.providers.resourceAvailability?.resourcesNeeded).toContain(
+        'cloud_infrastructure'
+      );
 
       // Should identify performance constraints
       const result1 = await analyzeInputAction.handler(runtime, message, state, {});

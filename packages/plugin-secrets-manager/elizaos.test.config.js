@@ -13,5 +13,5 @@ export default {
   plugin: {
     entry: './dist/index.js', // Use test version
     tests: true, // Enable test discovery
-  }
+  },
 };

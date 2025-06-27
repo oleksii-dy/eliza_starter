@@ -18,7 +18,8 @@ const paymentConfirmationFlowScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'This is a large transaction (1500 USDC). For security, I\'ve sent you a verification code. Please provide it to confirm.',
+        content:
+          "This is a large transaction (1500 USDC). For security, I've sent you a verification code. Please provide it to confirm.",
       },
     ],
     [
@@ -28,7 +29,8 @@ const paymentConfirmationFlowScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'Verification successful! Processing your payment of 1500 USDC to 0x742d35Cc6634C0532925a3b844Bc9e7595f2bd4e...',
+        content:
+          'Verification successful! Processing your payment of 1500 USDC to 0x742d35Cc6634C0532925a3b844Bc9e7595f2bd4e...',
       },
     ],
   ],

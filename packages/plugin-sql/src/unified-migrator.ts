@@ -1,10 +1,10 @@
 import { logger, type UUID } from '@elizaos/core';
 import { sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { connectionRegistry } from './connection-registry';
-import { schemaRegistry, type TableSchema } from './schema-registry';
-import { CORE_TABLES } from './core-tables';
-import { setDatabaseType, type DatabaseType } from './schema/factory';
+import { connectionRegistry } from './connection-registry.js';
+import { schemaRegistry, type TableSchema } from './schema-registry.js';
+import { CORE_TABLES } from './core-tables.js';
+import { setDatabaseType, type DatabaseType } from './schema/factory.js';
 
 /**
  * Unified migration system that handles all table creation in a consistent manner.
@@ -232,7 +232,7 @@ export class UnifiedMigrator {
 
     // Import and access the schema objects to trigger lazy loading
     try {
-      const coreSchema = await import('./schema');
+      const coreSchema = await import('./schema/index.js');
 
       // Access each schema object to trigger lazy proxy loading
       const schemaObjects = [

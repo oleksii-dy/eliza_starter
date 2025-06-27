@@ -108,7 +108,9 @@ async function runPublishingDemo() {
 
   const checkProgress = async () => {
     const currentProject = await orchestrationService.getProject(project.id);
-    if (!currentProject) {return false;}
+    if (!currentProject) {
+      return false;
+    }
 
     if (currentProject.phase !== lastPhase || currentProject.status !== lastStatus) {
       lastPhase = currentProject.phase;
@@ -137,7 +139,9 @@ async function runPublishingDemo() {
 
   while (true) {
     const isDone = await checkProgress();
-    if (isDone) {break;}
+    if (isDone) {
+      break;
+    }
     await new Promise((resolve) => setTimeout(resolve, 5000));
   }
 

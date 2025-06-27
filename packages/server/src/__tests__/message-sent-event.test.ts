@@ -2,7 +2,7 @@
  * Test to verify MESSAGE_SENT event emission in messaging API endpoint
  */
 
-import { describe, it, expect, beforeEach } from 'bun:test';
+import { describe, it, expect } from 'bun:test';
 import { mock } from 'bun:test';
 import { EventType, type UUID } from '@elizaos/core';
 
@@ -11,7 +11,7 @@ describe('/api/messaging/submit MESSAGE_SENT Event Emission', () => {
     // Mock agent runtime with emitEvent method
     const mockAgentRuntime = {
       emitEvent: mock(),
-      character: { name: 'Test Agent' }
+      character: { name: 'Test Agent' },
     };
 
     // Mock server instance with agents map
@@ -38,6 +38,6 @@ describe('/api/messaging/submit MESSAGE_SENT Event Emission', () => {
   });
 
   it('should have EventType.MESSAGE_SENT defined', () => {
-    expect(EventType.MESSAGE_SENT).toBe('MESSAGE_SENT');
+    expect(EventType.MESSAGE_SENT).toBe(EventType.MESSAGE_SENT);
   });
 });

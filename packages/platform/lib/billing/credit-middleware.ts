@@ -12,7 +12,10 @@ export interface CreditDeductionConfig {
   operation: string;
   estimatedCost?: number;
   costCalculator?: (requestData: any) => number;
-  usageExtractor?: (requestData: any, responseData: any) => Partial<UsageContext>;
+  usageExtractor?: (
+    requestData: any,
+    responseData: any,
+  ) => Partial<UsageContext>;
 }
 
 /**
@@ -21,7 +24,7 @@ export interface CreditDeductionConfig {
 export async function withCreditCheck(
   request: NextRequest,
   config: CreditDeductionConfig,
-  handler: (req: NextRequest) => Promise<NextResponse>
+  handler: (req: NextRequest) => Promise<NextResponse>,
 ): Promise<NextResponse> {
   try {
     // Get user session
@@ -42,17 +45,18 @@ export async function withCreditCheck(
     // Check if organization has sufficient credits
     const hasSufficientCredits = await CreditService.checkSufficientCredits(
       session.organizationId,
-      estimatedCost
+      estimatedCost,
     );
 
     if (!hasSufficientCredits) {
       return NextResponse.json(
         {
           error: 'Insufficient credits',
-          message: 'Your organization has insufficient credits to perform this operation.',
+          message:
+            'Your organization has insufficient credits to perform this operation.',
           estimatedCost,
         },
-        { status: 402 } // Payment Required
+        { status: 402 }, // Payment Required
       );
     }
 
@@ -78,8 +82,8 @@ export async function withCreditCheck(
       CreditService.deductCreditsForUsage(
         session.organizationId,
         session.userId,
-        usageContext
-      ).catch(error => {
+        usageContext,
+      ).catch((error) => {
         console.error('Failed to deduct credits:', error);
         // TODO: Add to retry queue or alert system
       });
@@ -90,7 +94,7 @@ export async function withCreditCheck(
     console.error('Credit middleware error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -105,7 +109,7 @@ export async function withModelUsageTracking(
     modelName: string;
     operation: string;
   },
-  handler: (req: NextRequest) => Promise<NextResponse>
+  handler: (req: NextRequest) => Promise<NextResponse>,
 ): Promise<NextResponse> {
   const config: CreditDeductionConfig = {
     service: modelConfig.service,
@@ -125,9 +129,12 @@ export async function withModelUsageTracking(
     costCalculator: (requestData) => {
       // Estimate cost based on request
       const messages = requestData?.messages || [];
-      const estimatedInputTokens = messages.reduce((total: number, msg: any) => {
-        return total + (msg.content?.length || 0) / 4; // Rough estimation
-      }, 0);
+      const estimatedInputTokens = messages.reduce(
+        (total: number, msg: any) => {
+          return total + (msg.content?.length || 0) / 4; // Rough estimation
+        },
+        0,
+      );
 
       return CreditService.calculateModelCost({
         service: modelConfig.service,
@@ -148,7 +155,7 @@ export async function withModelUsageTracking(
 export async function withStorageUsageTracking(
   request: NextRequest,
   operation: 'upload' | 'storage' | 'bandwidth',
-  handler: (req: NextRequest) => Promise<NextResponse>
+  handler: (req: NextRequest) => Promise<NextResponse>,
 ): Promise<NextResponse> {
   const config: CreditDeductionConfig = {
     service: 'storage',
@@ -212,7 +219,7 @@ export function trackUsage(config: CreditDeductionConfig) {
   return function (
     target: any,
     propertyName: string,
-    descriptor: TypedPropertyDescriptor<Function>
+    descriptor: TypedPropertyDescriptor<Function>,
   ) {
     const method = descriptor.value!;
 
@@ -228,12 +235,12 @@ export function trackUsage(config: CreditDeductionConfig) {
 export function trackModelUsage(
   service: 'openai' | 'anthropic' | 'cohere',
   modelName: string,
-  operation: string
+  operation: string,
 ) {
   return function (
     target: any,
     propertyName: string,
-    descriptor: TypedPropertyDescriptor<Function>
+    descriptor: TypedPropertyDescriptor<Function>,
   ) {
     const method = descriptor.value!;
 
@@ -241,7 +248,7 @@ export function trackModelUsage(
       return withModelUsageTracking(
         request,
         { service, modelName, operation },
-        method.bind(this)
+        method.bind(this),
       );
     };
   };

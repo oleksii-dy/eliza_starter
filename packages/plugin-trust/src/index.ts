@@ -2,7 +2,6 @@ import type { IAgentRuntime, Plugin, UUID } from '@elizaos/core';
 import { Service, logger } from '@elizaos/core';
 import { evaluateTrustAction } from './actions/evaluateTrust';
 import { recordTrustInteractionAction } from './actions/recordTrustInteraction';
-import { requestElevationAction } from './actions/requestElevation';
 import { updateRoleAction } from './actions/roles';
 import { TrustDatabase } from './database/TrustDatabase';
 import { reflectionEvaluator } from './evaluators/reflection';
@@ -448,8 +447,7 @@ const trustPlugin: Plugin = {
     recordTrustInteractionAction,
     // Trust evaluation enabled for security assessment
     evaluateTrustAction,
-    // Elevation requests enabled for privilege escalation workflows
-    requestElevationAction,
+    // Elevation requests disabled - feature not implemented
   ],
 
   providers: [roleProvider, trustProfileProvider, securityStatusProvider],

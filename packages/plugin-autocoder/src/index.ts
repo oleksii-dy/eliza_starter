@@ -31,12 +31,7 @@ export const autocoderPlugin: Plugin = {
     secretsWorkflowAction,
   ],
   providers: [],
-  services: [
-    N8nWorkflowService,
-    DockerService,
-    PluginCreationService,
-    MCPCreationService
-  ],
+  services: [N8nWorkflowService, DockerService, PluginCreationService, MCPCreationService],
 
   async init(config: Record<string, string>, runtime: IAgentRuntime): Promise<void> {
     elizaLogger.info('\n┌════════════════════════════════════════┐');

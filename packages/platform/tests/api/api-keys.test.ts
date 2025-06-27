@@ -3,7 +3,14 @@
  * Tests the actual API routes with real database integration
  */
 
-import { describe, test, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
+import {
+  describe,
+  test,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+} from '@jest/globals';
 
 describe('API Keys API Integration', () => {
   const BASE_URL = 'http://localhost:3333/api/v1';
@@ -25,24 +32,24 @@ describe('API Keys API Integration', () => {
         name: 'empty body',
         body: {},
         expectedStatus: 400,
-        expectedError: 'Invalid input'
+        expectedError: 'Invalid input',
       },
       {
         name: 'invalid name',
         body: { name: '' },
         expectedStatus: 400,
-        expectedError: 'Invalid input'
+        expectedError: 'Invalid input',
       },
       {
         name: 'invalid expiresIn',
         body: { name: 'Test Key', expiresIn: 'invalid' },
         expectedStatus: 400,
-        expectedError: 'Invalid input'
+        expectedError: 'Invalid input',
       },
       {
         name: 'valid basic request',
         body: { name: 'Test Key' },
-        isValid: true
+        isValid: true,
       },
       {
         name: 'valid full request',
@@ -50,13 +57,13 @@ describe('API Keys API Integration', () => {
           name: 'Test Key',
           description: 'Test description',
           permissions: ['inference:openai'],
-          expiresIn: '30d'
+          expiresIn: '30d',
         },
-        isValid: true
-      }
+        isValid: true,
+      },
     ];
 
-    testCases.forEach(testCase => {
+    testCases.forEach((testCase) => {
       if (testCase.isValid) {
         expect(testCase.body).toHaveProperty('name');
         expect(typeof testCase.body.name).toBe('string');
@@ -70,7 +77,9 @@ describe('API Keys API Integration', () => {
 
   test('API key service functions should be properly integrated', async () => {
     // Test that the service functions exist and are importable
-    const { createApiKey, getUserApiKeys, deleteApiKey } = await import('@/lib/server/services/api-key-service');
+    const { createApiKey, getUserApiKeys, deleteApiKey } = await import(
+      '@/lib/server/services/api-key-service'
+    );
 
     expect(typeof createApiKey).toBe('function');
     expect(typeof getUserApiKeys).toBe('function');
@@ -90,7 +99,9 @@ describe('API Keys API Integration', () => {
   });
 
   test('API key generation should produce secure keys', async () => {
-    const { generateApiKey } = await import('@/lib/server/services/api-key-service');
+    const { generateApiKey } = await import(
+      '@/lib/server/services/api-key-service'
+    );
 
     const result = generateApiKey();
 
@@ -112,7 +123,9 @@ describe('API Keys API Integration', () => {
   });
 
   test('API key validation should work correctly', async () => {
-    const { generateApiKey, hashApiKey } = await import('@/lib/server/services/api-key-service');
+    const { generateApiKey, hashApiKey } = await import(
+      '@/lib/server/services/api-key-service'
+    );
 
     const { keyValue, keyHash } = generateApiKey();
 
@@ -127,7 +140,9 @@ describe('API Keys API Integration', () => {
   });
 
   test('Permission checking should work correctly', async () => {
-    const { isValidPermission, checkApiKeyPermission } = await import('@/lib/server/services/api-key-service');
+    const { isValidPermission, checkApiKeyPermission } = await import(
+      '@/lib/server/services/api-key-service'
+    );
 
     // Test valid permissions
     expect(await isValidPermission('inference:openai')).toBe(true);
@@ -157,12 +172,16 @@ describe('API Keys API Integration', () => {
       updatedAt: new Date(),
     };
 
-    expect(await checkApiKeyPermission(mockApiKey, 'inference:openai')).toBe(true);
+    expect(await checkApiKeyPermission(mockApiKey, 'inference:openai')).toBe(
+      true,
+    );
     expect(await checkApiKeyPermission(mockApiKey, 'storage:read')).toBe(true);
     expect(await checkApiKeyPermission(mockApiKey, 'billing:read')).toBe(false);
 
     // Test admin permission
     const adminApiKey = { ...mockApiKey, permissions: ['admin:all'] };
-    expect(await checkApiKeyPermission(adminApiKey, 'any:permission')).toBe(true);
+    expect(await checkApiKeyPermission(adminApiKey, 'any:permission')).toBe(
+      true,
+    );
   });
 });

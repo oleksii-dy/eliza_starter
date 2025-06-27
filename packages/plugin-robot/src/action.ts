@@ -251,7 +251,8 @@ export const describeSceneAction: Action = {
 export const captureImageAction: Action = {
   name: 'CAPTURE_IMAGE',
   similes: ['TAKE_PHOTO', 'SCREENSHOT', 'CAPTURE_FRAME', 'TAKE_PICTURE'],
-  description: 'Captures the current frame from the camera and saves it as an image attachment. Returns capture status and image metadata for action chaining.',
+  description:
+    'Captures the current frame from the camera and saves it as an image attachment. Returns capture status and image metadata for action chaining.',
   validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
     const visionService = runtime.getService<VisionService>('VISION');
     return !!visionService && visionService.isActive();
@@ -430,7 +431,8 @@ export const captureImageAction: Action = {
 export const killAutonomousAction: Action = {
   name: 'KILL_AUTONOMOUS',
   similes: ['STOP_AUTONOMOUS', 'HALT_AUTONOMOUS', 'KILL_AUTO_LOOP'],
-  description: 'Stops the autonomous agent loop for debugging purposes. Returns termination status and service state for action chaining.',
+  description:
+    'Stops the autonomous agent loop for debugging purposes. Returns termination status and service state for action chaining.',
   validate: async (_runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<boolean> => {
     // Always allow this action for debugging
     return true;
@@ -564,7 +566,8 @@ export const killAutonomousAction: Action = {
 
 export const setVisionModeAction: Action = {
   name: 'SET_VISION_MODE',
-  description: 'Set the vision mode to OFF, CAMERA, SCREEN, or BOTH. Returns vision mode configuration and previous state for action chaining.',
+  description:
+    'Set the vision mode to OFF, CAMERA, SCREEN, or BOTH. Returns vision mode configuration and previous state for action chaining.',
   similes: [
     'change vision to {mode}',
     'set vision mode {mode}',

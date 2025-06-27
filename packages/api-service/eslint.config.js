@@ -20,10 +20,10 @@ export default [
         global: 'readonly',
         __dirname: 'readonly',
         __filename: 'readonly',
-        
+
         // Bun globals
         Bun: 'readonly',
-        
+
         // Web/Node.js APIs
         fetch: 'readonly',
         URL: 'readonly',
@@ -31,7 +31,7 @@ export default [
         crypto: 'readonly',
         TextEncoder: 'readonly',
         TextDecoder: 'readonly',
-        
+
         // TypeScript utility types
         Record: 'readonly',
         Parameters: 'readonly',

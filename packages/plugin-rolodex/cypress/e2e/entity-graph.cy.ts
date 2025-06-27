@@ -56,10 +56,12 @@ describe('Entity Graph E2E Tests', () => {
     cy.wait(500);
 
     // Check that stats reflect filtered data
-    cy.contains('Network Stats').parent().within(() => {
-      // Should show fewer entities if filter is working
-      cy.contains('Entities:').should('exist');
-    });
+    cy.contains('Network Stats')
+      .parent()
+      .within(() => {
+        // Should show fewer entities if filter is working
+        cy.contains('Entities:').should('exist');
+      });
   });
 
   it('filters entities by type', () => {
@@ -81,15 +83,15 @@ describe('Entity Graph E2E Tests', () => {
     cy.contains('Show Filters').click();
 
     // Find trust level sliders
-    cy.contains('Trust Level:').parent().within(() => {
-      // Adjust the first slider (minimum)
-      cy.get('input[type="range"]').first()
-        .invoke('val', '0')
-        .trigger('change');
+    cy.contains('Trust Level:')
+      .parent()
+      .within(() => {
+        // Adjust the first slider (minimum)
+        cy.get('input[type="range"]').first().invoke('val', '0').trigger('change');
 
-      // Check that the label updated
-      cy.contains('Trust Level: 0.0 to 1.0').should('exist');
-    });
+        // Check that the label updated
+        cy.contains('Trust Level: 0.0 to 1.0').should('exist');
+      });
   });
 
   it('adjusts connection strength threshold', () => {
@@ -97,37 +99,39 @@ describe('Entity Graph E2E Tests', () => {
     cy.contains('Show Filters').click();
 
     // Find strength slider
-    cy.contains('Min Strength:').parent().within(() => {
-      // Adjust the slider
-      cy.get('input[type="range"]')
-        .invoke('val', '0.5')
-        .trigger('change');
+    cy.contains('Min Strength:')
+      .parent()
+      .within(() => {
+        // Adjust the slider
+        cy.get('input[type="range"]').invoke('val', '0.5').trigger('change');
 
-      // Check that the label updated
-      cy.contains('Min Strength: 0.5').should('exist');
-    });
+        // Check that the label updated
+        cy.contains('Min Strength: 0.5').should('exist');
+      });
   });
 
   it('filters relationship types by clicking legend items', () => {
     // Click on 'friend' relationship type in legend
-    cy.contains('Relationship Types').parent().within(() => {
-      cy.contains('friend').click();
+    cy.contains('Relationship Types')
+      .parent()
+      .within(() => {
+        cy.contains('friend').click();
 
-      // Check that it's selected (should have font-bold class)
-      cy.contains('friend').parent().should('have.class', 'font-bold');
+        // Check that it's selected (should have font-bold class)
+        cy.contains('friend').parent().should('have.class', 'font-bold');
 
-      // Click again to deselect
-      cy.contains('friend').click();
+        // Click again to deselect
+        cy.contains('friend').click();
 
-      // Should not have font-bold class anymore
-      cy.contains('friend').parent().should('not.have.class', 'font-bold');
-    });
+        // Should not have font-bold class anymore
+        cy.contains('friend').parent().should('not.have.class', 'font-bold');
+      });
   });
 
   it('displays entity details panel when entity is clicked', () => {
     // This would require actual data in the graph
     // For now, we'll check that the structure exists
-    cy.get('body').then($body => {
+    cy.get('body').then(($body) => {
       // If there are entities in the graph
       if ($body.find('g.node').length > 0) {
         // Click on the first node
@@ -158,10 +162,12 @@ describe('Entity Graph E2E Tests', () => {
 
   it('handles empty state gracefully', () => {
     // If no entities exist, should show appropriate message
-    cy.get('body').then($body => {
+    cy.get('body').then(($body) => {
       if ($body.text().includes('No entities found')) {
         cy.contains('No entities found').should('be.visible');
-        cy.contains('Entities will appear here as they are mentioned in conversations').should('be.visible');
+        cy.contains('Entities will appear here as they are mentioned in conversations').should(
+          'be.visible'
+        );
       } else {
         // If entities exist, graph should be visible
         cy.get('[data-testid="force-graph"]').should('exist');

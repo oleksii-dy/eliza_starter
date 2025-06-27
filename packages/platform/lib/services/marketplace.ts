@@ -1,6 +1,6 @@
 /**
  * Marketplace Service
- * 
+ *
  * Core service for UGC marketplace functionality:
  * - Asset discovery and browsing
  * - Installation and subscription management
@@ -8,7 +8,7 @@
  * - Reviews and ratings
  */
 
-import { db } from '../database';
+import { getDatabase } from '../database';
 import {
   marketplaceAssets,
   assetVersions,
@@ -21,10 +21,23 @@ import {
   AssetType,
   AssetStatus,
   VisibilityType,
-  PricingModel
+  PricingModel,
 } from '../database/marketplace-schema';
 import { organizations, users } from '../database/schema';
-import { eq, and, desc, asc, gte, lte, like, inArray, sql, count, avg, sum } from 'drizzle-orm';
+import {
+  eq,
+  and,
+  desc,
+  asc,
+  gte,
+  lte,
+  like,
+  inArray,
+  sql,
+  count,
+  avg,
+  sum,
+} from 'drizzle-orm';
 import { ContainerHostingService } from './container-hosting';
 
 export interface CreateAssetRequest {
@@ -69,26 +82,26 @@ export interface MarketplaceAsset {
   tags: string[];
   status: AssetStatus;
   visibility: VisibilityType;
-  
+
   // Pricing
   pricingModel: PricingModel;
   basePrice: number;
   usagePrice: number;
   subscriptionPrice: number;
   currency: string;
-  
+
   // Media
   icon?: string;
   images: string[];
   readme?: string;
-  
+
   // Metrics
   installCount: number;
   usageCount: number;
   favoriteCount: number;
   rating: number;
   ratingCount: number;
-  
+
   // Creator Info
   creator: {
     id: string;
@@ -96,12 +109,12 @@ export interface MarketplaceAsset {
     avatarUrl?: string;
     isVerified: boolean;
   };
-  
+
   // Version Info
   version: string;
   lastUpdated: Date;
   createdAt: Date;
-  
+
   // User-specific data (if authenticated)
   isInstalled?: boolean;
   isFavorited?: boolean;
@@ -134,47 +147,52 @@ export class MarketplaceService {
   async createAsset(
     creatorId: string,
     organizationId: string,
-    assetData: CreateAssetRequest
+    assetData: CreateAssetRequest,
   ): Promise<string> {
     try {
       // Generate slug from name
       const slug = this.generateSlug(assetData.name);
-      
+
       // Check if slug already exists
-      const existingAssets = await db.select()
+      const db = await getDatabase();
+      const existingAssets = await db
+        .select()
         .from(marketplaceAssets)
         .where(eq(marketplaceAssets.slug, slug))
         .limit(1);
-      
+
       if (existingAssets.length > 0) {
         throw new Error('Asset with this name already exists');
       }
 
       // Create asset
-      const assetResult = await db.insert(marketplaceAssets).values({
-        organizationId,
-        creatorId,
-        name: assetData.name,
-        slug,
-        description: assetData.description,
-        longDescription: assetData.longDescription,
-        assetType: assetData.assetType,
-        category: assetData.category,
-        tags: assetData.tags,
-        configuration: assetData.configuration,
-        pricingModel: assetData.pricingModel,
-        basePrice: assetData.basePrice?.toString() || '0.00',
-        usagePrice: assetData.usagePrice?.toString() || '0.000000',
-        subscriptionPrice: assetData.subscriptionPrice?.toString() || '0.00',
-        repositoryUrl: assetData.repositoryUrl,
-        readme: assetData.readme,
-        icon: assetData.icon,
-        images: assetData.images || [],
-        status: 'draft',
-        visibility: 'private',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }).returning();
+      const assetResult = await db
+        .insert(marketplaceAssets)
+        .values({
+          organizationId,
+          creatorId,
+          name: assetData.name,
+          slug,
+          description: assetData.description,
+          longDescription: assetData.longDescription,
+          assetType: assetData.assetType,
+          category: assetData.category,
+          tags: assetData.tags,
+          configuration: assetData.configuration,
+          pricingModel: assetData.pricingModel,
+          basePrice: assetData.basePrice?.toString() || '0.00',
+          usagePrice: assetData.usagePrice?.toString() || '0.000000',
+          subscriptionPrice: assetData.subscriptionPrice?.toString() || '0.00',
+          repositoryUrl: assetData.repositoryUrl,
+          readme: assetData.readme,
+          icon: assetData.icon,
+          images: assetData.images || [],
+          status: 'draft',
+          visibility: 'private',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning();
 
       const asset = assetResult[0];
 
@@ -185,7 +203,7 @@ export class MarketplaceService {
         version: '1.0.0',
         configuration: assetData.configuration,
         isActive: true,
-        createdAt: new Date()
+        createdAt: new Date(),
       });
 
       return asset.id;
@@ -198,25 +216,35 @@ export class MarketplaceService {
   /**
    * Search and discover assets
    */
-  async searchAssets(filters: AssetSearchFilters, userId?: string): Promise<MarketplaceAsset[]> {
+  async searchAssets(
+    filters: AssetSearchFilters,
+    userId?: string,
+  ): Promise<MarketplaceAsset[]> {
     try {
-      let query = db.select({
-        asset: marketplaceAssets,
-        creator: creatorProfiles,
-        user: users
-      })
-      .from(marketplaceAssets)
-      .leftJoin(creatorProfiles, eq(marketplaceAssets.creatorId, creatorProfiles.userId))
-      .leftJoin(users, eq(marketplaceAssets.creatorId, users.id))
-      .where(and(
-        eq(marketplaceAssets.status, 'published'),
-        eq(marketplaceAssets.visibility, 'public')
-      ));
+      const db = await getDatabase();
+      let query = db
+        .select({
+          asset: marketplaceAssets,
+          creator: creatorProfiles,
+          user: users,
+        })
+        .from(marketplaceAssets)
+        .leftJoin(
+          creatorProfiles,
+          eq(marketplaceAssets.creatorId, creatorProfiles.userId),
+        )
+        .leftJoin(users, eq(marketplaceAssets.creatorId, users.id))
+        .where(
+          and(
+            eq(marketplaceAssets.status, 'published'),
+            eq(marketplaceAssets.visibility, 'public'),
+          ),
+        );
 
       // Apply filters
       const conditions = [
         eq(marketplaceAssets.status, 'published'),
-        eq(marketplaceAssets.visibility, 'public')
+        eq(marketplaceAssets.visibility, 'public'),
       ];
 
       if (filters.assetType) {
@@ -230,12 +258,14 @@ export class MarketplaceService {
       if (filters.searchQuery) {
         conditions.push(
           sql`(${marketplaceAssets.name} ILIKE ${'%' + filters.searchQuery + '%'} OR 
-               ${marketplaceAssets.description} ILIKE ${'%' + filters.searchQuery + '%'})`
+               ${marketplaceAssets.description} ILIKE ${'%' + filters.searchQuery + '%'})`,
         );
       }
 
       if (filters.rating) {
-        conditions.push(gte(marketplaceAssets.rating, filters.rating.toString()));
+        conditions.push(
+          gte(marketplaceAssets.rating, filters.rating.toString()),
+        );
       }
 
       query = query.where(and(...conditions));
@@ -243,32 +273,37 @@ export class MarketplaceService {
       // Apply sorting
       const sortBy = filters.sortBy || 'created';
       const sortOrder = filters.sortOrder || 'desc';
-      
+
       switch (sortBy) {
         case 'name':
-          query = sortOrder === 'asc' ? 
-            query.orderBy(asc(marketplaceAssets.name)) : 
-            query.orderBy(desc(marketplaceAssets.name));
+          query =
+            sortOrder === 'asc'
+              ? query.orderBy(asc(marketplaceAssets.name))
+              : query.orderBy(desc(marketplaceAssets.name));
           break;
         case 'rating':
-          query = sortOrder === 'asc' ? 
-            query.orderBy(asc(marketplaceAssets.rating)) : 
-            query.orderBy(desc(marketplaceAssets.rating));
+          query =
+            sortOrder === 'asc'
+              ? query.orderBy(asc(marketplaceAssets.rating))
+              : query.orderBy(desc(marketplaceAssets.rating));
           break;
         case 'installs':
-          query = sortOrder === 'asc' ? 
-            query.orderBy(asc(marketplaceAssets.installCount)) : 
-            query.orderBy(desc(marketplaceAssets.installCount));
+          query =
+            sortOrder === 'asc'
+              ? query.orderBy(asc(marketplaceAssets.installCount))
+              : query.orderBy(desc(marketplaceAssets.installCount));
           break;
         case 'updated':
-          query = sortOrder === 'asc' ? 
-            query.orderBy(asc(marketplaceAssets.updatedAt)) : 
-            query.orderBy(desc(marketplaceAssets.updatedAt));
+          query =
+            sortOrder === 'asc'
+              ? query.orderBy(asc(marketplaceAssets.updatedAt))
+              : query.orderBy(desc(marketplaceAssets.updatedAt));
           break;
         default: // created
-          query = sortOrder === 'asc' ? 
-            query.orderBy(asc(marketplaceAssets.createdAt)) : 
-            query.orderBy(desc(marketplaceAssets.createdAt));
+          query =
+            sortOrder === 'asc'
+              ? query.orderBy(asc(marketplaceAssets.createdAt))
+              : query.orderBy(desc(marketplaceAssets.createdAt));
       }
 
       // Apply pagination
@@ -287,25 +322,39 @@ export class MarketplaceService {
       let userRatings: any[] = [];
 
       if (userId && results.length > 0) {
-        const assetIds = results.map((r: { asset: { id: string } }) => r.asset.id);
-        
+        const assetIds = results.map(
+          (r: { asset: { id: string } }) => r.asset.id,
+        );
+
         [userInstallations, userFavs, userRatings] = await Promise.all([
-          db.select().from(assetInstallations)
-            .where(and(
-              eq(assetInstallations.userId, userId),
-              inArray(assetInstallations.assetId, assetIds),
-              eq(assetInstallations.isActive, true)
-            )),
-          db.select().from(userFavorites)
-            .where(and(
-              eq(userFavorites.userId, userId),
-              inArray(userFavorites.assetId, assetIds)
-            )),
-          db.select().from(assetReviews)
-            .where(and(
-              eq(assetReviews.userId, userId),
-              inArray(assetReviews.assetId, assetIds)
-            ))
+          db
+            .select()
+            .from(assetInstallations)
+            .where(
+              and(
+                eq(assetInstallations.userId, userId),
+                inArray(assetInstallations.assetId, assetIds),
+                eq(assetInstallations.isActive, true),
+              ),
+            ),
+          db
+            .select()
+            .from(userFavorites)
+            .where(
+              and(
+                eq(userFavorites.userId, userId),
+                inArray(userFavorites.assetId, assetIds),
+              ),
+            ),
+          db
+            .select()
+            .from(assetReviews)
+            .where(
+              and(
+                eq(assetReviews.userId, userId),
+                inArray(assetReviews.assetId, assetIds),
+              ),
+            ),
         ]);
       }
 
@@ -315,9 +364,11 @@ export class MarketplaceService {
         const creator = result.creator;
         const user = result.user;
 
-        const installation = userInstallations.find(i => i.assetId === asset.id);
-        const favorite = userFavs.find(f => f.assetId === asset.id);
-        const rating = userRatings.find(r => r.assetId === asset.id);
+        const installation = userInstallations.find(
+          (i) => i.assetId === asset.id,
+        );
+        const favorite = userFavs.find((f) => f.assetId === asset.id);
+        const rating = userRatings.find((r) => r.assetId === asset.id);
 
         return {
           id: asset.id,
@@ -345,16 +396,17 @@ export class MarketplaceService {
           ratingCount: asset.ratingCount,
           creator: {
             id: asset.creatorId,
-            displayName: creator?.displayName || user?.name || 'Unknown Creator',
+            displayName:
+              creator?.displayName || user?.name || 'Unknown Creator',
             avatarUrl: creator?.avatarUrl,
-            isVerified: creator?.isVerified || false
+            isVerified: creator?.isVerified || false,
           },
           version: asset.version,
           lastUpdated: asset.updatedAt,
           createdAt: asset.createdAt,
           isInstalled: !!installation,
           isFavorited: !!favorite,
-          userRating: rating?.rating
+          userRating: rating?.rating,
         };
       });
     } catch (error) {
@@ -370,11 +422,13 @@ export class MarketplaceService {
     assetId: string,
     userId: string,
     organizationId: string,
-    purchaseType: 'free' | 'one_time' | 'subscription' = 'free'
+    purchaseType: 'free' | 'one_time' | 'subscription' = 'free',
   ): Promise<InstallationResult> {
     try {
       // Get asset details
-      const assets = await db.select()
+      const db = await getDatabase();
+      const assets = await db
+        .select()
         .from(marketplaceAssets)
         .where(eq(marketplaceAssets.id, assetId))
         .limit(1);
@@ -386,12 +440,15 @@ export class MarketplaceService {
       const asset = assets[0];
 
       // Get latest version
-      const versions = await db.select()
+      const versions = await db
+        .select()
         .from(assetVersions)
-        .where(and(
-          eq(assetVersions.assetId, assetId),
-          eq(assetVersions.isActive, true)
-        ))
+        .where(
+          and(
+            eq(assetVersions.assetId, assetId),
+            eq(assetVersions.isActive, true),
+          ),
+        )
         .limit(1);
 
       if (!versions[0]) {
@@ -401,19 +458,22 @@ export class MarketplaceService {
       const version = versions[0];
 
       // Check if already installed
-      const existingInstallations = await db.select()
+      const existingInstallations = await db
+        .select()
         .from(assetInstallations)
-        .where(and(
-          eq(assetInstallations.assetId, assetId),
-          eq(assetInstallations.userId, userId),
-          eq(assetInstallations.isActive, true)
-        ))
+        .where(
+          and(
+            eq(assetInstallations.assetId, assetId),
+            eq(assetInstallations.userId, userId),
+            eq(assetInstallations.isActive, true),
+          ),
+        )
         .limit(1);
 
       if (existingInstallations.length > 0) {
         return {
           success: false,
-          error: 'Asset already installed'
+          error: 'Asset already installed',
         };
       }
 
@@ -426,25 +486,29 @@ export class MarketplaceService {
       }
 
       // Create installation record
-      const installationResult = await db.insert(assetInstallations).values({
-        organizationId,
-        assetId,
-        userId,
-        versionId: version.id,
-        purchaseType,
-        purchasePrice: purchasePrice.toString(),
-        currency: asset.currency,
-        isActive: true,
-        installedAt: new Date()
-      }).returning();
+      const installationResult = await db
+        .insert(assetInstallations)
+        .values({
+          organizationId,
+          assetId,
+          userId,
+          versionId: version.id,
+          purchaseType,
+          purchasePrice: purchasePrice.toString(),
+          currency: asset.currency,
+          isActive: true,
+          installedAt: new Date(),
+        })
+        .returning();
 
       const installation = installationResult[0];
 
       // Update install count
-      await db.update(marketplaceAssets)
+      await db
+        .update(marketplaceAssets)
         .set({
           installCount: sql`${marketplaceAssets.installCount} + 1`,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         })
         .where(eq(marketplaceAssets.id, assetId));
 
@@ -452,15 +516,17 @@ export class MarketplaceService {
       let containerId: string | undefined;
       if (asset.assetType === 'mcp' || asset.assetType === 'agent') {
         try {
-          const containerInstance = await this.containerHosting.deployContainer({
-            assetId,
-            versionId: version.id,
-            userId,
-            organizationId,
-            memory: asset.configuration?.containerConfig?.memory || 512,
-            cpu: asset.configuration?.containerConfig?.cpu || 1000,
-            storage: asset.configuration?.containerConfig?.storage || 1
-          });
+          const containerInstance = await this.containerHosting.deployContainer(
+            {
+              assetId,
+              versionId: version.id,
+              userId,
+              organizationId,
+              memory: asset.configuration?.containerConfig?.memory || 512,
+              cpu: asset.configuration?.containerConfig?.cpu || 1000,
+              storage: asset.configuration?.containerConfig?.storage || 1,
+            },
+          );
           containerId = containerInstance.id;
         } catch (error) {
           console.error('Failed to deploy container:', error);
@@ -471,13 +537,13 @@ export class MarketplaceService {
       return {
         success: true,
         installationId: installation.id,
-        containerId
+        containerId,
       };
     } catch (error) {
       console.error('Failed to install asset:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Installation failed'
+        error: error instanceof Error ? error.message : 'Installation failed',
       };
     }
   }
@@ -489,42 +555,52 @@ export class MarketplaceService {
     assetId: string,
     userId: string,
     organizationId: string,
-    reviewData: ReviewSubmission
+    reviewData: ReviewSubmission,
   ): Promise<void> {
     try {
       // Check if user has purchased/installed the asset
-      const installations = await db.select()
+      const db = await getDatabase();
+      const installations = await db
+        .select()
         .from(assetInstallations)
-        .where(and(
-          eq(assetInstallations.assetId, assetId),
-          eq(assetInstallations.userId, userId)
-        ))
+        .where(
+          and(
+            eq(assetInstallations.assetId, assetId),
+            eq(assetInstallations.userId, userId),
+          ),
+        )
         .limit(1);
 
       const isVerifiedPurchase = installations.length > 0;
 
       // Check if user already reviewed this asset
-      const existingReviews = await db.select()
+      const existingReviews = await db
+        .select()
         .from(assetReviews)
-        .where(and(
-          eq(assetReviews.assetId, assetId),
-          eq(assetReviews.userId, userId)
-        ))
+        .where(
+          and(
+            eq(assetReviews.assetId, assetId),
+            eq(assetReviews.userId, userId),
+          ),
+        )
         .limit(1);
 
       if (existingReviews.length > 0) {
         // Update existing review
-        await db.update(assetReviews)
+        await db
+          .update(assetReviews)
           .set({
             rating: reviewData.rating,
             title: reviewData.title,
             review: reviewData.review,
-            updatedAt: new Date()
+            updatedAt: new Date(),
           })
-          .where(and(
-            eq(assetReviews.assetId, assetId),
-            eq(assetReviews.userId, userId)
-          ));
+          .where(
+            and(
+              eq(assetReviews.assetId, assetId),
+              eq(assetReviews.userId, userId),
+            ),
+          );
       } else {
         // Create new review
         await db.insert(assetReviews).values({
@@ -536,7 +612,7 @@ export class MarketplaceService {
           review: reviewData.review,
           isVerifiedPurchase,
           createdAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         });
       }
 
@@ -551,30 +627,42 @@ export class MarketplaceService {
   /**
    * Toggle favorite status for an asset
    */
-  async toggleFavorite(assetId: string, userId: string, organizationId: string): Promise<boolean> {
+  async toggleFavorite(
+    assetId: string,
+    userId: string,
+    organizationId: string,
+  ): Promise<boolean> {
     try {
       // Check if already favorited
-      const existingFavorites = await db.select()
+      const db = await getDatabase();
+      const existingFavorites = await db
+        .select()
         .from(userFavorites)
-        .where(and(
-          eq(userFavorites.assetId, assetId),
-          eq(userFavorites.userId, userId)
-        ))
+        .where(
+          and(
+            eq(userFavorites.assetId, assetId),
+            eq(userFavorites.userId, userId),
+          ),
+        )
         .limit(1);
 
       if (existingFavorites.length > 0) {
         // Remove favorite
-        await db.delete(userFavorites)
-          .where(and(
-            eq(userFavorites.assetId, assetId),
-            eq(userFavorites.userId, userId)
-          ));
+        await db
+          .delete(userFavorites)
+          .where(
+            and(
+              eq(userFavorites.assetId, assetId),
+              eq(userFavorites.userId, userId),
+            ),
+          );
 
         // Update favorite count
-        await db.update(marketplaceAssets)
+        await db
+          .update(marketplaceAssets)
           .set({
             favoriteCount: sql`${marketplaceAssets.favoriteCount} - 1`,
-            updatedAt: new Date()
+            updatedAt: new Date(),
           })
           .where(eq(marketplaceAssets.id, assetId));
 
@@ -585,14 +673,15 @@ export class MarketplaceService {
           organizationId,
           assetId,
           userId,
-          createdAt: new Date()
+          createdAt: new Date(),
         });
 
         // Update favorite count
-        await db.update(marketplaceAssets)
+        await db
+          .update(marketplaceAssets)
           .set({
             favoriteCount: sql`${marketplaceAssets.favoriteCount} + 1`,
-            updatedAt: new Date()
+            updatedAt: new Date(),
           })
           .where(eq(marketplaceAssets.id, assetId));
 
@@ -610,25 +699,33 @@ export class MarketplaceService {
   async getCreatorDashboard(creatorId: string, organizationId: string) {
     try {
       // Get creator's assets
-      const assets = await db.select()
+      const db = await getDatabase();
+      const assets = await db
+        .select()
         .from(marketplaceAssets)
-        .where(and(
-          eq(marketplaceAssets.creatorId, creatorId),
-          eq(marketplaceAssets.organizationId, organizationId)
-        ))
+        .where(
+          and(
+            eq(marketplaceAssets.creatorId, creatorId),
+            eq(marketplaceAssets.organizationId, organizationId),
+          ),
+        )
         .orderBy(desc(marketplaceAssets.createdAt));
 
       // Get total earnings
       const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      
-      const earnings = await db.select({
-        totalRevenue: sum(assetUsageRecords.creatorRevenue),
-        monthlyRevenue: sql<number>`SUM(CASE WHEN ${assetUsageRecords.createdAt} >= ${thirtyDaysAgo} THEN ${assetUsageRecords.creatorRevenue} ELSE 0 END)`,
-        totalUsage: sum(assetUsageRecords.quantity)
-      })
-      .from(assetUsageRecords)
-      .leftJoin(marketplaceAssets, eq(assetUsageRecords.assetId, marketplaceAssets.id))
-      .where(eq(marketplaceAssets.creatorId, creatorId));
+
+      const earnings = await db
+        .select({
+          totalRevenue: sum(assetUsageRecords.creatorRevenue),
+          monthlyRevenue: sql<number>`SUM(CASE WHEN ${assetUsageRecords.createdAt} >= ${thirtyDaysAgo} THEN ${assetUsageRecords.creatorRevenue} ELSE 0 END)`,
+          totalUsage: sum(assetUsageRecords.quantity),
+        })
+        .from(assetUsageRecords)
+        .leftJoin(
+          marketplaceAssets,
+          eq(assetUsageRecords.assetId, marketplaceAssets.id),
+        )
+        .where(eq(marketplaceAssets.creatorId, creatorId));
 
       const stats = earnings[0];
 
@@ -641,12 +738,12 @@ export class MarketplaceService {
           installCount: asset.installCount,
           usageCount: asset.usageCount,
           rating: parseFloat(asset.rating || '0'),
-          createdAt: asset.createdAt
+          createdAt: asset.createdAt,
         })),
         totalEarnings: parseFloat(stats.totalRevenue || '0'),
         monthlyEarnings: parseFloat(stats.monthlyRevenue || '0'),
         totalUsage: parseFloat(stats.totalUsage || '0'),
-        totalAssets: assets.length
+        totalAssets: assets.length,
       };
     } catch (error) {
       console.error('Failed to get creator dashboard:', error);
@@ -659,25 +756,30 @@ export class MarketplaceService {
    */
   private async updateAssetRating(assetId: string): Promise<void> {
     try {
-      const ratingStats = await db.select({
-        averageRating: avg(assetReviews.rating),
-        totalReviews: count(assetReviews.id)
-      })
-      .from(assetReviews)
-      .where(and(
-        eq(assetReviews.assetId, assetId),
-        eq(assetReviews.isHidden, false)
-      ));
+      const db = await getDatabase();
+      const ratingStats = await db
+        .select({
+          averageRating: avg(assetReviews.rating),
+          totalReviews: count(assetReviews.id),
+        })
+        .from(assetReviews)
+        .where(
+          and(
+            eq(assetReviews.assetId, assetId),
+            eq(assetReviews.isHidden, false),
+          ),
+        );
 
       const stats = ratingStats[0];
       const avgRating = parseFloat(stats.averageRating || '0');
       const reviewCount = Number(stats.totalReviews || 0);
 
-      await db.update(marketplaceAssets)
+      await db
+        .update(marketplaceAssets)
         .set({
           rating: avgRating.toFixed(2),
           ratingCount: reviewCount,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         })
         .where(eq(marketplaceAssets.id, assetId));
     } catch (error) {

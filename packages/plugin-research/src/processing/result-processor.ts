@@ -148,7 +148,7 @@ export class SearchResultProcessor {
         }
 
         return true;
-      } catch (error) {
+      } catch (_error) {
         // Invalid URL, filter it out
         logger.debug(`Filtered result with invalid URL: ${result.url}`);
         return false;

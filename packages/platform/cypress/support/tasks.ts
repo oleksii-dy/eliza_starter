@@ -4,7 +4,10 @@
 
 import { db } from '../../lib/database';
 import { createApiKey } from '../../lib/server/services/api-key-service';
-import { addCredits, deductCredits } from '../../lib/server/services/billing-service';
+import {
+  addCredits,
+  deductCredits,
+} from '../../lib/server/services/billing-service';
 
 export const tasks = {
   // Database operations
@@ -13,14 +16,16 @@ export const tasks = {
     if (process.env.NODE_ENV !== 'test') {
       throw new Error('Database clearing only allowed in test environment');
     }
-    
+
     // Clear in reverse dependency order
-    await db.delete('credit_transactions').where('organization_id', 'like', 'test-%');
+    await db
+      .delete('credit_transactions')
+      .where('organization_id', 'like', 'test-%');
     await db.delete('api_keys').where('organization_id', 'like', 'test-%');
     await db.delete('user_sessions').where('organization_id', 'like', 'test-%');
     await db.delete('users').where('organization_id', 'like', 'test-%');
     await db.delete('organizations').where('slug', 'like', 'test-%');
-    
+
     return null;
   },
 
@@ -71,15 +76,18 @@ export const tasks = {
     }
 
     // Get current balance
-    const org = await db.select().from('organizations')
-      .where('id', user.organizationId).first();
-    
+    const org = await db
+      .select()
+      .from('organizations')
+      .where('id', user.organizationId)
+      .first();
+
     if (!org) {
       throw new Error('Organization not found');
     }
 
     const currentBalance = parseFloat(org.creditBalance);
-    
+
     if (currentBalance > 0) {
       // Deduct all credits
       await deductCredits({
@@ -111,11 +119,11 @@ export const tasks = {
   },
 
   // Mock Stripe webhook
-  triggerStripeWebhook: async ({ 
-    eventType, 
-    paymentIntentId, 
-    amount, 
-    organizationId 
+  triggerStripeWebhook: async ({
+    eventType,
+    paymentIntentId,
+    amount,
+    organizationId,
   }: {
     eventType: string;
     paymentIntentId: string;
@@ -143,7 +151,7 @@ export const tasks = {
     // Process the webhook (this would normally go through the webhook endpoint)
     if (eventType === 'payment_intent.succeeded') {
       const creditAmount = amount * 0.9; // 10% platform fee
-      
+
       await addCredits({
         organizationId,
         amount: creditAmount,
@@ -163,11 +171,11 @@ export const tasks = {
   },
 
   // API testing helpers
-  makeApiRequest: async ({ 
-    endpoint, 
-    method = 'GET', 
-    apiKey, 
-    body 
+  makeApiRequest: async ({
+    endpoint,
+    method = 'GET',
+    apiKey,
+    body,
   }: {
     endpoint: string;
     method?: string;
@@ -177,7 +185,7 @@ export const tasks = {
     const response = await fetch(`http://localhost:3333/api/v1${endpoint}`, {
       method,
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: body ? JSON.stringify(body) : undefined,
@@ -194,71 +202,95 @@ export const tasks = {
     if (process.env.NODE_ENV !== 'test') {
       throw new Error('Database cleanup only allowed in test environment');
     }
-    
+
     // Clear all test data
     await db.delete('audit_logs').where('organization_id', 'like', '%test%');
-    await db.delete('credit_transactions').where('organization_id', 'like', '%test%');
+    await db
+      .delete('credit_transactions')
+      .where('organization_id', 'like', '%test%');
     await db.delete('agents').where('organization_id', 'like', '%test%');
     await db.delete('api_keys').where('organization_id', 'like', '%test%');
     await db.delete('user_sessions').where('organization_id', 'like', '%test%');
     await db.delete('users').where('organization_id', 'like', '%test%');
     await db.delete('organizations').where('id', 'like', '%test%');
-    
+
     return null;
   },
 
   // Create test organizations for multi-tenancy testing
   'db:createTestOrganizations': async (organizationIds: string[]) => {
     if (process.env.NODE_ENV !== 'test') {
-      throw new Error('Test organization creation only allowed in test environment');
+      throw new Error(
+        'Test organization creation only allowed in test environment',
+      );
     }
-    
+
     const organizations = [];
-    
+
     for (const orgId of organizationIds) {
-      const org = await db.insert('organizations').values({
-        id: orgId,
-        name: `Test Organization ${orgId}`,
-        slug: `test-org-${orgId.toLowerCase()}`,
-        subscriptionTier: 'pro',
-        maxAgents: 10,
-        maxApiRequests: 10000,
-        creditBalance: '100.00',
-      }).returning('*').onConflict('id').ignore().first();
-      
+      const org = await db
+        .insert('organizations')
+        .values({
+          id: orgId,
+          name: `Test Organization ${orgId}`,
+          slug: `test-org-${orgId.toLowerCase()}`,
+          subscriptionTier: 'pro',
+          maxAgents: 10,
+          maxApiRequests: 10000,
+          creditBalance: '100.00',
+        })
+        .returning('*')
+        .onConflict('id')
+        .ignore()
+        .first();
+
       if (org) {
         organizations.push(org);
       }
     }
-    
+
     return organizations;
   },
 
   // Create test user with organization context
-  'db:createTestUser': async ({ email, organizationId, role = 'user' }: { 
-    email: string; 
-    organizationId: string; 
+  'db:createTestUser': async ({
+    email,
+    organizationId,
+    role = 'user',
+  }: {
+    email: string;
+    organizationId: string;
     role?: string;
   }) => {
     if (process.env.NODE_ENV !== 'test') {
       throw new Error('Test user creation only allowed in test environment');
     }
-    
-    const user = await db.insert('users').values({
-      organizationId,
-      email,
-      firstName: 'Test',
-      lastName: 'User',
-      role,
-      emailVerified: true,
-      workosUserId: `workos_${Date.now()}`,
-    }).returning('*').onConflict('email').ignore().first();
-    
+
+    const user = await db
+      .insert('users')
+      .values({
+        organizationId,
+        email,
+        firstName: 'Test',
+        lastName: 'User',
+        role,
+        emailVerified: true,
+        workosUserId: `workos_${Date.now()}`,
+      })
+      .returning('*')
+      .onConflict('email')
+      .ignore()
+      .first();
+
     return user;
   },
 
   // Create test agents for organization
-  'db:createTestAgents': async ({ organizationId, userId, count = 2 }: {
+  'db:createTestAgents': async ({
+    organizationId,
+    userId,
+    count = 2,
+  }: {
     organizationId: string;
     userId: string;
     count?: number;
@@ -266,68 +298,104 @@ export const tasks = {
     if (process.env.NODE_ENV !== 'test') {
       throw new Error('Test agent creation only allowed in test environment');
     }
-    
+
     const agents = [];
-    
+
     for (let i = 1; i <= count; i++) {
-      const agent = await db.insert('agents').values({
-        organizationId,
-        createdByUserId: userId,
-        name: `Test Agent ${i}`,
-        description: `Test agent ${i} for organization ${organizationId}`,
-        slug: `test-agent-${i}-${organizationId}`,
-        character: {
+      const agent = await db
+        .insert('agents')
+        .values({
+          organizationId,
+          createdByUserId: userId,
           name: `Test Agent ${i}`,
-          bio: 'A test agent for Cypress testing',
-          system: 'You are a helpful test agent.',
-        },
-        plugins: ['@elizaos/plugin-memory', '@elizaos/plugin-sql', '@elizaos/plugin-web-search'],
-        runtimeConfig: {
-          maxTokens: 4096,
-          temperature: 0.7,
-        },
-        visibility: 'organization',
-        deploymentStatus: 'draft',
-      }).returning('*').first();
-      
+          description: `Test agent ${i} for organization ${organizationId}`,
+          slug: `test-agent-${i}-${organizationId}`,
+          character: {
+            name: `Test Agent ${i}`,
+            bio: 'A test agent for Cypress testing',
+            system: 'You are a helpful test agent.',
+          },
+          plugins: [
+            '@elizaos/plugin-memory',
+            '@elizaos/plugin-sql',
+            '@elizaos/plugin-web-search',
+          ],
+          runtimeConfig: {
+            maxTokens: 4096,
+            temperature: 0.7,
+          },
+          visibility: 'organization',
+          deploymentStatus: 'draft',
+        })
+        .returning('*')
+        .first();
+
       if (agent) {
         agents.push(agent);
       }
     }
-    
+
     return agents;
   },
 
   // Verify data isolation between organizations
-  'db:verifyDataIsolation': async ({ org1Id, org2Id }: { org1Id: string; org2Id: string }) => {
+  'db:verifyDataIsolation': async ({
+    org1Id,
+    org2Id,
+  }: {
+    org1Id: string;
+    org2Id: string;
+  }) => {
     if (process.env.NODE_ENV !== 'test') {
-      throw new Error('Data isolation verification only allowed in test environment');
+      throw new Error(
+        'Data isolation verification only allowed in test environment',
+      );
     }
-    
+
     // Check that each organization only sees its own data
-    const org1Agents = await db.select().from('agents').where('organization_id', org1Id);
-    const org2Agents = await db.select().from('agents').where('organization_id', org2Id);
-    
+    const org1Agents = await db
+      .select()
+      .from('agents')
+      .where('organization_id', org1Id);
+    const org2Agents = await db
+      .select()
+      .from('agents')
+      .where('organization_id', org2Id);
+
     // Verify no cross-contamination
     const crossContamination = {
-      org1HasOrg2Data: org1Agents.some(agent => agent.organizationId === org2Id),
-      org2HasOrg1Data: org2Agents.some(agent => agent.organizationId === org1Id),
+      org1HasOrg2Data: org1Agents.some(
+        (agent) => agent.organizationId === org2Id,
+      ),
+      org2HasOrg1Data: org2Agents.some(
+        (agent) => agent.organizationId === org1Id,
+      ),
     };
-    
+
     return {
       org1AgentCount: org1Agents.length,
       org2AgentCount: org2Agents.length,
-      isolated: !crossContamination.org1HasOrg2Data && !crossContamination.org2HasOrg1Data,
+      isolated:
+        !crossContamination.org1HasOrg2Data &&
+        !crossContamination.org2HasOrg1Data,
       crossContamination,
     };
   },
 
   // Test API key generation with organization context
-  'api:generateTestApiKey': async ({ organizationId, userId }: { organizationId: string; userId: string }) => {
+  'api:generateTestApiKey': async ({
+    organizationId,
+    userId,
+  }: {
+    organizationId: string;
+    userId: string;
+  }) => {
     if (process.env.NODE_ENV !== 'test') {
-      throw new Error('Test API key generation only allowed in test environment');
+      throw new Error(
+        'Test API key generation only allowed in test environment',
+      );
     }
-    
+
     const { keyValue } = await createApiKey({
       organizationId,
       userId,
@@ -336,24 +404,29 @@ export const tasks = {
       permissions: ['agents:*', 'messaging:*', 'inference:*'],
       rateLimit: 1000,
     });
-    
+
     return keyValue;
   },
 
   // Test required plugins enforcement
-  'agents:testRequiredPlugins': async ({ organizationId, plugins }: { 
-    organizationId: string; 
+  'agents:testRequiredPlugins': async ({
+    organizationId,
+    plugins,
+  }: {
+    organizationId: string;
     plugins: string[];
   }) => {
     if (process.env.NODE_ENV !== 'test') {
       throw new Error('Plugin testing only allowed in test environment');
     }
-    
+
     // Mock organization config with required plugins
     const requiredPlugins = ['@elizaos/plugin-memory', '@elizaos/plugin-sql'];
-    const missingPlugins = requiredPlugins.filter(required => !plugins.includes(required));
+    const missingPlugins = requiredPlugins.filter(
+      (required) => !plugins.includes(required),
+    );
     const mergedPlugins = [...new Set([...requiredPlugins, ...plugins])];
-    
+
     return {
       isValid: missingPlugins.length === 0,
       missingPlugins,
@@ -370,23 +443,29 @@ export const tasks = {
     }
 
     // Set test environment variables
-    process.env.STRIPE_SECRET_KEY = process.env.STRIPE_TEST_SECRET_KEY || 'sk_test_...';
-    process.env.STRIPE_PUBLISHABLE_KEY = process.env.STRIPE_TEST_PUBLISHABLE_KEY || 'pk_test_...';
-    process.env.OPENAI_API_KEY = process.env.OPENAI_TEST_API_KEY || process.env.OPENAI_API_KEY;
-    process.env.ANTHROPIC_API_KEY = process.env.ANTHROPIC_TEST_API_KEY || process.env.ANTHROPIC_API_KEY;
+    process.env.STRIPE_SECRET_KEY =
+      process.env.STRIPE_TEST_SECRET_KEY || 'sk_test_...';
+    process.env.STRIPE_PUBLISHABLE_KEY =
+      process.env.STRIPE_TEST_PUBLISHABLE_KEY || 'pk_test_...';
+    process.env.OPENAI_API_KEY =
+      process.env.OPENAI_TEST_API_KEY || process.env.OPENAI_API_KEY;
+    process.env.ANTHROPIC_API_KEY =
+      process.env.ANTHROPIC_TEST_API_KEY || process.env.ANTHROPIC_API_KEY;
 
     return {
       stripeMode: 'test',
       hasOpenAI: !!process.env.OPENAI_API_KEY,
       hasAnthropic: !!process.env.ANTHROPIC_API_KEY,
-      hasR2: !!(process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY),
+      hasR2: !!(
+        process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY
+      ),
     };
   },
 
   // Performance testing
-  createLoadTestData: async ({ 
-    userCount = 10, 
-    apiKeysPerUser = 3 
+  createLoadTestData: async ({
+    userCount = 10,
+    apiKeysPerUser = 3,
   }: {
     userCount?: number;
     apiKeysPerUser?: number;
@@ -395,18 +474,26 @@ export const tasks = {
 
     for (let i = 0; i < userCount; i++) {
       // Create organization
-      const org = await db.insert('organizations').values({
-        name: `Load Test Org ${i}`,
-        slug: `load-test-org-${i}-${Date.now()}`,
-      }).returning('*').first();
+      const org = await db
+        .insert('organizations')
+        .values({
+          name: `Load Test Org ${i}`,
+          slug: `load-test-org-${i}-${Date.now()}`,
+        })
+        .returning('*')
+        .first();
 
       // Create user
-      const user = await db.insert('users').values({
-        organizationId: org.id,
-        email: `loadtest${i}@example.com`,
-        firstName: `Load`,
-        lastName: `Test ${i}`,
-      }).returning('*').first();
+      const user = await db
+        .insert('users')
+        .values({
+          organizationId: org.id,
+          email: `loadtest${i}@example.com`,
+          firstName: `Load`,
+          lastName: `Test ${i}`,
+        })
+        .returning('*')
+        .first();
 
       // Add credits
       await addCredits({

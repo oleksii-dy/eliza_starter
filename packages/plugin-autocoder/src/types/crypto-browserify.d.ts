@@ -12,26 +12,62 @@ declare module 'crypto-browserify' {
   }
 
   export interface Cipher extends Transform {
-    update(data: string | Buffer, inputEncoding?: BufferEncoding, outputEncoding?: BufferEncoding): string | Buffer;
+    update(
+      data: string | Buffer,
+      inputEncoding?: BufferEncoding,
+      outputEncoding?: BufferEncoding
+    ): string | Buffer;
     final(outputEncoding?: BufferEncoding): string | Buffer;
   }
 
   export interface Decipher extends Transform {
-    update(data: string | Buffer, inputEncoding?: BufferEncoding, outputEncoding?: BufferEncoding): string | Buffer;
+    update(
+      data: string | Buffer,
+      inputEncoding?: BufferEncoding,
+      outputEncoding?: BufferEncoding
+    ): string | Buffer;
     final(outputEncoding?: BufferEncoding): string | Buffer;
   }
 
   export function createHash(algorithm: string): Hash;
   export function createHmac(algorithm: string, key: string | Buffer): Hmac;
   export function createCipher(algorithm: string, password: string | Buffer): Cipher;
-  export function createCipheriv(algorithm: string, key: string | Buffer, iv: string | Buffer): Cipher;
+  export function createCipheriv(
+    algorithm: string,
+    key: string | Buffer,
+    iv: string | Buffer
+  ): Cipher;
   export function createDecipher(algorithm: string, password: string | Buffer): Decipher;
-  export function createDecipheriv(algorithm: string, key: string | Buffer, iv: string | Buffer): Decipher;
+  export function createDecipheriv(
+    algorithm: string,
+    key: string | Buffer,
+    iv: string | Buffer
+  ): Decipher;
   export function randomBytes(size: number): Buffer;
-  export function randomFill<T extends ArrayBufferView>(buffer: T, callback: (err: Error | null, buf: T) => void): void;
-  export function randomFillSync<T extends ArrayBufferView>(buffer: T, offset?: number, size?: number): T;
-  export function pbkdf2(password: string | Buffer, salt: string | Buffer, iterations: number, keylen: number, digest: string, callback: (err: Error | null, derivedKey: Buffer) => void): void;
-  export function pbkdf2Sync(password: string | Buffer, salt: string | Buffer, iterations: number, keylen: number, digest: string): Buffer;
+  export function randomFill<T extends ArrayBufferView>(
+    buffer: T,
+    callback: (err: Error | null, buf: T) => void
+  ): void;
+  export function randomFillSync<T extends ArrayBufferView>(
+    buffer: T,
+    offset?: number,
+    size?: number
+  ): T;
+  export function pbkdf2(
+    password: string | Buffer,
+    salt: string | Buffer,
+    iterations: number,
+    keylen: number,
+    digest: string,
+    callback: (err: Error | null, derivedKey: Buffer) => void
+  ): void;
+  export function pbkdf2Sync(
+    password: string | Buffer,
+    salt: string | Buffer,
+    iterations: number,
+    keylen: number,
+    digest: string
+  ): Buffer;
   export function getHashes(): string[];
   export function getCiphers(): string[];
 

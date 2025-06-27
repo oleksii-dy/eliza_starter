@@ -6,7 +6,7 @@ import {
   paymentRequests,
   userWallets,
   dailySpending,
-  priceCache
+  priceCache,
 } from '../../database/schema';
 import { eq, and, gte } from 'drizzle-orm';
 import { asUUID } from '@elizaos/core';
@@ -16,7 +16,8 @@ import { PAYMENT_TABLES } from '../../database/tables';
 
 // This test requires a real PostgreSQL instance
 // Run with: docker run -p 5432:5432 -e POSTGRES_PASSWORD=test postgres:15
-const TEST_DATABASE_URL = process.env.TEST_DATABASE_URL || 'postgresql://postgres:test@localhost:5432/payment_test';
+const TEST_DATABASE_URL =
+  process.env.TEST_DATABASE_URL || 'postgresql://postgres:test@localhost:5432/payment_test';
 
 describe.skipIf(!process.env.TEST_DATABASE_URL)('Database Integration Tests', () => {
   let db: ReturnType<typeof drizzle>;
@@ -67,14 +68,15 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)('Database Integration Tests', ()
         recipientAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f7E123',
         metadata: { test: true },
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       // Insert transaction
       await db.insert(paymentTransactions).values(transaction);
 
       // Retrieve transaction
-      const retrieved = await db.select()
+      const retrieved = await db
+        .select()
         .from(paymentTransactions)
         .where(eq(paymentTransactions.id, transaction.id))
         .limit(1);
@@ -98,21 +100,24 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)('Database Integration Tests', ()
         method: PaymentMethod.USDC_ETH,
         status: PaymentStatus.PROCESSING,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       });
 
       // Simulate concurrent updates
       const updates = await Promise.all([
-        db.update(paymentTransactions)
+        db
+          .update(paymentTransactions)
           .set({ status: PaymentStatus.COMPLETED, transactionHash: '0xabc' })
           .where(eq(paymentTransactions.id, transactionId)),
-        db.update(paymentTransactions)
+        db
+          .update(paymentTransactions)
           .set({ metadata: { concurrent: true } })
-          .where(eq(paymentTransactions.id, transactionId))
+          .where(eq(paymentTransactions.id, transactionId)),
       ]);
 
       // Verify final state
-      const final = await db.select()
+      const final = await db
+        .select()
         .from(paymentTransactions)
         .where(eq(paymentTransactions.id, transactionId))
         .limit(1);
@@ -134,14 +139,15 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)('Database Integration Tests', ()
         address: '0x742d35Cc6634C0532925a3b844Bc9e7595f7E123',
         encryptedPrivateKey: encrypt(privateKey, encryptionKey),
         network: 'ethereum',
-        createdAt: new Date()
+        createdAt: new Date(),
       };
 
       // Store encrypted wallet
       await db.insert(userWallets).values(wallet);
 
       // Retrieve and decrypt
-      const retrieved = await db.select()
+      const retrieved = await db
+        .select()
         .from(userWallets)
         .where(eq(userWallets.id, wallet.id))
         .limit(1);
@@ -158,7 +164,7 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)('Database Integration Tests', ()
         address: '0x742d35Cc6634C0532925a3b844Bc9e7595f7E123',
         encryptedPrivateKey: 'encrypted',
         network: 'ethereum',
-        createdAt: new Date()
+        createdAt: new Date(),
       };
 
       // Insert first wallet
@@ -168,14 +174,10 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)('Database Integration Tests', ()
       const duplicate = { ...wallet, id: asUUID('00000000-0000-0000-0000-000000000009') };
 
       // Check existing wallet
-      const existing = await db.select()
+      const existing = await db
+        .select()
         .from(userWallets)
-        .where(
-          and(
-            eq(userWallets.userId, wallet.userId),
-            eq(userWallets.network, wallet.network)
-          )
-        )
+        .where(and(eq(userWallets.userId, wallet.userId), eq(userWallets.network, wallet.network)))
         .limit(1);
 
       expect(existing).toHaveLength(1);
@@ -193,7 +195,8 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)('Database Integration Tests', ()
       const amounts = [100, 250, 150]; // $5.00 total
 
       for (const amount of amounts) {
-        await db.insert(dailySpending)
+        await db
+          .insert(dailySpending)
           .values({
             id: asUUID(`00000000-0000-0000-0000-${Date.now()}`),
             userId,
@@ -201,27 +204,23 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)('Database Integration Tests', ()
             date: today,
             totalSpentUsd: amount,
             transactionCount: 1,
-            lastTransactionAt: new Date()
+            lastTransactionAt: new Date(),
           })
           .onConflictDoUpdate({
             target: [dailySpending.userId, dailySpending.agentId, dailySpending.date],
             set: {
               totalSpentUsd: amount,
               transactionCount: 1,
-              lastTransactionAt: new Date()
-            }
+              lastTransactionAt: new Date(),
+            },
           });
       }
 
       // Get total spending
-      const spending = await db.select()
+      const spending = await db
+        .select()
         .from(dailySpending)
-        .where(
-          and(
-            eq(dailySpending.userId, userId),
-            eq(dailySpending.date, today)
-          )
-        )
+        .where(and(eq(dailySpending.userId, userId), eq(dailySpending.date, today)))
         .limit(1);
 
       expect(spending).toHaveLength(1);
@@ -245,7 +244,7 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)('Database Integration Tests', ()
         date: yesterdayStr,
         totalSpentUsd: 500,
         transactionCount: 5,
-        lastTransactionAt: yesterday
+        lastTransactionAt: yesterday,
       });
 
       // Add today's spending
@@ -256,18 +255,14 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)('Database Integration Tests', ()
         date: todayStr,
         totalSpentUsd: 100,
         transactionCount: 1,
-        lastTransactionAt: new Date()
+        lastTransactionAt: new Date(),
       });
 
       // Query today's spending only
-      const todaySpending = await db.select()
+      const todaySpending = await db
+        .select()
         .from(dailySpending)
-        .where(
-          and(
-            eq(dailySpending.userId, userId),
-            eq(dailySpending.date, todayStr)
-          )
-        );
+        .where(and(eq(dailySpending.userId, userId), eq(dailySpending.date, todayStr)));
 
       expect(todaySpending).toHaveLength(1);
       expect(todaySpending[0].totalSpentUsd).toBe(100);
@@ -283,14 +278,15 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)('Database Integration Tests', ()
         symbol: 'USDC',
         priceUsd: 1.0,
         lastUpdated: new Date(),
-        expiresAt: new Date(Date.now() + 5 * 60 * 1000) // 5 minutes
+        expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
       };
 
       // Cache price
       await db.insert(priceCache).values(tokenPrice);
 
       // Get non-expired prices
-      const validPrices = await db.select()
+      const validPrices = await db
+        .select()
         .from(priceCache)
         .where(
           and(
@@ -303,11 +299,13 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)('Database Integration Tests', ()
       expect(validPrices[0].priceUsd).toBe(1.0);
 
       // Simulate expired price
-      await db.update(priceCache)
+      await db
+        .update(priceCache)
         .set({ expiresAt: new Date(Date.now() - 1000) })
         .where(eq(priceCache.id, tokenPrice.id));
 
-      const expiredPrices = await db.select()
+      const expiredPrices = await db
+        .select()
         .from(priceCache)
         .where(
           and(
@@ -332,9 +330,9 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)('Database Integration Tests', ()
         requiresConfirmation: true,
         metadata: {
           verificationCode: '123456',
-          expiresAt: Date.now() + 5 * 60 * 1000
+          expiresAt: Date.now() + 5 * 60 * 1000,
         },
-        createdAt: new Date()
+        createdAt: new Date(),
       };
 
       // Create request
@@ -342,15 +340,17 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)('Database Integration Tests', ()
 
       // Update with transaction
       const transactionId = asUUID('00000000-0000-0000-0000-000000000010');
-      await db.update(paymentRequests)
+      await db
+        .update(paymentRequests)
         .set({
           transactionId,
-          processedAt: new Date()
+          processedAt: new Date(),
         })
         .where(eq(paymentRequests.id, request.id));
 
       // Verify update
-      const updated = await db.select()
+      const updated = await db
+        .select()
         .from(paymentRequests)
         .where(eq(paymentRequests.id, request.id))
         .limit(1);

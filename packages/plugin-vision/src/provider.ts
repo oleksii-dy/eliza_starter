@@ -10,7 +10,6 @@ import {
 import { type VisionService } from './service';
 import { type BoundingBox, type EntityAttributes } from './types';
 
-
 export const visionProvider: Provider = {
   name: 'VISION_PERCEPTION',
   description:
@@ -35,7 +34,9 @@ export const visionProvider: Provider = {
     }
 
     // Get current scene description (enhanced if screen is enabled)
-    const sceneDescription = await visionService.getEnhancedSceneDescription() || await visionService.getSceneDescription();
+    const sceneDescription =
+      (await visionService.getEnhancedSceneDescription()) ||
+      (await visionService.getSceneDescription());
     const cameraInfo = visionService.getCameraInfo();
     const isActive = visionService.isActive();
     const visionMode = visionService.getVisionMode();
@@ -84,7 +85,7 @@ export const visionProvider: Provider = {
       const stats = entityTracker.getStatistics();
 
       entityData = {
-        activeEntities: activeEntities.map(e => ({
+        activeEntities: activeEntities.map((e) => ({
           id: e.id,
           type: e.entityType,
           name: e.attributes.name,
@@ -119,7 +120,9 @@ export const visionProvider: Provider = {
         visionAvailable: false,
         visionMode,
         sceneDescription: 'Vision not active',
-        cameraStatus: cameraInfo ? `Camera "${cameraInfo.name}" detected but not active` : 'No camera',
+        cameraStatus: cameraInfo
+          ? `Camera "${cameraInfo.name}" detected but not active`
+          : 'No camera',
       };
     } else {
       perceptionText = `Vision mode: ${visionMode}\n\n`;
@@ -133,24 +136,32 @@ export const visionProvider: Provider = {
 
         if (sceneDescription.people.length > 0) {
           perceptionText += `\n\nPeople detected: ${sceneDescription.people.length}`;
-          const poses = sceneDescription.people.map(p => p.pose).filter(p => p !== 'unknown');
-          const facings = sceneDescription.people.map(p => p.facing).filter(f => f !== 'unknown');
+          const poses = sceneDescription.people.map((p) => p.pose).filter((p) => p !== 'unknown');
+          const facings = sceneDescription.people
+            .map((p) => p.facing)
+            .filter((f) => f !== 'unknown');
 
           if (poses.length > 0) {
-            const poseCounts = poses.reduce((acc, pose) => {
-              acc[pose] = (acc[pose] || 0) + 1;
-              return acc;
-            }, {} as Record<string, number>);
+            const poseCounts = poses.reduce(
+              (acc, pose) => {
+                acc[pose] = (acc[pose] || 0) + 1;
+                return acc;
+              },
+              {} as Record<string, number>
+            );
             perceptionText += `\n  Poses: ${Object.entries(poseCounts)
               .map(([pose, count]) => `${count} ${pose}`)
               .join(', ')}`;
           }
 
           if (facings.length > 0) {
-            const facingCounts = facings.reduce((acc, facing) => {
-              acc[facing] = (acc[facing] || 0) + 1;
-              return acc;
-            }, {} as Record<string, number>);
+            const facingCounts = facings.reduce(
+              (acc, facing) => {
+                acc[facing] = (acc[facing] || 0) + 1;
+                return acc;
+              },
+              {} as Record<string, number>
+            );
             perceptionText += `\n  Facing: ${Object.entries(facingCounts)
               .map(([facing, count]) => `${count} facing ${facing}`)
               .join(', ')}`;
@@ -158,7 +169,7 @@ export const visionProvider: Provider = {
         }
 
         if (sceneDescription.objects.length > 0) {
-          const objectTypes = sceneDescription.objects.map(o => o.type);
+          const objectTypes = sceneDescription.objects.map((o) => o.type);
           const uniqueObjects = [...new Set(objectTypes)];
           perceptionText += `\n\nObjects detected: ${uniqueObjects.join(', ')}`;
         }
@@ -173,7 +184,10 @@ export const visionProvider: Provider = {
             perceptionText += '\n\nCurrently tracking:';
             for (const entity of entityData.activeEntities) {
               const name = entity.name || `Unknown ${entity.type}`;
-              const duration = entity.duration < 60000 ? `${Math.round(entity.duration/1000)}s` : `${Math.round(entity.duration/60000)}m`;
+              const duration =
+                entity.duration < 60000
+                  ? `${Math.round(entity.duration / 1000)}s`
+                  : `${Math.round(entity.duration / 60000)}m`;
               perceptionText += `\n- ${name} (present for ${duration})`;
             }
           }
@@ -182,7 +196,10 @@ export const visionProvider: Provider = {
             perceptionText += '\n\nRecently left:';
             for (const departed of entityData.recentlyLeft) {
               const name = departed.name || 'Unknown person';
-              const timeStr = departed.timeAgo < 60000 ? `${Math.round(departed.timeAgo/1000)}s ago` : `${Math.round(departed.timeAgo/60000)}m ago`;
+              const timeStr =
+                departed.timeAgo < 60000
+                  ? `${Math.round(departed.timeAgo / 1000)}s ago`
+                  : `${Math.round(departed.timeAgo / 60000)}m ago`;
               perceptionText += `\n- ${name} left ${timeStr}`;
             }
           }
@@ -236,7 +253,9 @@ export const visionProvider: Provider = {
         cameraId: cameraInfo?.id,
         peopleCount: sceneDescription?.people.length || 0,
         objectCount: sceneDescription?.objects.length || 0,
-        sceneAge: sceneDescription ? Math.round((Date.now() - sceneDescription.timestamp) / 1000) : null,
+        sceneAge: sceneDescription
+          ? Math.round((Date.now() - sceneDescription.timestamp) / 1000)
+          : null,
         lastChange: sceneDescription?.sceneChanged ? sceneDescription.changePercentage : 0,
         hasScreenCapture: !!screenCapture,
         screenResolution: screenCapture ? `${screenCapture.width}x${screenCapture.height}` : null,

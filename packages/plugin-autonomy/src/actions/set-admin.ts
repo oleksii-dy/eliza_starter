@@ -45,7 +45,8 @@ export const setAdminAction: Action = {
   validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
     const text = message.content.text?.toLowerCase() || '';
 
-    const hasSetKeyword = text.includes('set') || text.includes('configure') || text.includes('make');
+    const hasSetKeyword =
+      text.includes('set') || text.includes('configure') || text.includes('make');
     const hasAdminKeyword = text.includes('admin');
     const hasUserKeyword = text.includes('user') || text.includes('me as');
 
@@ -69,7 +70,10 @@ export const setAdminAction: Action = {
       if (uuidMatch) {
         // Use the provided UUID
         adminUserId = uuidMatch[0];
-      } else if (text.toLowerCase().includes('me as admin') || text.toLowerCase().includes('set me as')) {
+      } else if (
+        text.toLowerCase().includes('me as admin') ||
+        text.toLowerCase().includes('set me as')
+      ) {
         // Use the message sender as admin
         adminUserId = message.entityId;
       }

@@ -1,14 +1,15 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, jest } from 'bun:test';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'bun:test';
 import { NgrokService } from '../services/NgrokService';
 import type { IAgentRuntime } from '@elizaos/core';
+import { createMockRuntime } from './test-utils';
 import * as http from 'http';
 import * as https from 'https';
 import { spawn } from 'child_process';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 
-// Load environment variables
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+// Load environment variables - use correct path relative to package location
+dotenv.config({ path: path.resolve(__dirname, '../../../../.env') });
 
 // Helper to check if we have ngrok credentials
 const hasNgrokCredentials = () => {
@@ -65,11 +66,8 @@ describe('Ngrok Integration Tests', () => {
       console.log('   Some features may be limited. Set NGROK_AUTH_TOKEN for full functionality');
     }
 
-    // Create mock runtime that passes all env vars
-    runtime = {
-      agentId: 'test-agent-123',
-      getSetting: (key: string) => process.env[key],
-    } as unknown as IAgentRuntime;
+    // Create mock runtime using core test-utils
+    runtime = createMockRuntime();
 
     // Create a test HTTP server
     testServer = http.createServer((req, res) => {
@@ -119,6 +117,11 @@ describe('Ngrok Integration Tests', () => {
 
   beforeEach(() => {
     // Create fresh service instance for each test
+    if (skipTests) {
+      return;
+    }
+    console.log('Runtime in beforeEach:', !!runtime);
+    console.log('Runtime getSetting type:', typeof runtime?.getSetting);
     service = new NgrokService(runtime);
   });
 

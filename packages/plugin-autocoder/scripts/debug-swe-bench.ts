@@ -49,10 +49,14 @@ async function debugInstance() {
 
     elizaLogger.info('Instance details:');
     elizaLogger.info(`- Repo: ${instance.repo || `${instance.org}/${instance.repo}`}`);
-    elizaLogger.info(`- Repo URL: ${instance.repo_url || `https://github.com/${instance.org}/${instance.repo}`}`);
+    elizaLogger.info(
+      `- Repo URL: ${instance.repo_url || `https://github.com/${instance.org}/${instance.repo}`}`
+    );
     elizaLogger.info(`- Base commit: ${instance.base_commit || instance.base?.sha}`);
     elizaLogger.info(`- Issue: ${instance.issue_title || instance.title}`);
-    elizaLogger.info(`- Issue body: ${(instance.issue_body || instance.body || '')?.substring(0, 200)}...`);
+    elizaLogger.info(
+      `- Issue body: ${(instance.issue_body || instance.body || '')?.substring(0, 200)}...`
+    );
 
     // Try to understand the issue better
     elizaLogger.info('\n📋 Issue Analysis:');
@@ -112,7 +116,9 @@ async function debugInstance() {
       }
 
       // Check if it's a TypeScript or JavaScript project
-      const packageJson = JSON.parse(await fs.readFile(path.join(repoPath, 'package.json'), 'utf-8'));
+      const packageJson = JSON.parse(
+        await fs.readFile(path.join(repoPath, 'package.json'), 'utf-8')
+      );
       elizaLogger.info('\nProject info:');
       elizaLogger.info(`  - Name: ${packageJson.name}`);
       elizaLogger.info(`  - Version: ${packageJson.version}`);
@@ -131,9 +137,13 @@ async function debugInstance() {
 
         try {
           // First check if patch can be applied
-          const checkResult = await Bun.$`cd ${repoPath} && git apply --check ${testPatchFile} 2>&1`.quiet();
+          const checkResult =
+            await Bun.$`cd ${repoPath} && git apply --check ${testPatchFile} 2>&1`.quiet();
           if (checkResult.exitCode !== 0) {
-            elizaLogger.error('❌ Patch check failed:', checkResult.stdout.toString() || checkResult.stderr.toString());
+            elizaLogger.error(
+              '❌ Patch check failed:',
+              checkResult.stdout.toString() || checkResult.stderr.toString()
+            );
 
             // Try to understand why
             elizaLogger.info('\n📝 Test patch content (first 20 lines):');
@@ -159,7 +169,9 @@ async function debugInstance() {
               const testResult = await Bun.$`cd ${repoPath} && npm test`.quiet();
               elizaLogger.info(`Test exit code: ${testResult.exitCode}`);
               if (testResult.exitCode === 0) {
-                elizaLogger.warn('⚠️  Tests are already passing! This might be why the evaluation is failing.');
+                elizaLogger.warn(
+                  '⚠️  Tests are already passing! This might be why the evaluation is failing.'
+                );
               } else {
                 elizaLogger.info('✅ Tests are failing as expected, patch should fix them.');
               }
@@ -173,11 +185,13 @@ async function debugInstance() {
       }
 
       // Look for relevant files based on issue
-      const issueKeywords = (instance.issue_title || instance.title || '').toLowerCase().split(/\s+/);
+      const issueKeywords = (instance.issue_title || instance.title || '')
+        .toLowerCase()
+        .split(/\s+/);
       elizaLogger.info(`\n🔍 Looking for files related to: ${issueKeywords.join(', ')}`);
 
       // Create regex pattern from keywords
-      const pattern = new RegExp(issueKeywords.filter(k => k.length > 2).join('|'), 'i');
+      const pattern = new RegExp(issueKeywords.filter((k) => k.length > 2).join('|'), 'i');
       const relevantFiles = await findFiles(repoPath, pattern);
       elizaLogger.info('\nPotentially relevant files:');
       for (const file of relevantFiles.slice(0, 10)) {
@@ -186,11 +200,9 @@ async function debugInstance() {
 
       // Clean up
       await fs.rm(testDir, { recursive: true, force: true });
-
     } catch (error) {
       elizaLogger.error('Error during debug:', error);
     }
-
   } catch (error) {
     elizaLogger.error('Failed to read cache:', error);
   }
@@ -219,7 +231,7 @@ async function findFiles(dir: string, pattern: RegExp): Promise<string[]> {
 }
 
 // Run the debug script
-debugInstance().catch(error => {
+debugInstance().catch((error) => {
   elizaLogger.error('Fatal error:', error);
   console.error('Stack trace:', error.stack);
   process.exit(1);

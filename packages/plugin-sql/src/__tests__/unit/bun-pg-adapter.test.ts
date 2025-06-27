@@ -1,6 +1,7 @@
 import { describe, test, expect, beforeAll, afterAll, beforeEach } from 'bun:test';
 import { PgAdapter } from '../../pg/adapter';
 import { PgManager } from '../../pg/manager';
+import { createMockRuntime } from '@elizaos/core/test-utils';
 import type { IAgentRuntime, UUID } from '@elizaos/core';
 
 describe('Bun PostgreSQL Adapter Tests', () => {
@@ -29,7 +30,13 @@ describe('Bun PostgreSQL Adapter Tests', () => {
       await manager.connect();
 
       adapter = new PgAdapter('test-agent-bun' as UUID, manager);
-      runtime = createMockRuntime();
+      runtime = createMockRuntime({
+        agentId: 'test-agent-bun' as UUID,
+        character: {
+          name: 'BunTestAgent',
+          bio: ['Test agent for Bun PostgreSQL adapter tests'],
+        },
+      });
 
       await adapter.init();
     } catch (error) {
@@ -169,14 +176,3 @@ describe('Bun PostgreSQL Adapter Tests', () => {
   });
 });
 
-// Helper function to create a mock runtime for testing
-function createMockRuntime(): IAgentRuntime {
-  return {
-    agentId: 'test-agent-bun',
-    character: {
-      name: 'BunTestAgent',
-      bio: 'Test agent for Bun PostgreSQL adapter tests',
-    },
-    // Add other required runtime properties as needed for tests
-  } as IAgentRuntime;
-}

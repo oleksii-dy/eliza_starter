@@ -58,6 +58,7 @@ elizaos.registerPlugin(robotPlugin);
 ### Available Actions
 
 #### 1. Robot Command Action
+
 Direct control of robot joints and modes.
 
 ```
@@ -72,6 +73,7 @@ Agent: "🤖 Robot mode set to: MANUAL"
 ```
 
 #### 2. Teaching Action
+
 Record and replay robot demonstrations.
 
 ```
@@ -89,6 +91,7 @@ Agent: "🎬 Executing motion: 'wave hello'"
 ```
 
 #### 3. Vision Actions
+
 Integrated vision capabilities for scene understanding.
 
 ```
@@ -102,22 +105,26 @@ Agent: "📷 I've captured an image from the camera"
 ## Robot Architecture
 
 ### Hardware Specifications
+
 - **24 DOF**: 2 head, 8 per arm, 6 per leg
 - **Servos**: HX-35H/HX-35HM high-voltage serial bus servos
 - **Control**: Raspberry Pi 5 with STM32-based HAT
 - **Camera**: 2-DOF camera rig with 120° FOV wide-angle camera
 
 ### Joint Naming Convention
+
 ```
 Head: head_yaw, head_pitch
-Arms: [left/right]_shoulder_[pitch/roll], [left/right]_elbow_pitch, 
+Arms: [left/right]_shoulder_[pitch/roll], [left/right]_elbow_pitch,
       [left/right]_wrist_[yaw/pitch], [left/right]_gripper
 Legs: [left/right]_hip_[yaw/roll/pitch], [left/right]_knee_pitch,
       [left/right]_ankle_[pitch/roll]
 ```
 
 ### Serial Protocol
+
 Communication with servos uses a binary protocol:
+
 - Header: `0x55 0x55`
 - Servo ID: 1-24
 - Command types: MOVE, READ_POSITION, SET_SPEED, etc.
@@ -126,6 +133,7 @@ Communication with servos uses a binary protocol:
 ## ROS 2 Integration
 
 ### Topics
+
 - `/joint_states` - Current joint positions (sensor_msgs/JointState)
 - `/ainex_joint_commands` - Joint commands (trajectory_msgs/JointTrajectory)
 - `/imu/data` - IMU sensor data (sensor_msgs/Imu)
@@ -133,6 +141,7 @@ Communication with servos uses a binary protocol:
 - `/ainex_camera/image_compressed` - Compressed camera feed
 
 ### Launch Simulation
+
 ```bash
 # Terminal 1: Start Gazebo with robot model
 ros2 launch ainex_gazebo ainex_world.launch.py
@@ -156,6 +165,7 @@ USE_SIMULATION=true npm start
 ## Development
 
 ### Project Structure
+
 ```
 plugin-robot/
 ├── src/
@@ -191,6 +201,7 @@ npm test -- --grep "robot control"
 ```
 
 ### Building URDF Model
+
 ```bash
 # Generate URDF from CAD models
 python scripts/generate-urdf.py
@@ -202,16 +213,19 @@ check_urdf urdf/ainex-humanoid.urdf
 ## Troubleshooting
 
 ### Robot Not Connecting
+
 1. Check serial port permissions: `sudo chmod 666 /dev/ttyUSB0`
 2. Verify baud rate matches servo configuration
 3. Ensure servos are powered on
 
 ### ROS 2 Connection Issues
+
 1. Verify rosbridge is running: `ros2 node list`
 2. Check WebSocket URL in configuration
 3. Ensure ROS_DOMAIN_ID matches if using multiple machines
 
 ### Vision Not Working
+
 1. Check camera permissions
 2. Install required tools:
    - macOS: `brew install imagesnap`
@@ -221,6 +235,7 @@ check_urdf urdf/ainex-humanoid.urdf
 ## Examples
 
 ### Basic Control Script
+
 ```typescript
 // Get robot service
 const robotService = runtime.getService('ROBOT');
@@ -234,6 +249,7 @@ await robotService.executeMotion('wave_hello');
 ```
 
 ### Teaching New Motion
+
 ```typescript
 // Enter teaching mode
 await robotService.setMode(RobotMode.TEACHING);

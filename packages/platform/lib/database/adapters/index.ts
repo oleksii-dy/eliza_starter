@@ -9,12 +9,12 @@ export {
   createDatabaseAdapter,
   getDatabaseAdapter,
   resetDatabaseAdapter,
-  detectDatabaseEngine
+  detectDatabaseEngine,
 } from './factory';
 
 export type {
   DatabaseAdapter,
   DatabaseConfig,
   DatabaseEngine,
-  AdapterFactoryConfig
+  AdapterFactoryConfig,
 } from './factory';

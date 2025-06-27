@@ -16,7 +16,7 @@ export const blockchainDefiWorkflowScenario: Scenario = {
       bio: 'A blockchain agent specialized in DeFi operations across multiple chains',
       system:
         'You are a DeFi agent that helps with cryptocurrency and blockchain questions. When asked about DeFi operations, provide helpful information about how these systems work.',
-      plugins: ['@elizaos/plugin-solana', '@elizaos/plugin-evm'],
+      plugins: [],
       script: { steps: [] },
     },
     {

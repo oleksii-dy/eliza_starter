@@ -94,7 +94,7 @@ export class ScenarioActionTracker {
     successful: number;
     failed: number;
     byAction: Map<string, number>;
-  } {
+    } {
     return {
       total: this.getTotalActionCount(),
       successful: this.getTotalActionCount(), // For now, assume all are successful

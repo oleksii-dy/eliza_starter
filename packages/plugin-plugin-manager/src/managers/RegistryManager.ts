@@ -146,9 +146,7 @@ export class RegistryManager {
       });
 
       const targetVersion =
-        version ||
-        response.data['dist-tags']?.latest ||
-        Object.keys(response.data.versions).pop();
+        version || response.data['dist-tags']?.latest || Object.keys(response.data.versions).pop();
       const versionData = response.data.versions[targetVersion];
 
       if (!versionData) {
@@ -264,7 +262,9 @@ export class RegistryManager {
 
   private getFromCache<T>(cache: Map<string, CacheEntry<T>>, key: string): T | null {
     const entry = cache.get(key);
-    if (!entry) {return null;}
+    if (!entry) {
+      return null;
+    }
 
     const age = Date.now() - entry.timestamp;
     if (age > entry.ttl) {

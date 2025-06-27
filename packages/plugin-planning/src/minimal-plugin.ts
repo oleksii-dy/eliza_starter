@@ -40,33 +40,68 @@ export const messageClassifierProvider: Provider = {
 
     // Multi-step planning indicators
     const multiStepIndicators = [
-      'and', 'then', 'also', 'make sure', 'include', 'ensure',
-      'step', 'process', 'workflow', 'sequence'
+      'and',
+      'then',
+      'also',
+      'make sure',
+      'include',
+      'ensure',
+      'step',
+      'process',
+      'workflow',
+      'sequence',
     ];
 
     // Strategic planning keywords
     const strategicKeywords = [
-      'plan', 'strategy', 'coordinate', 'organize', 'manage',
-      'schedule', 'meeting', 'project', 'workflow', 'process'
+      'plan',
+      'strategy',
+      'coordinate',
+      'organize',
+      'manage',
+      'schedule',
+      'meeting',
+      'project',
+      'workflow',
+      'process',
     ];
 
     // Research/analysis keywords
     const researchKeywords = [
-      'research', 'analyze', 'investigate', 'study', 'examine',
-      'review', 'evaluate', 'assess', 'compare'
+      'research',
+      'analyze',
+      'investigate',
+      'study',
+      'examine',
+      'review',
+      'evaluate',
+      'assess',
+      'compare',
     ];
 
     // Complex task indicators
     const complexTaskIndicators = [
-      'email', 'document', 'report', 'presentation', 'meeting',
-      'send', 'create', 'generate', 'compose', 'draft'
+      'email',
+      'document',
+      'report',
+      'presentation',
+      'meeting',
+      'send',
+      'create',
+      'generate',
+      'compose',
+      'draft',
     ];
 
     // Count indicators
-    const hasMultiStep = multiStepIndicators.some(indicator => text.toLowerCase().includes(indicator));
-    const hasStrategic = strategicKeywords.some(keyword => text.toLowerCase().includes(keyword));
-    const hasResearch = researchKeywords.some(keyword => text.toLowerCase().includes(keyword));
-    const hasComplexTask = complexTaskIndicators.some(indicator => text.toLowerCase().includes(indicator));
+    const hasMultiStep = multiStepIndicators.some((indicator) =>
+      text.toLowerCase().includes(indicator)
+    );
+    const hasStrategic = strategicKeywords.some((keyword) => text.toLowerCase().includes(keyword));
+    const hasResearch = researchKeywords.some((keyword) => text.toLowerCase().includes(keyword));
+    const hasComplexTask = complexTaskIndicators.some((indicator) =>
+      text.toLowerCase().includes(indicator)
+    );
 
     // Classify based on patterns
     if (hasStrategic || (hasMultiStep && hasComplexTask)) {
@@ -103,11 +138,13 @@ export const createPlanAction: Action = {
   validate: async (runtime, message) => {
     const text = message.content?.text || '';
     // Activate for complex requests or when explicitly asked to plan
-    return text.includes('plan') ||
-           text.includes('strategy') ||
-           text.includes('step') ||
-           text.includes('organize') ||
-           text.length > 100; // Long requests might need planning
+    return (
+      text.includes('plan') ||
+      text.includes('strategy') ||
+      text.includes('step') ||
+      text.includes('organize') ||
+      text.length > 100
+    ); // Long requests might need planning
   },
 
   handler: async (runtime, message, state, options, callback) => {
@@ -142,10 +179,10 @@ export const createPlanAction: Action = {
       steps: steps.map((step, index) => ({
         number: index + 1,
         action: step,
-        description: `Execute ${step.toLowerCase().replace('_', ' ')}`
+        description: `Execute ${step.toLowerCase().replace('_', ' ')}`,
       })),
       estimatedTime: `${steps.length * 2} minutes`,
-      complexity: steps.length > 2 ? 'high' : 'medium'
+      complexity: steps.length > 2 ? 'high' : 'medium',
     };
 
     if (callback) {
@@ -160,11 +197,11 @@ export const createPlanAction: Action = {
       values: {
         plan,
         planCreated: true,
-        nextActions: steps
+        nextActions: steps,
       },
       data: {
         strategicPlan: plan,
-        executionSteps: steps
+        executionSteps: steps,
       },
       text: `Plan created with ${plan.steps.length} steps`,
     };
@@ -174,17 +211,18 @@ export const createPlanAction: Action = {
     [
       {
         name: 'user',
-        content: { text: 'I need to research market trends and create a comprehensive report' }
+        content: { text: 'I need to research market trends and create a comprehensive report' },
       },
       {
         name: 'agent',
         content: {
-          text: 'I\'ll create a strategic plan to research market trends and compile a comprehensive report.',
-          thought: 'This requires research, analysis, and document creation - perfect for multi-step planning.',
-          actions: ['CREATE_PLAN']
-        }
-      }
-    ]
+          text: "I'll create a strategic plan to research market trends and compile a comprehensive report.",
+          thought:
+            'This requires research, analysis, and document creation - perfect for multi-step planning.',
+          actions: ['CREATE_PLAN'],
+        },
+      },
+    ],
   ],
 };
 
@@ -256,7 +294,7 @@ export const executePlanAction: Action = {
       }
 
       // Simulate some processing time
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
     if (callback) {
@@ -271,11 +309,11 @@ export const executePlanAction: Action = {
       values: {
         planExecuted: true,
         executionComplete: true,
-        success: true
+        success: true,
       },
       data: {
         executionResult: 'success',
-        completedSteps: plan.steps.length
+        completedSteps: plan.steps.length,
       },
       text: 'Plan execution completed successfully',
     };
@@ -301,13 +339,16 @@ export const planningReplyAction: Action = {
     let response = '';
 
     if (classification === 'STRATEGIC') {
-      response = 'I understand this requires a strategic approach. Let me think through this systematically and create a plan.';
+      response =
+        'I understand this requires a strategic approach. Let me think through this systematically and create a plan.';
     } else if (classification === 'RESEARCH_NEEDED') {
-      response = 'This request requires research and analysis. I\'ll need to gather information and provide you with comprehensive findings.';
+      response =
+        "This request requires research and analysis. I'll need to gather information and provide you with comprehensive findings.";
     } else if (classification === 'CAPABILITY_REQUEST') {
-      response = 'I see you\'re looking to integrate or add new capabilities. Let me help you with that implementation.';
+      response =
+        "I see you're looking to integrate or add new capabilities. Let me help you with that implementation.";
     } else {
-      response = 'I\'ll help you with that request. Let me work on this for you.';
+      response = "I'll help you with that request. Let me work on this for you.";
     }
 
     if (callback) {
@@ -331,7 +372,8 @@ export const planningReplyAction: Action = {
 // Main plugin definition
 export const planningPlugin: Plugin = {
   name: '@elizaos/plugin-planning',
-  description: 'Strategic planning and execution plugin for ElizaOS with step-by-step plan creation and execution',
+  description:
+    'Strategic planning and execution plugin for ElizaOS with step-by-step plan creation and execution',
 
   providers: [messageClassifierProvider],
 

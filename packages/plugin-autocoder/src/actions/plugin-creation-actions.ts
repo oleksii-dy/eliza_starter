@@ -1,6 +1,9 @@
 import type { Action, IAgentRuntime, Memory, State, HandlerCallback } from '@elizaos/core';
 import { logger } from '@elizaos/core';
-import type { PluginCreationService, PluginSpecification } from '../services/PluginCreationService.js';
+import type {
+  PluginCreationService,
+  PluginSpecification,
+} from '../services/PluginCreationService.js';
 
 /**
  * Action to create a new plugin using the PluginCreationService
@@ -8,7 +11,8 @@ import type { PluginCreationService, PluginSpecification } from '../services/Plu
 export const createPluginAction: Action = {
   name: 'CREATE_PLUGIN',
   similes: ['CREATE_PLUGIN', 'GENERATE_PLUGIN', 'BUILD_PLUGIN', 'MAKE_PLUGIN'],
-  description: 'Creates a new ElizaOS plugin with specified actions, providers, and services using AI assistance',
+  description:
+    'Creates a new ElizaOS plugin with specified actions, providers, and services using AI assistance',
 
   validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
     const service = runtime.getService<PluginCreationService>('plugin_creation');
@@ -17,12 +21,13 @@ export const createPluginAction: Action = {
     }
 
     const text = message.content.text?.toLowerCase() || '';
-    return text.includes('create') && (
-      text.includes('plugin') ||
-      text.includes('calculator') ||
-      text.includes('weather') ||
-      text.includes('todo') ||
-      text.includes('action')
+    return (
+      text.includes('create') &&
+      (text.includes('plugin') ||
+        text.includes('calculator') ||
+        text.includes('weather') ||
+        text.includes('todo') ||
+        text.includes('action'))
     );
   },
 
@@ -75,7 +80,7 @@ export const createPluginAction: Action = {
         actions: [],
         providers: [],
         services: [],
-        dependencies: []
+        dependencies: [],
       };
 
       // Add actions based on plugin type
@@ -84,48 +89,48 @@ export const createPluginAction: Action = {
           {
             name: 'ADD',
             description: 'Add two numbers',
-            parameters: { a: 'number', b: 'number' }
+            parameters: { a: 'number', b: 'number' },
           },
           {
             name: 'SUBTRACT',
             description: 'Subtract two numbers',
-            parameters: { a: 'number', b: 'number' }
+            parameters: { a: 'number', b: 'number' },
           },
           {
             name: 'MULTIPLY',
             description: 'Multiply two numbers',
-            parameters: { a: 'number', b: 'number' }
+            parameters: { a: 'number', b: 'number' },
           },
           {
             name: 'DIVIDE',
             description: 'Divide two numbers',
-            parameters: { a: 'number', b: 'number' }
-          }
+            parameters: { a: 'number', b: 'number' },
+          },
         ];
         specification.providers = [
           {
             name: 'CALCULATOR_PROVIDER',
-            description: 'Provides calculator history and state'
-          }
+            description: 'Provides calculator history and state',
+          },
         ];
       } else if (text.includes('weather')) {
         specification.actions = [
           {
             name: 'GET_WEATHER',
             description: 'Get current weather for a location',
-            parameters: { location: 'string', units: 'string' }
+            parameters: { location: 'string', units: 'string' },
           },
           {
             name: 'GET_FORECAST',
             description: 'Get weather forecast',
-            parameters: { location: 'string', days: 'number' }
-          }
+            parameters: { location: 'string', days: 'number' },
+          },
         ];
         specification.services = [
           {
             name: 'WeatherAPIService',
-            description: 'Service for weather API integration'
-          }
+            description: 'Service for weather API integration',
+          },
         ];
         specification.dependencies = ['axios'];
       } else if (text.includes('todo')) {
@@ -133,23 +138,23 @@ export const createPluginAction: Action = {
           {
             name: 'CREATE_TODO',
             description: 'Create a new todo item',
-            parameters: { title: 'string', description: 'string' }
+            parameters: { title: 'string', description: 'string' },
           },
           {
             name: 'LIST_TODOS',
-            description: 'List all todo items'
+            description: 'List all todo items',
           },
           {
             name: 'COMPLETE_TODO',
             description: 'Mark a todo as completed',
-            parameters: { id: 'string' }
-          }
+            parameters: { id: 'string' },
+          },
         ];
         specification.providers = [
           {
             name: 'TODO_PROVIDER',
-            description: 'Provides todo list data'
-          }
+            description: 'Provides todo list data',
+          },
         ];
       }
 
@@ -168,7 +173,7 @@ The plugin is now being generated. You can check its progress with GET_JOB_STATU
       if (callback) {
         callback({
           text: responseText,
-          actions: ['CREATE_PLUGIN']
+          actions: ['CREATE_PLUGIN'],
         });
       }
 
@@ -178,16 +183,15 @@ The plugin is now being generated. You can check its progress with GET_JOB_STATU
         values: {
           jobId,
           pluginName,
-          specification
+          specification,
         },
         data: {
           actionName: 'CREATE_PLUGIN',
           jobId,
           pluginName,
-          specification
-        }
+          specification,
+        },
       };
-
     } catch (error) {
       logger.error('Error in CREATE_PLUGIN action:', error);
       const errorMsg = `Failed to create plugin: ${error instanceof Error ? error.message : String(error)}`;
@@ -199,7 +203,7 @@ The plugin is now being generated. You can check its progress with GET_JOB_STATU
       return {
         text: errorMsg,
         success: false,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   },
@@ -209,18 +213,18 @@ The plugin is now being generated. You can check its progress with GET_JOB_STATU
       {
         name: 'User',
         content: {
-          text: 'Create a calculator plugin with basic math operations'
-        }
+          text: 'Create a calculator plugin with basic math operations',
+        },
       },
       {
         name: 'Assistant',
         content: {
           text: '✅ Started creating calculator-plugin!\n\n🆔 Job ID: abc123\n📝 Description: A calculator plugin with basic mathematical operations\n🔧 Components: 4 actions, 1 providers, 0 services',
-          actions: ['CREATE_PLUGIN']
-        }
-      }
-    ]
-  ]
+          actions: ['CREATE_PLUGIN'],
+        },
+      },
+    ],
+  ],
 };
 
 /**
@@ -291,13 +295,14 @@ export const getJobStatusAction: Action = {
       }
 
       // Format status response
-      const statusEmoji = {
-        pending: '⏳',
-        running: '🔄',
-        completed: '✅',
-        failed: '❌',
-        cancelled: '🚫'
-      }[job.status] || '❓';
+      const statusEmoji =
+        {
+          pending: '⏳',
+          running: '🔄',
+          completed: '✅',
+          failed: '❌',
+          cancelled: '🚫',
+        }[job.status] || '❓';
 
       let responseText = `${statusEmoji} Plugin Creation Job Status
 
@@ -327,13 +332,13 @@ export const getJobStatusAction: Action = {
       // Show recent logs
       if (job.logs.length > 0) {
         const recentLogs = job.logs.slice(-3);
-        responseText += `\n\n📋 Recent Logs:\n${recentLogs.map(log => `  • ${log}`).join('\n')}`;
+        responseText += `\n\n📋 Recent Logs:\n${recentLogs.map((log) => `  • ${log}`).join('\n')}`;
       }
 
       if (callback) {
         callback({
           text: responseText,
-          actions: ['GET_JOB_STATUS']
+          actions: ['GET_JOB_STATUS'],
         });
       }
 
@@ -344,7 +349,7 @@ export const getJobStatusAction: Action = {
           jobId: job.id,
           status: job.status,
           pluginName: job.specification.name,
-          duration: job.completedAt ? job.completedAt.getTime() - job.createdAt.getTime() : null
+          duration: job.completedAt ? job.completedAt.getTime() - job.createdAt.getTime() : null,
         },
         data: {
           actionName: 'GET_JOB_STATUS',
@@ -353,11 +358,10 @@ export const getJobStatusAction: Action = {
             status: job.status,
             pluginName: job.specification.name,
             error: job.error,
-            outputPath: job.outputPath
-          }
-        }
+            outputPath: job.outputPath,
+          },
+        },
       };
-
     } catch (error) {
       logger.error('Error in GET_JOB_STATUS action:', error);
       const errorMsg = `Failed to get job status: ${error instanceof Error ? error.message : String(error)}`;
@@ -369,7 +373,7 @@ export const getJobStatusAction: Action = {
       return {
         text: errorMsg,
         success: false,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   },
@@ -379,18 +383,18 @@ export const getJobStatusAction: Action = {
       {
         name: 'User',
         content: {
-          text: 'Check the status of my plugin creation job'
-        }
+          text: 'Check the status of my plugin creation job',
+        },
       },
       {
         name: 'Assistant',
         content: {
           text: '✅ Plugin Creation Job Status\n\n🆔 Job ID: abc123\n📝 Plugin: calculator-plugin\n📊 Status: COMPLETED\n⏰ Created: 12/25/2024, 2:30:15 PM',
-          actions: ['GET_JOB_STATUS']
-        }
-      }
-    ]
-  ]
+          actions: ['GET_JOB_STATUS'],
+        },
+      },
+    ],
+  ],
 };
 
 /**
@@ -408,9 +412,11 @@ export const listJobsAction: Action = {
     }
 
     const text = message.content.text?.toLowerCase() || '';
-    return text.includes('all') && text.includes('job') ||
-           text.includes('list') && text.includes('job') ||
-           text.includes('show') && text.includes('job');
+    return (
+      (text.includes('all') && text.includes('job')) ||
+      (text.includes('list') && text.includes('job')) ||
+      (text.includes('show') && text.includes('job'))
+    );
   },
 
   handler: async (
@@ -445,14 +451,16 @@ export const listJobsAction: Action = {
       // Sort by creation date (newest first)
       const sortedJobs = allJobs.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-      for (const job of sortedJobs.slice(0, 10)) { // Show latest 10
-        const statusEmoji = {
-          pending: '⏳',
-          running: '🔄',
-          completed: '✅',
-          failed: '❌',
-          cancelled: '🚫'
-        }[job.status] || '❓';
+      for (const job of sortedJobs.slice(0, 10)) {
+        // Show latest 10
+        const statusEmoji =
+          {
+            pending: '⏳',
+            running: '🔄',
+            completed: '✅',
+            failed: '❌',
+            cancelled: '🚫',
+          }[job.status] || '❓';
 
         responseText += `${statusEmoji} **${job.specification.name}**\n`;
         responseText += `   🆔 ${job.id.substring(0, 8)}...\n`;
@@ -473,7 +481,7 @@ export const listJobsAction: Action = {
       if (callback) {
         callback({
           text: responseText,
-          actions: ['LIST_JOBS']
+          actions: ['LIST_JOBS'],
         });
       }
 
@@ -482,20 +490,19 @@ export const listJobsAction: Action = {
         success: true,
         values: {
           jobCount: allJobs.length,
-          jobs: allJobs.map(job => ({
+          jobs: allJobs.map((job) => ({
             id: job.id,
             name: job.specification.name,
             status: job.status,
-            createdAt: job.createdAt
-          }))
+            createdAt: job.createdAt,
+          })),
         },
         data: {
           actionName: 'LIST_JOBS',
           totalJobs: allJobs.length,
-          recentJobs: sortedJobs.slice(0, 10)
-        }
+          recentJobs: sortedJobs.slice(0, 10),
+        },
       };
-
     } catch (error) {
       logger.error('Error in LIST_JOBS action:', error);
       const errorMsg = `Failed to list jobs: ${error instanceof Error ? error.message : String(error)}`;
@@ -507,7 +514,7 @@ export const listJobsAction: Action = {
       return {
         text: errorMsg,
         success: false,
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   },
@@ -517,23 +524,19 @@ export const listJobsAction: Action = {
       {
         name: 'User',
         content: {
-          text: 'Show me all my plugin creation jobs'
-        }
+          text: 'Show me all my plugin creation jobs',
+        },
       },
       {
         name: 'Assistant',
         content: {
           text: '📋 Plugin Creation Jobs (3 total)\n\n✅ **calculator-plugin**\n   🆔 abc123...\n   📊 COMPLETED\n   ⏰ 12/25/2024, 2:30:15 PM',
-          actions: ['LIST_JOBS']
-        }
-      }
-    ]
-  ]
+          actions: ['LIST_JOBS'],
+        },
+      },
+    ],
+  ],
 };
 
 // Export all plugin creation actions
-export const pluginCreationActions = [
-  createPluginAction,
-  getJobStatusAction,
-  listJobsAction
-];
+export const pluginCreationActions = [createPluginAction, getJobStatusAction, listJobsAction];

@@ -4,7 +4,7 @@ import { auth } from '@/lib/auth';
 
 const revenueService = new RevenueSharing();
 
-export async function GET(request: NextRequest) {
+export async function handleGET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -12,44 +12,48 @@ export async function GET(request: NextRequest) {
     }
 
     const url = new URL(request.url);
-    
+
     // Parse date range
     const startParam = url.searchParams.get('startDate');
     const endParam = url.searchParams.get('endDate');
-    
+
     let startDate = new Date();
     let endDate = new Date();
-    
+
     if (startParam) {
       startDate = new Date(startParam);
       if (isNaN(startDate.getTime())) {
         return NextResponse.json(
           { error: 'Invalid startDate format' },
-          { status: 400 }
+          { status: 400 },
         );
       }
     } else {
       // Default to current month
       startDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
     }
-    
+
     if (endParam) {
       endDate = new Date(endParam);
       if (isNaN(endDate.getTime())) {
         return NextResponse.json(
           { error: 'Invalid endDate format' },
-          { status: 400 }
+          { status: 400 },
         );
       }
     } else {
       // Default to end of current month
-      endDate = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+      endDate = new Date(
+        new Date().getFullYear(),
+        new Date().getMonth() + 1,
+        0,
+      );
     }
 
     if (startDate >= endDate) {
       return NextResponse.json(
         { error: 'Start date must be before end date' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -57,7 +61,7 @@ export async function GET(request: NextRequest) {
     const earnings = await revenueService.calculateCreatorEarnings(
       session.user.id,
       session.organizationId,
-      { startDate, endDate }
+      { startDate, endDate },
     );
 
     return NextResponse.json({
@@ -68,7 +72,7 @@ export async function GET(request: NextRequest) {
     console.error('Failed to calculate earnings:', error);
     return NextResponse.json(
       { error: 'Failed to calculate earnings' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

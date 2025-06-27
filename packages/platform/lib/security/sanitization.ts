@@ -68,7 +68,10 @@ export function sanitizeUUID(input: string): string {
 /**
  * Sanitize and validate numeric input
  */
-export function sanitizeNumber(input: any, options: { min?: number; max?: number } = {}): number {
+export function sanitizeNumber(
+  input: any,
+  options: { min?: number; max?: number } = {},
+): number {
   const num = Number(input);
 
   if (isNaN(num) || !isFinite(num)) {
@@ -152,25 +155,47 @@ function sanitizeObjectValues(obj: any): any {
  * Agent character validation schema
  */
 export const agentCharacterSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(100, 'Name too long').transform(sanitizeText),
-  bio: z.string().min(1, 'Bio is required').max(1000, 'Bio too long').transform(sanitizeHtml),
+  name: z
+    .string()
+    .min(1, 'Name is required')
+    .max(100, 'Name too long')
+    .transform(sanitizeText),
+  bio: z
+    .string()
+    .min(1, 'Bio is required')
+    .max(1000, 'Bio too long')
+    .transform(sanitizeHtml),
   messageExamples: z.array(z.array(z.any())).optional(),
   postExamples: z.array(z.string().max(500).transform(sanitizeText)).optional(),
   topics: z.array(z.string().max(50).transform(sanitizeText)).optional(),
-  style: z.object({
-    all: z.array(z.string().max(200).transform(sanitizeText)).optional(),
-    chat: z.array(z.string().max(200).transform(sanitizeText)).optional(),
-    post: z.array(z.string().max(200).transform(sanitizeText)).optional(),
-  }).optional(),
+  style: z
+    .object({
+      all: z.array(z.string().max(200).transform(sanitizeText)).optional(),
+      chat: z.array(z.string().max(200).transform(sanitizeText)).optional(),
+      post: z.array(z.string().max(200).transform(sanitizeText)).optional(),
+    })
+    .optional(),
 });
 
 /**
  * Agent creation request schema
  */
 export const createAgentSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(100, 'Name too long').transform(sanitizeText),
-  description: z.string().max(500, 'Description too long').transform(sanitizeText).optional(),
-  slug: z.string().min(1, 'Slug is required').max(50, 'Slug too long').transform(sanitizeSlug),
+  name: z
+    .string()
+    .min(1, 'Name is required')
+    .max(100, 'Name too long')
+    .transform(sanitizeText),
+  description: z
+    .string()
+    .max(500, 'Description too long')
+    .transform(sanitizeText)
+    .optional(),
+  slug: z
+    .string()
+    .min(1, 'Slug is required')
+    .max(50, 'Slug too long')
+    .transform(sanitizeSlug),
   character: agentCharacterSchema,
   plugins: z.array(z.string().max(50).transform(sanitizeText)),
   runtimeConfig: z.object({
@@ -188,17 +213,36 @@ export const createAgentSchema = z.object({
  */
 export const userRegistrationSchema = z.object({
   email: z.string().email('Invalid email').transform(sanitizeEmail),
-  firstName: z.string().min(1, 'First name required').max(50, 'First name too long').transform(sanitizeText),
-  lastName: z.string().min(1, 'Last name required').max(50, 'Last name too long').transform(sanitizeText),
-  organizationName: z.string().min(1, 'Organization name required').max(100, 'Organization name too long').transform(sanitizeText),
+  firstName: z
+    .string()
+    .min(1, 'First name required')
+    .max(50, 'First name too long')
+    .transform(sanitizeText),
+  lastName: z
+    .string()
+    .min(1, 'Last name required')
+    .max(50, 'Last name too long')
+    .transform(sanitizeText),
+  organizationName: z
+    .string()
+    .min(1, 'Organization name required')
+    .max(100, 'Organization name too long')
+    .transform(sanitizeText),
 });
 
 /**
  * Credit transaction schema
  */
 export const creditTransactionSchema = z.object({
-  amount: z.number().min(0.0001, 'Amount must be positive').max(10000, 'Amount too large'),
-  description: z.string().min(1, 'Description required').max(200, 'Description too long').transform(sanitizeText),
+  amount: z
+    .number()
+    .min(0.0001, 'Amount must be positive')
+    .max(10000, 'Amount too large'),
+  description: z
+    .string()
+    .min(1, 'Description required')
+    .max(200, 'Description too long')
+    .transform(sanitizeText),
   type: z.enum(['purchase', 'usage', 'refund', 'adjustment', 'auto_topup']),
 });
 
@@ -220,24 +264,40 @@ export function sanitizeRequestBody(body: any): any {
 /**
  * File upload validation
  */
-export function validateFileUpload(file: File, options: {
-  maxSize?: number;
-  allowedTypes?: string[];
-} = {}): void {
+export function validateFileUpload(
+  file: File,
+  options: {
+    maxSize?: number;
+    allowedTypes?: string[];
+  } = {},
+): void {
   const maxSize = options.maxSize || 5 * 1024 * 1024; // 5MB default
-  const allowedTypes = options.allowedTypes || ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  const allowedTypes = options.allowedTypes || [
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+  ];
 
   if (file.size > maxSize) {
-    throw new Error(`File size must be less than ${Math.round(maxSize / 1024 / 1024)}MB`);
+    throw new Error(
+      `File size must be less than ${Math.round(maxSize / 1024 / 1024)}MB`,
+    );
   }
 
   if (!allowedTypes.includes(file.type)) {
-    throw new Error(`File type ${file.type} is not allowed. Allowed types: ${allowedTypes.join(', ')}`);
+    throw new Error(
+      `File type ${file.type} is not allowed. Allowed types: ${allowedTypes.join(', ')}`,
+    );
   }
 
   // Additional filename validation
   const sanitizedName = sanitizeText(file.name);
-  if (sanitizedName.length === 0 || sanitizedName.includes('..') || sanitizedName.includes('/')) {
+  if (
+    sanitizedName.length === 0 ||
+    sanitizedName.includes('..') ||
+    sanitizedName.includes('/')
+  ) {
     throw new Error('Invalid filename');
   }
 }

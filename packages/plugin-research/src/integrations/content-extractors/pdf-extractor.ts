@@ -9,7 +9,7 @@ const loadPdfParse = async () => {
   if (!pdfParse) {
     try {
       pdfParse = (await import('pdf-parse')).default;
-    } catch (error) {
+    } catch (_error) {
       logger.warn(
         '[PDFExtractor] pdf-parse not available, PDF extraction disabled'
       );
@@ -87,8 +87,8 @@ export class PDFExtractor {
 
       const buffer = Buffer.from(response.data);
       return await this.extractFromBuffer(buffer, url);
-    } catch (error) {
-      logger.error('[PDFExtractor] Failed to download PDF:', error);
+    } catch (_error) {
+      logger.error('[PDFExtractor] Failed to download PDF:', _error);
       return null;
     }
   }
@@ -133,8 +133,8 @@ export class PDFExtractor {
           sourceUrl,
         },
       };
-    } catch (error) {
-      logger.error('[PDFExtractor] Failed to parse PDF:', error);
+    } catch (_error) {
+      logger.error('[PDFExtractor] Failed to parse PDF:', _error);
       return null;
     }
   }
@@ -382,10 +382,10 @@ export class PDFExtractor {
 
       const match = text.match(sectionRegex);
       return match ? this.cleanText(match[1]) : null;
-    } catch (error) {
+    } catch (_error) {
       logger.error(
         `[PDFExtractor] Failed to extract section ${sectionName}:`,
-        error
+        _error
       );
       return null;
     }

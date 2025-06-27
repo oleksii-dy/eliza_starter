@@ -37,19 +37,22 @@ export const analyzeInputAction: Action = {
     const words = text.trim() ? text.split(/\s+/) : [];
     const hasNumbers = /\d/.test(text);
     const lowerText = text.toLowerCase();
-    const sentiment = lowerText.includes('urgent') || lowerText.includes('emergency') || lowerText.includes('critical')
-      ? 'urgent'
-      : lowerText.includes('good')
-        ? 'positive'
-        : lowerText.includes('bad')
-          ? 'negative'
-          : 'neutral';
+    const sentiment =
+      lowerText.includes('urgent') ||
+      lowerText.includes('emergency') ||
+      lowerText.includes('critical')
+        ? 'urgent'
+        : lowerText.includes('good')
+          ? 'positive'
+          : lowerText.includes('bad')
+            ? 'negative'
+            : 'neutral';
 
     const analysis = {
       wordCount: words.length,
       hasNumbers,
       sentiment,
-      topics: words.filter((w) => w.length >= 5).map(w => w.toLowerCase()),
+      topics: words.filter((w) => w.length >= 5).map((w) => w.toLowerCase()),
       timestamp: Date.now(),
     };
 
@@ -199,10 +202,7 @@ export const chainExampleAction: Action = {
   validate: async (_runtime: IAgentRuntime, message: Memory) => {
     // Validate when this chain should be triggered
     const text = message.content.text?.toLowerCase() || '';
-    return (
-      text.includes('chain example') ||
-      text.includes('demonstrate chaining')
-    );
+    return text.includes('chain example') || text.includes('demonstrate chaining');
   },
 
   handler: async (

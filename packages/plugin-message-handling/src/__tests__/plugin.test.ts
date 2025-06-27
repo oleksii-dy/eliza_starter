@@ -1,7 +1,8 @@
-import { describe, expect, it, mock, beforeEach, afterEach } from 'bun:test';
+import { describe, expect, it, beforeEach, afterEach } from 'bun:test';
+
 import { messageHandlingPlugin } from '../index';
 import { IAgentRuntime, EventType, Memory, Content, UUID } from '@elizaos/core';
-import { MockRuntime, createMockRuntime } from './test-utils';
+import { MockRuntime, createMockRuntime, mock } from './test-utils';
 
 describe('Message Handling Plugin Integration', () => {
   let mockRuntime: IAgentRuntime;

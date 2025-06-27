@@ -1,9 +1,4 @@
-import {
-  IAgentRuntime,
-  Service,
-  ServiceType,
-  logger,
-} from '@elizaos/core';
+import { IAgentRuntime, Service, ServiceType, logger } from '@elizaos/core';
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
 /**
@@ -168,7 +163,7 @@ export class RealX402Service extends Service {
         currency: request.currency,
         chain: request.chain,
         nonce: request.nonce,
-        expires: Date.now() + (24 * 60 * 60 * 1000), // 24 hours from now
+        expires: Date.now() + 24 * 60 * 60 * 1000, // 24 hours from now
       };
 
       logger.info(`X.402 payment request created: ${request.amount} ${request.currency}`);
@@ -204,7 +199,10 @@ export class RealX402Service extends Service {
   }
 
   // Process X.402 Payment (for buyers)
-  async processPayment(paymentRequired: X402PaymentRequired, walletAddress: string): Promise<CoinbaseFacilitatorResponse> {
+  async processPayment(
+    paymentRequired: X402PaymentRequired,
+    walletAddress: string
+  ): Promise<CoinbaseFacilitatorResponse> {
     try {
       // In a real implementation, this would:
       // 1. Create a blockchain transaction
@@ -221,7 +219,10 @@ export class RealX402Service extends Service {
         from: walletAddress,
       };
 
-      const response = await this.facilitatorClient.post<CoinbaseFacilitatorResponse>('/settle', paymentData);
+      const response = await this.facilitatorClient.post<CoinbaseFacilitatorResponse>(
+        '/settle',
+        paymentData
+      );
 
       logger.info(`X.402 payment processed: ${response.data.paymentId}`);
       return response.data;
@@ -234,7 +235,9 @@ export class RealX402Service extends Service {
   // Check Payment Status
   async getPaymentStatus(paymentId: string): Promise<CoinbaseFacilitatorResponse> {
     try {
-      const response = await this.facilitatorClient.get<CoinbaseFacilitatorResponse>(`/status/${paymentId}`);
+      const response = await this.facilitatorClient.get<CoinbaseFacilitatorResponse>(
+        `/status/${paymentId}`
+      );
       return response.data;
     } catch (error) {
       logger.error('Error getting X.402 payment status:', error);
@@ -288,12 +291,15 @@ export class RealX402Service extends Service {
   }
 
   // Utility: Make X.402 enabled HTTP request
-  async makeX402Request(url: string, options: {
-    method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
-    data?: any;
-    walletAddress?: string;
-    autoPayment?: boolean;
-  } = {}): Promise<any> {
+  async makeX402Request(
+    url: string,
+    options: {
+      method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+      data?: any;
+      walletAddress?: string;
+      autoPayment?: boolean;
+    } = {}
+  ): Promise<any> {
     const { method = 'GET', data, walletAddress, autoPayment = false } = options;
 
     try {
@@ -310,7 +316,9 @@ export class RealX402Service extends Service {
       if (response.status === 402 && autoPayment && walletAddress) {
         const paymentRequired = response.data as X402PaymentRequired;
 
-        logger.info(`X.402 payment required: ${paymentRequired.amount} ${paymentRequired.currency}`);
+        logger.info(
+          `X.402 payment required: ${paymentRequired.amount} ${paymentRequired.currency}`
+        );
 
         // Process payment
         const payment = await this.processPayment(paymentRequired, walletAddress);
@@ -343,7 +351,8 @@ export class RealX402Service extends Service {
 
   // Service Lifecycle
   static async start(runtime: IAgentRuntime): Promise<RealX402Service> {
-    const facilitatorUrl = runtime.getSetting('X402_FACILITATOR_URL') || 'https://x402.coinbase.com';
+    const facilitatorUrl =
+      runtime.getSetting('X402_FACILITATOR_URL') || 'https://x402.coinbase.com';
 
     logger.info('Starting Real X.402 service...');
 

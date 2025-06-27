@@ -27,14 +27,14 @@ export interface SimpleJWTPayload {
 
 // Overload for simple token creation (used by signup and dev-login)
 export async function createTokenPair(
-  payload: SimpleJWTPayload
+  payload: SimpleJWTPayload,
 ): Promise<TokenPair>;
 
 export async function createTokenPair(
   user: User,
   session: Session,
   jwtSecret: string,
-  organizationId?: string
+  organizationId?: string,
 ): Promise<TokenPair>;
 
 // Implementation that handles both overloads
@@ -42,11 +42,13 @@ export async function createTokenPair(
   userOrPayload: User | SimpleJWTPayload,
   session?: Session,
   jwtSecret?: string,
-  organizationId?: string
+  organizationId?: string,
 ): Promise<TokenPair> {
   const jwtSecretKey = jwtSecret || process.env.JWT_SECRET;
   if (!jwtSecretKey) {
-    throw new Error('JWT_SECRET environment variable is required for token creation');
+    throw new Error(
+      'JWT_SECRET environment variable is required for token creation',
+    );
   }
   if (jwtSecretKey.length < 32) {
     throw new Error('JWT_SECRET must be at least 32 characters long');
@@ -98,7 +100,9 @@ export async function createTokenPair(
   // Original implementation for full User/Session
   const user = userOrPayload as User;
   if (!session || !jwtSecret) {
-    throw new Error('Session and jwtSecret are required for full User token creation');
+    throw new Error(
+      'Session and jwtSecret are required for full User token creation',
+    );
   }
   const now = Math.floor(Date.now() / 1000);
   const expiresAt = new Date((now + ACCESS_TOKEN_EXPIRY) * 1000);
@@ -136,12 +140,12 @@ export async function createTokenPair(
 
 export async function verifyJWT(
   token: string,
-  jwtSecret: string
+  jwtSecret: string,
 ): Promise<JWTPayload> {
   try {
     const { payload } = await jwtVerify(
       token,
-      new TextEncoder().encode(jwtSecret)
+      new TextEncoder().encode(jwtSecret),
     );
 
     return payload as unknown as JWTPayload;
@@ -151,7 +155,9 @@ export async function verifyJWT(
 }
 
 export function extractBearerToken(authHeader?: string): string | null {
-  if (!authHeader) {return null;}
+  if (!authHeader) {
+    return null;
+  }
 
   const parts = authHeader.split(' ');
   if (parts.length !== 2 || parts[0] !== 'Bearer') {
@@ -164,7 +170,9 @@ export function extractBearerToken(authHeader?: string): string | null {
 /**
  * Generate a simple JWT token for testing purposes
  */
-export async function generateJWT(payload: Record<string, any>): Promise<string> {
+export async function generateJWT(
+  payload: Record<string, any>,
+): Promise<string> {
   const jwtSecret = process.env.JWT_SECRET;
   if (!jwtSecret) {
     throw new Error('JWT_SECRET environment variable is required');

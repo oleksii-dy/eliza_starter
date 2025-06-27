@@ -33,13 +33,23 @@ describe.skipIf(!process.env.RUN_E2E_TESTS)('MCP Creation E2E Scenarios', () => 
       },
       getService: (name: string) => {
         if (name === 'secrets-manager') {
-          return { initialize: async () => { /* empty */ }, isReady: () => true };
+          return {
+            initialize: async () => {
+              /* empty */
+            },
+            isReady: () => true,
+          };
         }
         if (name === 'mcp-creation') {
           return service;
         }
         if (name === 'orchestration') {
-          return { initialize: async () => { /* empty */ }, isReady: () => true };
+          return {
+            initialize: async () => {
+              /* empty */
+            },
+            isReady: () => true,
+          };
         }
         return null;
       },
@@ -74,7 +84,15 @@ describe.skipIf(!process.env.RUN_E2E_TESTS)('MCP Creation E2E Scenarios', () => 
         createdAt: Date.now(),
       };
 
-      const state: State = { values: { /* empty */ }, data: { /* empty */ }, text: '' };
+      const state: State = {
+        values: {
+          /* empty */
+        },
+        data: {
+          /* empty */
+        },
+        text: '',
+      };
       const __responses: Memory[] = [];
       const callback = async (response: any) => {
         __responses.push({ ...__message, content: response });
@@ -82,7 +100,15 @@ describe.skipIf(!process.env.RUN_E2E_TESTS)('MCP Creation E2E Scenarios', () => 
       };
 
       // Execute action
-      await createMCPAction.handler(_runtime, __message, state, { /* empty */ }, callback);
+      await createMCPAction.handler(
+        _runtime,
+        __message,
+        state,
+        {
+          /* empty */
+        },
+        callback
+      );
 
       // Verify response
       expect(__responses).toHaveLength(1);
@@ -333,7 +359,17 @@ describe.skipIf(!process.env.RUN_E2E_TESTS)('MCP Creation E2E Scenarios', () => 
         return __responses;
       };
 
-      await createMCPAction.handler(_runtime, __message, { /* empty */ } as State, { /* empty */ }, callback);
+      await createMCPAction.handler(
+        _runtime,
+        __message,
+        {
+          /* empty */
+        } as State,
+        {
+          /* empty */
+        },
+        callback
+      );
 
       expect(__responses[0].content.text).toContain('successfully created');
 
@@ -375,7 +411,9 @@ describe.skipIf(!process.env.RUN_E2E_TESTS)('MCP Creation E2E Scenarios', () => 
           {
             name: 'ping',
             description: 'Simple ping tool',
-            parameters: { /* empty */ },
+            parameters: {
+              /* empty */
+            },
           },
         ],
       };

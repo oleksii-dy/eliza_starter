@@ -1,4 +1,4 @@
-import { type UUID, Memory, State, IAgentRuntime, Service } from '@elizaos/core';
+import { type UUID, Memory, State, IAgentRuntime, type Service } from '@elizaos/core';
 
 /**
  * Training data extraction configuration

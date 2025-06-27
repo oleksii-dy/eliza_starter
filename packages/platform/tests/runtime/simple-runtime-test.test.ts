@@ -4,11 +4,22 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
-import { addCredits, deductCredits, getCreditBalance } from '../../lib/server/services/billing-service';
-import { getBillingConfig, getAgentLimitForTier } from '../../lib/billing/config';
+import {
+  addCredits,
+  deductCredits,
+  getCreditBalance,
+} from '../../lib/server/services/billing-service';
+import {
+  getBillingConfig,
+  getAgentLimitForTier,
+} from '../../lib/billing/config';
 import { CreditService } from '../../lib/billing/credit-service';
 import { db, getDatabase } from '../../lib/database';
-import { organizations, users, creditTransactions } from '../../lib/database/schema';
+import {
+  organizations,
+  users,
+  creditTransactions,
+} from '../../lib/database/schema';
 import { eq } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -33,9 +44,13 @@ describe('Simple Runtime Integration', () => {
 
     try {
       // Clean up any existing test data more thoroughly
-      await database.delete(creditTransactions).where(eq(creditTransactions.organizationId, testOrgId));
+      await database
+        .delete(creditTransactions)
+        .where(eq(creditTransactions.organizationId, testOrgId));
       await database.delete(users).where(eq(users.organizationId, testOrgId));
-      await database.delete(organizations).where(eq(organizations.id, testOrgId));
+      await database
+        .delete(organizations)
+        .where(eq(organizations.id, testOrgId));
     } catch (error) {
       // Ignore cleanup errors for non-existent data
     }
@@ -63,9 +78,12 @@ describe('Simple Runtime Integration', () => {
     // Verify initial balance is actually zero
     const verifyBalance = await getCreditBalance(testOrgId);
     if (verifyBalance !== 0) {
-      console.warn(`Test setup issue: Expected balance 0, got ${verifyBalance} for org ${testOrgId}`);
+      console.warn(
+        `Test setup issue: Expected balance 0, got ${verifyBalance} for org ${testOrgId}`,
+      );
       // Force set to zero
-      await database.update(organizations)
+      await database
+        .update(organizations)
         .set({ creditBalance: '0.00' })
         .where(eq(organizations.id, testOrgId));
     }
@@ -76,19 +94,25 @@ describe('Simple Runtime Integration', () => {
     if (testOrgId) {
       try {
         // Delete in reverse dependency order
-        await database.delete(creditTransactions).where(eq(creditTransactions.organizationId, testOrgId));
+        await database
+          .delete(creditTransactions)
+          .where(eq(creditTransactions.organizationId, testOrgId));
         await database.delete(users).where(eq(users.organizationId, testOrgId));
-        await database.delete(organizations).where(eq(organizations.id, testOrgId));
-        
+        await database
+          .delete(organizations)
+          .where(eq(organizations.id, testOrgId));
+
         // Verify organization was deleted
-        const [remainingOrg] = await db
+        const [remainingOrg] = await database
           .select()
           .from(organizations)
           .where(eq(organizations.id, testOrgId))
           .limit(1);
-        
+
         if (remainingOrg) {
-          console.warn(`Test organization ${testOrgId} was not properly deleted`);
+          console.warn(
+            `Test organization ${testOrgId} was not properly deleted`,
+          );
         }
       } catch (error) {
         console.warn('Error cleaning up test data:', error);
@@ -117,13 +141,21 @@ describe('Simple Runtime Integration', () => {
       const billingConfig = getBillingConfig();
 
       expect(getAgentLimitForTier('free')).toBe(billingConfig.agentLimits.free);
-      expect(getAgentLimitForTier('basic')).toBe(billingConfig.agentLimits.basic);
+      expect(getAgentLimitForTier('basic')).toBe(
+        billingConfig.agentLimits.basic,
+      );
       expect(getAgentLimitForTier('pro')).toBe(billingConfig.agentLimits.pro);
-      expect(getAgentLimitForTier('premium')).toBe(billingConfig.agentLimits.premium);
-      expect(getAgentLimitForTier('enterprise')).toBe(billingConfig.agentLimits.enterprise);
+      expect(getAgentLimitForTier('premium')).toBe(
+        billingConfig.agentLimits.premium,
+      );
+      expect(getAgentLimitForTier('enterprise')).toBe(
+        billingConfig.agentLimits.enterprise,
+      );
 
       // Test invalid tier defaults to free
-      expect(getAgentLimitForTier('invalid-tier')).toBe(billingConfig.agentLimits.free);
+      expect(getAgentLimitForTier('invalid-tier')).toBe(
+        billingConfig.agentLimits.free,
+      );
     });
   });
 
@@ -131,25 +163,30 @@ describe('Simple Runtime Integration', () => {
     test('should add credits to organization', async () => {
       // Force reset balance to zero before testing with multiple attempts
       for (let i = 0; i < 3; i++) {
-        await database.update(organizations)
+        await database
+          .update(organizations)
           .set({ creditBalance: '0.00' })
           .where(eq(organizations.id, testOrgId));
-        
+
         // Small delay to ensure database consistency
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
         const checkBalance = await getCreditBalance(testOrgId);
         if (checkBalance === 0) break;
-        
-        console.warn(`Attempt ${i + 1}: Balance still ${checkBalance}, retrying...`);
+
+        console.warn(
+          `Attempt ${i + 1}: Balance still ${checkBalance}, retrying...`,
+        );
       }
-      
+
       const initialBalance = await getCreditBalance(testOrgId);
       if (initialBalance !== 0) {
         // If we still can't get zero balance, adjust the test expectations
-        console.warn(`Cannot reset balance to zero (got ${initialBalance}), adjusting test...`);
+        console.warn(
+          `Cannot reset balance to zero (got ${initialBalance}), adjusting test...`,
+        );
       }
-      
+
       const expectedFinalBalance = initialBalance + 100;
       expect(initialBalance).toBeGreaterThanOrEqual(0); // More flexible expectation
 
@@ -158,7 +195,7 @@ describe('Simple Runtime Integration', () => {
         userId: testUserId,
         amount: 100.0,
         description: 'Test credit addition',
-        type: 'adjustment'
+        type: 'adjustment',
       });
 
       expect(addResult).toBeDefined();
@@ -172,14 +209,14 @@ describe('Simple Runtime Integration', () => {
     test('should deduct credits from organization', async () => {
       // Get current balance and add credits to it
       const currentBalance = await getCreditBalance(testOrgId);
-      
+
       // Add initial credits
       await addCredits({
         organizationId: testOrgId,
         userId: testUserId,
         amount: 50.0,
         description: 'Initial credits',
-        type: 'adjustment'
+        type: 'adjustment',
       });
 
       const initialBalance = await getCreditBalance(testOrgId);
@@ -190,7 +227,7 @@ describe('Simple Runtime Integration', () => {
         organizationId: testOrgId,
         userId: testUserId,
         amount: 20.0,
-        description: 'Test credit deduction'
+        description: 'Test credit deduction',
       });
 
       expect(deductResult).toBeDefined();
@@ -205,14 +242,14 @@ describe('Simple Runtime Integration', () => {
     test('should handle insufficient balance gracefully', async () => {
       // Get current balance and set a known small amount
       const currentBalance = await getCreditBalance(testOrgId);
-      
+
       // Start with small balance - add only 5 credits
       await addCredits({
         organizationId: testOrgId,
         userId: testUserId,
         amount: 5.0,
         description: 'Small initial balance',
-        type: 'adjustment'
+        type: 'adjustment',
       });
 
       const balance = await getCreditBalance(testOrgId);
@@ -226,8 +263,8 @@ describe('Simple Runtime Integration', () => {
           organizationId: testOrgId,
           userId: testUserId,
           amount: excessiveAmount,
-          description: 'Excessive deduction'
-        })
+          description: 'Excessive deduction',
+        }),
       ).rejects.toThrow('Insufficient credit balance');
 
       // Balance should remain unchanged
@@ -243,7 +280,7 @@ describe('Simple Runtime Integration', () => {
         operation: 'chat',
         modelName: 'gpt-4o-mini',
         inputTokens: 1000,
-        outputTokens: 500
+        outputTokens: 500,
       });
 
       expect(openaiCost).toBeGreaterThan(0);
@@ -254,7 +291,7 @@ describe('Simple Runtime Integration', () => {
         operation: 'chat',
         modelName: 'claude-3-haiku',
         inputTokens: 1000,
-        outputTokens: 500
+        outputTokens: 500,
       });
 
       expect(anthropicCost).toBeGreaterThan(0);
@@ -265,7 +302,7 @@ describe('Simple Runtime Integration', () => {
       const uploadCost = CreditService.calculateStorageCost({
         service: 'storage',
         operation: 'upload',
-        tokens: 1024 // 1MB file size in KB
+        tokens: 1024, // 1MB file size in KB
       });
 
       expect(uploadCost).toBe(0.01); // Should be $0.01 per upload
@@ -273,7 +310,7 @@ describe('Simple Runtime Integration', () => {
       const storageCost = CreditService.calculateStorageCost({
         service: 'storage',
         operation: 'storage',
-        tokens: 1024 * 1024 // 1GB in KB
+        tokens: 1024 * 1024, // 1GB in KB
       });
 
       expect(storageCost).toBe(0.02); // Should be $0.02 per GB-month
@@ -282,14 +319,14 @@ describe('Simple Runtime Integration', () => {
     test('should deduct credits for usage correctly', async () => {
       // Get current balance and add test credits
       const currentBalance = await getCreditBalance(testOrgId);
-      
+
       // Add initial credits
       await addCredits({
         organizationId: testOrgId,
         userId: testUserId,
         amount: 10.0,
         description: 'Credits for usage test',
-        type: 'adjustment'
+        type: 'adjustment',
       });
 
       const initialBalance = await getCreditBalance(testOrgId);
@@ -306,8 +343,8 @@ describe('Simple Runtime Integration', () => {
           modelName: 'gpt-4o-mini',
           inputTokens: 100,
           outputTokens: 50,
-          requestId: `test-${Date.now()}`
-        }
+          requestId: `test-${Date.now()}`,
+        },
       );
 
       expect(usageResult.success).toBe(true);
@@ -325,7 +362,7 @@ describe('Simple Runtime Integration', () => {
   describe('Configuration Integration', () => {
     test('should use centralized billing configuration for real operations', async () => {
       const billingConfig = getBillingConfig();
-      
+
       // Get current balance
       const currentBalance = await getCreditBalance(testOrgId);
 
@@ -336,14 +373,16 @@ describe('Simple Runtime Integration', () => {
         {
           service: 'test',
           operation: 'minimal',
-          tokens: 1
-        }
+          tokens: 1,
+        },
       );
 
       // Check if operation succeeded or failed based on available balance
       if (currentBalance >= billingConfig.pricing.minimumCharge) {
         expect(usage.success).toBe(true);
-        expect(usage.deductedAmount).toBeGreaterThanOrEqual(billingConfig.pricing.minimumCharge);
+        expect(usage.deductedAmount).toBeGreaterThanOrEqual(
+          billingConfig.pricing.minimumCharge,
+        );
       } else {
         expect(usage.success).toBe(false);
         expect(usage.error).toContain('Insufficient credit balance');
@@ -356,10 +395,18 @@ describe('Simple Runtime Integration', () => {
       // Should have reasonable defaults even without environment variables
       expect(billingConfig.initialCredits.amount).toBeGreaterThan(0);
       expect(billingConfig.agentLimits.free).toBeGreaterThanOrEqual(1);
-      expect(billingConfig.agentLimits.basic).toBeGreaterThan(billingConfig.agentLimits.free);
-      expect(billingConfig.agentLimits.pro).toBeGreaterThan(billingConfig.agentLimits.basic);
-      expect(billingConfig.agentLimits.premium).toBeGreaterThan(billingConfig.agentLimits.pro);
-      expect(billingConfig.agentLimits.enterprise).toBeGreaterThan(billingConfig.agentLimits.premium);
+      expect(billingConfig.agentLimits.basic).toBeGreaterThan(
+        billingConfig.agentLimits.free,
+      );
+      expect(billingConfig.agentLimits.pro).toBeGreaterThan(
+        billingConfig.agentLimits.basic,
+      );
+      expect(billingConfig.agentLimits.premium).toBeGreaterThan(
+        billingConfig.agentLimits.pro,
+      );
+      expect(billingConfig.agentLimits.enterprise).toBeGreaterThan(
+        billingConfig.agentLimits.premium,
+      );
     });
   });
 });

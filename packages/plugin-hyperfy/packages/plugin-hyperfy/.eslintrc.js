@@ -17,7 +17,7 @@ export default {
     WebAssembly: 'readonly',
     TextDecoder: 'readonly',
     self: 'readonly',
-    
+
     // PhysX/Emscripten globals
     PHYSX: 'readonly',
     read: 'readonly',
@@ -26,7 +26,7 @@ export default {
     quit: 'readonly',
     print: 'readonly',
     printErr: 'readonly',
-    
+
     // Emscripten bindings
     _emscripten_bind_PxArticulationDrive_PxArticulationDrive_1: 'readonly',
     _emscripten_bind_PxArticulationDrive_PxArticulationDrive_2: 'readonly',
@@ -58,16 +58,19 @@ export default {
     _emscripten_bind_PxVec3_PxVec3_2: 'readonly',
     _emscripten_bind_PxVec4_PxVec4_1: 'readonly',
     _emscripten_bind_PxVec4_PxVec4_2: 'readonly',
-    _emscripten_bind_PxVec4_PxVec4_3: 'readonly'
+    _emscripten_bind_PxVec4_PxVec4_3: 'readonly',
   },
   rules: {
     // Relax some rules for this package
     '@typescript-eslint/ban-ts-comment': 'off', // Too many to fix right now
-    '@typescript-eslint/no-unused-vars': ['warn', { 
-      argsIgnorePattern: '^_', 
-      varsIgnorePattern: '^_',
-      ignoreRestSiblings: true 
-    }],
+    '@typescript-eslint/no-unused-vars': [
+      'warn',
+      {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        ignoreRestSiblings: true,
+      },
+    ],
     'no-undef': 'off', // We've defined globals above
     'prefer-const': 'warn',
     'no-empty': 'warn',
@@ -80,7 +83,7 @@ export default {
         'no-var': 'off',
         'no-throw-literal': 'off',
         'no-prototype-builtins': 'off',
-        'eqeqeq': 'off',
+        eqeqeq: 'off',
         'no-constant-condition': 'off',
         'no-setter-return': 'off',
         'no-async-promise-executor': 'off',
@@ -91,7 +94,7 @@ export default {
         'no-fallthrough': 'off',
         '@typescript-eslint/no-unused-vars': 'off',
         'prefer-const': 'off',
-      }
-    }
-  ]
-}; 
+      },
+    },
+  ],
+};

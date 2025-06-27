@@ -2,9 +2,16 @@
 import { Plugin } from '@elizaos/core';
 import { VisionService } from './service';
 import { visionProvider } from './provider';
-import { describeSceneAction, captureImageAction, killAutonomousAction, setVisionModeAction, nameEntityAction, identifyPersonAction, trackEntityAction } from './action';
+import {
+  describeSceneAction,
+  captureImageAction,
+  killAutonomousAction,
+  setVisionModeAction,
+  nameEntityAction,
+  identifyPersonAction,
+  trackEntityAction,
+} from './action';
 import { testSuites } from './tests/e2e/index';
-import './types'; // Ensure module augmentation is loaded
 
 export const visionPlugin: Plugin = {
   name: 'vision',

@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sessionService } from '@/lib/auth/session';
 import { inferenceAnalytics } from '@/lib/services/inference-analytics';
 
-export async function GET(request: NextRequest) {
+export async function handleGET(request: NextRequest) {
   try {
     const session = await sessionService.getSessionFromCookies();
     if (!session) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     // Calculate date range based on timeRange
     const now = new Date();
     let startDate: Date;
-    
+
     switch (timeRange) {
       case 'weekly':
         startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform data for export
-    const exportData = analyticsData.byDay.map(day => ({
+    const exportData = analyticsData.byDay.map((day) => ({
       date: day.date,
       requests: day.requests,
       spent: day.cost,
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
 
     if (format === 'csv') {
       const csv = convertToCSV(exportData);
-      
+
       return new NextResponse(csv, {
         status: 200,
         headers: {
@@ -76,34 +76,38 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       { success: false, error: 'Unsupported format' },
-      { status: 400 }
+      { status: 400 },
     );
   } catch (error) {
     console.error('Failed to export analytics data:', error);
     return NextResponse.json(
       { success: false, error: 'Failed to export analytics data' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
-
 function convertToCSV(data: any[]): string {
   if (data.length === 0) return '';
-  
+
   const headers = Object.keys(data[0]);
   const csvHeaders = headers.join(',');
-  
-  const csvRows = data.map(row => 
-    headers.map(header => {
-      const value = row[header];
-      // Escape commas and quotes in CSV values
-      if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
-        return `"${value.replace(/"/g, '""')}"`;
-      }
-      return value;
-    }).join(',')
+
+  const csvRows = data.map((row) =>
+    headers
+      .map((header) => {
+        const value = row[header];
+        // Escape commas and quotes in CSV values
+        if (
+          typeof value === 'string' &&
+          (value.includes(',') || value.includes('"'))
+        ) {
+          return `"${value.replace(/"/g, '""')}"`;
+        }
+        return value;
+      })
+      .join(','),
   );
-  
+
   return [csvHeaders, ...csvRows].join('\n');
 }

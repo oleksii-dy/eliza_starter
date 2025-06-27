@@ -4,50 +4,49 @@
  * This file shows how to integrate RPG testing into existing Hyperfy worlds
  */
 
-import type { World } from '../../types/index.js';
-import { initializeClientRPGTesting, initializeServerRPGTesting } from './hyperfy-rpg-test-init.js';
+import type { World } from '../../types/index.js'
+import { initializeClientRPGTesting, initializeServerRPGTesting } from './hyperfy-rpg-test-init.js'
 
 /**
  * Patch World class to automatically include RPG testing
  */
 export function patchWorldForRPGTesting(): void {
   // This would be called during Hyperfy initialization
-  console.log('[RPGTestPatch] Applying RPG testing integration patch...');
+  console.log('[RPGTestPatch] Applying RPG testing integration patch...')
 
   // For now, we'll document the integration points
-  console.log('[RPGTestPatch] Integration points:');
-  console.log('  1. Add to world initialization');
-  console.log('  2. Register RPG testing system');
-  console.log('  3. Enable UI components');
-  console.log('  4. Set up event handlers');
+  console.log('[RPGTestPatch] Integration points:')
+  console.log('  1. Add to world initialization')
+  console.log('  2. Register RPG testing system')
+  console.log('  3. Enable UI components')
+  console.log('  4. Set up event handlers')
 }
 
 /**
  * Manual integration function for existing worlds
  */
 export async function integrateRPGTestingIntoWorld(world: World): Promise<void> {
-  console.log('[RPGTestPatch] Manually integrating RPG testing into world...');
+  console.log('[RPGTestPatch] Manually integrating RPG testing into world...')
 
   try {
     // Determine environment
-    const isServer = typeof window === 'undefined';
-    const isClient = typeof window !== 'undefined';
+    const isServer = typeof window === 'undefined'
+    const isClient = typeof window !== 'undefined'
 
     if (isServer) {
-      console.log('[RPGTestPatch] Server environment detected');
-      initializeServerRPGTesting(world);
+      console.log('[RPGTestPatch] Server environment detected')
+      initializeServerRPGTesting(world)
     }
 
     if (isClient) {
-      console.log('[RPGTestPatch] Client environment detected');
-      initializeClientRPGTesting(world);
+      console.log('[RPGTestPatch] Client environment detected')
+      initializeClientRPGTesting(world)
     }
 
-    console.log('[RPGTestPatch] RPG testing successfully integrated');
-
+    console.log('[RPGTestPatch] RPG testing successfully integrated')
   } catch (error: any) {
-    console.error('[RPGTestPatch] Failed to integrate RPG testing:', error);
-    throw error;
+    console.error('[RPGTestPatch] Failed to integrate RPG testing:', error)
+    throw error
   }
 }
 
@@ -55,43 +54,42 @@ export async function integrateRPGTestingIntoWorld(world: World): Promise<void> 
  * Add RPG testing to world creation
  */
 export function createWorldWithRPGTesting(worldOptions: any = {}): Promise<World> {
-  console.log('[RPGTestPatch] Creating world with RPG testing enabled...');
+  console.log('[RPGTestPatch] Creating world with RPG testing enabled...')
 
   // This would integrate with Hyperfy's world creation process
   // For now, we'll return a promise that would create the world
   return Promise.resolve({
     async init(options: any) {
-      console.log('[RPGTestPatch] World init called with RPG testing');
+      console.log('[RPGTestPatch] World init called with RPG testing')
 
       // Initialize world systems first
       // ... world initialization code ...
 
       // Then add RPG testing
-      await integrateRPGTestingIntoWorld(this as World);
+      await integrateRPGTestingIntoWorld(this as World)
     },
 
     start() {
-      console.log('[RPGTestPatch] World started with RPG testing');
+      console.log('[RPGTestPatch] World started with RPG testing')
     },
 
     // Mock world object for demonstration
     events: {
       on: (event: string, handler: Function) => console.log(`Event listener: ${event}`),
-      emit: (event: string, data?: any) => console.log(`Event emitted: ${event}`, data)
+      emit: (event: string, data?: any) => console.log(`Event emitted: ${event}`, data),
     },
 
     entities: {
       create: (id: string, data: any) => console.log(`Entity created: ${id}`, data),
       get: (id: string) => null,
-      remove: (id: string) => console.log(`Entity removed: ${id}`)
+      remove: (id: string) => console.log(`Entity removed: ${id}`),
     },
 
     register: (name: string, systemFactory: Function) => {
-      console.log(`System registered: ${name}`);
-      return systemFactory();
-    }
-
-  } as any as World);
+      console.log(`System registered: ${name}`)
+      return systemFactory()
+    },
+  } as any as World)
 }
 
 /**
@@ -198,6 +196,6 @@ The testing system integrates seamlessly with Hyperfy's:
 - Event system
 - Physics system
 - Rendering system
-`;
+`
 
-export default INTEGRATION_INSTRUCTIONS;
+export default INTEGRATION_INSTRUCTIONS

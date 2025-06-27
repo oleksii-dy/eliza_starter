@@ -52,7 +52,7 @@ export const ${camelCaseName}Action: Action = {
     _state?: State
   ): Promise<boolean> => {
     // Add validation logic here
-    const text = message.content?.text || '';
+    const text = _message.content?.text || '';
     return text.length > 0;
   },
   handler: async (
@@ -64,32 +64,32 @@ export const ${camelCaseName}Action: Action = {
   ): Promise<string> => {
     try {
       // Extract parameters from message or options
-      const messageText = message.content?.text || '';
+      const messageText = _message.content?.text || '';
       ${
-  parameters
-    ? `
+        parameters
+          ? `
       // Expected parameters: ${JSON.stringify(parameters, null, 2)}
       // Extract parameters from the message or options
-      const params = options || { /* empty */ };
+      const params = _options || { /* empty */ };
 
       // Destructure and validate required parameters
       const { ${Object.keys(parameters).join(', ')} } = params;
 
       // Validate required parameters
       ${Object.entries(parameters)
-    .map(([key, value]: [string, any]) => {
-      if (value.required) {
-        return `if (!${key}) {
+        .map(([key, value]: [string, any]) => {
+          if (value.required) {
+            return `if (!${key}) {
         return "${key} is required";
       }`;
-      }
-      return '';
-    })
-    .filter(Boolean)
-    .join('\n      ')}
+          }
+          return '';
+        })
+        .filter(Boolean)
+        .join('\n      ')}
       `
-    : ''
-}
+          : ''
+      }
 
       // Implement the action logic
       // For now, we'll acknowledge the request and simulate processing
@@ -105,13 +105,13 @@ export const ${camelCaseName}Action: Action = {
       // Or use fallback: const apiKey = runtime.getSetting('API_KEY');
 
       // Update state if needed
-      if (state) {
-        state.lastAction = "${name}";
-        state.lastActionTime = new Date().toISOString();
+      if (_state) {
+        _state.lastAction = "${name}";
+        _state.lastActionTime = new Date().toISOString();
       }
 
-      if (callback) {
-        await callback({
+      if (_callback) {
+        await _callback({
           text: responseText,
           type: "text",
           metadata: {
@@ -124,18 +124,18 @@ export const ${camelCaseName}Action: Action = {
 
       return responseText;
     } catch (_error) {
-      const errorMessage = error instanceof Error
-        ? \`Failed to execute ${name}: \${error.message}\`
+      const errorMessage = _error instanceof Error
+        ? \`Failed to execute ${name}: \${_error.message}\`
         : \`Failed to execute ${name}: Unknown error\`;
 
-      if (callback) {
-        await callback({
+      if (_callback) {
+        await _callback({
           text: errorMessage,
           type: "error",
           metadata: {
             action: "${name}",
             success: false,
-            error: error instanceof Error ? error.message : 'Unknown error'
+            error: _error instanceof Error ? _error.message : 'Unknown error'
           }
         });
       }
@@ -176,33 +176,46 @@ export const ${camelCaseName}: Provider = {
       const currentTime = new Date().toISOString();
 
       ${
-  dataStructure
-    ? `// Build the expected data structure: ${JSON.stringify(dataStructure, null, 2)}
+        dataStructure
+          ? `// Build the expected data structure: ${JSON.stringify(dataStructure, null, 2)}
       const providerData = {
-        ${Object.entries(dataStructure || { /* empty */ })
-    .map(([key, type]) => {
-      if (type === 'string') {return `${key}: 'Sample ${key} value'`;}
-      if (type === 'number') {return `${key}: 0`;}
-      if (type === 'boolean') {return `${key}: false`;}
-      if (type === 'array') {return `${key}: []`;}
-      return `${key}: { /* empty */ }`;
-    })
-    .join(',\n        ')},
+        ${Object.entries(
+          dataStructure ||
+            {
+              /* empty */
+            }
+        )
+          .map(([key, type]) => {
+            if (type === 'string') {
+              return `${key}: 'Sample ${key} value'`;
+            }
+            if (type === 'number') {
+              return `${key}: 0`;
+            }
+            if (type === 'boolean') {
+              return `${key}: false`;
+            }
+            if (type === 'array') {
+              return `${key}: []`;
+            }
+            return `${key}: { /* empty */ }`;
+          })
+          .join(',\n        ')},
         timestamp: currentTime,
         source: "${name}",
         _context: _context.substring(0, 100) // Include some context
       };`
-    : `
+          : `
       // Create provider data based on the description: ${description}
       const providerData = {
         timestamp: currentTime,
         source: "${name}",
-        _context: context.substring(0, 100),
+        _context: _context.substring(0, 100),
         // Add relevant data fields here based on what this provider should provide
         status: 'active',
         available: true
       };`
-}
+      }
 
       // You can access runtime services and state:
       // const service = runtime.getService('SOME_SERVICE');
@@ -219,7 +232,7 @@ export const ${camelCaseName}: Provider = {
         data: providerData
       };
     } catch (_error) {
-      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      const errorMsg = _error instanceof Error ? _error.message : 'Unknown error';
       return {
         text: \`Unable to retrieve ${name} data: \${errorMsg}\`,
         data: {
@@ -241,7 +254,7 @@ export const generateServiceCode = (
 ): string => {
   const className = name.charAt(0).toUpperCase() + name.slice(1);
 
-  return `import { IAgentRuntime, logger } from "@elizaos/core";
+  return `import { IAgentRuntime, logger, Service } from "@elizaos/core";
 
 // Extend the ServiceTypeRegistry for this service
 declare module "@elizaos/core" {
@@ -256,7 +269,7 @@ export class ${className} extends Service {
   public readonly capabilityDescription: string = "${description}";
 
   constructor(runtime?: IAgentRuntime) {
-    super(_runtime);
+    super(runtime);
   }
 
   async stop(): Promise<void> {
@@ -271,14 +284,14 @@ export class ${className} extends Service {
     logger.debug(\`${className} resources cleaned up\`);
   }
 
-  static async start(__runtime: IAgentRuntime): Promise<${className}> {
+  static async start(_runtime: IAgentRuntime): Promise<${className}> {
     const service = new ${className}(_runtime);
     await service.initialize(_runtime);
     return service;
   }
 
-  async initialize(__runtime: IAgentRuntime): Promise<void> {
-    this.runtime = runtime;
+  async initialize(_runtime: IAgentRuntime): Promise<void> {
+    this.runtime = _runtime;
     logger.info(\`Initializing ${className}\`);
 
     // Initialize service resources
@@ -288,8 +301,8 @@ export class ${className} extends Service {
       this.setupInternalState();
       logger.info(\`${className} initialized successfully\`);
     } catch (_error) {
-      logger.error(\`Failed to initialize ${className}:\`, error);
-      throw error;
+      logger.error(\`Failed to initialize ${className}:\`, _error);
+      throw _error;
     }
   }
 
@@ -299,10 +312,10 @@ export class ${className} extends Service {
   }
 
   ${
-  methods
-    ? methods
-      .map(
-        (method) => `
+    methods
+      ? methods
+          .map(
+            (method) => `
   async ${method}(...args: any[]): Promise<any> {
     logger.info(\`${className}.${method} called with args:\`, args);
 
@@ -319,15 +332,15 @@ export class ${className} extends Service {
       logger.debug(\`${className}.${method} completed successfully\`);
       return result;
     } catch (_error) {
-      logger.error(\`${className}.${method} failed:\`, error);
-      throw error;
+      logger.error(\`${className}.${method} failed:\`, _error);
+      throw _error;
     }
   }
   `
-      )
-      .join('\n')
-    : ''
-}
+          )
+          .join('\n')
+      : ''
+  }
 
   // Additional service methods
   async getStatus(): Promise<{ active: boolean; uptime: number }> {
@@ -382,30 +395,30 @@ export const ${camelCaseName}Evaluator: Evaluator = {
     _state?: State
   ): Promise<boolean> => {
     // Check if this evaluator should run based on message content and state
-    const content = message.content?.text?.toLowerCase() || '';
+    const content = _message.content?.text?.toLowerCase() || '';
 
     ${
-  triggers && triggers.length > 0
-    ? `// Check against configured triggers: ${triggers.join(', ')}
+      triggers && triggers.length > 0
+        ? `// Check against configured triggers: ${triggers.join(', ')}
     const shouldTrigger = ${triggers.map((t) => `content.includes('${t.toLowerCase()}')`).join(' || ')};
 
     if (!shouldTrigger) {
       return false;
     }`
-    : `// Default validation - run on messages with sufficient content
+        : `// Default validation - run on messages with sufficient content
     if (content.length < 5) {
       return false;
     }`
-}
+    }
 
     // Additional validation logic
     // For example, check if enough time has passed since last evaluation
-    if (state?.lastEvaluation) {
-      const timeSinceLastEval = Date.now() - new Date(state.lastEvaluation.timestamp).getTime();
+    if (_state?.lastEvaluation) {
+      const timeSinceLastEval = Date.now() - new Date(_state.lastEvaluation.timestamp).getTime();
       const minInterval = 60000; // 1 minute minimum between evaluations
 
       if (timeSinceLastEval < minInterval) {
-        logger.debug(\`${name} evaluator skipped - too soon since last evaluation\`);
+        elizaLogger.debug(\`${name} evaluator skipped - too soon since last evaluation\`);
         return false;
       }
     }
@@ -418,9 +431,9 @@ export const ${camelCaseName}Evaluator: Evaluator = {
     _state?: State
   ): Promise<string> => {
     try {
-      logger.info(\`Running ${name} evaluator\`);
+      elizaLogger.info(\`Running ${name} evaluator\`);
 
-      const content = message.content?.text || '';
+      const content = _message.content?.text || '';
 
       // Perform evaluation based on the evaluator's purpose
       // Example: sentiment analysis, content moderation, quality check, etc.
@@ -444,8 +457,8 @@ export const ${camelCaseName}Evaluator: Evaluator = {
       };
 
       // Update state with evaluation results if needed
-      if (state) {
-        state.lastEvaluation = {
+      if (_state) {
+        _state.lastEvaluation = {
           evaluator: "${name}",
           score: overallScore,
           timestamp: result.timestamp
@@ -460,8 +473,8 @@ export const ${camelCaseName}Evaluator: Evaluator = {
 
       return \`${name} evaluation complete. Score: \${(overallScore * 100).toFixed(1)}% - \${result.recommendation}\`;
     } catch (_error) {
-      logger.error(\`${name} evaluator error:\`, error);
-      return \`${name} evaluation failed: \${error instanceof Error ? error.message : 'Unknown error'}\`;
+      elizaLogger.error(\`${name} evaluator error:\`, _error);
+      return \`${name} evaluation failed: \${_error instanceof Error ? _error.message : 'Unknown error'}\`;
     }
   }
 };
@@ -470,8 +483,7 @@ export const ${camelCaseName}Evaluator: Evaluator = {
 
 export const generatePluginIndex = (pluginName: string, specification: any): string => {
   const cleanPluginName = pluginName.replace(/^@[^/]+\//, '').replace(/[-_]/g, '');
-  const pluginClassName =
-    `${cleanPluginName.charAt(0).toUpperCase() + cleanPluginName.slice(1)}Plugin`;
+  const pluginClassName = `${cleanPluginName.charAt(0).toUpperCase() + cleanPluginName.slice(1)}Plugin`;
 
   const imports: string[] = [];
   const exports: string[] = [];
@@ -544,13 +556,13 @@ type SecretContext = {
 function getSecretContext(_runtime: IAgentRuntime): SecretContext {
   return {
     level: 'global',
-    agentId: runtime.agentId,
-    requesterId: runtime.agentId
+    agentId: _runtime.agentId,
+    requesterId: _runtime.agentId
   };
 }
 
-async function getConfigValue(runtime: IAgentRuntime, key: string): Promise<string | undefined> {
-  const secretsManager = runtime.getService('SECRETS');
+async function getConfigValue(_runtime: IAgentRuntime, key: string): Promise<string | undefined> {
+  const secretsManager = _runtime.getService('SECRETS') as any;
 
   if (secretsManager) {
     try {
@@ -559,7 +571,7 @@ async function getConfigValue(runtime: IAgentRuntime, key: string): Promise<stri
         return value;
       }
     } catch (_error) {
-      logger.warn(\`Failed to get \${key} from secrets manager:\`, error);
+      logger.warn(\`Failed to get \${key} from secrets manager:\`, _error);
     }
   }
 
@@ -573,7 +585,7 @@ async function setConfigValue(
   value: string,
   metadata?: { type?: string; required?: boolean; sensitive?: boolean }
 ): Promise<boolean> {
-  const secretsManager = runtime.getService('SECRETS');
+  const secretsManager = _runtime.getService('SECRETS') as any;
 
   if (secretsManager) {
     try {
@@ -588,7 +600,7 @@ async function setConfigValue(
         }
       );
     } catch (_error) {
-      logger.error(\`Failed to set \${key} in secrets manager:\`, error);
+      logger.error(\`Failed to set \${key} in secrets manager:\`, _error);
     }
   }
 
@@ -602,15 +614,15 @@ async function setConfigValue(
 }export const ${pluginClassName}: Plugin = {
   name: "${pluginName}",
   description: "${specification.description}",${
-  dependencies.length > 0
-    ? `
+    dependencies.length > 0
+      ? `
 
   // Declare dependencies${needsSecretsManager ? ' including secrets manager for secure configuration' : ''}
   dependencies: [${dependencies.map((d: string) => `'${d}'`).join(', ')}],`
-    : ''
-}${
-  specification.environmentVariables?.length > 0
-    ? `
+      : ''
+  }${
+    specification.environmentVariables?.length > 0
+      ? `
 
   // Declare environment variables for secrets manager
   declaredEnvVars: {${specification.environmentVariables
@@ -625,26 +637,26 @@ async function setConfigValue(
     )
     .join(',')}
   },`
-    : ''
-}${
-  needsSecretsManager
-    ? `
+      : ''
+  }${
+    needsSecretsManager
+      ? `
 
   async init(_config: Record<string, string>, _runtime: IAgentRuntime) {
     logger.info('Initializing ${pluginName}');
 
     try {
       // Load and validate configuration using secrets manager${specification.environmentVariables
-    ?.map(
-      (envVar: any) => `
+        ?.map(
+          (envVar: any) => `
       const ${envVar.name.toLowerCase()} = config?.${envVar.name} || await getConfigValue(_runtime, '${envVar.name}');${
-  envVar.required
-    ? `
+        envVar.required
+          ? `
       if (!${envVar.name.toLowerCase()}) {
         throw new Error('${envVar.name} is required but not configured');
       }`
-    : ''
-}
+          : ''
+      }
 
       if (${envVar.name.toLowerCase()}) {
         await setConfigValue(_runtime, '${envVar.name}', ${envVar.name.toLowerCase()}, {
@@ -653,54 +665,54 @@ async function setConfigValue(
           sensitive: ${envVar.sensitive || false}
         });
       }`
-    )
-    .join('\n      ')}
+        )
+        .join('\n      ')}
 
       logger.info('${pluginName} initialized successfully');
     } catch (_error) {
-      logger.error('Failed to initialize ${pluginName}:', error);
-      throw error;
+      logger.error('Failed to initialize ${pluginName}:', _error);
+      throw _error;
     }
   },`
-    : ''
-}${
-  specification.actions?.length
-    ? `
+      : ''
+  }${
+    specification.actions?.length
+      ? `
 
   actions: [
     ${specification.actions.map((a: any) => `${a.name.charAt(0).toLowerCase() + a.name.slice(1)}Action`).join(',\n    ')}
   ],`
-    : ''
-}${
-  specification.providers?.length
-    ? `
+      : ''
+  }${
+    specification.providers?.length
+      ? `
 
   providers: [
     ${specification.providers
-    .map((p: any) => {
-      const camelCaseName = p.name.charAt(0).toLowerCase() + p.name.slice(1);
-      return p.name.endsWith('Provider') ? camelCaseName : `${camelCaseName}Provider`;
-    })
-    .join(',\n    ')}
+      .map((p: any) => {
+        const camelCaseName = p.name.charAt(0).toLowerCase() + p.name.slice(1);
+        return p.name.endsWith('Provider') ? camelCaseName : `${camelCaseName}Provider`;
+      })
+      .join(',\n    ')}
   ],`
-    : ''
-}${
-  specification.services?.length
-    ? `
+      : ''
+  }${
+    specification.services?.length
+      ? `
 
   services: [
     ${specification.services.map((s: any) => `${s.name}`).join(',\n    ')}
   ],`
-    : ''
-}${
-  specification.evaluators?.length
-    ? `
+      : ''
+  }${
+    specification.evaluators?.length
+      ? `
 
   evaluators: [
     ${specification.evaluators.map((e: any) => `${e.name.charAt(0).toLowerCase() + e.name.slice(1)}Evaluator`).join(',\n    ')}
   ]`
-    : ''
-}
+      : ''
+  }
 };
 
 // Export individual components for direct use
@@ -758,8 +770,8 @@ describe('${componentName}${componentType}', () => {
   });
 
   ${
-  componentType === 'Action'
-    ? `
+    componentType === 'Action'
+      ? `
   describe('validate', () => {
     it('should validate valid input', async () => {
       const message = createMockMemory('test input');
@@ -789,12 +801,12 @@ describe('${componentName}${componentType}', () => {
     });
   });
   `
-    : ''
-}
+      : ''
+  }
 
   ${
-  componentType === 'Provider'
-    ? `
+    componentType === 'Provider'
+      ? `
   describe('get', () => {
     it('should provide data', async () => {
       const message = createMockMemory('test');
@@ -812,12 +824,12 @@ describe('${componentName}${componentType}', () => {
     });
   });
   `
-    : ''
-}
+      : ''
+  }
 
   ${
-  componentType === 'Evaluator'
-    ? `
+    componentType === 'Evaluator'
+      ? `
   describe('validate', () => {
     it('should validate when appropriate', async () => {
       const message = createMockMemory('test evaluation');
@@ -834,8 +846,8 @@ describe('${componentName}${componentType}', () => {
     });
   });
   `
-    : ''
-}
+      : ''
+  }
 
   // TODO: Add more specific tests based on the component's functionality
 });

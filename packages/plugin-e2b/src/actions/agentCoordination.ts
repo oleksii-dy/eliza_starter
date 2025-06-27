@@ -11,59 +11,55 @@ const agentCoordinationExamples: ActionExample[][] = [
   [
     {
       name: 'MainAgent',
-      content: { text: 'I need to coordinate with the coder agent to work on GitHub issue #123' }
+      content: { text: 'I need to coordinate with the coder agent to work on GitHub issue #123' },
     },
     {
       name: 'Agent',
       content: {
         text: "I'll establish communication with the coder agent and coordinate the work assignment for issue #123.",
-        actions: ['AGENT_COORDINATION']
-      }
-    }
+        actions: ['AGENT_COORDINATION'],
+      },
+    },
   ],
   [
     {
       name: 'CoderAgent',
-      content: { text: 'I have completed the implementation. Please review the pull request.' }
+      content: { text: 'I have completed the implementation. Please review the pull request.' },
     },
     {
       name: 'Agent',
       content: {
         text: "I'll coordinate the PR review process and notify the appropriate reviewers.",
-        actions: ['AGENT_COORDINATION']
-      }
-    }
+        actions: ['AGENT_COORDINATION'],
+      },
+    },
   ],
   [
     {
       name: 'User',
-      content: { text: 'Send a status update to all agents in the workflow' }
+      content: { text: 'Send a status update to all agents in the workflow' },
     },
     {
       name: 'Agent',
       content: {
         text: "I'll broadcast a status update to all participating agents in the current workflow.",
-        actions: ['AGENT_COORDINATION']
-      }
-    }
-  ]
+        actions: ['AGENT_COORDINATION'],
+      },
+    },
+  ],
 ];
 
-const agentCoordinationHandler: Handler = async (
-  runtime,
-  message,
-  state,
-  _options,
-  callback
-) => {
+const agentCoordinationHandler: Handler = async (runtime, message, state, _options, callback) => {
   elizaLogger.info('Agent Coordination action triggered', {
     messageId: message.id,
-    content: message.content.text
+    content: message.content.text,
   });
 
   try {
     // Get the communication bridge service
-    const communicationBridge = runtime.getService<AgentCommunicationBridge>('agent-communication-bridge');
+    const communicationBridge = runtime.getService<AgentCommunicationBridge>(
+      'agent-communication-bridge'
+    );
 
     if (!communicationBridge) {
       throw new Error('Agent Communication Bridge service not available');
@@ -78,7 +74,11 @@ const agentCoordinationHandler: Handler = async (
       coordinationType = 'task_assignment';
     } else if (content.includes('status') || content.includes('update')) {
       coordinationType = 'status_update';
-    } else if (content.includes('review') || content.includes('pr') || content.includes('pull request')) {
+    } else if (
+      content.includes('review') ||
+      content.includes('pr') ||
+      content.includes('pull request')
+    ) {
       coordinationType = 'review_coordination';
     } else if (content.includes('broadcast') || content.includes('all agents')) {
       coordinationType = 'broadcast';
@@ -99,7 +99,7 @@ const agentCoordinationHandler: Handler = async (
         // Find available coder agents
         const coderAgents = communicationBridge.getConnectedAgents({
           role: 'coder',
-          status: 'connected'
+          status: 'connected',
         });
 
         if (coderAgents.length === 0) {
@@ -135,15 +135,15 @@ const agentCoordinationHandler: Handler = async (
                 issueNumber: issueNumber ? parseInt(issueNumber, 10) : undefined,
                 assignment: 'code_implementation',
                 priority: 'high',
-                tags: ['github', 'development', 'coordination']
+                tags: ['github', 'development', 'coordination'],
               },
               metadata: {
                 coordinatedBy: runtime.agentId,
-                originalMessage: message.content.text
-              }
+                originalMessage: message.content.text,
+              },
             },
             priority: 'high',
-            requiresResponse: true
+            requiresResponse: true,
           });
 
           responseText += `**Message Sent:** \`${messageId}\`\n`;
@@ -162,13 +162,13 @@ const agentCoordinationHandler: Handler = async (
 
         responseText += `**Connected Agents:** ${connectedAgents.length}\n`;
 
-        connectedAgents.forEach(agent => {
+        connectedAgents.forEach((agent) => {
           responseText += `• **${agent.role}** (${agent.status}) - ${agent.capabilities.join(', ')}\n`;
         });
 
         responseText += `\n**Active Workflows:** ${activeWorkflows.length}\n`;
 
-        activeWorkflows.forEach(workflow => {
+        activeWorkflows.forEach((workflow) => {
           responseText += `• **${workflow.workflowId}** - ${workflow.status} (${workflow.currentPhase})\n`;
         });
 
@@ -185,10 +185,10 @@ const agentCoordinationHandler: Handler = async (
               timestamp: Date.now(),
               connectedAgents: connectedAgents.length,
               activeWorkflows: activeWorkflows.length,
-              systemStatus: 'operational'
-            }
+              systemStatus: 'operational',
+            },
           },
-          priority: 'medium'
+          priority: 'medium',
         });
 
         responseText += `**Broadcast Sent:** ${messageIds.length} messages delivered\n`;
@@ -201,7 +201,7 @@ const agentCoordinationHandler: Handler = async (
 
         // Find reviewer agents
         const reviewerAgents = communicationBridge.getConnectedAgents({
-          role: 'reviewer'
+          role: 'reviewer',
         });
 
         if (reviewerAgents.length === 0) {
@@ -222,10 +222,10 @@ const agentCoordinationHandler: Handler = async (
                   event: 'review_request',
                   requestType: 'code_review',
                   priority: 'high',
-                  details: message.content.text
-                }
+                  details: message.content.text,
+                },
               },
-              priority: 'high'
+              priority: 'high',
             });
 
             responseText += `**Review Request Sent:** \`${messageId}\` to ${reviewer.role}\n`;
@@ -250,8 +250,9 @@ const agentCoordinationHandler: Handler = async (
         }
 
         // Extract broadcast message from original content
-        const broadcastContent = message.content.text?.replace(/broadcast|send|all agents/gi, '').trim() ||
-                                'General coordination broadcast';
+        const broadcastContent =
+          message.content.text?.replace(/broadcast|send|all agents/gi, '').trim() ||
+          'General coordination broadcast';
 
         const messageIds = await communicationBridge.broadcastMessage({
           fromAgentId: runtime.agentId,
@@ -261,10 +262,10 @@ const agentCoordinationHandler: Handler = async (
             data: {
               event: 'coordination_broadcast',
               timestamp: Date.now(),
-              broadcastType: 'general_coordination'
-            }
+              broadcastType: 'general_coordination',
+            },
           },
-          priority: 'medium'
+          priority: 'medium',
         });
 
         responseText += '✅ **Broadcast Complete**\n';
@@ -299,7 +300,7 @@ const agentCoordinationHandler: Handler = async (
               workflow.currentPhase,
               {
                 lastCoordination: Date.now(),
-                coordinatedBy: runtime.agentId
+                coordinatedBy: runtime.agentId,
               }
             );
           }
@@ -345,18 +346,18 @@ const agentCoordinationHandler: Handler = async (
         coordinationType,
         connectedAgents: communicationBridge.getConnectedAgents().length,
         activeWorkflows: communicationBridge.getActiveWorkflows().length,
-        systemStatus: 'operational'
+        systemStatus: 'operational',
       },
       data: {
         bridgeStatistics: communicationBridge.getStatistics(),
         connectedAgents: communicationBridge.getConnectedAgents(),
-        activeWorkflows: communicationBridge.getActiveWorkflows()
-      }
+        activeWorkflows: communicationBridge.getActiveWorkflows(),
+      },
     };
 
     elizaLogger.info('Agent coordination completed', {
       coordinationType,
-      success: true
+      success: true,
     });
 
     if (callback) {
@@ -364,11 +365,10 @@ const agentCoordinationHandler: Handler = async (
     }
 
     return actionResult;
-
   } catch (error) {
     elizaLogger.error('Agent Coordination action failed', {
       messageId: message.id,
-      error: error.message
+      error: error.message,
     });
 
     const errorText = `❌ **Agent Coordination Failed**\n\nError: ${error.message}`;
@@ -377,15 +377,15 @@ const agentCoordinationHandler: Handler = async (
       await callback({
         values: {
           success: false,
-          error: error.message
+          error: error.message,
         },
-        text: errorText
+        text: errorText,
       });
     }
 
     return {
       text: errorText,
-      values: { success: false, error: error.message }
+      values: { success: false, error: error.message },
     };
   }
 };
@@ -401,10 +401,10 @@ const agentCoordinationValidator: Validator = async (runtime, message) => {
     /review.*coordinate|coordinate.*review/i,
     /workflow.*manage|manage.*workflow/i,
     /agent.*communication|communicate.*agent/i,
-    /notify.*agents?|alert.*agents?/i
+    /notify.*agents?|alert.*agents?/i,
   ];
 
-  return coordinationPatterns.some(pattern => pattern.test(content));
+  return coordinationPatterns.some((pattern) => pattern.test(content));
 };
 
 export const agentCoordinationAction: Action = {
@@ -413,15 +413,21 @@ export const agentCoordinationAction: Action = {
     'COORDINATE_AGENTS',
     'MANAGE_AGENT_COMMUNICATION',
     'AGENT_TASK_ASSIGNMENT',
-    'WORKFLOW_COORDINATION'
+    'WORKFLOW_COORDINATION',
   ],
-  description: 'Coordinates communication and task assignment between multiple agents in collaborative workflows',
+  description:
+    'Coordinates communication and task assignment between multiple agents in collaborative workflows',
   examples: agentCoordinationExamples,
   validate: agentCoordinationValidator,
   handler: agentCoordinationHandler,
   effects: {
-    provides: ['agent_coordination', 'task_assignment', 'status_synchronization', 'workflow_management'],
+    provides: [
+      'agent_coordination',
+      'task_assignment',
+      'status_synchronization',
+      'workflow_management',
+    ],
     requires: ['agent_communication_bridge'],
-    modifies: ['agent_tasks', 'workflow_status', 'communication_state']
-  }
+    modifies: ['agent_tasks', 'workflow_status', 'communication_state'],
+  },
 };

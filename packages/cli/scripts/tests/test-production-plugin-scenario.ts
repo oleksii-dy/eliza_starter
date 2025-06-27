@@ -9,12 +9,12 @@ import { productionPluginConfigurationScenario } from '../../scenarios/plugin-co
 
 async function testProductionPluginConfig() {
   console.log('🔄 Testing Production Plugin Configuration Scenario...');
-  
+
   try {
     const result = await executeRealScenario(productionPluginConfigurationScenario, {
       verbose: false,
       timeout: 180000,
-      maxSteps: 15
+      maxSteps: 15,
     });
 
     console.log(`📊 Result: ${result.passed ? 'PASSED' : 'FAILED'}`);

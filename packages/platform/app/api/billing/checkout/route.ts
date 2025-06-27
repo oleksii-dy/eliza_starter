@@ -9,9 +9,18 @@ import Stripe from 'stripe';
 import { loadConfig } from '@/lib/server/utils/config';
 
 const config = loadConfig();
-const stripe = new Stripe(config.stripe.secretKey, {
-  apiVersion: '2025-02-24.acacia',
-});
+
+// Initialize Stripe only if configuration is available
+let stripe: Stripe | null = null;
+if (config.stripe.secretKey) {
+  stripe = new Stripe(config.stripe.secretKey, {
+    apiVersion: '2025-02-24.acacia',
+  });
+} else {
+  console.warn(
+    'Stripe secret key not configured. Billing routes will return errors.',
+  );
+}
 import { z } from 'zod';
 
 const checkoutSchema = z.object({
@@ -21,8 +30,16 @@ const checkoutSchema = z.object({
   metadata: z.record(z.string()).optional(),
 });
 
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   try {
+    // Check if Stripe is configured
+    if (!stripe) {
+      return NextResponse.json(
+        { error: 'Billing system is not configured. Please contact support.' },
+        { status: 503 },
+      );
+    }
+
     // Get user session
     const session = await sessionService.getSessionFromCookies();
     if (!session) {
@@ -61,14 +78,14 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid request data', details: error.errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     console.error('Failed to create checkout session:', error);
     return NextResponse.json(
       { error: 'Failed to create checkout session' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

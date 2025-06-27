@@ -7,7 +7,7 @@ export {
   apiKeyService,
   type CreateApiKeyRequest,
   type ApiKeyWithPrefix,
-  type ApiKeyStats
+  type ApiKeyStats,
 } from './service';
 
 export { apiKeyAuthMiddleware } from './middleware';

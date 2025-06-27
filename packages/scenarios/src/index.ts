@@ -53,7 +53,12 @@ export const rolodexScenarios = [
 ];
 
 // Export all scenarios including plugin tests
-export const allScenarios = [...exampleScenarios, ...pluginTestScenarios, ...rolodexScenarios, ...sandboxScenarios];
+export const allScenarios = [
+  ...exampleScenarios,
+  ...pluginTestScenarios,
+  ...rolodexScenarios,
+  ...sandboxScenarios,
+];
 
 // Default export includes all scenarios
 export default allScenarios;

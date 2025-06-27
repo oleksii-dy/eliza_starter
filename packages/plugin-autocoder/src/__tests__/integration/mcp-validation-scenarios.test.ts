@@ -5,7 +5,11 @@ import type { IAgentRuntime, Memory, State, UUID } from '@elizaos/core';
 // Mock child_process before any imports that use it
 mock.module('child_process', () => ({
   exec: mock((cmd: string, opts: any, callback?: any) => {
-    const cb = callback || ((err: any, stdout: string, stderr: string) => { /* empty */ });
+    const cb =
+      callback ||
+      ((err: any, stdout: string, stderr: string) => {
+        /* empty */
+      });
     // Simulate successful command execution
     process.nextTick(() => cb(null, '', ''));
   }),
@@ -135,7 +139,9 @@ describe('MCP Validation Scenarios - Production Ready', () => {
           {
             name: 'now',
             description: 'Get current time',
-            parameters: { /* empty */ },
+            parameters: {
+              /* empty */
+            },
           },
         ],
       };
@@ -164,12 +170,24 @@ describe('MCP Validation Scenarios - Production Ready', () => {
       };
 
       const state: State = {
-        values: { /* empty */ },
-        data: { /* empty */ },
+        values: {
+          /* empty */
+        },
+        data: {
+          /* empty */
+        },
         text: '',
       };
 
-      const result = await createMCPAction.handler(runtime, message, state, { /* empty */ }, callback);
+      const result = await createMCPAction.handler(
+        runtime,
+        message,
+        state,
+        {
+          /* empty */
+        },
+        callback
+      );
       expect(result).toBeDefined();
       expect(callbackCalled).toBe(true);
     }, 10000);
@@ -315,8 +333,12 @@ describe('MCP Validation Scenarios - Production Ready', () => {
         };
 
         const state: State = {
-          values: { /* empty */ },
-          data: { /* empty */ },
+          values: {
+            /* empty */
+          },
+          data: {
+            /* empty */
+          },
           text: '',
         };
 
@@ -327,7 +349,15 @@ describe('MCP Validation Scenarios - Production Ready', () => {
           return [];
         };
 
-        await createMCPAction.handler(runtime, message, state, { /* empty */ }, callback);
+        await createMCPAction.handler(
+          runtime,
+          message,
+          state,
+          {
+            /* empty */
+          },
+          callback
+        );
 
         // Verify the action was called
         expect(responses.length).toBeGreaterThan(0);
@@ -442,7 +472,17 @@ describe('MCP Validation Scenarios - Production Ready', () => {
         return [];
       };
 
-      await createMCPAction.handler(runtime, message, { /* empty */ } as State, { /* empty */ }, callback);
+      await createMCPAction.handler(
+        runtime,
+        message,
+        {
+          /* empty */
+        } as State,
+        {
+          /* empty */
+        },
+        callback
+      );
 
       // Verify the action was called
       expect(responses.length).toBeGreaterThan(0);

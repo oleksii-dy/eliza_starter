@@ -61,7 +61,11 @@ export class TokenService extends Service {
     super(runtime);
 
     const rpcService = runtime.getService('rpc-service');
-    if (rpcService && 'getConnection' in rpcService && typeof rpcService.getConnection === 'function') {
+    if (
+      rpcService &&
+      'getConnection' in rpcService &&
+      typeof rpcService.getConnection === 'function'
+    ) {
       this.connection = rpcService.getConnection();
     } else {
       const rpcUrl = runtime.getSetting('SOLANA_RPC_URL') || 'https://api.mainnet-beta.solana.com';

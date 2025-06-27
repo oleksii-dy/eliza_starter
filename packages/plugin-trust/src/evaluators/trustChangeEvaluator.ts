@@ -1,21 +1,19 @@
 import { type Evaluator, type IAgentRuntime, type Memory, type State, logger } from '@elizaos/core';
 import { TrustEvidenceType } from '../types/trust';
-import { TrustEngineServiceWrapper } from '..';
-
 export const trustChangeEvaluator: Evaluator = {
   name: 'trustChangeEvaluator',
   description: 'Evaluates interactions to detect and record trust-affecting behaviors',
   alwaysRun: true,
 
   validate: async (runtime: IAgentRuntime, _message: Memory, _state?: State) => {
-    const trustEngine = runtime.getService<TrustEngineServiceWrapper>('trust-engine');
-    return !!trustEngine;
+    const trustService = runtime.getService<any>('trust');
+    return !!trustService;
   },
 
   handler: async (runtime: IAgentRuntime, message: Memory) => {
-    const trustEngine = runtime.getService<TrustEngineServiceWrapper>('trust-engine');
+    const trustService = runtime.getService<any>('trust');
 
-    if (!trustEngine) {
+    if (!trustService) {
       return null;
     }
 
@@ -32,7 +30,7 @@ export const trustChangeEvaluator: Evaluator = {
         // Determine trust impact based on analysis
         if (analysis.riskScore < 0.3) {
           // Positive behavior
-          await trustEngine.recordInteraction({
+          await trustService.recordInteraction({
             sourceEntityId: entityId,
             targetEntityId: runtime.agentId,
             type: TrustEvidenceType.HELPFUL_ACTION,
@@ -62,7 +60,7 @@ export const trustChangeEvaluator: Evaluator = {
         } else if (analysis.riskScore > 0.7) {
           // Negative behavior
           const impact = analysis.riskScore > 0.85 ? -25 : -15;
-          await trustEngine.recordInteraction({
+          await trustService.recordInteraction({
             sourceEntityId: entityId,
             targetEntityId: runtime.agentId,
             type: TrustEvidenceType.SUSPICIOUS_ACTIVITY,
@@ -136,7 +134,7 @@ export const trustChangeEvaluator: Evaluator = {
       // Check for positive behaviors
       for (const { pattern, type, impact } of positivePatterns) {
         if (pattern.test(content)) {
-          await trustEngine.recordInteraction({
+          await trustService.recordInteraction({
             sourceEntityId: entityId,
             targetEntityId: runtime.agentId,
             type,
@@ -169,7 +167,7 @@ export const trustChangeEvaluator: Evaluator = {
       // Check for negative behaviors
       for (const { pattern, type, impact } of negativePatterns) {
         if (pattern.test(content)) {
-          await trustEngine.recordInteraction({
+          await trustService.recordInteraction({
             sourceEntityId: entityId,
             targetEntityId: runtime.agentId,
             type,

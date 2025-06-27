@@ -1,26 +1,26 @@
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
-import { mock, spyOn } from 'bun:test';
-import { Chat, ExtendedChatMessage } from '../../core/systems/Chat.js';
-import { createTestWorld, MockWorld } from '../test-world-factory.js';
-import moment from 'moment';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
+import { mock, spyOn } from 'bun:test'
+import { Chat, ExtendedChatMessage } from '../../core/systems/Chat.js'
+import { createTestWorld, MockWorld } from '../test-world-factory.js'
+import moment from 'moment'
 
 // Mock uuid function
 mock.module('../../core/utils.js', () => ({
-  uuid: mock(() => `test-uuid-${Math.random()}`)
-}));
+  uuid: mock(() => `test-uuid-${Math.random()}`),
+}))
 
 describe('Chat System', () => {
-  let world: MockWorld;
-  let chat: Chat;
+  let world: MockWorld
+  let chat: Chat
 
   beforeEach(async () => {
-    world = await createTestWorld();
-    chat = new Chat(world);
-  });
+    world = await createTestWorld()
+    chat = new Chat(world)
+  })
 
   afterEach(() => {
-    mock.restore();
-  });
+    mock.restore()
+  })
 
   describe('add', () => {
     it('should add a message to the chat', () => {
@@ -31,14 +31,14 @@ describe('Chat System', () => {
         body: 'Hello world!',
         text: 'Hello world!',
         timestamp: Date.now(),
-        createdAt: moment().toISOString()
-      };
+        createdAt: moment().toISOString(),
+      }
 
-      chat.add(msg);
+      chat.add(msg)
 
-      expect(chat.msgs).toHaveLength(1);
-      expect(chat.msgs[0]).toEqual(msg);
-    });
+      expect(chat.msgs).toHaveLength(1)
+      expect(chat.msgs[0]).toEqual(msg)
+    })
 
     it('should limit messages to CHAT_MAX_MESSAGES', () => {
       // Add 51 messages (one more than the limit)
@@ -49,19 +49,19 @@ describe('Chat System', () => {
           body: `Message ${i}`,
           text: `Message ${i}`,
           timestamp: Date.now(),
-          createdAt: moment().toISOString()
-        };
-        chat.add(msg);
+          createdAt: moment().toISOString(),
+        }
+        chat.add(msg)
       }
 
-      expect(chat.msgs).toHaveLength(50);
-      expect(chat.msgs[0].id).toBe('msg-1'); // First message should be removed
-      expect(chat.msgs[49].id).toBe('msg-50'); // Last message should be present
-    });
+      expect(chat.msgs).toHaveLength(50)
+      expect(chat.msgs[0].id).toBe('msg-1') // First message should be removed
+      expect(chat.msgs[49].id).toBe('msg-50') // Last message should be present
+    })
 
     it('should notify listeners when message is added', () => {
-      const listener = mock();
-      chat.subscribe(listener);
+      const listener = mock()
+      chat.subscribe(listener)
 
       const msg: ExtendedChatMessage = {
         id: 'msg-1',
@@ -69,20 +69,20 @@ describe('Chat System', () => {
         body: 'Hello!',
         text: 'Hello!',
         timestamp: Date.now(),
-        createdAt: moment().toISOString()
-      };
+        createdAt: moment().toISOString(),
+      }
 
-      chat.add(msg);
+      chat.add(msg)
 
-      expect(listener).toHaveBeenCalledTimes(2); // Once on subscribe, once on add
-      expect(listener).toHaveBeenLastCalledWith([msg]);
-    });
+      expect(listener).toHaveBeenCalledTimes(2) // Once on subscribe, once on add
+      expect(listener).toHaveBeenLastCalledWith([msg])
+    })
 
     it('should trigger player chat animation if fromId is provided', () => {
       const mockPlayer = {
-        chat: mock()
-      };
-      world.entities.players.set('player-1', mockPlayer as any);
+        chat: mock(),
+      }
+      world.entities.players.set('player-1', mockPlayer as any)
 
       const msg: ExtendedChatMessage = {
         id: 'msg-1',
@@ -91,13 +91,13 @@ describe('Chat System', () => {
         body: 'Hello!',
         text: 'Hello!',
         timestamp: Date.now(),
-        createdAt: moment().toISOString()
-      };
+        createdAt: moment().toISOString(),
+      }
 
-      chat.add(msg);
+      chat.add(msg)
 
-      expect(mockPlayer.chat).toHaveBeenCalledWith('Hello!');
-    });
+      expect(mockPlayer.chat).toHaveBeenCalledWith('Hello!')
+    })
 
     it('should emit chat event', () => {
       const msg: ExtendedChatMessage = {
@@ -106,19 +106,19 @@ describe('Chat System', () => {
         body: 'Hello!',
         text: 'Hello!',
         timestamp: Date.now(),
-        createdAt: moment().toISOString()
-      };
+        createdAt: moment().toISOString(),
+      }
 
-      chat.add(msg);
+      chat.add(msg)
 
-      expect(world.events.emit).toHaveBeenCalledWith('chat', expect.objectContaining(msg));
-    });
+      expect(world.events.emit).toHaveBeenCalledWith('chat', expect.objectContaining(msg))
+    })
 
     it('should broadcast message when broadcast is true', () => {
       const mockNetwork = {
-        send: mock()
-      };
-      (world as any).network = mockNetwork;
+        send: mock(),
+      }
+      ;(world as any).network = mockNetwork
 
       const msg: ExtendedChatMessage = {
         id: 'msg-1',
@@ -126,95 +126,92 @@ describe('Chat System', () => {
         body: 'Hello!',
         text: 'Hello!',
         timestamp: Date.now(),
-        createdAt: moment().toISOString()
-      };
+        createdAt: moment().toISOString(),
+      }
 
-      chat.add(msg, true);
+      chat.add(msg, true)
 
-      expect(mockNetwork.send).toHaveBeenCalledWith('chatAdded', msg);
-    });
-  });
+      expect(mockNetwork.send).toHaveBeenCalledWith('chatAdded', msg)
+    })
+  })
 
   describe('command', () => {
     it('should not process commands on server', () => {
       const mockNetwork = {
         isServer: true,
-        send: mock()
-      };
-      (world as any).network = mockNetwork;
+        send: mock(),
+      }
+      ;(world as any).network = mockNetwork
 
-      chat.command('/stats');
+      chat.command('/stats')
 
-      expect(mockNetwork.send).not.toHaveBeenCalled();
-    });
+      expect(mockNetwork.send).not.toHaveBeenCalled()
+    })
 
     it('should parse and send command to network', () => {
       const mockNetwork = {
         isServer: false,
         isClient: true,
         id: 'player-1',
-        send: mock()
-      };
-      (world as any).network = mockNetwork;
+        send: mock(),
+      }
+      ;(world as any).network = mockNetwork
 
-      chat.command('/teleport home');
+      chat.command('/teleport home')
 
-      expect(mockNetwork.send).toHaveBeenCalledWith('command', ['teleport', 'home']);
-    });
+      expect(mockNetwork.send).toHaveBeenCalledWith('command', ['teleport', 'home'])
+    })
 
     it('should toggle stats when /stats command is used', () => {
       const mockPrefs = {
         stats: false,
-        setStats: mock()
-      };
+        setStats: mock(),
+      }
       const mockNetwork = {
         isServer: false,
         isClient: true,
         id: 'player-1',
-        send: mock()
-      };
-      (world as any).prefs = mockPrefs;
-      (world as any).network = mockNetwork;
+        send: mock(),
+      }
+      ;(world as any).prefs = mockPrefs
+      ;(world as any).network = mockNetwork
 
-      chat.command('/stats');
+      chat.command('/stats')
 
-      expect(mockPrefs.setStats).toHaveBeenCalledWith(true);
-    });
+      expect(mockPrefs.setStats).toHaveBeenCalledWith(true)
+    })
 
     it('should emit command event for non-admin commands', () => {
       const mockNetwork = {
         isServer: false,
         isClient: true,
         id: 'player-1',
-        send: mock()
-      };
-      (world as any).network = mockNetwork;
+        send: mock(),
+      }
+      ;(world as any).network = mockNetwork
 
-      chat.command('/teleport home');
+      chat.command('/teleport home')
 
       expect(world.events.emit).toHaveBeenCalledWith('command', {
         playerId: 'player-1',
-        args: ['teleport', 'home']
-      });
-    });
+        args: ['teleport', 'home'],
+      })
+    })
 
     it('should not emit command event for admin commands', () => {
       const mockNetwork = {
         isServer: false,
         isClient: true,
         id: 'player-1',
-        send: mock()
-      };
-      (world as any).network = mockNetwork;
+        send: mock(),
+      }
+      ;(world as any).network = mockNetwork
 
-      chat.command('/admin kick player2');
+      chat.command('/admin kick player2')
 
-      expect(world.events.emit).not.toHaveBeenCalledWith(
-        'command',
-        expect.anything()
-      );
-    });
-  });
+      expect(world.events.emit).not.toHaveBeenCalledWith('command', expect.anything())
+    })
+  })
 
   describe('clear', () => {
     it('should clear all messages', () => {
@@ -226,102 +223,105 @@ describe('Chat System', () => {
           body: `Message ${i}`,
           text: `Message ${i}`,
           timestamp: Date.now(),
-          createdAt: moment().toISOString()
-        });
+          createdAt: moment().toISOString(),
+        })
       }
 
-      expect(chat.msgs).toHaveLength(5);
+      expect(chat.msgs).toHaveLength(5)
 
-      chat.clear();
+      chat.clear()
 
-      expect(chat.msgs).toHaveLength(0);
-    });
+      expect(chat.msgs).toHaveLength(0)
+    })
 
     it('should notify listeners when cleared', () => {
-      const listener = mock();
-      chat.subscribe(listener);
+      const listener = mock()
+      chat.subscribe(listener)
 
-      chat.clear();
+      chat.clear()
 
-      expect(listener).toHaveBeenLastCalledWith([]);
-    });
+      expect(listener).toHaveBeenLastCalledWith([])
+    })
 
     it('should broadcast clear when broadcast is true', () => {
       const mockNetwork = {
-        send: mock()
-      };
-      (world as any).network = mockNetwork;
+        send: mock(),
+      }
+      ;(world as any).network = mockNetwork
 
-      chat.clear(true);
+      chat.clear(true)
 
-      expect(mockNetwork.send).toHaveBeenCalledWith('chatCleared');
-    });
-  });
+      expect(mockNetwork.send).toHaveBeenCalledWith('chatCleared')
+    })
+  })
 
   describe('send', () => {
     it('should only work on client', () => {
       const mockNetwork = {
         isServer: true,
-        isClient: false
-      };
-      (world as any).network = mockNetwork;
+        isClient: false,
+      }
+      ;(world as any).network = mockNetwork
 
-      const result = chat.send('Hello!');
+      const result = chat.send('Hello!')
 
-      expect(result).toBeUndefined();
-      expect(chat.msgs).toHaveLength(0);
-    });
+      expect(result).toBeUndefined()
+      expect(chat.msgs).toHaveLength(0)
+    })
 
     it('should create and add message from current player', () => {
       const mockPlayer = {
         data: {
           id: 'player-1',
-          name: 'Player1'
-        }
-      };
+          name: 'Player1',
+        },
+      }
       const mockNetwork = {
         isServer: false,
         isClient: true,
-        send: mock()
-      };
-      (world.entities as any).player = mockPlayer;
-      (world as any).network = mockNetwork;
+        send: mock(),
+      }
+      ;(world.entities as any).player = mockPlayer
+      ;(world as any).network = mockNetwork
 
-      const result = chat.send('Hello world!');
+      const result = chat.send('Hello world!')
 
-      expect(result).toBeDefined();
-      expect(result?.from).toBe('Player1');
-      expect(result?.fromId).toBe('player-1');
-      expect(result?.body).toBe('Hello world!');
-      expect(result?.text).toBe('Hello world!');
-      expect(chat.msgs).toHaveLength(1);
-    });
+      expect(result).toBeDefined()
+      expect(result?.from).toBe('Player1')
+      expect(result?.fromId).toBe('player-1')
+      expect(result?.body).toBe('Hello world!')
+      expect(result?.text).toBe('Hello world!')
+      expect(chat.msgs).toHaveLength(1)
+    })
 
     it('should broadcast sent message', () => {
       const mockPlayer = {
         data: {
           id: 'player-1',
-          name: 'Player1'
-        }
-      };
+          name: 'Player1',
+        },
+      }
       const mockNetwork = {
         isServer: false,
         isClient: true,
-        send: mock()
-      };
-      (world.entities as any).player = mockPlayer;
-      (world as any).network = mockNetwork;
+        send: mock(),
+      }
+      ;(world.entities as any).player = mockPlayer
+      ;(world as any).network = mockNetwork
 
-      chat.send('Hello!');
+      chat.send('Hello!')
 
-      expect(mockNetwork.send).toHaveBeenCalledWith('chatAdded', expect.objectContaining({
-        from: 'Player1',
-        fromId: 'player-1',
-        body: 'Hello!',
-        text: 'Hello!'
-      }));
-    });
-  });
+      expect(mockNetwork.send).toHaveBeenCalledWith(
+        'chatAdded',
+        expect.objectContaining({
+          from: 'Player1',
+          fromId: 'player-1',
+          body: 'Hello!',
+          text: 'Hello!',
+        })
+      )
+    })
+  })
 
   describe('serialize/deserialize', () => {
     it('should serialize messages', () => {
@@ -332,7 +332,7 @@ describe('Chat System', () => {
           body: 'Hello!',
           text: 'Hello!',
           timestamp: Date.now(),
-          createdAt: moment().toISOString()
+          createdAt: moment().toISOString(),
         },
         {
           id: 'msg-2',
@@ -340,15 +340,15 @@ describe('Chat System', () => {
           body: 'Hi there!',
           text: 'Hi there!',
           timestamp: Date.now(),
-          createdAt: moment().toISOString()
-        }
-      ];
+          createdAt: moment().toISOString(),
+        },
+      ]
 
-      messages.forEach(msg => chat.add(msg));
+      messages.forEach(msg => chat.add(msg))
 
-      const serialized = chat.serialize();
-      expect(serialized).toEqual(messages);
-    });
+      const serialized = chat.serialize()
+      expect(serialized).toEqual(messages)
+    })
 
     it('should deserialize messages', () => {
       const messages: ExtendedChatMessage[] = [
@@ -358,7 +358,7 @@ describe('Chat System', () => {
           body: 'Hello!',
           text: 'Hello!',
           timestamp: Date.now(),
-          createdAt: moment().toISOString()
+          createdAt: moment().toISOString(),
         },
         {
           id: 'msg-2',
@@ -366,18 +366,18 @@ describe('Chat System', () => {
           body: 'Hi there!',
           text: 'Hi there!',
           timestamp: Date.now(),
-          createdAt: moment().toISOString()
-        }
-      ];
+          createdAt: moment().toISOString(),
+        },
+      ]
 
-      chat.deserialize(messages);
+      chat.deserialize(messages)
 
-      expect(chat.msgs).toEqual(messages);
-    });
+      expect(chat.msgs).toEqual(messages)
+    })
 
     it('should notify listeners on deserialize', () => {
-      const listener = mock();
-      chat.subscribe(listener);
+      const listener = mock()
+      chat.subscribe(listener)
 
       const messages: ExtendedChatMessage[] = [
         {
@@ -386,35 +386,35 @@ describe('Chat System', () => {
           body: 'Hello!',
           text: 'Hello!',
           timestamp: Date.now(),
-          createdAt: moment().toISOString()
-        }
-      ];
+          createdAt: moment().toISOString(),
+        },
+      ]
 
-      chat.deserialize(messages);
+      chat.deserialize(messages)
 
-      expect(listener).toHaveBeenLastCalledWith(messages);
-    });
-  });
+      expect(listener).toHaveBeenLastCalledWith(messages)
+    })
+  })
 
   describe('subscribe', () => {
     it('should add listener and call it immediately', () => {
-      const listener = mock();
+      const listener = mock()
 
-      const unsubscribe = chat.subscribe(listener);
+      const unsubscribe = chat.subscribe(listener)
 
-      expect(listener).toHaveBeenCalledWith([]);
-      expect((chat as any).chatListeners.has(listener)).toBe(true);
-    });
+      expect(listener).toHaveBeenCalledWith([])
+      expect((chat as any).chatListeners.has(listener)).toBe(true)
+    })
 
     it('should return unsubscribe function', () => {
-      const listener = mock();
+      const listener = mock()
 
-      const unsubscribe = chat.subscribe(listener);
-      expect((chat as any).chatListeners.has(listener)).toBe(true);
+      const unsubscribe = chat.subscribe(listener)
+      expect((chat as any).chatListeners.has(listener)).toBe(true)
 
-      unsubscribe();
-      expect((chat as any).chatListeners.has(listener)).toBe(false);
-    });
+      unsubscribe()
+      expect((chat as any).chatListeners.has(listener)).toBe(false)
+    })
 
     it('should call listener with current messages on subscribe', () => {
       const msg: ExtendedChatMessage = {
@@ -423,16 +423,16 @@ describe('Chat System', () => {
         body: 'Hello!',
         text: 'Hello!',
         timestamp: Date.now(),
-        createdAt: moment().toISOString()
-      };
-      chat.add(msg);
+        createdAt: moment().toISOString(),
+      }
+      chat.add(msg)
 
-      const listener = mock();
-      chat.subscribe(listener);
+      const listener = mock()
+      chat.subscribe(listener)
 
-      expect(listener).toHaveBeenCalledWith([msg]);
-    });
-  });
+      expect(listener).toHaveBeenCalledWith([msg])
+    })
+  })
 
   describe('destroy', () => {
     it('should clear messages and listeners', () => {
@@ -443,21 +443,21 @@ describe('Chat System', () => {
         body: 'Hello!',
         text: 'Hello!',
         timestamp: Date.now(),
-        createdAt: moment().toISOString()
-      });
+        createdAt: moment().toISOString(),
+      })
 
-      const listener = mock();
-      chat.subscribe(listener);
+      const listener = mock()
+      chat.subscribe(listener)
 
-      expect(chat.msgs).toHaveLength(1);
-      expect((chat as any).chatListeners.size).toBe(1);
+      expect(chat.msgs).toHaveLength(1)
+      expect((chat as any).chatListeners.size).toBe(1)
 
-      chat.destroy();
+      chat.destroy()
 
-      expect(chat.msgs).toHaveLength(0);
-      expect((chat as any).chatListeners.size).toBe(0);
-    });
-  });
+      expect(chat.msgs).toHaveLength(0)
+      expect((chat as any).chatListeners.size).toBe(0)
+    })
+  })
 
   describe('integration', () => {
     it('should handle full chat flow', () => {
@@ -465,26 +465,26 @@ describe('Chat System', () => {
       const mockPlayer = {
         data: {
           id: 'player-1',
-          name: 'Player1'
-        }
-      };
+          name: 'Player1',
+        },
+      }
       const mockNetwork = {
         isServer: false,
         isClient: true,
         id: 'player-1',
-        send: mock()
-      };
-      (world.entities as any).player = mockPlayer;
-      (world as any).network = mockNetwork;
+        send: mock(),
+      }
+      ;(world.entities as any).player = mockPlayer
+      ;(world as any).network = mockNetwork
 
       // Subscribe listener
-      const listener = mock();
-      const unsubscribe = chat.subscribe(listener);
+      const listener = mock()
+      const unsubscribe = chat.subscribe(listener)
 
       // Send message
-      const sentMsg = chat.send('Hello everyone!');
-      expect(sentMsg).toBeDefined();
-      expect(listener).toHaveBeenCalledWith([sentMsg]);
+      const sentMsg = chat.send('Hello everyone!')
+      expect(sentMsg).toBeDefined()
+      expect(listener).toHaveBeenCalledWith([sentMsg])
 
       // Simulate receiving message from another player
       const receivedMsg: ExtendedChatMessage = {
@@ -494,25 +494,25 @@ describe('Chat System', () => {
         body: 'Hi Player1!',
         text: 'Hi Player1!',
         timestamp: Date.now(),
-        createdAt: moment().toISOString()
-      };
-      chat.add(receivedMsg);
+        createdAt: moment().toISOString(),
+      }
+      chat.add(receivedMsg)
 
-      expect(chat.msgs).toHaveLength(2);
-      expect(listener).toHaveBeenCalledWith([sentMsg, receivedMsg]);
+      expect(chat.msgs).toHaveLength(2)
+      expect(listener).toHaveBeenCalledWith([sentMsg, receivedMsg])
 
       // Send command
-      chat.command('/stats');
-      expect(mockNetwork.send).toHaveBeenCalledWith('command', ['stats']);
+      chat.command('/stats')
+      expect(mockNetwork.send).toHaveBeenCalledWith('command', ['stats'])
 
       // Clear chat
-      chat.clear(true);
-      expect(chat.msgs).toHaveLength(0);
-      expect(mockNetwork.send).toHaveBeenCalledWith('chatCleared');
+      chat.clear(true)
+      expect(chat.msgs).toHaveLength(0)
+      expect(mockNetwork.send).toHaveBeenCalledWith('chatCleared')
 
       // Cleanup
-      unsubscribe();
-      chat.destroy();
-    });
-  });
-});
+      unsubscribe()
+      chat.destroy()
+    })
+  })
+})

@@ -1,10 +1,9 @@
-// @ts-nocheck
 /**
  * Item Definitions - Comprehensive item system for RuneScape-style RPG
  * Defines all items including weapons, armor, consumables, and materials
  */
 
-import { SkillType } from '../skills/SkillDefinitions';
+import { SkillType } from '../skills/SkillDefinitions'
 
 export enum ItemCategory {
   WEAPON = 'weapon',
@@ -13,7 +12,7 @@ export enum ItemCategory {
   CONSUMABLE = 'consumable',
   MATERIAL = 'material',
   QUEST = 'quest',
-  MISC = 'misc'
+  MISC = 'misc',
 }
 
 export enum ItemRarity {
@@ -21,7 +20,7 @@ export enum ItemRarity {
   UNCOMMON = 'uncommon',
   RARE = 'rare',
   VERY_RARE = 'very_rare',
-  ULTRA_RARE = 'ultra_rare'
+  ULTRA_RARE = 'ultra_rare',
 }
 
 export enum EquipmentSlot {
@@ -35,78 +34,78 @@ export enum EquipmentSlot {
   RING = 'ring',
   AMULET = 'amulet',
   ARROW = 'arrow',
-  CAPE = 'cape'
+  CAPE = 'cape',
 }
 
 export interface ItemRequirement {
-  skill: SkillType;
-  level: number;
+  skill: SkillType
+  level: number
 }
 
 export interface ItemStats {
-  attackBonus?: number;
-  strengthBonus?: number;
-  defenceBonus?: number;
-  rangedBonus?: number;
-  rangedDefence?: number;
-  magicBonus?: number;
-  magicDefence?: number;
-  prayer?: number;
-  weight?: number;
+  attackBonus?: number
+  strengthBonus?: number
+  defenceBonus?: number
+  rangedBonus?: number
+  rangedDefence?: number
+  magicBonus?: number
+  magicDefence?: number
+  prayer?: number
+  weight?: number
 }
 
 export interface ItemDefinition {
-  id: string;
-  name: string;
-  description: string;
-  category: ItemCategory;
-  rarity: ItemRarity;
-  value: number; // Grand Exchange value
-  weight: number;
-  stackable: boolean;
-  tradeable: boolean;
-  
+  id: string
+  name: string
+  description: string
+  category: ItemCategory
+  rarity: ItemRarity
+  value: number // Grand Exchange value
+  weight: number
+  stackable: boolean
+  tradeable: boolean
+
   // Equipment specific
-  equipmentSlot?: EquipmentSlot;
-  requirements?: ItemRequirement[];
-  stats?: ItemStats;
-  
+  equipmentSlot?: EquipmentSlot
+  requirements?: ItemRequirement[]
+  stats?: ItemStats
+
   // Consumable specific
   consumable?: {
-    healAmount?: number;
+    healAmount?: number
     effects?: Array<{
-      skill: SkillType;
-      boost: number;
-      duration: number; // minutes
-    }>;
-    consumeTime?: number; // milliseconds
-  };
-  
+      skill: SkillType
+      boost: number
+      duration: number // minutes
+    }>
+    consumeTime?: number // milliseconds
+  }
+
   // Visual
   visual?: {
-    color: string;
-    model?: string;
-    texture?: string;
-  };
-  
+    color: string
+    model?: string
+    texture?: string
+  }
+
   // Production
   production?: {
-    skill: SkillType;
-    level: number;
-    experience: number;
+    skill: SkillType
+    level: number
+    experience: number
     materials: Array<{
-      itemId: string;
-      quantity: number;
-    }>;
-  };
+      itemId: string
+      quantity: number
+    }>
+  }
 }
 
 // Comprehensive item definitions
 export const ITEM_DEFINITIONS: Record<string, ItemDefinition> = {
   // === WEAPONS ===
-  
+
   // Bronze weapons
-  'bronze_dagger': {
+  bronze_dagger: {
     id: 'bronze_dagger',
     name: 'Bronze Dagger',
     description: 'A sharp bronze dagger.',
@@ -121,15 +120,15 @@ export const ITEM_DEFINITIONS: Record<string, ItemDefinition> = {
     stats: {
       attackBonus: 1,
       strengthBonus: 1,
-      weight: 0.5
+      weight: 0.5,
     },
     visual: {
       color: '#CD7F32',
-      model: 'dagger'
-    }
+      model: 'dagger',
+    },
   },
-  
-  'bronze_sword': {
+
+  bronze_sword: {
     id: 'bronze_sword',
     name: 'Bronze Sword',
     description: 'A bronze sword.',
@@ -144,16 +143,16 @@ export const ITEM_DEFINITIONS: Record<string, ItemDefinition> = {
     stats: {
       attackBonus: 3,
       strengthBonus: 2,
-      weight: 1.0
+      weight: 1.0,
     },
     visual: {
       color: '#CD7F32',
-      model: 'sword'
-    }
+      model: 'sword',
+    },
   },
-  
+
   // Iron weapons
-  'iron_sword': {
+  iron_sword: {
     id: 'iron_sword',
     name: 'Iron Sword',
     description: 'An iron sword.',
@@ -168,16 +167,16 @@ export const ITEM_DEFINITIONS: Record<string, ItemDefinition> = {
     stats: {
       attackBonus: 10,
       strengthBonus: 9,
-      weight: 1.2
+      weight: 1.2,
     },
     visual: {
       color: '#C0C0C0',
-      model: 'sword'
-    }
+      model: 'sword',
+    },
   },
-  
+
   // Steel weapons
-  'steel_sword': {
+  steel_sword: {
     id: 'steel_sword',
     name: 'Steel Sword',
     description: 'A steel sword.',
@@ -192,16 +191,16 @@ export const ITEM_DEFINITIONS: Record<string, ItemDefinition> = {
     stats: {
       attackBonus: 21,
       strengthBonus: 20,
-      weight: 1.4
+      weight: 1.4,
     },
     visual: {
       color: '#71797E',
-      model: 'sword'
-    }
+      model: 'sword',
+    },
   },
-  
+
   // Mithril weapons
-  'mithril_sword': {
+  mithril_sword: {
     id: 'mithril_sword',
     name: 'Mithril Sword',
     description: 'A mithril sword.',
@@ -216,16 +215,16 @@ export const ITEM_DEFINITIONS: Record<string, ItemDefinition> = {
     stats: {
       attackBonus: 35,
       strengthBonus: 34,
-      weight: 1.0
+      weight: 1.0,
     },
     visual: {
       color: '#4A90E2',
-      model: 'sword'
-    }
+      model: 'sword',
+    },
   },
-  
+
   // Adamant weapons
-  'adamant_sword': {
+  adamant_sword: {
     id: 'adamant_sword',
     name: 'Adamant Sword',
     description: 'An adamant sword.',
@@ -240,16 +239,16 @@ export const ITEM_DEFINITIONS: Record<string, ItemDefinition> = {
     stats: {
       attackBonus: 50,
       strengthBonus: 49,
-      weight: 1.6
+      weight: 1.6,
     },
     visual: {
       color: '#50C878',
-      model: 'sword'
-    }
+      model: 'sword',
+    },
   },
-  
+
   // Rune weapons
-  'rune_sword': {
+  rune_sword: {
     id: 'rune_sword',
     name: 'Rune Sword',
     description: 'A rune sword.',
@@ -264,18 +263,18 @@ export const ITEM_DEFINITIONS: Record<string, ItemDefinition> = {
     stats: {
       attackBonus: 67,
       strengthBonus: 66,
-      weight: 1.8
+      weight: 1.8,
     },
     visual: {
       color: '#4169E1',
-      model: 'sword'
-    }
+      model: 'sword',
+    },
   },
-  
+
   // === ARMOR ===
-  
+
   // Bronze armor
-  'bronze_helmet': {
+  bronze_helmet: {
     id: 'bronze_helmet',
     name: 'Bronze Helmet',
     description: 'A bronze helmet.',
@@ -289,15 +288,15 @@ export const ITEM_DEFINITIONS: Record<string, ItemDefinition> = {
     requirements: [{ skill: SkillType.DEFENCE, level: 1 }],
     stats: {
       defenceBonus: 6,
-      weight: 1.0
+      weight: 1.0,
     },
     visual: {
       color: '#CD7F32',
-      model: 'helmet'
-    }
+      model: 'helmet',
+    },
   },
-  
-  'bronze_platebody': {
+
+  bronze_platebody: {
     id: 'bronze_platebody',
     name: 'Bronze Platebody',
     description: 'A bronze platebody.',
@@ -311,16 +310,16 @@ export const ITEM_DEFINITIONS: Record<string, ItemDefinition> = {
     requirements: [{ skill: SkillType.DEFENCE, level: 1 }],
     stats: {
       defenceBonus: 15,
-      weight: 5.0
+      weight: 5.0,
     },
     visual: {
       color: '#CD7F32',
-      model: 'platebody'
-    }
+      model: 'platebody',
+    },
   },
-  
+
   // Iron armor
-  'iron_helmet': {
+  iron_helmet: {
     id: 'iron_helmet',
     name: 'Iron Helmet',
     description: 'An iron helmet.',
@@ -334,18 +333,18 @@ export const ITEM_DEFINITIONS: Record<string, ItemDefinition> = {
     requirements: [{ skill: SkillType.DEFENCE, level: 1 }],
     stats: {
       defenceBonus: 15,
-      weight: 1.2
+      weight: 1.2,
     },
     visual: {
       color: '#C0C0C0',
-      model: 'helmet'
-    }
+      model: 'helmet',
+    },
   },
-  
+
   // === CONSUMABLES ===
-  
+
   // Cooked food
-  'cooked_shrimp': {
+  cooked_shrimp: {
     id: 'cooked_shrimp',
     name: 'Cooked Shrimp',
     description: 'Some nicely cooked shrimp.',
@@ -357,15 +356,15 @@ export const ITEM_DEFINITIONS: Record<string, ItemDefinition> = {
     tradeable: true,
     consumable: {
       healAmount: 3,
-      consumeTime: 1800
+      consumeTime: 1800,
     },
     visual: {
       color: '#FFA500',
-      model: 'food'
-    }
+      model: 'food',
+    },
   },
-  
-  'cooked_lobster': {
+
+  cooked_lobster: {
     id: 'cooked_lobster',
     name: 'Cooked Lobster',
     description: 'A delicious cooked lobster.',
@@ -377,15 +376,15 @@ export const ITEM_DEFINITIONS: Record<string, ItemDefinition> = {
     tradeable: true,
     consumable: {
       healAmount: 12,
-      consumeTime: 1800
+      consumeTime: 1800,
     },
     visual: {
       color: '#FF6347',
-      model: 'food'
-    }
+      model: 'food',
+    },
   },
-  
-  'cooked_shark': {
+
+  cooked_shark: {
     id: 'cooked_shark',
     name: 'Cooked Shark',
     description: 'A perfectly cooked shark.',
@@ -397,16 +396,16 @@ export const ITEM_DEFINITIONS: Record<string, ItemDefinition> = {
     tradeable: true,
     consumable: {
       healAmount: 20,
-      consumeTime: 1800
+      consumeTime: 1800,
     },
     visual: {
       color: '#708090',
-      model: 'food'
-    }
+      model: 'food',
+    },
   },
-  
+
   // Potions
-  'attack_potion': {
+  attack_potion: {
     id: 'attack_potion',
     name: 'Attack Potion',
     description: 'A potion that temporarily boosts attack.',
@@ -417,20 +416,22 @@ export const ITEM_DEFINITIONS: Record<string, ItemDefinition> = {
     stackable: true,
     tradeable: true,
     consumable: {
-      effects: [{
-        skill: SkillType.ATTACK,
-        boost: 3,
-        duration: 5 // 5 minutes
-      }],
-      consumeTime: 1800
+      effects: [
+        {
+          skill: SkillType.ATTACK,
+          boost: 3,
+          duration: 5, // 5 minutes
+        },
+      ],
+      consumeTime: 1800,
     },
     visual: {
       color: '#FF0000',
-      model: 'potion'
-    }
+      model: 'potion',
+    },
   },
-  
-  'strength_potion': {
+
+  strength_potion: {
     id: 'strength_potion',
     name: 'Strength Potion',
     description: 'A potion that temporarily boosts strength.',
@@ -441,23 +442,25 @@ export const ITEM_DEFINITIONS: Record<string, ItemDefinition> = {
     stackable: true,
     tradeable: true,
     consumable: {
-      effects: [{
-        skill: SkillType.STRENGTH,
-        boost: 3,
-        duration: 5
-      }],
-      consumeTime: 1800
+      effects: [
+        {
+          skill: SkillType.STRENGTH,
+          boost: 3,
+          duration: 5,
+        },
+      ],
+      consumeTime: 1800,
     },
     visual: {
       color: '#800080',
-      model: 'potion'
-    }
+      model: 'potion',
+    },
   },
-  
+
   // === MATERIALS ===
-  
+
   // Raw materials
-  'raw_shrimp': {
+  raw_shrimp: {
     id: 'raw_shrimp',
     name: 'Raw Shrimp',
     description: 'Some raw shrimp.',
@@ -469,11 +472,11 @@ export const ITEM_DEFINITIONS: Record<string, ItemDefinition> = {
     tradeable: true,
     visual: {
       color: '#FFEFD5',
-      model: 'food'
-    }
+      model: 'food',
+    },
   },
-  
-  'raw_lobster': {
+
+  raw_lobster: {
     id: 'raw_lobster',
     name: 'Raw Lobster',
     description: 'A raw lobster.',
@@ -485,11 +488,11 @@ export const ITEM_DEFINITIONS: Record<string, ItemDefinition> = {
     tradeable: true,
     visual: {
       color: '#8B0000',
-      model: 'food'
-    }
+      model: 'food',
+    },
   },
-  
-  'raw_shark': {
+
+  raw_shark: {
     id: 'raw_shark',
     name: 'Raw Shark',
     description: 'A raw shark.',
@@ -501,12 +504,12 @@ export const ITEM_DEFINITIONS: Record<string, ItemDefinition> = {
     tradeable: true,
     visual: {
       color: '#2F4F4F',
-      model: 'food'
-    }
+      model: 'food',
+    },
   },
-  
+
   // Ore and bars
-  'copper_ore': {
+  copper_ore: {
     id: 'copper_ore',
     name: 'Copper Ore',
     description: 'An ore containing copper.',
@@ -518,11 +521,11 @@ export const ITEM_DEFINITIONS: Record<string, ItemDefinition> = {
     tradeable: true,
     visual: {
       color: '#B87333',
-      model: 'ore'
-    }
+      model: 'ore',
+    },
   },
-  
-  'tin_ore': {
+
+  tin_ore: {
     id: 'tin_ore',
     name: 'Tin Ore',
     description: 'An ore containing tin.',
@@ -534,11 +537,11 @@ export const ITEM_DEFINITIONS: Record<string, ItemDefinition> = {
     tradeable: true,
     visual: {
       color: '#D3D3D3',
-      model: 'ore'
-    }
+      model: 'ore',
+    },
   },
-  
-  'iron_ore': {
+
+  iron_ore: {
     id: 'iron_ore',
     name: 'Iron Ore',
     description: 'An ore containing iron.',
@@ -550,11 +553,11 @@ export const ITEM_DEFINITIONS: Record<string, ItemDefinition> = {
     tradeable: true,
     visual: {
       color: '#696969',
-      model: 'ore'
-    }
+      model: 'ore',
+    },
   },
-  
-  'coal': {
+
+  coal: {
     id: 'coal',
     name: 'Coal',
     description: 'A lump of coal.',
@@ -566,11 +569,11 @@ export const ITEM_DEFINITIONS: Record<string, ItemDefinition> = {
     tradeable: true,
     visual: {
       color: '#36454F',
-      model: 'ore'
-    }
+      model: 'ore',
+    },
   },
-  
-  'bronze_bar': {
+
+  bronze_bar: {
     id: 'bronze_bar',
     name: 'Bronze Bar',
     description: 'A bar of bronze.',
@@ -582,11 +585,11 @@ export const ITEM_DEFINITIONS: Record<string, ItemDefinition> = {
     tradeable: true,
     visual: {
       color: '#CD7F32',
-      model: 'bar'
-    }
+      model: 'bar',
+    },
   },
-  
-  'iron_bar': {
+
+  iron_bar: {
     id: 'iron_bar',
     name: 'Iron Bar',
     description: 'A bar of iron.',
@@ -598,13 +601,13 @@ export const ITEM_DEFINITIONS: Record<string, ItemDefinition> = {
     tradeable: true,
     visual: {
       color: '#C0C0C0',
-      model: 'bar'
-    }
+      model: 'bar',
+    },
   },
-  
+
   // === TOOLS ===
-  
-  'bronze_pickaxe': {
+
+  bronze_pickaxe: {
     id: 'bronze_pickaxe',
     name: 'Bronze Pickaxe',
     description: 'A pickaxe made of bronze.',
@@ -618,15 +621,15 @@ export const ITEM_DEFINITIONS: Record<string, ItemDefinition> = {
     requirements: [{ skill: SkillType.MINING, level: 1 }],
     stats: {
       attackBonus: 1,
-      weight: 2.0
+      weight: 2.0,
     },
     visual: {
       color: '#CD7F32',
-      model: 'pickaxe'
-    }
+      model: 'pickaxe',
+    },
   },
-  
-  'iron_pickaxe': {
+
+  iron_pickaxe: {
     id: 'iron_pickaxe',
     name: 'Iron Pickaxe',
     description: 'A pickaxe made of iron.',
@@ -640,17 +643,17 @@ export const ITEM_DEFINITIONS: Record<string, ItemDefinition> = {
     requirements: [{ skill: SkillType.MINING, level: 1 }],
     stats: {
       attackBonus: 3,
-      weight: 2.5
+      weight: 2.5,
     },
     visual: {
       color: '#C0C0C0',
-      model: 'pickaxe'
-    }
+      model: 'pickaxe',
+    },
   },
-  
+
   // === MISC ===
-  
-  'coins': {
+
+  coins: {
     id: 'coins',
     name: 'Coins',
     description: 'Shiny gold coins.',
@@ -662,41 +665,43 @@ export const ITEM_DEFINITIONS: Record<string, ItemDefinition> = {
     tradeable: true,
     visual: {
       color: '#FFD700',
-      model: 'coin'
-    }
-  }
-};
+      model: 'coin',
+    },
+  },
+}
 
 // Helper functions
 export function getItemDefinition(itemId: string): ItemDefinition | null {
-  return ITEM_DEFINITIONS[itemId] || null;
+  return ITEM_DEFINITIONS[itemId] || null
 }
 
 export function getItemsByCategory(category: ItemCategory): ItemDefinition[] {
-  return Object.values(ITEM_DEFINITIONS).filter(item => item.category === category);
+  return Object.values(ITEM_DEFINITIONS).filter(item => item.category === category)
 }
 
 export function getItemsByRarity(rarity: ItemRarity): ItemDefinition[] {
-  return Object.values(ITEM_DEFINITIONS).filter(item => item.rarity === rarity);
+  return Object.values(ITEM_DEFINITIONS).filter(item => item.rarity === rarity)
 }
 
 export function getItemsByEquipmentSlot(slot: EquipmentSlot): ItemDefinition[] {
-  return Object.values(ITEM_DEFINITIONS).filter(item => item.equipmentSlot === slot);
+  return Object.values(ITEM_DEFINITIONS).filter(item => item.equipmentSlot === slot)
 }
 
 export function getTradeableItems(): ItemDefinition[] {
-  return Object.values(ITEM_DEFINITIONS).filter(item => item.tradeable);
+  return Object.values(ITEM_DEFINITIONS).filter(item => item.tradeable)
 }
 
 export function getStackableItems(): ItemDefinition[] {
-  return Object.values(ITEM_DEFINITIONS).filter(item => item.stackable);
+  return Object.values(ITEM_DEFINITIONS).filter(item => item.stackable)
 }
 
 export function canPlayerEquipItem(playerLevels: Record<SkillType, number>, item: ItemDefinition): boolean {
-  if (!item.requirements) return true;
-  
+  if (!item.requirements) {
+    return true
+  }
+
   return item.requirements.every(req => {
-    const playerLevel = playerLevels[req.skill] || 1;
-    return playerLevel >= req.level;
-  });
+    const playerLevel = playerLevels[req.skill] || 1
+    return playerLevel >= req.level
+  })
 }

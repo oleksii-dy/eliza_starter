@@ -5,13 +5,13 @@
 
 import { describe, test, expect, mock } from 'bun:test';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
-import { 
-  platformAuthProvider, 
-  checkUserPermissionAction, 
+import {
+  platformAuthProvider,
+  checkUserPermissionAction,
   getUserContextAction,
   securityContextEvaluator,
   organizationContextProvider,
-  platformAuthPlugin 
+  platformAuthPlugin,
 } from '../../lib/eliza-auth-extensions';
 
 describe('ElizaOS Authentication Extensions', () => {
@@ -180,7 +180,11 @@ describe('ElizaOS Authentication Extensions', () => {
         getSetting: mock(() => undefined),
       } as any;
 
-      const result = await securityContextEvaluator.handler(mockRuntimeNoAuth, mockMessage, mockState);
+      const result = await securityContextEvaluator.handler(
+        mockRuntimeNoAuth,
+        mockMessage,
+        mockState
+      );
 
       if (result && typeof result === 'object' && 'reason' in result) {
         expect(result.reason).toContain('User not authenticated');
@@ -211,7 +215,11 @@ describe('ElizaOS Authentication Extensions', () => {
         }),
       } as any;
 
-      const result = await organizationContextProvider.get(mockRuntimeNoOrg, mockMessage, mockState);
+      const result = await organizationContextProvider.get(
+        mockRuntimeNoOrg,
+        mockMessage,
+        mockState
+      );
 
       if (result && typeof result === 'object' && 'data' in result && result.data) {
         expect(result.data.hasOrganization).toBe(false);
@@ -233,7 +241,7 @@ describe('ElizaOS Authentication Extensions', () => {
     test('should have correct provider configuration', () => {
       expect(platformAuthProvider.name).toBe('PLATFORM_AUTH');
       expect(typeof platformAuthProvider.get).toBe('function');
-      
+
       expect(organizationContextProvider.name).toBe('ORGANIZATION_CONTEXT');
       expect(typeof organizationContextProvider.get).toBe('function');
     });
@@ -242,7 +250,7 @@ describe('ElizaOS Authentication Extensions', () => {
       expect(checkUserPermissionAction.name).toBe('CHECK_USER_PERMISSION');
       expect(typeof checkUserPermissionAction.handler).toBe('function');
       expect(typeof checkUserPermissionAction.validate).toBe('function');
-      
+
       expect(getUserContextAction.name).toBe('GET_USER_CONTEXT');
       expect(typeof getUserContextAction.handler).toBe('function');
       expect(typeof getUserContextAction.validate).toBe('function');
@@ -272,7 +280,11 @@ describe('ElizaOS Authentication Extensions', () => {
         content: null as any,
       };
 
-      const result = await securityContextEvaluator.handler(mockRuntime, malformedMessage, mockState);
+      const result = await securityContextEvaluator.handler(
+        mockRuntime,
+        malformedMessage,
+        mockState
+      );
       expect(result).toBeTruthy();
       if (result && typeof result === 'object' && 'score' in result) {
         expect(typeof result.score).toBe('number');

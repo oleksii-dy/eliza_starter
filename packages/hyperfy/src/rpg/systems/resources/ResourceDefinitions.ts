@@ -1,10 +1,9 @@
-// @ts-nocheck
 /**
  * Resource Definitions - All harvestable resources in the world
  * Each resource is represented as a colored cube with specific properties
  */
 
-import { SkillType } from '../skills/SkillDefinitions';
+import { SkillType } from '../skills/SkillDefinitions'
 
 export enum ResourceType {
   // Trees (Woodcutting)
@@ -14,7 +13,7 @@ export enum ResourceType {
   TREE_MAPLE = 'tree_maple',
   TREE_YEW = 'tree_yew',
   TREE_MAGIC = 'tree_magic',
-  
+
   // Rocks (Mining)
   ROCK_CLAY = 'rock_clay',
   ROCK_COPPER = 'rock_copper',
@@ -25,49 +24,49 @@ export enum ResourceType {
   ROCK_MITHRIL = 'rock_mithril',
   ROCK_ADAMANT = 'rock_adamant',
   ROCK_RUNITE = 'rock_runite',
-  
+
   // Fishing Spots
-  FISHING_NET = 'fishing_net',      // Shrimp, anchovies
-  FISHING_BAIT = 'fishing_bait',    // Trout, salmon
-  FISHING_CAGE = 'fishing_cage',    // Lobster
+  FISHING_NET = 'fishing_net', // Shrimp, anchovies
+  FISHING_BAIT = 'fishing_bait', // Trout, salmon
+  FISHING_CAGE = 'fishing_cage', // Lobster
   FISHING_HARPOON = 'fishing_harpoon', // Swordfish, shark
 }
 
 export interface ResourceVisual {
-  color: string;      // Hex color for the cube
-  scale: number;      // Size multiplier (1.0 = normal)
-  emissive?: string;  // Emissive color for glowing effects
-  metalness?: number; // 0-1 for metallic appearance
-  roughness?: number; // 0-1 for surface roughness
+  color: string // Hex color for the cube
+  scale: number // Size multiplier (1.0 = normal)
+  emissive?: string // Emissive color for glowing effects
+  metalness?: number // 0-1 for metallic appearance
+  roughness?: number // 0-1 for surface roughness
 }
 
 export interface ResourceDefinition {
-  type: ResourceType;
-  name: string;
-  description: string;
-  skill: SkillType;
-  levelRequired: number;
-  baseHarvestTime: number; // milliseconds
-  respawnTime: number;     // milliseconds
-  visual: ResourceVisual;
-  
+  type: ResourceType
+  name: string
+  description: string
+  skill: SkillType
+  levelRequired: number
+  baseHarvestTime: number // milliseconds
+  respawnTime: number // milliseconds
+  visual: ResourceVisual
+
   // What you get from harvesting
   drops: {
-    itemId: number;
-    name: string;
-    quantity: { min: number; max: number };
-    chance: number; // 0-1
-    xp: number;
-  }[];
-  
+    itemId: number
+    name: string
+    quantity: { min: number; max: number }
+    chance: number // 0-1
+    xp: number
+  }[]
+
   // Tool requirements
-  toolRequired?: number; // Item ID of required tool
-  
+  toolRequired?: number // Item ID of required tool
+
   // Depletion (some resources disappear after harvesting)
-  depletes: boolean;
-  
+  depletes: boolean
+
   // Rarity in world generation
-  rarity: 'common' | 'uncommon' | 'rare' | 'very_rare';
+  rarity: 'common' | 'uncommon' | 'rare' | 'very_rare'
 }
 
 export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
@@ -83,7 +82,7 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
     visual: {
       color: '#8B4513', // Brown
       scale: 1.2,
-      roughness: 0.8
+      roughness: 0.8,
     },
     drops: [
       {
@@ -91,14 +90,14 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
         name: 'Logs',
         quantity: { min: 1, max: 1 },
         chance: 1.0,
-        xp: 25
-      }
+        xp: 25,
+      },
     ],
     toolRequired: 1351, // Bronze axe
     depletes: true,
-    rarity: 'common'
+    rarity: 'common',
   },
-  
+
   [ResourceType.TREE_OAK]: {
     type: ResourceType.TREE_OAK,
     name: 'Oak Tree',
@@ -110,7 +109,7 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
     visual: {
       color: '#654321', // Darker brown
       scale: 1.4,
-      roughness: 0.7
+      roughness: 0.7,
     },
     drops: [
       {
@@ -118,14 +117,14 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
         name: 'Oak Logs',
         quantity: { min: 1, max: 1 },
         chance: 1.0,
-        xp: 37.5
-      }
+        xp: 37.5,
+      },
     ],
     toolRequired: 1351,
     depletes: true,
-    rarity: 'uncommon'
+    rarity: 'uncommon',
   },
-  
+
   [ResourceType.TREE_WILLOW]: {
     type: ResourceType.TREE_WILLOW,
     name: 'Willow Tree',
@@ -137,7 +136,7 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
     visual: {
       color: '#9ACD32', // Yellow-green
       scale: 1.3,
-      roughness: 0.6
+      roughness: 0.6,
     },
     drops: [
       {
@@ -145,14 +144,14 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
         name: 'Willow Logs',
         quantity: { min: 1, max: 1 },
         chance: 1.0,
-        xp: 67.5
-      }
+        xp: 67.5,
+      },
     ],
     toolRequired: 1351,
     depletes: false, // Willows don't deplete completely
-    rarity: 'uncommon'
+    rarity: 'uncommon',
   },
-  
+
   [ResourceType.TREE_MAPLE]: {
     type: ResourceType.TREE_MAPLE,
     name: 'Maple Tree',
@@ -164,7 +163,7 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
     visual: {
       color: '#FF8C00', // Dark orange
       scale: 1.5,
-      roughness: 0.5
+      roughness: 0.5,
     },
     drops: [
       {
@@ -172,14 +171,14 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
         name: 'Maple Logs',
         quantity: { min: 1, max: 1 },
         chance: 1.0,
-        xp: 100
-      }
+        xp: 100,
+      },
     ],
     toolRequired: 1351,
     depletes: true,
-    rarity: 'rare'
+    rarity: 'rare',
   },
-  
+
   [ResourceType.TREE_YEW]: {
     type: ResourceType.TREE_YEW,
     name: 'Yew Tree',
@@ -191,7 +190,7 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
     visual: {
       color: '#006400', // Dark green
       scale: 1.8,
-      roughness: 0.4
+      roughness: 0.4,
     },
     drops: [
       {
@@ -199,14 +198,14 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
         name: 'Yew Logs',
         quantity: { min: 1, max: 1 },
         chance: 1.0,
-        xp: 175
-      }
+        xp: 175,
+      },
     ],
     toolRequired: 1351,
     depletes: false,
-    rarity: 'very_rare'
+    rarity: 'very_rare',
   },
-  
+
   [ResourceType.TREE_MAGIC]: {
     type: ResourceType.TREE_MAGIC,
     name: 'Magic Tree',
@@ -219,7 +218,7 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
       color: '#8A2BE2', // Blue violet
       scale: 2.0,
       emissive: '#4B0082',
-      roughness: 0.2
+      roughness: 0.2,
     },
     drops: [
       {
@@ -227,14 +226,14 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
         name: 'Magic Logs',
         quantity: { min: 1, max: 1 },
         chance: 1.0,
-        xp: 250
-      }
+        xp: 250,
+      },
     ],
     toolRequired: 1351,
     depletes: false,
-    rarity: 'very_rare'
+    rarity: 'very_rare',
   },
-  
+
   // Rocks (Mining)
   [ResourceType.ROCK_CLAY]: {
     type: ResourceType.ROCK_CLAY,
@@ -247,7 +246,7 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
     visual: {
       color: '#D2B48C', // Tan
       scale: 0.8,
-      roughness: 0.9
+      roughness: 0.9,
     },
     drops: [
       {
@@ -255,14 +254,14 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
         name: 'Clay',
         quantity: { min: 1, max: 1 },
         chance: 1.0,
-        xp: 5
-      }
+        xp: 5,
+      },
     ],
     toolRequired: 1265, // Bronze pickaxe
     depletes: true,
-    rarity: 'common'
+    rarity: 'common',
   },
-  
+
   [ResourceType.ROCK_COPPER]: {
     type: ResourceType.ROCK_COPPER,
     name: 'Copper Rock',
@@ -275,7 +274,7 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
       color: '#B87333', // Copper
       scale: 1.0,
       metalness: 0.7,
-      roughness: 0.6
+      roughness: 0.6,
     },
     drops: [
       {
@@ -283,14 +282,14 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
         name: 'Copper Ore',
         quantity: { min: 1, max: 1 },
         chance: 1.0,
-        xp: 17.5
-      }
+        xp: 17.5,
+      },
     ],
     toolRequired: 1265,
     depletes: true,
-    rarity: 'common'
+    rarity: 'common',
   },
-  
+
   [ResourceType.ROCK_TIN]: {
     type: ResourceType.ROCK_TIN,
     name: 'Tin Rock',
@@ -303,7 +302,7 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
       color: '#A8A8A8', // Light gray
       scale: 1.0,
       metalness: 0.6,
-      roughness: 0.5
+      roughness: 0.5,
     },
     drops: [
       {
@@ -311,14 +310,14 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
         name: 'Tin Ore',
         quantity: { min: 1, max: 1 },
         chance: 1.0,
-        xp: 17.5
-      }
+        xp: 17.5,
+      },
     ],
     toolRequired: 1265,
     depletes: true,
-    rarity: 'common'
+    rarity: 'common',
   },
-  
+
   [ResourceType.ROCK_IRON]: {
     type: ResourceType.ROCK_IRON,
     name: 'Iron Rock',
@@ -331,7 +330,7 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
       color: '#696969', // Dim gray
       scale: 1.1,
       metalness: 0.8,
-      roughness: 0.4
+      roughness: 0.4,
     },
     drops: [
       {
@@ -339,14 +338,14 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
         name: 'Iron Ore',
         quantity: { min: 1, max: 1 },
         chance: 1.0,
-        xp: 35
-      }
+        xp: 35,
+      },
     ],
     toolRequired: 1265,
     depletes: true,
-    rarity: 'uncommon'
+    rarity: 'uncommon',
   },
-  
+
   [ResourceType.ROCK_COAL]: {
     type: ResourceType.ROCK_COAL,
     name: 'Coal Rock',
@@ -358,7 +357,7 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
     visual: {
       color: '#2F4F4F', // Dark slate gray
       scale: 1.0,
-      roughness: 0.9
+      roughness: 0.9,
     },
     drops: [
       {
@@ -366,14 +365,14 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
         name: 'Coal',
         quantity: { min: 1, max: 1 },
         chance: 1.0,
-        xp: 50
-      }
+        xp: 50,
+      },
     ],
     toolRequired: 1265,
     depletes: true,
-    rarity: 'uncommon'
+    rarity: 'uncommon',
   },
-  
+
   [ResourceType.ROCK_GOLD]: {
     type: ResourceType.ROCK_GOLD,
     name: 'Gold Rock',
@@ -387,7 +386,7 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
       scale: 0.9,
       metalness: 1.0,
       roughness: 0.1,
-      emissive: '#FFD700'
+      emissive: '#FFD700',
     },
     drops: [
       {
@@ -395,14 +394,14 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
         name: 'Gold Ore',
         quantity: { min: 1, max: 1 },
         chance: 1.0,
-        xp: 65
-      }
+        xp: 65,
+      },
     ],
     toolRequired: 1265,
     depletes: true,
-    rarity: 'rare'
+    rarity: 'rare',
   },
-  
+
   [ResourceType.ROCK_MITHRIL]: {
     type: ResourceType.ROCK_MITHRIL,
     name: 'Mithril Rock',
@@ -416,7 +415,7 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
       scale: 1.2,
       metalness: 0.9,
       roughness: 0.2,
-      emissive: '#4169E1'
+      emissive: '#4169E1',
     },
     drops: [
       {
@@ -424,14 +423,14 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
         name: 'Mithril Ore',
         quantity: { min: 1, max: 1 },
         chance: 1.0,
-        xp: 80
-      }
+        xp: 80,
+      },
     ],
     toolRequired: 1265,
     depletes: true,
-    rarity: 'rare'
+    rarity: 'rare',
   },
-  
+
   [ResourceType.ROCK_ADAMANT]: {
     type: ResourceType.ROCK_ADAMANT,
     name: 'Adamant Rock',
@@ -445,7 +444,7 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
       scale: 1.3,
       metalness: 0.9,
       roughness: 0.15,
-      emissive: '#228B22'
+      emissive: '#228B22',
     },
     drops: [
       {
@@ -453,14 +452,14 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
         name: 'Adamant Ore',
         quantity: { min: 1, max: 1 },
         chance: 1.0,
-        xp: 95
-      }
+        xp: 95,
+      },
     ],
     toolRequired: 1265,
     depletes: true,
-    rarity: 'very_rare'
+    rarity: 'very_rare',
   },
-  
+
   [ResourceType.ROCK_RUNITE]: {
     type: ResourceType.ROCK_RUNITE,
     name: 'Runite Rock',
@@ -474,7 +473,7 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
       scale: 1.5,
       metalness: 1.0,
       roughness: 0.1,
-      emissive: '#00CED1'
+      emissive: '#00CED1',
     },
     drops: [
       {
@@ -482,14 +481,14 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
         name: 'Runite Ore',
         quantity: { min: 1, max: 1 },
         chance: 1.0,
-        xp: 125
-      }
+        xp: 125,
+      },
     ],
     toolRequired: 1265,
     depletes: true,
-    rarity: 'very_rare'
+    rarity: 'very_rare',
   },
-  
+
   // Fishing Spots
   [ResourceType.FISHING_NET]: {
     type: ResourceType.FISHING_NET,
@@ -503,7 +502,7 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
       color: '#1E90FF', // Dodger blue
       scale: 0.6,
       roughness: 0.1,
-      emissive: '#87CEEB'
+      emissive: '#87CEEB',
     },
     drops: [
       {
@@ -511,21 +510,21 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
         name: 'Raw Shrimp',
         quantity: { min: 1, max: 1 },
         chance: 0.8,
-        xp: 10
+        xp: 10,
       },
       {
         itemId: 321, // Anchovies
         name: 'Raw Anchovies',
         quantity: { min: 1, max: 1 },
         chance: 0.2,
-        xp: 40
-      }
+        xp: 40,
+      },
     ],
     toolRequired: 303, // Small fishing net
     depletes: false,
-    rarity: 'common'
+    rarity: 'common',
   },
-  
+
   [ResourceType.FISHING_BAIT]: {
     type: ResourceType.FISHING_BAIT,
     name: 'Fishing Spot (Bait)',
@@ -538,7 +537,7 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
       color: '#4682B4', // Steel blue
       scale: 0.7,
       roughness: 0.1,
-      emissive: '#B0C4DE'
+      emissive: '#B0C4DE',
     },
     drops: [
       {
@@ -546,21 +545,21 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
         name: 'Raw Trout',
         quantity: { min: 1, max: 1 },
         chance: 0.7,
-        xp: 50
+        xp: 50,
       },
       {
         itemId: 331, // Salmon
         name: 'Raw Salmon',
         quantity: { min: 1, max: 1 },
         chance: 0.3,
-        xp: 70
-      }
+        xp: 70,
+      },
     ],
     toolRequired: 307, // Fishing rod
     depletes: false,
-    rarity: 'uncommon'
+    rarity: 'uncommon',
   },
-  
+
   [ResourceType.FISHING_CAGE]: {
     type: ResourceType.FISHING_CAGE,
     name: 'Fishing Spot (Cage)',
@@ -573,7 +572,7 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
       color: '#FF6347', // Tomato
       scale: 0.8,
       roughness: 0.1,
-      emissive: '#FFA07A'
+      emissive: '#FFA07A',
     },
     drops: [
       {
@@ -581,14 +580,14 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
         name: 'Raw Lobster',
         quantity: { min: 1, max: 1 },
         chance: 1.0,
-        xp: 90
-      }
+        xp: 90,
+      },
     ],
     toolRequired: 301, // Lobster pot
     depletes: false,
-    rarity: 'rare'
+    rarity: 'rare',
   },
-  
+
   [ResourceType.FISHING_HARPOON]: {
     type: ResourceType.FISHING_HARPOON,
     name: 'Fishing Spot (Harpoon)',
@@ -601,7 +600,7 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
       color: '#191970', // Midnight blue
       scale: 1.0,
       roughness: 0.05,
-      emissive: '#483D8B'
+      emissive: '#483D8B',
     },
     drops: [
       {
@@ -609,31 +608,31 @@ export const RESOURCE_DEFINITIONS: Record<ResourceType, ResourceDefinition> = {
         name: 'Raw Swordfish',
         quantity: { min: 1, max: 1 },
         chance: 0.6,
-        xp: 100
+        xp: 100,
       },
       {
         itemId: 383, // Shark
         name: 'Raw Shark',
         quantity: { min: 1, max: 1 },
         chance: 0.4,
-        xp: 110
-      }
+        xp: 110,
+      },
     ],
     toolRequired: 311, // Harpoon
     depletes: false,
-    rarity: 'very_rare'
-  }
-};
+    rarity: 'very_rare',
+  },
+}
 
 // Helper functions
 export function getResourcesBySkill(skill: SkillType): ResourceDefinition[] {
-  return Object.values(RESOURCE_DEFINITIONS).filter(resource => resource.skill === skill);
+  return Object.values(RESOURCE_DEFINITIONS).filter(resource => resource.skill === skill)
 }
 
 export function getResourcesByRarity(rarity: string): ResourceDefinition[] {
-  return Object.values(RESOURCE_DEFINITIONS).filter(resource => resource.rarity === rarity);
+  return Object.values(RESOURCE_DEFINITIONS).filter(resource => resource.rarity === rarity)
 }
 
 export function canHarvestResource(resource: ResourceDefinition, playerLevel: number, hasTool: boolean): boolean {
-  return playerLevel >= resource.levelRequired && (hasTool || !resource.toolRequired);
+  return playerLevel >= resource.levelRequired && (hasTool || !resource.toolRequired)
 }

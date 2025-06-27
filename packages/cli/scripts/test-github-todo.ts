@@ -38,41 +38,43 @@ DO NOT engage in conversational planning - EXECUTE ACTIONS IMMEDIATELY.`,
       settings: {
         github: {
           owner: 'test-user',
-          repo: 'test-repo'
-        }
-      }
-    }
+          repo: 'test-repo',
+        },
+      },
+    },
   ],
   script: {
     steps: [
       {
         type: 'message',
         from: 'user',
-        content: 'Create a todo: "Setup GitHub Actions workflow for automated testing". Please use the CREATE_TODO action now.'
+        content:
+          'Create a todo: "Setup GitHub Actions workflow for automated testing". Please use the CREATE_TODO action now.',
       },
       {
         type: 'wait',
-        duration: 10000
+        duration: 10000,
       },
       {
         type: 'message',
         from: 'user',
-        content: 'Search for all todos containing "GitHub". Please use the SEARCH_TODOS action.'
+        content: 'Search for all todos containing "GitHub". Please use the SEARCH_TODOS action.',
       },
       {
         type: 'wait',
-        duration: 10000
+        duration: 10000,
       },
       {
         type: 'message',
         from: 'user',
-        content: 'Update the GitHub Actions todo status to "in progress". Please use the UPDATE_TODO action.'
+        content:
+          'Update the GitHub Actions todo status to "in progress". Please use the UPDATE_TODO action.',
       },
       {
         type: 'wait',
-        duration: 5000
-      }
-    ]
+        duration: 5000,
+      },
+    ],
   },
   verification: {
     rules: [
@@ -94,7 +96,7 @@ FAIL CRITERIA: The response contains:
 - Generic descriptions without technical specifics
 - No todo IDs or service response details
 
-Look for ACTUAL ACTION EXECUTION, not conversational responses.`
+Look for ACTUAL ACTION EXECUTION, not conversational responses.`,
       },
       {
         id: 'todo-search-execution',
@@ -114,10 +116,10 @@ FAIL CRITERIA: The response contains:
 - No specific todo IDs or search results
 - Conversational responses instead of service data
 
-Verify REAL search execution, not simulated responses.`
-      }
-    ]
-  }
+Verify REAL search execution, not simulated responses.`,
+      },
+    ],
+  },
 };
 
 async function main() {
@@ -127,7 +129,7 @@ async function main() {
     const result = await executeRealScenario(githubTodoScenario, {
       verbose: true,
       timeout: 120000,
-      maxSteps: 8
+      maxSteps: 8,
     });
 
     console.log(`\\n${'='.repeat(60)}`);
@@ -152,7 +154,7 @@ async function main() {
 
     if (result.errors.length > 0) {
       console.log('\\n**Errors**:');
-      result.errors.forEach(error => console.log(`  - ${error}`));
+      result.errors.forEach((error) => console.log(`  - ${error}`));
     }
 
     if (result.passed && result.score >= 0.8) {
@@ -163,14 +165,13 @@ async function main() {
       console.log(`   Current score: ${result.score.toFixed(3)} (target: 0.8+)`);
       process.exit(1);
     }
-
   } catch (error) {
     console.error('💥 Test execution failed:', error);
     process.exit(1);
   }
 }
 
-main().catch(error => {
+main().catch((error) => {
   console.error('💥 Error:', error);
   process.exit(1);
 });

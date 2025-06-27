@@ -6,14 +6,14 @@
 
 import { NextRequest } from 'next/server';
 import { withMiddleware } from '@/lib/domains/generation/api/middleware';
-import { 
-  getGenerationHandler, 
-  cancelGenerationHandler 
+import {
+  getGenerationHandler,
+  cancelGenerationHandler,
 } from '@/lib/domains/generation/api/handlers/generate';
 
-export async function GET(
+export async function handleGET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   return withMiddleware(req, async (request, context) => {
     const resolvedParams = await params;
@@ -23,7 +23,7 @@ export async function GET(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   return withMiddleware(req, async (request, context) => {
     const resolvedParams = await params;

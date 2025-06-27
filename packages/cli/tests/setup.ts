@@ -36,7 +36,6 @@ if (!existsSync(cliDistEntry)) {
 //   uncaughtException: process.listeners('uncaughtException'),
 // };
 
-
 // Mock socket.io to prevent server startup issues in tests
 mock.module('socket.io', () => ({
   Server: mock(() => ({
@@ -126,7 +125,7 @@ global.console = {
 // terminate any child processes they created.
 // ---------------------------------------------------------------------------
 
-import { afterAll  } from 'bun:test';
+import { afterAll } from 'bun:test';
 
 afterAll(async () => {
   // Give any pending "exit" events from child processes a brief moment to

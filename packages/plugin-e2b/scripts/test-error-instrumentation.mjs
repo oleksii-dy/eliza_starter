@@ -15,31 +15,31 @@ dotenv.config({ path: envPath });
 console.log('Environment loaded:', {
   E2B_API_KEY: !!process.env.E2B_API_KEY,
   OPENAI_API_KEY: !!process.env.OPENAI_API_KEY,
-  ANTHROPIC_API_KEY: !!process.env.ANTHROPIC_API_KEY
+  ANTHROPIC_API_KEY: !!process.env.ANTHROPIC_API_KEY,
 });
 
 console.log('🔍 Testing Comprehensive Error Instrumentation...');
 
 async function testErrorInstrumentationWithE2B() {
   console.log('\n🧪 Testing Error Instrumentation with Real E2B Operations...');
-  
+
   try {
     const { Sandbox } = await import('@e2b/code-interpreter');
-    
+
     console.log('✅ E2B code-interpreter imported');
-    
+
     // Test 1: Successful operation with instrumentation logging
     console.log('\n✅ Test 1: Successful E2B Operation');
     const sandbox = await Sandbox.create({
       apiKey: process.env.E2B_API_KEY,
-      timeoutMs: 30000
+      timeoutMs: 30000,
     });
     console.log(`   Sandbox created: ${sandbox.sandboxId}`);
-    
+
     // Test 2: Instrumented code execution with metrics
     console.log('\n📊 Test 2: Code Execution with Performance Metrics');
     const startTime = Date.now();
-    
+
     const result = await sandbox.runCode(`
 import time
 import json
@@ -69,12 +69,12 @@ print(f"💾 Estimated memory: {metrics['memory_estimate']} bytes")
 
 metrics
 `);
-    
+
     const executionTime = Date.now() - startTime;
     console.log(`   ✅ Code executed in ${executionTime}ms`);
     console.log(`   📊 Result: ${result.text}`);
     console.log(`   📝 Output logs: ${result.logs.stdout.join('\\n')}`);
-    
+
     // Test 3: Error simulation and handling
     console.log('\n❌ Test 3: Error Simulation and Recovery');
     try {
@@ -108,14 +108,13 @@ for error_name, error_func in errors_to_test[:2]:  # Test first 2 errors
 print(f"\\n🔍 Tested {len(error_results)} error scenarios")
 error_results
 `);
-      
+
       console.log('   ✅ Error simulation completed successfully');
       console.log('   📋 Error test results:', errorResult.text);
-      
     } catch (executionError) {
       console.log('   ⚠️  Expected error during error simulation:', executionError.message);
     }
-    
+
     // Test 4: Resource monitoring and cleanup
     console.log('\n🧹 Test 4: Resource Monitoring and Cleanup');
     const cleanupResult = await sandbox.runCode(`
@@ -162,14 +161,14 @@ except ImportError:
     
     basic_metrics
 `);
-    
+
     console.log('   ✅ Resource monitoring completed');
     console.log('   📊 Resource metrics:', cleanupResult.text);
-    
+
     // Test 5: Comprehensive logging and correlation
     console.log('\n📝 Test 5: Comprehensive Logging and Correlation');
     const correlationId = `test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    
+
     const loggingResult = await sandbox.runCode(`
 import json
 import time
@@ -244,14 +243,14 @@ for phase in test_session["test_phases"]:
 
 test_session
 `);
-    
+
     console.log('   ✅ Comprehensive logging completed');
     console.log('   🔗 Correlation tracking:', loggingResult.text);
-    
+
     // Clean up sandbox
     await sandbox.kill();
     console.log('   🧹 Sandbox cleaned up successfully');
-    
+
     return {
       success: true,
       tests: {
@@ -259,25 +258,24 @@ test_session
         performanceMetrics: true,
         errorSimulation: true,
         resourceMonitoring: true,
-        correlationLogging: true
+        correlationLogging: true,
       },
       correlationId,
-      totalExecutionTime: Date.now() - startTime
+      totalExecutionTime: Date.now() - startTime,
     };
-    
   } catch (error) {
     console.error('❌ Error instrumentation test failed:', error.message);
-    
+
     // Demonstrate error classification
     const errorInfo = {
       type: error.constructor.name,
       message: error.message,
       timestamp: new Date().toISOString(),
-      classification: 'test_failure'
+      classification: 'test_failure',
     };
-    
+
     console.log('🔍 Error Classification:', JSON.stringify(errorInfo, null, 2));
-    
+
     return { success: false, error: errorInfo };
   }
 }
@@ -286,7 +284,7 @@ test_session
 try {
   console.log('🎯 Starting comprehensive error instrumentation test...');
   const result = await testErrorInstrumentationWithE2B();
-  
+
   if (result.success) {
     console.log('\\n🎉 Error Instrumentation Test PASSED!');
     console.log('\\n✅ All instrumentation components verified:');
@@ -295,15 +293,15 @@ try {
     console.log('   ❌ Error simulation, classification, and recovery');
     console.log('   🖥️  Resource monitoring and cleanup tracking');
     console.log('   🔗 Correlation ID tracking across operations');
-    
+
     console.log('\\n📋 Test Results Summary:');
     Object.entries(result.tests).forEach(([test, passed]) => {
       console.log(`   ${passed ? '✅' : '❌'} ${test}: ${passed ? 'PASSED' : 'FAILED'}`);
     });
-    
+
     console.log(`\\n⏱️  Total execution time: ${result.totalExecutionTime}ms`);
     console.log(`🔗 Correlation ID: ${result.correlationId}`);
-    
+
     console.log('\\n🚀 Instrumentation Features Demonstrated:');
     console.log('   • Operation start/end timing and metrics');
     console.log('   • Error classification and recovery strategies');
@@ -313,14 +311,14 @@ try {
     console.log('   • Performance bottleneck identification');
     console.log('   • Automatic retry logic with exponential backoff');
     console.log('   • Service health monitoring and alerting');
-    
+
     console.log('\\n🔮 Ready for Production Monitoring:');
     console.log('   • Real-time error alerting and classification');
     console.log('   • Performance degradation detection');
     console.log('   • Automatic recovery and retry mechanisms');
     console.log('   • Distributed tracing across services');
     console.log('   • Comprehensive audit logs for debugging');
-    
+
     console.log('\\n✨ Error Instrumentation System is fully operational!');
     process.exit(0);
   } else {
@@ -328,7 +326,6 @@ try {
     console.log('Error details:', result.error);
     process.exit(1);
   }
-  
 } catch (error) {
   console.error('\\n💥 Fatal error during instrumentation test:', error.message);
   console.error('Stack:', error.stack?.split('\\n').slice(0, 8).join('\\n'));

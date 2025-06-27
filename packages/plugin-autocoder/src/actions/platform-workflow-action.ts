@@ -419,73 +419,70 @@ Format as markdown for user review.
       responseText += '🛠️ **Phase 5: Development & Generation**\n';
 
       try {
-        // Create AutoCoder project
-        const projectSpecification = {
+        // Create plugin specification for PluginCreationService
+        const pluginSpec: PluginSpecification = {
           name: workflowRequest.projectName,
-          type: workflowRequest.projectType,
           description: workflowRequest.description,
-          requirements: workflowRequest.requirements || [],
-          secretsRequired: workflowState.requiredSecrets,
-          customInstructions: workflowState.researchFindings
-            ? [
-                `Use these research findings: ${workflowState.researchFindings.summary}`,
-                ...Object.keys(workflowState.researchFindings.sources || {}).map(
-                  (source) => `Reference: ${source}`
-                ),
-              ]
-            : [],
+          version: '1.0.0',
+          dependencies: workflowRequest.requirements,
+          environmentVariables: workflowState.requiredSecrets.map((secret) => ({
+            name: secret,
+            description: `Required ${secret} for plugin functionality`,
+            required: true,
+            sensitive: true,
+          })),
         };
 
-        const project = await autocoderService.createPluginProject(
-          message.entityId || runtime.agentId,
-          projectSpecification,
-          runtime
-        );
+        // Add custom instructions based on research
+        if (workflowState.researchFindings) {
+          pluginSpec.description += `\n\nResearch findings: ${workflowState.researchFindings.summary}`;
+        }
 
-        const projectId = typeof project === 'string' ? project : project.id;
-        workflowState.projectId = projectId;
-        responseText += `✅ Development project created: ${projectId}\n`;
-
-        // Start development phases
-        await autocoderService.runDiscoveryPhase(projectId, runtime);
-        responseText += '✅ Discovery phase completed\n';
-
-        await autocoderService.runDevelopmentPhase(projectId, runtime);
-        responseText += '✅ MVP development started\n\n';
+        const jobId = await pluginCreationService.createPlugin(pluginSpec);
+        workflowState.projectId = jobId;
+        responseText += `✅ Development job started: ${jobId}\n`;
+        responseText += '⏳ Plugin generation in progress...\n\n';
 
         // Phase 6: Testing & Validation
         workflowState.phase = 'testing';
-        responseText += '🧪 **Phase 6: Testing & Validation**\n';
+        responseText += '🧪 **Phase 6: Monitoring Progress**\n';
 
-        // Monitor project progress
+        // Monitor job progress
         let attempts = 0;
         const maxAttempts = 30; // 5 minutes with 10-second intervals
 
         while (attempts < maxAttempts) {
-          const project = await autocoderService.getProject(projectId);
+          const job = pluginCreationService.getJobStatus(jobId);
 
-          if (project && project.status === 'completed') {
-            responseText += '✅ Development completed successfully!\n';
-            responseText += `🔗 Pull Request: ${project.pullRequestUrl || 'N/A'}\n\n`;
+          if (job && job.status === 'completed') {
+            responseText += '✅ Plugin generation completed successfully!\n';
+            responseText += `📁 Output location: ${job.outputPath}\n\n`;
             workflowState.phase = 'completed';
             break;
-          } else if (project && project.status === 'failed') {
-            responseText += `❌ Development failed: ${project.error || 'Unknown error'}\n\n`;
+          } else if (job && job.status === 'failed') {
+            responseText += `❌ Plugin generation failed: ${job.error || 'Unknown error'}\n\n`;
             workflowState.phase = 'failed';
-            workflowState.errors.push(project.error || 'Unknown development error');
+            workflowState.errors.push(job.error || 'Unknown generation error');
+            if (job.errors.length > 0) {
+              responseText += '**Error details:**\n';
+              job.errors.forEach((err) => {
+                responseText += `- ${err}\n`;
+              });
+            }
+            break;
+          } else if (job && job.status === 'cancelled') {
+            responseText += '⚠️ Plugin generation was cancelled\n\n';
+            workflowState.phase = 'failed';
+            workflowState.errors.push('Job was cancelled');
             break;
           }
 
-          // Check for user notifications requiring action
-          const actionRequiredNotifs =
-            project?.userNotifications?.filter((n: any) => n.requiresAction) || [];
-          if (actionRequiredNotifs.length > 0) {
-            responseText += '⚡ **User Action Required**:\n';
-            actionRequiredNotifs.forEach((notif: any) => {
-              responseText += `- ${(notif as any).message || notif._message || 'Action required'}\n`;
+          // Show progress logs
+          if (job && job.logs.length > 0) {
+            const newLogs = job.logs.slice(-(attempts === 0 ? job.logs.length : 1));
+            newLogs.forEach((log) => {
+              responseText += `📝 ${log}\n`;
             });
-            responseText += '\nPlease address these issues and the development will continue.\n\n';
-            break;
           }
 
           attempts++;
@@ -493,7 +490,7 @@ Format as markdown for user review.
         }
 
         if (attempts >= maxAttempts) {
-          responseText += `⏱️ Development in progress... Check project status: ${projectId}\n\n`;
+          responseText += `⏱️ Generation still in progress... Check job status: ${jobId}\n\n`;
         }
       } catch (developmentError) {
         workflowState.phase = 'failed';

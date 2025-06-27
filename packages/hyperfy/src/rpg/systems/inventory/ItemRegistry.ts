@@ -1,151 +1,150 @@
-// @ts-nocheck
-import type { ItemDefinition, EquipmentSlot } from '../../types';
-import { WeaponType } from '../../types';
+import type { ItemDefinition, EquipmentSlot } from '../../types'
+import { WeaponType } from '../../types'
 
 export class ItemRegistry {
-  private items: Map<number, ItemDefinition> = new Map();
-  private nameIndex: Map<string, ItemDefinition> = new Map();
+  private items: Map<number, ItemDefinition> = new Map()
+  private nameIndex: Map<string, ItemDefinition> = new Map()
 
   /**
    * Register an item definition
    */
   register(item: ItemDefinition): void {
-    this.items.set(item.id, item);
-    this.nameIndex.set(item.name, item);
+    this.items.set(item.id, item)
+    this.nameIndex.set(item.name, item)
   }
 
   /**
    * Get item by ID
    */
   get(itemId: number): ItemDefinition | null {
-    return this.items.get(itemId) || null;
+    return this.items.get(itemId) || null
   }
 
   /**
    * Get item by exact name
    */
   getByName(name: string): ItemDefinition | null {
-    return this.nameIndex.get(name) || null;
+    return this.nameIndex.get(name) || null
   }
 
   /**
    * Check if item is stackable
    */
   isStackable(itemId: number): boolean {
-    const item = this.get(itemId);
-    return item ? item.stackable : false;
+    const item = this.get(itemId)
+    return item ? item.stackable : false
   }
 
   /**
    * Check if item is equipable
    */
   isEquipable(itemId: number): boolean {
-    const item = this.get(itemId);
-    return item ? item.equipable : false;
+    const item = this.get(itemId)
+    return item ? item.equipable : false
   }
 
   /**
    * Check if item is tradeable
    */
   isTradeable(itemId: number): boolean {
-    const item = this.get(itemId);
-    return item ? item.tradeable : false;
+    const item = this.get(itemId)
+    return item ? item.tradeable : false
   }
 
   /**
    * Check if item can be noted
    */
   isNoteable(itemId: number): boolean {
-    const item = this.get(itemId);
-    return item ? (item.noteable === true && !item.noted) : false;
+    const item = this.get(itemId)
+    return item ? item.noteable === true && !item.noted : false
   }
 
   /**
    * Check if item is noted
    */
   isNoted(itemId: number): boolean {
-    const item = this.get(itemId);
-    return item ? (item.noted === true) : false;
+    const item = this.get(itemId)
+    return item ? item.noted === true : false
   }
 
   /**
    * Get unnoted version ID
    */
   getUnnoted(itemId: number): number | null {
-    const item = this.get(itemId);
-    return (item && item.noted && item.notedId) ? item.notedId : null;
+    const item = this.get(itemId)
+    return item && item.noted && item.notedId ? item.notedId : null
   }
 
   /**
    * Get noted version ID
    */
   getNoted(itemId: number): number | null {
-    const item = this.get(itemId);
-    return (item && item.noteable && item.notedId) ? item.notedId : null;
+    const item = this.get(itemId)
+    return item && item.noteable && item.notedId ? item.notedId : null
   }
 
   /**
    * Check if item is members only
    */
   isMembers(itemId: number): boolean {
-    const item = this.get(itemId);
-    return item ? item.members : false;
+    const item = this.get(itemId)
+    return item ? item.members : false
   }
 
   /**
    * Get all registered items
    */
   getAll(): ItemDefinition[] {
-    return Array.from(this.items.values());
+    return Array.from(this.items.values())
   }
 
   /**
    * Get items by category (equipment slot)
    */
   getByCategory(category: string): ItemDefinition[] {
-    const results: ItemDefinition[] = [];
+    const results: ItemDefinition[] = []
 
     for (const item of this.items.values()) {
       if (item.equipment) {
-        const slot = item.equipment.slot.toLowerCase();
+        const slot = item.equipment.slot.toLowerCase()
         if (slot === category.toLowerCase()) {
-          results.push(item);
+          results.push(item)
         }
       }
     }
 
-    return results;
+    return results
   }
 
   /**
    * Search items by name (case insensitive partial match)
    */
   search(query: string): ItemDefinition[] {
-    const lowerQuery = query.toLowerCase();
-    const results: ItemDefinition[] = [];
+    const lowerQuery = query.toLowerCase()
+    const results: ItemDefinition[] = []
 
     for (const item of this.items.values()) {
       if (item.name.toLowerCase().includes(lowerQuery)) {
-        results.push(item);
+        results.push(item)
       }
     }
 
-    return results;
+    return results
   }
 
   /**
    * Clear all items
    */
   clear(): void {
-    this.items.clear();
-    this.nameIndex.clear();
+    this.items.clear()
+    this.nameIndex.clear()
   }
 
   /**
    * Get number of registered items
    */
   size(): number {
-    return this.items.size;
+    return this.items.size
   }
 
   /**
@@ -180,14 +179,14 @@ export class ItemRegistry {
           meleeStrength: 4,
           rangedStrength: 0,
           magicDamage: 0,
-          prayerBonus: 0
+          prayerBonus: 0,
         },
         weaponType: WeaponType.SWORD,
-        attackSpeed: 4
+        attackSpeed: 4,
       },
       model: 'bronze_sword',
-      icon: 'bronze_sword_icon'
-    });
+      icon: 'bronze_sword_icon',
+    })
 
     // Currency
     this.register({
@@ -201,8 +200,8 @@ export class ItemRegistry {
       tradeable: true,
       members: false,
       model: 'coins',
-      icon: 'coins_icon'
-    });
+      icon: 'coins_icon',
+    })
 
     // Food
     this.register({
@@ -216,8 +215,8 @@ export class ItemRegistry {
       tradeable: true,
       members: false,
       model: 'shrimps',
-      icon: 'shrimps_icon'
-    });
+      icon: 'shrimps_icon',
+    })
 
     // Bones (always dropped by NPCs)
     this.register({
@@ -231,7 +230,7 @@ export class ItemRegistry {
       tradeable: true,
       members: false,
       model: 'bones',
-      icon: 'bones_icon'
-    });
+      icon: 'bones_icon',
+    })
   }
 }

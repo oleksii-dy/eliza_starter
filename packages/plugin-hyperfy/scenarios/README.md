@@ -5,6 +5,7 @@ This directory contains scenario tests for the Hyperfy plugin, demonstrating var
 ## Overview
 
 Scenario tests are real-world simulations that test agent behaviors in actual Hyperfy environments. They verify that agents can:
+
 - Navigate 3D worlds
 - Build and modify objects
 - Interact socially with emotes
@@ -16,26 +17,31 @@ Scenario tests are real-world simulations that test agent behaviors in actual Hy
 ### 1. Basic Agent Scenarios (`hyperfy-agent-scenarios.ts`)
 
 #### Movement Test
+
 - Tests agent navigation and pathfinding
 - Verifies GOTO_ENTITY and WALK_RANDOMLY actions
 - Ensures agents can perceive their environment
 
 #### Building Test
+
 - Tests world modification capabilities
 - Verifies object duplication, translation, and importing
 - Ensures agents can create persistent changes
 
 #### Social Interaction Test
+
 - Tests communication and emotes
 - Verifies agent expressions and ambient speech
 - Ensures natural social behaviors
 
 #### Item Interaction Test
+
 - Tests object manipulation
 - Verifies USE_ITEM and UNUSE_ITEM actions
 - Ensures agents can interact with world objects
 
 #### Autonomy Integration Test
+
 - Tests plugin-autonomy integration
 - Verifies OODA loop functionality
 - Ensures goal-directed behavior
@@ -45,7 +51,9 @@ Scenario tests are real-world simulations that test agent behaviors in actual Hy
 The flagship scenario that demonstrates 10 autonomous agents exploring a Hyperfy world simultaneously.
 
 #### Features
+
 - **10 Unique Agent Personalities**:
+
   - Explorer-Alpha: Systematic explorer and leader
   - Explorer-Beta: Social agent seeking interactions
   - Explorer-Gamma: Builder marking discoveries
@@ -94,6 +102,7 @@ ENABLE_OBSERVATION_WINDOW=true elizaos scenario run scenarios/hyperfy-autonomous
 ### Prerequisites
 
 1. **Hyperfy Server**: The autonomous exploration requires a running Hyperfy instance
+
    ```bash
    cd hyperfy
    npm install
@@ -101,6 +110,7 @@ ENABLE_OBSERVATION_WINDOW=true elizaos scenario run scenarios/hyperfy-autonomous
    ```
 
 2. **Required Plugins**:
+
    - `@elizaos/plugin-hyperfy` (this plugin)
    - `@elizaos/plugin-autonomy` (for autonomous behaviors)
 
@@ -118,20 +128,26 @@ Each scenario includes:
 ## Debugging
 
 ### View Logs
+
 Scenarios output detailed logs including:
+
 - Agent connections
 - Action executions
 - Movement tracking
 - Interaction events
 
 ### Smaller Tests
+
 Use the 3-agent version for faster debugging:
+
 ```bash
 elizaos scenario run scenarios/hyperfy-autonomous-exploration.ts --filter "3 Agents"
 ```
 
 ### Visual Observation
+
 Enable Puppeteer window to watch agents:
+
 ```bash
 ENABLE_OBSERVATION_WINDOW=true npm run scenario:explore
 ```
@@ -139,6 +155,7 @@ ENABLE_OBSERVATION_WINDOW=true npm run scenario:explore
 ## Success Metrics
 
 The autonomous exploration scenario tracks:
+
 - **Connection Success**: All agents connect to world
 - **Movement Distance**: Total distance traveled by each agent
 - **Action Variety**: Different types of actions performed
@@ -157,16 +174,19 @@ To create new scenarios:
 ## Troubleshooting
 
 ### Hyperfy Not Starting
+
 - Ensure Node.js 22.11.0+ is installed
 - Check if port 3000/3001 is available
 - Verify Hyperfy dependencies are installed
 
 ### Agents Not Connecting
+
 - Check WebSocket URL (default: ws://localhost:3001/ws)
 - Ensure Hyperfy server is fully started (30s startup time)
 - Verify network connectivity
 
 ### Performance Issues
+
 - Reduce agent count for testing
 - Check system resources (CPU/Memory)
 - Use `--skip-setup` if Hyperfy is already running
@@ -174,7 +194,8 @@ To create new scenarios:
 ## Contributing
 
 When adding new scenarios:
+
 1. Test with both small (3 agents) and full (10 agents) configurations
 2. Ensure verification rules are comprehensive
 3. Document unique behaviors and requirements
-4. Add appropriate npm scripts for easy execution 
+4. Add appropriate npm scripts for easy execution

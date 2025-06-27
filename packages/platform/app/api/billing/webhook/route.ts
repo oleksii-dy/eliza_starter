@@ -11,7 +11,11 @@ import { StripeService } from '@/lib/billing/stripe';
 import { initializeDatabase } from '@/lib/database/server';
 import { organizations, auditLogs } from '@/lib/database/schema';
 import { eq } from 'drizzle-orm';
-import { WebhookRateLimiter, createRateLimit, RateLimitPresets } from '@/lib/middleware/rate-limiter';
+import {
+  WebhookRateLimiter,
+  createRateLimit,
+  RateLimitPresets,
+} from '@/lib/middleware/rate-limiter';
 import { ApiErrorHandler, ErrorCode } from '@/lib/api/error-handler';
 import Stripe from 'stripe';
 
@@ -20,12 +24,14 @@ const stripe = new Stripe(config.stripe.secretKey, {
   apiVersion: '2025-02-24.acacia',
 });
 
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   const startTime = Date.now();
-  
+
   try {
     // Apply rate limiting for webhook security
-    const rateLimitCheck = await createRateLimit(RateLimitPresets.WEBHOOK)(request);
+    const rateLimitCheck = await createRateLimit(RateLimitPresets.WEBHOOK)(
+      request,
+    );
     if (rateLimitCheck) {
       console.warn('Webhook rate limit exceeded', {
         ip: request.headers.get('x-forwarded-for'),
@@ -37,17 +43,17 @@ export async function POST(request: NextRequest) {
     // Additional webhook security checks
     const webhookSecurity = WebhookRateLimiter.getInstance();
     const securityCheck = await webhookSecurity.checkWebhookSecurity(request);
-    
+
     if (!securityCheck.allowed) {
       console.error('Webhook security check failed:', {
         reason: securityCheck.reason,
         ip: request.headers.get('x-forwarded-for'),
         suspicious: securityCheck.suspiciousActivity,
       });
-      
+
       return ApiErrorHandler.error(
         ErrorCode.FORBIDDEN,
-        securityCheck.reason || 'Webhook security check failed'
+        securityCheck.reason || 'Webhook security check failed',
       );
     }
     // Get raw body and signature
@@ -57,7 +63,7 @@ export async function POST(request: NextRequest) {
     if (!signature) {
       return NextResponse.json(
         { error: 'Missing stripe-signature header' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -65,7 +71,7 @@ export async function POST(request: NextRequest) {
     const event = stripe.webhooks.constructEvent(
       body,
       signature,
-      config.stripe.webhookSecret
+      config.stripe.webhookSecret,
     );
 
     // Process webhook with deduplication and safety measures
@@ -74,40 +80,41 @@ export async function POST(request: NextRequest) {
         id: event.id,
         type: event.type,
         createdAt: event.created,
-        organizationId: ('metadata' in event.data.object && event.data.object.metadata) 
-          ? (event.data.object.metadata as any)?.organizationId 
-          : undefined,
+        organizationId:
+          'metadata' in event.data.object && event.data.object.metadata
+            ? (event.data.object.metadata as any)?.organizationId
+            : undefined,
         data: event.data,
       },
-      () => handleWebhookEvent(event)
+      () => handleWebhookEvent(event),
     );
 
     if (!result.success) {
-      console.error(`Webhook processing failed for event ${event.id}: ${result.error}`);
+      console.error(
+        `Webhook processing failed for event ${event.id}: ${result.error}`,
+      );
       return NextResponse.json(
         { error: 'Webhook processing failed', details: result.error },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    console.log(`Webhook ${event.id} processed successfully in ${Date.now() - startTime}ms`);
+    console.log(
+      `Webhook ${event.id} processed successfully in ${Date.now() - startTime}ms`,
+    );
     return NextResponse.json({ received: true, eventId: event.id });
-    
   } catch (error) {
     const duration = Date.now() - startTime;
     console.error(`Webhook error after ${duration}ms:`, error);
-    
+
     // Return 200 for signature validation errors to prevent retries
     if (error instanceof Stripe.errors.StripeSignatureVerificationError) {
-      return NextResponse.json(
-        { error: 'Invalid signature' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
     }
-    
+
     return NextResponse.json(
       { error: 'Webhook handler failed' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -116,19 +123,27 @@ async function handleWebhookEvent(event: Stripe.Event): Promise<void> {
   try {
     switch (event.type) {
       case 'checkout.session.completed':
-        await handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session);
+        await handleCheckoutSessionCompleted(
+          event.data.object as Stripe.Checkout.Session,
+        );
         break;
 
       case 'payment_intent.succeeded':
-        await handlePaymentIntentSucceeded(event.data.object as Stripe.PaymentIntent);
+        await handlePaymentIntentSucceeded(
+          event.data.object as Stripe.PaymentIntent,
+        );
         break;
 
       case 'invoice.payment_succeeded':
-        await handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice);
+        await handleInvoicePaymentSucceeded(
+          event.data.object as Stripe.Invoice,
+        );
         break;
 
       case 'customer.subscription.updated':
-        await handleSubscriptionUpdated(event.data.object as Stripe.Subscription);
+        await handleSubscriptionUpdated(
+          event.data.object as Stripe.Subscription,
+        );
         break;
 
       default:
@@ -140,7 +155,9 @@ async function handleWebhookEvent(event: Stripe.Event): Promise<void> {
   }
 }
 
-async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session): Promise<void> {
+async function handleCheckoutSessionCompleted(
+  session: Stripe.Checkout.Session,
+): Promise<void> {
   const { organizationId, userId, creditAmount, type } = session.metadata!;
 
   if (type === 'credit_purchase') {
@@ -160,11 +177,15 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session):
       },
     });
 
-    console.log(`Added ${amount} credits to organization ${organizationId} from checkout session ${session.id}`);
+    console.log(
+      `Added ${amount} credits to organization ${organizationId} from checkout session ${session.id}`,
+    );
   }
 }
 
-async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent): Promise<void> {
+async function handlePaymentIntentSucceeded(
+  paymentIntent: Stripe.PaymentIntent,
+): Promise<void> {
   const { organizationId, userId, creditAmount, type } = paymentIntent.metadata;
 
   if (type === 'credit_purchase' && creditAmount) {
@@ -187,7 +208,9 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
         },
       });
 
-      console.log(`Added ${amount} credits to organization ${organizationId} from payment intent ${paymentIntent.id}`);
+      console.log(
+        `Added ${amount} credits to organization ${organizationId} from payment intent ${paymentIntent.id}`,
+      );
     } catch (error) {
       // May have already been processed by checkout.session.completed
       console.warn('Payment intent already processed or failed:', error);
@@ -209,32 +232,42 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
       },
     });
 
-    console.log(`Auto top-up: Added ${amount} credits to organization ${organizationId}`);
+    console.log(
+      `Auto top-up: Added ${amount} credits to organization ${organizationId}`,
+    );
   }
 }
 
-async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<void> {
+async function handleInvoicePaymentSucceeded(
+  invoice: Stripe.Invoice,
+): Promise<void> {
   try {
     const customerId = invoice.customer as string;
     const subscriptionId = invoice.subscription as string;
-    
+
     if (!customerId || !subscriptionId) {
-      console.warn('Invoice missing required customer or subscription ID:', invoice.id);
+      console.warn(
+        'Invoice missing required customer or subscription ID:',
+        invoice.id,
+      );
       return;
     }
 
     // Get subscription to find organization
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
     const organizationId = subscription.metadata.organizationId;
-    
+
     if (!organizationId) {
-      console.warn('Subscription missing organizationId metadata:', subscriptionId);
+      console.warn(
+        'Subscription missing organizationId metadata:',
+        subscriptionId,
+      );
       return;
     }
 
     // Calculate subscription credits based on subscription tier
     const subscriptionCredits = calculateSubscriptionCredits(subscription);
-    
+
     if (subscriptionCredits > 0) {
       await addCredits({
         organizationId,
@@ -251,7 +284,9 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<v
         },
       });
 
-      console.log(`Added ${subscriptionCredits} subscription credits to organization ${organizationId}`);
+      console.log(
+        `Added ${subscriptionCredits} subscription credits to organization ${organizationId}`,
+      );
     }
   } catch (error) {
     console.error('Failed to handle invoice payment succeeded:', error);
@@ -259,12 +294,17 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<v
   }
 }
 
-async function handleSubscriptionUpdated(subscription: Stripe.Subscription): Promise<void> {
+async function handleSubscriptionUpdated(
+  subscription: Stripe.Subscription,
+): Promise<void> {
   try {
     const organizationId = subscription.metadata.organizationId;
-    
+
     if (!organizationId) {
-      console.warn('Subscription missing organizationId metadata:', subscription.id);
+      console.warn(
+        'Subscription missing organizationId metadata:',
+        subscription.id,
+      );
       return;
     }
 
@@ -276,15 +316,19 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription): Pro
       .set({
         stripeSubscriptionId: subscription.id,
         subscriptionStatus: subscription.status,
-        subscriptionTier: mapStripeProductToTier(subscription.items.data[0]?.price.product as string),
+        subscriptionTier: mapStripeProductToTier(
+          subscription.items.data[0]?.price.product as string,
+        ),
         currentPeriodStart: new Date(subscription.current_period_start * 1000),
         currentPeriodEnd: new Date(subscription.current_period_end * 1000),
         updatedAt: new Date(),
       })
       .where(eq(organizations.id, organizationId));
 
-    console.log(`Updated subscription for organization ${organizationId}: status=${subscription.status}`);
-    
+    console.log(
+      `Updated subscription for organization ${organizationId}: status=${subscription.status}`,
+    );
+
     // Handle subscription tier changes and prorated credits
     if (subscription.status === 'active') {
       await handleSubscriptionTierChange(subscription, organizationId);
@@ -298,9 +342,11 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription): Pro
 /**
  * Calculate subscription credits based on subscription tier
  */
-function calculateSubscriptionCredits(subscription: Stripe.Subscription): number {
+function calculateSubscriptionCredits(
+  subscription: Stripe.Subscription,
+): number {
   const priceId = subscription.items.data[0]?.price.id;
-  
+
   // Map Stripe price IDs to credit amounts
   const creditMap: Record<string, number> = {
     [config.stripe.priceIds.basic]: 100,
@@ -308,7 +354,7 @@ function calculateSubscriptionCredits(subscription: Stripe.Subscription): number
     [config.stripe.priceIds.premium]: 1000,
     [config.stripe.priceIds.enterprise]: 2000,
   };
-  
+
   return creditMap[priceId] || 0;
 }
 
@@ -317,41 +363,48 @@ function calculateSubscriptionCredits(subscription: Stripe.Subscription): number
  */
 function mapStripeProductToTier(productId: string): string {
   const tierMap: Record<string, string> = {
-    'prod_basic': 'basic',
-    'prod_pro': 'pro',
-    'prod_premium': 'premium', 
-    'prod_enterprise': 'enterprise',
+    prod_basic: 'basic',
+    prod_pro: 'pro',
+    prod_premium: 'premium',
+    prod_enterprise: 'enterprise',
   };
-  
+
   return tierMap[productId] || 'free';
 }
 
 /**
  * Handle subscription tier changes and prorated credits
  */
-async function handleSubscriptionTierChange(subscription: Stripe.Subscription, organizationId: string): Promise<void> {
+async function handleSubscriptionTierChange(
+  subscription: Stripe.Subscription,
+  organizationId: string,
+): Promise<void> {
   try {
-    const newTier = mapStripeProductToTier(subscription.items.data[0]?.price.product as string);
+    const newTier = mapStripeProductToTier(
+      subscription.items.data[0]?.price.product as string,
+    );
     const adapter = await initializeDatabase();
     const db = adapter.getDatabase();
-    
+
     // Get current organization tier
     const [org] = await db
       .select()
       .from(organizations)
       .where(eq(organizations.id, organizationId))
       .limit(1);
-    
+
     if (!org) {
       throw new Error('Organization not found');
     }
-    
+
     const currentTier = org.subscriptionTier;
-    
+
     // If tier changed, log the change and handle any special logic
     if (currentTier !== newTier) {
-      console.log(`Subscription tier changed for organization ${organizationId}: ${currentTier} -> ${newTier}`);
-      
+      console.log(
+        `Subscription tier changed for organization ${organizationId}: ${currentTier} -> ${newTier}`,
+      );
+
       // Add audit log for tier change
       await db.insert(auditLogs).values({
         organizationId,

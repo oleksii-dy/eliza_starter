@@ -3,7 +3,9 @@ import { Connection, PublicKey, VersionedTransaction, Keypair } from '@solana/we
 import axios from 'axios';
 import { TokenService } from './TokenService.js';
 import { TransactionService } from './TransactionService.js';
-import BigNumber from 'bignumber.js';
+import * as BigNumberJS from 'bignumber.js';
+
+const BigNumber = BigNumberJS.default || BigNumberJS;
 
 export interface SwapQuoteResponse {
   inputMint: string;

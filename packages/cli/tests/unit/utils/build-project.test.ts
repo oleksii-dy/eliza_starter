@@ -135,7 +135,9 @@ describe('buildProject', () => {
     // Mock tsconfig.json exists
     mockExistsSync.mockImplementation((path: string) => {
       const pathStr = String(path);
-      if (pathStr.includes('tsconfig.json')) {return true;}
+      if (pathStr.includes('tsconfig.json')) {
+        return true;
+      }
       return !pathStr.includes('dist');
     });
 
@@ -219,7 +221,9 @@ describe('buildProject', () => {
     // Mock tsconfig.json exists for fallback
     mockExistsSync.mockImplementation((path: string) => {
       const pathStr = String(path);
-      if (pathStr.includes('tsconfig.json')) {return true;}
+      if (pathStr.includes('tsconfig.json')) {
+        return true;
+      }
       return !pathStr.includes('dist');
     });
 

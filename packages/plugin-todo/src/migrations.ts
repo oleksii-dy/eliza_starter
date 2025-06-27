@@ -55,7 +55,6 @@ async function createPostgreSQLTables(db: any): Promise<void> {
   await createIndexes(db);
 }
 
-
 async function createIndexes(db: any): Promise<void> {
   const indexes = [
     'CREATE INDEX IF NOT EXISTS idx_todos_agent ON todos(agent_id)',

@@ -4,6 +4,7 @@
  */
 
 import { beforeAll, afterAll } from 'bun:test';
+import '../types/globals';
 
 // Mock Tauri APIs globally for all tests
 const mockTauriAPIs = () => {
@@ -46,17 +47,20 @@ const mockTauriAPIs = () => {
 // Mock fetch for platform API calls
 const mockFetch = () => {
   const originalFetch = globalThis.fetch;
-  
+
   (globalThis as any).fetch = async (url: string | URL, options?: RequestInit) => {
     const urlString = typeof url === 'string' ? url : url.toString();
-    
+
     // Mock OAuth initiation endpoint
     if (urlString.includes('/api/auth/social/')) {
       return {
         ok: true,
         status: 302,
         headers: new Map([
-          ['location', 'https://auth.workos.com/oauth/authorize?client_id=test&redirect_uri=elizaos%3A%2F%2Fauth%2Fcallback']
+          [
+            'location',
+            'https://auth.workos.com/oauth/authorize?client_id=test&redirect_uri=elizaos%3A%2F%2Fauth%2Fcallback',
+          ],
         ]),
         url: 'https://auth.workos.com/oauth/authorize?client_id=test',
         redirected: false,
@@ -110,7 +114,7 @@ const mockFetch = () => {
     if (originalFetch) {
       return originalFetch(url, options);
     }
-    
+
     return Promise.reject(new Error(`Unmocked fetch call to: ${urlString}`));
   };
 
@@ -130,12 +134,12 @@ const setupConsoleCapture = () => {
   (globalThis as any).__TEST_CONSOLE_CAPTURE__ = {
     enable: () => {
       const captured: { level: string; args: any[] }[] = [];
-      
+
       console.log = (...args) => captured.push({ level: 'log', args });
       console.warn = (...args) => captured.push({ level: 'warn', args });
       console.error = (...args) => captured.push({ level: 'error', args });
       console.info = (...args) => captured.push({ level: 'info', args });
-      
+
       return captured;
     },
     disable: () => {
@@ -153,17 +157,17 @@ const setupConsoleCapture = () => {
 beforeAll(async () => {
   // Mock Tauri APIs
   mockTauriAPIs();
-  
+
   // Mock fetch for platform communication
   mockFetch();
-  
+
   // Setup console capture utilities
   setupConsoleCapture();
 
   // Set test environment variables
   process.env.NODE_ENV = 'test';
   process.env.JWT_SECRET = 'test-jwt-secret-key-for-testing-only';
-  
+
   console.log('🧪 Test environment setup complete');
 });
 
@@ -184,7 +188,7 @@ export const testUtils = {
     agentLimit: 10,
     ...overrides,
   }),
-  
+
   createMockCharacter: (overrides = {}) => ({
     name: 'TestBot',
     bio: 'A test bot for authentication integration testing',
@@ -192,8 +196,8 @@ export const testUtils = {
     messageExamples: [
       [
         { user: 'user', content: { text: 'Hello' } },
-        { user: 'assistant', content: { text: 'Hello! How can I help you today?' } }
-      ]
+        { user: 'assistant', content: { text: 'Hello! How can I help you today?' } },
+      ],
     ],
     knowledge: [],
     plugins: [],
@@ -210,7 +214,7 @@ export const testUtils = {
     ...overrides,
   }),
 
-  waitForAsync: (ms: number = 100) => new Promise(resolve => setTimeout(resolve, ms)),
+  waitForAsync: (ms: number = 100) => new Promise((resolve) => setTimeout(resolve, ms)),
 };
 
 // Global test timeout

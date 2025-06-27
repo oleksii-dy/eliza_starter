@@ -40,7 +40,9 @@ describe('PluginManagerService (Consolidated)', () => {
     runtime = createMockRuntime();
     pluginManager = new PluginManagerService(runtime);
     spyOn(runtime, 'getService').mockImplementation((name) => {
-      if (name === 'plugin_manager') {return pluginManager as any;}
+      if (name === 'plugin_manager') {
+        return pluginManager as any;
+      }
       return undefined;
     });
   });
@@ -67,8 +69,10 @@ describe('PluginManagerService (Consolidated)', () => {
   describe('GitHub Operations (Consolidated)', () => {
     it('should clone a repository using the consolidated method', async () => {
       // Mock the underlying implementation if needed, or let it run if it's simple
-      const cloneSpy = spyOn(pluginManager, 'cloneRepository')
-        .mockResolvedValue({ success: true, path: '/tmp/test' });
+      const cloneSpy = spyOn(pluginManager, 'cloneRepository').mockResolvedValue({
+        success: true,
+        path: '/tmp/test',
+      });
 
       const result = await pluginManager.cloneRepository(
         'https://github.com/test/repo.git',

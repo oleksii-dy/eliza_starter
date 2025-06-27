@@ -27,20 +27,27 @@ export interface ApiKeyAuthContext {
 export function apiKeyAuthMiddleware(requiredPermission?: string) {
   return async function (
     request: NextRequest,
-    handler: (request: NextRequest, context: ApiKeyAuthContext) => Promise<NextResponse>
+    handler: (
+      request: NextRequest,
+      context: ApiKeyAuthContext,
+    ) => Promise<NextResponse>,
   ): Promise<NextResponse> {
     try {
       // Extract API key from Authorization header
       const authHeader = request.headers.get('Authorization');
 
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return NextResponse.json({
-          success: false,
-          error: {
-            code: 'missing_api_key',
-            message: 'API key is required. Please provide your API key in the Authorization header as "Bearer YOUR_API_KEY".',
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: 'missing_api_key',
+              message:
+                'API key is required. Please provide your API key in the Authorization header as "Bearer YOUR_API_KEY".',
+            },
           },
-        }, { status: 401 });
+          { status: 401 },
+        );
       }
 
       const apiKey = authHeader.substring(7); // Remove 'Bearer ' prefix
@@ -48,36 +55,51 @@ export function apiKeyAuthMiddleware(requiredPermission?: string) {
       // Verify API key
       const verification = await apiKeyService.verifyApiKey(apiKey);
 
-      if (!verification.isValid || !verification.apiKey || !verification.organizationId) {
-        return NextResponse.json({
-          success: false,
-          error: {
-            code: 'invalid_api_key',
-            message: 'Invalid or expired API key.',
+      if (
+        !verification.isValid ||
+        !verification.apiKey ||
+        !verification.organizationId
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: 'invalid_api_key',
+              message: 'Invalid or expired API key.',
+            },
           },
-        }, { status: 401 });
+          { status: 401 },
+        );
       }
 
       // Check required permission
-      if (requiredPermission && !apiKeyService.hasPermission(verification.apiKey, requiredPermission)) {
-        return NextResponse.json({
-          success: false,
-          error: {
-            code: 'insufficient_permissions',
-            message: `This API key does not have the required permission: ${requiredPermission}`,
-            details: {
-              required: requiredPermission,
-              available: verification.apiKey.permissions,
+      if (
+        requiredPermission &&
+        !apiKeyService.hasPermission(verification.apiKey, requiredPermission)
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: 'insufficient_permissions',
+              message: `This API key does not have the required permission: ${requiredPermission}`,
+              details: {
+                required: requiredPermission,
+                available: verification.apiKey.permissions,
+              },
             },
           },
-        }, { status: 403 });
+          { status: 403 },
+        );
       }
 
       // Set database context for the request
       await setDatabaseContext({
         organizationId: verification.organizationId,
         userId: verification.apiKey.id, // Use API key ID as user context
-        isAdmin: verification.apiKey.permissions.includes('admin') || verification.apiKey.permissions.includes('*'),
+        isAdmin:
+          verification.apiKey.permissions.includes('admin') ||
+          verification.apiKey.permissions.includes('*'),
       });
 
       // Create context object
@@ -103,7 +125,6 @@ export function apiKeyAuthMiddleware(requiredPermission?: string) {
         // Clean up database context
         await clearDatabaseContext();
       }
-
     } catch (error) {
       console.error('API key auth middleware error:', error);
 
@@ -112,13 +133,16 @@ export function apiKeyAuthMiddleware(requiredPermission?: string) {
         await clearDatabaseContext();
       } catch {}
 
-      return NextResponse.json({
-        success: false,
-        error: {
-          code: 'internal_error',
-          message: 'An internal error occurred during authentication.',
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'internal_error',
+            message: 'An internal error occurred during authentication.',
+          },
         },
-      }, { status: 500 });
+        { status: 500 },
+      );
     }
   };
 }
@@ -128,12 +152,18 @@ export function apiKeyAuthMiddleware(requiredPermission?: string) {
  */
 export function apiKeyRateLimitMiddleware() {
   // Simple in-memory rate limiter (use Redis in production)
-  const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+  const rateLimitStore = new Map<
+    string,
+    { count: number; resetTime: number }
+  >();
 
   return async function (
     request: NextRequest,
     context: ApiKeyAuthContext,
-    handler: (request: NextRequest, context: ApiKeyAuthContext) => Promise<NextResponse>
+    handler: (
+      request: NextRequest,
+      context: ApiKeyAuthContext,
+    ) => Promise<NextResponse>,
   ): Promise<NextResponse> {
     const { apiKey } = context;
     const now = Date.now();
@@ -156,24 +186,27 @@ export function apiKeyRateLimitMiddleware() {
     if (rateLimitData.count >= limit) {
       const resetIn = Math.ceil((rateLimitData.resetTime - now) / 1000);
 
-      return NextResponse.json({
-        success: false,
-        error: {
-          code: 'rate_limit_exceeded',
-          message: `Rate limit exceeded. Maximum ${limit} requests per minute allowed.`,
-          details: {
-            limit,
-            resetIn,
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'rate_limit_exceeded',
+            message: `Rate limit exceeded. Maximum ${limit} requests per minute allowed.`,
+            details: {
+              limit,
+              resetIn,
+            },
           },
         },
-      }, {
-        status: 429,
-        headers: {
-          'X-RateLimit-Limit': limit.toString(),
-          'X-RateLimit-Remaining': '0',
-          'X-RateLimit-Reset': rateLimitData.resetTime.toString(),
+        {
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': limit.toString(),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': rateLimitData.resetTime.toString(),
+          },
         },
-      });
+      );
     }
 
     // Increment counter
@@ -184,8 +217,14 @@ export function apiKeyRateLimitMiddleware() {
     const response = await handler(request, context);
 
     response.headers.set('X-RateLimit-Limit', limit.toString());
-    response.headers.set('X-RateLimit-Remaining', (limit - rateLimitData.count).toString());
-    response.headers.set('X-RateLimit-Reset', rateLimitData.resetTime.toString());
+    response.headers.set(
+      'X-RateLimit-Remaining',
+      (limit - rateLimitData.count).toString(),
+    );
+    response.headers.set(
+      'X-RateLimit-Reset',
+      rateLimitData.resetTime.toString(),
+    );
 
     return response;
   };
@@ -200,7 +239,10 @@ export function createApiKeyMiddleware(requiredPermission?: string) {
 
   return async function (
     request: NextRequest,
-    handler: (request: NextRequest, context: ApiKeyAuthContext) => Promise<NextResponse>
+    handler: (
+      request: NextRequest,
+      context: ApiKeyAuthContext,
+    ) => Promise<NextResponse>,
   ): Promise<NextResponse> {
     return authMiddleware(request, async (req, context) => {
       return rateLimitMiddleware(req, context, handler);
@@ -221,5 +263,8 @@ export function requirePermission(permission: string) {
  * Utility to check if API key has admin access
  */
 export function requireAdmin(context: ApiKeyAuthContext): boolean {
-  return context.apiKey.permissions.includes('admin') || context.apiKey.permissions.includes('*');
+  return (
+    context.apiKey.permissions.includes('admin') ||
+    context.apiKey.permissions.includes('*')
+  );
 }

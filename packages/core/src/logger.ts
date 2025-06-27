@@ -190,72 +190,74 @@ const isDebugMode = (process?.env?.LOG_LEVEL || '').toLowerCase() === 'debug';
 const effectiveLogLevel = isDebugMode ? 'debug' : process?.env?.DEFAULT_LOG_LEVEL || 'info';
 
 // Create a function to generate the pretty configuration
-const createPrettyConfig = () => ({
-  colorize: true,
-  translateTime: 'yyyy-mm-dd HH:MM:ss',
-  ignore: 'pid,hostname',
-  levelColors: {
-    60: 'red', // fatal
-    50: 'red', // error
-    40: 'yellow', // warn
-    30: 'blue', // info
-    29: 'green', // log
-    28: 'cyan', // progress
-    27: 'greenBright', // success
-    20: 'magenta', // debug
-    10: 'grey', // trace
-    '*': 'white', // default for any unspecified level
-  },
-  customPrettifiers: {
-    level: (inputData: any) => {
-      let level;
-      if (typeof inputData === 'object' && inputData !== null) {
-        level = inputData.level || inputData.value;
-      } else {
-        level = inputData;
-      }
+// Commented out - not currently used
+// const createPrettyConfig = () => ({
+//   colorize: true,
+//   translateTime: 'yyyy-mm-dd HH:MM:ss',
+//   ignore: 'pid,hostname',
+//   levelColors: {
+//     60: 'red', // fatal
+//     50: 'red', // error
+//     40: 'yellow', // warn
+//     30: 'blue', // info
+//     29: 'green', // log
+//     28: 'cyan', // progress
+//     27: 'greenBright', // success
+//     20: 'magenta', // debug
+//     10: 'grey', // trace
+//     '*': 'white', // default for any unspecified level
+//   },
+//   customPrettifiers: {
+//     level: (inputData: any) => {
+//       let level;
+//       if (typeof inputData === 'object' && inputData !== null) {
+//         level = inputData.level || inputData.value;
+//       } else {
+//         level = inputData;
+//       }
 
-      const levelNames: Record<number, string> = {
-        10: 'TRACE',
-        20: 'DEBUG',
-        27: 'SUCCESS',
-        28: 'PROGRESS',
-        29: 'LOG',
-        30: 'INFO',
-        40: 'WARN',
-        50: 'ERROR',
-        60: 'FATAL',
-      };
+//       const levelNames: Record<number, string> = {
+//         10: 'TRACE',
+//         20: 'DEBUG',
+//         27: 'SUCCESS',
+//         28: 'PROGRESS',
+//         29: 'LOG',
+//         30: 'INFO',
+//         40: 'WARN',
+//         50: 'ERROR',
+//         60: 'FATAL',
+//       };
 
-      if (typeof level === 'number') {
-        return levelNames[level] || `LEVEL${level}`;
-      }
+//       if (typeof level === 'number') {
+//         return levelNames[level] || `LEVEL${level}`;
+//       }
 
-      if (level === undefined || level === null) {
-        return 'UNKNOWN';
-      }
+//       if (level === undefined || level === null) {
+//         return 'UNKNOWN';
+//       }
 
-      return String(level).toUpperCase();
-    },
-    // Add a custom prettifier for error messages
-    msg: (msg: string | object) => {
-      // If msg is an object, convert to string first
-      const msgStr = typeof msg === 'string' ? msg : JSON.stringify(msg);
-      // Replace "ERROR (TypeError):" pattern with just "ERROR:"
-      return msgStr.replace(/ERROR \([^)]+\):/g, 'ERROR:');
-    },
-  },
-  messageFormat: '{msg}',
-});
+//       return String(level).toUpperCase();
+//     },
+//     // Add a custom prettifier for error messages
+//     msg: (msg: string | object) => {
+//       // If msg is an object, convert to string first
+//       const msgStr = typeof msg === 'string' ? msg : JSON.stringify(msg);
+//       // Replace "ERROR (TypeError):" pattern with just "ERROR:"
+//       return msgStr.replace(/ERROR \([^)]+\):/g, 'ERROR:');
+//     },
+//   },
+//   messageFormat: '{msg}',
+// });
 
-const _createStream = async () => {
-  if (raw) {
-    return undefined;
-  }
-  // dynamically import pretty to avoid importing it in the browser
-  const pretty = await import('pino-pretty');
-  return pretty.default(createPrettyConfig());
-};
+// Commented out unused stream creation
+// const _createStream = async () => {
+//   if (raw) {
+//     return undefined;
+//   }
+//   // dynamically import pretty to avoid importing it in the browser
+//   const pretty = await import('pino-pretty');
+//   return pretty.default(createPrettyConfig());
+// };
 
 // Create options with appropriate level
 const options = {

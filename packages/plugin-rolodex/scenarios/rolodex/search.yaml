@@ -1,5 +1,5 @@
-name: "Entity Search"
-description: "Test natural language entity search"
+name: 'Entity Search'
+description: 'Test natural language entity search'
 characters:
   - user
   - agent
@@ -7,51 +7,51 @@ characters:
 setup:
   - action: user
     message: "Track Alice Johnson - she's a software engineer at Google working on distributed systems"
-    
+
   - action: agent
     expectation:
       response:
-        contains: "tracked"
-        
+        contains: 'tracked'
+
   - action: user
     message: "Track Bob Smith - he's a UX designer at Meta focused on AR interfaces"
-    
+
   - action: agent
     expectation:
       response:
-        contains: "tracked"
-        
+        contains: 'tracked'
+
   - action: user
-    message: "Track Charlie Davis - founder of TechStartup, building AI tools for education"
-    
+    message: 'Track Charlie Davis - founder of TechStartup, building AI tools for education'
+
   - action: agent
     expectation:
       response:
-        contains: "tracked"
+        contains: 'tracked'
 
 scenario:
   - action: user
-    message: "Who do I know in tech?"
-    
+    message: 'Who do I know in tech?'
+
   - action: agent
     expectation:
       response:
-        contains: ["Alice", "Bob", "Charlie"]
-        
+        contains: ['Alice', 'Bob', 'Charlie']
+
   - action: user
-    message: "Find all engineers"
-    
+    message: 'Find all engineers'
+
   - action: agent
     expectation:
       response:
-        contains: "Alice"
-        excludes: ["Bob", "Charlie"]
-        
+        contains: 'Alice'
+        excludes: ['Bob', 'Charlie']
+
   - action: user
-    message: "Who works at big tech companies?"
-    
+    message: 'Who works at big tech companies?'
+
   - action: agent
     expectation:
       response:
-        contains: ["Alice", "Google", "Bob", "Meta"]
-        excludes: "Charlie" 
+        contains: ['Alice', 'Google', 'Bob', 'Meta']
+        excludes: 'Charlie'

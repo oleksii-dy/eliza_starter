@@ -11,10 +11,19 @@ export const priorityDetectorProvider: Provider = {
     let priority: string;
     let urgencyScore: number;
 
-    if (text.includes('urgent') || text.includes('critical') || text.includes('emergency') || text.includes('server is down')) {
+    if (
+      text.includes('urgent') ||
+      text.includes('critical') ||
+      text.includes('emergency') ||
+      text.includes('server is down')
+    ) {
       priority = 'critical';
       urgencyScore = 10;
-    } else if (text.includes('high priority') || text.includes('important') || text.includes('asap')) {
+    } else if (
+      text.includes('high priority') ||
+      text.includes('important') ||
+      text.includes('asap')
+    ) {
       priority = 'high';
       urgencyScore = 8;
     } else if (text.includes('stakeholder') || text.includes('board meeting')) {
@@ -268,8 +277,8 @@ export const taskComplexityProvider: Provider = {
       'customer survey',
       'crm',
       'data warehouse',
-      'database'
-    ].filter(source => text.includes(source)).length;
+      'database',
+    ].filter((source) => text.includes(source)).length;
 
     const factors = {
       hasMultipleSteps:
@@ -300,16 +309,13 @@ export const taskComplexityProvider: Provider = {
         text.includes('daily') ||
         text.includes('weekly'),
       requiresCoordination:
-        text.includes('team') ||
-        text.includes('coordinate') ||
-        text.includes('collaborate'),
+        text.includes('team') || text.includes('coordinate') || text.includes('collaborate'),
       requiresAutomation:
         text.includes('automate') ||
         text.includes('workflow') ||
         text.includes('monitor') ||
         text.includes('escalate'),
-      hasMultipleObjectives:
-        text.includes('and') && (text.match(/and/g) || []).length > 2,
+      hasMultipleObjectives: text.includes('and') && (text.match(/and/g) || []).length > 2,
     };
 
     const complexityScore = Object.values(factors).filter(Boolean).length;

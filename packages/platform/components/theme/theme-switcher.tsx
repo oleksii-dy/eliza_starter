@@ -18,16 +18,11 @@ export function ThemeSwitcher() {
         <button
           key={value}
           onClick={() => setTheme(value)}
-          className={`
-            flex items-center space-x-2 rounded-md px-3 py-2 text-sm font-medium transition-colors
-            focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--focus-ring)]
-            min-h-[44px] min-w-[44px]
-            ${
-              theme === value
-                ? 'bg-background text-typography-strong shadow-sm font-semibold'
-                : 'text-typography-weak hover:text-typography-strong hover:bg-fill-hover'
-            }
-          `}
+          className={`flex min-h-[44px] min-w-[44px] items-center space-x-2 rounded-md px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--focus-ring)] ${
+            theme === value
+              ? 'bg-background font-semibold text-typography-strong shadow-sm'
+              : 'text-typography-weak hover:bg-fill-hover hover:text-typography-strong'
+          } `}
           data-cy={`theme-${value}`}
           aria-label={`Switch to ${label} theme`}
           aria-pressed={theme === value}
@@ -47,12 +42,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-      className="
-        flex h-10 w-10 items-center justify-center rounded-lg bg-fill text-typography-strong
-        transition-colors hover:bg-fill-hover 
-        focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--focus-ring)]
-        min-h-[44px] min-w-[44px]
-      "
+      className="flex h-10 min-h-[44px] w-10 min-w-[44px] items-center justify-center rounded-lg bg-fill text-typography-strong transition-colors hover:bg-fill-hover focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--focus-ring)]"
       data-cy="theme-toggle"
       aria-label={`Switch to ${resolvedTheme === 'dark' ? 'light' : 'dark'} theme`}
       aria-pressed={resolvedTheme === 'dark'}

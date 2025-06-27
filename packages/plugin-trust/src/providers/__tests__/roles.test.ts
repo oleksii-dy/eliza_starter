@@ -3,8 +3,9 @@ import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 import { ChannelType } from '@elizaos/core';
 import type { UUID } from '@elizaos/core';
 import { roleProvider } from '../roles';
+import { createMockRuntime, createMockMemory, createMockState } from '../../__tests__/test-utils';
 
-const createMockRuntime = (): IAgentRuntime => {
+const createProviderRolesMockRuntime = (): IAgentRuntime => {
   const mockWorld = {
     id: 'world-1' as UUID,
     metadata: {
@@ -37,8 +38,7 @@ const createMockRuntime = (): IAgentRuntime => {
     },
   };
 
-  return {
-    agentId: 'test-agent' as UUID,
+  return createMockRuntime({
     getRoom: mock().mockResolvedValue({
       id: 'room-1',
       type: ChannelType.GROUP,
@@ -46,24 +46,15 @@ const createMockRuntime = (): IAgentRuntime => {
     }),
     getWorld: mock().mockResolvedValue(mockWorld),
     getEntityById: mock().mockImplementation((id: string) => mockEntities[id]),
-  } as any;
+  });
 };
-
-const createMockMemory = (text: string, entityId: UUID): Memory =>
-  ({
-    entityId,
-    content: {
-      text,
-    },
-    roomId: 'room-1' as UUID,
-  }) as Memory;
 
 describe('roleProvider', () => {
   let runtime: IAgentRuntime;
   const testEntityId = 'entity-1' as UUID;
 
   beforeEach(() => {
-    runtime = createMockRuntime();
+    runtime = createProviderRolesMockRuntime();
     mock.restore();
   });
 

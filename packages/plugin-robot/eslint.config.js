@@ -7,7 +7,7 @@ export default [
     rules: {
       // Turn off no-undef as TypeScript handles this
       'no-undef': 'off',
-      
+
       // TypeScript specific overrides for this package
       '@typescript-eslint/no-unused-vars': [
         'warn',
@@ -25,9 +25,9 @@ export default [
           caughtErrorsIgnorePattern: '^_',
         },
       ],
-      
+
       // Radix parameter is common in this package for base-10 parsing
-      'radix': 'off', // Too many false positives with base 10
+      radix: 'off', // Too many false positives with base 10
     },
   },
   {
@@ -66,6 +66,6 @@ export default [
     // Plugin-robot specific rules
     rules: {
       // Add any plugin-specific rule overrides here if needed
-    }
-  }
-]; 
+    },
+  },
+];

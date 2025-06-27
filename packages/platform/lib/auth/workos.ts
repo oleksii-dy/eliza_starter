@@ -7,7 +7,7 @@ import type {
   Organization as WorkOSOrganization,
   User as WorkOSUser,
   AuthenticationResponse,
-  OrganizationMembership
+  OrganizationMembership,
 } from '@workos-inc/node';
 import type { WorkOSExtended } from '@/lib/types/common';
 
@@ -20,7 +20,9 @@ function getWorkOSClient(): WorkOS {
     const clientId = process.env.WORKOS_CLIENT_ID;
 
     if (!apiKey || !clientId) {
-      throw new Error('WorkOS API key and client ID are required. Please set WORKOS_API_KEY and WORKOS_CLIENT_ID environment variables.');
+      throw new Error(
+        'WorkOS API key and client ID are required. Please set WORKOS_API_KEY and WORKOS_CLIENT_ID environment variables.',
+      );
     }
 
     workosClient = new WorkOS(apiKey, {
@@ -36,24 +38,28 @@ function getWorkOSClient(): WorkOS {
  */
 export class WorkOSAuthService {
   private workos = getWorkOSClient();
-  private workosExtended: WorkOSExtended = getWorkOSClient() as unknown as WorkOSExtended;
+  private workosExtended: WorkOSExtended =
+    getWorkOSClient() as unknown as WorkOSExtended;
   private clientId = process.env.WORKOS_CLIENT_ID!;
-  private redirectUri = process.env.WORKOS_REDIRECT_URI || 'http://localhost:3333/auth/callback';
+  private redirectUri =
+    process.env.WORKOS_REDIRECT_URI || 'http://localhost:3333/auth/callback';
 
   /**
    * Generate authorization URL for SSO login
    */
-  generateAuthUrl(options: {
-    organizationId?: string;
-    connection?: string;
-    domain?: string;
-    state?: string;
-    screenHint?: 'sign_up' | 'sign_in';
-    redirectUri?: string;
-  } = {}): string {
+  generateAuthUrl(
+    options: {
+      organizationId?: string;
+      connection?: string;
+      domain?: string;
+      state?: string;
+      screenHint?: 'sign_up' | 'sign_in';
+      redirectUri?: string;
+    } = {},
+  ): string {
     try {
       const { redirectUri, ...otherOptions } = options;
-      
+
       const authUrl = this.workos.sso.getAuthorizationUrl({
         clientId: this.clientId,
         redirectUri: redirectUri || this.redirectUri,
@@ -76,10 +82,14 @@ export class WorkOSAuthService {
     accessToken: string;
   }> {
     try {
-      const response = await this.workos.sso.getProfileAndToken({
+      const response = (await this.workos.sso.getProfileAndToken({
         code,
         clientId: this.clientId,
-      }) as unknown as { profile: WorkOSUser; organizationId?: string; accessToken: string };
+      })) as unknown as {
+        profile: WorkOSUser;
+        organizationId?: string;
+        accessToken: string;
+      };
 
       return {
         user: response.profile as WorkOSUser,
@@ -95,9 +105,12 @@ export class WorkOSAuthService {
   /**
    * Get organization by ID
    */
-  async getOrganization(organizationId: string): Promise<WorkOSOrganization | null> {
+  async getOrganization(
+    organizationId: string,
+  ): Promise<WorkOSOrganization | null> {
     try {
-      const organization = await this.workos.organizations.getOrganization(organizationId);
+      const organization =
+        await this.workos.organizations.getOrganization(organizationId);
       return organization;
     } catch (error) {
       console.error('Failed to get WorkOS organization:', error);
@@ -108,7 +121,9 @@ export class WorkOSAuthService {
   /**
    * List organizations for domain
    */
-  async getOrganizationsByDomain(domain: string): Promise<WorkOSOrganization[]> {
+  async getOrganizationsByDomain(
+    domain: string,
+  ): Promise<WorkOSOrganization[]> {
     try {
       const { data } = await this.workos.organizations.listOrganizations({
         domains: [domain],
@@ -229,10 +244,12 @@ export class WorkOSAuthService {
    */
   async getOrganizationMembership(
     userId: string,
-    organizationId: string
+    organizationId: string,
   ): Promise<OrganizationMembership | null> {
     try {
-      const { data } = await (this.workos as any).organizationMemberships?.listOrganizationMemberships({
+      const { data } = await (
+        this.workos as any
+      ).organizationMemberships?.listOrganizationMemberships({
         userId,
         organizationId,
       });
@@ -253,7 +270,9 @@ export class WorkOSAuthService {
     roleSlug?: string;
   }): Promise<OrganizationMembership> {
     try {
-      const membership = await (this.workos as any).organizationMemberships?.createOrganizationMembership({
+      const membership = await (
+        this.workos as any
+      ).organizationMemberships?.createOrganizationMembership({
         userId: data.userId,
         organizationId: data.organizationId,
         roleSlug: data.roleSlug,
@@ -271,7 +290,9 @@ export class WorkOSAuthService {
    */
   async deleteOrganizationMembership(membershipId: string): Promise<void> {
     try {
-      await (this.workos as any).organizationMemberships?.deleteOrganizationMembership(membershipId);
+      await (
+        this.workos as any
+      ).organizationMemberships?.deleteOrganizationMembership(membershipId);
     } catch (error) {
       console.error('Failed to delete organization membership:', error);
       throw new Error('Failed to delete organization membership');
@@ -281,7 +302,11 @@ export class WorkOSAuthService {
   /**
    * Webhook signature verification
    */
-  verifyWebhookSignature(payload: string, signature: string, secret: string): boolean {
+  verifyWebhookSignature(
+    payload: string,
+    signature: string,
+    secret: string,
+  ): boolean {
     try {
       const event = this.workos.webhooks.constructEvent({
         payload,
@@ -317,15 +342,17 @@ export const workosAuth = new WorkOSAuthService();
 
 // Helper function to determine user role based on WorkOS data
 export function mapWorkOSRoleToAppRole(workosRole?: string): string {
-  if (!workosRole) {return 'member';}
+  if (!workosRole) {
+    return 'member';
+  }
 
   const roleMapping: Record<string, string> = {
-    'admin': 'admin',
-    'owner': 'owner',
-    'manager': 'admin',
-    'member': 'member',
-    'guest': 'viewer',
-    'viewer': 'viewer',
+    admin: 'admin',
+    owner: 'owner',
+    manager: 'admin',
+    member: 'member',
+    guest: 'viewer',
+    viewer: 'viewer',
   };
 
   return roleMapping[workosRole.toLowerCase()] || 'member';

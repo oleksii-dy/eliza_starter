@@ -18,17 +18,20 @@ const paymentMultiAgentScenario: Scenario = {
       },
       {
         user: 'payment_agent',
-        content: 'Processing agent-to-agent transfer of 5 USDC to the data analysis agent. Transfer completed successfully.',
+        content:
+          'Processing agent-to-agent transfer of 5 USDC to the data analysis agent. Transfer completed successfully.',
       },
     ],
     [
       {
         user: 'customer',
-        content: 'Can multiple agents collaborate on my project and handle payments between themselves?',
+        content:
+          'Can multiple agents collaborate on my project and handle payments between themselves?',
       },
       {
         user: 'coordinator_agent',
-        content: 'Yes! I can coordinate multiple specialized agents. They handle payments automatically - you only pay once, and I distribute funds as needed.',
+        content:
+          'Yes! I can coordinate multiple specialized agents. They handle payments automatically - you only pay once, and I distribute funds as needed.',
       },
     ],
   ],

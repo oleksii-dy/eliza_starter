@@ -13,11 +13,11 @@ export function useConfirmation() {
     open: boolean;
     options: ConfirmationOptions | null;
     onConfirm: (() => void) | null;
-  }>({
-    open: false,
-    options: null,
-    onConfirm: null,
-  });
+      }>({
+        open: false,
+        options: null,
+        onConfirm: null,
+      });
 
   const confirm = useCallback((options: ConfirmationOptions, onConfirm: () => void) => {
     setConfirmationState({

@@ -14,7 +14,7 @@ const searchMemoriesSchema = z.object({
 });
 
 // POST /api/v1/memories/search - Search memories with vector similarity
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   try {
     // Authenticate user
     const session = await sessionService.getSessionFromCookies();
@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     const data = searchMemoriesSchema.parse(body);
 
     const db = await getDatabase();
-    
+
     // Verify agent belongs to user's organization
     const agent = await db
       .select({ id: agents.id })
@@ -35,15 +35,18 @@ export async function POST(request: NextRequest) {
       .where(
         and(
           eq(agents.id, data.agentId),
-          eq(agents.organizationId, session.organizationId)
-        )
+          eq(agents.organizationId, session.organizationId),
+        ),
       )
       .limit(1);
 
     if (agent.length === 0) {
-      return NextResponse.json({
-        error: 'Agent not found or access denied'
-      }, { status: 404 });
+      return NextResponse.json(
+        {
+          error: 'Agent not found or access denied',
+        },
+        { status: 404 },
+      );
     }
 
     // Perform vector similarity search with triple isolation
@@ -71,8 +74,8 @@ export async function POST(request: NextRequest) {
           eq(memories.organizationId, session.organizationId), // Organization isolation
           eq(memories.agentId, data.agentId), // Agent isolation
           eq(memories.userId, session.userId), // User isolation
-          sql`${memories.embedding} IS NOT NULL`
-        )
+          sql`${memories.embedding} IS NOT NULL`,
+        ),
       )
       .orderBy(desc(sql`similarity`))
       .having(sql`similarity >= ${data.matchThreshold}`)
@@ -86,20 +89,25 @@ export async function POST(request: NextRequest) {
         matchThreshold: data.matchThreshold,
         agentId: data.agentId,
         userId: session.userId,
-      }
+      },
     });
-
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({
-        error: 'Invalid search parameters',
-        details: error.errors
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Invalid search parameters',
+          details: error.errors,
+        },
+        { status: 400 },
+      );
     }
 
     console.error('Failed to search memories:', error);
-    return NextResponse.json({
-      error: 'Failed to search memories'
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to search memories',
+      },
+      { status: 500 },
+    );
   }
 }

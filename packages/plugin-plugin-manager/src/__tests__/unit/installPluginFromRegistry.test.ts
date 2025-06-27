@@ -103,8 +103,9 @@ describe('installPluginFromRegistry Action (Consolidated)', () => {
         pluginName: '@elizaos/plugin-fails',
       },
     } as any;
-    mockPluginManager.installPluginFromRegistry = mock()
-      .mockRejectedValue(new Error('Installation failed'));
+    mockPluginManager.installPluginFromRegistry = mock().mockRejectedValue(
+      new Error('Installation failed')
+    );
 
     const result = await installPluginFromRegistryAction.handler(
       mockRuntime,

@@ -28,27 +28,32 @@ export class PGliteAdapter extends BaseDatabaseAdapter {
 
     try {
       // Determine PGlite database path
-      let dbPath = this.config.path ||
-                   this.config.url ||
-                   process.env.PGLITE_DB_PATH ||
-                   process.env.SQLITE_DB_PATH || // Backward compatibility
-                   './data/local.db';
+      let dbPath =
+        this.config.path ||
+        this.config.url ||
+        process.env.PGLITE_DB_PATH ||
+        process.env.SQLITE_DB_PATH || // Backward compatibility
+        './data/local.db';
 
       // Convert to proper path for PGlite - handle URL objects too
       if (typeof dbPath === 'object' && dbPath && 'href' in dbPath) {
-        console.log('⚠️  PGliteAdapter received URL object, converting to string');
+        console.log(
+          '⚠️  PGliteAdapter received URL object, converting to string',
+        );
         const urlObj = dbPath as any;
         dbPath = urlObj.pathname || urlObj.href.replace(/^[^:]+:\/\//, '');
       }
-      
+
       if (typeof dbPath === 'string') {
         dbPath = dbPath.replace('file:', '').replace('.db', '');
       }
-      
+
       // Ensure it's definitely a string
       const cleanPath = String(dbPath);
 
-      console.log(`🔌 Connecting to PGlite database: ${cleanPath} (type: ${typeof cleanPath})`);
+      console.log(
+        `🔌 Connecting to PGlite database: ${cleanPath} (type: ${typeof cleanPath})`,
+      );
 
       // Create PGlite client - CRITICAL: always pass clean string
       this.client = new PGlite({
@@ -66,7 +71,6 @@ export class PGliteAdapter extends BaseDatabaseAdapter {
 
       this.connected = true;
       console.log('✅ PGlite database connection established');
-
     } catch (error) {
       console.error('❌ Failed to connect to PGlite database:', error);
       throw error;
@@ -108,7 +112,9 @@ export class PGliteAdapter extends BaseDatabaseAdapter {
 
     try {
       console.log('🔄 Running PGlite migrations...');
-      await migrate(this.db, { migrationsFolder: './drizzle/migrations-pglite' });
+      await migrate(this.db, {
+        migrationsFolder: './drizzle/migrations-pglite',
+      });
       console.log('✅ PGlite migrations completed');
     } catch (error) {
       console.error('❌ PGlite migration failed:', error);
@@ -128,11 +134,13 @@ export class PGliteAdapter extends BaseDatabaseAdapter {
       const result = await this.client!.query(`
         SELECT tablename FROM pg_tables WHERE schemaname = 'public'
       `);
-      
+
       for (const row of result.rows) {
-        await this.client!.query(`DROP TABLE IF EXISTS "${(row as any).tablename}" CASCADE`);
+        await this.client!.query(
+          `DROP TABLE IF EXISTS "${(row as any).tablename}" CASCADE`,
+        );
       }
-      
+
       console.log('✅ All tables dropped');
     } catch (error) {
       console.warn('Warning during table cleanup:', error);

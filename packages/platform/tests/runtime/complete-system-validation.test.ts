@@ -31,23 +31,23 @@ const mockApiResponses = {
           plugins: ['@elizaos/plugin-bootstrap'],
           runtimeConfig: {
             models: { TEXT_GENERATION: 'anthropic:claude-3-haiku-20240307' },
-            temperature: 0.7
-          }
-        }
-      ]
+            temperature: 0.7,
+          },
+        },
+      ],
     },
     create: {
       agent: {
         id: 'agent-new-456',
         name: 'NewTestAgent',
         status: 'created',
-        organizationId: 'org-123'
-      }
+        organizationId: 'org-123',
+      },
     },
     start: {
       success: true,
-      deploymentUrl: 'https://platform.elizaos.ai/agents/agent-123/chat'
-    }
+      deploymentUrl: 'https://platform.elizaos.ai/agents/agent-123/chat',
+    },
   },
   auth: {
     me: {
@@ -55,8 +55,8 @@ const mockApiResponses = {
       email: 'test@example.com',
       name: 'Test User',
       organizationId: 'org-123',
-      role: 'admin'
-    }
+      role: 'admin',
+    },
   },
   apiKeys: {
     list: {
@@ -69,10 +69,10 @@ const mockApiResponses = {
             key: 'eliza_****', // Masked for security
             permissions: ['agents:read', 'agents:write'],
             isActive: true,
-            createdAt: '2024-01-01T00:00:00Z'
-          }
-        ]
-      }
+            createdAt: '2024-01-01T00:00:00Z',
+          },
+        ],
+      },
     },
     create: {
       success: true,
@@ -81,10 +81,10 @@ const mockApiResponses = {
           id: 'key-new-456',
           name: 'New Test Key',
           key: 'eliza_test_key_full_value_shown_once_only',
-          permissions: ['agents:read']
-        }
-      }
-    }
+          permissions: ['agents:read'],
+        },
+      },
+    },
   },
   health: {
     status: 'healthy',
@@ -93,9 +93,9 @@ const mockApiResponses = {
     services: {
       database: 'connected',
       authentication: 'active',
-      agents: 'running'
-    }
-  }
+      agents: 'running',
+    },
+  },
 };
 
 // Setup fetch mocks
@@ -115,7 +115,6 @@ function setupFetchMock(endpoint: string, response: any, status: number = 200) {
 }
 
 describe('Complete System Validation', () => {
-
   beforeAll(() => {
     // Reset mocks
     mockFetch.mockClear();
@@ -139,8 +138,8 @@ describe('Complete System Validation', () => {
 
     const response = await fetch('/api/v1/auth/me', {
       headers: {
-        'Authorization': 'Bearer test-token'
-      }
+        Authorization: 'Bearer test-token',
+      },
     });
     const user = await response.json();
 
@@ -155,7 +154,7 @@ describe('Complete System Validation', () => {
     setupFetchMock('/api/v1/api-keys', mockApiResponses.apiKeys.list);
 
     const listResponse = await fetch('/api/v1/api-keys', {
-      headers: { 'Authorization': 'Bearer test-token' }
+      headers: { Authorization: 'Bearer test-token' },
     });
     const keysList = await listResponse.json();
 
@@ -170,13 +169,13 @@ describe('Complete System Validation', () => {
     const createResponse = await fetch('/api/v1/api-keys', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer test-token',
-        'Content-Type': 'application/json'
+        Authorization: 'Bearer test-token',
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         name: 'New Test Key',
-        permissions: ['agents:read']
-      })
+        permissions: ['agents:read'],
+      }),
     });
     const newKey = await createResponse.json();
 
@@ -190,7 +189,7 @@ describe('Complete System Validation', () => {
     setupFetchMock('/api/v1/agents', mockApiResponses.agents.list);
 
     const listResponse = await fetch('/api/v1/agents', {
-      headers: { 'Authorization': 'Bearer test-token' }
+      headers: { Authorization: 'Bearer test-token' },
     });
     const agentsList = await listResponse.json();
 
@@ -206,8 +205,8 @@ describe('Complete System Validation', () => {
     const createResponse = await fetch('/api/v1/agents', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer test-token',
-        'Content-Type': 'application/json'
+        Authorization: 'Bearer test-token',
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         name: 'NewTestAgent',
@@ -217,8 +216,8 @@ describe('Complete System Validation', () => {
           bio: 'I am a newly created test agent',
           style: { all: ['helpful'] },
         },
-        plugins: ['@elizaos/plugin-bootstrap']
-      })
+        plugins: ['@elizaos/plugin-bootstrap'],
+      }),
     });
     const newAgent = await createResponse.json();
 
@@ -227,11 +226,14 @@ describe('Complete System Validation', () => {
     expect(newAgent.agent.status).toBe('created');
 
     // Test starting agent
-    setupFetchMock('/api/v1/agents/agent-123/start', mockApiResponses.agents.start);
+    setupFetchMock(
+      '/api/v1/agents/agent-123/start',
+      mockApiResponses.agents.start,
+    );
 
     const startResponse = await fetch('/api/v1/agents/agent-123/start', {
       method: 'POST',
-      headers: { 'Authorization': 'Bearer test-token' }
+      headers: { Authorization: 'Bearer test-token' },
     });
     const startResult = await startResponse.json();
 
@@ -247,7 +249,7 @@ describe('Complete System Validation', () => {
     setupFetchMock('/api/agents', mockApiResponses.agents.list);
 
     const clientResponse = await fetch('/api/agents', {
-      headers: { 'X-API-KEY': 'test-api-key' }
+      headers: { 'X-API-KEY': 'test-api-key' },
     });
     const clientAgents = await clientResponse.json();
 
@@ -272,7 +274,11 @@ describe('Complete System Validation', () => {
     expect(unauthorizedResponse.status).toBe(401);
 
     // Test 404 Not Found
-    setupFetchMock('/api/v1/agents/nonexistent', { error: 'Agent not found' }, 404);
+    setupFetchMock(
+      '/api/v1/agents/nonexistent',
+      { error: 'Agent not found' },
+      404,
+    );
 
     const notFoundResponse = await fetch('/api/v1/agents/nonexistent');
     expect(notFoundResponse.status).toBe(404);
@@ -295,22 +301,22 @@ describe('Complete System Validation', () => {
         messageExamples: [
           [
             { user: 'user', content: { text: 'Test message' } },
-            { user: 'FlowTestAgent', content: { text: 'Test response' } }
-          ]
+            { user: 'FlowTestAgent', content: { text: 'Test response' } },
+          ],
         ],
         style: {
           all: ['precise', 'thorough'],
           chat: ['responsive'],
-          post: ['detailed']
+          post: ['detailed'],
         },
       },
       plugins: ['@elizaos/plugin-bootstrap'],
       runtimeConfig: {
         models: { TEXT_GENERATION: 'anthropic:claude-3-haiku-20240307' },
         temperature: 0.5,
-        maxTokens: 2048
+        maxTokens: 2048,
       },
-      visibility: 'organization'
+      visibility: 'organization',
     };
 
     // Mock successful creation
@@ -319,17 +325,17 @@ describe('Complete System Validation', () => {
         ...agentData,
         id: 'flow-test-agent',
         status: 'created',
-        organizationId: 'org-123'
-      }
+        organizationId: 'org-123',
+      },
     });
 
     const createResponse = await fetch('/api/v1/agents', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer test-token',
-        'Content-Type': 'application/json'
+        Authorization: 'Bearer test-token',
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify(agentData)
+      body: JSON.stringify(agentData),
     });
 
     const createdAgent = await createResponse.json();
@@ -337,7 +343,9 @@ describe('Complete System Validation', () => {
     // Validate all data was preserved
     expect(createdAgent.agent.name).toBe(agentData.name);
     expect(createdAgent.agent.character.bio).toBe(agentData.character.bio);
-    expect(createdAgent.agent.runtimeConfig.temperature).toBe(agentData.runtimeConfig.temperature);
+    expect(createdAgent.agent.runtimeConfig.temperature).toBe(
+      agentData.runtimeConfig.temperature,
+    );
     expect(createdAgent.agent.plugins).toEqual(agentData.plugins);
     expect(createdAgent.agent.visibility).toBe(agentData.visibility);
   });
@@ -348,7 +356,7 @@ describe('Complete System Validation', () => {
       '/api/v1/agents',
       '/api/v1/api-keys',
       '/api/v1/auth/me',
-      '/api/v1/organizations'
+      '/api/v1/organizations',
     ];
 
     for (const endpoint of secureEndpoints) {
@@ -359,10 +367,14 @@ describe('Complete System Validation', () => {
     }
 
     // Test that API keys have proper scoping
-    setupFetchMock('/api/v1/agents', { error: 'Insufficient permissions' }, 403);
+    setupFetchMock(
+      '/api/v1/agents',
+      { error: 'Insufficient permissions' },
+      403,
+    );
 
     const limitedResponse = await fetch('/api/v1/agents', {
-      headers: { 'X-API-KEY': 'limited-read-only-key' }
+      headers: { 'X-API-KEY': 'limited-read-only-key' },
     });
     expect(limitedResponse.status).toBe(403);
   });
@@ -387,35 +399,33 @@ describe('Complete System Validation', () => {
       bio: 'A'.repeat(1000), // Large bio
       messageExamples: Array.from({ length: 50 }, (_, i) => [
         { user: 'user', content: { text: `Example ${i} user message` } },
-        { user: 'agent', content: { text: `Example ${i} agent response` } }
+        { user: 'agent', content: { text: `Example ${i} agent response` } },
       ]),
       style: {
         all: Array.from({ length: 20 }, (_, i) => `Style directive ${i}`),
         chat: Array.from({ length: 10 }, (_, i) => `Chat style ${i}`),
-        post: Array.from({ length: 10 }, (_, i) => `Post style ${i}`)
+        post: Array.from({ length: 10 }, (_, i) => `Post style ${i}`),
       },
     };
 
     setupFetchMock('/api/v1/agents/large', {
-      agent: { id: 'large-agent', character: largeCharacterConfig }
+      agent: { id: 'large-agent', character: largeCharacterConfig },
     });
 
     const largeResponse = await fetch('/api/v1/agents/large', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer test-token',
-        'Content-Type': 'application/json'
+        Authorization: 'Bearer test-token',
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ character: largeCharacterConfig })
+      body: JSON.stringify({ character: largeCharacterConfig }),
     });
 
     expect(largeResponse.ok).toBe(true);
   });
-
 });
 
 describe('System Integration Edge Cases', () => {
-
   test('should handle malformed requests gracefully', async () => {
     // Test invalid JSON
     setupFetchMock('/api/v1/agents', { error: 'Invalid request body' }, 400);
@@ -423,10 +433,10 @@ describe('System Integration Edge Cases', () => {
     const invalidJsonResponse = await fetch('/api/v1/agents', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer test-token',
-        'Content-Type': 'application/json'
+        Authorization: 'Bearer test-token',
+        'Content-Type': 'application/json',
       },
-      body: '{ invalid json'
+      body: '{ invalid json',
     });
 
     expect(invalidJsonResponse.status).toBe(400);
@@ -435,10 +445,10 @@ describe('System Integration Edge Cases', () => {
     const missingFieldsResponse = await fetch('/api/v1/agents', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer test-token',
-        'Content-Type': 'application/json'
+        Authorization: 'Bearer test-token',
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ description: 'Missing name field' })
+      body: JSON.stringify({ description: 'Missing name field' }),
     });
 
     expect(missingFieldsResponse.status).toBe(400);
@@ -452,20 +462,20 @@ describe('System Integration Edge Cases', () => {
         name: '测试代理 🤖',
         bio: 'I handle Unicode: 😀 🎉 ∑ ∆ ∫ ≈ ≠ ≤ ≥',
         style: { all: ['multilingual'] },
-      }
+      },
     };
 
     setupFetchMock('/api/v1/agents/unicode', {
-      agent: { ...unicodeAgent, id: 'unicode-agent' }
+      agent: { ...unicodeAgent, id: 'unicode-agent' },
     });
 
     const response = await fetch('/api/v1/agents/unicode', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer test-token',
-        'Content-Type': 'application/json'
+        Authorization: 'Bearer test-token',
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify(unicodeAgent)
+      body: JSON.stringify(unicodeAgent),
     });
 
     const result = await response.json();
@@ -482,13 +492,14 @@ describe('System Integration Edge Cases', () => {
         return Promise.resolve({
           ok: false,
           status: 503,
-          json: () => Promise.resolve({ error: 'Service temporarily unavailable' })
+          json: () =>
+            Promise.resolve({ error: 'Service temporarily unavailable' }),
         });
       }
       return Promise.resolve({
         ok: true,
         status: 200,
-        json: () => Promise.resolve(mockApiResponses.health)
+        json: () => Promise.resolve(mockApiResponses.health),
       });
     });
 
@@ -503,5 +514,4 @@ describe('System Integration Edge Cases', () => {
     const successResponse = await fetch('/api/v1/health');
     expect(successResponse.ok).toBe(true);
   });
-
 });

@@ -24,9 +24,7 @@ import {
   SessionKey,
 } from '@elizaos/core';
 import { RealCrossMintService } from './RealCrossMintService';
-import {
-  CrossMintError,
-} from '../types/crossmint';
+import { CrossMintError } from '../types/crossmint';
 
 /**
  * CrossMint Universal Wallet Service
@@ -428,9 +426,15 @@ export class CrossMintUniversalWalletService extends Service implements IUnivers
       return wallets
         .filter((wallet) => {
           const walletChain = this.getChainFromWalletType(wallet.type);
-          if (filter?.chain && walletChain !== filter.chain) {return false;}
-          if (filter?.isActive !== undefined && filter.isActive !== true) {return false;}
-          if (filter?.type && this.mapWalletType(wallet.type) !== filter.type) {return false;}
+          if (filter?.chain && walletChain !== filter.chain) {
+            return false;
+          }
+          if (filter?.isActive !== undefined && filter.isActive !== true) {
+            return false;
+          }
+          if (filter?.type && this.mapWalletType(wallet.type) !== filter.type) {
+            return false;
+          }
           return true;
         })
         .map((wallet) => ({

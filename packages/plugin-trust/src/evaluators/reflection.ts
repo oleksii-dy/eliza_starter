@@ -193,7 +193,7 @@ async function handler(runtime: IAgentRuntime, message: Memory, state?: State) {
     // Store new facts
     const newFacts =
       reflection.facts.filter(
-        (fact) =>
+        (fact: any) =>
           fact &&
           typeof fact === 'object' &&
           !fact.already_known &&
@@ -204,7 +204,7 @@ async function handler(runtime: IAgentRuntime, message: Memory, state?: State) {
       ) || [];
 
     await Promise.all(
-      newFacts.map(async (fact) => {
+      newFacts.map(async (fact: any) => {
         const factMemory = await runtime.addEmbeddingToMemory({
           entityId: agentId,
           agentId,

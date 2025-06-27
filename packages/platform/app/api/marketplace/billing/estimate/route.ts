@@ -3,7 +3,7 @@ import { MarketplaceBillingService } from '@/lib/billing/marketplace-billing-ser
 import { getCreditBalance } from '@/lib/server/services/billing-service';
 import { auth } from '@/lib/auth';
 
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -13,19 +13,28 @@ export async function POST(request: NextRequest) {
     const estimationRequest = await request.json();
 
     // Validate required fields
-    if (!estimationRequest.usageType || !estimationRequest.service || !estimationRequest.operation) {
+    if (
+      !estimationRequest.usageType ||
+      !estimationRequest.service ||
+      !estimationRequest.operation
+    ) {
       return NextResponse.json(
         { error: 'Missing required fields: usageType, service, operation' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Validate usage type
-    const validUsageTypes = ['asset_purchase', 'container_hosting', 'asset_usage', 'subscription'];
+    const validUsageTypes = [
+      'asset_purchase',
+      'container_hosting',
+      'asset_usage',
+      'subscription',
+    ];
     if (!validUsageTypes.includes(estimationRequest.usageType)) {
       return NextResponse.json(
         { error: 'Invalid usage type' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -38,16 +47,18 @@ export async function POST(request: NextRequest) {
       creatorId: estimationRequest.creatorId,
       basePrice: estimationRequest.basePrice || 0,
       tokens: estimationRequest.quantity || 1,
-      
+
       // Container-specific fields
       memory: estimationRequest.memory,
       cpu: estimationRequest.cpu,
-      storage: estimationRequest.storage
+      storage: estimationRequest.storage,
     };
 
     // Estimate costs
-    const totalCost = MarketplaceBillingService.estimateMarketplaceCost(context);
-    const costBreakdown = MarketplaceBillingService.calculateMarketplaceCost(context);
+    const totalCost =
+      MarketplaceBillingService.estimateMarketplaceCost(context);
+    const costBreakdown =
+      MarketplaceBillingService.calculateMarketplaceCost(context);
 
     // Check if user can afford it
     const currentBalance = await getCreditBalance(session.organizationId);
@@ -61,7 +72,7 @@ export async function POST(request: NextRequest) {
         hourly: hourlyRate,
         daily: hourlyRate * 24,
         weekly: hourlyRate * 24 * 7,
-        monthly: hourlyRate * 24 * 30
+        monthly: hourlyRate * 24 * 30,
       };
     }
 
@@ -79,18 +90,19 @@ export async function POST(request: NextRequest) {
           quantity: estimationRequest.quantity || 1,
           unitCost: totalCost / (estimationRequest.quantity || 1),
           creatorShare: '50%',
-          platformShare: '50%'
+          platformShare: '50%',
         },
-        note: estimationRequest.usageType === 'container_hosting' ? 
-          'Container hosting is billed hourly based on actual usage' :
-          'This is a one-time cost estimate'
+        note:
+          estimationRequest.usageType === 'container_hosting'
+            ? 'Container hosting is billed hourly based on actual usage'
+            : 'This is a one-time cost estimate',
       },
     });
   } catch (error) {
     console.error('Failed to estimate marketplace cost:', error);
     return NextResponse.json(
       { error: 'Failed to estimate cost' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

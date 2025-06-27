@@ -1,7 +1,11 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { ExternalLinkIcon, ReloadIcon, ExclamationTriangleIcon } from '@radix-ui/react-icons';
+import {
+  ExternalLinkIcon,
+  ReloadIcon,
+  ExclamationTriangleIcon,
+} from '@radix-ui/react-icons';
 import Button from '@/components/ui/button';
 
 interface User {
@@ -29,7 +33,7 @@ export function EmbeddedClientGui({
   user,
   apiKey,
   organizationId,
-  requiredPlugins
+  requiredPlugins,
 }: EmbeddedClientGuiProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [clientState, setClientState] = useState<ClientState>({
@@ -40,27 +44,40 @@ export function EmbeddedClientGui({
   });
 
   const configureClient = useCallback(() => {
-    if (!iframeRef.current || !clientState.isReady) { return; }
+    if (!iframeRef.current || !clientState.isReady) {
+      return;
+    }
 
     // Send configuration to the embedded client
-    iframeRef.current.contentWindow?.postMessage({
-      type: 'PLATFORM_CONFIG',
-      payload: {
-        apiKey,
-        userId: user.id,
-        organizationId,
-        requiredPlugins,
-        apiUrl: '/api', // Client will use the compatibility layer
-        embeddedMode: true,
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
+    iframeRef.current.contentWindow?.postMessage(
+      {
+        type: 'PLATFORM_CONFIG',
+        payload: {
+          apiKey,
+          userId: user.id,
+          organizationId,
+          requiredPlugins,
+          apiUrl: '/api', // Client will use the compatibility layer
+          embeddedMode: true,
+          user: {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+          },
+          platformUrl: window.location.origin,
         },
-        platformUrl: window.location.origin,
-      }
-    }, '*');
-  }, [apiKey, user.id, user.email, user.name, organizationId, requiredPlugins, clientState.isReady]);
+      },
+      '*',
+    );
+  }, [
+    apiKey,
+    user.id,
+    user.email,
+    user.name,
+    organizationId,
+    requiredPlugins,
+    clientState.isReady,
+  ]);
 
   // Set up iframe communication
   useEffect(() => {
@@ -82,18 +99,21 @@ export function EmbeddedClientGui({
       switch (type) {
         case 'CLIENT_READY':
           console.log('Client iframe is ready');
-          setClientState(prev => ({ ...prev, isReady: true }));
+          setClientState((prev) => ({ ...prev, isReady: true }));
           configureClient();
           break;
 
         case 'CLIENT_CONFIGURED':
           console.log('Client has been configured');
-          setClientState(prev => ({ ...prev, hasConfigured: true }));
+          setClientState((prev) => ({ ...prev, hasConfigured: true }));
           break;
 
         case 'CLIENT_ERROR':
           console.error('Client error:', data);
-          setClientState(prev => ({ ...prev, error: data.message || 'Client error occurred' }));
+          setClientState((prev) => ({
+            ...prev,
+            error: data.message || 'Client error occurred',
+          }));
           break;
 
         case 'AGENT_CREATED':
@@ -117,7 +137,7 @@ export function EmbeddedClientGui({
 
   const handleIframeLoad = () => {
     console.log('Client iframe loaded');
-    setClientState(prev => ({ ...prev, isLoaded: true }));
+    setClientState((prev) => ({ ...prev, isLoaded: true }));
 
     // The iframe will send CLIENT_READY when it's ready to receive config
     // We'll configure it in the message handler
@@ -125,9 +145,10 @@ export function EmbeddedClientGui({
 
   const handleIframeError = () => {
     console.error('Failed to load client iframe');
-    setClientState(prev => ({
+    setClientState((prev) => ({
       ...prev,
-      error: 'Failed to load agent management interface. Please refresh the page.',
+      error:
+        'Failed to load agent management interface. Please refresh the page.',
     }));
   };
 
@@ -149,9 +170,9 @@ export function EmbeddedClientGui({
   };
 
   return (
-    <div className="h-full flex flex-col" data-cy="embedded-client">
+    <div className="flex h-full flex-col" data-cy="embedded-client">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+      <div className="flex items-center justify-between border-b border-gray-200 bg-white p-4">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">Agent Editor</h2>
           <p className="text-sm text-gray-600">
@@ -163,28 +184,28 @@ export function EmbeddedClientGui({
           {/* Status indicator */}
           {clientState.hasConfigured ? (
             <span
-              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
+              className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800"
               data-cy="client-status"
             >
               Ready
             </span>
           ) : clientState.isReady ? (
             <span
-              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"
+              className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800"
               data-cy="client-status"
             >
               Configuring...
             </span>
           ) : clientState.isLoaded ? (
             <span
-              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+              className="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800"
               data-cy="client-status"
             >
               Loading...
             </span>
           ) : (
             <span
-              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+              className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-800"
               data-cy="client-status"
             >
               Connecting...
@@ -193,7 +214,7 @@ export function EmbeddedClientGui({
 
           <button
             onClick={reloadClient}
-            className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+            className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
             title="Reload Client"
             data-cy="reload-client-button"
           >
@@ -202,7 +223,7 @@ export function EmbeddedClientGui({
 
           <button
             onClick={openInNewTab}
-            className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+            className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
             title="Open in New Tab"
             data-cy="open-external-button"
           >
@@ -213,14 +234,16 @@ export function EmbeddedClientGui({
 
       {/* Error Banner */}
       {clientState.error && (
-        <div className="bg-red-50 border-l-4 border-red-400 p-4">
+        <div className="border-l-4 border-red-400 bg-red-50 p-4">
           <div className="flex items-center">
             <ExclamationTriangleIcon className="h-5 w-5 text-red-400" />
             <div className="ml-3">
               <p className="text-sm text-red-700">{clientState.error}</p>
             </div>
             <button
-              onClick={() => setClientState(prev => ({ ...prev, error: null }))}
+              onClick={() =>
+                setClientState((prev) => ({ ...prev, error: null }))
+              }
               className="ml-auto text-red-400 hover:text-red-600"
             >
               ×
@@ -230,14 +253,16 @@ export function EmbeddedClientGui({
       )}
 
       {/* Required Plugins Info */}
-      <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
+      <div className="border-l-4 border-blue-400 bg-blue-50 p-4">
         <div className="flex items-start">
           <div className="ml-3">
             <p className="text-sm text-blue-700">
-              <span className="font-medium">Required plugins:</span> {requiredPlugins.join(', ')}
+              <span className="font-medium">Required plugins:</span>{' '}
+              {requiredPlugins.join(', ')}
             </p>
-            <p className="text-xs text-blue-600 mt-1">
-              These plugins are automatically included in all agents and cannot be removed.
+            <p className="mt-1 text-xs text-blue-600">
+              These plugins are automatically included in all agents and cannot
+              be removed.
             </p>
           </div>
         </div>
@@ -248,7 +273,7 @@ export function EmbeddedClientGui({
         <iframe
           ref={iframeRef}
           src="/client-static/index.html"
-          className="w-full h-full border-0"
+          className="h-full w-full border-0"
           title="ElizaOS Agent Management Interface"
           sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
           onLoad={handleIframeLoad}
@@ -258,19 +283,23 @@ export function EmbeddedClientGui({
 
       {/* Loading Overlay */}
       {!clientState.isLoaded && (
-        <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
           <div className="text-center">
-            <ReloadIcon className="h-8 w-8 text-blue-600 mx-auto mb-4 animate-spin" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Loading Agent Editor</h3>
-            <p className="text-gray-600">Preparing the ElizaOS client interface...</p>
+            <ReloadIcon className="mx-auto mb-4 h-8 w-8 animate-spin text-blue-600" />
+            <h3 className="mb-2 text-lg font-medium text-gray-900">
+              Loading Agent Editor
+            </h3>
+            <p className="text-gray-600">
+              Preparing the ElizaOS client interface...
+            </p>
           </div>
         </div>
       )}
 
       {/* Debug Info (development only) */}
       {process.env.NODE_ENV === 'development' && (
-        <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg border border-gray-200 p-3 text-xs text-gray-600">
-          <div className="font-medium mb-1">Debug Info:</div>
+        <div className="absolute bottom-4 left-4 rounded-lg border border-gray-200 bg-white p-3 text-xs text-gray-600 shadow-lg">
+          <div className="mb-1 font-medium">Debug Info:</div>
           <div>Loaded: {clientState.isLoaded ? 'Yes' : 'No'}</div>
           <div>Ready: {clientState.isReady ? 'Yes' : 'No'}</div>
           <div>Configured: {clientState.hasConfigured ? 'Yes' : 'No'}</div>

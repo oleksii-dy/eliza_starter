@@ -121,6 +121,13 @@ export class SecureKeyManager extends Service {
    * Store an encrypted key in the database
    */
   async storeEncryptedKey(keyId: string, encryptedKey: EncryptedKey): Promise<void> {
+    // Check if database is available
+    if (!this.runtime.db) {
+      logger.warn('Database not available, storing encrypted key in memory only');
+      this.encryptedKeys.set(keyId, encryptedKey);
+      return;
+    }
+
     try {
       await this.runtime.db.execute(
         `INSERT OR REPLACE INTO encrypted_keys (
@@ -139,8 +146,9 @@ export class SecureKeyManager extends Service {
       // Also keep in memory cache
       this.encryptedKeys.set(keyId, encryptedKey);
     } catch (error) {
-      logger.error('Failed to store encrypted key:', error);
-      throw error;
+      logger.error('Failed to store encrypted key, falling back to memory storage:', error);
+      // Fallback to memory storage
+      this.encryptedKeys.set(keyId, encryptedKey);
     }
   }
 
@@ -148,6 +156,18 @@ export class SecureKeyManager extends Service {
    * Load an encrypted key from the database
    */
   async loadEncryptedKey(keyId: string): Promise<EncryptedKey | null> {
+    // Check memory cache first
+    const cachedKey = this.encryptedKeys.get(keyId);
+    if (cachedKey) {
+      return cachedKey;
+    }
+
+    // Check if database is available
+    if (!this.runtime.db) {
+      logger.warn('Database not available, using memory cache only');
+      return null;
+    }
+
     try {
       const result = await this.runtime.db.query(
         'SELECT encrypted, salt, iv, tag FROM encrypted_keys WHERE key_id = ?',
@@ -238,13 +258,18 @@ export class SecureKeyManager extends Service {
    */
   async deleteKey(keyId: string): Promise<void> {
     try {
-      await this.runtime.db.execute('DELETE FROM encrypted_keys WHERE key_id = ?', [keyId]);
+      // Delete from database if available
+      if (this.runtime.db) {
+        await this.runtime.db.execute('DELETE FROM encrypted_keys WHERE key_id = ?', [keyId]);
+      }
 
+      // Always delete from memory cache
       this.encryptedKeys.delete(keyId);
       logger.info(`Key deleted: ${keyId}`);
     } catch (error) {
-      logger.error('Failed to delete key:', error);
-      throw error;
+      logger.error('Failed to delete key from database, removing from memory only:', error);
+      // Still remove from memory even if database deletion fails
+      this.encryptedKeys.delete(keyId);
     }
   }
 
@@ -288,8 +313,11 @@ export class SecureKeyManager extends Service {
    * Initialize database tables
    */
   static async start(runtime: IAgentRuntime): Promise<SecureKeyManager> {
-    // Create table if not exists
-    await runtime.db.execute(`
+    // Check if database is available before trying to create tables
+    if (runtime.db) {
+      try {
+        // Create table if not exists
+        await runtime.db.execute(`
             CREATE TABLE IF NOT EXISTS encrypted_keys (
                 key_id TEXT PRIMARY KEY,
                 encrypted TEXT NOT NULL,
@@ -300,6 +328,13 @@ export class SecureKeyManager extends Service {
                 updated_at INTEGER DEFAULT NULL
             )
         `);
+        logger.info('SecureKeyManager: Database tables initialized');
+      } catch (error) {
+        logger.warn('SecureKeyManager: Failed to initialize database tables, using memory-only storage:', error);
+      }
+    } else {
+      logger.warn('SecureKeyManager: No database adapter available, using memory-only storage');
+    }
 
     const service = new SecureKeyManager(runtime);
     return service;

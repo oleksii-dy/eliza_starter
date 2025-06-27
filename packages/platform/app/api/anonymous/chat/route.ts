@@ -21,7 +21,7 @@ interface ChatResponse {
   nextStep?: string;
 }
 
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   try {
     const body: ChatRequest = await request.json();
     const { sessionId, message, context } = body;
@@ -29,17 +29,14 @@ export async function POST(request: NextRequest) {
     if (!sessionId || !message) {
       return NextResponse.json(
         { error: 'Session ID and message are required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Get session data for context
     const session = await anonymousSessionRepo.getSession(sessionId);
     if (!session) {
-      return NextResponse.json(
-        { error: 'Session not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     }
 
     // Build chat context
@@ -48,33 +45,42 @@ export async function POST(request: NextRequest) {
       userContext: {
         ...context.userContext,
         workflowType: session.workflowProgress.workflowType,
-        requirements: session.workflowProgress.requirements
+        requirements: session.workflowProgress.requirements,
       },
       chatHistory: session.chatHistory.slice(-10), // Last 10 messages for context
-      sessionId
+      sessionId,
     };
 
     // Generate real AI response
-    const response = await chatService.generateChatResponse(message, chatContext);
+    const response = await chatService.generateChatResponse(
+      message,
+      chatContext,
+    );
 
     // Update session workflow progress if needed
     if (response.workflowStep) {
       const updatedProgress = {
         ...session.workflowProgress,
-        currentStep: response.nextStep || session.workflowProgress.currentStep
+        currentStep: response.nextStep || session.workflowProgress.currentStep,
       };
-      
+
       // Extract workflow type from user context if mentioned
-      if (message.toLowerCase().includes('n8n') || message.toLowerCase().includes('workflow')) {
+      if (
+        message.toLowerCase().includes('n8n') ||
+        message.toLowerCase().includes('workflow')
+      ) {
         updatedProgress.workflowType = 'n8n_workflow';
-      } else if (message.toLowerCase().includes('mcp') || message.toLowerCase().includes('server')) {
+      } else if (
+        message.toLowerCase().includes('mcp') ||
+        message.toLowerCase().includes('server')
+      ) {
         updatedProgress.workflowType = 'mcp';
       } else if (message.toLowerCase().includes('agent')) {
         updatedProgress.workflowType = 'agent_config';
       }
 
       await anonymousSessionRepo.updateSession(sessionId, {
-        workflowProgress: updatedProgress
+        workflowProgress: updatedProgress,
       });
     }
 
@@ -86,13 +92,16 @@ export async function POST(request: NextRequest) {
     console.error('Chat API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
-
-async function saveMessageToSession(sessionId: string, userMessage: string, response: ChatResponse) {
+async function saveMessageToSession(
+  sessionId: string,
+  userMessage: string,
+  response: ChatResponse,
+) {
   try {
     // Save user message
     const userChatMessage: ChatMessage = {
@@ -100,9 +109,9 @@ async function saveMessageToSession(sessionId: string, userMessage: string, resp
       role: 'user',
       content: userMessage,
       timestamp: new Date(),
-      metadata: {}
+      metadata: {},
     };
-    
+
     await anonymousSessionRepo.addMessage(sessionId, userChatMessage);
 
     // Save assistant response
@@ -115,10 +124,10 @@ async function saveMessageToSession(sessionId: string, userMessage: string, resp
         suggestions: response.suggestions,
         workflowStep: response.workflowStep,
         nextStep: response.nextStep,
-        generatedAsset: response.generatedAsset
-      }
+        generatedAsset: response.generatedAsset,
+      },
     };
-    
+
     await anonymousSessionRepo.addMessage(sessionId, assistantChatMessage);
 
     console.log(`Session ${sessionId}: Messages saved to database`);

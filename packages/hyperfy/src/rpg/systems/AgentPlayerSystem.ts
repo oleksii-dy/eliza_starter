@@ -1,26 +1,26 @@
-import { System } from '../../core/systems/System';
-import type { World } from '../../types';
-import type { Vector3 } from '../types';
-import { RPGEntity } from '../entities/RPGEntity';
-import { NavigationSystem } from './NavigationSystem';
-import { QuestSystem } from './QuestSystem';
+import { System } from '../../core/systems/System'
+import type { World } from '../../types'
+import type { Vector3 } from '../types'
+import { RPGEntity } from '../entities/RPGEntity'
+import { NavigationSystem } from './NavigationSystem'
+import { QuestSystem } from './QuestSystem'
 
 export interface AgentAction {
-  type: 'move' | 'interact' | 'pickup' | 'attack' | 'wait';
-  target?: Vector3 | string; // Position or entity ID
-  duration?: number; // For wait actions
-  description: string;
-  completed: boolean;
-  callback?: () => void;
+  type: 'move' | 'interact' | 'pickup' | 'attack' | 'wait'
+  target?: Vector3 | string // Position or entity ID
+  duration?: number // For wait actions
+  description: string
+  completed: boolean
+  callback?: () => void
 }
 
 export interface AgentTask {
-  id: string;
-  name: string;
-  actions: AgentAction[];
-  currentAction: number;
-  completed: boolean;
-  callback?: () => void;
+  id: string
+  name: string
+  actions: AgentAction[]
+  currentAction: number
+  completed: boolean
+  callback?: () => void
 }
 
 /**
@@ -28,12 +28,12 @@ export interface AgentTask {
  * Creates and controls an AI player that can perform quest actions
  */
 export class AgentPlayerSystem extends System {
-  private agent: RPGEntity | null = null;
-  private navigationSystem: NavigationSystem | null = null;
-  private questSystem: QuestSystem | null = null;
-  private currentTask: AgentTask | null = null;
-  private actionTimer: number = 0;
-  private updateInterval: NodeJS.Timeout | null = null;
+  private agent: RPGEntity | null = null
+  private navigationSystem: NavigationSystem | null = null
+  private questSystem: QuestSystem | null = null
+  private currentTask: AgentTask | null = null
+  private actionTimer: number = 0
+  private updateInterval: NodeJS.Timeout | null = null
 
   // Quest locations (simple coordinates for testing)
   private readonly LOCATIONS = {
@@ -41,39 +41,39 @@ export class AgentPlayerSystem extends System {
     QUEST_NPC: { x: 0, y: 0, z: 5 },
     SWORD: { x: 0, y: 0, z: 0 },
     GOBLIN_AREA: { x: 5, y: 0, z: 5 },
-  };
+  }
 
   constructor(world: World) {
-    super(world);
+    super(world)
   }
 
   override async init(_options: any): Promise<void> {
-    console.log('[AgentPlayerSystem] Initializing...');
+    console.log('[AgentPlayerSystem] Initializing...')
 
     // Get required systems
-    this.navigationSystem = (this.world as any).getSystem?.('navigation');
-    this.questSystem = (this.world as any).getSystem?.('quest');
+    this.navigationSystem = (this.world as any).getSystem?.('navigation')
+    this.questSystem = (this.world as any).getSystem?.('quest')
 
     if (!this.navigationSystem) {
-      console.warn('[AgentPlayerSystem] Navigation system not found');
+      console.warn('[AgentPlayerSystem] Navigation system not found')
     }
     if (!this.questSystem) {
-      console.warn('[AgentPlayerSystem] Quest system not found');
+      console.warn('[AgentPlayerSystem] Quest system not found')
     }
 
     // Create agent player after a delay to ensure other systems are ready
     setTimeout(() => {
-      console.log('[AgentPlayerSystem] Creating agent player...');
-      this.createAgentPlayer();
-      console.log('[AgentPlayerSystem] Starting quest demo...');
-      this.startQuestDemo();
+      console.log('[AgentPlayerSystem] Creating agent player...')
+      this.createAgentPlayer()
+      console.log('[AgentPlayerSystem] Starting quest demo...')
+      this.startQuestDemo()
 
       // Start continuous update loop
       setTimeout(() => {
-        console.log('[AgentPlayerSystem] Starting continuous update loop...');
-        this.startUpdateLoop();
-      }, 1000);
-    }, 3000);
+        console.log('[AgentPlayerSystem] Starting continuous update loop...')
+        this.startUpdateLoop()
+      }, 1000)
+    }, 3000)
   }
 
   /**
@@ -81,22 +81,22 @@ export class AgentPlayerSystem extends System {
    */
   private startUpdateLoop(): void {
     if (this.updateInterval) {
-      clearInterval(this.updateInterval);
+      clearInterval(this.updateInterval)
     }
 
     // Update every 100ms (10 FPS)
     this.updateInterval = setInterval(() => {
-      this.fixedUpdate(100); // 100ms delta
-    }, 100);
+      this.fixedUpdate(100) // 100ms delta
+    }, 100)
 
-    console.log('[AgentPlayerSystem] Update loop started');
+    console.log('[AgentPlayerSystem] Update loop started')
   }
 
   /**
    * Create the automated agent player
    */
   private createAgentPlayer(): void {
-    const agentId = `agent_player_${Date.now()}`;
+    const agentId = `agent_player_${Date.now()}`
 
     // Create agent entity
     this.agent = new RPGEntity(this.world, 'player', {
@@ -104,8 +104,8 @@ export class AgentPlayerSystem extends System {
       type: 'player',
       name: 'Agent Player',
       position: this.LOCATIONS.SPAWN,
-      isAgent: true
-    });
+      isAgent: true,
+    })
 
     // Add player components
     this.agent.components.set('stats', {
@@ -115,39 +115,39 @@ export class AgentPlayerSystem extends System {
       strength: { level: 5, xp: 300 },
       defense: { level: 5, xp: 300 },
       combatLevel: 5,
-      totalLevel: 20
-    } as any);
+      totalLevel: 20,
+    } as any)
 
     this.agent.components.set('inventory', {
       type: 'inventory',
       items: new Map(),
       capacity: 28,
-      gold: 0
-    } as any);
+      gold: 0,
+    } as any)
 
     this.agent.components.set('movement', {
       type: 'movement',
       position: this.LOCATIONS.SPAWN,
       moveSpeed: 3,
       isMoving: false,
-      canMove: true
-    } as any);
+      canMove: true,
+    } as any)
 
     // Add to world
     if ((this.world as any).entities?.items) {
-      (this.world as any).entities.items.set(agentId, this.agent);
+      ;(this.world as any).entities.items.set(agentId, this.agent)
     } else {
-      (this.world as any).entities = new Map();
-      (this.world as any).entities.set(agentId, this.agent);
+      ;(this.world as any).entities = new Map()
+      ;(this.world as any).entities.set(agentId, this.agent)
     }
 
     // Create visual representation
-    const visualSystem = (this.world as any).getSystem?.('visualRepresentation');
+    const visualSystem = (this.world as any).getSystem?.('visualRepresentation')
     if (visualSystem) {
-      visualSystem.createVisual(this.agent, 'player');
+      visualSystem.createVisual(this.agent, 'player')
     }
 
-    console.log(`[AgentPlayerSystem] Created agent player at spawn ${JSON.stringify(this.LOCATIONS.SPAWN)}`);
+    console.log(`[AgentPlayerSystem] Created agent player at spawn ${JSON.stringify(this.LOCATIONS.SPAWN)}`)
   }
 
   /**
@@ -155,11 +155,11 @@ export class AgentPlayerSystem extends System {
    */
   private startQuestDemo(): void {
     if (!this.agent) {
-      console.error('[AgentPlayerSystem] No agent player created');
-      return;
+      console.error('[AgentPlayerSystem] No agent player created')
+      return
     }
 
-    console.log('[AgentPlayerSystem] Starting quest demonstration...');
+    console.log('[AgentPlayerSystem] Starting quest demonstration...')
 
     // Create quest completion task
     const questTask: AgentTask = {
@@ -172,69 +172,69 @@ export class AgentPlayerSystem extends System {
           type: 'wait',
           duration: 2000,
           description: 'Wait for world to stabilize',
-          completed: false
+          completed: false,
         },
         {
           type: 'move',
           target: this.LOCATIONS.QUEST_NPC,
           description: 'Walk to Quest NPC',
           completed: false,
-          callback: () => console.log('[Agent] Arrived at Quest NPC')
+          callback: () => console.log('[Agent] Arrived at Quest NPC'),
         },
         {
           type: 'interact',
           target: 'quest_giver_1',
           description: 'Talk to Quest NPC and accept quest',
           completed: false,
-          callback: () => console.log('[Agent] Accepted quest')
+          callback: () => console.log('[Agent] Accepted quest'),
         },
         {
           type: 'move',
           target: this.LOCATIONS.SWORD,
           description: 'Walk to sword location',
           completed: false,
-          callback: () => console.log('[Agent] Arrived at sword')
+          callback: () => console.log('[Agent] Arrived at sword'),
         },
         {
           type: 'pickup',
           target: 'sword',
           description: 'Pick up sword',
           completed: false,
-          callback: () => console.log('[Agent] Picked up sword')
+          callback: () => console.log('[Agent] Picked up sword'),
         },
         {
           type: 'move',
           target: this.LOCATIONS.GOBLIN_AREA,
           description: 'Walk to goblin area',
           completed: false,
-          callback: () => console.log('[Agent] Arrived at goblin area')
+          callback: () => console.log('[Agent] Arrived at goblin area'),
         },
         {
           type: 'attack',
           target: 'goblin',
           description: 'Attack and kill goblin',
           completed: false,
-          callback: () => console.log('[Agent] Killed goblin')
+          callback: () => console.log('[Agent] Killed goblin'),
         },
         {
           type: 'move',
           target: this.LOCATIONS.QUEST_NPC,
           description: 'Return to Quest NPC',
           completed: false,
-          callback: () => console.log('[Agent] Returned to Quest NPC')
+          callback: () => console.log('[Agent] Returned to Quest NPC'),
         },
         {
           type: 'interact',
           target: 'quest_giver_1',
           description: 'Complete quest with NPC',
           completed: false,
-          callback: () => console.log('[Agent] Completed quest!')
-        }
-      ]
-    };
+          callback: () => console.log('[Agent] Completed quest!'),
+        },
+      ],
+    }
 
-    this.currentTask = questTask;
-    console.log('[AgentPlayerSystem] Quest task created with', questTask.actions.length, 'actions');
+    this.currentTask = questTask
+    console.log('[AgentPlayerSystem] Quest task created with', questTask.actions.length, 'actions')
   }
 
   /**
@@ -242,28 +242,31 @@ export class AgentPlayerSystem extends System {
    */
   override fixedUpdate(delta: number): void {
     if (!this.agent || !this.currentTask || this.currentTask.completed) {
-      return;
+      return
     }
 
-    this.actionTimer += delta;
+    this.actionTimer += delta
 
     // Execute current action
-    const currentAction = this.currentTask.actions[this.currentTask.currentAction];
+    const currentAction = this.currentTask.actions[this.currentTask.currentAction]
     if (!currentAction) {
-      return;
+      return
     }
 
     if (currentAction.completed) {
-      this.moveToNextAction();
-      return;
+      this.moveToNextAction()
+      return
     }
 
     // Add periodic status logging
-    if (this.actionTimer % 5000 < delta) { // Every 5 seconds
-      console.log(`[AgentPlayerSystem] Current action: ${currentAction.description} (${this.currentTask.currentAction + 1}/${this.currentTask.actions.length})`);
+    if (this.actionTimer % 5000 < delta) {
+      // Every 5 seconds
+      console.log(
+        `[AgentPlayerSystem] Current action: ${currentAction.description} (${this.currentTask.currentAction + 1}/${this.currentTask.actions.length})`
+      )
     }
 
-    this.executeAction(currentAction, delta);
+    this.executeAction(currentAction, delta)
   }
 
   /**
@@ -272,20 +275,20 @@ export class AgentPlayerSystem extends System {
   private executeAction(action: AgentAction, delta: number): void {
     switch (action.type) {
       case 'wait':
-        this.executeWaitAction(action, delta);
-        break;
+        this.executeWaitAction(action, delta)
+        break
       case 'move':
-        this.executeMoveAction(action);
-        break;
+        this.executeMoveAction(action)
+        break
       case 'interact':
-        this.executeInteractAction(action);
-        break;
+        this.executeInteractAction(action)
+        break
       case 'pickup':
-        this.executePickupAction(action);
-        break;
+        this.executePickupAction(action)
+        break
       case 'attack':
-        this.executeAttackAction(action);
-        break;
+        this.executeAttackAction(action)
+        break
     }
   }
 
@@ -294,15 +297,17 @@ export class AgentPlayerSystem extends System {
    */
   private executeWaitAction(action: AgentAction, delta: number): void {
     if (!action.duration) {
-      action.completed = true;
-      return;
+      action.completed = true
+      return
     }
 
-    action.duration -= delta;
+    action.duration -= delta
     if (action.duration <= 0) {
-      action.completed = true;
-      console.log(`[Agent] ${action.description} - completed`);
-      if (action.callback) {action.callback();}
+      action.completed = true
+      console.log(`[Agent] ${action.description} - completed`)
+      if (action.callback) {
+        action.callback()
+      }
     }
   }
 
@@ -311,32 +316,34 @@ export class AgentPlayerSystem extends System {
    */
   private executeMoveAction(action: AgentAction): void {
     if (!this.navigationSystem || !this.agent) {
-      action.completed = true;
-      return;
+      action.completed = true
+      return
     }
 
     // Check if already navigating - validate agent ID first
-    const agentId = this.agent.id || this.agent.data?.id;
+    const agentId = this.agent.id || this.agent.data?.id
     if (!agentId) {
-      console.error('[Agent] Cannot check navigation - agent ID is undefined');
-      return;
+      console.error('[Agent] Cannot check navigation - agent ID is undefined')
+      return
     }
 
     if (this.navigationSystem.isNavigating(agentId)) {
-      return;
+      return
     }
 
     // Start navigation if not started
     if (!action.completed) {
-      const target = action.target as Vector3;
-      console.log(`[Agent] ${action.description} - starting navigation to [${target.x}, ${target.y}, ${target.z}]`);
+      const target = action.target as Vector3
+      console.log(`[Agent] ${action.description} - starting navigation to [${target.x}, ${target.y}, ${target.z}]`)
 
       // Double-check agent ID for navigation
       if (!agentId) {
-        console.error('[Agent] Cannot navigate - agent ID is undefined');
-        action.completed = true;
-        if (action.callback) {action.callback();}
-        return;
+        console.error('[Agent] Cannot navigate - agent ID is undefined')
+        action.completed = true
+        if (action.callback) {
+          action.callback()
+        }
+        return
       }
 
       this.navigationSystem.navigateTo({
@@ -344,10 +351,12 @@ export class AgentPlayerSystem extends System {
         destination: target,
         speed: 3,
         callback: () => {
-          action.completed = true;
-          if (action.callback) {action.callback();}
-        }
-      });
+          action.completed = true
+          if (action.callback) {
+            action.callback()
+          }
+        },
+      })
     }
   }
 
@@ -355,103 +364,112 @@ export class AgentPlayerSystem extends System {
    * Execute interact action
    */
   private executeInteractAction(action: AgentAction): void {
-    console.log(`[Agent] ${action.description} - simulating interaction`);
+    console.log(`[Agent] ${action.description} - simulating interaction`)
 
     // Simulate quest interaction
     if (this.questSystem && this.agent && action.target === 'quest_giver_1') {
-      const _agentId = this.agent.id || this.agent.data?.id;
+      const agentId = this.agent.id || this.agent.data?.id
 
-      // Try to start quest
-      const canStart = this.questSystem.canStartQuest(this.agent as any, 'kill_goblin_basic');
-      if (canStart.canStart) {
-        console.log('[Agent] Starting quest: kill_goblin_basic');
-        // Simulate quest start (actual implementation would be in quest system)
-      } else {
-        console.log('[Agent] Quest already started or completed');
+      if (agentId) {
+        // Try to start a quest
+        const availableQuests = this.questSystem.getAvailableQuests(agentId)
+        const cookQuest = availableQuests.find(q => q.id === 'cooks_assistant')
+
+        if (cookQuest) {
+          console.log('[Agent] Starting quest: cooks_assistant')
+          this.questSystem.startQuest(agentId, 'cooks_assistant')
+        } else {
+          console.log('[Agent] No available quests from this NPC')
+        }
       }
     }
 
-    action.completed = true;
-    if (action.callback) {action.callback();}
+    action.completed = true
+    if (action.callback) {
+      action.callback()
+    }
   }
 
   /**
    * Execute pickup action
    */
   private executePickupAction(action: AgentAction): void {
-    console.log(`[Agent] ${action.description} - looking for item`);
+    console.log(`[Agent] ${action.description} - looking for item`)
 
     // Find nearest sword item
-    const entities = (this.world as any).entities?.items || new Map();
-    let swordEntity = null;
+    const entities = (this.world as any).entities?.items || new Map()
+    let swordEntity = null
 
     for (const [_id, entity] of entities) {
       if (entity.data?.type === 'item' && entity.data?.itemType === 'sword') {
-        swordEntity = entity;
-        break;
+        swordEntity = entity
+        break
       }
     }
 
     if (swordEntity) {
-      console.log('[Agent] Found sword, picking up');
+      console.log('[Agent] Found sword, picking up')
       // Simulate pickup by adding to inventory
-      const inventory = this.agent?.getComponent('inventory') as any;
+      const inventory = this.agent?.getComponent('inventory') as any
       if (inventory) {
-        inventory.items.set('sword', { itemId: 1001, name: 'Bronze Sword', quantity: 1 });
-        console.log('[Agent] Added sword to inventory');
+        inventory.items.set('sword', { itemId: 1001, name: 'Bronze Sword', quantity: 1 })
+        console.log('[Agent] Added sword to inventory')
       }
 
       // Remove from world (simulate pickup)
-      entities.delete((swordEntity as any).id || (swordEntity as any).data?.id);
-      console.log('[Agent] Removed sword from world');
+      entities.delete((swordEntity as any).id || (swordEntity as any).data?.id)
+      console.log('[Agent] Removed sword from world')
     } else {
-      console.log('[Agent] No sword found nearby');
+      console.log('[Agent] No sword found nearby')
     }
 
-    action.completed = true;
-    if (action.callback) {action.callback();}
+    action.completed = true
+    if (action.callback) {
+      action.callback()
+    }
   }
 
   /**
    * Execute attack action
    */
   private executeAttackAction(action: AgentAction): void {
-    console.log(`[Agent] ${action.description} - looking for goblin`);
+    console.log(`[Agent] ${action.description} - looking for goblin`)
 
     // Find nearest goblin
-    const entities = (this.world as any).entities?.items || new Map();
-    let goblinEntity = null;
+    const entities = (this.world as any).entities?.items || new Map()
+    let goblinEntity = null
 
     for (const [_id, entity] of entities) {
-      const npcComponent = entity.getComponent?.('npc');
+      const npcComponent = entity.getComponent?.('npc')
       if (npcComponent && (npcComponent.npcId === 1 || npcComponent.name?.toLowerCase().includes('goblin'))) {
-        goblinEntity = entity as any;
-        break;
+        goblinEntity = entity as any
+        break
       }
     }
 
     if (goblinEntity) {
-      console.log('[Agent] Found goblin, attacking!');
+      console.log('[Agent] Found goblin, attacking!')
 
       // Simulate combat and goblin death
       setTimeout(() => {
         // Remove goblin from world
-        entities.delete((goblinEntity as any).id || (goblinEntity as any).data?.id);
-        console.log('[Agent] Goblin defeated!');
+        entities.delete((goblinEntity as any).id || (goblinEntity as any).data?.id)
+        console.log('[Agent] Goblin defeated!')
 
         // Add loot to inventory
-        const inventory = this.agent?.getComponent('inventory') as any;
+        const inventory = this.agent?.getComponent('inventory') as any
         if (inventory) {
-          inventory.gold = (inventory.gold || 0) + 25;
-          console.log('[Agent] Gained 25 gold from goblin');
+          inventory.gold = (inventory.gold || 0) + 25
+          console.log('[Agent] Gained 25 gold from goblin')
         }
 
-        action.completed = true;
-        if (action.callback) {action.callback();}
-      }, 2000); // 2 second combat
-
+        action.completed = true
+        if (action.callback) {
+          action.callback()
+        }
+      }, 2000) // 2 second combat
     } else {
-      console.log('[Agent] No goblin found, retrying...');
+      console.log('[Agent] No goblin found, retrying...')
       // Don't mark as completed, will retry
     }
   }
@@ -460,20 +478,22 @@ export class AgentPlayerSystem extends System {
    * Move to next action in task
    */
   private moveToNextAction(): void {
-    if (!this.currentTask) {return;}
+    if (!this.currentTask) {
+      return
+    }
 
-    this.currentTask.currentAction++;
+    this.currentTask.currentAction++
 
     if (this.currentTask.currentAction >= this.currentTask.actions.length) {
-      this.currentTask.completed = true;
-      console.log(`[AgentPlayerSystem] Task "${this.currentTask.name}" completed!`);
+      this.currentTask.completed = true
+      console.log(`[AgentPlayerSystem] Task "${this.currentTask.name}" completed!`)
 
       if (this.currentTask.callback) {
-        this.currentTask.callback();
+        this.currentTask.callback()
       }
     } else {
-      const nextAction = this.currentTask.actions[this.currentTask.currentAction];
-      console.log(`[AgentPlayerSystem] Starting next action: ${nextAction.description}`);
+      const nextAction = this.currentTask.actions[this.currentTask.currentAction]
+      console.log(`[AgentPlayerSystem] Starting next action: ${nextAction.description}`)
     }
   }
 
@@ -481,34 +501,36 @@ export class AgentPlayerSystem extends System {
    * Get current task status
    */
   getTaskStatus(): { task: string; action: string; progress: string } | null {
-    if (!this.currentTask) {return null;}
+    if (!this.currentTask) {
+      return null
+    }
 
-    const currentAction = this.currentTask.actions[this.currentTask.currentAction];
-    const progress = `${this.currentTask.currentAction + 1}/${this.currentTask.actions.length}`;
+    const currentAction = this.currentTask.actions[this.currentTask.currentAction]
+    const progress = `${this.currentTask.currentAction + 1}/${this.currentTask.actions.length}`
 
     return {
       task: this.currentTask.name,
       action: currentAction?.description || 'None',
-      progress
-    };
+      progress,
+    }
   }
 
   override destroy(): void {
     // Stop update loop
     if (this.updateInterval) {
-      clearInterval(this.updateInterval);
-      this.updateInterval = null;
+      clearInterval(this.updateInterval)
+      this.updateInterval = null
     }
 
     // Clean up agent
     if (this.agent) {
-      const agentId = this.agent.id || this.agent.data?.id;
-      const entities = (this.world as any).entities?.items;
+      const agentId = this.agent.id || this.agent.data?.id
+      const entities = (this.world as any).entities?.items
       if (entities) {
-        entities.delete(agentId);
+        entities.delete(agentId)
       }
     }
 
-    super.destroy();
+    super.destroy()
   }
 }

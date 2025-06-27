@@ -84,8 +84,8 @@ describe('Security Tests', () => {
 
       // Mock the installPluginFromRegistry to simulate npm failure after validation
       const originalMethod = pluginManagerService.installPluginFromRegistry;
-      pluginManagerService.installPluginFromRegistry = mock()
-        .mockImplementation(async (name, version) => {
+      pluginManagerService.installPluginFromRegistry = mock().mockImplementation(
+        async (name, version) => {
           // Validate version first (like the real implementation)
           if (
             version &&
@@ -95,7 +95,8 @@ describe('Security Tests', () => {
           }
           // Simulate npm failure
           throw new Error('npm install failed');
-        });
+        }
+      );
 
       for (const version of validVersions) {
         // These should not throw validation errors (they'll fail at npm install)
@@ -241,10 +242,7 @@ describe('Security Tests', () => {
         const promises: Array<Promise<SearchResult[] | Error>> = [];
 
         for (let i = 0; i < rateLimit + 5; i++) {
-          promises.push(
-            pluginManagerService.searchRegistry(`test-${i}`)
-              .catch((e: Error) => e)
-          );
+          promises.push(pluginManagerService.searchRegistry(`test-${i}`).catch((e: Error) => e));
         }
 
         const results = await Promise.all(promises);

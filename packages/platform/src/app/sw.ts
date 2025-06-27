@@ -1,6 +1,10 @@
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
-import { StaleWhileRevalidate, CacheFirst, NetworkFirst } from 'workbox-strategies';
+import {
+  StaleWhileRevalidate,
+  CacheFirst,
+  NetworkFirst,
+} from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 
 declare const self: ServiceWorkerGlobalScope;
@@ -15,15 +19,17 @@ registerRoute(
   new NetworkFirst({
     cacheName: 'api-cache',
     networkTimeoutSeconds: 3,
-    plugins: [{
-      cacheKeyWillBeUsed: async ({ request }) => {
-        // Cache based on URL and auth header
-        const url = new URL(request.url);
-        const authHeader = request.headers.get('authorization');
-        return `${url.pathname}${url.search}${authHeader ? '-auth' : ''}`;
-      }
-    }]
-  })
+    plugins: [
+      {
+        cacheKeyWillBeUsed: async ({ request }) => {
+          // Cache based on URL and auth header
+          const url = new URL(request.url);
+          const authHeader = request.headers.get('authorization');
+          return `${url.pathname}${url.search}${authHeader ? '-auth' : ''}`;
+        },
+      },
+    ],
+  }),
 );
 
 // Cache images
@@ -35,15 +41,15 @@ registerRoute(
       new ExpirationPlugin({
         maxEntries: 60,
         maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
-      })
-    ]
-  })
+      }),
+    ],
+  }),
 );
 
 // Cache page navigations
 registerRoute(
   ({ request }) => request.mode === 'navigate',
   new StaleWhileRevalidate({
-    cacheName: 'pages'
-  })
+    cacheName: 'pages',
+  }),
 );

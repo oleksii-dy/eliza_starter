@@ -4,7 +4,14 @@
  */
 
 // Re-export logger
-export { logger, Logger, LogLevel, authLogger, databaseLogger, apiLogger } from '../logger';
+export {
+  logger,
+  Logger,
+  LogLevel,
+  authLogger,
+  databaseLogger,
+  apiLogger,
+} from '../logger';
 
 // Re-export retry utility
 export * from './retry';

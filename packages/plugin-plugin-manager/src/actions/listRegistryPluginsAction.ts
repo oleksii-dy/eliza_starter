@@ -26,7 +26,7 @@ export const listRegistryPluginsAction: Action = {
       {
         name: '{{agentName}}',
         content: {
-          text: 'I\'ll list all available plugins from the ElizaOS registry.',
+          text: "I'll list all available plugins from the ElizaOS registry.",
           actions: ['LIST_REGISTRY_PLUGINS'],
         },
       },
@@ -56,7 +56,7 @@ export const listRegistryPluginsAction: Action = {
       {
         name: '{{agentName}}',
         content: {
-          text: 'I\'ll fetch the list of plugins from the registry.',
+          text: "I'll fetch the list of plugins from the registry.",
           actions: ['LIST_REGISTRY_PLUGINS'],
         },
       },
@@ -123,9 +123,9 @@ export const listRegistryPluginsAction: Action = {
 
       // Check permissions
       const trustService = runtime.getService<TrustService>('TRUST');
-      const canInstall = trustService ?
-        await (trustService as any).checkPermission(message.entityId, 'plugin:install') :
-        true;
+      const canInstall = trustService
+        ? await (trustService as any).checkPermission(message.entityId, 'plugin:install')
+        : true;
 
       const suggestions: string[] = [];
 
@@ -134,12 +134,12 @@ export const listRegistryPluginsAction: Action = {
       }
       suggestions.push('Use SEARCH_PLUGINS to find specific plugins');
 
-      if (installedPlugins.some(p => p.status === 'needs_configuration')) {
+      if (installedPlugins.some((p) => p.status === 'needs_configuration')) {
         suggestions.push('Use START_PLUGIN_CONFIGURATION to configure installed plugins');
       }
 
       if (suggestions.length > 0) {
-        text += `\n\n**Available Actions:**\n${suggestions.map(s => `- ${s}`).join('\n')}`;
+        text += `\n\n**Available Actions:**\n${suggestions.map((s) => `- ${s}`).join('\n')}`;
       }
 
       await callback?.({

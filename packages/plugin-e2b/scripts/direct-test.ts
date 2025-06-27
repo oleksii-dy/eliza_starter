@@ -21,7 +21,7 @@ async function testE2BDirect() {
         if (key === 'E2B_API_KEY') return process.env.E2B_API_KEY;
         return null;
       },
-      agentId: 'test-agent-123'
+      agentId: 'test-agent-123',
     };
 
     elizaLogger.info('🏗️ Creating E2B service instance...');
@@ -38,19 +38,22 @@ async function testE2BDirect() {
 
     if (isHealthy) {
       elizaLogger.info('🧪 Testing code execution...');
-      const result = await service.executeCode(`
+      const result = await service.executeCode(
+        `
 print("Hello from E2B!")
 result = 2 + 2
 print(f"2 + 2 = {result}")
 result
-`, 'python');
+`,
+        'python'
+      );
 
       if (result.error) {
         elizaLogger.error('Code execution error', { error: result.error });
       } else {
-        elizaLogger.info('✅ Code execution successful', { 
+        elizaLogger.info('✅ Code execution successful', {
           text: result.text,
-          hasResults: result.results?.length > 0
+          hasResults: result.results?.length > 0,
         });
       }
 
@@ -60,7 +63,9 @@ result
       elizaLogger.info(`Active sandboxes: ${sandboxes.length}`);
 
       sandboxes.forEach((sandbox, index) => {
-        elizaLogger.info(`  ${index + 1}. ${sandbox.sandboxId} (${sandbox.isActive ? 'active' : 'inactive'})`);
+        elizaLogger.info(
+          `  ${index + 1}. ${sandbox.sandboxId} (${sandbox.isActive ? 'active' : 'inactive'})`
+        );
       });
     }
 
@@ -71,11 +76,10 @@ result
 
     elizaLogger.info('🎉 Direct E2B test completed successfully!');
     return true;
-
   } catch (error) {
-    elizaLogger.error('❌ Direct test failed', { 
+    elizaLogger.error('❌ Direct test failed', {
       error: error.message,
-      stack: error.stack?.split('\n').slice(0, 5)
+      stack: error.stack?.split('\n').slice(0, 5),
     });
     return false;
   }
@@ -85,7 +89,9 @@ async function testGitHubIntegration() {
   elizaLogger.info('🐙 Testing GitHub Integration');
 
   try {
-    const { GitHubIntegrationService } = await import('../src/services/GitHubIntegrationService.js');
+    const { GitHubIntegrationService } = await import(
+      '../src/services/GitHubIntegrationService.js'
+    );
     elizaLogger.info('✅ GitHub service imported');
 
     const mockRuntime = {
@@ -93,7 +99,7 @@ async function testGitHubIntegration() {
         if (key === 'GITHUB_TOKEN') return process.env.GITHUB_TOKEN;
         return null;
       },
-      agentId: 'test-agent-123'
+      agentId: 'test-agent-123',
     };
 
     elizaLogger.info('🏗️ Creating GitHub service...');
@@ -107,7 +113,7 @@ async function testGitHubIntegration() {
     elizaLogger.info('📋 Testing issue fetching...');
     const issues = await service.getIssues('elizaOS', 'eliza', {
       state: 'open',
-      limit: 3
+      limit: 3,
     });
 
     elizaLogger.info(`✅ Found ${issues.length} issues`);
@@ -117,11 +123,10 @@ async function testGitHubIntegration() {
 
     elizaLogger.info('🎉 GitHub integration test completed successfully!');
     return true;
-
   } catch (error) {
-    elizaLogger.error('❌ GitHub test failed', { 
+    elizaLogger.error('❌ GitHub test failed', {
       error: error.message,
-      stack: error.stack?.split('\n').slice(0, 5)
+      stack: error.stack?.split('\n').slice(0, 5),
     });
     return false;
   }

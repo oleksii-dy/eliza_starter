@@ -15,18 +15,21 @@ This plugin provides a unified planning service that enables ElizaOS agents to:
 ## Key Features
 
 ### 🎯 Unified Planning Service
+
 - **IPlanningService Interface**: Standardized planning contract in core package
 - **PlanningService Implementation**: Production-ready service with full runtime integration
 - **Message Handler Integration**: Seamless fallback from inline planning to service-based planning
 - **Action Plan Execution**: Support for sequential, parallel, and DAG execution models
 
 ### 📊 Comprehensive Benchmarking
+
 - **REALM-Bench Integration**: Tests planning patterns (sequential, reactive, complex multi-step)
 - **API-Bank Integration**: Tests tool-use scenarios across 3 complexity levels
 - **Real Runtime Testing**: Uses actual agent runtime with real providers and context
 - **Performance Metrics**: Token usage, response latency, memory usage, plan quality
 
 ### 🔧 Production-Ready Features
+
 - **Error Handling**: Robust error handling with plan adaptation and recovery
 - **Working Memory**: Maintains state across plan execution steps
 - **Validation**: Plan structure validation and feasibility checking
@@ -165,11 +168,7 @@ const config: BenchmarkConfig = {
 ```typescript
 interface IPlanningService {
   // Simple planning for basic tasks
-  createSimplePlan(
-    runtime: IAgentRuntime,
-    message: Memory,
-    state: State
-  ): Promise<ActionPlan>;
+  createSimplePlan(runtime: IAgentRuntime, message: Memory, state: State): Promise<ActionPlan>;
 
   // Comprehensive planning with context
   createComprehensivePlan(
@@ -188,10 +187,7 @@ interface IPlanningService {
   ): Promise<PlanExecutionResult>;
 
   // Validate plan structure and feasibility
-  validatePlan(
-    runtime: IAgentRuntime,
-    plan: ActionPlan
-  ): Promise<PlanValidationResult>;
+  validatePlan(runtime: IAgentRuntime, plan: ActionPlan): Promise<PlanValidationResult>;
 
   // Adapt plans when execution fails
   adaptPlan(
@@ -334,6 +330,7 @@ npm run benchmark:quick
 ### Common Issues
 
 **Planning Service Not Available**
+
 ```typescript
 // Check if service is registered
 const planningService = runtime.getService<IPlanningService>('planning');
@@ -343,6 +340,7 @@ if (!planningService) {
 ```
 
 **Benchmark Data Not Found**
+
 ```bash
 # Ensure benchmark data is available
 mkdir -p benchmark-data/realm-bench
@@ -351,6 +349,7 @@ mkdir -p benchmark-data/api-bank
 ```
 
 **High Planning Latency**
+
 - Reduce `maxSteps` in planning preferences
 - Use smaller LLM models for simple plans
 - Enable plan caching for repeated patterns

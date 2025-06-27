@@ -29,13 +29,17 @@ class StandaloneElizaServer {
 
   async validateClientAssets() {
     if (!existsSync(CLIENT_STATIC_PATH)) {
-      logger.error('Client assets not found. Run "bun run build:client" first.');
+      logger.error(
+        'Client assets not found. Run "bun run build:client" first.',
+      );
       process.exit(1);
     }
 
     const requiredFiles = ['index.html'];
-    const missingFiles = requiredFiles.filter(file => !existsSync(join(CLIENT_STATIC_PATH, file)));
-    
+    const missingFiles = requiredFiles.filter(
+      (file) => !existsSync(join(CLIENT_STATIC_PATH, file)),
+    );
+
     if (missingFiles.length > 0) {
       logger.error(`Missing client files: ${missingFiles.join(', ')}`);
       logger.error('Run "bun run build:client" to build client assets.');
@@ -52,28 +56,39 @@ class StandaloneElizaServer {
       if (req.path.startsWith('/client')) {
         const staticPath = req.path.replace('/client', '');
         const fullPath = join(CLIENT_STATIC_PATH, staticPath || 'index.html');
-        
+
         if (existsSync(fullPath)) {
           // Set appropriate headers
           if (fullPath.endsWith('.html')) {
-            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            res.setHeader(
+              'Cache-Control',
+              'no-cache, no-store, must-revalidate',
+            );
           } else if (fullPath.includes('/assets/')) {
-            res.setHeader('Cache-Control', process.env.NODE_ENV === 'production' ? 'public, max-age=31536000, immutable' : 'no-cache');
+            res.setHeader(
+              'Cache-Control',
+              process.env.NODE_ENV === 'production'
+                ? 'public, max-age=31536000, immutable'
+                : 'no-cache',
+            );
           }
-          
+
           return res.sendFile(fullPath);
-        } else if (!staticPath.includes('.') && !staticPath.startsWith('/assets/')) {
+        } else if (
+          !staticPath.includes('.') &&
+          !staticPath.startsWith('/assets/')
+        ) {
           // SPA routing fallback
           res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
           return res.sendFile(join(CLIENT_STATIC_PATH, 'index.html'));
         }
       }
-      
+
       // Default route to client
       if (req.path === '/') {
         return res.redirect('/client');
       }
-      
+
       next();
     });
 
@@ -82,12 +97,14 @@ class StandaloneElizaServer {
 
   async createAgentIfProvided() {
     if (!this.characterPath && !this.characterJson) {
-      logger.info('No character provided. Server ready for agent creation via API.');
+      logger.info(
+        'No character provided. Server ready for agent creation via API.',
+      );
       return;
     }
 
     try {
-      const agentData = this.characterJson 
+      const agentData = this.characterJson
         ? { characterJson: this.characterJson }
         : { characterPath: this.characterPath };
 
@@ -96,25 +113,30 @@ class StandaloneElizaServer {
         headers: {
           'Content-Type': 'application/json',
           ...(process.env.ELIZA_SERVER_AUTH_TOKEN && {
-            'X-API-KEY': process.env.ELIZA_SERVER_AUTH_TOKEN
-          })
+            'X-API-KEY': process.env.ELIZA_SERVER_AUTH_TOKEN,
+          }),
         },
-        body: JSON.stringify(agentData)
+        body: JSON.stringify(agentData),
       });
 
       if (response.ok) {
         const result = await response.json();
-        logger.info(`✅ Agent created: ${result.data.character.name} (ID: ${result.data.id})`);
-        
+        logger.info(
+          `✅ Agent created: ${result.data.character.name} (ID: ${result.data.id})`,
+        );
+
         // Start the agent
-        const startResponse = await fetch(`http://localhost:${this.port}/api/agents/${result.data.id}/start`, {
-          method: 'POST',
-          headers: {
-            ...(process.env.ELIZA_SERVER_AUTH_TOKEN && {
-              'X-API-KEY': process.env.ELIZA_SERVER_AUTH_TOKEN
-            })
-          }
-        });
+        const startResponse = await fetch(
+          `http://localhost:${this.port}/api/agents/${result.data.id}/start`,
+          {
+            method: 'POST',
+            headers: {
+              ...(process.env.ELIZA_SERVER_AUTH_TOKEN && {
+                'X-API-KEY': process.env.ELIZA_SERVER_AUTH_TOKEN,
+              }),
+            },
+          },
+        );
 
         if (startResponse.ok) {
           logger.info(`✅ Agent started successfully`);
@@ -123,7 +145,9 @@ class StandaloneElizaServer {
         }
       } else {
         const error = await response.json();
-        logger.error(`Failed to create agent: ${error.error?.message || 'Unknown error'}`);
+        logger.error(
+          `Failed to create agent: ${error.error?.message || 'Unknown error'}`,
+        );
       }
     } catch (error) {
       logger.error(`Error creating agent: ${error.message}`);
@@ -133,7 +157,7 @@ class StandaloneElizaServer {
   async start() {
     try {
       logger.info('🚀 Starting standalone ElizaOS server...');
-      
+
       // Validate client assets exist
       await this.validateClientAssets();
 
@@ -143,7 +167,7 @@ class StandaloneElizaServer {
       // Initialize the server with proper options
       await this.agentServer.initialize({
         postgresUrl: process.env.POSTGRES_URL,
-        dataDir: process.env.PGLITE_DATA_DIR || './.elizadb'
+        dataDir: process.env.PGLITE_DATA_DIR || './.elizadb',
       });
 
       // Setup client serving middleware
@@ -153,16 +177,19 @@ class StandaloneElizaServer {
       this.agentServer.start(this.port);
 
       // Wait a moment for server to be ready
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Create agent if provided
       await this.createAgentIfProvided();
 
-      logger.info(`🎉 ElizaOS server running on http://${this.host}:${this.port}`);
-      logger.info(`📱 Client GUI available at: http://localhost:${this.port}/client`);
+      logger.info(
+        `🎉 ElizaOS server running on http://${this.host}:${this.port}`,
+      );
+      logger.info(
+        `📱 Client GUI available at: http://localhost:${this.port}/client`,
+      );
       logger.info(`🔌 API available at: http://localhost:${this.port}/api`);
       logger.info(`📊 WebSocket available at: http://localhost:${this.port}`);
-
     } catch (error) {
       logger.error(`Failed to start server: ${error.message}`);
       process.exit(1);
@@ -185,7 +212,7 @@ async function main() {
   // Parse CLI arguments
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    
+
     if (arg === '--character' && args[i + 1]) {
       options.characterPath = args[++i];
     } else if (arg === '--port' && args[i + 1]) {

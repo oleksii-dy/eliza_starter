@@ -102,6 +102,16 @@ export class HandPlacementDetector {
    * Calculate bounding box of geometry
    */
   private calculateBoundingBox(vertices: Float32Array): BoundingBox {
+    // Handle empty geometry
+    if (vertices.length === 0) {
+      return {
+        min: { x: 0, y: 0, z: 0 },
+        max: { x: 0, y: 0, z: 0 },
+        center: { x: 0, y: 0, z: 0 },
+        dimensions: { x: 0, y: 0, z: 0 },
+      }
+    }
+
     let minX = Infinity,
       minY = Infinity,
       minZ = Infinity
@@ -266,10 +276,19 @@ export class HandPlacementDetector {
    * Calculate overall confidence score
    */
   private calculateConfidence(grips: HandGrip[], boundingBox: BoundingBox, heuristic: WeaponHeuristic): number {
-    if (grips.length === 0) return 0
+    if (grips.length === 0) {
+      return 0
+    }
 
     const primaryGrip = grips.find(g => g.gripType === 'primary')
-    if (!primaryGrip) return 0
+    if (!primaryGrip) {
+      return 0
+    }
+
+    // If geometry is empty (zero dimensions), confidence should be 0
+    if (boundingBox.dimensions.x === 0 && boundingBox.dimensions.y === 0 && boundingBox.dimensions.z === 0) {
+      return 0
+    }
 
     let confidence = primaryGrip.confidence
 

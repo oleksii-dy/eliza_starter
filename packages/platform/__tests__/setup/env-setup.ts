@@ -17,26 +17,36 @@ config({ path: localEnvPath });
 // Set default test environment variables
 const testDefaults = {
   NODE_ENV: 'test',
-  
+
   // Database
-  DATABASE_URL: process.env.DATABASE_URL || 'postgresql://test:test@localhost:5432/platform_test',
-  
+  DATABASE_URL:
+    process.env.DATABASE_URL ||
+    'postgresql://test:test@localhost:5432/platform_test',
+
   // Stripe (use test keys)
-  STRIPE_SECRET_KEY: process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_SECRET_KEY || 'sk_test_mock_key',
-  STRIPE_PUBLISHABLE_KEY: process.env.STRIPE_TEST_PUBLISHABLE_KEY || process.env.STRIPE_PUBLISHABLE_KEY || 'pk_test_mock_key',
-  STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET || 'whsec_test_webhook_secret',
-  
+  STRIPE_SECRET_KEY:
+    process.env.STRIPE_TEST_SECRET_KEY ||
+    process.env.STRIPE_SECRET_KEY ||
+    'sk_test_mock_key',
+  STRIPE_PUBLISHABLE_KEY:
+    process.env.STRIPE_TEST_PUBLISHABLE_KEY ||
+    process.env.STRIPE_PUBLISHABLE_KEY ||
+    'pk_test_mock_key',
+  STRIPE_WEBHOOK_SECRET:
+    process.env.STRIPE_WEBHOOK_SECRET || 'whsec_test_webhook_secret',
+
   // Alchemy (for crypto tests)
   ALCHEMY_API_KEY: process.env.ALCHEMY_API_KEY || 'test_alchemy_key',
-  
+
   // App configuration
-  NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+  NEXT_PUBLIC_APP_URL:
+    process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
   NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET || 'test-nextauth-secret',
   NEXTAUTH_URL: process.env.NEXTAUTH_URL || 'http://localhost:3000',
-  
+
   // Logging
   LOG_LEVEL: 'error', // Suppress logs during tests
-  
+
   // Test-specific settings
   JEST_TIMEOUT: '30000',
   TEST_PARALLEL: 'false', // Run integration tests sequentially
@@ -51,17 +61,24 @@ Object.entries(testDefaults).forEach(([key, value]) => {
 
 // Validate critical environment variables for integration tests
 const requiredVars = ['DATABASE_URL'];
-const missingVars = requiredVars.filter(key => !process.env[key]);
+const missingVars = requiredVars.filter((key) => !process.env[key]);
 
 if (missingVars.length > 0) {
-  console.error('Missing required environment variables for integration tests:');
-  missingVars.forEach(key => console.error(`  - ${key}`));
-  console.error('\nPlease create a .env.test file with the required variables.');
+  console.error(
+    'Missing required environment variables for integration tests:',
+  );
+  missingVars.forEach((key) => console.error(`  - ${key}`));
+  console.error(
+    '\nPlease create a .env.test file with the required variables.',
+  );
   process.exit(1);
 }
 
 // Warn about using production keys in tests
-if (process.env.STRIPE_SECRET_KEY && !process.env.STRIPE_SECRET_KEY.includes('test')) {
+if (
+  process.env.STRIPE_SECRET_KEY &&
+  !process.env.STRIPE_SECRET_KEY.includes('test')
+) {
   console.warn('⚠️  WARNING: Using production Stripe key in tests');
 }
 
@@ -74,19 +91,19 @@ if (process.env.DATABASE_URL && process.env.DATABASE_URL.includes('prod')) {
 if (process.env.NODE_ENV === 'test') {
   // Suppress unnecessary console output during tests
   const originalConsole = { ...console };
-  
+
   console.log = (...args) => {
     if (process.env.VERBOSE_TESTS === 'true') {
       originalConsole.log(...args);
     }
   };
-  
+
   console.info = (...args) => {
     if (process.env.VERBOSE_TESTS === 'true') {
       originalConsole.info(...args);
     }
   };
-  
+
   // Always show warnings and errors
   console.warn = originalConsole.warn;
   console.error = originalConsole.error;
@@ -118,7 +135,13 @@ export const testConfig = {
 console.log('🧪 Test environment configured');
 if (testConfig.test.verbose) {
   console.log('Environment variables loaded:');
-  console.log('  - Database:', testConfig.database.url.replace(/\/\/.*@/, '//***:***@'));
-  console.log('  - Stripe:', testConfig.stripe.secretKey.substring(0, 12) + '...');
+  console.log(
+    '  - Database:',
+    testConfig.database.url.replace(/\/\/.*@/, '//***:***@'),
+  );
+  console.log(
+    '  - Stripe:',
+    testConfig.stripe.secretKey.substring(0, 12) + '...',
+  );
   console.log('  - App URL:', testConfig.app.url);
 }

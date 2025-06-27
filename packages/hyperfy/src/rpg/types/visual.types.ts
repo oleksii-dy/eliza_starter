@@ -2,7 +2,7 @@
  * Visual system type definitions
  */
 
-import { Vector3 } from './index';
+import { Vector3 } from './index'
 // import * as THREE from 'three';
 
 /**
@@ -10,40 +10,40 @@ import { Vector3 } from './index';
  */
 export interface VisualTemplate {
   /** Base color of the visual */
-  color: number;
+  color: number
   /** Size dimensions */
   size: {
-    width: number;
-    height: number;
-    depth: number;
-  };
+    width: number
+    height: number
+    depth: number
+  }
   /** Available animations for this template */
-  animations: string[];
+  animations: string[]
   /** Optional material properties */
   material?: {
-    metalness?: number;
-    roughness?: number;
-    emissive?: number;
-    emissiveIntensity?: number;
-    opacity?: number;
-  };
+    metalness?: number
+    roughness?: number
+    emissive?: number
+    emissiveIntensity?: number
+    opacity?: number
+  }
   /** Optional custom geometry type */
-  geometryType?: 'box' | 'sphere' | 'cylinder' | 'cone';
+  geometryType?: 'box' | 'sphere' | 'cylinder' | 'cone'
 }
 
 /**
  * Animation state for an entity
  */
 export interface AnimationState {
-  entityId: string;
-  animationType: string;
-  startTime: number;
-  duration: number;
-  loop: boolean;
-  originalPosition?: Vector3;
-  originalRotation?: Vector3;
+  entityId: string
+  animationType: string
+  startTime: number
+  duration: number
+  loop: boolean
+  originalPosition?: Vector3
+  originalRotation?: Vector3
   /** Animation-specific parameters */
-  params?: Record<string, any>;
+  params?: Record<string, any>
 }
 
 /**
@@ -51,15 +51,15 @@ export interface AnimationState {
  */
 export interface VisualComponent {
   /** Reference to the Hyperfy mesh node */
-  mesh: any; // Hyperfy Mesh node
+  mesh: any // Hyperfy Mesh node
   /** Container group for the visual */
-  group: any; // Hyperfy Group node
+  group: any // Hyperfy Group node
   /** Template used for this visual */
-  template: VisualTemplate;
+  template: VisualTemplate
   /** Whether visual is currently visible */
-  visible: boolean;
+  visible: boolean
   /** LOD level (0 = highest detail) */
-  lodLevel: number;
+  lodLevel: number
 }
 
 /**
@@ -67,11 +67,11 @@ export interface VisualComponent {
  */
 export interface VisualSystemConfig {
   /** Enable shadow casting/receiving */
-  enableShadows?: boolean;
+  enableShadows?: boolean
   /** Maximum view distance for visuals */
-  maxViewDistance?: number;
+  maxViewDistance?: number
   /** LOD distances [high, medium, low] */
-  lodDistances?: [number, number, number];
+  lodDistances?: [number, number, number]
   /** Enable debug visuals */
-  debug?: boolean;
+  debug?: boolean
 }

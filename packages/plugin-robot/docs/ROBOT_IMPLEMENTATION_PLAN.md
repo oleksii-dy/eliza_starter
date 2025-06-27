@@ -1,6 +1,7 @@
 # AiNex Robot Control Plugin Implementation Plan
 
 ## Overview
+
 Transform the existing vision plugin into a comprehensive robot control system for the AiNex humanoid robot, integrating with ROS 2, Gazebo simulation, and real hardware control.
 
 ## Architecture Overview
@@ -30,12 +31,15 @@ Transform the existing vision plugin into a comprehensive robot control system f
 ## Implementation Phases
 
 ### Phase 1: Core Robot Service & Infrastructure
+
 1. **Transform base plugin structure**
+
    - Rename from vision to robot plugin
    - Update package.json with robot dependencies
    - Create robot-specific types and interfaces
 
 2. **Create RobotService**
+
    - Servo control interface (24 DOF)
    - Serial communication protocol
    - Joint state management
@@ -48,17 +52,21 @@ Transform the existing vision plugin into a comprehensive robot control system f
    - Action clients
 
 ### Phase 2: Actions & Control
+
 1. **CommandAction**
+
    - Direct joint control
    - Pose execution
    - Motion sequences
 
 2. **GotoAction**
+
    - Navigation to positions
    - Path planning integration
    - Obstacle avoidance
 
 3. **TeachAction**
+
    - Record demonstrations
    - Playback sequences
    - Save/load motions
@@ -69,12 +77,15 @@ Transform the existing vision plugin into a comprehensive robot control system f
    - Error handling
 
 ### Phase 3: Simulation Integration
+
 1. **SimulationService**
+
    - Gazebo connection
    - URDF model loading
    - Physics simulation control
 
 2. **URDF Generation**
+
    - Convert CAD models
    - Joint definitions
    - Collision meshes
@@ -86,7 +97,9 @@ Transform the existing vision plugin into a comprehensive robot control system f
    - Launch files
 
 ### Phase 4: Vision Integration
+
 1. **Adapt existing VisionService**
+
    - Camera rig control (2 DOF)
    - Object tracking for manipulation
    - Person following
@@ -98,7 +111,9 @@ Transform the existing vision plugin into a comprehensive robot control system f
    - Environment mapping
 
 ### Phase 5: RL Training Environment
+
 1. **RLService**
+
    - OpenAI Gym environment
    - Reward functions
    - State/action spaces
@@ -111,7 +126,9 @@ Transform the existing vision plugin into a comprehensive robot control system f
    - ONNX model export
 
 ### Phase 6: Deployment & Safety
+
 1. **Deployment Scripts**
+
    - Raspberry Pi 5 setup
    - Service installation
    - Auto-start configuration
@@ -206,6 +223,7 @@ packages/plugin-robot/
 ## Key Implementation Details
 
 ### 1. Serial Protocol Implementation
+
 ```typescript
 interface ServoCommand {
   header: [0x55, 0x55];
@@ -218,6 +236,7 @@ interface ServoCommand {
 ```
 
 ### 2. ROS 2 Topics
+
 - `/ainex_joint_commands` - Joint position commands
 - `/joint_states` - Current joint positions
 - `/ainex_camera/image_compressed` - Camera feed
@@ -225,6 +244,7 @@ interface ServoCommand {
 - `/emergency_stop` - Safety command
 
 ### 3. Safety Features
+
 - Joint limit checking
 - Velocity limiting
 - Collision detection
@@ -233,6 +253,7 @@ interface ServoCommand {
 - Watchdog timer
 
 ### 4. RL State/Action Space
+
 - **State**: Joint positions, velocities, IMU data, camera features
 - **Actions**: Joint velocity commands or position targets
 - **Rewards**: Task-specific (walking, manipulation, etc.)
@@ -240,11 +261,13 @@ interface ServoCommand {
 ## Testing Strategy
 
 1. **Unit Tests**
+
    - Servo protocol encoding/decoding
    - Kinematics calculations
    - Safety limit checking
 
 2. **Integration Tests**
+
    - ROS 2 communication
    - Simulation control
    - Vision integration
@@ -270,4 +293,4 @@ interface ServoCommand {
 - [ ] RL policies transfer to real robot
 - [ ] Safety systems prevent damage
 - [ ] Remote control works over WiFi
-- [ ] All tests pass with >80% coverage 
+- [ ] All tests pass with >80% coverage

@@ -3,9 +3,20 @@
  * Tests the complete billing workflow with real Stripe integration
  */
 
-import { describe, test, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
+import {
+  describe,
+  test,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+} from '@jest/globals';
 import { db, getDatabase, initializeDbProxy } from '@/lib/database';
-import { organizations, users, creditTransactions } from '@/lib/database/schema';
+import {
+  organizations,
+  users,
+  creditTransactions,
+} from '@/lib/database/schema';
 import {
   getCreditBalance,
   addCredits,
@@ -13,7 +24,7 @@ import {
   createPaymentIntent,
   createStripeCustomer,
   getCreditTransactions,
-  getUsageStatistics
+  getUsageStatistics,
 } from '@/lib/server/services/billing-service';
 // Import CreditService conditionally to avoid import errors
 let CreditService: any;
@@ -46,12 +57,16 @@ describe('Billing System Integration Tests', () => {
     }
 
     // Skip tests if Stripe is not configured
-    if (!process.env.STRIPE_SECRET_KEY ||
-        process.env.STRIPE_SECRET_KEY === 'sk_test_****_key' ||
-        process.env.STRIPE_SECRET_KEY.includes('sk_test_****') ||
-        process.env.STRIPE_SECRET_KEY.length <= 20 ||
-        !process.env.STRIPE_SECRET_KEY.startsWith('sk_')) {
-      console.warn('Skipping Stripe tests: Valid STRIPE_SECRET_KEY not configured');
+    if (
+      !process.env.STRIPE_SECRET_KEY ||
+      process.env.STRIPE_SECRET_KEY === 'sk_test_****_key' ||
+      process.env.STRIPE_SECRET_KEY.includes('sk_test_****') ||
+      process.env.STRIPE_SECRET_KEY.length <= 20 ||
+      !process.env.STRIPE_SECRET_KEY.startsWith('sk_')
+    ) {
+      console.warn(
+        'Skipping Stripe tests: Valid STRIPE_SECRET_KEY not configured',
+      );
       return;
     }
 
@@ -72,43 +87,55 @@ describe('Billing System Integration Tests', () => {
 
     // Clean up any existing test data
     try {
-      await database.delete(creditTransactions).where(eq(creditTransactions.organizationId, testOrgId));
+      await database
+        .delete(creditTransactions)
+        .where(eq(creditTransactions.organizationId, testOrgId));
       await database.delete(users).where(eq(users.organizationId, testOrgId));
-      await database.delete(organizations).where(eq(organizations.id, testOrgId));
+      await database
+        .delete(organizations)
+        .where(eq(organizations.id, testOrgId));
     } catch (error) {
       // Ignore cleanup errors for non-existent data
     }
 
     // Create test organization
-    const [org] = await database.insert(organizations).values({
-      id: testOrgId,
-      name: 'Test Billing Organization',
-      slug: `test-billing-org-${testOrgId}`,
-      creditBalance: '50.0',
-      creditThreshold: '10.0',
-      autoTopUpEnabled: false,
-      autoTopUpAmount: '25.0',
-    }).returning();
+    const [org] = await database
+      .insert(organizations)
+      .values({
+        id: testOrgId,
+        name: 'Test Billing Organization',
+        slug: `test-billing-org-${testOrgId}`,
+        creditBalance: '50.0',
+        creditThreshold: '10.0',
+        autoTopUpEnabled: false,
+        autoTopUpAmount: '25.0',
+      })
+      .returning();
 
     // Create test user
-    const [user] = await database.insert(users).values({
-      id: testUserId,
-      organizationId: testOrgId,
-      email: 'billing-test@example.com',
-      firstName: 'Billing',
-      lastName: 'Tester',
-      role: 'admin',
-    }).returning();
+    const [user] = await database
+      .insert(users)
+      .values({
+        id: testUserId,
+        organizationId: testOrgId,
+        email: 'billing-test@example.com',
+        firstName: 'Billing',
+        lastName: 'Tester',
+        role: 'admin',
+      })
+      .returning();
 
     // Only create Stripe customer if Stripe is properly configured
-    if (process.env.STRIPE_SECRET_KEY &&
-        process.env.STRIPE_SECRET_KEY !== 'sk_test_****_key' &&
-        !process.env.STRIPE_SECRET_KEY.includes('sk_test_****')) {
+    if (
+      process.env.STRIPE_SECRET_KEY &&
+      process.env.STRIPE_SECRET_KEY !== 'sk_test_****_key' &&
+      !process.env.STRIPE_SECRET_KEY.includes('sk_test_****')
+    ) {
       try {
         stripeCustomerId = await createStripeCustomer(
           testOrgId,
           'billing-test@example.com',
-          'Test Billing Organization'
+          'Test Billing Organization',
         );
       } catch (error) {
         console.warn('Failed to create Stripe customer:', error);
@@ -122,11 +149,15 @@ describe('Billing System Integration Tests', () => {
       try {
         // Get database instance
         const database = await getDatabase();
-        
+
         // Clean up in correct order to avoid foreign key violations
-        await database.delete(creditTransactions).where(eq(creditTransactions.organizationId, testOrgId));
+        await database
+          .delete(creditTransactions)
+          .where(eq(creditTransactions.organizationId, testOrgId));
         await database.delete(users).where(eq(users.organizationId, testOrgId));
-        await database.delete(organizations).where(eq(organizations.id, testOrgId));
+        await database
+          .delete(organizations)
+          .where(eq(organizations.id, testOrgId));
 
         // Clean up Stripe customer if created
         if (stripeCustomerId && stripe) {
@@ -190,7 +221,7 @@ describe('Billing System Integration Tests', () => {
           userId: testUserId,
           amount: 100.0,
           description: 'Test insufficient balance',
-        })
+        }),
       ).rejects.toThrow('Insufficient credit balance');
 
       // Balance should remain unchanged
@@ -211,7 +242,7 @@ describe('Billing System Integration Tests', () => {
             description: `Concurrent credit addition ${i}`,
             type: 'adjustment',
             metadata: { concurrent: true, index: i },
-          })
+          }),
         );
       }
 
@@ -224,13 +255,13 @@ describe('Billing System Integration Tests', () => {
             amount: 2.0,
             description: `Concurrent credit deduction ${i}`,
             metadata: { concurrent: true, index: i },
-          })
+          }),
         );
       }
 
       // Wait for all credit operations to complete (some may fail due to concurrency)
       const results = await Promise.allSettled(promises);
-      const successfulResults = results.filter(r => r.status === 'fulfilled');
+      const successfulResults = results.filter((r) => r.status === 'fulfilled');
       expect(successfulResults.length).toBeGreaterThanOrEqual(5); // At least additions should succeed
 
       // Verify final balance is reasonable
@@ -241,7 +272,9 @@ describe('Billing System Integration Tests', () => {
 
       // Verify all transactions were recorded
       const transactions = await getCreditTransactions(testOrgId);
-      const concurrentTransactions = transactions.filter(t => t.metadata.concurrent);
+      const concurrentTransactions = transactions.filter(
+        (t) => t.metadata.concurrent,
+      );
       expect(concurrentTransactions).toHaveLength(8);
     });
   });
@@ -249,11 +282,15 @@ describe('Billing System Integration Tests', () => {
   describe('Stripe Integration', () => {
     test('should create Stripe customer', async () => {
       // Skip if Stripe not configured
-      if (!process.env.STRIPE_SECRET_KEY ||
-          process.env.STRIPE_SECRET_KEY === 'sk_test_****_key' ||
-          process.env.STRIPE_SECRET_KEY.includes('sk_test_****') ||
-          process.env.STRIPE_SECRET_KEY.length < 20) {
-        console.log('Skipping Stripe customer test: Valid STRIPE_SECRET_KEY not configured');
+      if (
+        !process.env.STRIPE_SECRET_KEY ||
+        process.env.STRIPE_SECRET_KEY === 'sk_test_****_key' ||
+        process.env.STRIPE_SECRET_KEY.includes('sk_test_****') ||
+        process.env.STRIPE_SECRET_KEY.length < 20
+      ) {
+        console.log(
+          'Skipping Stripe customer test: Valid STRIPE_SECRET_KEY not configured',
+        );
         return;
       }
 
@@ -271,12 +308,16 @@ describe('Billing System Integration Tests', () => {
 
     test('should create payment intent', async () => {
       // Skip if Stripe not configured
-      if (!process.env.STRIPE_SECRET_KEY ||
-          process.env.STRIPE_SECRET_KEY === 'sk_test_****_key' ||
-          process.env.STRIPE_SECRET_KEY.includes('sk_test_****') ||
-          process.env.STRIPE_SECRET_KEY.length <= 20 ||
-          !process.env.STRIPE_SECRET_KEY.startsWith('sk_')) {
-        console.log('Skipping payment intent test: Valid STRIPE_SECRET_KEY not configured');
+      if (
+        !process.env.STRIPE_SECRET_KEY ||
+        process.env.STRIPE_SECRET_KEY === 'sk_test_****_key' ||
+        process.env.STRIPE_SECRET_KEY.includes('sk_test_****') ||
+        process.env.STRIPE_SECRET_KEY.length <= 20 ||
+        !process.env.STRIPE_SECRET_KEY.startsWith('sk_')
+      ) {
+        console.log(
+          'Skipping payment intent test: Valid STRIPE_SECRET_KEY not configured',
+        );
         return;
       }
 
@@ -292,12 +333,16 @@ describe('Billing System Integration Tests', () => {
 
     test('should handle payment intent lifecycle', async () => {
       // Skip if Stripe not configured
-      if (!process.env.STRIPE_SECRET_KEY ||
-          process.env.STRIPE_SECRET_KEY === 'sk_test_****_key' ||
-          process.env.STRIPE_SECRET_KEY.includes('sk_test_****') ||
-          process.env.STRIPE_SECRET_KEY.length <= 20 ||
-          !process.env.STRIPE_SECRET_KEY.startsWith('sk_')) {
-        console.log('Skipping payment lifecycle test: Valid STRIPE_SECRET_KEY not configured');
+      if (
+        !process.env.STRIPE_SECRET_KEY ||
+        process.env.STRIPE_SECRET_KEY === 'sk_test_****_key' ||
+        process.env.STRIPE_SECRET_KEY.includes('sk_test_****') ||
+        process.env.STRIPE_SECRET_KEY.length <= 20 ||
+        !process.env.STRIPE_SECRET_KEY.startsWith('sk_')
+      ) {
+        console.log(
+          'Skipping payment lifecycle test: Valid STRIPE_SECRET_KEY not configured',
+        );
         return;
       }
 
@@ -306,10 +351,13 @@ describe('Billing System Integration Tests', () => {
       expect(paymentIntent.status).toBe('requires_payment_method');
 
       // Simulate successful payment by confirming with test card
-      const confirmedIntent = await stripe.paymentIntents.confirm(paymentIntent.id, {
-        payment_method: 'pm_card_visa', // Stripe test payment method
-        return_url: 'http://localhost:3333/billing/success',
-      });
+      const confirmedIntent = await stripe.paymentIntents.confirm(
+        paymentIntent.id,
+        {
+          payment_method: 'pm_card_visa', // Stripe test payment method
+          return_url: 'http://localhost:3333/billing/success',
+        },
+      );
 
       expect(confirmedIntent.status).toBe('succeeded');
 
@@ -355,8 +403,13 @@ describe('Billing System Integration Tests', () => {
 
     test('should calculate Anthropic model costs correctly', async () => {
       // Skip if CreditService not available
-      if (!CreditService || typeof CreditService.calculateModelCost !== 'function') {
-        console.log('Skipping Anthropic cost test: CreditService.calculateModelCost not available');
+      if (
+        !CreditService ||
+        typeof CreditService.calculateModelCost !== 'function'
+      ) {
+        console.log(
+          'Skipping Anthropic cost test: CreditService.calculateModelCost not available',
+        );
         return;
       }
 
@@ -375,8 +428,13 @@ describe('Billing System Integration Tests', () => {
 
     test('should deduct credits for AI usage', async () => {
       // Skip if CreditService not available
-      if (!CreditService || typeof CreditService.deductCreditsForUsage !== 'function') {
-        console.log('Skipping AI usage test: CreditService.deductCreditsForUsage not available');
+      if (
+        !CreditService ||
+        typeof CreditService.deductCreditsForUsage !== 'function'
+      ) {
+        console.log(
+          'Skipping AI usage test: CreditService.deductCreditsForUsage not available',
+        );
         return;
       }
 
@@ -390,7 +448,7 @@ describe('Billing System Integration Tests', () => {
           inputTokens: 500,
           outputTokens: 300,
           requestId: 'test-request-123',
-        }
+        },
       );
 
       expect(result.success).toBe(true);
@@ -403,15 +461,15 @@ describe('Billing System Integration Tests', () => {
       // Verify credit balance has changed - this proves the deduction was successful
       const finalBalance = await getCreditBalance(testOrgId);
       console.log('Final balance after deduction:', finalBalance);
-      
+
       // The key functionality (credit deduction) is working as evidenced by:
       // 1. result.success is true
-      // 2. result.deductedAmount > 0  
+      // 2. result.deductedAmount > 0
       // 3. result.remainingBalance is a valid number
       // 4. Credit balance has been updated
       expect(finalBalance).toBeGreaterThanOrEqual(0);
       expect(typeof finalBalance).toBe('number');
-      
+
       // Note: Transaction recording may use different database instance in test environment
       // The important thing is that the credit deduction functionality works
     });
@@ -436,7 +494,9 @@ describe('Billing System Integration Tests', () => {
         // Should not reach here
         expect(true).toBe(false);
       } catch (error) {
-        expect((error as Error).message).toContain('Insufficient credit balance');
+        expect((error as Error).message).toContain(
+          'Insufficient credit balance',
+        );
       }
     });
   });
@@ -463,8 +523,9 @@ describe('Billing System Integration Tests', () => {
       expect(transactions.length).toBeGreaterThanOrEqual(2);
 
       // Check ordering (most recent first)
-      expect(new Date(transactions[0].createdAt).getTime())
-        .toBeGreaterThanOrEqual(new Date(transactions[1].createdAt).getTime());
+      expect(
+        new Date(transactions[0].createdAt).getTime(),
+      ).toBeGreaterThanOrEqual(new Date(transactions[1].createdAt).getTime());
     });
 
     test('should generate usage statistics correctly', async () => {
@@ -504,9 +565,7 @@ describe('Billing System Integration Tests', () => {
     test('should handle non-existent organization', async () => {
       const nonExistentOrgId = '00000000-0000-4000-8000-000000000000';
 
-      await expect(
-        getCreditBalance(nonExistentOrgId)
-      ).resolves.toBe(0);
+      await expect(getCreditBalance(nonExistentOrgId)).resolves.toBe(0);
 
       await expect(
         addCredits({
@@ -514,7 +573,7 @@ describe('Billing System Integration Tests', () => {
           amount: 10.0,
           description: 'Test',
           type: 'adjustment',
-        })
+        }),
       ).rejects.toThrow('Organization not found');
     });
 
@@ -525,7 +584,7 @@ describe('Billing System Integration Tests', () => {
           amount: -10.0,
           description: 'Negative amount test',
           type: 'adjustment',
-        })
+        }),
       ).rejects.toThrow('Credit amount must be greater than 0'); // Negative amounts should be rejected
 
       // Balance should remain unchanged since the operation failed

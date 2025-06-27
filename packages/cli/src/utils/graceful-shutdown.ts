@@ -1,4 +1,3 @@
-import AgentServer from '@elizaos/server';
 import { logger } from '@elizaos/core';
 import { LogArchiver } from './log-archiver';
 import type { ServerStartOptions } from '../commands/start/actions/server-start';
@@ -7,7 +6,7 @@ import type { ServerStartOptions } from '../commands/start/actions/server-start'
  * Graceful shutdown handler for the agent server
  */
 export class GracefulShutdownHandler {
-  private server: AgentServer | null = null;
+  private server: any | null = null;
   private timeoutId: NodeJS.Timeout | null = null;
   private isShuttingDown = false;
   private logArchiver: LogArchiver;
@@ -20,7 +19,7 @@ export class GracefulShutdownHandler {
   /**
    * Set the server instance to manage
    */
-  setServer(server: AgentServer): void {
+  setServer(server: any): void {
     this.server = server;
   }
 

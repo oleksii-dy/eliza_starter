@@ -14,23 +14,25 @@ const CI = process.env.CI === 'true';
 const VERBOSE = process.env.VERBOSE === 'true' || !CI;
 
 // Colors for console output (disabled in CI)
-const colors = CI ? {
-  reset: '',
-  green: '',
-  red: '',
-  yellow: '',
-  blue: '',
-  cyan: '',
-  magenta: ''
-} : {
-  reset: '\x1b[0m',
-  green: '\x1b[32m',
-  red: '\x1b[31m',
-  yellow: '\x1b[33m',
-  blue: '\x1b[34m',
-  cyan: '\x1b[36m',
-  magenta: '\x1b[35m'
-};
+const colors = CI
+  ? {
+      reset: '',
+      green: '',
+      red: '',
+      yellow: '',
+      blue: '',
+      cyan: '',
+      magenta: '',
+    }
+  : {
+      reset: '\x1b[0m',
+      green: '\x1b[32m',
+      red: '\x1b[31m',
+      yellow: '\x1b[33m',
+      blue: '\x1b[34m',
+      cyan: '\x1b[36m',
+      magenta: '\x1b[35m',
+    };
 
 function log(message, color = 'reset', prefix = '') {
   const timestamp = new Date().toISOString();
@@ -49,7 +51,7 @@ function logVerbose(message, color = 'reset') {
 // Ensure required directories exist
 function ensureDirectories() {
   const dirs = ['cypress/screenshots', 'cypress/videos', 'cypress/downloads'];
-  dirs.forEach(dir => {
+  dirs.forEach((dir) => {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
       logVerbose(`📁 Created directory: ${dir}`, 'cyan');
@@ -70,12 +72,12 @@ function waitForServer(port, retries = MAX_RETRIES) {
         port,
         path: '/api/goals',
         method: 'GET',
-        timeout: 5000
+        timeout: 5000,
       };
 
       const req = http.request(options, (res) => {
         let data = '';
-        res.on('data', chunk => data += chunk);
+        res.on('data', (chunk) => (data += chunk));
         res.on('end', () => {
           if (res.statusCode === 200) {
             log(`✅ Server is ready on port ${port}`, 'green');
@@ -152,7 +154,7 @@ async function runTests() {
       shell: true,
       cwd: process.cwd(),
       env: serverEnv,
-      detached: process.platform !== 'win32' // Create process group on Unix
+      detached: process.platform !== 'win32', // Create process group on Unix
     });
 
     // Capture server output
@@ -189,19 +191,21 @@ async function runTests() {
 
     // Run Cypress tests
     log('\n🧪 Running Cypress tests...', 'blue');
-    const cypressArgs = CYPRESS_HEADED ? ['run', 'cypress:run'] : ['run', 'cypress:run', '--', '--headless'];
+    const cypressArgs = CYPRESS_HEADED
+      ? ['run', 'cypress:run']
+      : ['run', 'cypress:run', '--', '--headless'];
 
     const cypressEnv = {
       ...process.env,
       CYPRESS_baseUrl: `http://localhost:${SERVER_PORT}`,
-      FORCE_COLOR: '1'
+      FORCE_COLOR: '1',
     };
 
     const cypressProcess = spawn('npm', cypressArgs, {
       stdio: 'inherit',
       shell: true,
       cwd: process.cwd(),
-      env: cypressEnv
+      env: cypressEnv,
     });
 
     // Wait for Cypress to complete
@@ -220,7 +224,6 @@ async function runTests() {
         reject(new Error(`Cypress failed to start: ${err.message}`));
       });
     });
-
   } catch (error) {
     log(`\n❌ Test failed: ${error.message}`, 'red');
     exitCode = 1;
@@ -255,7 +258,7 @@ async function runTests() {
         }, 5000);
 
         // Wait a bit for cleanup
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       } catch (e) {
         logVerbose(`Error during cleanup: ${e.message}`, 'yellow');
       }
@@ -269,7 +272,9 @@ async function runTests() {
 let isCleaningUp = false;
 
 function cleanup(signal) {
-  if (isCleaningUp) {return;}
+  if (isCleaningUp) {
+    return;
+  }
   isCleaningUp = true;
 
   log(`\n\n⚠️  Received ${signal}, cleaning up...`, 'yellow');

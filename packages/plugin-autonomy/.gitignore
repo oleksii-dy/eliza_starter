@@ -58,3 +58,7 @@ cache/
 .turbo/
 .cursor
 docs/
+AGENTS.md
+.cursor/rules/elizaos
+CLAUDE.md
+.cursorignore

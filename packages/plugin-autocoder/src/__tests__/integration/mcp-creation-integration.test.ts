@@ -7,7 +7,11 @@ import type { IAgentRuntime } from '@elizaos/core';
 // Mock child_process to avoid running real commands
 mock.module('child_process', () => ({
   exec: mock((cmd: string, opts: any, callback?: any) => {
-    const cb = callback || ((err: any, stdout: string, stderr: string) => { /* empty */ });
+    const cb =
+      callback ||
+      ((err: any, stdout: string, stderr: string) => {
+        /* empty */
+      });
     // Simulate successful command execution for npm install, tsc, etc.
     process.nextTick(() => cb(null, 'Success', ''));
   }),
@@ -80,7 +84,9 @@ describe('MCP Creation Integration Tests', () => {
     // Check that basic files were created regardless of the final success status
     try {
       await fs.access(path.join(projectPath, 'package.json'));
-      const packageJson = JSON.parse(await fs.readFile(path.join(projectPath, 'package.json'), 'utf-8'));
+      const packageJson = JSON.parse(
+        await fs.readFile(path.join(projectPath, 'package.json'), 'utf-8')
+      );
       expect(packageJson.name).toBe('simple-time-plugin');
       expect(packageJson.description).toBe('A simple time reporting plugin');
 

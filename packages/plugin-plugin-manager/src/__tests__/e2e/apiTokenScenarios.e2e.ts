@@ -57,7 +57,9 @@ export const apiTokenScenariosTests: TestCase[] = [
       // Override getSetting to return expired token
       const originalGetSetting = runtime.getSetting;
       runtime.getSetting = (key: string) => {
-        if (key === 'GITHUB_TOKEN') {return expiredToken;}
+        if (key === 'GITHUB_TOKEN') {
+          return expiredToken;
+        }
         return originalGetSetting.call(runtime, key);
       };
 
@@ -94,7 +96,9 @@ export const apiTokenScenariosTests: TestCase[] = [
 
       const originalGetSetting = runtime.getSetting;
       runtime.getSetting = (key: string) => {
-        if (key === 'GITHUB_TOKEN') {return currentToken;}
+        if (key === 'GITHUB_TOKEN') {
+          return currentToken;
+        }
         return originalGetSetting.call(runtime, key);
       };
 
@@ -181,7 +185,9 @@ export const apiTokenScenariosTests: TestCase[] = [
 
       const originalGetSetting = runtime.getSetting;
       runtime.getSetting = (key: string) => {
-        if (key === 'GITHUB_TOKEN') {return sensitiveToken;}
+        if (key === 'GITHUB_TOKEN') {
+          return sensitiveToken;
+        }
         return originalGetSetting.call(runtime, key);
       };
 

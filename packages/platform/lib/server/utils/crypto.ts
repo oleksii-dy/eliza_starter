@@ -8,7 +8,11 @@ import bcrypt from 'bcryptjs';
 /**
  * Generate a secure random API key
  */
-export function generateApiKey(): { key: string; hash: string; prefix: string } {
+export function generateApiKey(): {
+  key: string;
+  hash: string;
+  prefix: string;
+} {
   // Generate 32 bytes of random data
   const keyBytes = randomBytes(32);
   const keyHex = keyBytes.toString('hex');
@@ -50,7 +54,10 @@ export async function hashPassword(password: string): Promise<string> {
 /**
  * Verify password against hash
  */
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+export async function verifyPassword(
+  password: string,
+  hash: string,
+): Promise<boolean> {
   return bcrypt.compare(password, hash);
 }
 

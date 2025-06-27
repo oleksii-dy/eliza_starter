@@ -1,22 +1,25 @@
 {
-  "extends": "../../tsconfig.json",
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./configs/typescript/tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "types": [],
     "typeRoots": ["./src/types", "../../node_modules/@types"],
-    "strict": true,
     "incremental": true,
     "tsBuildInfoFile": "./.tsbuildinfo",
-    "emitDeclarationOnly": false,
+    "emitDeclarationOnly": true,
     "noEmit": false
   },
   "include": ["src/**/*", "src/types/**/*.d.ts"],
-  "exclude": ["dist", "node_modules", "src/**/*.test.ts", "src/__tests__/**/*", "src/auth/*.test.ts"]
+  "exclude": [
+    "dist",
+    "node_modules",
+    "src/**/*.test.ts",
+    "src/__tests__/**/*",
+    "src/auth/*.test.ts",
+    "src/test-utils/**/*"
+  ]
 }

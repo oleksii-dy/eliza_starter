@@ -41,7 +41,7 @@ export class CSRFProtection {
   generateTokenMiddleware() {
     return (req: Request, res: Response, next: NextFunction) => {
       const token = this.generateToken();
-      const sessionId = req.sessionID || this.generateToken();
+      const sessionId = (req as any).sessionID || this.generateToken();
 
       // Store token with 1 hour expiry
       this.tokens.set(sessionId, {
@@ -96,7 +96,7 @@ export class CSRFProtection {
       }
 
       // Check if token is still valid in our store
-      const sessionId = req.sessionID || submittedToken;
+      const sessionId = (req as any).sessionID || submittedToken;
       const storedToken = this.tokens.get(sessionId);
 
       if (!storedToken || storedToken.expires < Date.now()) {

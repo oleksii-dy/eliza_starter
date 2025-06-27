@@ -42,6 +42,7 @@ mock.module('@elizaos/core', () => ({
 import { TokenService } from '../../services/TokenService';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { logger } from '@elizaos/core';
+import { createMockRuntime } from '@elizaos/core/test-utils';
 import axios from 'axios';
 
 describe('TokenService', () => {
@@ -54,7 +55,7 @@ describe('TokenService', () => {
     mock.restore();
     mockAxios = axios as any;
 
-    mockRuntime = {
+    mockRuntime = createMockRuntime({
       getSetting: mock((key: string) => {
         const settings: Record<string, string> = {
           SOLANA_RPC_URL: 'https://api.devnet.solana.com',
@@ -65,7 +66,7 @@ describe('TokenService', () => {
       getService: mock(() => ({
         getConnection: () => mockConnection,
       })),
-    };
+    });
 
     mockConnection = {
       getParsedAccountInfo: mock(),

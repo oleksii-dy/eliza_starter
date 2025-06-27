@@ -21,7 +21,9 @@ const mockRuntime = {
     return settings[key];
   },
   getService: (name: string) => {
-    if (name === 'ROBOT') {return mockRobotService;}
+    if (name === 'ROBOT') {
+      return mockRobotService;
+    }
     return null;
   },
   logger,
@@ -205,7 +207,7 @@ async function demoNaturalLanguageCommands() {
 
 // Helper function
 function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 // ASCII art robot

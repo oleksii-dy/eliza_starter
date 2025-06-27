@@ -305,7 +305,7 @@ export const CharacterSchema: Schema = {
  * Validate function parameters at runtime
  */
 export function validateParams(schema: Record<string, Schema>) {
-  return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+  return function (_target: any, _propertyKey: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value;
 
     descriptor.value = function (...args: unknown[]) {

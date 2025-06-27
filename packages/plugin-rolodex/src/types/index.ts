@@ -65,20 +65,8 @@ export interface StandardActionResult<T = any> {
   };
 }
 
-// Error classes
-export class EntityNotFoundError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'EntityNotFoundError';
-  }
-}
-
-export class WorldNotFoundError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'WorldNotFoundError';
-  }
-}
+// Error classes - re-exported from errors module
+export { EntityNotFoundError, WorldNotFoundError } from '../errors';
 
 // Enum definitions
 export enum EntityType {

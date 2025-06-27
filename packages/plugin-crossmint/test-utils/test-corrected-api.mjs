@@ -8,9 +8,10 @@ config();
 
 const API_KEY = process.env.CROSSMINT_API_KEY;
 const ENVIRONMENT = process.env.CROSSMINT_ENVIRONMENT || 'production';
-const BASE_URL = ENVIRONMENT === 'production'
-  ? 'https://www.crossmint.com/api'
-  : 'https://staging.crossmint.com/api';
+const BASE_URL =
+  ENVIRONMENT === 'production'
+    ? 'https://www.crossmint.com/api'
+    : 'https://staging.crossmint.com/api';
 
 console.log('🚀 Testing CrossMint API with Corrected Endpoints');
 console.log('='.repeat(60));
@@ -41,8 +42,8 @@ async function testWalletCreation() {
   try {
     // Use the correct versioned endpoint for wallet creation with valid type
     const walletData = {
-      type: 'evm-mpc-wallet',  // Using valid discriminator value from error message
-      linkedUser: `email:test-${Date.now()}@example.com`  // Use valid email format
+      type: 'evm-mpc-wallet', // Using valid discriminator value from error message
+      linkedUser: `email:test-${Date.now()}@example.com`, // Use valid email format
     };
 
     console.log(`   Attempting to create wallet: ${JSON.stringify(walletData)}`);
@@ -55,7 +56,6 @@ async function testWalletCreation() {
 
     // Return wallet data for use in other tests
     return response.data;
-
   } catch (error) {
     console.error('❌ Wallet creation failed');
     if (error.response) {
@@ -93,7 +93,6 @@ async function testWalletBalance(walletId) {
     console.log(`   Balances: ${JSON.stringify(response.data, null, 2)}`);
 
     return true;
-
   } catch (error) {
     console.error('❌ Wallet balance retrieval failed');
     if (error.response) {
@@ -122,7 +121,6 @@ async function testWalletNFTs(walletId) {
     console.log(`   NFTs: ${JSON.stringify(response.data, null, 2).substring(0, 300)}...`);
 
     return true;
-
   } catch (error) {
     console.error('❌ Wallet NFT retrieval failed');
     if (error.response) {
@@ -145,7 +143,6 @@ async function testAPIConnectivity() {
     console.log(`   Data: ${JSON.stringify(response.data, null, 2).substring(0, 200)}...`);
 
     return true;
-
   } catch (error) {
     console.log('⚠️ Collections endpoint test failed, trying alternative...');
 
@@ -248,7 +245,7 @@ async function runTests() {
 }
 
 // Execute tests
-runTests().catch(error => {
+runTests().catch((error) => {
   console.error('\n💥 Test execution failed:', error);
   process.exit(1);
 });

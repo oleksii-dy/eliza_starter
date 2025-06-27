@@ -8,92 +8,92 @@ const fixes = [
     replacements: [
       {
         from: 'if (world.controls.stopAllActions)',
-        to: 'if (world.controls?.stopAllActions)'
-      }
-    ]
+        to: 'if (world.controls?.stopAllActions)',
+      },
+    ],
   },
   {
     file: 'src/managers/behavior-manager.ts',
     replacements: [
       {
         from: 'entityId: UUID | null',
-        to: 'entityId: UUID | undefined'
+        to: 'entityId: UUID | undefined',
       },
       {
         from: '= null',
-        to: '= undefined'
-      }
-    ]
+        to: '= undefined',
+      },
+    ],
   },
   {
     file: 'src/managers/message-manager.ts',
     replacements: [
       {
         from: 'entityId: string | null',
-        to: 'entityId: string | undefined'
+        to: 'entityId: string | undefined',
       },
       {
         from: 'new Date(msg.createdAt)',
-        to: 'new Date(msg.createdAt || Date.now())'
-      }
-    ]
+        to: 'new Date(msg.createdAt || Date.now())',
+      },
+    ],
   },
   {
     file: 'src/managers/voice-manager.ts',
     replacements: [
       {
         from: 'entityId: UUID | null',
-        to: 'entityId: UUID | undefined'
-      }
-    ]
+        to: 'entityId: UUID | undefined',
+      },
+    ],
   },
   {
     file: 'src/providers/character.ts',
     replacements: [
       {
         from: 'message.content.actions.includes',
-        to: 'message.content.actions?.includes'
+        to: 'message.content.actions?.includes',
       },
       {
         from: 'character.style.all.length',
-        to: 'character.style?.all?.length'
+        to: 'character.style?.all?.length',
       },
       {
         from: 'character.style.post.length',
-        to: 'character.style?.post?.length'
+        to: 'character.style?.post?.length',
       },
       {
         from: 'character.style.chat.length',
-        to: 'character.style?.chat?.length'
-      }
-    ]
+        to: 'character.style?.chat?.length',
+      },
+    ],
   },
   {
     file: 'src/providers/world.ts',
     replacements: [
       {
         from: 'actionsSystem?.getNearby(50)',
-        to: '(actionsSystem as any)?.getNearby?.(50)'
-      }
-    ]
+        to: '(actionsSystem as any)?.getNearby?.(50)',
+      },
+    ],
   },
   {
     file: 'src/systems/environment.ts',
     replacements: [
       {
         from: 'cascades: null',
-        to: 'cascades: undefined'
+        to: 'cascades: undefined',
       },
       {
         from: 'shadowMapSize: null',
-        to: 'shadowMapSize: undefined'
+        to: 'shadowMapSize: undefined',
       },
       {
         from: 'lightIntensity: null',
-        to: 'lightIntensity: undefined'
-      }
-    ]
-  }
+        to: 'lightIntensity: undefined',
+      },
+    ],
+  },
 ];
 
 // Apply fixes
@@ -124,7 +124,7 @@ fixes.forEach(({ file, replacements }) => {
 
 // Fix event handler signatures
 const eventFiles = ['src/events.ts'];
-eventFiles.forEach(file => {
+eventFiles.forEach((file) => {
   const filePath = path.join(__dirname, '..', file);
 
   if (!fs.existsSync(filePath)) {
@@ -141,10 +141,7 @@ eventFiles.forEach(file => {
   );
 
   // Add null checks
-  content = content.replace(
-    /await callback\(/g,
-    'await callback?.('
-  );
+  content = content.replace(/await callback\(/g, 'await callback?.(');
 
   fs.writeFileSync(filePath, content, 'utf8');
   console.log(`Fixed event handlers in: ${file}`);

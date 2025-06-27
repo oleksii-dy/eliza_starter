@@ -6,14 +6,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
-  CreditCard, 
-  Plus, 
-  Trash2, 
+import {
+  CreditCard,
+  Plus,
+  Trash2,
   Star,
   CheckCircle,
   AlertCircle,
-  Loader2
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -75,7 +75,7 @@ export function PaymentMethods({ organizationId }: PaymentMethodsProps) {
       }
 
       const { clientSecret } = await response.json();
-      
+
       // In a real implementation, you would:
       // 1. Load Stripe.js
       // 2. Create elements
@@ -84,7 +84,6 @@ export function PaymentMethods({ organizationId }: PaymentMethodsProps) {
       // For now, we'll just show a placeholder
 
       toast.info('Payment method setup would open here');
-      
     } catch (error) {
       console.error('Failed to add payment method:', error);
       toast.error('Failed to add payment method');
@@ -108,11 +107,11 @@ export function PaymentMethods({ organizationId }: PaymentMethodsProps) {
       }
 
       // Update local state
-      setPaymentMethods(methods =>
-        methods.map(method => ({
+      setPaymentMethods((methods) =>
+        methods.map((method) => ({
           ...method,
           isDefault: method.id === paymentMethodId,
-        }))
+        })),
       );
 
       toast.success('Default payment method updated');
@@ -128,17 +127,20 @@ export function PaymentMethods({ organizationId }: PaymentMethodsProps) {
     }
 
     try {
-      const response = await fetch(`/api/billing/payment-methods/${paymentMethodId}`, {
-        method: 'DELETE',
-      });
+      const response = await fetch(
+        `/api/billing/payment-methods/${paymentMethodId}`,
+        {
+          method: 'DELETE',
+        },
+      );
 
       if (!response.ok) {
         throw new Error('Failed to delete payment method');
       }
 
       // Remove from local state
-      setPaymentMethods(methods =>
-        methods.filter(method => method.id !== paymentMethodId)
+      setPaymentMethods((methods) =>
+        methods.filter((method) => method.id !== paymentMethodId),
       );
 
       toast.success('Payment method deleted');
@@ -159,12 +161,12 @@ export function PaymentMethods({ organizationId }: PaymentMethodsProps) {
 
   if (loading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
+      <div className="rounded-lg border border-gray-200 bg-white p-6">
         <div className="animate-pulse">
-          <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="mb-4 h-6 w-1/3 rounded bg-gray-200"></div>
           <div className="space-y-4">
             {[1, 2].map((i) => (
-              <div key={i} className="h-16 bg-gray-200 rounded"></div>
+              <div key={i} className="h-16 rounded bg-gray-200"></div>
             ))}
           </div>
         </div>
@@ -177,14 +179,18 @@ export function PaymentMethods({ organizationId }: PaymentMethodsProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">Payment Methods</h3>
-          <p className="text-sm text-gray-600">Manage your saved payment methods</p>
+          <h3 className="text-lg font-semibold text-gray-900">
+            Payment Methods
+          </h3>
+          <p className="text-sm text-gray-600">
+            Manage your saved payment methods
+          </p>
         </div>
-        
+
         <button
           onClick={addPaymentMethod}
           disabled={addingMethod}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {addingMethod ? (
             <>
@@ -203,16 +209,19 @@ export function PaymentMethods({ organizationId }: PaymentMethodsProps) {
       {/* Payment Methods List */}
       <div className="space-y-4">
         {paymentMethods.length === 0 ? (
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-            <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h4 className="text-lg font-medium text-gray-900 mb-2">No payment methods</h4>
-            <p className="text-sm text-gray-600 mb-4">
-              Add a payment method to enable automatic billing and faster checkouts
+          <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
+            <CreditCard className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+            <h4 className="mb-2 text-lg font-medium text-gray-900">
+              No payment methods
+            </h4>
+            <p className="mb-4 text-sm text-gray-600">
+              Add a payment method to enable automatic billing and faster
+              checkouts
             </p>
             <button
               onClick={addPaymentMethod}
               disabled={addingMethod}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed mx-auto"
+              className="mx-auto flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {addingMethod ? (
                 <>
@@ -231,8 +240,10 @@ export function PaymentMethods({ organizationId }: PaymentMethodsProps) {
           paymentMethods.map((method) => (
             <div
               key={method.id}
-              className={`bg-white border rounded-lg p-4 ${
-                method.isDefault ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
+              className={`rounded-lg border bg-white p-4 ${
+                method.isDefault
+                  ? 'border-blue-500 bg-blue-50'
+                  : 'border-gray-200'
               }`}
             >
               <div className="flex items-center justify-between">
@@ -240,24 +251,28 @@ export function PaymentMethods({ organizationId }: PaymentMethodsProps) {
                   <div className="text-gray-700">
                     {getCardIcon(method.card.brand)}
                   </div>
-                  
+
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-gray-900">
-                        {formatCardBrand(method.card.brand)} ending in {method.card.last4}
+                        {formatCardBrand(method.card.brand)} ending in{' '}
+                        {method.card.last4}
                       </span>
                       {method.isDefault && (
-                        <span className="flex items-center gap-1 text-blue-600 text-sm">
+                        <span className="flex items-center gap-1 text-sm text-blue-600">
                           <Star className="h-4 w-4 fill-current" />
                           Default
                         </span>
                       )}
                     </div>
                     <div className="text-sm text-gray-600">
-                      Expires {method.card.exp_month.toString().padStart(2, '0')}/{method.card.exp_year}
+                      Expires{' '}
+                      {method.card.exp_month.toString().padStart(2, '0')}/
+                      {method.card.exp_year}
                     </div>
                     <div className="text-xs text-gray-500">
-                      Added {new Date(method.created * 1000).toLocaleDateString()}
+                      Added{' '}
+                      {new Date(method.created * 1000).toLocaleDateString()}
                     </div>
                   </div>
                 </div>
@@ -266,15 +281,15 @@ export function PaymentMethods({ organizationId }: PaymentMethodsProps) {
                   {!method.isDefault && (
                     <button
                       onClick={() => setDefaultPaymentMethod(method.id)}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                      className="text-sm font-medium text-blue-600 hover:text-blue-800"
                     >
                       Set as Default
                     </button>
                   )}
-                  
+
                   <button
                     onClick={() => deletePaymentMethod(method.id)}
-                    className="text-red-600 hover:text-red-800 p-1"
+                    className="p-1 text-red-600 hover:text-red-800"
                     title="Delete payment method"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -287,7 +302,7 @@ export function PaymentMethods({ organizationId }: PaymentMethodsProps) {
       </div>
 
       {/* Security Notice */}
-      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+      <div className="rounded-lg border border-green-200 bg-green-50 p-4">
         <div className="flex items-center gap-2">
           <CheckCircle className="h-5 w-5 text-green-600" />
           <div>
@@ -295,14 +310,15 @@ export function PaymentMethods({ organizationId }: PaymentMethodsProps) {
               Your payment information is secure
             </p>
             <p className="text-sm text-green-700">
-              All payment data is encrypted and stored securely by Stripe. We never store your full card details.
+              All payment data is encrypted and stored securely by Stripe. We
+              never store your full card details.
             </p>
           </div>
         </div>
       </div>
 
       {/* Billing Notice */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
         <div className="flex items-center gap-2">
           <AlertCircle className="h-5 w-5 text-blue-600" />
           <div>
@@ -310,7 +326,8 @@ export function PaymentMethods({ organizationId }: PaymentMethodsProps) {
               Automatic Billing
             </p>
             <p className="text-sm text-blue-700">
-              Your default payment method will be used for automatic top-ups and subscription charges.
+              Your default payment method will be used for automatic top-ups and
+              subscription charges.
             </p>
           </div>
         </div>

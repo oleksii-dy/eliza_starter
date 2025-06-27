@@ -113,7 +113,6 @@ export function createPaymentMiddleware(options: PaymentMiddlewareOptions) {
         });
 
         // Don't continue - payment is pending
-
       } else {
         logger.error('[PaymentMiddleware] Payment failed', {
           paymentId: result.id,
@@ -126,7 +125,6 @@ export function createPaymentMiddleware(options: PaymentMiddlewareOptions) {
         });
 
         // Don't continue - payment failed
-
       }
     } catch (error) {
       logger.error('[PaymentMiddleware] Error processing payment', error);
@@ -137,7 +135,6 @@ export function createPaymentMiddleware(options: PaymentMiddlewareOptions) {
       });
 
       // Don't continue on error
-
     }
   };
 }

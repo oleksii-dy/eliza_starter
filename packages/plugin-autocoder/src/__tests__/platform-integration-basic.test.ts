@@ -13,14 +13,16 @@ describe('Basic Platform Integration', () => {
     expect(autocoderPlugin.name).toBe('@elizaos/plugin-autocoder');
     expect(autocoderPlugin.actions).toBeDefined();
 
-    const actionNames = autocoderPlugin.actions?.map(action => action.name) || [];
+    const actionNames = autocoderPlugin.actions?.map((action) => action.name) || [];
 
     // Check for new platform workflow actions
     expect(actionNames).toContain('PLATFORM_WORKFLOW');
     expect(actionNames).toContain('SECRETS_WORKFLOW');
 
-    console.log('✅ Platform workflow actions found:', actionNames.filter(name =>
-      name.includes('PLATFORM') || name.includes('SECRETS')));
+    console.log(
+      '✅ Platform workflow actions found:',
+      actionNames.filter((name) => name.includes('PLATFORM') || name.includes('SECRETS'))
+    );
   });
 
   it('should have correct dependencies', () => {
@@ -35,23 +37,28 @@ describe('Basic Platform Integration', () => {
     expect(autocoderPlugin.services).toBeDefined();
     expect(autocoderPlugin.services?.length || 0).toBeGreaterThan(0);
 
-    const serviceNames = autocoderPlugin.services?.map(service => {
-      if (typeof service === 'function') {
-        return (service as any).serviceName || service.name || 'unknown';
-      } else if (service && typeof service === 'object' && 'component' in service) {
-        return (service as any).component.serviceName || (service as any).component.name || 'unknown';
-      }
-      return 'unknown';
-    }) || [];
+    const serviceNames =
+      autocoderPlugin.services?.map((service) => {
+        if (typeof service === 'function') {
+          return (service as any).serviceName || service.name || 'unknown';
+        } else if (service && typeof service === 'object' && 'component' in service) {
+          return (
+            (service as any).component.serviceName || (service as any).component.name || 'unknown'
+          );
+        }
+        return 'unknown';
+      }) || [];
 
     console.log('✅ Services available:', serviceNames);
   });
 
   it('should export platform workflow actions', () => {
-    const platformWorkflowAction = autocoderPlugin.actions?.find(action =>
-      action.name === 'PLATFORM_WORKFLOW');
-    const secretsWorkflowAction = autocoderPlugin.actions?.find(action =>
-      action.name === 'SECRETS_WORKFLOW');
+    const platformWorkflowAction = autocoderPlugin.actions?.find(
+      (action) => action.name === 'PLATFORM_WORKFLOW'
+    );
+    const secretsWorkflowAction = autocoderPlugin.actions?.find(
+      (action) => action.name === 'SECRETS_WORKFLOW'
+    );
 
     expect(platformWorkflowAction).toBeDefined();
     expect(platformWorkflowAction?.description).toBeDefined();

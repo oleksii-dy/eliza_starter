@@ -61,7 +61,11 @@ export async function getDatabaseStatsFromAPI(): Promise<DatabaseStats> {
  * Database client singleton with lazy initialization
  */
 
-import { getDatabase as getDbConnection, getSql as getSqlConnection, initializeDatabase } from './connection';
+import {
+  getDatabase as getDbConnection,
+  getSql as getSqlConnection,
+  initializeDatabase,
+} from './connection';
 import * as schema from './schema';
 
 // The actual return type from our connection module
@@ -75,7 +79,7 @@ let isInitialized = false;
  */
 async function ensureInitialized() {
   if (isInitialized) return;
-  
+
   if (!initPromise) {
     initPromise = (async () => {
       try {
@@ -90,7 +94,7 @@ async function ensureInitialized() {
       }
     })();
   }
-  
+
   await initPromise;
 }
 
@@ -102,13 +106,15 @@ export function getDatabaseClient(): Database {
   if (!isInitialized) {
     // Start initialization if not already started
     if (!initPromise) {
-      ensureInitialized().catch(error => {
+      ensureInitialized().catch((error) => {
         console.error('Database initialization failed:', error);
       });
     }
-    throw new Error('Database is initializing. Please wait a moment and try again.');
+    throw new Error(
+      'Database is initializing. Please wait a moment and try again.',
+    );
   }
-  
+
   return getDbConnection();
 }
 
@@ -127,13 +133,15 @@ export function getSqlClient() {
   if (!isInitialized) {
     // Start initialization if not already started
     if (!initPromise) {
-      ensureInitialized().catch(error => {
+      ensureInitialized().catch((error) => {
         console.error('Database initialization failed:', error);
       });
     }
-    throw new Error('SQL client is initializing. Please wait a moment and try again.');
+    throw new Error(
+      'SQL client is initializing. Please wait a moment and try again.',
+    );
   }
-  
+
   return getSqlConnection();
 }
 

@@ -218,7 +218,9 @@ export class StreamingAudioCaptureService extends EventEmitter {
   }
 
   private async startStreamingTranscription(): Promise<void> {
-    if (this.transcriptionInProgress) {return;}
+    if (this.transcriptionInProgress) {
+      return;
+    }
 
     this.transcriptionInProgress = true;
     logger.debug('[StreamingAudio] Starting streaming transcription');
@@ -253,7 +255,9 @@ export class StreamingAudioCaptureService extends EventEmitter {
   }
 
   private endSpeech(): void {
-    if (!this.isSpeaking) {return;}
+    if (!this.isSpeaking) {
+      return;
+    }
 
     this.isSpeaking = false;
     this.silenceTimer = null;
@@ -295,7 +299,9 @@ export class StreamingAudioCaptureService extends EventEmitter {
   }
 
   private getRecentAudioData(): Buffer {
-    if (this.audioBuffer.length === 0) {return Buffer.alloc(0);}
+    if (this.audioBuffer.length === 0) {
+      return Buffer.alloc(0);
+    }
 
     // Get audio from start of speech to now
     const startTime = this.audioBuffer[0].timestamp;

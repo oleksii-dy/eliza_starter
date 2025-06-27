@@ -8,7 +8,9 @@ export class OCRService {
   private useFallback = false;
 
   async initialize(): Promise<void> {
-    if (this.initialized) {return;}
+    if (this.initialized) {
+      return;
+    }
 
     try {
       logger.info('[OCR] Initializing OCR service...');

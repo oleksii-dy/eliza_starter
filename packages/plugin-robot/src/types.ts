@@ -3,7 +3,7 @@ export const VisionServiceType = {
   VISION: 'VISION' as const,
 };
 
-// Robot service types
+// Robot service types and interfaces
 export const RobotServiceType = {
   ROBOT: 'ROBOT' as const,
   SIMULATION: 'SIMULATION' as const,
@@ -14,7 +14,6 @@ export const RobotServiceType = {
 // Extend the core service types with robot services
 declare module '@elizaos/core' {
   interface ServiceTypeRegistry {
-    VISION: 'VISION';
     ROBOT: 'ROBOT';
     SIMULATION: 'SIMULATION';
     RL_TRAINING: 'RL_TRAINING';

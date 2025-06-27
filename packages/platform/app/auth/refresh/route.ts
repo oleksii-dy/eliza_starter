@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
 import { cookies } from 'next/headers';
 
-export async function GET(request: NextRequest) {
+export async function handleGET(request: NextRequest) {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const cookieStore = await cookies();
   const allCookies = cookieStore.getAll();

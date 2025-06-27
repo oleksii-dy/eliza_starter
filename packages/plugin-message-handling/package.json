@@ -45,7 +45,7 @@
     "clean": "rm -rf dist && rm -rf .turbo",
     "lint": "eslint src --fix && prettier --write ./src",
     "typecheck": "tsc --noEmit",
-    "test": "elizaos test"
+    "test": "bun test src/"
   },
   "peerDependencies": {
     "whatwg-url": "7.1.0"

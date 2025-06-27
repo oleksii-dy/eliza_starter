@@ -626,88 +626,6 @@ export class AgentRuntime implements IAgentRuntime {
     }
   }
 
-  private async resolvePluginDependencies(characterPlugins: Plugin[]): Promise<Plugin[]> {
-    const resolvedPlugins = new Map<string, Plugin>();
-    const visited = new Set<string>();
-    const recursionStack = new Set<string>();
-    const finalPluginList: Plugin[] = [];
-
-    // First, add all character-specified plugins to resolvedPlugins to prioritize them.
-    for (const plugin of characterPlugins) {
-      if (plugin?.name) {
-        resolvedPlugins.set(plugin.name, plugin);
-      }
-    }
-
-    const resolve = async (pluginName: string) => {
-      if (recursionStack.has(pluginName)) {
-        this.logger.error(
-          `Circular dependency detected: ${Array.from(recursionStack).join(' -> ')} -> ${pluginName}`
-        );
-        throw new Error(`Circular dependency detected involving plugin: ${pluginName}`);
-      }
-      if (visited.has(pluginName)) {
-        return;
-      }
-
-      visited.add(pluginName);
-      recursionStack.add(pluginName);
-
-      let plugin = resolvedPlugins.get(pluginName); // Check if it's a character-specified plugin first
-      if (!plugin) {
-        plugin = this.allAvailablePlugins.get(pluginName); // Fallback to allAvailablePlugins
-      }
-
-      if (!plugin) {
-        this.logger.warn(
-          `Dependency plugin "${pluginName}" not found in allAvailablePlugins. Skipping.`
-        );
-        recursionStack.delete(pluginName);
-        return; // Or throw an error if strict dependency checking is required
-      }
-
-      if (plugin.dependencies && Array.isArray(plugin.dependencies)) {
-        for (const depName of plugin.dependencies) {
-          await resolve(depName);
-        }
-      }
-
-      recursionStack.delete(pluginName);
-      // Add to final list only if it hasn't been added. This ensures correct order for dependencies.
-      if (!finalPluginList.find((p) => p.name === pluginName)) {
-        finalPluginList.push(plugin);
-        // Ensure the resolvedPlugins map contains the instance we are actually going to use.
-        // This is important if a dependency was loaded from allAvailablePlugins but was also a character plugin.
-        // The character plugin (already in resolvedPlugins) should be the one used.
-        if (!resolvedPlugins.has(pluginName)) {
-          resolvedPlugins.set(pluginName, plugin);
-        }
-      }
-    };
-
-    // Resolve dependencies for all character-specified plugins.
-    for (const plugin of characterPlugins) {
-      if (plugin?.name) {
-        await resolve(plugin.name);
-      }
-    }
-
-    // The finalPluginList is now topologically sorted.
-    // We also need to ensure that any plugin in characterPlugins that was *not* a dependency of another characterPlugin
-    // is also included, maintaining its original instance.
-    const finalSet = new Map<string, Plugin>();
-    finalPluginList.forEach((p) => finalSet.set(p.name, resolvedPlugins.get(p.name)!));
-    characterPlugins.forEach((p) => {
-      if (p?.name && !finalSet.has(p.name)) {
-        // This handles cases where a character plugin has no dependencies and wasn't pulled in as one.
-        // It should be added to the end, or merged based on priority if that's a requirement (not implemented here).
-        finalSet.set(p.name, p);
-      }
-    });
-
-    return Array.from(finalSet.values());
-  }
-
   getAllServices(): Map<ServiceTypeName, Service> {
     return this.services;
   }
@@ -1818,9 +1736,9 @@ export class AgentRuntime implements IAgentRuntime {
     const cachedState =
       skipCache || !message.id ? emptyObj : (await this.stateCache.get(message.id)) || emptyObj;
 
-    const _existingProviderNames = cachedState.data.providers
-      ? Object.keys(cachedState.data.providers)
-      : [];
+    // const _existingProviderNames = cachedState.data.providers
+    //   ? Object.keys(cachedState.data.providers)
+    //   : [];
     const providerNames = new Set<string>();
     if (filterList && filterList.length > 0) {
       filterList.forEach((name) => providerNames.add(name));
@@ -1894,9 +1812,9 @@ export class AgentRuntime implements IAgentRuntime {
     if (message.id) {
       this.stateCache.set(message.id, newState);
     }
-    const _finalProviderCount = Object.keys(currentProviderResults).length;
-    const _finalProviderNames = Object.keys(currentProviderResults);
-    const _finalValueKeys = Object.keys(newState.values);
+    // const _finalProviderCount = Object.keys(currentProviderResults).length;
+    // const _finalProviderNames = Object.keys(currentProviderResults);
+    // const _finalValueKeys = Object.keys(newState.values);
     return newState;
   }
 

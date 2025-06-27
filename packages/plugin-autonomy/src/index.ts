@@ -14,7 +14,6 @@ declare global {
   }
 }
 
-
 export const autoPlugin: Plugin = {
   name: 'auto',
   description: 'Simple autonomous loop that continuously triggers agent thinking and actions',

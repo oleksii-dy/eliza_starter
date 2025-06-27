@@ -1,12 +1,12 @@
 import { DatabaseAdapter, type Plugin, type UUID, logger } from '@elizaos/core';
-import { PgManager } from './pg/manager';
-import { PgAdapter } from './pg/adapter';
-import { connectionRegistry } from './connection-registry';
+import { PgManager } from './pg/manager.js';
+import { PgAdapter } from './pg/adapter.js';
+import { connectionRegistry } from './connection-registry.js';
 import {
   createAdaptiveDatabaseAdapter,
   getRecommendedAdaptiveConfig,
   type AdaptiveConfig,
-} from './adaptive-adapter';
+} from './adaptive-adapter.js';
 
 /**
  * Creates a PostgreSQL database adapter.
@@ -224,10 +224,11 @@ async function performInitialization(runtime: any): Promise<void> {
 }
 
 // Export unified migration system components
-export { createMigrator, UnifiedMigrator } from './unified-migrator';
-export { schemaRegistry } from './schema-registry';
-export { connectionRegistry } from './connection-registry';
-export { CORE_TABLES } from './core-tables';
-export type { TableSchema } from './schema-registry';
+export { createMigrator, UnifiedMigrator } from './unified-migrator.js';
+export { schemaRegistry } from './schema-registry.js';
+export { connectionRegistry } from './connection-registry.js';
+export { CORE_TABLES } from './core-tables.js';
+export { setDatabaseType } from './schema/factory.js';
+export type { TableSchema } from './schema-registry.js';
 
 export default plugin;

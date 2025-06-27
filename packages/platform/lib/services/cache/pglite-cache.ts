@@ -22,21 +22,29 @@ export class PGLiteCacheService implements ICacheService {
   constructor(databasePath: string | URL, cleanupIntervalMs: number = 60000) {
     // Ensure we always pass a clean string to PGlite
     let cleanPath: string;
-    
+
     if (typeof databasePath === 'object' && databasePath instanceof URL) {
-      console.log('⚠️  PGLiteCacheService received URL object, converting to string');
-      cleanPath = databasePath.pathname || databasePath.href.replace(/^[^:]+:\/\//, '');
+      console.log(
+        '⚠️  PGLiteCacheService received URL object, converting to string',
+      );
+      cleanPath =
+        databasePath.pathname || databasePath.href.replace(/^[^:]+:\/\//, '');
     } else {
       cleanPath = String(databasePath);
     }
-    
-    console.log(`🗄️  Initializing PGLite cache at: ${cleanPath} (type: ${typeof cleanPath})`);
-    
+
+    console.log(
+      `🗄️  Initializing PGLite cache at: ${cleanPath} (type: ${typeof cleanPath})`,
+    );
+
     this.db = new PGlite({
       dataDir: cleanPath,
     });
-    this.initialize(cleanupIntervalMs).catch(error => {
-      throw new CacheConnectionError('Failed to initialize PGLite cache', error as Error);
+    this.initialize(cleanupIntervalMs).catch((error) => {
+      throw new CacheConnectionError(
+        'Failed to initialize PGLite cache',
+        error as Error,
+      );
     });
   }
 
@@ -47,7 +55,10 @@ export class PGLiteCacheService implements ICacheService {
       this.startCleanup(cleanupIntervalMs);
       this.initialized = true;
     } catch (error) {
-      throw new CacheConnectionError('Failed to initialize PGLite cache', error as Error);
+      throw new CacheConnectionError(
+        'Failed to initialize PGLite cache',
+        error as Error,
+      );
     }
   }
 
@@ -79,12 +90,15 @@ export class PGLiteCacheService implements ICacheService {
     try {
       const result = await this.db.query(
         'SELECT value, expires_at FROM cache_entries WHERE key = $1',
-        [key]
+        [key],
       );
 
       if (result.rows.length === 0) return null;
-      
-      const row = result.rows[0] as { value: string; expires_at: number | null };
+
+      const row = result.rows[0] as {
+        value: string;
+        expires_at: number | null;
+      };
       if (this.isExpired(row.expires_at)) {
         await this.del(key);
         return null;
@@ -98,15 +112,18 @@ export class PGLiteCacheService implements ICacheService {
 
   async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
     try {
-      const expiresAt = ttlSeconds ? Date.now() + (ttlSeconds * 1000) : null;
-      await this.db.query(`
+      const expiresAt = ttlSeconds ? Date.now() + ttlSeconds * 1000 : null;
+      await this.db.query(
+        `
         INSERT INTO cache_entries (key, value, expires_at, created_at)
         VALUES ($1, $2, $3, EXTRACT(EPOCH FROM NOW())::BIGINT)
         ON CONFLICT (key) DO UPDATE SET 
           value = EXCLUDED.value, 
           expires_at = EXCLUDED.expires_at,
           created_at = EXCLUDED.created_at
-      `, [key, value, expiresAt]);
+      `,
+        [key, value, expiresAt],
+      );
     } catch (error) {
       throw new CacheError(`Failed to set key ${key}`, error as Error);
     }
@@ -125,7 +142,10 @@ export class PGLiteCacheService implements ICacheService {
       const value = await this.get(key);
       return value !== null;
     } catch (error) {
-      throw new CacheError(`Failed to check existence of key ${key}`, error as Error);
+      throw new CacheError(
+        `Failed to check existence of key ${key}`,
+        error as Error,
+      );
     }
   }
 
@@ -159,7 +179,9 @@ export class PGLiteCacheService implements ICacheService {
     return results;
   }
 
-  async mset(entries: Array<{ key: string; value: string; ttl?: number }>): Promise<void> {
+  async mset(
+    entries: Array<{ key: string; value: string; ttl?: number }>,
+  ): Promise<void> {
     for (const entry of entries) {
       await this.set(entry.key, entry.value, entry.ttl);
     }
@@ -169,7 +191,12 @@ export class PGLiteCacheService implements ICacheService {
     return this.get(`${hash}:${field}`);
   }
 
-  async hset(hash: string, field: string, value: string, ttlSeconds?: number): Promise<void> {
+  async hset(
+    hash: string,
+    field: string,
+    value: string,
+    ttlSeconds?: number,
+  ): Promise<void> {
     await this.set(`${hash}:${field}`, value, ttlSeconds);
   }
 
@@ -229,7 +256,10 @@ export class PGLiteCacheService implements ICacheService {
       const array = JSON.parse(current);
       return array.length;
     } catch (error) {
-      throw new CacheError(`Failed to get length of list ${list}`, error as Error);
+      throw new CacheError(
+        `Failed to get length of list ${list}`,
+        error as Error,
+      );
     }
   }
 
@@ -240,7 +270,10 @@ export class PGLiteCacheService implements ICacheService {
         await this.set(key, current, seconds);
       }
     } catch (error) {
-      throw new CacheError(`Failed to set expiration for key ${key}`, error as Error);
+      throw new CacheError(
+        `Failed to set expiration for key ${key}`,
+        error as Error,
+      );
     }
   }
 
@@ -248,15 +281,18 @@ export class PGLiteCacheService implements ICacheService {
     try {
       const result = await this.db.query(
         'SELECT expires_at FROM cache_entries WHERE key = $1',
-        [key]
+        [key],
       );
 
       if (result.rows.length === 0) return -2; // Key doesn't exist
-      
+
       const row = result.rows[0] as { expires_at: number | null };
       if (row.expires_at === null) return -1; // Key exists but has no TTL
-      
-      const remaining = Math.max(0, Math.floor((row.expires_at - Date.now()) / 1000));
+
+      const remaining = Math.max(
+        0,
+        Math.floor((row.expires_at - Date.now()) / 1000),
+      );
       return remaining > 0 ? remaining : -2; // Key expired
     } catch (error) {
       throw new CacheError(`Failed to get TTL for key ${key}`, error as Error);
@@ -269,9 +305,9 @@ export class PGLiteCacheService implements ICacheService {
       const sqlPattern = pattern.replace(/\*/g, '%');
       const result = await this.db.query(
         'SELECT key FROM cache_entries WHERE key LIKE $1',
-        [sqlPattern]
+        [sqlPattern],
       );
-      
+
       // Filter out expired keys
       const validKeys: string[] = [];
       for (const row of result.rows) {
@@ -281,22 +317,30 @@ export class PGLiteCacheService implements ICacheService {
           validKeys.push(key);
         }
       }
-      
+
       return validKeys;
     } catch (error) {
-      throw new CacheError(`Failed to get keys with pattern ${pattern}`, error as Error);
+      throw new CacheError(
+        `Failed to get keys with pattern ${pattern}`,
+        error as Error,
+      );
     }
   }
 
-  async scan(cursor: string, pattern?: string, count?: number): Promise<{ cursor: string; keys: string[] }> {
+  async scan(
+    cursor: string,
+    pattern?: string,
+    count?: number,
+  ): Promise<{ cursor: string; keys: string[] }> {
     // Simple implementation - PGLite doesn't need real cursor scanning
     const keys = pattern ? await this.keys(pattern) : await this.keys('*');
     const limit = count || 10;
     const offset = parseInt(cursor, 10) || 0;
-    
+
     const slice = keys.slice(offset, offset + limit);
-    const nextCursor = offset + limit >= keys.length ? '0' : (offset + limit).toString();
-    
+    const nextCursor =
+      offset + limit >= keys.length ? '0' : (offset + limit).toString();
+
     return { cursor: nextCursor, keys: slice };
   }
 
@@ -312,11 +356,17 @@ export class PGLiteCacheService implements ICacheService {
     try {
       const result = await this.db.query(
         'DELETE FROM cache_entries WHERE expires_at IS NOT NULL AND expires_at < $1',
-        [Date.now()]
+        [Date.now()],
       );
-      
-      if (process.env.NODE_ENV === 'development' && result.affectedRows && result.affectedRows > 0) {
-        console.log(`[PGLiteCache] Cleaned up ${result.affectedRows} expired entries`);
+
+      if (
+        process.env.NODE_ENV === 'development' &&
+        result.affectedRows &&
+        result.affectedRows > 0
+      ) {
+        console.log(
+          `[PGLiteCache] Cleaned up ${result.affectedRows} expired entries`,
+        );
       }
     } catch (error) {
       throw new CacheError('Failed to cleanup expired entries', error as Error);
@@ -332,21 +382,30 @@ export class PGLiteCacheService implements ICacheService {
     }
   }
 
-  async info(): Promise<{ type: string; connected: boolean; memory?: string; version?: string }> {
+  async info(): Promise<{
+    type: string;
+    connected: boolean;
+    memory?: string;
+    version?: string;
+  }> {
     try {
-      const result = await this.db.query('SELECT COUNT(*) as count FROM cache_entries');
-      const count = result.rows[0] ? (result.rows[0] as { count: number }).count : 0;
-      
+      const result = await this.db.query(
+        'SELECT COUNT(*) as count FROM cache_entries',
+      );
+      const count = result.rows[0]
+        ? (result.rows[0] as { count: number }).count
+        : 0;
+
       return {
         type: 'pglite',
         connected: this.initialized,
         memory: `${count} entries`,
-        version: '@electric-sql/pglite'
+        version: '@electric-sql/pglite',
       };
     } catch (error) {
       return {
         type: 'pglite',
-        connected: false
+        connected: false,
       };
     }
   }
@@ -358,4 +417,4 @@ export class PGLiteCacheService implements ICacheService {
     }
     await this.db.close();
   }
-} 
+}

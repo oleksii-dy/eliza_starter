@@ -2,7 +2,10 @@
  * Core types for the ElizaOS Platform
  */
 
-import type { User as WorkOSUser, Organization as WorkOSOrganization } from '@workos-inc/node';
+import type {
+  User as WorkOSUser,
+  Organization as WorkOSOrganization,
+} from '@workos-inc/node';
 
 export interface User {
   id: string;

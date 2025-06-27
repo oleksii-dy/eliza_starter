@@ -51,12 +51,15 @@ class APIService {
 
   private setupMiddleware(): void {
     // CORS
-    this.app.use('*', cors({
-      origin: this.config.corsOrigins,
-      allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-      allowHeaders: ['Content-Type', 'Authorization'],
-      exposeHeaders: ['X-Request-ID', 'X-RateLimit-Limit', 'X-RateLimit-Remaining'],
-    }));
+    this.app.use(
+      '*',
+      cors({
+        origin: this.config.corsOrigins,
+        allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowHeaders: ['Content-Type', 'Authorization'],
+        exposeHeaders: ['X-Request-ID', 'X-RateLimit-Limit', 'X-RateLimit-Remaining'],
+      })
+    );
 
     // Request logging
     this.app.use('*', logger());
@@ -68,13 +71,16 @@ class APIService {
     this.app.onError((error, c) => {
       console.error('API Error:', error);
 
-      return c.json({
-        error: {
-          message: 'Internal server error',
-          type: 'server_error',
-          code: 'internal_error',
+      return c.json(
+        {
+          error: {
+            message: 'Internal server error',
+            type: 'server_error',
+            code: 'internal_error',
+          },
         },
-      }, 500);
+        500
+      );
     });
   }
 
@@ -88,7 +94,7 @@ class APIService {
 
       return c.json({
         object: 'list',
-        data: models.map(model => ({
+        data: models.map((model) => ({
           id: model.id,
           object: 'model',
           created: Math.floor(Date.now() / 1000),
@@ -111,12 +117,7 @@ class APIService {
         version: '1.0.0',
         status: 'running',
         providers: this.providerManager.getAvailableModels().length > 0 ? 'available' : 'none',
-        endpoints: [
-          '/v1/chat/completions',
-          '/v1/embeddings',
-          '/v1/models',
-          '/health',
-        ],
+        endpoints: ['/v1/chat/completions', '/v1/embeddings', '/v1/models', '/health'],
       });
     });
   }
@@ -126,7 +127,7 @@ class APIService {
       const dbHealth = await checkDatabaseHealth();
       const providerHealth = await this.providerManager.healthCheck();
 
-      const allHealthy = dbHealth && Object.values(providerHealth).some(healthy => healthy);
+      const allHealthy = dbHealth && Object.values(providerHealth).some((healthy) => healthy);
 
       const healthStatus = {
         status: allHealthy ? 'healthy' : 'degraded',
@@ -175,7 +176,9 @@ class APIService {
     });
 
     console.log(`🌟 ElizaOS API Service running on http://${this.config.host}:${this.config.port}`);
-    console.log(`📊 Health checks available at http://${this.config.host}:${this.config.port}/health`);
+    console.log(
+      `📊 Health checks available at http://${this.config.host}:${this.config.port}/health`
+    );
 
     // Graceful shutdown
     process.on('SIGINT', async () => {

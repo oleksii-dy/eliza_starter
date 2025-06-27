@@ -409,7 +409,7 @@ export class EnhancedFALProvider extends BaseGenerationProvider {
       // Simple health check with a minimal request
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
-      
+
       const response = await fetch(
         `${this.falConfig.baseUrl}/fal-ai/flux/schnell`,
         {
@@ -420,7 +420,7 @@ export class EnhancedFALProvider extends BaseGenerationProvider {
           signal: controller.signal,
         },
       );
-      
+
       clearTimeout(timeoutId);
 
       const latency = Date.now() - startTime;
@@ -443,7 +443,7 @@ export class EnhancedFALProvider extends BaseGenerationProvider {
   protected async performHealthCheck(): Promise<void> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000);
-    
+
     const response = await fetch(
       `${this.falConfig.baseUrl}/fal-ai/flux/schnell`,
       {
@@ -454,7 +454,7 @@ export class EnhancedFALProvider extends BaseGenerationProvider {
         signal: controller.signal,
       },
     );
-    
+
     clearTimeout(timeoutId);
 
     if (!response.ok) {

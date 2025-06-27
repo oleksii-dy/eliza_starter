@@ -73,7 +73,7 @@
     "clean": "rm -rf dist && rm -rf .turbo",
     "lint": "eslint src --fix && prettier --write ./src",
     "typecheck": "tsc --noEmit",
-    "test": "elizaos test"
+    "test": "bun test src/"
   },
   "publishConfig": {
     "access": "public"

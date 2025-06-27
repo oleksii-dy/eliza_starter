@@ -11,7 +11,6 @@ import {
 import githubPlugin from '@elizaos/plugin-github';
 import messageHandlingPlugin from '@elizaos/plugin-message-handling';
 import TodoPlugin from '@elizaos/plugin-todo';
-import AgentServer from '@elizaos/server';
 import chalk from 'chalk';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -100,7 +99,8 @@ async function runGitHubTodoTest() {
 
     // Initialize server
     console.log(chalk.blue('🖥️  Initializing server...'));
-    const server = new AgentServer();
+    const AgentServerClass = (await import('@elizaos/server')).default as any;
+    const server: any = new AgentServerClass();
     const dataDir = path.join(process.cwd(), '.eliza-test-db');
     await server.initialize({ dataDir });
 

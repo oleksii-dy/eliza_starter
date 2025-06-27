@@ -24,12 +24,12 @@ async function testBasicFunctionality() {
         bio: 'A test agent for E2B plugin verification',
         system: 'You are a test agent.',
         messageExamples: [],
-        postExamples: []
+        postExamples: [],
       },
       plugins: [e2bPlugin],
       apiKeys: {
-        E2B_API_KEY: process.env.E2B_API_KEY || ''
-      }
+        E2B_API_KEY: process.env.E2B_API_KEY || '',
+      },
     });
 
     elizaLogger.info('✅ Runtime created successfully', { agentId: runtime.agentId });
@@ -37,11 +37,11 @@ async function testBasicFunctionality() {
     // Test that E2B service is available
     elizaLogger.info('🔍 Checking E2B service...');
     const e2bService = runtime.getService('e2b');
-    
+
     if (!e2bService) {
       throw new Error('E2B service not found');
     }
-    
+
     elizaLogger.info('✅ E2B service found');
 
     // Test service health
@@ -51,15 +51,15 @@ async function testBasicFunctionality() {
 
     if (isHealthy) {
       elizaLogger.info('✅ E2B service is healthy');
-      
+
       // Test listing sandboxes
       const sandboxes = e2bService.listSandboxes();
       elizaLogger.info(`Current sandboxes: ${sandboxes.length}`);
-      
+
       // Test basic code execution
       elizaLogger.info('🧪 Testing basic code execution...');
       const result = await e2bService.executeCode('print("Hello from E2B!")', 'python');
-      
+
       if (result.error) {
         elizaLogger.warn('Code execution returned error', { error: result.error });
       } else {
@@ -71,11 +71,10 @@ async function testBasicFunctionality() {
 
     elizaLogger.info('🎉 Simple E2B Plugin Test Completed Successfully!');
     return true;
-
   } catch (error) {
-    elizaLogger.error('❌ Simple test failed', { 
+    elizaLogger.error('❌ Simple test failed', {
       error: error.message,
-      stack: error.stack
+      stack: error.stack,
     });
     return false;
   }
@@ -83,7 +82,7 @@ async function testBasicFunctionality() {
 
 async function main() {
   const success = await testBasicFunctionality();
-  
+
   if (success) {
     elizaLogger.info('✅ All tests passed!');
     process.exit(0);

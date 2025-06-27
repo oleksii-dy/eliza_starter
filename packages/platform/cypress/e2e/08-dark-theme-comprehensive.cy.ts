@@ -24,16 +24,16 @@ describe('Dark Theme - Comprehensive Testing', () => {
           id: 'theme-org',
           name: 'Theme Testing Org',
           subscription_tier: 'premium',
-          credit_balance: '1000.0'
+          credit_balance: '1000.0',
         },
         permissions: {
           canCreateAgents: true,
           canEditAgents: true,
           canDeleteAgents: true,
           canManageUsers: true,
-          canAccessBilling: true
-        }
-      }
+          canAccessBilling: true,
+        },
+      },
     }).as('getIdentity');
   });
 
@@ -65,9 +65,9 @@ describe('Dark Theme - Comprehensive Testing', () => {
           apiRequests24h: 2500,
           totalCost24h: '12.50',
           activeAgents: 3,
-          pendingInvites: 1
-        }
-      }
+          pendingInvites: 1,
+        },
+      },
     }).as('getDashboardStats');
 
     cy.intercept('GET', '**/api/dashboard/activity*', {
@@ -80,10 +80,10 @@ describe('Dark Theme - Comprehensive Testing', () => {
             type: 'agent_created',
             title: 'Agent Created',
             description: 'New agent created',
-            timestamp: '2 hours ago'
-          }
-        ]
-      }
+            timestamp: '2 hours ago',
+          },
+        ],
+      },
     }).as('getDashboardActivity');
 
     cy.visit('/dashboard', { failOnStatusCode: false });
@@ -121,14 +121,18 @@ describe('Dark Theme - Comprehensive Testing', () => {
         autoRecharge: { enabled: true, threshold: 10, amount: 50 },
         usageAlerts: { enabled: true, thresholds: [50, 80, 95] },
         billingContact: { email: 'test@example.com', name: 'Test User' },
-        invoiceSettings: { frequency: 'monthly', autoDownload: false, emailCopy: true },
-        spendingLimits: { daily: 100, monthly: 1000, enabled: true }
-      }
+        invoiceSettings: {
+          frequency: 'monthly',
+          autoDownload: false,
+          emailCopy: true,
+        },
+        spendingLimits: { daily: 100, monthly: 1000, enabled: true },
+      },
     }).as('getBillingSettings');
 
     cy.intercept('GET', '**/api/v1/billing/payment-methods', {
       statusCode: 200,
-      body: { paymentMethods: [] }
+      body: { paymentMethods: [] },
     }).as('getPaymentMethods');
 
     // Test billing settings
@@ -149,9 +153,9 @@ describe('Dark Theme - Comprehensive Testing', () => {
         data: {
           apiKeys: [],
           stats: { totalKeys: 0, activeKeys: 0, expiredKeys: 0, totalUsage: 0 },
-          availablePermissions: ['inference:*', 'storage:*']
-        }
-      }
+          availablePermissions: ['inference:*', 'storage:*'],
+        },
+      },
     }).as('getApiKeys');
 
     cy.visit('/api-keys', { failOnStatusCode: false });
@@ -173,9 +177,9 @@ describe('Dark Theme - Comprehensive Testing', () => {
         success: true,
         data: {
           agents: [],
-          stats: { totalAgents: 0, activeAgents: 0, deployedAgents: 0 }
-        }
-      }
+          stats: { totalAgents: 0, activeAgents: 0, deployedAgents: 0 },
+        },
+      },
     }).as('getAgents');
 
     cy.visit('/dashboard/agents', { failOnStatusCode: false });
@@ -252,46 +256,57 @@ describe('Dark Theme - Comprehensive Testing', () => {
 
   function testDarkThemeCompliance() {
     cy.log('🔍 Testing Dark Theme Class Application');
-    
+
     // Verify dark class is applied
     cy.get('html').should('have.class', 'dark');
-    
+
     // Body should have dark background
-    cy.get('body').should('have.css', 'background-color').then((bgColor) => {
-      // Should be a dark color (RGB values under 50)
-      expect(bgColor).to.match(/rgb\(\s*([0-4]?\d)\s*,\s*([0-4]?\d)\s*,\s*([0-4]?\d)\s*\)/);
-    });
+    cy.get('body')
+      .should('have.css', 'background-color')
+      .then((bgColor) => {
+        // Should be a dark color (RGB values under 50)
+        expect(bgColor).to.match(
+          /rgb\(\s*([0-4]?\d)\s*,\s*([0-4]?\d)\s*,\s*([0-4]?\d)\s*\)/,
+        );
+      });
   }
 
   function testColorContrast(pageName: string) {
     cy.log(`📝 Testing ${pageName} Text Contrast`);
-    
+
     // Test headings have high contrast
     cy.get('h1, h2, h3').each(($heading) => {
-      cy.wrap($heading).should('be.visible').then(() => {
-        const color = $heading.css('color');
-        // Should be light text (RGB > 150)
-        expect(color).to.match(/rgb\(\s*(1[5-9]\d|2[0-5]\d)\s*,\s*(1[5-9]\d|2[0-5]\d)\s*,\s*(1[5-9]\d|2[0-5]\d)\s*\)/);
-      });
+      cy.wrap($heading)
+        .should('be.visible')
+        .then(() => {
+          const color = $heading.css('color');
+          // Should be light text (RGB > 150)
+          expect(color).to.match(
+            /rgb\(\s*(1[5-9]\d|2[0-5]\d)\s*,\s*(1[5-9]\d|2[0-5]\d)\s*,\s*(1[5-9]\d|2[0-5]\d)\s*\)/,
+          );
+        });
     });
-    
+
     // Test paragraph text has good contrast
-    cy.get('p').first().should('be.visible').then(($p) => {
-      const color = $p.css('color');
-      // Should have adequate contrast
-      expect(color).to.not.equal('rgb(0, 0, 0)'); // Not black text on dark bg
-    });
+    cy.get('p')
+      .first()
+      .should('be.visible')
+      .then(($p) => {
+        const color = $p.css('color');
+        // Should have adequate contrast
+        expect(color).to.not.equal('rgb(0, 0, 0)'); // Not black text on dark bg
+      });
   }
 
   function testButtonContrast() {
     cy.log('🔘 Testing Button Contrast');
-    
+
     cy.get('button').each(($btn) => {
       if ($btn.is(':visible')) {
         cy.wrap($btn).then(() => {
           const btnBg = $btn.css('background-color');
           const btnColor = $btn.css('color');
-          
+
           // Button should have contrasting text and background
           expect(btnBg).to.not.equal(btnColor);
           expect(btnBg).to.not.equal('transparent');
@@ -302,11 +317,11 @@ describe('Dark Theme - Comprehensive Testing', () => {
 
   function testCardBackgroundContrast() {
     cy.log('🃏 Testing Card Background Contrast');
-    
+
     // Cards should be slightly different from body background
     cy.get('body').then(($body) => {
       const bodyBg = $body.css('background-color');
-      
+
       // Find card-like elements
       cy.get('div[class*="bg-"], div[class*="border"]').each(($card) => {
         if ($card.is(':visible')) {
@@ -321,35 +336,39 @@ describe('Dark Theme - Comprehensive Testing', () => {
 
   function testStatCardContrast() {
     cy.log('📊 Testing Stat Card Contrast');
-    
+
     // Test dashboard stat cards specifically
     cy.get('[data-cy*="stats-"]').each(($statCard) => {
-      cy.wrap($statCard).should('be.visible').then(() => {
-        const cardBg = $statCard.css('background-color');
-        const textColor = $statCard.css('color');
-        
-        expect(cardBg).to.not.equal('transparent');
-        expect(textColor).to.not.equal(cardBg);
-      });
+      cy.wrap($statCard)
+        .should('be.visible')
+        .then(() => {
+          const cardBg = $statCard.css('background-color');
+          const textColor = $statCard.css('color');
+
+          expect(cardBg).to.not.equal('transparent');
+          expect(textColor).to.not.equal(cardBg);
+        });
     });
   }
 
   function testActionButtonContrast() {
     cy.log('⚡ Testing Action Button Contrast');
-    
+
     cy.get('[data-cy*="quick-action-"]').each(($btn) => {
-      cy.wrap($btn).should('be.visible').then(() => {
-        const btnBg = $btn.css('background-color');
-        const btnColor = $btn.css('color');
-        
-        expect(btnBg).to.not.equal(btnColor);
-      });
+      cy.wrap($btn)
+        .should('be.visible')
+        .then(() => {
+          const btnBg = $btn.css('background-color');
+          const btnColor = $btn.css('color');
+
+          expect(btnBg).to.not.equal(btnColor);
+        });
     });
   }
 
   function testFormElementContrast() {
     cy.log('📋 Testing Form Element Contrast');
-    
+
     // Test input fields
     cy.get('input').each(($input) => {
       if ($input.is(':visible')) {
@@ -357,24 +376,26 @@ describe('Dark Theme - Comprehensive Testing', () => {
           const inputBg = $input.css('background-color');
           const inputColor = $input.css('color');
           const borderColor = $input.css('border-color');
-          
+
           expect(inputBg).to.not.equal(inputColor);
           expect(borderColor).to.not.equal('transparent');
         });
       }
     });
-    
+
     // Test labels
     cy.get('label').each(($label) => {
       if ($label.is(':visible')) {
-        cy.wrap($label).should('have.css', 'color').and('not.equal', 'rgb(0, 0, 0)');
+        cy.wrap($label)
+          .should('have.css', 'color')
+          .and('not.equal', 'rgb(0, 0, 0)');
       }
     });
   }
 
   function testToggleContrast() {
     cy.log('🔄 Testing Toggle Element Contrast');
-    
+
     cy.get('input[type="checkbox"]').each(($toggle) => {
       if ($toggle.is(':visible')) {
         cy.wrap($toggle).then(() => {
@@ -387,12 +408,14 @@ describe('Dark Theme - Comprehensive Testing', () => {
 
   function testTableContrast() {
     cy.log('📊 Testing Table Contrast');
-    
+
     cy.get('table').then(($tables) => {
       if ($tables.length > 0) {
         cy.get('th, td').each(($cell) => {
           if ($cell.is(':visible')) {
-            cy.wrap($cell).should('have.css', 'color').and('not.equal', 'rgb(0, 0, 0)');
+            cy.wrap($cell)
+              .should('have.css', 'color')
+              .and('not.equal', 'rgb(0, 0, 0)');
           }
         });
       }
@@ -401,39 +424,43 @@ describe('Dark Theme - Comprehensive Testing', () => {
 
   function testIframeContrast() {
     cy.log('🖼️ Testing Iframe Container Contrast');
-    
-    cy.get('iframe').parent().then(($container) => {
-      const containerBg = $container.css('background-color');
-      expect(containerBg).to.not.equal('transparent');
-    });
+
+    cy.get('iframe')
+      .parent()
+      .then(($container) => {
+        const containerBg = $container.css('background-color');
+        expect(containerBg).to.not.equal('transparent');
+      });
   }
 
   function testWCAGContrast(selector: string, minRatio: number) {
-    cy.get(selector).first().then(($el) => {
-      if ($el.is(':visible')) {
-        const color = $el.css('color');
-        const bgColor = $el.css('background-color');
-        
-        // For now, just ensure they are different colors
-        // In a real implementation, you'd calculate actual contrast ratio
-        expect(color).to.not.equal(bgColor);
-      }
-    });
+    cy.get(selector)
+      .first()
+      .then(($el) => {
+        if ($el.is(':visible')) {
+          const color = $el.css('color');
+          const bgColor = $el.css('background-color');
+
+          // For now, just ensure they are different colors
+          // In a real implementation, you'd calculate actual contrast ratio
+          expect(color).to.not.equal(bgColor);
+        }
+      });
   }
 
   function testStateColorContrast() {
     cy.log('🎨 Testing State Color Contrast');
-    
+
     // These would test error, warning, success states if present
     const stateClasses = [
       'text-error',
-      'text-warning', 
+      'text-warning',
       'text-success',
       'bg-error',
       'bg-warning',
-      'bg-success'
+      'bg-success',
     ];
-    
+
     stateClasses.forEach((className) => {
       cy.get('body').then(($body) => {
         if ($body.find(`.${className}`).length > 0) {

@@ -30,7 +30,9 @@ async function createBenchmarkRuntime(): Promise<IAgentRuntime> {
     agentId: 'ts-js-benchmark-agent',
     character: {
       name: 'TypeScript/JavaScript Research Agent',
-      bio: ['Expert software engineering research agent specializing in TypeScript and JavaScript'],
+      bio: [
+        'Expert software engineering research agent specializing in TypeScript and JavaScript',
+      ],
       system:
         'You are an expert software engineering researcher with deep knowledge of TypeScript, JavaScript, and modern web development frameworks.',
       plugins: ['research'],
@@ -77,7 +79,9 @@ async function createBenchmarkRuntime(): Promise<IAgentRuntime> {
 async function runTsJsBenchmark() {
   console.log('🚀 Starting TypeScript/JavaScript Research Benchmark');
   console.log('='.repeat(70));
-  console.log(`📊 Testing ${SWE_BENCH.queries.length} software engineering issues`);
+  console.log(
+    `📊 Testing ${SWE_BENCH.queries.length} software engineering issues`
+  );
   console.log('='.repeat(70));
 
   const runtime = await createBenchmarkRuntime();
@@ -157,7 +161,9 @@ async function runTsJsBenchmark() {
 
         if (updated.status === 'completed') {
           const duration = Date.now() - startTime;
-          console.log(`\n✅ Research completed in ${Math.round(duration / 1000)}s`);
+          console.log(
+            `\n✅ Research completed in ${Math.round(duration / 1000)}s`
+          );
 
           // Log detailed statistics
           console.log('\n📊 Research Statistics:');
@@ -166,7 +172,9 @@ async function runTsJsBenchmark() {
           );
           console.log(`  - Findings extracted: ${updated.findings.length}`);
           console.log(`  - Word count: ${updated.report?.wordCount || 0}`);
-          console.log(`  - Citations: ${updated.report?.citations.length || 0}`);
+          console.log(
+            `  - Citations: ${updated.report?.citations.length || 0}`
+          );
           console.log(`  - Repository: ${benchmarkQuery.metadata.repo}`);
           console.log(`  - Issue: #${benchmarkQuery.metadata.issue_number}`);
 
@@ -182,8 +190,12 @@ async function runTsJsBenchmark() {
               raceScore = race.overall;
               console.log('\n📊 RACE Evaluation:');
               console.log(`  - Overall: ${(race.overall * 100).toFixed(1)}%`);
-              console.log(`  - Comprehensiveness: ${(race.comprehensiveness * 100).toFixed(1)}%`);
-              console.log(`  - Technical Depth: ${(race.depth * 100).toFixed(1)}%`);
+              console.log(
+                `  - Comprehensiveness: ${(race.comprehensiveness * 100).toFixed(1)}%`
+              );
+              console.log(
+                `  - Technical Depth: ${(race.depth * 100).toFixed(1)}%`
+              );
               console.log(
                 `  - Instruction Following: ${(race.instructionFollowing * 100).toFixed(1)}%`
               );
@@ -192,7 +204,9 @@ async function runTsJsBenchmark() {
             if (fact) {
               factScore = fact.citationAccuracy;
               console.log('\n📊 FACT Evaluation:');
-              console.log(`  - Citation Accuracy: ${(fact.citationAccuracy * 100).toFixed(1)}%`);
+              console.log(
+                `  - Citation Accuracy: ${(fact.citationAccuracy * 100).toFixed(1)}%`
+              );
               console.log(`  - Total Citations: ${fact.totalCitations}`);
               console.log(`  - Verified Citations: ${fact.verifiedCitations}`);
             }
@@ -233,7 +247,9 @@ async function runTsJsBenchmark() {
 
         // Show status every 30 seconds
         if (elapsed % 30000 === 0 && elapsed > 0) {
-          console.log(`⏳ Still processing... (${Math.round(elapsed / 1000)}s elapsed)`);
+          console.log(
+            `⏳ Still processing... (${Math.round(elapsed / 1000)}s elapsed)`
+          );
           console.log(`  - Status: ${updated.status}`);
           console.log(`  - Phase: ${updated.phase}`);
           console.log(`  - Sources: ${updated.sources.length}`);
@@ -300,17 +316,24 @@ async function runTsJsBenchmark() {
   console.log(`⏰ Timed Out: ${timedOut.length}`);
 
   if (successful.length > 0) {
-    const avgDuration = successful.reduce((sum, r) => sum + r.duration, 0) / successful.length;
-    const avgSources = successful.reduce((sum, r) => sum + r.sources, 0) / successful.length;
-    const avgFindings = successful.reduce((sum, r) => sum + r.findings, 0) / successful.length;
-    const avgWordCount = successful.reduce((sum, r) => sum + r.wordCount, 0) / successful.length;
-    const avgCitations = successful.reduce((sum, r) => sum + r.citations, 0) / successful.length;
+    const avgDuration =
+      successful.reduce((sum, r) => sum + r.duration, 0) / successful.length;
+    const avgSources =
+      successful.reduce((sum, r) => sum + r.sources, 0) / successful.length;
+    const avgFindings =
+      successful.reduce((sum, r) => sum + r.findings, 0) / successful.length;
+    const avgWordCount =
+      successful.reduce((sum, r) => sum + r.wordCount, 0) / successful.length;
+    const avgCitations =
+      successful.reduce((sum, r) => sum + r.citations, 0) / successful.length;
     const avgRaceScore =
-      successful.filter((r) => r.raceScore).reduce((sum, r) => sum + (r.raceScore || 0), 0) /
-      successful.length;
+      successful
+        .filter((r) => r.raceScore)
+        .reduce((sum, r) => sum + (r.raceScore || 0), 0) / successful.length;
     const avgFactScore =
-      successful.filter((r) => r.factScore).reduce((sum, r) => sum + (r.factScore || 0), 0) /
-      successful.length;
+      successful
+        .filter((r) => r.factScore)
+        .reduce((sum, r) => sum + (r.factScore || 0), 0) / successful.length;
 
     console.log('\n📊 Average Performance Metrics:');
     console.log(`  - Duration: ${Math.round(avgDuration / 1000)}s`);
@@ -326,7 +349,11 @@ async function runTsJsBenchmark() {
   console.log('\n📋 Individual Results:');
   for (const result of results) {
     const statusIcon =
-      result.status === 'completed' ? '✅' : result.status === 'failed' ? '❌' : '⏰';
+      result.status === 'completed'
+        ? '✅'
+        : result.status === 'failed'
+          ? '❌'
+          : '⏰';
     console.log(`${statusIcon} ${result.id}:`);
     console.log(`   Duration: ${Math.round(result.duration / 1000)}s`);
     console.log(`   Sources: ${result.sources}`);
@@ -359,20 +386,32 @@ async function runTsJsBenchmark() {
     averageMetrics:
       successful.length > 0
         ? {
-          duration: successful.reduce((sum, r) => sum + r.duration, 0) / successful.length,
-          sources: successful.reduce((sum, r) => sum + r.sources, 0) / successful.length,
-          findings: successful.reduce((sum, r) => sum + r.findings, 0) / successful.length,
-          wordCount: successful.reduce((sum, r) => sum + r.wordCount, 0) / successful.length,
-          citations: successful.reduce((sum, r) => sum + r.citations, 0) / successful.length,
-          raceScore:
+            duration:
+              successful.reduce((sum, r) => sum + r.duration, 0) /
+              successful.length,
+            sources:
+              successful.reduce((sum, r) => sum + r.sources, 0) /
+              successful.length,
+            findings:
+              successful.reduce((sum, r) => sum + r.findings, 0) /
+              successful.length,
+            wordCount:
+              successful.reduce((sum, r) => sum + r.wordCount, 0) /
+              successful.length,
+            citations:
+              successful.reduce((sum, r) => sum + r.citations, 0) /
+              successful.length,
+            raceScore:
               successful
                 .filter((r) => r.raceScore)
-                .reduce((sum, r) => sum + (r.raceScore || 0), 0) / successful.length,
-          factScore:
+                .reduce((sum, r) => sum + (r.raceScore || 0), 0) /
+              successful.length,
+            factScore:
               successful
                 .filter((r) => r.factScore)
-                .reduce((sum, r) => sum + (r.factScore || 0), 0) / successful.length,
-        }
+                .reduce((sum, r) => sum + (r.factScore || 0), 0) /
+              successful.length,
+          }
         : null,
     results,
   };

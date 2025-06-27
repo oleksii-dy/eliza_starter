@@ -17,11 +17,11 @@ console.log('='.repeat(60));
 const mockRuntime = {
   getSetting: (key) => {
     const settings = {
-      'CROSSMINT_API_KEY': API_KEY,
-      'CROSSMINT_ENVIRONMENT': ENVIRONMENT,
+      CROSSMINT_API_KEY: API_KEY,
+      CROSSMINT_ENVIRONMENT: ENVIRONMENT,
     };
     return settings[key];
-  }
+  },
 };
 
 // Mock logger
@@ -44,9 +44,10 @@ class TestCrossMintService {
   initializeClient() {
     // Use dynamic import for axios
     import('axios').then(({ default: axios }) => {
-      const baseURL = this.environment === 'production'
-        ? 'https://www.crossmint.com/api'
-        : 'https://staging.crossmint.com/api';
+      const baseURL =
+        this.environment === 'production'
+          ? 'https://www.crossmint.com/api'
+          : 'https://staging.crossmint.com/api';
 
       this.client = axios.create({
         baseURL,
@@ -81,7 +82,7 @@ class TestCrossMintService {
     try {
       const formattedRequest = {
         ...request,
-        linkedUser: this.formatLinkedUser(request.linkedUser)
+        linkedUser: this.formatLinkedUser(request.linkedUser),
       };
 
       mockLogger.info('Creating wallet with request:', formattedRequest);
@@ -99,7 +100,7 @@ class TestCrossMintService {
   async createEVMWallet(linkedUser) {
     return this.createWallet({
       type: 'evm-mpc-wallet',
-      linkedUser
+      linkedUser,
     });
   }
 

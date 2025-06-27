@@ -5,8 +5,22 @@
  */
 
 import { logger, AgentRuntime, DatabaseAdapter } from '@elizaos/core';
-import type { Character, IAgentRuntime, UUID, Memory, Entity, Component, Room, World, Relationship, Task, Agent as ElizaAgent, Participant, Log } from '@elizaos/core';
-import { db } from '../database';
+import type {
+  Character,
+  IAgentRuntime,
+  UUID,
+  Memory,
+  Entity,
+  Component,
+  Room,
+  World,
+  Relationship,
+  Task,
+  Agent as ElizaAgent,
+  Participant,
+  Log,
+} from '@elizaos/core';
+import { getDatabase } from '../database';
 import { memories, messages, entities, agentTasks } from '../database/schema';
 import { eq, and, desc, count, sql, gt, gte, lte, inArray } from 'drizzle-orm';
 
@@ -42,22 +56,27 @@ export interface AgentStats {
  * This provides basic database functionality using the platform's existing database connection
  */
 class PlatformDatabaseAdapter extends DatabaseAdapter {
-  db: typeof db;
+  public db: any;
   private schema: string;
   private organizationId: string;
   private agentId: string;
 
   constructor(schema: string, organizationId: string, agentId: string) {
     super();
-    this.db = db;
+    this.db = getDatabase();
     this.schema = schema;
     this.organizationId = organizationId;
     this.agentId = agentId;
   }
 
+  private async getDb() {
+    return await getDatabase();
+  }
+
   async init(): Promise<void> {
     // Initialize the schema if needed
-    await this.db.execute(`CREATE SCHEMA IF NOT EXISTS "${this.schema}"`);
+    const db = await this.getDb();
+    await db.execute(`CREATE SCHEMA IF NOT EXISTS "${this.schema}"`);
   }
 
   async initialize(): Promise<void> {
@@ -66,7 +85,8 @@ class PlatformDatabaseAdapter extends DatabaseAdapter {
 
   async isReady(): Promise<boolean> {
     try {
-      await this.db.execute('SELECT 1');
+      const db = await this.getDb();
+      await db.execute('SELECT 1');
       return true;
     } catch {
       return false;
@@ -102,7 +122,10 @@ class PlatformDatabaseAdapter extends DatabaseAdapter {
     return [];
   }
 
-  async getEntitiesForRoom(roomId: UUID, includeComponents?: boolean): Promise<Entity[]> {
+  async getEntitiesForRoom(
+    roomId: UUID,
+    includeComponents?: boolean,
+  ): Promise<Entity[]> {
     return [];
   }
 
@@ -114,11 +137,20 @@ class PlatformDatabaseAdapter extends DatabaseAdapter {
     return Promise.resolve();
   }
 
-  async getComponent(entityId: UUID, type: string, worldId?: UUID, sourceEntityId?: UUID): Promise<Component | null> {
+  async getComponent(
+    entityId: UUID,
+    type: string,
+    worldId?: UUID,
+    sourceEntityId?: UUID,
+  ): Promise<Component | null> {
     return null;
   }
 
-  async getComponents(entityId: UUID, worldId?: UUID, sourceEntityId?: UUID): Promise<Component[]> {
+  async getComponents(
+    entityId: UUID,
+    worldId?: UUID,
+    sourceEntityId?: UUID,
+  ): Promise<Component[]> {
     return [];
   }
 
@@ -146,46 +178,59 @@ class PlatformDatabaseAdapter extends DatabaseAdapter {
     try {
       const limit = params.count || 10;
       const table = params.tableName === 'messages' ? messages : memories;
-      
-      let query = this.db.select().from(table)
-        .where(and(
-          eq(table.organizationId, this.organizationId),
-          eq(table.agentId, this.agentId)
-        ))
+
+      const db = await this.getDb();
+      let query = db
+        .select()
+        .from(table)
+        .where(
+          and(
+            eq(table.organizationId, this.organizationId),
+            eq(table.agentId, this.agentId),
+          ),
+        )
         .orderBy(desc(table.createdAt))
         .limit(limit);
 
       // Add room/conversation filtering if specified
       if (params.roomId && 'conversationId' in table) {
-        query = query.where(and(
-          eq(table.organizationId, this.organizationId),
-          eq(table.agentId, this.agentId),
-          eq(table.conversationId, params.roomId)
-        ));
+        query = query.where(
+          and(
+            eq(table.organizationId, this.organizationId),
+            eq(table.agentId, this.agentId),
+            eq(table.conversationId, params.roomId),
+          ),
+        );
       }
 
       // Add unique filtering for memories
       if (params.unique && table === memories) {
-        query = query.where(and(
-          eq(table.organizationId, this.organizationId),
-          eq(table.agentId, this.agentId),
-          eq(table.isUnique, true)
-        ));
+        query = query.where(
+          and(
+            eq(table.organizationId, this.organizationId),
+            eq(table.agentId, this.agentId),
+            eq(table.isUnique, true),
+          ),
+        );
       }
 
       const results = await query;
-      
+
       return results.map((row: any) => ({
         id: row.id as UUID,
         agentId: row.agentId as UUID,
         content: row.content,
         embedding: row.embedding ? JSON.parse(row.embedding) : undefined,
-        roomId: (row as any).conversationId as UUID || (row as any).roomId as UUID,
+        roomId:
+          ((row as any).conversationId as UUID) ||
+          ((row as any).roomId as UUID),
         worldId: (row as any).worldId as UUID,
         entityId: (row as any).entityId as UUID,
         unique: (row as any).isUnique || false,
         similarity: row.similarity ? parseFloat(row.similarity) : undefined,
-        createdAt: row.createdAt ? new Date(row.createdAt).getTime() : Date.now()
+        createdAt: row.createdAt
+          ? new Date(row.createdAt).getTime()
+          : Date.now(),
       }));
     } catch (error) {
       console.error('Error getting memories:', error);
@@ -196,12 +241,17 @@ class PlatformDatabaseAdapter extends DatabaseAdapter {
   async getMemoryById(id: UUID): Promise<Memory | null> {
     try {
       // Try memories table first
-      const memoryResult = await this.db.select().from(memories)
-        .where(and(
-          eq(memories.id, id),
-          eq(memories.organizationId, this.organizationId),
-          eq(memories.agentId, this.agentId)
-        ))
+      const db = await this.getDb();
+      const memoryResult = await db
+        .select()
+        .from(memories)
+        .where(
+          and(
+            eq(memories.id, id),
+            eq(memories.organizationId, this.organizationId),
+            eq(memories.agentId, this.agentId),
+          ),
+        )
         .limit(1);
 
       if (memoryResult.length > 0) {
@@ -216,17 +266,23 @@ class PlatformDatabaseAdapter extends DatabaseAdapter {
           entityId: row.entityId as UUID,
           unique: row.isUnique || false,
           similarity: row.similarity ? parseFloat(row.similarity) : undefined,
-          createdAt: row.createdAt ? new Date(row.createdAt).getTime() : Date.now()
+          createdAt: row.createdAt
+            ? new Date(row.createdAt).getTime()
+            : Date.now(),
         };
       }
 
       // Try messages table if not found in memories
-      const messageResult = await this.db.select().from(messages)
-        .where(and(
-          eq(messages.id, id),
-          eq(messages.organizationId, this.organizationId),
-          eq(messages.agentId, this.agentId)
-        ))
+      const messageResult = await db
+        .select()
+        .from(messages)
+        .where(
+          and(
+            eq(messages.id, id),
+            eq(messages.organizationId, this.organizationId),
+            eq(messages.agentId, this.agentId),
+          ),
+        )
         .limit(1);
 
       if (messageResult.length > 0) {
@@ -239,7 +295,9 @@ class PlatformDatabaseAdapter extends DatabaseAdapter {
           roomId: row.conversationId as UUID,
           entityId: row.userId as UUID,
           unique: false,
-          createdAt: row.createdAt ? new Date(row.createdAt).getTime() : Date.now()
+          createdAt: row.createdAt
+            ? new Date(row.createdAt).getTime()
+            : Date.now(),
         };
       }
 
@@ -277,40 +335,51 @@ class PlatformDatabaseAdapter extends DatabaseAdapter {
       const threshold = params.match_threshold || 0.1;
       const limit = params.match_count || 10;
       const table = params.tableName === 'messages' ? messages : memories;
-      
+
       // For now, we'll do a simple text-based search since vector search requires additional setup
       // In production, this would use pgvector or similar for true semantic search
-      let query = this.db.select().from(table)
-        .where(and(
-          eq(table.organizationId, this.organizationId),
-          eq(table.agentId, this.agentId)
-        ))
+      const db = await this.getDb();
+      let query = db
+        .select()
+        .from(table)
+        .where(
+          and(
+            eq(table.organizationId, this.organizationId),
+            eq(table.agentId, this.agentId),
+          ),
+        )
         .orderBy(desc(table.createdAt))
         .limit(limit);
 
       // Add room/conversation filtering if specified
       if (params.roomId && 'conversationId' in table) {
-        query = query.where(and(
-          eq(table.organizationId, this.organizationId),
-          eq(table.agentId, this.agentId),
-          eq(table.conversationId, params.roomId)
-        ));
+        query = query.where(
+          and(
+            eq(table.organizationId, this.organizationId),
+            eq(table.agentId, this.agentId),
+            eq(table.conversationId, params.roomId),
+          ),
+        );
       }
 
       const results = await query;
-      
+
       // Convert results to Memory format
       return results.map((row: any) => ({
         id: row.id as UUID,
         agentId: row.agentId as UUID,
         content: row.content,
         embedding: row.embedding ? JSON.parse(row.embedding) : undefined,
-        roomId: (row as any).conversationId as UUID || (row as any).roomId as UUID,
+        roomId:
+          ((row as any).conversationId as UUID) ||
+          ((row as any).roomId as UUID),
         worldId: (row as any).worldId as UUID,
         entityId: (row as any).entityId as UUID,
         unique: (row as any).isUnique || false,
         similarity: row.similarity ? parseFloat(row.similarity) : 0.8, // Default similarity for text-based search
-        createdAt: row.createdAt ? new Date(row.createdAt).getTime() : Date.now()
+        createdAt: row.createdAt
+          ? new Date(row.createdAt).getTime()
+          : Date.now(),
       }));
     } catch (error) {
       console.error('Error searching memories:', error);
@@ -318,10 +387,14 @@ class PlatformDatabaseAdapter extends DatabaseAdapter {
     }
   }
 
-  async createMemory(memory: Memory, tableName: string = 'memories', unique?: boolean): Promise<UUID> {
+  async createMemory(
+    memory: Memory,
+    tableName: string = 'memories',
+    unique?: boolean,
+  ): Promise<UUID> {
     try {
       const table = tableName === 'messages' ? messages : memories;
-      
+
       const insertData = {
         id: memory.id || crypto.randomUUID(),
         organizationId: this.organizationId,
@@ -334,7 +407,7 @@ class PlatformDatabaseAdapter extends DatabaseAdapter {
         importance: 5,
         isUnique: unique || memory.unique || false,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       if (tableName === 'messages') {
@@ -342,10 +415,14 @@ class PlatformDatabaseAdapter extends DatabaseAdapter {
         const messageData = {
           ...insertData,
           role: 'agent', // Default to agent role
-          embedding: memory.embedding ? JSON.stringify(memory.embedding) : null
+          embedding: memory.embedding ? JSON.stringify(memory.embedding) : null,
         };
-        
-        const result = await this.db.insert(messages).values(messageData).returning({ id: messages.id });
+
+        const db = await this.getDb();
+        const result = await db
+          .insert(messages)
+          .values(messageData)
+          .returning({ id: messages.id });
         return result[0].id as UUID;
       } else {
         // For memories table
@@ -354,10 +431,14 @@ class PlatformDatabaseAdapter extends DatabaseAdapter {
           similarity: memory.similarity ? memory.similarity.toString() : null,
           worldId: memory.worldId,
           entityId: memory.entityId,
-          roomId: memory.roomId
+          roomId: memory.roomId,
         };
-        
-        const result = await this.db.insert(memories).values(memoryData).returning({ id: memories.id });
+
+        const db = await this.getDb();
+        const result = await db
+          .insert(memories)
+          .values(memoryData)
+          .returning({ id: memories.id });
         return result[0].id as UUID;
       }
     } catch (error) {
@@ -382,7 +463,11 @@ class PlatformDatabaseAdapter extends DatabaseAdapter {
     return Promise.resolve();
   }
 
-  async countMemories(roomId: UUID, unique?: boolean, tableName?: string): Promise<number> {
+  async countMemories(
+    roomId: UUID,
+    unique?: boolean,
+    tableName?: string,
+  ): Promise<number> {
     return 0;
   }
 
@@ -458,11 +543,18 @@ class PlatformDatabaseAdapter extends DatabaseAdapter {
     return true;
   }
 
-  async getParticipantUserState(roomId: UUID, entityId: UUID): Promise<'FOLLOWED' | 'MUTED' | null> {
+  async getParticipantUserState(
+    roomId: UUID,
+    entityId: UUID,
+  ): Promise<'FOLLOWED' | 'MUTED' | null> {
     return null;
   }
 
-  async setParticipantUserState(roomId: UUID, entityId: UUID, state: 'FOLLOWED' | 'MUTED' | null): Promise<void> {
+  async setParticipantUserState(
+    roomId: UUID,
+    entityId: UUID,
+    state: 'FOLLOWED' | 'MUTED' | null,
+  ): Promise<void> {
     return Promise.resolve();
   }
 
@@ -506,7 +598,10 @@ class PlatformDatabaseAdapter extends DatabaseAdapter {
     return true;
   }
 
-  async updateAgent(agentId: UUID, agent: Partial<ElizaAgent>): Promise<boolean> {
+  async updateAgent(
+    agentId: UUID,
+    agent: Partial<ElizaAgent>,
+  ): Promise<boolean> {
     return true;
   }
 
@@ -579,7 +674,9 @@ export class ElizaRuntimeService {
     // Check organization agent limits using existing agents map
     const orgAgentCount = this.getOrganizationAgentCount(config.organizationId);
     if (orgAgentCount >= this.maxAgentsPerOrg) {
-      throw new Error(`Organization has reached maximum agent limit of ${this.maxAgentsPerOrg}`);
+      throw new Error(
+        `Organization has reached maximum agent limit of ${this.maxAgentsPerOrg}`,
+      );
     }
 
     // Validate character configuration
@@ -590,7 +687,7 @@ export class ElizaRuntimeService {
       const adapter = new PlatformDatabaseAdapter(
         `agent_${config.organizationId.replace(/-/g, '_')}`,
         config.organizationId,
-        config.character.id || crypto.randomUUID()
+        config.character.id || crypto.randomUUID(),
       );
 
       // Ensure adapter is ready
@@ -638,7 +735,9 @@ export class ElizaRuntimeService {
       return runtime.agentId;
     } catch (error) {
       logger.error('[ElizaRuntimeService] Failed to deploy agent:', error);
-      throw new Error(`Agent deployment failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Agent deployment failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -656,11 +755,18 @@ export class ElizaRuntimeService {
 
       // ElizaOS runtime is ready after initialization
       // Message processing is automatically available via the runtime
-      logger.debug(`[ElizaRuntimeService] Agent ${agentId} runtime is ready for message processing`);
+      logger.debug(
+        `[ElizaRuntimeService] Agent ${agentId} runtime is ready for message processing`,
+      );
 
-      logger.info(`[ElizaRuntimeService] Agent ${agentId} started successfully`);
+      logger.info(
+        `[ElizaRuntimeService] Agent ${agentId} started successfully`,
+      );
     } catch (error) {
-      logger.error(`[ElizaRuntimeService] Failed to start agent ${agentId}:`, error);
+      logger.error(
+        `[ElizaRuntimeService] Failed to start agent ${agentId}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -679,9 +785,14 @@ export class ElizaRuntimeService {
 
       // ElizaOS runtime doesn't need explicit stop - managed by cleanup
 
-      logger.info(`[ElizaRuntimeService] Agent ${agentId} stopped successfully`);
+      logger.info(
+        `[ElizaRuntimeService] Agent ${agentId} stopped successfully`,
+      );
     } catch (error) {
-      logger.error(`[ElizaRuntimeService] Failed to stop agent ${agentId}:`, error);
+      logger.error(
+        `[ElizaRuntimeService] Failed to stop agent ${agentId}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -708,9 +819,14 @@ export class ElizaRuntimeService {
       this.activeRuntimes.delete(agentId);
       this.agentStats.delete(agentId);
 
-      logger.info(`[ElizaRuntimeService] Agent ${agentId} deleted successfully`);
+      logger.info(
+        `[ElizaRuntimeService] Agent ${agentId} deleted successfully`,
+      );
     } catch (error) {
-      logger.error(`[ElizaRuntimeService] Failed to delete agent ${agentId}:`, error);
+      logger.error(
+        `[ElizaRuntimeService] Failed to delete agent ${agentId}:`,
+        error,
+      );
       throw error;
     }
   }
@@ -720,7 +836,9 @@ export class ElizaRuntimeService {
    */
   getAgent(agentId: UUID): AgentInstanceInfo | null {
     const runtime = this.activeRuntimes.get(agentId);
-    if (!runtime) {return null;}
+    if (!runtime) {
+      return null;
+    }
 
     const stats = this.agentStats.get(agentId);
 
@@ -730,8 +848,8 @@ export class ElizaRuntimeService {
       runtime,
       status: 'running', // Active runtimes are running
       startedAt: stats?.lastActivity,
-      organizationId: runtime.getSetting('organizationId') as string || '',
-      userId: runtime.getSetting('userId') as string || '',
+      organizationId: (runtime.getSetting('organizationId') as string) || '',
+      userId: (runtime.getSetting('userId') as string) || '',
     };
   }
 
@@ -759,7 +877,9 @@ export class ElizaRuntimeService {
    */
   getAgentStats(agentId: UUID): AgentStats | null {
     const stats = this.agentStats.get(agentId);
-    if (!stats) {return null;}
+    if (!stats) {
+      return null;
+    }
 
     const agentInfo = this.getAgent(agentId);
     if (agentInfo?.startedAt) {
@@ -794,7 +914,9 @@ export class ElizaRuntimeService {
    */
   async checkAgentHealth(agentId: UUID): Promise<boolean> {
     const runtime = this.activeRuntimes.get(agentId);
-    if (!runtime) {return false;}
+    if (!runtime) {
+      return false;
+    }
 
     try {
       // Check if runtime is responsive via database adapter
@@ -805,7 +927,10 @@ export class ElizaRuntimeService {
       // Basic check - agent exists in active runtimes
       return true;
     } catch (error) {
-      logger.warn(`[ElizaRuntimeService] Health check failed for agent ${agentId}:`, error);
+      logger.warn(
+        `[ElizaRuntimeService] Health check failed for agent ${agentId}:`,
+        error,
+      );
       return false;
     }
   }
@@ -824,7 +949,10 @@ export class ElizaRuntimeService {
 
     // Validate message examples if provided
     if (character.messageExamples) {
-      if (!Array.isArray(character.messageExamples) || character.messageExamples.length === 0) {
+      if (
+        !Array.isArray(character.messageExamples) ||
+        character.messageExamples.length === 0
+      ) {
         throw new Error('Character messageExamples must be a non-empty array');
       }
     }
@@ -866,13 +994,16 @@ export class ElizaRuntimeService {
     const agents = this.getAllAgents();
     return {
       totalAgents: agents.length,
-      runningAgents: agents.filter(a => a.status === 'running').length,
-      stoppedAgents: agents.filter(a => a.status === 'stopped').length,
-      errorAgents: agents.filter(a => a.status === 'error').length,
-      organizationCounts: agents.reduce((acc, agent) => {
-        acc[agent.organizationId] = (acc[agent.organizationId] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>),
+      runningAgents: agents.filter((a) => a.status === 'running').length,
+      stoppedAgents: agents.filter((a) => a.status === 'stopped').length,
+      errorAgents: agents.filter((a) => a.status === 'error').length,
+      organizationCounts: agents.reduce(
+        (acc, agent) => {
+          acc[agent.organizationId] = (acc[agent.organizationId] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>,
+      ),
     };
   }
 
@@ -882,13 +1013,18 @@ export class ElizaRuntimeService {
   async shutdown(): Promise<void> {
     logger.info('[ElizaRuntimeService] Shutting down all agents...');
 
-    const shutdownPromises = Array.from(this.activeRuntimes.keys()).map(async (agentId) => {
-      try {
-        await this.stopAgent(agentId);
-      } catch (error) {
-        logger.error(`[ElizaRuntimeService] Error stopping agent ${agentId} during shutdown:`, error);
-      }
-    });
+    const shutdownPromises = Array.from(this.activeRuntimes.keys()).map(
+      async (agentId) => {
+        try {
+          await this.stopAgent(agentId);
+        } catch (error) {
+          logger.error(
+            `[ElizaRuntimeService] Error stopping agent ${agentId} during shutdown:`,
+            error,
+          );
+        }
+      },
+    );
 
     await Promise.allSettled(shutdownPromises);
 

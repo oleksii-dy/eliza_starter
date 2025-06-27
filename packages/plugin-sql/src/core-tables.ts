@@ -1,4 +1,4 @@
-import type { TableSchema } from './schema-registry';
+import type { TableSchema } from './schema-registry.js';
 
 /**
  * Core table definitions that are provided by the SQL plugin.

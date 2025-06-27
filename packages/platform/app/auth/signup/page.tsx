@@ -33,7 +33,7 @@ export default function SignupPage() {
           firstName,
           lastName,
           organizationName,
-          password
+          password,
         },
         {
           headers: {
@@ -72,12 +72,16 @@ export default function SignupPage() {
     setIsDevSignupLoading(true);
 
     try {
-      const response = await axios.post('/api/auth/dev-login', {}, {
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await axios.post(
+        '/api/auth/dev-login',
+        {},
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          withCredentials: true,
         },
-        withCredentials: true,
-      });
+      );
 
       if (response.status === 200) {
         toast({
@@ -101,9 +105,15 @@ export default function SignupPage() {
     <div className="flex flex-col gap-6" data-cy="signup-page">
       <div className="flex flex-col gap-2">
         <h1 data-cy="signup-title">Get started with your dashboard</h1>
-        <p data-cy="signup-subtitle">Free for 14 days &mdash; no credit card required.</p>
+        <p data-cy="signup-subtitle">
+          Free for 14 days &mdash; no credit card required.
+        </p>
       </div>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-6" data-cy="signup-form">
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-6"
+        data-cy="signup-form"
+      >
         <div className="grid grid-cols-2 gap-4">
           <Input
             value={firstName}
@@ -162,7 +172,9 @@ export default function SignupPage() {
         <Button
           className="w-full"
           type="submit"
-          disabled={isLoading || !email || !firstName || !organizationName || !password}
+          disabled={
+            isLoading || !email || !firstName || !organizationName || !password
+          }
           loading={isLoading}
           data-cy="signup-submit-button"
         >
@@ -170,19 +182,25 @@ export default function SignupPage() {
         </Button>
 
         <div className="text-center">
-          <Link className="no-underline" href="/auth/login" data-cy="login-link">
+          <Link
+            className="no-underline"
+            href="/auth/login"
+            data-cy="login-link"
+          >
             or login instead
           </Link>
         </div>
       </form>
 
       {isDevelopment && (
-        <div className="border-t pt-4 mt-4" data-cy="dev-mode-section">
-          <div className="text-center mb-3">
-            <span className="text-sm text-gray-500 bg-white px-2">Development Mode</span>
+        <div className="mt-4 border-t pt-4" data-cy="dev-mode-section">
+          <div className="mb-3 text-center">
+            <span className="bg-white px-2 text-sm text-gray-500">
+              Development Mode
+            </span>
           </div>
           <Button
-            className="w-full bg-yellow-500 hover:bg-yellow-600 text-black"
+            className="w-full bg-yellow-500 text-black hover:bg-yellow-600"
             onClick={handleDevSignup}
             disabled={isDevSignupLoading}
             loading={isDevSignupLoading}
@@ -190,7 +208,7 @@ export default function SignupPage() {
           >
             Dev Signup
           </Button>
-          <p className="text-xs text-gray-500 text-center mt-2">
+          <p className="mt-2 text-center text-xs text-gray-500">
             Instantly create developer account with full access (dev@elizaos.ai)
           </p>
         </div>

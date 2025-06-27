@@ -133,6 +133,7 @@ interface ActionContext {
 ### Supporting Type Definitions
 
 - **`Handler`**: The function that contains the core logic of the action.
+
   ```typescript
   // Source: packages/core/src/types/components.ts
   export type Handler = (
@@ -172,7 +173,9 @@ interface ActionContext {
       text: 'Summary of what was done',
     };
   },
-```
+  ```
+
+````
 
 ## Complete Action Template
 
@@ -237,7 +240,7 @@ const customAction: Action = {
 };
 
 export default customAction;
-```
+````
 
 ### Action Chaining
 

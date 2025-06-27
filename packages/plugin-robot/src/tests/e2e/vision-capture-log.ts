@@ -94,22 +94,22 @@ export class VisionCaptureLogTestSuite implements TestSuite {
               elapsedMs: Date.now() - startTime,
               scene: scene
                 ? {
-                  description: scene.description,
-                  changePercentage: scene.changePercentage,
-                  sceneChanged: scene.sceneChanged,
-                  objectCount: scene.objects.length,
-                  peopleCount: scene.people.length,
-                  objects: scene.objects,
-                  people: scene.people,
-                }
+                    description: scene.description,
+                    changePercentage: scene.changePercentage,
+                    sceneChanged: scene.sceneChanged,
+                    objectCount: scene.objects.length,
+                    peopleCount: scene.people.length,
+                    objects: scene.objects,
+                    people: scene.people,
+                  }
                 : null,
               frame: frame
                 ? {
-                  width: frame.width,
-                  height: frame.height,
-                  format: frame.format,
-                  timestamp: frame.timestamp,
-                }
+                    width: frame.width,
+                    height: frame.height,
+                    format: frame.format,
+                    timestamp: frame.timestamp,
+                  }
                 : null,
               imageBase64: imageBase64 ?? null,
             };
@@ -163,10 +163,10 @@ export class VisionCaptureLogTestSuite implements TestSuite {
                     scene,
                     frame: frame
                       ? {
-                        width: frame.width,
-                        height: frame.height,
-                        format: frame.format,
-                      }
+                          width: frame.width,
+                          height: frame.height,
+                          format: frame.format,
+                        }
                       : null,
                   },
                   null,
@@ -265,16 +265,16 @@ ${
 
 ## Sample Scene Descriptions
 ${captureData.captures
-    .filter((c) => c.scene?.description)
-    .slice(0, 5)
-    .map(
-      (c, _i) => `### Capture ${c.index} (${c.elapsedMs}ms)
+  .filter((c) => c.scene?.description)
+  .slice(0, 5)
+  .map(
+    (c, _i) => `### Capture ${c.index} (${c.elapsedMs}ms)
 "${c.scene.description}"
 - Change: ${c.scene.changePercentage?.toFixed(1)}%
 - Objects: ${c.scene.objectCount}
 - People: ${c.scene.peopleCount}`
-    )
-    .join('\n\n')}
+  )
+  .join('\n\n')}
 
 ## Files Generated
 - \`vision-capture-summary.json\` - Complete capture data

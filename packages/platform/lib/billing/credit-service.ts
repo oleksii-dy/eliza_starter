@@ -3,7 +3,10 @@
  * Handles credit deduction for agent operations and usage tracking
  */
 
-import { getCreditBalance, deductCredits } from '../server/services/billing-service';
+import {
+  getCreditBalance,
+  deductCredits,
+} from '../server/services/billing-service';
 import { getDatabase } from '../database/connection';
 import { creditTransactions } from '../database/schema';
 import { eq, desc, and, gte, lte, sum } from 'drizzle-orm';
@@ -33,13 +36,22 @@ export class CreditService {
    * Calculate cost for AI model usage
    */
   static calculateModelCost(context: UsageContext): number {
-    const { service, modelName, inputTokens = 0, outputTokens = 0, tokens = 0 } = context;
+    const {
+      service,
+      modelName,
+      inputTokens = 0,
+      outputTokens = 0,
+      tokens = 0,
+    } = context;
 
     // Total tokens if not split
     const totalTokens = inputTokens + outputTokens || tokens;
 
     // Pricing per 1k tokens (in USD)
-    const pricing: Record<string, Record<string, { input: number; output: number }>> = {
+    const pricing: Record<
+      string,
+      Record<string, { input: number; output: number }>
+    > = {
       openai: {
         'gpt-4': { input: 0.03, output: 0.06 },
         'gpt-4-turbo': { input: 0.01, output: 0.03 },
@@ -59,20 +71,24 @@ export class CreditService {
     const serviceModels = pricing[service.toLowerCase()];
     if (!serviceModels || !modelName) {
       // Default fallback pricing
-      return totalTokens * 0.002 / 1000;
+      return (totalTokens * 0.002) / 1000;
     }
 
     const modelPricing = serviceModels[modelName.toLowerCase()];
     if (!modelPricing) {
       // Default model pricing for service
       const defaultPricing = Object.values(serviceModels)[0];
-      return totalTokens * defaultPricing.input / 1000;
+      return (totalTokens * defaultPricing.input) / 1000;
     }
 
     if (inputTokens && outputTokens) {
-      return (inputTokens * modelPricing.input + outputTokens * modelPricing.output) / 1000;
+      return (
+        (inputTokens * modelPricing.input +
+          outputTokens * modelPricing.output) /
+        1000
+      );
     } else {
-      return totalTokens * modelPricing.input / 1000;
+      return (totalTokens * modelPricing.input) / 1000;
     }
   }
 
@@ -95,7 +111,10 @@ export class CreditService {
 
     // For storage and bandwidth, tokens represent size in KB
     const sizeInGB = tokens / (1024 * 1024);
-    return sizeInGB * (storagePricing[operation as keyof typeof storagePricing] || 0.02);
+    return (
+      sizeInGB *
+      (storagePricing[operation as keyof typeof storagePricing] || 0.02)
+    );
   }
 
   /**
@@ -113,17 +132,29 @@ export class CreditService {
     }
 
     // Sanitize inputs to prevent injection
-    if (context.service.includes(';') || context.service.includes('--') || context.service.includes('<')) {
+    if (
+      context.service.includes(';') ||
+      context.service.includes('--') ||
+      context.service.includes('<')
+    ) {
       throw new Error('Invalid characters in service name');
     }
 
-    if (context.operation.includes(';') || context.operation.includes('--') || context.operation.includes('<')) {
+    if (
+      context.operation.includes(';') ||
+      context.operation.includes('--') ||
+      context.operation.includes('<')
+    ) {
       throw new Error('Invalid characters in operation name');
     }
 
     // Validate token counts
     if (context.tokens !== undefined) {
-      if (typeof context.tokens !== 'number' || context.tokens < 0 || !isFinite(context.tokens)) {
+      if (
+        typeof context.tokens !== 'number' ||
+        context.tokens < 0 ||
+        !isFinite(context.tokens)
+      ) {
         throw new Error('Tokens must be a non-negative finite number');
       }
       if (context.tokens > 1000000) {
@@ -132,13 +163,21 @@ export class CreditService {
     }
 
     if (context.inputTokens !== undefined) {
-      if (typeof context.inputTokens !== 'number' || context.inputTokens < 0 || !isFinite(context.inputTokens)) {
+      if (
+        typeof context.inputTokens !== 'number' ||
+        context.inputTokens < 0 ||
+        !isFinite(context.inputTokens)
+      ) {
         throw new Error('Input tokens must be a non-negative finite number');
       }
     }
 
     if (context.outputTokens !== undefined) {
-      if (typeof context.outputTokens !== 'number' || context.outputTokens < 0 || !isFinite(context.outputTokens)) {
+      if (
+        typeof context.outputTokens !== 'number' ||
+        context.outputTokens < 0 ||
+        !isFinite(context.outputTokens)
+      ) {
         throw new Error('Output tokens must be a non-negative finite number');
       }
     }
@@ -150,7 +189,7 @@ export class CreditService {
   static async deductCreditsForUsage(
     organizationId: string,
     userId: string,
-    context: UsageContext
+    context: UsageContext,
   ): Promise<CreditUsageResult> {
     try {
       // Validate inputs first
@@ -159,7 +198,11 @@ export class CreditService {
       // Calculate cost based on usage type
       let cost = 0;
 
-      if (['openai', 'anthropic', 'cohere', 'huggingface'].includes(context.service)) {
+      if (
+        ['openai', 'anthropic', 'cohere', 'huggingface'].includes(
+          context.service,
+        )
+      ) {
         cost = this.calculateModelCost(context);
       } else if (context.service === 'storage') {
         cost = this.calculateStorageCost(context);
@@ -207,7 +250,10 @@ export class CreditService {
         };
       } catch (deductError) {
         // Handle insufficient balance errors specifically
-        if (deductError instanceof Error && deductError.message.includes('Insufficient credit balance')) {
+        if (
+          deductError instanceof Error &&
+          deductError.message.includes('Insufficient credit balance')
+        ) {
           const currentBalance = await getCreditBalance(organizationId);
           return {
             success: false,
@@ -235,12 +281,13 @@ export class CreditService {
   static async getUsageSummary(
     organizationId: string,
     startDate?: Date,
-    endDate?: Date
+    endDate?: Date,
   ) {
     const db = getDatabase();
 
     try {
-      const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // 30 days ago
+      const start =
+        startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // 30 days ago
       const end = endDate || new Date();
 
       const transactions = await db
@@ -251,43 +298,47 @@ export class CreditService {
             eq(creditTransactions.organizationId, organizationId),
             eq(creditTransactions.type, 'usage'),
             gte(creditTransactions.createdAt, start),
-            lte(creditTransactions.createdAt, end)
-          )
+            lte(creditTransactions.createdAt, end),
+          ),
         )
         .orderBy(desc(creditTransactions.createdAt));
 
       // Aggregate by service
-      const serviceUsage = transactions.reduce((acc: Record<string, any>, transaction: any) => {
-        const service = transaction.metadata?.service || 'unknown';
+      const serviceUsage = transactions.reduce(
+        (acc: Record<string, any>, transaction: any) => {
+          const service = transaction.metadata?.service || 'unknown';
 
-        if (!acc[service]) {
-          acc[service] = {
-            totalCost: 0,
-            totalTokens: 0,
-            operationCount: 0,
-            operations: {},
-          };
-        }
+          if (!acc[service]) {
+            acc[service] = {
+              totalCost: 0,
+              totalTokens: 0,
+              operationCount: 0,
+              operations: {},
+            };
+          }
 
-        acc[service].totalCost += Math.abs(parseFloat(transaction.amount));
-        acc[service].totalTokens += transaction.metadata?.tokens || 0;
-        acc[service].operationCount += 1;
+          acc[service].totalCost += Math.abs(parseFloat(transaction.amount));
+          acc[service].totalTokens += transaction.metadata?.tokens || 0;
+          acc[service].operationCount += 1;
 
-        const operation = transaction.metadata?.operation || 'unknown';
-        acc[service].operations[operation] = (acc[service].operations[operation] || 0) + 1;
+          const operation = transaction.metadata?.operation || 'unknown';
+          acc[service].operations[operation] =
+            (acc[service].operations[operation] || 0) + 1;
 
-        return acc;
-      }, {});
+          return acc;
+        },
+        {},
+      );
 
       // Calculate totals
       const totalCost = Object.values(serviceUsage).reduce(
         (sum: number, service: any) => sum + service.totalCost,
-        0
+        0,
       );
 
       const totalTokens = Object.values(serviceUsage).reduce(
         (sum: number, service: any) => sum + service.totalTokens,
-        0
+        0,
       );
 
       return {
@@ -309,7 +360,7 @@ export class CreditService {
    */
   static async checkSufficientCredits(
     organizationId: string,
-    estimatedCost: number
+    estimatedCost: number,
   ): Promise<boolean> {
     try {
       const balance = await getCreditBalance(organizationId);
@@ -337,11 +388,16 @@ export class CreditService {
         .where(
           and(
             eq(creditTransactions.type, 'usage'),
-            gte(creditTransactions.createdAt, new Date(Date.now() - 24 * 60 * 60 * 1000))
-          )
+            gte(
+              creditTransactions.createdAt,
+              new Date(Date.now() - 24 * 60 * 60 * 1000),
+            ),
+          ),
         );
 
-      const orgIds = Array.from(new Set(recentTransactions.map((t: any) => t.organizationId as string)));
+      const orgIds = Array.from(
+        new Set(recentTransactions.map((t: any) => t.organizationId as string)),
+      );
 
       const lowBalanceOrgs = [];
       for (const orgId of orgIds) {
@@ -362,7 +418,8 @@ export class CreditService {
   }
 
   private static generateUsageDescription(context: UsageContext): string {
-    const { service, operation, modelName, tokens, inputTokens, outputTokens } = context;
+    const { service, operation, modelName, tokens, inputTokens, outputTokens } =
+      context;
 
     let description = `${service} - ${operation}`;
 
@@ -383,7 +440,9 @@ export class CreditService {
    * Estimate cost for planned operation
    */
   static estimateOperationCost(context: UsageContext): number {
-    if (['openai', 'anthropic', 'cohere', 'huggingface'].includes(context.service)) {
+    if (
+      ['openai', 'anthropic', 'cohere', 'huggingface'].includes(context.service)
+    ) {
       return this.calculateModelCost(context);
     } else if (context.service === 'storage') {
       return this.calculateStorageCost(context);

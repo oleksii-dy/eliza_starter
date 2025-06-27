@@ -5,14 +5,14 @@
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "types": "src/index.ts",
   "bun": "./src/index.ts",
   "exports": {
     "./package.json": "./package.json",
     ".": {
       "bun": "./src/index.ts",
       "import": {
-        "types": "./dist/index.d.ts",
+        "types": "./src/index.ts",
         "default": "./dist/index.js"
       }
     },
@@ -21,10 +21,26 @@
         "types": "./dist/test-utils/index.d.ts",
         "default": "./dist/test-utils/index.js"
       }
-    }
+    },
+    "./types/*": {
+      "import": {
+        "types": "./dist/types/*.d.ts",
+        "default": "./dist/types/*.js"
+      }
+    },
+    "./dist/*": "./dist/*",
+    "./configs/eslint/eslint.config.plugin.js": "./configs/eslint/eslint.config.plugin.js",
+    "./configs/eslint/eslint.config.base.js": "./configs/eslint/eslint.config.base.js",
+    "./configs/eslint/eslint.config.frontend.js": "./configs/eslint/eslint.config.frontend.js",
+    "./configs/prettier/prettier.config.js": "./configs/prettier/prettier.config.js",
+    "./configs/typescript/tsconfig.base.json": "./configs/typescript/tsconfig.base.json",
+    "./configs/typescript/tsconfig.plugin.json": "./configs/typescript/tsconfig.plugin.json",
+    "./configs/typescript/tsconfig.frontend.json": "./configs/typescript/tsconfig.frontend.json",
+    "./configs/typescript/tsconfig.test.json": "./configs/typescript/tsconfig.test.json"
   },
   "files": [
-    "dist"
+    "dist",
+    "configs"
   ],
   "scripts": {
     "build": "NODE_OPTIONS='--max-old-space-size=4096' bun run build.ts",
@@ -49,6 +65,8 @@
     "@types/uuid": "10.0.0",
     "@typescript-eslint/eslint-plugin": "^8.26.0",
     "@typescript-eslint/parser": "^8.26.0",
+    "api-extractor": "^99.99.99",
+    "dts-bundle-generator": "^9.5.1",
     "eslint": "^9.22.0",
     "prettier": "3.5.3",
     "typescript": "5.8.3"

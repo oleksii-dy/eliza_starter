@@ -1,175 +1,207 @@
 /**
- * Individual API Key Management
- * Handles updating and deleting specific API keys
+ * Individual API Key Management Routes
+ * Handles operations on specific API keys
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { sessionService } from '@/lib/auth/session';
-import { getDatabase } from '@/lib/database';
-import { apiKeys } from '@/lib/database/schema';
-import { eq, and } from 'drizzle-orm';
+import { z } from 'zod';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 
-const AVAILABLE_PERMISSIONS = [
-  'agents:read',
-  'agents:write',
-  'agents:delete',
-  'memory:read',
-  'memory:write',
-  'memory:delete',
-  'messaging:read',
-  'messaging:write',
-  'audio:read',
-  'audio:write',
-  'media:read',
-  'media:write',
-  'admin'
-];
+// Use dynamic imports to avoid database connection during build
+const getApiKeyService = () =>
+  import('@/lib/api-keys/service').then((m) => m.apiKeyService);
+const getAuthService = () =>
+  import('@/lib/auth/session').then((m) => m.authService);
+const getPermissionService = () =>
+  import('@/lib/auth/permissions').then((m) => m.permissionService);
 
-// PUT /api/api-keys/[id] - Update API key
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+interface RouteParams {
+  params: {
+    id: string;
+  };
+}
+
+/**
+ * GET /api/api-keys/[id] - Get specific API key details
+ */
+async function handleGET(request: NextRequest, { params }: RouteParams) {
   try {
-    const session = await sessionService.getSessionFromCookies();
-    if (!session) {
+    const authService = await getAuthService();
+    const user = await authService.getCurrentUser();
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id: keyId } = await params;
-    const body = await request.json();
-    const { name, description, permissions, rateLimit, isActive } = body;
-
-    // Verify the API key belongs to the user's organization
-    const db = await getDatabase();
-    const [existingKey] = await db
-      .select()
-      .from(apiKeys)
-      .where(
-        and(
-          eq(apiKeys.id, keyId),
-          eq(apiKeys.organizationId, session.organizationId)
-        )
-      )
-      .limit(1);
-
-    if (!existingKey) {
+    // Check permissions
+    const permissionService = await getPermissionService();
+    const canViewApiKeys = await permissionService.hasPermission(
+      user.id,
+      'api_keys:read',
+    );
+    if (!canViewApiKeys) {
       return NextResponse.json(
-        { error: { message: 'API key not found' } },
-        { status: 404 }
+        { error: 'Insufficient permissions' },
+        { status: 403 },
       );
     }
 
-    // Validate input
-    if (name && !name.trim()) {
-      return NextResponse.json(
-        { error: { message: 'Name cannot be empty' } },
-        { status: 400 }
-      );
+    const apiKeyService = await getApiKeyService();
+    const apiKey = await apiKeyService.getApiKey(
+      user.organizationId,
+      params.id,
+    );
+
+    if (!apiKey) {
+      return NextResponse.json({ error: 'API key not found' }, { status: 404 });
     }
 
-    if (permissions && Array.isArray(permissions)) {
-      const invalidPermissions = permissions.filter(p => !AVAILABLE_PERMISSIONS.includes(p));
-      if (invalidPermissions.length > 0) {
-        return NextResponse.json(
-          { error: { message: `Invalid permissions: ${invalidPermissions.join(', ')}` } },
-          { status: 400 }
-        );
-      }
-    }
-
-    // Update the API key
-    const updateData: any = {
-      updatedAt: new Date(),
+    // Sanitize the response
+    const sanitizedKey = {
+      id: apiKey.id,
+      name: apiKey.name,
+      description: apiKey.description,
+      scopes: apiKey.scopes,
+      lastUsedAt: apiKey.lastUsedAt,
+      expiresAt: apiKey.expiresAt,
+      createdAt: apiKey.createdAt,
+      createdBy: apiKey.createdBy,
+      isActive: apiKey.isActive,
+      usageCount: apiKey.usageCount,
+      keyPreview: apiKey.keyPrefix || '...****',
     };
 
-    if (name !== undefined) updateData.name = name.trim();
-    if (description !== undefined) updateData.description = description?.trim() || '';
-    if (permissions !== undefined) updateData.permissions = permissions;
-    if (rateLimit !== undefined) updateData.rateLimit = rateLimit;
-    if (isActive !== undefined) updateData.isActive = isActive;
-
-    const [updatedKey] = await db
-      .update(apiKeys)
-      .set(updateData)
-      .where(eq(apiKeys.id, keyId))
-      .returning();
-
-    return NextResponse.json({
-      success: true,
-      data: {
-        apiKey: {
-          id: updatedKey.id,
-          name: updatedKey.name,
-          description: updatedKey.description,
-          keyPrefix: updatedKey.keyPrefix,
-          permissions: updatedKey.permissions || [],
-          rateLimit: updatedKey.rateLimit,
-          isActive: updatedKey.isActive,
-          expiresAt: updatedKey.expiresAt,
-          lastUsedAt: updatedKey.lastUsedAt,
-          usageCount: updatedKey.usageCount,
-          createdAt: updatedKey.createdAt,
-          updatedAt: updatedKey.updatedAt,
-        },
-      },
-    });
+    return NextResponse.json({ apiKey: sanitizedKey });
   } catch (error) {
-    console.error('Failed to update API key:', error);
+    console.error('Error fetching API key:', error);
     return NextResponse.json(
-      { error: { message: 'Failed to update API key' } },
-      { status: 500 }
+      { error: 'Failed to fetch API key' },
+      { status: 500 },
     );
   }
 }
 
-// DELETE /api/api-keys/[id] - Delete API key
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+/**
+ * PUT /api/api-keys/[id] - Update API key
+ */
+async function handlePUT(request: NextRequest, { params }: RouteParams) {
   try {
-    const session = await sessionService.getSessionFromCookies();
-    if (!session) {
+    const authService = await getAuthService();
+    const user = await authService.getCurrentUser();
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id: keyId } = await params;
-
-    // Verify the API key belongs to the user's organization
-    const db = await getDatabase();
-    const [existingKey] = await db
-      .select()
-      .from(apiKeys)
-      .where(
-        and(
-          eq(apiKeys.id, keyId),
-          eq(apiKeys.organizationId, session.organizationId)
-        )
-      )
-      .limit(1);
-
-    if (!existingKey) {
+    // Check permissions
+    const permissionService = await getPermissionService();
+    const canUpdateApiKeys = await permissionService.hasPermission(
+      user.id,
+      'api_keys:write',
+    );
+    if (!canUpdateApiKeys) {
       return NextResponse.json(
-        { error: { message: 'API key not found' } },
-        { status: 404 }
+        { error: 'Insufficient permissions' },
+        { status: 403 },
       );
     }
 
-    // Delete the API key
-    await db
-      .delete(apiKeys)
-      .where(eq(apiKeys.id, keyId));
+    // Validate request body
+    const updateKeySchema = z.object({
+      name: z.string().min(1).max(100).optional(),
+      description: z.string().max(500).optional(),
+      scopes: z.array(z.string()).min(1).optional(),
+      isActive: z.boolean().optional(),
+    });
+
+    const body = await request.json();
+    const validation = updateKeySchema.safeParse(body);
+
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Invalid request', details: validation.error.errors },
+        { status: 400 },
+      );
+    }
+
+    const apiKeyService = await getApiKeyService();
+    const updatedKey = await apiKeyService.updateApiKey(
+      user.organizationId,
+      params.id,
+      validation.data,
+    );
+
+    if (!updatedKey) {
+      return NextResponse.json({ error: 'API key not found' }, { status: 404 });
+    }
+
+    // Sanitize the response
+    const sanitizedKey = {
+      id: updatedKey.id,
+      name: updatedKey.name,
+      description: updatedKey.description,
+      scopes: updatedKey.scopes,
+      isActive: updatedKey.isActive,
+      updatedAt: updatedKey.updatedAt,
+    };
+
+    return NextResponse.json({ apiKey: sanitizedKey });
+  } catch (error) {
+    console.error('Error updating API key:', error);
+    return NextResponse.json(
+      { error: 'Failed to update API key' },
+      { status: 500 },
+    );
+  }
+}
+
+/**
+ * DELETE /api/api-keys/[id] - Delete specific API key
+ */
+async function handleDELETE(request: NextRequest, { params }: RouteParams) {
+  try {
+    const authService = await getAuthService();
+    const user = await authService.getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Check permissions
+    const permissionService = await getPermissionService();
+    const canDeleteApiKeys = await permissionService.hasPermission(
+      user.id,
+      'api_keys:delete',
+    );
+    if (!canDeleteApiKeys) {
+      return NextResponse.json(
+        { error: 'Insufficient permissions' },
+        { status: 403 },
+      );
+    }
+
+    const apiKeyService = await getApiKeyService();
+    const deleted = await apiKeyService.deleteApiKey(
+      user.organizationId,
+      params.id,
+    );
+
+    if (!deleted) {
+      return NextResponse.json({ error: 'API key not found' }, { status: 404 });
+    }
 
     return NextResponse.json({
-      success: true,
       message: 'API key deleted successfully',
     });
   } catch (error) {
-    console.error('Failed to delete API key:', error);
+    console.error('Error deleting API key:', error);
     return NextResponse.json(
-      { error: { message: 'Failed to delete API key' } },
-      { status: 500 }
+      { error: 'Failed to delete API key' },
+      { status: 500 },
     );
   }
 }
+
+// Export with security headers and authentication
+export const { GET, PUT, DELETE } = wrapHandlers({
+  handleGET,
+  handlePUT,
+  handleDELETE,
+});

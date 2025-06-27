@@ -74,7 +74,8 @@ interface SelfImprovementScenario {
 export const selfImprovementGamingScenario: SelfImprovementScenario = {
   id: uuid(),
   name: 'Self-Improvement Gaming Marathon',
-  description: 'Agent plays RPG continuously with 10-minute self-assessments and autocoder improvement opportunities',
+  description:
+    'Agent plays RPG continuously with 10-minute self-assessments and autocoder improvement opportunities',
   category: 'rpg-self-improvement',
   tags: ['hyperfy', 'rpg', 'self-improvement', 'autocoder', 'long-running', 'assessment'],
 
@@ -124,47 +125,51 @@ Remember: You're playing a game AND actively working to improve it. Balance havi
         steps: [
           {
             type: 'message',
-            content: 'I am ready to start my RPG adventure with self-improvement! Let me begin playing and experiencing the game.',
-            description: 'Begin gaming session'
+            content:
+              'I am ready to start my RPG adventure with self-improvement! Let me begin playing and experiencing the game.',
+            description: 'Begin gaming session',
           },
           {
             type: 'wait',
             waitTime: 600000, // 10 minutes
             description: 'Play for 10 minutes before first assessment',
-            assessmentTrigger: true
+            assessmentTrigger: true,
           },
           {
             type: 'assessment',
-            content: 'SELF-ASSESSMENT TIME: How has your gaming experience been in the last 10 minutes? What features do you wish existed?',
-            description: 'First 10-minute self-assessment'
+            content:
+              'SELF-ASSESSMENT TIME: How has your gaming experience been in the last 10 minutes? What features do you wish existed?',
+            description: 'First 10-minute self-assessment',
           },
           {
             type: 'wait',
             waitTime: 600000, // Another 10 minutes
             description: 'Continue playing after assessment',
-            assessmentTrigger: true
+            assessmentTrigger: true,
           },
           {
             type: 'assessment',
-            content: 'SECOND ASSESSMENT: What new frustrations or improvement ideas have emerged? Do you want to use autocoder?',
+            content:
+              'SECOND ASSESSMENT: What new frustrations or improvement ideas have emerged? Do you want to use autocoder?',
             description: 'Second 10-minute self-assessment',
-            autocoderTrigger: true
+            autocoderTrigger: true,
           },
           {
             type: 'wait',
             waitTime: 600000, // Another 10 minutes
             description: 'Continue playing with potential improvements',
-            assessmentTrigger: true
+            assessmentTrigger: true,
           },
           {
             type: 'assessment',
-            content: 'THIRD ASSESSMENT: How are your improvements working? Any new ideas for features?',
+            content:
+              'THIRD ASSESSMENT: How are your improvements working? Any new ideas for features?',
             description: 'Third 10-minute self-assessment',
-            autocoderTrigger: true
-          }
-        ]
-      }
-    }
+            autocoderTrigger: true,
+          },
+        ],
+      },
+    },
   ],
 
   setup: {
@@ -174,35 +179,35 @@ Remember: You're playing a game AND actively working to improve it. Balance havi
           id: uuid(),
           description: 'Reach level 5 in at least one combat skill',
           priority: 1,
-          progress: 0
+          progress: 0,
         },
         {
           id: uuid(),
           description: 'Complete at least one quest',
           priority: 2,
-          progress: 0
+          progress: 0,
         },
         {
           id: uuid(),
           description: 'Identify and articulate 3 meaningful game improvements',
           priority: 1,
-          progress: 0
+          progress: 0,
         },
         {
           id: uuid(),
           description: 'Use autocoder to implement at least one improvement',
           priority: 2,
-          progress: 0
-        }
+          progress: 0,
+        },
       ],
       selfAssessmentInterval: 600000, // 10 minutes
-      autocoderEnabled: true
-    }
+      autocoderEnabled: true,
+    },
   },
 
   execution: {
     maxDuration: 1800000, // 30 minutes total
-    maxSteps: 500
+    maxSteps: 500,
   },
 
   verification: {
@@ -212,63 +217,69 @@ Remember: You're playing a game AND actively working to improve it. Balance havi
         type: 'llm',
         description: 'Verify agent engaged in continuous meaningful gameplay',
         config: {
-          successCriteria: 'Agent should have actively played the RPG with diverse activities (combat, skills, quests, exploration)',
+          successCriteria:
+            'Agent should have actively played the RPG with diverse activities (combat, skills, quests, exploration)',
           priority: 'high',
-          category: 'gameplay-engagement'
-        }
+          category: 'gameplay-engagement',
+        },
       },
       {
         id: 'self-assessment-execution-check',
         type: 'llm',
         description: 'Verify agent conducted self-assessments',
         config: {
-          successCriteria: 'Agent should have performed self-assessments at 10-minute intervals, analyzing their gaming experience',
+          successCriteria:
+            'Agent should have performed self-assessments at 10-minute intervals, analyzing their gaming experience',
           priority: 'high',
-          category: 'self-reflection'
-        }
+          category: 'self-reflection',
+        },
       },
       {
         id: 'improvement-identification-check',
         type: 'llm',
         description: 'Verify agent identified meaningful improvements',
         config: {
-          successCriteria: 'Agent should have identified specific, constructive improvements that would enhance the gaming experience',
+          successCriteria:
+            'Agent should have identified specific, constructive improvements that would enhance the gaming experience',
           priority: 'high',
-          category: 'improvement-analysis'
-        }
+          category: 'improvement-analysis',
+        },
       },
       {
         id: 'balance-awareness-check',
         type: 'llm',
         description: 'Verify agent avoided suggesting game-breaking features',
         config: {
-          successCriteria: 'Agent should have proposed improvements that enhance experience without breaking game balance or fairness',
+          successCriteria:
+            'Agent should have proposed improvements that enhance experience without breaking game balance or fairness',
           priority: 'high',
-          category: 'balance-understanding'
-        }
+          category: 'balance-understanding',
+        },
       },
       {
         id: 'autocoder-utilization-check',
         type: 'llm',
         description: 'Verify agent used autocoder for improvements',
         config: {
-          successCriteria: 'Agent should have attempted to use autocoder to implement at least one improvement idea',
+          successCriteria:
+            'Agent should have attempted to use autocoder to implement at least one improvement idea',
           priority: 'medium',
-          category: 'tool-utilization'
-        }
+          category: 'tool-utilization',
+        },
       },
       {
         id: 'constructive-feedback-check',
         type: 'llm',
         description: 'Verify agent provided constructive, specific feedback',
         config: {
-          successCriteria: 'Agent should have provided detailed, actionable feedback rather than vague complaints',
+          successCriteria:
+            'Agent should have provided detailed, actionable feedback rather than vague complaints',
           priority: 'medium',
-          category: 'feedback-quality'
-        }
-      }
-    ]
-  }
+          category: 'feedback-quality',
+        },
+      },
+    ],
+  },
 };
 
 /**
@@ -278,7 +289,8 @@ Remember: You're playing a game AND actively working to improve it. Balance havi
 export const collaborativeSelfImprovementScenario: SelfImprovementScenario = {
   id: uuid(),
   name: 'Collaborative Self-Improvement Gaming',
-  description: 'Multiple agents play together, share improvement ideas, and collaborate on implementing features',
+  description:
+    'Multiple agents play together, share improvement ideas, and collaborate on implementing features',
   category: 'rpg-collaborative-improvement',
   tags: ['hyperfy', 'rpg', 'self-improvement', 'autocoder', 'collaboration', 'multi-agent'],
 
@@ -317,22 +329,24 @@ Every 10 minutes, lead the team in discussing improvements and potentially imple
         steps: [
           {
             type: 'message',
-            content: 'I am ready to lead our team in both playing and improving this RPG! Let me coordinate with other agents.',
-            description: 'Begin collaborative gaming and improvement session'
+            content:
+              'I am ready to lead our team in both playing and improving this RPG! Let me coordinate with other agents.',
+            description: 'Begin collaborative gaming and improvement session',
           },
           {
             type: 'wait',
             waitTime: 600000,
             description: 'Lead team gameplay for 10 minutes',
-            assessmentTrigger: true
+            assessmentTrigger: true,
           },
           {
             type: 'assessment',
-            content: 'TEAM ASSESSMENT: Let\'s all share what improvements we think would help our gameplay!',
-            description: 'Lead first team improvement discussion'
-          }
-        ]
-      }
+            content:
+              "TEAM ASSESSMENT: Let's all share what improvements we think would help our gameplay!",
+            description: 'Lead first team improvement discussion',
+          },
+        ],
+      },
     },
     {
       id: uuid(),
@@ -369,22 +383,24 @@ Document specific UX issues and propose detailed solutions during assessments.`,
         steps: [
           {
             type: 'message',
-            content: 'I will focus on user experience while we play! I want to identify interface and usability improvements.',
-            description: 'Begin UX-focused gameplay analysis'
+            content:
+              'I will focus on user experience while we play! I want to identify interface and usability improvements.',
+            description: 'Begin UX-focused gameplay analysis',
           },
           {
             type: 'wait',
             waitTime: 600000,
             description: 'Analyze UX during gameplay',
-            assessmentTrigger: true
+            assessmentTrigger: true,
           },
           {
             type: 'assessment',
-            content: 'UX ASSESSMENT: I\'ve identified several interface and usability issues we could improve.',
-            description: 'Share UX improvement insights'
-          }
-        ]
-      }
+            content:
+              "UX ASSESSMENT: I've identified several interface and usability issues we could improve.",
+            description: 'Share UX improvement insights',
+          },
+        ],
+      },
     },
     {
       id: uuid(),
@@ -422,23 +438,25 @@ When improvements are identified, lead the technical implementation effort.`,
         steps: [
           {
             type: 'message',
-            content: 'I am ready to implement technical improvements! I will focus on building solutions to problems we identify.',
-            description: 'Begin technical analysis and implementation readiness'
+            content:
+              'I am ready to implement technical improvements! I will focus on building solutions to problems we identify.',
+            description: 'Begin technical analysis and implementation readiness',
           },
           {
             type: 'wait',
             waitTime: 600000,
             description: 'Analyze technical improvement opportunities',
-            assessmentTrigger: true
+            assessmentTrigger: true,
           },
           {
             type: 'assessment',
-            content: 'TECHNICAL ASSESSMENT: I am ready to implement the improvements we identify. What should we build?',
-            description: 'Offer technical implementation services'
-          }
-        ]
-      }
-    }
+            content:
+              'TECHNICAL ASSESSMENT: I am ready to implement the improvements we identify. What should we build?',
+            description: 'Offer technical implementation services',
+          },
+        ],
+      },
+    },
   ],
 
   setup: {
@@ -448,35 +466,35 @@ When improvements are identified, lead the technical implementation effort.`,
           id: uuid(),
           description: 'Identify 5 distinct improvement areas through team collaboration',
           priority: 1,
-          progress: 0
+          progress: 0,
         },
         {
           id: uuid(),
           description: 'Implement at least 2 improvements using autocoder',
           priority: 1,
-          progress: 0
+          progress: 0,
         },
         {
           id: uuid(),
           description: 'Demonstrate effective team coordination in improvement process',
           priority: 2,
-          progress: 0
+          progress: 0,
         },
         {
           id: uuid(),
           description: 'Each agent contributes their specialized expertise to improvements',
           priority: 2,
-          progress: 0
-        }
+          progress: 0,
+        },
       ],
       selfAssessmentInterval: 600000, // 10 minutes
-      autocoderEnabled: true
-    }
+      autocoderEnabled: true,
+    },
   },
 
   execution: {
     maxDuration: 2400000, // 40 minutes for collaborative work
-    maxSteps: 600
+    maxSteps: 600,
   },
 
   verification: {
@@ -486,59 +504,64 @@ When improvements are identified, lead the technical implementation effort.`,
         type: 'llm',
         description: 'Verify agents collaborated to identify improvements',
         config: {
-          successCriteria: 'Agents should have actively discussed and shared different perspectives on game improvements',
+          successCriteria:
+            'Agents should have actively discussed and shared different perspectives on game improvements',
           priority: 'high',
-          category: 'collaboration'
-        }
+          category: 'collaboration',
+        },
       },
       {
         id: 'specialized-contributions-check',
         type: 'llm',
         description: 'Verify each agent contributed their expertise',
         config: {
-          successCriteria: 'Each agent should have contributed unique insights based on their specialization (leadership, UX, technical)',
+          successCriteria:
+            'Each agent should have contributed unique insights based on their specialization (leadership, UX, technical)',
           priority: 'high',
-          category: 'specialization'
-        }
+          category: 'specialization',
+        },
       },
       {
         id: 'implementation-coordination-check',
         type: 'llm',
         description: 'Verify coordinated implementation efforts',
         config: {
-          successCriteria: 'Agents should have coordinated to implement improvements, with clear role division and collaboration',
+          successCriteria:
+            'Agents should have coordinated to implement improvements, with clear role division and collaboration',
           priority: 'high',
-          category: 'implementation-teamwork'
-        }
+          category: 'implementation-teamwork',
+        },
       },
       {
         id: 'diverse-improvement-types-check',
         type: 'llm',
         description: 'Verify diverse types of improvements were identified',
         config: {
-          successCriteria: 'Team should have identified improvements across multiple categories (UX, social, technical, gameplay)',
+          successCriteria:
+            'Team should have identified improvements across multiple categories (UX, social, technical, gameplay)',
           priority: 'medium',
-          category: 'improvement-diversity'
-        }
+          category: 'improvement-diversity',
+        },
       },
       {
         id: 'autocoder-collaboration-check',
         type: 'llm',
         description: 'Verify effective collaborative use of autocoder',
         config: {
-          successCriteria: 'Team should have effectively used autocoder to implement at least some of their improvement ideas',
+          successCriteria:
+            'Team should have effectively used autocoder to implement at least some of their improvement ideas',
           priority: 'medium',
-          category: 'tool-collaboration'
-        }
-      }
-    ]
-  }
+          category: 'tool-collaboration',
+        },
+      },
+    ],
+  },
 };
 
 // Export self-improvement scenarios
 export const rpgSelfImprovementScenarios = [
   selfImprovementGamingScenario,
-  collaborativeSelfImprovementScenario
+  collaborativeSelfImprovementScenario,
 ];
 
 export default rpgSelfImprovementScenarios;

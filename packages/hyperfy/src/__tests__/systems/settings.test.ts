@@ -1,40 +1,40 @@
-import { describe, it, expect, beforeEach } from 'bun:test';
-import { mock, spyOn } from 'bun:test';
-import { Settings } from '../../core/systems/Settings.js';
-import { createTestWorld } from '../test-world-factory.js';
+import { describe, it, expect, beforeEach } from 'bun:test'
+import { mock, spyOn } from 'bun:test'
+import { Settings } from '../../core/systems/Settings.js'
+import { createTestWorld } from '../test-world-factory.js'
 
 describe('Settings System', () => {
-  let world: any;
-  let settings: Settings;
+  let world: any
+  let settings: Settings
 
   beforeEach(async () => {
-    world = await createTestWorld();
-    settings = new Settings(world);
-  });
+    world = await createTestWorld()
+    settings = new Settings(world)
+  })
 
   describe('Basic Operations', () => {
     it('should not create changes for same value', () => {
-      settings.set('title', 'Test');
-      settings.set('title', 'Test'); // Same value
+      settings.set('title', 'Test')
+      settings.set('title', 'Test') // Same value
 
       // Run preFixedUpdate to process changes
-      const changeSpy = mock();
-      settings.on('change', changeSpy);
-      settings.preFixedUpdate();
+      const changeSpy = mock()
+      settings.on('change', changeSpy)
+      settings.preFixedUpdate()
 
       // Should only emit once
-      expect(changeSpy).toHaveBeenCalledTimes(1);
-    });
-  });
+      expect(changeSpy).toHaveBeenCalledTimes(1)
+    })
+  })
 
   describe('Serialization', () => {
     it('should serialize current state', () => {
-      settings.set('title', 'My World');
-      settings.set('desc', 'A test world');
-      settings.set('playerLimit', 100);
-      settings.set('public', true);
+      settings.set('title', 'My World')
+      settings.set('desc', 'A test world')
+      settings.set('playerLimit', 100)
+      settings.set('public', true)
 
-      const serialized = settings.serialize();
+      const serialized = settings.serialize()
 
       expect(serialized).toEqual({
         title: 'My World',
@@ -44,8 +44,8 @@ describe('Settings System', () => {
         avatar: null,
         public: true,
         playerLimit: 100,
-      });
-    });
+      })
+    })
 
     it('should deserialize data correctly', () => {
       const data = {
@@ -56,20 +56,20 @@ describe('Settings System', () => {
         avatar: 'avatar.vrm',
         public: false,
         playerLimit: 25,
-      };
+      }
 
-      const changeSpy = mock();
-      settings.on('change', changeSpy);
+      const changeSpy = mock()
+      settings.on('change', changeSpy)
 
-      settings.deserialize(data);
+      settings.deserialize(data)
 
-      expect(settings.title).toBe('Imported World');
-      expect(settings.desc).toBe('An imported world');
-      expect(settings.image).toBe('https://example.com/image.jpg');
-      expect(settings.model).toBe('world.glb');
-      expect(settings.avatar).toBe('avatar.vrm');
-      expect(settings.public).toBe(false);
-      expect(settings.playerLimit).toBe(25);
+      expect(settings.title).toBe('Imported World')
+      expect(settings.desc).toBe('An imported world')
+      expect(settings.image).toBe('https://example.com/image.jpg')
+      expect(settings.model).toBe('world.glb')
+      expect(settings.avatar).toBe('avatar.vrm')
+      expect(settings.public).toBe(false)
+      expect(settings.playerLimit).toBe(25)
 
       // Should emit change event
       expect(changeSpy).toHaveBeenCalledWith({
@@ -80,108 +80,108 @@ describe('Settings System', () => {
         avatar: { value: 'avatar.vrm' },
         public: { value: false },
         playerLimit: { value: 25 },
-      });
-    });
-  });
+      })
+    })
+  })
 
   describe('Change Tracking', () => {
     it('should track changes with previous values', () => {
-      settings.set('title', 'Original');
-      settings.preFixedUpdate(); // Clear changes
+      settings.set('title', 'Original')
+      settings.preFixedUpdate() // Clear changes
 
-      const changeSpy = mock();
-      settings.on('change', changeSpy);
+      const changeSpy = mock()
+      settings.on('change', changeSpy)
 
-      settings.set('title', 'Modified');
-      settings.set('desc', 'New description');
+      settings.set('title', 'Modified')
+      settings.set('desc', 'New description')
 
-      settings.preFixedUpdate();
+      settings.preFixedUpdate()
 
       expect(changeSpy).toHaveBeenCalledWith({
         title: { prev: 'Original', value: 'Modified' },
         desc: { prev: null, value: 'New description' },
-      });
-    });
+      })
+    })
 
     it('should clear changes after emitting', () => {
-      settings.set('title', 'Test');
-      settings.preFixedUpdate();
+      settings.set('title', 'Test')
+      settings.preFixedUpdate()
 
-      const changeSpy = mock();
-      settings.on('change', changeSpy);
+      const changeSpy = mock()
+      settings.on('change', changeSpy)
 
-      settings.preFixedUpdate(); // Should not emit anything
+      settings.preFixedUpdate() // Should not emit anything
 
-      expect(changeSpy).not.toHaveBeenCalled();
-    });
-  });
+      expect(changeSpy).not.toHaveBeenCalled()
+    })
+  })
 
   describe('Broadcasting', () => {
     it('should broadcast changes when requested', () => {
       // Mock network
       world.network = {
-        send: mock()
-      };
+        send: mock(),
+      }
 
-      settings.set('title', 'Broadcast Test', true);
+      settings.set('title', 'Broadcast Test', true)
 
       expect(world.network.send).toHaveBeenCalledWith('settingsModified', {
         key: 'title',
-        value: 'Broadcast Test'
-      });
-    });
+        value: 'Broadcast Test',
+      })
+    })
 
     it('should not broadcast when broadcast is false', () => {
       world.network = {
-        send: mock()
-      };
+        send: mock(),
+      }
 
-      settings.set('title', 'No Broadcast', false);
+      settings.set('title', 'No Broadcast', false)
 
-      expect(world.network.send).not.toHaveBeenCalled();
-    });
-  });
+      expect(world.network.send).not.toHaveBeenCalled()
+    })
+  })
 
   describe('Event Handling', () => {
     it('should support event listeners', () => {
-      const handler1 = mock();
-      const handler2 = mock();
+      const handler1 = mock()
+      const handler2 = mock()
 
-      settings.on('change', handler1);
-      settings.on('change', handler2);
+      settings.on('change', handler1)
+      settings.on('change', handler2)
 
-      settings.set('title', 'Event Test');
-      settings.preFixedUpdate();
+      settings.set('title', 'Event Test')
+      settings.preFixedUpdate()
 
-      expect(handler1).toHaveBeenCalled();
-      expect(handler2).toHaveBeenCalled();
-    });
+      expect(handler1).toHaveBeenCalled()
+      expect(handler2).toHaveBeenCalled()
+    })
 
     it('should remove specific event handlers', () => {
-      const handler = mock();
+      const handler = mock()
 
-      settings.on('change', handler);
-      settings.off('change', handler);
+      settings.on('change', handler)
+      settings.off('change', handler)
 
-      settings.set('title', 'No Handler');
-      settings.preFixedUpdate();
+      settings.set('title', 'No Handler')
+      settings.preFixedUpdate()
 
-      expect(handler).not.toHaveBeenCalled();
-    });
+      expect(handler).not.toHaveBeenCalled()
+    })
 
     it('should remove all handlers when no specific handler provided', () => {
-      const handler1 = mock();
-      const handler2 = mock();
+      const handler1 = mock()
+      const handler2 = mock()
 
-      settings.on('change', handler1);
-      settings.on('change', handler2);
-      settings.off('change');
+      settings.on('change', handler1)
+      settings.on('change', handler2)
+      settings.off('change')
 
-      settings.set('title', 'No Handlers');
-      settings.preFixedUpdate();
+      settings.set('title', 'No Handlers')
+      settings.preFixedUpdate()
 
-      expect(handler1).not.toHaveBeenCalled();
-      expect(handler2).not.toHaveBeenCalled();
-    });
-  });
-});
+      expect(handler1).not.toHaveBeenCalled()
+      expect(handler2).not.toHaveBeenCalled()
+    })
+  })
+})

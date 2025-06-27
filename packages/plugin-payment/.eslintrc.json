@@ -2,7 +2,7 @@
   "extends": "../../eslint.config.js",
   "rules": {
     "@typescript-eslint/no-unused-vars": [
-      "warn", 
+      "warn",
       {
         "argsIgnorePattern": "^_",
         "varsIgnorePattern": "^_",
@@ -38,4 +38,4 @@
       }
     }
   ]
-} 
+}

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, mock } from 'bun:test';
-import { type IAgentRuntime, type Memory, type UUID, asUUID, ServiceType } from '@elizaos/core';
+import { type IAgentRuntime, type Memory, type UUID, asUUID } from '@elizaos/core';
+import { createMockRuntime, createTestMemory } from './helpers/test-runtime';
 import { PaymentService } from '../services/PaymentService';
 import { researchAction } from '../actions/researchAction';
 import { PaymentMethod, PaymentStatus } from '../types';
@@ -12,52 +13,10 @@ describe('Payment System Integration', () => {
   let paymentService: PaymentService;
 
   beforeEach(async () => {
-    // Mock Drizzle database
-    const mockDb = {
-      select: mock().mockReturnThis(),
-      from: mock().mockReturnThis(),
-      where: mock().mockReturnThis(),
-      limit: mock().mockResolvedValue([]),
-      insert: mock().mockReturnThis(),
-      values: mock().mockResolvedValue({}),
-      update: mock().mockReturnThis(),
-      set: mock().mockReturnThis(),
-      execute: mock().mockResolvedValue([]),
-    };
-
-    // Mock database service with getDatabase method
-    const mockDbService = {
-      getDatabase: mock().mockReturnValue(mockDb),
-      get: mock(),
-      set: mock(),
-      delete: mock(),
-      query: mock().mockResolvedValue([]),
-    };
-
-    // Mock runtime
-    runtime = {
+    // Create mock runtime
+    runtime = createMockRuntime({
       agentId: asUUID(uuid('123')),
-      getSetting: mock((key: string) => {
-        const settings: Record<string, string> = {
-          PAYMENT_AUTO_APPROVAL_ENABLED: 'true',
-          PAYMENT_AUTO_APPROVAL_THRESHOLD: '10',
-          PAYMENT_DEFAULT_CURRENCY: 'USDC',
-          PAYMENT_REQUIRE_CONFIRMATION: 'false',
-          PAYMENT_TRUST_THRESHOLD: '70',
-          PAYMENT_MAX_DAILY_SPEND: '1000',
-          WALLET_ENCRYPTION_KEY: `0x${'0'.repeat(64)}`,
-        };
-        return settings[key];
-      }),
-      getService: mock((name: string) => {
-        if (name === 'payment') {return paymentService;}
-        if (name === 'database') {return mockDbService;}
-        return null;
-      }),
-      setSetting: mock(),
-      emit: mock(),
-      registerTaskWorker: mock(),
-    } as any;
+    });
 
     // Initialize payment service
     paymentService = new PaymentService();
@@ -114,30 +73,22 @@ describe('Payment System Integration', () => {
 
   describe('Research Action with Payment', () => {
     it('should validate research requests', async () => {
-      const message: Memory = {
-        id: asUUID(uuid('3')),
-        entityId: asUUID(uuid('4')),
-        roomId: asUUID(uuid('5')),
+      const message = createTestMemory({
         content: {
           text: 'Can you research the latest developments in AI?',
         },
-        createdAt: Date.now(),
-      };
+      });
 
       const isValid = await researchAction.validate!(runtime, message);
       expect(isValid).toBe(true);
     });
 
     it('should not validate non-research messages', async () => {
-      const message: Memory = {
-        id: asUUID(uuid('6')),
-        entityId: asUUID(uuid('7')),
-        roomId: asUUID(uuid('8')),
+      const message = createTestMemory({
         content: {
           text: 'Hello, how are you?',
         },
-        createdAt: Date.now(),
-      };
+      });
 
       const isValid = await researchAction.validate!(runtime, message);
       expect(isValid).toBe(false);

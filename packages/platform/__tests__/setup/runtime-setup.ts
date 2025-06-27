@@ -13,21 +13,22 @@ jest.setTimeout(60000);
 beforeAll(async () => {
   // Ensure required environment variables are set
   if (!process.env.DATABASE_URL) {
-    process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/platform_test';
+    process.env.DATABASE_URL =
+      'postgresql://test:test@localhost:5432/platform_test';
   }
-  
+
   if (!process.env.OPENAI_API_KEY && !process.env.ANTHROPIC_API_KEY) {
     console.warn('No AI model API key found - some tests may fail');
     process.env.OPENAI_API_KEY = 'test-key';
   }
-  
+
   // Set test mode (NODE_ENV is read-only in some environments)
   // process.env.NODE_ENV = 'test';
   process.env.RUNTIME_TEST_MODE = 'true';
-  
+
   // Configure logger for tests
   logger.setLevel('ERROR'); // Reduce log noise in tests
-  
+
   console.log('🤖 Runtime test environment configured');
 });
 
@@ -46,13 +47,18 @@ afterAll(async () => {
 beforeEach(() => {
   // Clear all mocks
   jest.clearAllMocks();
-  
+
   // Reset any global state that might affect tests
 });
 
 // Handle unhandled promises and errors
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection in runtime test:', promise, 'reason:', reason);
+  console.error(
+    'Unhandled Rejection in runtime test:',
+    promise,
+    'reason:',
+    reason,
+  );
 });
 
 process.on('uncaughtException', (error) => {
@@ -62,17 +68,23 @@ process.on('uncaughtException', (error) => {
 // Performance monitoring for runtime tests
 const originalTest = global.test;
 (global.test as any) = (name: string, fn: any, timeout?: number) => {
-  return originalTest(name, async () => {
-    const startTime = Date.now();
-    try {
-      await fn();
-    } finally {
-      const duration = Date.now() - startTime;
-      if (duration > 10000) {
-        console.warn(`Runtime test "${name}" took ${duration}ms (longer than 10s)`);
+  return originalTest(
+    name,
+    async () => {
+      const startTime = Date.now();
+      try {
+        await fn();
+      } finally {
+        const duration = Date.now() - startTime;
+        if (duration > 10000) {
+          console.warn(
+            `Runtime test "${name}" took ${duration}ms (longer than 10s)`,
+          );
+        }
       }
-    }
-  }, timeout || 60000);
+    },
+    timeout || 60000,
+  );
 };
 
 // Database health check
@@ -81,7 +93,7 @@ beforeAll(async () => {
     // Import database connection
     const { getDatabase } = await import('@/lib/database/connection');
     const db = getDatabase();
-    
+
     // Test connection
     console.log('📊 Database connection verified for runtime tests');
   } catch (error) {
@@ -94,9 +106,11 @@ beforeAll(async () => {
 beforeAll(async () => {
   const hasOpenAI = !!process.env.OPENAI_API_KEY?.startsWith('sk-');
   const hasAnthropic = !!process.env.ANTHROPIC_API_KEY?.startsWith('sk-ant-');
-  
+
   if (!hasOpenAI && !hasAnthropic) {
-    console.warn('⚠️  No valid AI model API keys found - tests may use mock responses');
+    console.warn(
+      '⚠️  No valid AI model API keys found - tests may use mock responses',
+    );
   } else {
     console.log('🧠 AI model provider verified for runtime tests');
   }
@@ -107,59 +121,61 @@ export const runtimeTestUtils = {
   /**
    * Wait for async operations to complete
    */
-  waitForAsync: (ms: number = 1000) => new Promise(resolve => setTimeout(resolve, ms)),
-  
+  waitForAsync: (ms: number = 1000) =>
+    new Promise((resolve) => setTimeout(resolve, ms)),
+
   /**
    * Generate unique test IDs
    */
-  generateTestId: (prefix: string = 'test') => `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2)}`,
-  
+  generateTestId: (prefix: string = 'test') =>
+    `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2)}`,
+
   /**
    * Retry async operations with exponential backoff
    */
   retryAsync: async <T>(
     operation: () => Promise<T>,
     maxAttempts: number = 3,
-    baseDelay: number = 1000
+    baseDelay: number = 1000,
   ): Promise<T> => {
     let lastError: Error;
-    
+
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         return await operation();
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
-        
+
         if (attempt < maxAttempts) {
           const delay = baseDelay * Math.pow(2, attempt - 1);
           await runtimeTestUtils.waitForAsync(delay);
         }
       }
     }
-    
+
     throw lastError!;
   },
-  
+
   /**
    * Wait for condition to be true
    */
   waitForCondition: async (
     condition: () => boolean | Promise<boolean>,
     timeout: number = 5000,
-    interval: number = 100
+    interval: number = 100,
   ): Promise<void> => {
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < timeout) {
       if (await condition()) {
         return;
       }
       await runtimeTestUtils.waitForAsync(interval);
     }
-    
+
     throw new Error(`Condition not met within ${timeout}ms`);
   },
-  
+
   /**
    * Create test organization data
    */
@@ -174,45 +190,55 @@ export const runtimeTestUtils = {
     createdAt: new Date(),
     updatedAt: new Date(),
   }),
-  
+
   /**
    * Cleanup test data
    */
   cleanupTestData: async (orgId: string) => {
     try {
       const { getDatabase } = await import('@/lib/database/connection');
-      const { organizations, creditTransactions } = await import('@/lib/database/schema');
+      const { organizations, creditTransactions } = await import(
+        '@/lib/database/schema'
+      );
       const { eq } = await import('drizzle-orm');
-      
+
       const db = getDatabase();
-      
+
       // Clean up in correct order
-      await db.delete(creditTransactions).where(eq(creditTransactions.organizationId, orgId));
+      await db
+        .delete(creditTransactions)
+        .where(eq(creditTransactions.organizationId, orgId));
       await db.delete(organizations).where(eq(organizations.id, orgId));
-      
+
       console.log(`✅ Cleaned up test data for organization: ${orgId}`);
     } catch (error) {
       console.error('❌ Failed to cleanup test data:', error);
     }
   },
-  
+
   /**
    * Validate runtime memory operations
    */
-  validateMemoryOperations: async (runtime: any, roomId: string, expectedCount: number) => {
+  validateMemoryOperations: async (
+    runtime: any,
+    roomId: string,
+    expectedCount: number,
+  ) => {
     const memories = await runtime.getMemories({ roomId, count: 100 });
-    
+
     if (memories.length < expectedCount) {
-      throw new Error(`Expected at least ${expectedCount} memories, found ${memories.length}`);
+      throw new Error(
+        `Expected at least ${expectedCount} memories, found ${memories.length}`,
+      );
     }
-    
+
     // Validate memory structure
     for (const memory of memories) {
       if (!memory.id || !memory.content) {
         throw new Error('Invalid memory structure detected');
       }
     }
-    
+
     return memories;
   },
 };

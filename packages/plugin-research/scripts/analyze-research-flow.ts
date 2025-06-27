@@ -45,7 +45,9 @@ interface FlowAnalysis {
 
 async function analyzeResearchFlow(): Promise<void> {
   console.log('=== ElizaOS Research Flow Analysis ===\n');
-  console.log('Analyzing current implementation against DeepResearch Bench standards...\n');
+  console.log(
+    'Analyzing current implementation against DeepResearch Bench standards...\n'
+  );
 
   const flowAnalysis: FlowAnalysis[] = [];
 
@@ -302,7 +304,11 @@ async function analyzeResearchFlow(): Promise<void> {
   console.log('  - Processing Time: <5 minutes');
 
   // Save analysis
-  const analysisPath = path.join(process.cwd(), 'benchmark_results', 'flow_analysis.json');
+  const analysisPath = path.join(
+    process.cwd(),
+    'benchmark_results',
+    'flow_analysis.json'
+  );
   await fs.mkdir(path.dirname(analysisPath), { recursive: true });
   await fs.writeFile(
     analysisPath,

@@ -13,23 +13,25 @@ export const runtime = 'nodejs';
 /**
  * GET /api/auth/identity - Get current user and organization information
  */
-export async function GET(request: NextRequest) {
+export async function handleGET(request: NextRequest) {
   const startTime = Date.now();
-  
+
   try {
     const userAgent = request.headers.get('user-agent');
-    
+
     // Skip excessive logging for Next.js middleware requests
     if (!userAgent?.includes('Next.js Middleware')) {
       apiLogger.debug('Identity request received', {
         userAgent,
-        ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip'),
+        ip:
+          request.headers.get('x-forwarded-for') ||
+          request.headers.get('x-real-ip'),
       });
     }
 
     // Get current user session
     const user = await authService.getCurrentUser();
-    
+
     if (!user) {
       // Only log auth failures from non-middleware requests to reduce noise
       if (!userAgent?.includes('Next.js Middleware')) {
@@ -41,7 +43,9 @@ export async function GET(request: NextRequest) {
     // Get organization
     const organization = await authService.getCurrentOrganization();
     if (!organization) {
-      apiLogger.warn('Identity request failed: organization not found', { userId: user.id });
+      apiLogger.warn('Identity request failed: organization not found', {
+        userId: user.id,
+      });
       throw new AuthenticationError('Organization not found');
     }
 

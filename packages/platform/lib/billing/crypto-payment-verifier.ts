@@ -53,10 +53,10 @@ export class CryptoPaymentVerifier {
    * Start monitoring for a crypto payment
    */
   static async startPaymentMonitoring(
-    paymentRequest: CryptoPaymentRequest
+    paymentRequest: CryptoPaymentRequest,
   ): Promise<{ paymentId: string; walletAddress: string }> {
     const paymentId = `crypto_${Date.now()}_${Math.random().toString(36).substring(2)}`;
-    
+
     // Store payment request for monitoring
     const db = getDatabase();
     await db.insert(creditTransactions).values({
@@ -75,7 +75,9 @@ export class CryptoPaymentVerifier {
         currency: paymentRequest.currency,
         status: 'monitoring',
         startedAt: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + this.PAYMENT_TIMEOUT_MINUTES * 60 * 1000).toISOString(),
+        expiresAt: new Date(
+          Date.now() + this.PAYMENT_TIMEOUT_MINUTES * 60 * 1000,
+        ).toISOString(),
       },
     });
 
@@ -88,11 +90,16 @@ export class CryptoPaymentVerifier {
   /**
    * Check for incoming payments to a wallet address
    */
-  static async checkPayments(walletAddress: string, network: string): Promise<CryptoPaymentVerification[]> {
+  static async checkPayments(
+    walletAddress: string,
+    network: string,
+  ): Promise<CryptoPaymentVerification[]> {
     try {
       // Check if crypto payment features are available
       if (!ConfigValidator.isCryptoPaymentAvailable()) {
-        throw new Error('Crypto payment verification not available - ALCHEMY_API_KEY not configured');
+        throw new Error(
+          'Crypto payment verification not available - ALCHEMY_API_KEY not configured',
+        );
       }
 
       const apiKey = ConfigValidator.getConfig('ALCHEMY_API_KEY');
@@ -131,28 +138,30 @@ export class CryptoPaymentVerifier {
               },
             ],
           }),
-        }
+        },
       );
 
       const data = await response.json();
-      
+
       if (data.error) {
         throw new Error(`Alchemy API error: ${data.error.message}`);
       }
 
       const transfers = data.result?.transfers || [];
-      
-      return transfers.map((transfer: any): CryptoPaymentVerification => ({
-        transactionHash: transfer.hash,
-        amount: parseFloat(transfer.value),
-        confirmations: parseInt(transfer.blockNum, 16), // This would need current block calculation
-        isConfirmed: parseInt(transfer.blockNum, 16) > 0, // Simplified confirmation check
-        gasUsed: transfer.metadata?.gasUsed,
-        gasPrice: transfer.metadata?.gasPrice,
-        blockNumber: parseInt(transfer.blockNum, 16),
-        timestamp: new Date(transfer.metadata?.blockTimestamp).getTime() / 1000,
-      }));
 
+      return transfers.map(
+        (transfer: any): CryptoPaymentVerification => ({
+          transactionHash: transfer.hash,
+          amount: parseFloat(transfer.value),
+          confirmations: parseInt(transfer.blockNum, 16), // This would need current block calculation
+          isConfirmed: parseInt(transfer.blockNum, 16) > 0, // Simplified confirmation check
+          gasUsed: transfer.metadata?.gasUsed,
+          gasPrice: transfer.metadata?.gasPrice,
+          blockNumber: parseInt(transfer.blockNum, 16),
+          timestamp:
+            new Date(transfer.metadata?.blockTimestamp).getTime() / 1000,
+        }),
+      );
     } catch (error) {
       console.error('Failed to check crypto payments:', error);
       throw new Error('Failed to verify crypto payments');
@@ -166,12 +175,14 @@ export class CryptoPaymentVerifier {
     transactionHash: string,
     expectedAmount: number,
     walletAddress: string,
-    network: string
+    network: string,
   ): Promise<CryptoPaymentVerification | null> {
     try {
       // Check if crypto payment features are available
       if (!ConfigValidator.isCryptoPaymentAvailable()) {
-        throw new Error('Crypto payment verification not available - ALCHEMY_API_KEY not configured');
+        throw new Error(
+          'Crypto payment verification not available - ALCHEMY_API_KEY not configured',
+        );
       }
 
       const apiKey = ConfigValidator.getConfig('ALCHEMY_API_KEY');
@@ -201,17 +212,17 @@ export class CryptoPaymentVerifier {
             method: 'eth_getTransactionByHash',
             params: [transactionHash],
           }),
-        }
+        },
       );
 
       const data = await response.json();
-      
+
       if (data.error || !data.result) {
         return null;
       }
 
       const transaction = data.result;
-      
+
       // Get transaction receipt for confirmation status
       const receiptResponse = await fetch(
         `https://${alchemyNetwork}.g.alchemy.com/v2/${apiKey}`,
@@ -226,7 +237,7 @@ export class CryptoPaymentVerifier {
             method: 'eth_getTransactionReceipt',
             params: [transactionHash],
           }),
-        }
+        },
       );
 
       const receiptData = await receiptResponse.json();
@@ -237,9 +248,12 @@ export class CryptoPaymentVerifier {
       }
 
       // Verify transaction is to the correct address and amount
-      const transactionAmount = parseFloat(transaction.value) / Math.pow(10, 18); // Convert from wei
-      const isCorrectAddress = transaction.to?.toLowerCase() === walletAddress.toLowerCase();
-      const isCorrectAmount = Math.abs(transactionAmount - expectedAmount) < 0.001; // Allow small variance
+      const transactionAmount =
+        parseFloat(transaction.value) / Math.pow(10, 18); // Convert from wei
+      const isCorrectAddress =
+        transaction.to?.toLowerCase() === walletAddress.toLowerCase();
+      const isCorrectAmount =
+        Math.abs(transactionAmount - expectedAmount) < 0.001; // Allow small variance
 
       if (!isCorrectAddress || !isCorrectAmount) {
         return null;
@@ -259,7 +273,7 @@ export class CryptoPaymentVerifier {
             method: 'eth_blockNumber',
             params: [],
           }),
-        }
+        },
       );
 
       const currentBlockData = await currentBlockResponse.json();
@@ -267,7 +281,10 @@ export class CryptoPaymentVerifier {
       const transactionBlock = parseInt(receipt.blockNumber, 16);
       const confirmations = currentBlock - transactionBlock + 1;
 
-      const requiredConfirmations = this.REQUIRED_CONFIRMATIONS[network as keyof typeof this.REQUIRED_CONFIRMATIONS];
+      const requiredConfirmations =
+        this.REQUIRED_CONFIRMATIONS[
+          network as keyof typeof this.REQUIRED_CONFIRMATIONS
+        ];
       const isConfirmed = confirmations >= requiredConfirmations;
 
       return {
@@ -280,7 +297,6 @@ export class CryptoPaymentVerifier {
         blockNumber: transactionBlock,
         timestamp: Date.now() / 1000, // Approximate timestamp
       };
-
     } catch (error) {
       console.error('Failed to verify specific transaction:', error);
       return null;
@@ -292,7 +308,7 @@ export class CryptoPaymentVerifier {
    */
   static async processConfirmedPayment(
     paymentId: string,
-    verification: CryptoPaymentVerification
+    verification: CryptoPaymentVerification,
   ): Promise<void> {
     const db = getDatabase();
 
@@ -337,7 +353,9 @@ export class CryptoPaymentVerifier {
           })
           .where(eq(creditTransactions.id, paymentId));
 
-        console.log(`Crypto payment confirmed: ${paymentId} - ${expectedUsdAmount} USD`);
+        console.log(
+          `Crypto payment confirmed: ${paymentId} - ${expectedUsdAmount} USD`,
+        );
       });
     } catch (error) {
       console.error('Failed to process confirmed crypto payment:', error);
@@ -414,7 +432,7 @@ export class CryptoPaymentVerifier {
       for (const payment of expiredPayments) {
         const metadata = payment.metadata as any;
         const expiresAt = new Date(metadata.expiresAt);
-        
+
         if (now > expiresAt) {
           expiredIds.push(payment.id!);
         }

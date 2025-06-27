@@ -16,10 +16,18 @@ const DEFAULT_CONFIG: Required<RetryConfig> = {
   backoffMultiplier: 2,
   shouldRetry: (error) => {
     // Retry on rate limits and network errors
-    if (error.status === 429) {return true;}
-    if (error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT') {return true;}
-    if (error.message?.includes('rate limit')) {return true;}
-    if (error.message?.includes('timeout')) {return true;}
+    if (error.status === 429) {
+      return true;
+    }
+    if (error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT') {
+      return true;
+    }
+    if (error.message?.includes('rate limit')) {
+      return true;
+    }
+    if (error.message?.includes('timeout')) {
+      return true;
+    }
     return false;
   },
   onRetry: (attempt, error) => {
@@ -71,10 +79,18 @@ export const anthropicRetryConfig: RetryConfig = {
   maxDelayMs: 60000,
   shouldRetry: (error) => {
     // Anthropic-specific error handling
-    if (error.status === 429) {return true;} // Rate limit
-    if (error.status === 500 || error.status === 502 || error.status === 503) {return true;} // Server errors
-    if (error.error?.type === 'rate_limit_error') {return true;}
-    if (error.error?.type === 'overloaded_error') {return true;}
+    if (error.status === 429) {
+      return true;
+    } // Rate limit
+    if (error.status === 500 || error.status === 502 || error.status === 503) {
+      return true;
+    } // Server errors
+    if (error.error?.type === 'rate_limit_error') {
+      return true;
+    }
+    if (error.error?.type === 'overloaded_error') {
+      return true;
+    }
     return DEFAULT_CONFIG.shouldRetry!(error);
   },
   onRetry: (attempt, error) => {

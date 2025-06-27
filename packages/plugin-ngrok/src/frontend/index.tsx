@@ -138,6 +138,7 @@ const CopyButton = ({ text }: { text: string }) => {
 
   const handleCopy = async () => {
     try {
+      // eslint-disable-next-line no-undef
       await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);

@@ -21,6 +21,7 @@ mock.module('@elizaos/core', () => ({
 
 import { PriceOracleService } from '../../services/PriceOracleService';
 import { logger } from '@elizaos/core';
+import { createMockRuntime } from '@elizaos/core/test-utils';
 import axios from 'axios';
 
 describe('PriceOracleService', () => {
@@ -32,7 +33,7 @@ describe('PriceOracleService', () => {
     mock.restore();
     mockAxios = axios as any;
 
-    mockRuntime = {
+    mockRuntime = createMockRuntime({
       getSetting: mock((key: string) => {
         const settings: Record<string, string> = {
           BIRDEYE_API_KEY: 'test-birdeye-key',
@@ -40,7 +41,7 @@ describe('PriceOracleService', () => {
         };
         return settings[key];
       }),
-    };
+    });
 
     service = new PriceOracleService(mockRuntime);
   });

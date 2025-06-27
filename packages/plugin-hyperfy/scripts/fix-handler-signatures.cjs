@@ -4,15 +4,9 @@ const path = require('path');
 const actionsDir = path.join(__dirname, '..', 'src', 'actions');
 
 // Actions to fix
-const actionsToFix = [
-  'perception.ts',
-  'stop.ts',
-  'unuse.ts',
-  'use.ts',
-  'walk_randomly.ts'
-];
+const actionsToFix = ['perception.ts', 'stop.ts', 'unuse.ts', 'use.ts', 'walk_randomly.ts'];
 
-actionsToFix.forEach(filename => {
+actionsToFix.forEach((filename) => {
   const filePath = path.join(actionsDir, filename);
 
   if (!fs.existsSync(filePath)) {
@@ -39,15 +33,12 @@ actionsToFix.forEach(filename => {
   );
 
   // Add callback check after service checks
-  content = content.replace(
-    /if\s*\(\s*!service\s*\|\|\s*!.*?\)\s*{/g,
-    (match) => {
-      if (!match.includes('!callback')) {
-        return match.replace(/\)\s*{/, ' || !callback) {');
-      }
-      return match;
+  content = content.replace(/if\s*\(\s*!service\s*\|\|\s*!.*?\)\s*{/g, (match) => {
+    if (!match.includes('!callback')) {
+      return match.replace(/\)\s*{/, ' || !callback) {');
     }
-  );
+    return match;
+  });
 
   fs.writeFileSync(filePath, content, 'utf8');
   console.log(`Fixed: ${filename}`);

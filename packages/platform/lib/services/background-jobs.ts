@@ -1,6 +1,6 @@
 /**
  * Background Jobs Service
- * 
+ *
  * Manages long-running background tasks for the platform:
  * - Container monitoring and health checks
  * - Billing cycle processing
@@ -49,7 +49,6 @@ export class BackgroundJobsService {
 
       // Handle graceful shutdown
       this.setupGracefulShutdown();
-
     } catch (error) {
       console.error('Failed to start background jobs service:', error);
       throw error;
@@ -73,7 +72,6 @@ export class BackgroundJobsService {
 
       this.isRunning = false;
       console.log('Background jobs service stopped successfully');
-
     } catch (error) {
       console.error('Failed to stop background jobs service:', error);
       throw error;
@@ -92,8 +90,8 @@ export class BackgroundJobsService {
     return {
       isRunning: this.isRunning,
       services: {
-        containerMonitoring: this.isRunning // We could track individual service status
-      }
+        containerMonitoring: this.isRunning, // We could track individual service status
+      },
     };
   }
 
@@ -151,24 +149,27 @@ export class BackgroundJobsService {
       // Check if services are running
       const containerMonitoringHealthy = this.isRunning;
 
-      const overallStatus = containerMonitoringHealthy ? 'healthy' : 'unhealthy';
+      const overallStatus = containerMonitoringHealthy
+        ? 'healthy'
+        : 'unhealthy';
 
       return {
         status: overallStatus,
         services: {
-          containerMonitoring: containerMonitoringHealthy ? 'healthy' : 'unhealthy'
+          containerMonitoring: containerMonitoringHealthy
+            ? 'healthy'
+            : 'unhealthy',
         },
-        lastCheck: now
+        lastCheck: now,
       };
-
     } catch (error) {
       console.error('Background jobs health check failed:', error);
       return {
         status: 'unhealthy',
         services: {
-          containerMonitoring: 'unhealthy'
+          containerMonitoring: 'unhealthy',
         },
-        lastCheck: now
+        lastCheck: now,
       };
     }
   }

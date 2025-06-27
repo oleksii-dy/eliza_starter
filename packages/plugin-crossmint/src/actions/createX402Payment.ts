@@ -18,10 +18,13 @@ import { CrossMintError } from '../types/crossmint';
 export const createX402PaymentAction: Action = {
   name: 'CREATE_X402_PAYMENT',
   similes: ['CREATE_PAYMENT', 'REQUEST_PAYMENT', 'X402_PAYMENT'],
-  description: 'Create an X.402 compliant payment request using CrossMint. Can be chained with CHECK_PAYMENT_STATUS to monitor completion or REAL_CREATE_X402_PAYMENT for production payments',
+  description:
+    'Create an X.402 compliant payment request using CrossMint. Can be chained with CHECK_PAYMENT_STATUS to monitor completion or REAL_CREATE_X402_PAYMENT for production payments',
 
   validate: async (runtime: IAgentRuntime, _message: Memory) => {
-    const crossmintService = runtime.getService<CrossMintUniversalWalletService>('crossmint-universal-wallet');
+    const crossmintService = runtime.getService<CrossMintUniversalWalletService>(
+      'crossmint-universal-wallet'
+    );
     return !!crossmintService;
   },
 
@@ -33,7 +36,9 @@ export const createX402PaymentAction: Action = {
     callback?: HandlerCallback
   ): Promise<ActionResult> => {
     try {
-      const crossmintService = runtime.getService<CrossMintUniversalWalletService>('crossmint-universal-wallet');
+      const crossmintService = runtime.getService<CrossMintUniversalWalletService>(
+        'crossmint-universal-wallet'
+      );
       if (!crossmintService) {
         throw new CrossMintError('CrossMint service not available');
       }
@@ -74,7 +79,7 @@ export const createX402PaymentAction: Action = {
       }
 
       // Create payment request
-      const expiresAt = Date.now() + (paymentDetails.expiresIn * 60 * 60 * 1000);
+      const expiresAt = Date.now() + paymentDetails.expiresIn * 60 * 60 * 1000;
 
       const paymentRequest = await crossmintService.createPaymentRequest({
         amount: paymentDetails.amount,
@@ -157,7 +162,8 @@ The payment request is X.402 compliant and can be used for HTTP-native payments.
         name: '{{agent}}',
         content: {
           text: "I'll create the payment request and set up monitoring for payment completion.",
-          thought: 'First create the X.402 payment request, then chain to status monitoring to track payment completion in real-time',
+          thought:
+            'First create the X.402 payment request, then chain to status monitoring to track payment completion in real-time',
           actions: ['CREATE_X402_PAYMENT', 'CHECK_PAYMENT_STATUS'],
         },
       },
@@ -174,7 +180,8 @@ The payment request is X.402 compliant and can be used for HTTP-native payments.
         name: '{{agent}}',
         content: {
           text: "I'll create a test payment request first, then create the production payment.",
-          thought: 'Start with a test payment to validate the flow, then create the actual production payment request using the real X.402 service',
+          thought:
+            'Start with a test payment to validate the flow, then create the actual production payment request using the real X.402 service',
           actions: ['CREATE_X402_PAYMENT', 'REAL_CREATE_X402_PAYMENT'],
         },
       },
@@ -191,7 +198,8 @@ The payment request is X.402 compliant and can be used for HTTP-native payments.
         name: '{{agent}}',
         content: {
           text: "I'll create the payment request and mint the NFT after payment confirmation.",
-          thought: 'Create payment request first, then chain to NFT minting which will only execute after payment verification',
+          thought:
+            'Create payment request first, then chain to NFT minting which will only execute after payment verification',
           actions: ['CREATE_X402_PAYMENT', 'MINT_NFT'],
         },
       },

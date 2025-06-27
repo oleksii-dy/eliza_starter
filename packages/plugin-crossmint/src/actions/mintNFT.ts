@@ -18,7 +18,8 @@ import { CrossMintError } from '../types/crossmint';
 export const mintNFTAction: Action = {
   name: 'MINT_NFT',
   similes: ['CREATE_NFT', 'MINT_TOKEN', 'GENERATE_NFT'],
-  description: 'Mint an NFT using CrossMint infrastructure. Can be chained with CHECK_PAYMENT_STATUS after payment or TRANSFER to send the NFT after minting',
+  description:
+    'Mint an NFT using CrossMint infrastructure. Can be chained with CHECK_PAYMENT_STATUS after payment or TRANSFER to send the NFT after minting',
 
   validate: async (runtime: IAgentRuntime, _message: Memory) => {
     const crossmintService = runtime.getService<CrossMintService>('crossmint');
@@ -70,7 +71,9 @@ export const mintNFTAction: Action = {
 
       // Validate required fields
       if (!nftDetails.name || !nftDetails.recipient || !nftDetails.contractAddress) {
-        throw new CrossMintError('Missing required NFT details (name, recipient, contract address)');
+        throw new CrossMintError(
+          'Missing required NFT details (name, recipient, contract address)'
+        );
       }
 
       // Set defaults
@@ -171,7 +174,8 @@ The NFT has been minted and assigned to the specified recipient.`;
         name: '{{agent}}',
         content: {
           text: "I'll check if the payment is confirmed and then mint the NFT to the payer.",
-          thought: 'First verify payment completion and validity, then proceed with NFT minting to the payer address only if payment is confirmed',
+          thought:
+            'First verify payment completion and validity, then proceed with NFT minting to the payer address only if payment is confirmed',
           actions: ['CHECK_PAYMENT_STATUS', 'MINT_NFT'],
         },
       },
@@ -188,7 +192,8 @@ The NFT has been minted and assigned to the specified recipient.`;
         name: '{{agent}}',
         content: {
           text: "I'll mint the NFT to your wallet first, then transfer it to the buyer.",
-          thought: 'First mint the NFT to the user\'s wallet as temporary custody, then execute transfer to final buyer address',
+          thought:
+            "First mint the NFT to the user's wallet as temporary custody, then execute transfer to final buyer address",
           actions: ['MINT_NFT', 'TRANSFER'],
         },
       },
@@ -205,7 +210,8 @@ The NFT has been minted and assigned to the specified recipient.`;
         name: '{{agent}}',
         content: {
           text: "I'll create the payment request and mint the NFT after payment confirmation.",
-          thought: 'Create X.402 payment request first, then chain to NFT minting which will only execute after payment verification',
+          thought:
+            'Create X.402 payment request first, then chain to NFT minting which will only execute after payment verification',
           actions: ['CREATE_X402_PAYMENT', 'MINT_NFT'],
         },
       },

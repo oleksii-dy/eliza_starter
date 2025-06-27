@@ -42,7 +42,6 @@ export interface AgentStatsRecord {
  * Repository for managing agent runtime state in the database
  */
 export class AgentRuntimeRepository {
-
   private async getDb() {
     return await getDatabase();
   }
@@ -59,45 +58,52 @@ export class AgentRuntimeRepository {
     runtimeConfig: Record<string, any>;
     metadata?: Record<string, any>;
   }): Promise<void> {
-    await (await this.getDb()).insert(agents).values({
-      id: data.id,
-      organizationId: data.organizationId,
-      runtimeAgentId: data.runtimeAgentId,
-      name: data.character.name || 'Unknown Agent',
-      description: data.character.bio || 'Agent created via runtime service',
-      slug: `runtime-${data.runtimeAgentId}`,
-      character: data.character,
-      plugins: data.plugins,
-      runtimeConfig: data.runtimeConfig,
-      deploymentStatus: 'deployed',
-      deploymentUrl: null,
-      deploymentError: null,
-      lastDeployedAt: new Date(),
-      visibility: 'private',
-      isPublished: false,
-      totalInteractions: 0,
-      totalCost: '0',
-      metadata: data.metadata || {},
-      createdByUserId: sql`(SELECT id FROM users WHERE organization_id = ${data.organizationId} LIMIT 1)`,
-    }).onConflictDoUpdate({
-      target: agents.id,
-      set: {
+    await (
+      await this.getDb()
+    )
+      .insert(agents)
+      .values({
+        id: data.id,
+        organizationId: data.organizationId,
         runtimeAgentId: data.runtimeAgentId,
+        name: data.character.name || 'Unknown Agent',
+        description: data.character.bio || 'Agent created via runtime service',
+        slug: `runtime-${data.runtimeAgentId}`,
         character: data.character,
         plugins: data.plugins,
         runtimeConfig: data.runtimeConfig,
         deploymentStatus: 'deployed',
+        deploymentUrl: null,
+        deploymentError: null,
         lastDeployedAt: new Date(),
-        updatedAt: new Date(),
+        visibility: 'private',
+        isPublished: false,
+        totalInteractions: 0,
+        totalCost: '0',
         metadata: data.metadata || {},
-      },
-    });
+        createdByUserId: sql`(SELECT id FROM users WHERE organization_id = ${data.organizationId} LIMIT 1)`,
+      })
+      .onConflictDoUpdate({
+        target: agents.id,
+        set: {
+          runtimeAgentId: data.runtimeAgentId,
+          character: data.character,
+          plugins: data.plugins,
+          runtimeConfig: data.runtimeConfig,
+          deploymentStatus: 'deployed',
+          lastDeployedAt: new Date(),
+          updatedAt: new Date(),
+          metadata: data.metadata || {},
+        },
+      });
   }
 
   /**
    * Get agent runtime information by runtime agent ID
    */
-  async getAgentByRuntimeId(runtimeAgentId: string): Promise<AgentRuntimeRecord | null> {
+  async getAgentByRuntimeId(
+    runtimeAgentId: string,
+  ): Promise<AgentRuntimeRecord | null> {
     const [agent] = await (await this.getDb())
       .select()
       .from(agents)
@@ -110,14 +116,20 @@ export class AgentRuntimeRepository {
   /**
    * Get all agents for an organization
    */
-  async getOrganizationAgents(organizationId: string): Promise<AgentRuntimeRecord[]> {
-    return await (await this.getDb())
+  async getOrganizationAgents(
+    organizationId: string,
+  ): Promise<AgentRuntimeRecord[]> {
+    return await (
+      await this.getDb()
+    )
       .select()
       .from(agents)
-      .where(and(
-        eq(agents.organizationId, organizationId),
-        eq(agents.deploymentStatus, 'deployed')
-      ))
+      .where(
+        and(
+          eq(agents.organizationId, organizationId),
+          eq(agents.deploymentStatus, 'deployed'),
+        ),
+      )
       .orderBy(desc(agents.lastDeployedAt));
   }
 
@@ -127,9 +139,11 @@ export class AgentRuntimeRepository {
   async updateDeploymentStatus(
     runtimeAgentId: string,
     status: string,
-    error?: string
+    error?: string,
   ): Promise<void> {
-    await (await this.getDb())
+    await (
+      await this.getDb()
+    )
       .update(agents)
       .set({
         deploymentStatus: status,
@@ -148,7 +162,7 @@ export class AgentRuntimeRepository {
       totalInteractions?: number;
       totalCost?: string;
       metadata?: Record<string, any>;
-    }
+    },
   ): Promise<void> {
     const updates: any = {
       updatedAt: new Date(),
@@ -176,7 +190,9 @@ export class AgentRuntimeRepository {
    * Delete agent runtime record
    */
   async deleteAgentRuntime(runtimeAgentId: string): Promise<void> {
-    await (await this.getDb())
+    await (
+      await this.getDb()
+    )
       .update(agents)
       .set({
         deploymentStatus: 'stopped',
@@ -190,13 +206,17 @@ export class AgentRuntimeRepository {
    * Get count of agents for an organization
    */
   async getOrganizationAgentCount(organizationId: string): Promise<number> {
-    const [result] = await (await this.getDb())
+    const [result] = await (
+      await this.getDb()
+    )
       .select({ count: sql<number>`count(*)` })
       .from(agents)
-      .where(and(
-        eq(agents.organizationId, organizationId),
-        eq(agents.deploymentStatus, 'deployed')
-      ));
+      .where(
+        and(
+          eq(agents.organizationId, organizationId),
+          eq(agents.deploymentStatus, 'deployed'),
+        ),
+      );
 
     return result?.count || 0;
   }
@@ -209,7 +229,9 @@ export class AgentRuntimeRepository {
     status: string;
     lastActivity?: Date;
   }> {
-    const [agent] = await (await this.getDb())
+    const [agent] = await (
+      await this.getDb()
+    )
       .select({
         deploymentStatus: agents.deploymentStatus,
         lastDeployedAt: agents.lastDeployedAt,
@@ -244,7 +266,9 @@ export class AgentRuntimeRepository {
       ? [eq(agents.organizationId, organizationId)]
       : [];
 
-    const [stats] = await (await this.getDb())
+    const [stats] = await (
+      await this.getDb()
+    )
       .select({
         total: sql<number>`count(*)`,
         running: sql<number>`count(*) filter (where deployment_status = 'deployed')`,
@@ -264,7 +288,9 @@ export class AgentRuntimeRepository {
 
     // If not filtering by organization, get organization counts
     if (!organizationId) {
-      const orgCounts = await (await this.getDb())
+      const orgCounts = await (
+        await this.getDb()
+      )
         .select({
           organizationId: agents.organizationId,
           count: sql<number>`count(*)`,
@@ -273,10 +299,16 @@ export class AgentRuntimeRepository {
         .where(eq(agents.deploymentStatus, 'deployed'))
         .groupBy(agents.organizationId);
 
-      result.organizationCounts = orgCounts.reduce((acc: Record<string, number>, { organizationId, count }: { organizationId: string, count: number }) => {
-        acc[organizationId] = count;
-        return acc;
-      }, {} as Record<string, number>);
+      result.organizationCounts = orgCounts.reduce(
+        (
+          acc: Record<string, number>,
+          { organizationId, count }: { organizationId: string; count: number },
+        ) => {
+          acc[organizationId] = count;
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
     }
 
     return result;

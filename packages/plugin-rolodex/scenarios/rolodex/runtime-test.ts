@@ -7,7 +7,8 @@ export const runtimeTestScenario: Scenario = {
   messages: [
     {
       role: 'user',
-      content: 'I just met Sarah Chen from TechCorp. She\'s the VP of Engineering and seems very interested in our AI platform.',
+      content:
+        "I just met Sarah Chen from TechCorp. She's the VP of Engineering and seems very interested in our AI platform.",
     },
     {
       role: 'assistant',
@@ -34,7 +35,7 @@ export const runtimeTestScenario: Scenario = {
     },
     {
       role: 'user',
-      content: 'Can you show me everyone I\'ve met from TechCorp?',
+      content: "Can you show me everyone I've met from TechCorp?",
     },
     {
       role: 'assistant',

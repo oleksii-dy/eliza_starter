@@ -13,7 +13,7 @@ const createWebhookSchema = z.object({
   events: z.array(z.string()).min(1, 'At least one event must be selected'),
 });
 
-export async function GET(request: NextRequest) {
+export async function handleGET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.organizationId) {
@@ -21,25 +21,29 @@ export async function GET(request: NextRequest) {
     }
 
     const organizationId = session.user.organizationId;
-    
+
     // Filter webhooks for the current organization
-    const userWebhooks = webhooksDB.filter(webhook => webhook.organizationId === organizationId);
+    const userWebhooks = webhooksDB.filter(
+      (webhook) => webhook.organizationId === organizationId,
+    );
 
     return NextResponse.json({
       success: true,
       webhooks: userWebhooks,
     });
-
   } catch (error: any) {
     console.error('Webhooks list error:', error);
-    return NextResponse.json({
-      error: 'Failed to load webhooks',
-      message: error.message || 'Unknown error occurred'
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to load webhooks',
+        message: error.message || 'Unknown error occurred',
+      },
+      { status: 500 },
+    );
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.organizationId) {
@@ -72,20 +76,25 @@ export async function POST(request: NextRequest) {
       webhook,
       message: 'Webhook created successfully',
     });
-
   } catch (error: any) {
     console.error('Webhook creation error:', error);
-    
+
     if (error instanceof z.ZodError) {
-      return NextResponse.json({
-        error: 'Validation error',
-        details: error.errors,
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Validation error',
+          details: error.errors,
+        },
+        { status: 400 },
+      );
     }
 
-    return NextResponse.json({
-      error: 'Failed to create webhook',
-      message: error.message || 'Unknown error occurred'
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to create webhook',
+        message: error.message || 'Unknown error occurred',
+      },
+      { status: 500 },
+    );
   }
 }

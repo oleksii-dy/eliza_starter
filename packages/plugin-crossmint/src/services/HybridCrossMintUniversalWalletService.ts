@@ -338,10 +338,15 @@ export class HybridCrossMintUniversalWalletService
 
       return wallets
         .filter((wallet) => {
-          if (filter?.chain && this.getChainFromWalletType(wallet.type) !== filter.chain)
-          {return false;}
-          if (filter?.isActive !== undefined && filter.isActive !== true) {return false;}
-          if (filter?.type && this.mapWalletType(wallet.type) !== filter.type) {return false;}
+          if (filter?.chain && this.getChainFromWalletType(wallet.type) !== filter.chain) {
+            return false;
+          }
+          if (filter?.isActive !== undefined && filter.isActive !== true) {
+            return false;
+          }
+          if (filter?.type && this.mapWalletType(wallet.type) !== filter.type) {
+            return false;
+          }
           return true;
         })
         .map((wallet) => ({

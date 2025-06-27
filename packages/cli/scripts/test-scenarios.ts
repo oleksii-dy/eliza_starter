@@ -14,18 +14,18 @@ async function runScenarios() {
     {
       name: 'Individual Scenarios with Success Rate Tracking',
       command: 'bun run scripts/test-individual-scenarios.ts',
-      description: 'Runs all scenarios individually with 80%+ success rate validation'
+      description: 'Runs all scenarios individually with 80%+ success rate validation',
     },
     {
       name: 'Autocoder Plugin (Legacy)',
       command: 'bun run scripts/test-autocoder.ts',
-      description: 'Tests autocoder plugin functionality (legacy test)'
+      description: 'Tests autocoder plugin functionality (legacy test)',
     },
     {
       name: 'GitHub Todo Workflow (Legacy)',
-      command: 'bun run scripts/test-github-todo.ts', 
-      description: 'Tests GitHub todo integration workflow (legacy test)'
-    }
+      command: 'bun run scripts/test-github-todo.ts',
+      description: 'Tests GitHub todo integration workflow (legacy test)',
+    },
   ];
 
   let passed = 0;
@@ -34,11 +34,11 @@ async function runScenarios() {
   for (const test of tests) {
     console.log(`🧪 Running ${test.name} test...`);
     console.log(`   ${test.description}`);
-    
+
     try {
-      execSync(test.command, { 
+      execSync(test.command, {
         stdio: 'inherit',
-        timeout: 180000 // 3 minutes max per test
+        timeout: 180000, // 3 minutes max per test
       });
       console.log(`✅ ${test.name} test PASSED\n`);
       passed++;
@@ -63,7 +63,7 @@ async function runScenarios() {
   }
 }
 
-runScenarios().catch(error => {
+runScenarios().catch((error) => {
   console.error('💥 Scenario runner failed:', error);
   process.exit(1);
 });

@@ -1,7 +1,7 @@
 {
   "id": "hill_giant_drops",
   "name": "Hill Giant Loot Table",
-  "description": "Drops from hill giants", 
+  "description": "Drops from hill giants",
   "drops": [
     {
       "itemId": 532,
@@ -37,4 +37,4 @@
   "rareDropTable": true,
   "rareTableAccess": 64,
   "maxDrops": 3
-} 
+}

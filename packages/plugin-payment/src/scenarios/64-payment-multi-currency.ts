@@ -17,7 +17,8 @@ const paymentMultiCurrencyScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'Yes, I accept multiple currencies. The service costs 10 USDC, which is approximately 0.004 ETH at current rates. Would you like to pay in ETH?',
+        content:
+          'Yes, I accept multiple currencies. The service costs 10 USDC, which is approximately 0.004 ETH at current rates. Would you like to pay in ETH?',
       },
     ],
     [
@@ -27,7 +28,8 @@ const paymentMultiCurrencyScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'I accept ETH, USDC, USDT, DAI on Ethereum, and MATIC on Polygon. I can show you the equivalent amounts in any of these currencies.',
+        content:
+          'I accept ETH, USDC, USDT, DAI on Ethereum, and MATIC on Polygon. I can show you the equivalent amounts in any of these currencies.',
       },
     ],
   ],

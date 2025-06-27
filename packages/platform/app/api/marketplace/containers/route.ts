@@ -5,7 +5,7 @@ import { auth } from '@/lib/auth';
 
 const containerService = new ContainerHostingService();
 
-export async function GET(request: NextRequest) {
+export async function handleGET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     // List user's containers
     const containers = await containerService.listUserContainers(
       session.user.id,
-      session.organizationId
+      session.organizationId,
     );
 
     return NextResponse.json({
@@ -26,12 +26,12 @@ export async function GET(request: NextRequest) {
     console.error('Failed to list containers:', error);
     return NextResponse.json(
       { error: 'Failed to list containers' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     if (!deploymentConfig.assetId || !deploymentConfig.versionId) {
       return NextResponse.json(
         { error: 'Missing required fields: assetId, versionId' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -57,27 +57,31 @@ export async function POST(request: NextRequest) {
       storage: deploymentConfig.storage || 1,
       environment: deploymentConfig.environment || {},
       estimatedUsageHours: deploymentConfig.estimatedUsageHours || 24,
-      ...deploymentConfig
+      ...deploymentConfig,
     };
 
     // Check if user can afford the estimated container costs
     const estimatedHours = config.estimatedUsageHours;
-    const canAfford = await MarketplaceBillingService.canAffordMarketplaceOperation(
-      session.organizationId,
-      {
-        service: 'container_hosting',
-        operation: 'deployment',
-        usageType: 'container_hosting',
-        assetId: config.assetId,
-        tokens: estimatedHours, // Hours
-        basePrice: 0 // Will be calculated based on resource requirements
-      }
-    );
+    const canAfford =
+      await MarketplaceBillingService.canAffordMarketplaceOperation(
+        session.organizationId,
+        {
+          service: 'container_hosting',
+          operation: 'deployment',
+          usageType: 'container_hosting',
+          assetId: config.assetId,
+          tokens: estimatedHours, // Hours
+          basePrice: 0, // Will be calculated based on resource requirements
+        },
+      );
 
     if (!canAfford) {
       return NextResponse.json(
-        { error: 'Insufficient credits for container deployment. Please add credits to your account.' },
-        { status: 402 } // Payment Required
+        {
+          error:
+            'Insufficient credits for container deployment. Please add credits to your account.',
+        },
+        { status: 402 }, // Payment Required
       );
     }
 
@@ -96,15 +100,18 @@ export async function POST(request: NextRequest) {
           hourlyRate,
           estimatedHours,
           estimatedCost,
-          note: 'You will be billed hourly based on actual usage'
-        }
+          note: 'You will be billed hourly based on actual usage',
+        },
       },
     });
   } catch (error) {
     console.error('Failed to deploy container:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to deploy container' },
-      { status: 500 }
+      {
+        error:
+          error instanceof Error ? error.message : 'Failed to deploy container',
+      },
+      { status: 500 },
     );
   }
 }

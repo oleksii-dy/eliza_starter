@@ -11,10 +11,10 @@ interface UnifiedLoginFormProps {
   sessionId?: string;
 }
 
-export function UnifiedLoginForm({ 
-  onSuccess, 
+export function UnifiedLoginForm({
+  onSuccess,
   returnTo = '/dashboard',
-  sessionId 
+  sessionId,
 }: UnifiedLoginFormProps) {
   const auth = useUnifiedAuth();
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
@@ -59,9 +59,9 @@ export function UnifiedLoginForm({
 
   if (auth.isLoading) {
     return (
-      <Card className="w-full max-w-md mx-auto">
+      <Card className="mx-auto w-full max-w-md">
         <CardContent className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
           <span className="ml-3 text-gray-600">Initializing...</span>
         </CardContent>
       </Card>
@@ -69,12 +69,12 @@ export function UnifiedLoginForm({
   }
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="mx-auto w-full max-w-md">
       <CardHeader>
         <CardTitle className="text-center">
           Sign in to ElizaOS Platform
         </CardTitle>
-        <p className="text-sm text-gray-600 text-center">
+        <p className="text-center text-sm text-gray-600">
           Choose your preferred sign-in method
         </p>
       </CardHeader>
@@ -86,16 +86,20 @@ export function UnifiedLoginForm({
               onClick={() => handleOAuthSignIn(provider.id)}
               disabled={loadingProvider !== null}
               variant="outline"
-              className="w-full flex items-center justify-center gap-3 h-12"
-              style={{ 
-                borderColor: loadingProvider === provider.id ? provider.color : undefined,
-                color: loadingProvider === provider.id ? provider.color : undefined 
+              className="flex h-12 w-full items-center justify-center gap-3"
+              style={{
+                borderColor:
+                  loadingProvider === provider.id ? provider.color : undefined,
+                color:
+                  loadingProvider === provider.id ? provider.color : undefined,
               }}
             >
               {loadingProvider === provider.id ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2" 
-                       style={{ borderColor: provider.color }}></div>
+                  <div
+                    className="h-4 w-4 animate-spin rounded-full border-b-2"
+                    style={{ borderColor: provider.color }}
+                  ></div>
                   <span>Connecting to {provider.name}...</span>
                 </>
               ) : (
@@ -109,7 +113,7 @@ export function UnifiedLoginForm({
         </div>
 
         {error && (
-          <div className="mt-4 bg-red-50 border border-red-200 rounded-md p-3">
+          <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3">
             <p className="text-sm text-red-600">{error}</p>
             <Button
               onClick={() => setError(null)}
@@ -138,25 +142,32 @@ export function UnifiedLoginForm({
         {/* Platform info */}
         <div className="mt-4 text-center">
           <p className="text-xs text-gray-500">
-            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium mr-2 ${
-              auth.platform === 'tauri' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
-            }`}>
+            <span
+              className={`mr-2 inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                auth.platform === 'tauri'
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-blue-100 text-blue-800'
+              }`}
+            >
               {auth.platform === 'tauri' ? 'Desktop App' : 'Web App'}
             </span>
-            {auth.platform === 'tauri' ? 'Native application' : 'Progressive Web App'}
+            {auth.platform === 'tauri'
+              ? 'Native application'
+              : 'Progressive Web App'}
           </p>
         </div>
 
         {/* Development info */}
         {process.env.NODE_ENV === 'development' && (
-          <div className="mt-4 p-3 bg-gray-50 rounded-md">
+          <div className="mt-4 rounded-md bg-gray-50 p-3">
             <p className="text-xs text-gray-600">
               <strong>Platform:</strong> {auth.platform}
             </p>
-            <p className="text-xs text-gray-600 mt-1">
-              <strong>Auth State:</strong> {auth.isAuthenticated ? 'Authenticated' : 'Not Authenticated'}
+            <p className="mt-1 text-xs text-gray-600">
+              <strong>Auth State:</strong>{' '}
+              {auth.isAuthenticated ? 'Authenticated' : 'Not Authenticated'}
             </p>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="mt-1 text-xs text-gray-600">
               <strong>User:</strong> {auth.user?.email || 'None'}
             </p>
           </div>

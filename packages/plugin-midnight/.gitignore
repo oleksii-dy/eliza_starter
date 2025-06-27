@@ -64,3 +64,7 @@ data/
 
 dist/
 coverage/
+AGENTS.md
+.cursor/rules/elizaos
+CLAUDE.md
+.cursorignore

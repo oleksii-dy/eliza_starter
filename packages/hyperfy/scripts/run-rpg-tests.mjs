@@ -2,37 +2,37 @@
 
 /**
  * RPG Visual Test Runner
- * 
+ *
  * Simple script to run RPG visual tests with various options
  */
 
-import { runRPGVisualTest } from './rpg-visual-test.mjs';
+import { runRPGVisualTest } from './rpg-visual-test.mjs'
 
-const args = process.argv.slice(2);
+const args = process.argv.slice(2)
 const options = {
   scenario: null,
   verbose: false,
-  help: false
-};
+  help: false,
+}
 
 // Parse command line arguments
 for (let i = 0; i < args.length; i++) {
-  const arg = args[i];
-  
+  const arg = args[i]
+
   switch (arg) {
     case '--scenario':
     case '-s':
-      options.scenario = args[i + 1];
-      i++;
-      break;
+      options.scenario = args[i + 1]
+      i++
+      break
     case '--verbose':
     case '-v':
-      options.verbose = true;
-      break;
+      options.verbose = true
+      break
     case '--help':
     case '-h':
-      options.help = true;
-      break;
+      options.help = true
+      break
   }
 }
 
@@ -62,30 +62,30 @@ EXAMPLES:
   npm run test:rpg
   npm run test:rpg -- --scenario COMBAT_SYSTEM
   npm run test:rpg -- --verbose
-`);
-  process.exit(0);
+`)
+  process.exit(0)
 }
 
 // Run tests
-console.log('🎯 Starting RPG Visual Tests...');
+console.log('🎯 Starting RPG Visual Tests...')
 if (options.scenario) {
-  console.log(`📋 Running scenario: ${options.scenario}`);
+  console.log(`📋 Running scenario: ${options.scenario}`)
 } else {
-  console.log('📋 Running all scenarios');
+  console.log('📋 Running all scenarios')
 }
 
 try {
-  const success = await runRPGVisualTest();
-  
+  const success = await runRPGVisualTest()
+
   if (success) {
-    console.log('\n🎉 All tests passed!');
-    process.exit(0);
+    console.log('\n🎉 All tests passed!')
+    process.exit(0)
   } else {
-    console.log('\n💥 Some tests failed!');
-    process.exit(1);
+    console.log('\n💥 Some tests failed!')
+    process.exit(1)
   }
 } catch (error) {
-  console.error('\n💥 Test runner failed:', error.message);
-  console.error('Check the logs and try again.');
-  process.exit(1);
+  console.error('\n💥 Test runner failed:', error.message)
+  console.error('Check the logs and try again.')
+  process.exit(1)
 }

@@ -18,9 +18,10 @@ export default function LoginPage() {
   const [isDevLoginLoading, setIsDevLoginLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const isDevelopment = process.env.NODE_ENV === 'development' || 
-                        process.env.NEXT_PUBLIC_DEV_MODE === 'true' ||
-                        (typeof window !== 'undefined' && window.Cypress);
+  const isDevelopment =
+    process.env.NODE_ENV === 'development' ||
+    process.env.NEXT_PUBLIC_DEV_MODE === 'true' ||
+    (typeof window !== 'undefined' && (window as any).Cypress);
 
   useEffect(() => {
     const error = searchParams.get('error');
@@ -72,7 +73,7 @@ export default function LoginPage() {
           message: 'Logged in successfully',
           mode: 'success',
         });
-        
+
         // Use Next.js router for reliable navigation
         router.push('/dashboard');
       }
@@ -98,19 +99,23 @@ export default function LoginPage() {
     setIsDevLoginLoading(true);
 
     try {
-      const response = await axios.post('/api/auth/dev-login', {}, {
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await axios.post(
+        '/api/auth/dev-login',
+        {},
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          withCredentials: true,
         },
-        withCredentials: true,
-      });
+      );
 
       if (response.status === 200 && response.data?.success) {
         toast({
           message: response.data?.data?.message || 'Developer login successful',
           mode: 'success',
         });
-        
+
         // Use full page reload to ensure cookies are processed by middleware
         setTimeout(() => {
           window.location.href = '/dashboard';
@@ -120,7 +125,7 @@ export default function LoginPage() {
       }
     } catch (error) {
       console.error('Dev login error:', error);
-      
+
       if (axios.isAxiosError(error) && error.response?.data) {
         toast({
           message: error.response.data.error || 'Dev login failed',
@@ -140,7 +145,11 @@ export default function LoginPage() {
   return (
     <div className="flex flex-col gap-4" data-cy="login-page">
       <h1 data-cy="login-title">Log in to your account</h1>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-6" data-cy="login-form">
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-6"
+        data-cy="login-form"
+      >
         <Input
           label="Email address"
           type="email"
@@ -182,19 +191,25 @@ export default function LoginPage() {
         </Button>
 
         <div className="text-center">
-          <Link className="no-underline" href="/auth/signup" data-cy="signup-link">
+          <Link
+            className="no-underline"
+            href="/auth/signup"
+            data-cy="signup-link"
+          >
             or sign up instead
           </Link>
         </div>
       </form>
 
       {isDevelopment && (
-        <div className="border-t pt-4 mt-4" data-cy="dev-mode-section">
-          <div className="text-center mb-3">
-            <span className="text-sm text-gray-500 bg-white px-2">Development Mode</span>
+        <div className="mt-4 border-t pt-4" data-cy="dev-mode-section">
+          <div className="mb-3 text-center">
+            <span className="bg-white px-2 text-sm text-gray-500">
+              Development Mode
+            </span>
           </div>
           <Button
-            className="w-full bg-yellow-500 hover:bg-yellow-600 text-black"
+            className="w-full bg-yellow-500 text-black hover:bg-yellow-600"
             onClick={handleDevLogin}
             disabled={isDevLoginLoading}
             loading={isDevLoginLoading}
@@ -202,10 +217,10 @@ export default function LoginPage() {
           >
             Dev Login
           </Button>
-          <p className="text-xs text-gray-500 text-center mt-2">
+          <p className="mt-2 text-center text-xs text-gray-500">
             Instantly login as developer with full access (dev@elizaos.ai)
           </p>
-          <p className="text-xs text-gray-400 text-center">
+          <p className="text-center text-xs text-gray-400">
             Use this if you see JWT errors
           </p>
         </div>

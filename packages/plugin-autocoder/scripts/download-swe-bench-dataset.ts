@@ -7,7 +7,8 @@ import fetch from 'node-fetch';
 
 const DATASET_URLS = {
   test: 'https://huggingface.co/datasets/ByteDance-Seed/Multi-SWE-bench/resolve/main/data/test.jsonl',
-  validation: 'https://huggingface.co/datasets/ByteDance-Seed/Multi-SWE-bench/resolve/main/data/validation.jsonl'
+  validation:
+    'https://huggingface.co/datasets/ByteDance-Seed/Multi-SWE-bench/resolve/main/data/validation.jsonl',
 };
 
 async function downloadDataset() {
@@ -22,7 +23,9 @@ async function downloadDataset() {
     // Check if already exists
     try {
       const stats = await fs.stat(outputPath);
-      console.log(`✓ ${split} dataset already exists (${(stats.size / 1024 / 1024).toFixed(2)} MB)`);
+      console.log(
+        `✓ ${split} dataset already exists (${(stats.size / 1024 / 1024).toFixed(2)} MB)`
+      );
       continue;
     } catch {
       // File doesn't exist, download it
@@ -33,8 +36,8 @@ async function downloadDataset() {
     try {
       const response = await fetch(url, {
         headers: {
-          'User-Agent': 'ElizaOS-SWEBench/1.0'
-        }
+          'User-Agent': 'ElizaOS-SWEBench/1.0',
+        },
       });
 
       if (!response.ok) {
@@ -52,8 +55,10 @@ async function downloadDataset() {
         downloadedSize += (chunk as any).length;
 
         if (totalSize > 0) {
-          const progress = (downloadedSize / totalSize * 100).toFixed(1);
-          process.stdout.write(`\r  Progress: ${progress}% (${(downloadedSize / 1024 / 1024).toFixed(2)} MB)`);
+          const progress = ((downloadedSize / totalSize) * 100).toFixed(1);
+          process.stdout.write(
+            `\r  Progress: ${progress}% (${(downloadedSize / 1024 / 1024).toFixed(2)} MB)`
+          );
         }
       }
 
@@ -62,10 +67,14 @@ async function downloadDataset() {
       const buffer = Buffer.concat(chunks);
       await fs.writeFile(outputPath, buffer);
 
-      console.log(`✅ ${split} dataset downloaded (${(buffer.length / 1024 / 1024).toFixed(2)} MB)\n`);
+      console.log(
+        `✅ ${split} dataset downloaded (${(buffer.length / 1024 / 1024).toFixed(2)} MB)\n`
+      );
     } catch (error) {
       console.error(`❌ Failed to download ${split} dataset:`, error);
-      console.log('\nNote: The dataset might require authentication or may not be publicly available.');
+      console.log(
+        '\nNote: The dataset might require authentication or may not be publicly available.'
+      );
       console.log(`You can manually download it from: ${url}\n`);
     }
   }
@@ -105,7 +114,9 @@ async function downloadDataset() {
 
     console.log('Dataset Statistics:');
     console.log(`- Total instances: ${lines.length}`);
-    console.log(`- TypeScript/JavaScript: ${tsCount} (${(tsCount / lines.length * 100).toFixed(1)}%)`);
+    console.log(
+      `- TypeScript/JavaScript: ${tsCount} (${((tsCount / lines.length) * 100).toFixed(1)}%)`
+    );
     console.log('\nTop Languages:');
 
     const sortedLangs = Array.from(languages.entries())
@@ -124,7 +135,6 @@ async function downloadDataset() {
     for (const [repo, count] of sortedRepos) {
       console.log(`  - ${repo}: ${count}`);
     }
-
   } catch (error) {
     console.log('Could not analyze dataset (file might not exist or be corrupted)');
   }

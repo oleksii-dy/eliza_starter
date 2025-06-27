@@ -3,37 +3,37 @@
  * Multi-chain wallet connection and payment processing with real blockchain monitoring
  */
 
-import { 
-  WalletConnection, 
-  CryptoTopUp, 
-  CryptoPayment, 
-  TokenBalance 
+import {
+  WalletConnection,
+  CryptoTopUp,
+  CryptoPayment,
+  TokenBalance,
 } from '../../generation/types/enhanced-types';
 import { getDatabaseClient } from '@/lib/database';
-import { 
-  cryptoPayments, 
-  walletConnections, 
+import {
+  cryptoPayments,
+  walletConnections,
   creditTransactions,
   NewCryptoPayment,
-  NewWalletConnection 
+  NewWalletConnection,
 } from '@/lib/database/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { AuthContext, PermissionChecker, jwtService } from '@/lib/auth/context';
 import { logger } from '@/lib/logger';
 import { addCredits } from '@/lib/billing';
-import { 
-  JsonRpcProvider, 
-  Contract, 
-  formatEther, 
-  formatUnits, 
-  parseEther, 
-  parseUnits, 
-  isAddress, 
-  verifyMessage, 
+import {
+  JsonRpcProvider,
+  Contract,
+  formatEther,
+  formatUnits,
+  parseEther,
+  parseUnits,
+  isAddress,
+  verifyMessage,
   ZeroAddress,
   WebSocketProvider,
   TransactionReceipt,
-  TransactionRequest
+  TransactionRequest,
 } from 'ethers';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
@@ -78,7 +78,10 @@ interface CryptoWalletConfig {
 
 interface PriceOracle {
   getTokenPrice(symbol: string, currency?: string): Promise<number>;
-  getTokenPrices(symbols: string[], currency?: string): Promise<Record<string, number>>;
+  getTokenPrices(
+    symbols: string[],
+    currency?: string,
+  ): Promise<Record<string, number>>;
 }
 
 // Default chain configurations
@@ -99,9 +102,9 @@ const DEFAULT_CHAINS: ChainConfig[] = [
         decimals: 6,
         coingeckoId: 'usd-coin',
         isStablecoin: true,
-        minAmount: parseUnits('10', 6).toString() // $10 minimum
-      }
-    ]
+        minAmount: parseUnits('10', 6).toString(), // $10 minimum
+      },
+    ],
   },
   {
     chainId: 137,
@@ -119,10 +122,10 @@ const DEFAULT_CHAINS: ChainConfig[] = [
         decimals: 6,
         coingeckoId: 'usd-coin',
         isStablecoin: true,
-        minAmount: parseUnits('5', 6).toString() // $5 minimum on Polygon
-      }
-    ]
-  }
+        minAmount: parseUnits('5', 6).toString(), // $5 minimum on Polygon
+      },
+    ],
+  },
 ];
 
 export class CryptoWalletService {
@@ -138,7 +141,7 @@ export class CryptoWalletService {
     paymentTimeoutMinutes: number;
     blockchainMonitoringEnabled: boolean;
   };
-  
+
   // Active payment monitoring
   private paymentMonitors = new Map<string, NodeJS.Timeout>();
   private blockchainEventListeners = new Map<number, any>();
@@ -151,20 +154,23 @@ export class CryptoWalletService {
       topUpMinUsd: config.topUpMinUsd || 10,
       topUpMaxUsd: config.topUpMaxUsd || 10000,
       paymentTimeoutMinutes: config.paymentTimeoutMinutes || 20,
-      blockchainMonitoringEnabled: config.blockchainMonitoringEnabled !== false
+      blockchainMonitoringEnabled: config.blockchainMonitoringEnabled !== false,
     };
 
     // Initialize chains and providers
     this.chains = new Map();
     this.providers = new Map();
     this.wsProviders = new Map();
-    
-    const chainsToUse = config.supportedChains.length > 0 ? config.supportedChains : DEFAULT_CHAINS;
-    
+
+    const chainsToUse =
+      config.supportedChains.length > 0
+        ? config.supportedChains
+        : DEFAULT_CHAINS;
+
     for (const chain of chainsToUse) {
       this.chains.set(chain.chainId, chain);
       this.providers.set(chain.chainId, new JsonRpcProvider(chain.rpcUrl));
-      
+
       // Initialize WebSocket provider for real-time monitoring if available
       if (chain.wsRpcUrl && this.config.blockchainMonitoringEnabled) {
         try {
@@ -172,7 +178,10 @@ export class CryptoWalletService {
           this.wsProviders.set(chain.chainId, wsProvider);
           this.setupBlockchainEventListeners(chain.chainId, wsProvider);
         } catch (error) {
-          logger.warn(`Failed to initialize WebSocket provider for chain ${chain.chainId}`, { error });
+          logger.warn(
+            `Failed to initialize WebSocket provider for chain ${chain.chainId}`,
+            { error },
+          );
         }
       }
     }
@@ -181,7 +190,10 @@ export class CryptoWalletService {
   /**
    * Connect wallet and verify ownership with proper JWT generation
    */
-  async connectWallet(walletConnection: WalletConnection, authContext?: AuthContext): Promise<{
+  async connectWallet(
+    walletConnection: WalletConnection,
+    authContext?: AuthContext,
+  ): Promise<{
     success: boolean;
     user_id?: string;
     session_token?: string;
@@ -189,7 +201,8 @@ export class CryptoWalletService {
   }> {
     try {
       // Validate signature
-      const isValidSignature = await this.verifyWalletSignature(walletConnection);
+      const isValidSignature =
+        await this.verifyWalletSignature(walletConnection);
       if (!isValidSignature) {
         return { success: false, error: 'Invalid wallet signature' };
       }
@@ -202,9 +215,9 @@ export class CryptoWalletService {
 
       // Create or get user account
       const { userId, organizationId } = await this.getOrCreateUserByWallet(
-        walletConnection.address, 
+        walletConnection.address,
         walletConnection.chain_id,
-        authContext
+        authContext,
       );
 
       // Generate proper JWT session token
@@ -212,28 +225,34 @@ export class CryptoWalletService {
         userId,
         organizationId,
         walletConnection.address,
-        walletConnection.chain_id
+        walletConnection.chain_id,
       );
 
       // Store wallet connection in database
-      await this.storeWalletConnection(userId, organizationId, walletConnection);
+      await this.storeWalletConnection(
+        userId,
+        organizationId,
+        walletConnection,
+      );
 
       logger.info('Wallet connected successfully', {
         userId,
         organizationId,
         address: walletConnection.address,
         chainId: walletConnection.chain_id,
-        walletType: walletConnection.wallet_type
+        walletType: walletConnection.wallet_type,
       });
 
       return {
         success: true,
         user_id: userId,
-        session_token: sessionToken
+        session_token: sessionToken,
       };
-
     } catch (error) {
-      logger.error('Failed to connect wallet', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        'Failed to connect wallet',
+        error instanceof Error ? error : new Error(String(error)),
+      );
       return { success: false, error: 'Failed to connect wallet' };
     }
   }
@@ -241,11 +260,19 @@ export class CryptoWalletService {
   /**
    * Get wallet balances for supported tokens
    */
-  async getWalletBalances(address: string, chainId: number, authContext: AuthContext): Promise<TokenBalance[]> {
+  async getWalletBalances(
+    address: string,
+    chainId: number,
+    authContext: AuthContext,
+  ): Promise<TokenBalance[]> {
     try {
       // Check permissions
-      PermissionChecker.requirePermission(authContext, 'crypto:read', 'Cannot view wallet balances');
-      
+      PermissionChecker.requirePermission(
+        authContext,
+        'crypto:read',
+        'Cannot view wallet balances',
+      );
+
       const chain = this.chains.get(chainId);
       if (!chain) {
         throw new Error('Unsupported chain');
@@ -256,8 +283,11 @@ export class CryptoWalletService {
 
       // Get native token balance
       const nativeBalance = await provider.getBalance(address);
-      const nativePrice = await this.priceOracle.getTokenPrice(chain.nativeCurrency.symbol, 'usd');
-      
+      const nativePrice = await this.priceOracle.getTokenPrice(
+        chain.nativeCurrency.symbol,
+        'usd',
+      );
+
       balances.push({
         token_address: ZeroAddress, // Native token
         symbol: chain.nativeCurrency.symbol,
@@ -265,16 +295,23 @@ export class CryptoWalletService {
         balance: formatEther(nativeBalance),
         decimals: 18,
         price_usd: nativePrice,
-        value_usd: parseFloat(formatEther(nativeBalance)) * nativePrice
+        value_usd: parseFloat(formatEther(nativeBalance)) * nativePrice,
       });
 
       // Get ERC-20 token balances
       for (const token of chain.supportedTokens) {
         try {
-          const balance = await this.getTokenBalance(address, token.address, provider);
-          const price = await this.priceOracle.getTokenPrice(token.symbol, 'usd');
+          const balance = await this.getTokenBalance(
+            address,
+            token.address,
+            provider,
+          );
+          const price = await this.priceOracle.getTokenPrice(
+            token.symbol,
+            'usd',
+          );
           const balanceFormatted = formatUnits(balance, token.decimals);
-          
+
           balances.push({
             token_address: token.address,
             symbol: token.symbol,
@@ -282,20 +319,22 @@ export class CryptoWalletService {
             balance: balanceFormatted,
             decimals: token.decimals,
             price_usd: price,
-            value_usd: parseFloat(balanceFormatted) * price
+            value_usd: parseFloat(balanceFormatted) * price,
           });
         } catch (error) {
-          logger.warn(`Failed to get balance for token ${token.symbol}`, { 
-            error: error instanceof Error ? error.message : String(error), 
-            tokenSymbol: token.symbol 
+          logger.warn(`Failed to get balance for token ${token.symbol}`, {
+            error: error instanceof Error ? error.message : String(error),
+            tokenSymbol: token.symbol,
           });
         }
       }
 
-      return balances.filter(b => parseFloat(b.balance) > 0);
-
+      return balances.filter((b) => parseFloat(b.balance) > 0);
     } catch (error) {
-      logger.error('Failed to get wallet balances', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        'Failed to get wallet balances',
+        error instanceof Error ? error : new Error(String(error)),
+      );
       throw error;
     }
   }
@@ -303,7 +342,10 @@ export class CryptoWalletService {
   /**
    * Process crypto top-up with real database operations
    */
-  async processCryptoTopUp(topUpRequest: CryptoTopUp, authContext: AuthContext): Promise<{
+  async processCryptoTopUp(
+    topUpRequest: CryptoTopUp,
+    authContext: AuthContext,
+  ): Promise<{
     payment_id: string;
     credits_added: number;
     usd_amount: number;
@@ -312,23 +354,42 @@ export class CryptoWalletService {
   }> {
     try {
       // Check permissions
-      PermissionChecker.requirePermission(authContext, 'crypto:write', 'Cannot process crypto payments');
-      
+      PermissionChecker.requirePermission(
+        authContext,
+        'crypto:write',
+        'Cannot process crypto payments',
+      );
+
       // Validate top-up request
       const validation = await this.validateTopUpRequest(topUpRequest);
       if (!validation.valid) {
-        throw new Error(`Invalid top-up request: ${validation.errors.join(', ')}`);
+        throw new Error(
+          `Invalid top-up request: ${validation.errors.join(', ')}`,
+        );
       }
 
       // Get token price and calculate USD amount
-      const token = await this.getTokenConfig(topUpRequest.token_address, topUpRequest.chain_id);
-      const tokenPrice = await this.priceOracle.getTokenPrice(token.symbol, 'usd');
-      const tokenAmount = parseFloat(formatUnits(topUpRequest.amount, token.decimals));
+      const token = await this.getTokenConfig(
+        topUpRequest.token_address,
+        topUpRequest.chain_id,
+      );
+      const tokenPrice = await this.priceOracle.getTokenPrice(
+        token.symbol,
+        'usd',
+      );
+      const tokenAmount = parseFloat(
+        formatUnits(topUpRequest.amount, token.decimals),
+      );
       const usdAmount = tokenAmount * tokenPrice;
 
       // Validate USD amount limits
-      if (usdAmount < this.config.topUpMinUsd || usdAmount > this.config.topUpMaxUsd) {
-        throw new Error(`Amount must be between $${this.config.topUpMinUsd} and $${this.config.topUpMaxUsd}`);
+      if (
+        usdAmount < this.config.topUpMinUsd ||
+        usdAmount > this.config.topUpMaxUsd
+      ) {
+        throw new Error(
+          `Amount must be between $${this.config.topUpMinUsd} and $${this.config.topUpMaxUsd}`,
+        );
       }
 
       // Calculate credits (1 credit = $0.01)
@@ -336,8 +397,10 @@ export class CryptoWalletService {
 
       // Create payment record in database
       const paymentId = uuidv4();
-      const expiresAt = new Date(Date.now() + this.config.paymentTimeoutMinutes * 60 * 1000);
-      
+      const expiresAt = new Date(
+        Date.now() + this.config.paymentTimeoutMinutes * 60 * 1000,
+      );
+
       const newPayment: NewCryptoPayment = {
         id: paymentId,
         organizationId: authContext.organizationId,
@@ -352,15 +415,16 @@ export class CryptoWalletService {
         status: 'pending',
         expiresAt,
         walletType: 'unknown', // This could be passed from the request
-        slippageTolerance: topUpRequest.slippage_tolerance.toString(), 
+        slippageTolerance: topUpRequest.slippage_tolerance.toString(),
         metadata: {
           deadline_minutes: topUpRequest.deadline_minutes,
           token_name: token.name,
-          estimated_gas: 'unknown'
-        }
+          estimated_gas: 'unknown',
+        },
       };
 
-      await this.database.insert(cryptoPayments).values(newPayment);
+      const db = await getDatabaseClient();
+      await db.insert(cryptoPayments).values(newPayment);
 
       // Start transaction monitoring
       if (this.config.blockchainMonitoringEnabled) {
@@ -374,18 +438,20 @@ export class CryptoWalletService {
         tokenAmount,
         usdAmount,
         creditsToAdd,
-        tokenSymbol: token.symbol
+        tokenSymbol: token.symbol,
       });
 
       return {
         payment_id: paymentId,
         credits_added: creditsToAdd,
         usd_amount: usdAmount,
-        status: 'pending'
+        status: 'pending',
       };
-
     } catch (error) {
-      logger.error('Failed to process crypto top-up', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        'Failed to process crypto top-up',
+        error instanceof Error ? error : new Error(String(error)),
+      );
       throw error;
     }
   }
@@ -393,23 +459,34 @@ export class CryptoWalletService {
   /**
    * Get payment status with real database implementation
    */
-  async getPaymentStatus(paymentId: string, authContext: AuthContext): Promise<CryptoPayment | null> {
+  async getPaymentStatus(
+    paymentId: string,
+    authContext: AuthContext,
+  ): Promise<CryptoPayment | null> {
     try {
       // Check permissions
-      PermissionChecker.requirePermission(authContext, 'crypto:read', 'Cannot view payment status');
-      
-      const result = await this.database.select()
+      PermissionChecker.requirePermission(
+        authContext,
+        'crypto:read',
+        'Cannot view payment status',
+      );
+
+      const db = await getDatabaseClient();
+      const result = await db
+        .select()
         .from(cryptoPayments)
-        .where(and(
-          eq(cryptoPayments.id, paymentId),
-          eq(cryptoPayments.organizationId, authContext.organizationId)
-        ))
+        .where(
+          and(
+            eq(cryptoPayments.id, paymentId),
+            eq(cryptoPayments.organizationId, authContext.organizationId),
+          ),
+        )
         .limit(1);
-        
+
       if (result.length === 0) {
         return null;
       }
-      
+
       const payment = result[0];
       return {
         id: payment.id,
@@ -422,13 +499,20 @@ export class CryptoWalletService {
         amount_usd: parseFloat(payment.amountUsd),
         amount_credits: payment.amountCredits,
         transaction_hash: payment.transactionHash || undefined,
-        status: payment.status as 'pending' | 'confirmed' | 'failed' | 'expired',
+        status: payment.status as
+          | 'pending'
+          | 'confirmed'
+          | 'failed'
+          | 'expired',
         created_at: payment.createdAt,
         confirmed_at: payment.confirmedAt || undefined,
-        expires_at: payment.expiresAt
+        expires_at: payment.expiresAt,
       };
     } catch (error) {
-      logger.error('Failed to get payment status', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        'Failed to get payment status',
+        error instanceof Error ? error : new Error(String(error)),
+      );
       throw error;
     }
   }
@@ -436,37 +520,49 @@ export class CryptoWalletService {
   /**
    * Get payment history with real database implementation
    */
-  async getPaymentHistory(authContext: AuthContext, options: {
-    limit?: number;
-    offset?: number;
-    status?: 'pending' | 'confirmed' | 'failed' | 'expired';
-  } = {}): Promise<CryptoPayment[]> {
+  async getPaymentHistory(
+    authContext: AuthContext,
+    options: {
+      limit?: number;
+      offset?: number;
+      status?: 'pending' | 'confirmed' | 'failed' | 'expired';
+    } = {},
+  ): Promise<CryptoPayment[]> {
     try {
       // Check permissions
-      PermissionChecker.requirePermission(authContext, 'crypto:read', 'Cannot view payment history');
-      
+      PermissionChecker.requirePermission(
+        authContext,
+        'crypto:read',
+        'Cannot view payment history',
+      );
+
       // Build query with proper chaining
-      const baseQuery = this.database.select()
+      const db = await getDatabaseClient();
+      const baseQuery = db
+        .select()
         .from(cryptoPayments)
         .where(eq(cryptoPayments.organizationId, authContext.organizationId));
-      
+
       // Apply filters and pagination in a single chain
       let query = baseQuery;
-      
+
       if (options.status) {
-        query = this.database.select()
+        query = db
+          .select()
           .from(cryptoPayments)
-          .where(and(
-            eq(cryptoPayments.organizationId, authContext.organizationId),
-            eq(cryptoPayments.status, options.status)
-          ));
+          .where(
+            and(
+              eq(cryptoPayments.organizationId, authContext.organizationId),
+              eq(cryptoPayments.status, options.status),
+            ),
+          );
       }
-      
+
       const results = await query
         .orderBy(desc(cryptoPayments.createdAt))
         .limit(options.limit || 50)
         .offset(options.offset || 0);
-      
+
       return results.map((payment: any) => ({
         id: payment.id,
         user_id: payment.userId,
@@ -478,13 +574,20 @@ export class CryptoWalletService {
         amount_usd: parseFloat(payment.amountUsd),
         amount_credits: payment.amountCredits,
         transaction_hash: payment.transactionHash || undefined,
-        status: payment.status as 'pending' | 'confirmed' | 'failed' | 'expired',
+        status: payment.status as
+          | 'pending'
+          | 'confirmed'
+          | 'failed'
+          | 'expired',
         created_at: payment.createdAt,
         confirmed_at: payment.confirmedAt || undefined,
-        expires_at: payment.expiresAt
+        expires_at: payment.expiresAt,
       }));
     } catch (error) {
-      logger.error('Failed to get payment history', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        'Failed to get payment history',
+        error instanceof Error ? error : new Error(String(error)),
+      );
       throw error;
     }
   }
@@ -504,34 +607,45 @@ export class CryptoWalletService {
 
     const checkInterval = setInterval(async () => {
       try {
-        const isConfirmed = await this.checkPaymentConfirmation(paymentId, topUpRequest);
+        const isConfirmed = await this.checkPaymentConfirmation(
+          paymentId,
+          topUpRequest,
+        );
         if (isConfirmed) {
           clearInterval(checkInterval);
           this.paymentMonitors.delete(paymentId);
         }
       } catch (error) {
-        logger.error('Error during payment monitoring', undefined, { paymentId });
+        logger.error('Error during payment monitoring', undefined, {
+          paymentId,
+        });
       }
     }, 30000); // Check every 30 seconds
 
     this.paymentMonitors.set(paymentId, checkInterval);
 
     // Set expiration timeout
-    const expirationTimeout = setTimeout(async () => {
-      try {
-        await this.expirePayment(paymentId);
-        clearInterval(checkInterval);
-        this.paymentMonitors.delete(paymentId);
-      } catch (error) {
-        logger.error('Error expiring payment', undefined, { paymentId });
-      }
-    }, this.config.paymentTimeoutMinutes * 60 * 1000);
+    const expirationTimeout = setTimeout(
+      async () => {
+        try {
+          await this.expirePayment(paymentId);
+          clearInterval(checkInterval);
+          this.paymentMonitors.delete(paymentId);
+        } catch (error) {
+          logger.error('Error expiring payment', undefined, { paymentId });
+        }
+      },
+      this.config.paymentTimeoutMinutes * 60 * 1000,
+    );
   }
 
   /**
    * Check if payment has been confirmed on blockchain
    */
-  private async checkPaymentConfirmation(paymentId: string, topUpRequest: CryptoTopUp): Promise<boolean> {
+  private async checkPaymentConfirmation(
+    paymentId: string,
+    topUpRequest: CryptoTopUp,
+  ): Promise<boolean> {
     try {
       const chain = this.chains.get(topUpRequest.chain_id);
       if (!chain) return false;
@@ -553,23 +667,33 @@ export class CryptoWalletService {
         // Check for ERC-20 token transfers
         const tokenContract = new Contract(
           topUpRequest.token_address,
-          ['event Transfer(address indexed from, address indexed to, uint256 value)'],
-          provider
+          [
+            'event Transfer(address indexed from, address indexed to, uint256 value)',
+          ],
+          provider,
         );
 
         // Query transfer events
         const filter = tokenContract.filters.Transfer(
           topUpRequest.wallet_address,
-          null // Any recipient - you'd specify your payment address here
+          null, // Any recipient - you'd specify your payment address here
         );
 
-        const events = await tokenContract.queryFilter(filter, fromBlock, latestBlock);
-        
+        const events = await tokenContract.queryFilter(
+          filter,
+          fromBlock,
+          latestBlock,
+        );
+
         // Check if any event matches our expected amount
         const expectedAmount = BigInt(topUpRequest.amount);
         for (const event of events) {
           // Handle EventLog type properly
-          if ('args' in event && event.args && BigInt(event.args.value) === expectedAmount) {
+          if (
+            'args' in event &&
+            event.args &&
+            BigInt(event.args.value) === expectedAmount
+          ) {
             // Found matching transaction, confirm payment
             await this.confirmPayment(paymentId, event.transactionHash);
             return true;
@@ -579,7 +703,9 @@ export class CryptoWalletService {
 
       return false;
     } catch (error) {
-      logger.error('Error checking payment confirmation', undefined, { paymentId });
+      logger.error('Error checking payment confirmation', undefined, {
+        paymentId,
+      });
       return false;
     }
   }
@@ -587,10 +713,15 @@ export class CryptoWalletService {
   /**
    * Confirm payment and add credits
    */
-  private async confirmPayment(paymentId: string, transactionHash: string): Promise<void> {
+  private async confirmPayment(
+    paymentId: string,
+    transactionHash: string,
+  ): Promise<void> {
     try {
       // Get payment details
-      const paymentResult = await this.database.select()
+      const db = await getDatabaseClient();
+      const paymentResult = await db
+        .select()
         .from(cryptoPayments)
         .where(eq(cryptoPayments.id, paymentId))
         .limit(1);
@@ -602,11 +733,12 @@ export class CryptoWalletService {
       const payment = paymentResult[0];
 
       // Update payment status
-      await this.database.update(cryptoPayments)
+      await db
+        .update(cryptoPayments)
         .set({
           status: 'confirmed',
           transactionHash,
-          confirmedAt: new Date()
+          confirmedAt: new Date(),
         })
         .where(eq(cryptoPayments.id, paymentId));
 
@@ -624,8 +756,8 @@ export class CryptoWalletService {
           token_symbol: payment.tokenSymbol,
           amount_crypto: payment.amountCrypto,
           amount_usd: payment.amountUsd,
-          chain_id: payment.chainId
-        }
+          chain_id: payment.chainId,
+        },
       });
 
       logger.info('Payment confirmed and credits added', {
@@ -633,10 +765,14 @@ export class CryptoWalletService {
         creditsAdded: payment.amountCredits,
         transactionHash,
         organizationId: payment.organizationId,
-        userId: payment.userId
+        userId: payment.userId,
       });
     } catch (error) {
-      logger.error('Failed to confirm payment', error instanceof Error ? error : new Error(String(error)), { paymentId });
+      logger.error(
+        'Failed to confirm payment',
+        error instanceof Error ? error : new Error(String(error)),
+        { paymentId },
+      );
       throw error;
     }
   }
@@ -646,55 +782,72 @@ export class CryptoWalletService {
    */
   private async expirePayment(paymentId: string): Promise<void> {
     try {
-      await this.database.update(cryptoPayments)
+      const db = await getDatabaseClient();
+      await db
+        .update(cryptoPayments)
         .set({ status: 'expired' })
         .where(eq(cryptoPayments.id, paymentId));
 
       logger.info('Payment expired', { paymentId });
     } catch (error) {
-      logger.error('Failed to expire payment', error instanceof Error ? error : new Error(String(error)), { paymentId });
+      logger.error(
+        'Failed to expire payment',
+        error instanceof Error ? error : new Error(String(error)),
+        { paymentId },
+      );
     }
   }
 
   // ... (keeping existing helper methods but fixing them)
 
-  private async verifyWalletSignature(walletConnection: WalletConnection): Promise<boolean> {
+  private async verifyWalletSignature(
+    walletConnection: WalletConnection,
+  ): Promise<boolean> {
     try {
       // Add nonce verification for security
       const expectedMessage = `ElizaOS Login: ${walletConnection.message}`;
-      
+
       const recoveredAddress = verifyMessage(
         expectedMessage,
-        walletConnection.signature
+        walletConnection.signature,
       );
 
-      return recoveredAddress.toLowerCase() === walletConnection.address.toLowerCase();
+      return (
+        recoveredAddress.toLowerCase() ===
+        walletConnection.address.toLowerCase()
+      );
     } catch (error) {
-      logger.warn('Failed to verify wallet signature', { error: error instanceof Error ? error.message : String(error) });
+      logger.warn('Failed to verify wallet signature', {
+        error: error instanceof Error ? error.message : String(error),
+      });
       return false;
     }
   }
 
   private async getOrCreateUserByWallet(
-    address: string, 
-    chainId: number, 
-    authContext?: AuthContext
+    address: string,
+    chainId: number,
+    authContext?: AuthContext,
   ): Promise<{ userId: string; organizationId: string }> {
     try {
       // Check if wallet connection already exists
-      const existingConnection = await this.database.select()
+      const db = await getDatabaseClient();
+      const existingConnection = await db
+        .select()
         .from(walletConnections)
-        .where(and(
-          eq(walletConnections.walletAddress, address),
-          eq(walletConnections.chainId, chainId),
-          eq(walletConnections.isActive, true)
-        ))
+        .where(
+          and(
+            eq(walletConnections.walletAddress, address),
+            eq(walletConnections.chainId, chainId),
+            eq(walletConnections.isActive, true),
+          ),
+        )
         .limit(1);
 
       if (existingConnection.length > 0) {
         return {
           userId: existingConnection[0].userId,
-          organizationId: existingConnection[0].organizationId
+          organizationId: existingConnection[0].organizationId,
         };
       }
 
@@ -702,7 +855,7 @@ export class CryptoWalletService {
       if (authContext) {
         return {
           userId: authContext.userId,
-          organizationId: authContext.organizationId
+          organizationId: authContext.organizationId,
         };
       }
 
@@ -713,15 +866,18 @@ export class CryptoWalletService {
 
       return { userId, organizationId };
     } catch (error) {
-      logger.error('Failed to get or create user by wallet', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        'Failed to get or create user by wallet',
+        error instanceof Error ? error : new Error(String(error)),
+      );
       throw error;
     }
   }
 
   private async storeWalletConnection(
-    userId: string, 
-    organizationId: string, 
-    walletConnection: WalletConnection
+    userId: string,
+    organizationId: string,
+    walletConnection: WalletConnection,
   ): Promise<void> {
     try {
       const connectionData: NewWalletConnection = {
@@ -733,39 +889,46 @@ export class CryptoWalletService {
         signatureMessage: walletConnection.message,
         signature: walletConnection.signature,
         nonce: crypto.randomBytes(16).toString('hex'), // Generate secure nonce
-        isVerified: true
+        isVerified: true,
       };
 
-      await this.database.insert(walletConnections).values(connectionData);
-      
-      logger.info('Wallet connection stored', { 
-        userId, 
+      const db = await getDatabaseClient();
+      await db.insert(walletConnections).values(connectionData);
+
+      logger.info('Wallet connection stored', {
+        userId,
         organizationId,
         walletAddress: walletConnection.address,
         walletType: walletConnection.wallet_type,
-        chainId: walletConnection.chain_id 
+        chainId: walletConnection.chain_id,
       });
     } catch (error) {
-      logger.error('Failed to store wallet connection', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        'Failed to store wallet connection',
+        error instanceof Error ? error : new Error(String(error)),
+      );
       throw error;
     }
   }
 
   private async getTokenBalance(
-    address: string, 
-    tokenAddress: string, 
-    provider: JsonRpcProvider
+    address: string,
+    tokenAddress: string,
+    provider: JsonRpcProvider,
   ): Promise<bigint> {
     const contract = new Contract(
       tokenAddress,
       ['function balanceOf(address) view returns (uint256)'],
-      provider
+      provider,
     );
 
     return await contract.balanceOf(address);
   }
 
-  private async getTokenConfig(tokenAddress: string, chainId: number): Promise<TokenConfig> {
+  private async getTokenConfig(
+    tokenAddress: string,
+    chainId: number,
+  ): Promise<TokenConfig> {
     const chain = this.chains.get(chainId);
     if (!chain) {
       throw new Error('Unsupported chain');
@@ -779,12 +942,12 @@ export class CryptoWalletService {
         name: chain.nativeCurrency.name,
         decimals: chain.nativeCurrency.decimals,
         isStablecoin: false,
-        minAmount: parseEther('0.001').toString()
+        minAmount: parseEther('0.001').toString(),
       };
     }
 
-    const token = chain.supportedTokens.find(t => 
-      t.address.toLowerCase() === tokenAddress.toLowerCase()
+    const token = chain.supportedTokens.find(
+      (t) => t.address.toLowerCase() === tokenAddress.toLowerCase(),
     );
 
     if (!token) {
@@ -794,7 +957,9 @@ export class CryptoWalletService {
     return token;
   }
 
-  private async validateTopUpRequest(request: CryptoTopUp): Promise<{ valid: boolean; errors: string[] }> {
+  private async validateTopUpRequest(
+    request: CryptoTopUp,
+  ): Promise<{ valid: boolean; errors: string[] }> {
     const errors: string[] = [];
 
     // Validate wallet address
@@ -803,8 +968,10 @@ export class CryptoWalletService {
     }
 
     // Validate token address
-    if (request.token_address !== ZeroAddress && 
-        !isAddress(request.token_address)) {
+    if (
+      request.token_address !== ZeroAddress &&
+      !isAddress(request.token_address)
+    ) {
       errors.push('Invalid token address');
     }
 
@@ -831,7 +998,10 @@ export class CryptoWalletService {
     return { valid: errors.length === 0, errors };
   }
 
-  private setupBlockchainEventListeners(chainId: number, wsProvider: WebSocketProvider): void {
+  private setupBlockchainEventListeners(
+    chainId: number,
+    wsProvider: WebSocketProvider,
+  ): void {
     // Set up event listeners for real-time transaction monitoring
     // This would be implemented based on your specific needs
     logger.info('Setting up blockchain event listeners', { chainId });
@@ -842,23 +1012,33 @@ export class CryptoWalletService {
    */
   async cleanupExpiredPayments(): Promise<void> {
     try {
-      const expiredCount = await this.database.update(cryptoPayments)
+      const db = await getDatabaseClient();
+      const expiredCount = await db
+        .update(cryptoPayments)
         .set({ status: 'expired' })
-        .where(and(
-          eq(cryptoPayments.status, 'pending'),
-          // SQL: expires_at < NOW()
-        ));
+        .where(
+          and(
+            eq(cryptoPayments.status, 'pending'),
+            // SQL: expires_at < NOW()
+          ),
+        );
 
       logger.info('Expired payments cleanup completed', { expiredCount });
     } catch (error) {
-      logger.error('Failed to cleanup expired payments', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        'Failed to cleanup expired payments',
+        error instanceof Error ? error : new Error(String(error)),
+      );
     }
   }
 
   /**
    * Health check for all chains
    */
-  async healthCheck(): Promise<{ healthy: boolean; chains: Record<number, boolean> }> {
+  async healthCheck(): Promise<{
+    healthy: boolean;
+    chains: Record<number, boolean>;
+  }> {
     const chainHealth: Record<number, boolean> = {};
     let overallHealthy = true;
 
@@ -869,7 +1049,10 @@ export class CryptoWalletService {
       } catch (error) {
         chainHealth[chainId] = false;
         overallHealthy = false;
-        logger.warn(`Chain ${chainId} health check failed`, { chainId, error: error instanceof Error ? error.message : String(error) });
+        logger.warn(`Chain ${chainId} health check failed`, {
+          chainId,
+          error: error instanceof Error ? error.message : String(error),
+        });
       }
     }
 
@@ -891,12 +1074,14 @@ export class CryptoWalletService {
       try {
         await wsProvider.destroy();
       } catch (error) {
-        logger.warn(`Failed to close WebSocket provider for chain ${chainId}`, { error });
+        logger.warn(`Failed to close WebSocket provider for chain ${chainId}`, {
+          error,
+        });
       }
     }
 
     await this.cleanupExpiredPayments();
-    
+
     logger.info('Crypto wallet service cleanup completed');
   }
 }

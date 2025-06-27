@@ -28,7 +28,6 @@ async function build() {
 
   console.log(`✅ Built ${result.outputs.length} files`);
 
-
   // Generate TypeScript declarations
   console.log('📝 Generating TypeScript declarations...');
   try {
@@ -36,12 +35,12 @@ async function build() {
   } catch (error) {
     console.warn('⚠️ TypeScript declaration generation had issues, but continuing...');
   }
-  
+
   // Copy main declaration file to expected location (always attempt)
   try {
     const sourcePath = 'dist/plugin-autocoder/src/index.d.ts';
     const targetPath = 'dist/index.d.ts';
-    
+
     if (existsSync(sourcePath)) {
       const content = readFileSync(sourcePath, 'utf8');
       writeFileSync(targetPath, content);
@@ -52,9 +51,8 @@ async function build() {
   } catch (copyError) {
     console.warn('⚠️ Failed to copy main declaration file:', copyError);
   }
-  
-  console.log('✅ TypeScript declarations generated');
 
+  console.log('✅ TypeScript declarations generated');
 
   console.log('✅ Build complete!');
 }

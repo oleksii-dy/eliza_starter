@@ -80,7 +80,9 @@ describe('Complete Application Test Suite', () => {
     cy.log('🧩 Component Coverage Summary:');
     cy.log('');
     cy.log('Dashboard Components:');
-    cy.log('   ✅ [data-cy="dashboard-header"] - Header with title and description');
+    cy.log(
+      '   ✅ [data-cy="dashboard-header"] - Header with title and description',
+    );
     cy.log('   ✅ [data-cy="stats-section"] - Stats cards section');
     cy.log('   ✅ [data-cy="stats-agents"] - Agent statistics card');
     cy.log('   ✅ [data-cy="stats-team"] - Team member statistics');
@@ -108,16 +110,22 @@ describe('Complete Application Test Suite', () => {
     cy.log('   ✅ [data-cy="create-api-key-button"] - Create new API key');
     cy.log('   ✅ [data-cy="api-key-modal"] - API key creation modal');
     cy.log('   ✅ [data-cy="api-key-row"] - Individual API key display');
-    cy.log('   ✅ [data-cy="api-key-actions"] - Edit, regenerate, delete actions');
+    cy.log(
+      '   ✅ [data-cy="api-key-actions"] - Edit, regenerate, delete actions',
+    );
     cy.log('   ✅ Permission checkboxes with individual data-cy attributes');
     cy.log('   ✅ API key display and copy functionality');
     cy.log('   ✅ Rate limiting and configuration options');
     cy.log('');
     cy.log('Billing Components:');
     cy.log('   ✅ [data-cy="billing-settings-page"] - Billing settings page');
-    cy.log('   ✅ [data-cy="payment-methods-section"] - Payment methods management');
+    cy.log(
+      '   ✅ [data-cy="payment-methods-section"] - Payment methods management',
+    );
     cy.log('   ✅ [data-cy="add-payment-method"] - Add payment method button');
-    cy.log('   ✅ [data-cy="payment-method-modal"] - Payment method form modal');
+    cy.log(
+      '   ✅ [data-cy="payment-method-modal"] - Payment method form modal',
+    );
     cy.log('   ✅ [data-cy="auto-recharge-section"] - Auto-recharge settings');
     cy.log('   ✅ Payment form fields with validation');
     cy.log('   ✅ Auto-recharge toggle and configuration');
@@ -268,7 +276,7 @@ describe('Complete Application Test Suite', () => {
 
     const expectedTestFiles = [
       '01-dashboard-comprehensive.cy.ts',
-      '02-authentication-complete.cy.ts', 
+      '02-authentication-complete.cy.ts',
       '03-api-keys-complete.cy.ts',
       '04-billing-complete.cy.ts',
       '05-embedded-client-complete.cy.ts',

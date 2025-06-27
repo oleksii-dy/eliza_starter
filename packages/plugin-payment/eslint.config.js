@@ -1,0 +1,1 @@
+export { default } from '@elizaos/core/configs/eslint/eslint.config.plugin.js';

@@ -122,7 +122,7 @@ export class GoalDataService {
         .orderBy(asc(goalsTable.createdAt));
 
       // Get tags for all goals
-      const goalIds = goals.map((goal) => goal.id);
+      const goalIds = goals.map((goal: any) => goal.id);
       if (goalIds.length === 0) {
         return [];
       }
@@ -138,7 +138,7 @@ export class GoalDataService {
 
       // Group tags by goal
       const tagsByGoal = tags.reduce(
-        (acc, tag) => {
+        (acc: any, tag: any) => {
           if (!acc[tag.goalId]) {
             acc[tag.goalId] = [];
           }
@@ -151,13 +151,13 @@ export class GoalDataService {
       // Filter by tags if specified
       let filteredGoals = goals;
       if (filters?.tags && filters.tags.length > 0) {
-        filteredGoals = goals.filter((goal) => {
+        filteredGoals = goals.filter((goal: any) => {
           const goalTags = tagsByGoal[goal.id] || [];
           return filters.tags!.some((tag) => goalTags.includes(tag));
         });
       }
 
-      return filteredGoals.map((goal) => ({
+      return filteredGoals.map((goal: any) => ({
         ...goal,
         tags: tagsByGoal[goal.id] || [],
         createdAt: new Date(goal.createdAt),
@@ -191,7 +191,7 @@ export class GoalDataService {
 
       return {
         ...goal,
-        tags: tags.map((t) => t.tag),
+        tags: tags.map((t: any) => t.tag),
         createdAt: new Date(goal.createdAt),
         updatedAt: new Date(goal.updatedAt),
         completedAt: goal.completedAt ? new Date(goal.completedAt) : null,

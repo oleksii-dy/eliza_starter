@@ -21,8 +21,8 @@ async function testClaudeCodeSDK() {
         maxTurns: 1,
         outputFormat: 'stream-json' as const,
         allowedTools: ['Write'],
-        permissionMode: 'acceptEdits' as const
-      }
+        permissionMode: 'acceptEdits' as const,
+      },
     })) {
       messages.push(message);
 
@@ -32,7 +32,7 @@ async function testClaudeCodeSDK() {
         elizaLogger.info('Session completed:', {
           turns: message.num_turns,
           cost: message.total_cost_usd,
-          error: message.is_error
+          error: message.is_error,
         });
       } else if (message.type === 'assistant') {
         elizaLogger.info('Assistant message received');
@@ -41,7 +41,6 @@ async function testClaudeCodeSDK() {
 
     elizaLogger.info('Test completed successfully!');
     elizaLogger.info('Total messages:', messages.length);
-
   } catch (error) {
     elizaLogger.error('Test failed:', error);
     process.exit(1);

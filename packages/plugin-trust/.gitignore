@@ -8,3 +8,7 @@ docs
 coverage
 .cursor
 .elizadb*
+AGENTS.md
+.cursor/rules/elizaos
+CLAUDE.md
+.cursorignore

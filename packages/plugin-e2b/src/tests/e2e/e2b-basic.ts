@@ -32,7 +32,7 @@ export class E2BBasicE2ETestSuite implements TestSuite {
 
         elizaLogger.info('✓ E2B service initialized successfully', {
           sandboxCount: sandboxes.length,
-          isHealthy
+          isHealthy,
         });
       },
     },
@@ -88,7 +88,9 @@ export class E2BBasicE2ETestSuite implements TestSuite {
         const message: Memory = {
           id: createUniqueUuid(runtime, 'test-msg-2'),
           entityId: runtime.agentId,
-          content: { text: '```python\n# This will cause a division by zero error\nresult = 10 / 0\n```' },
+          content: {
+            text: '```python\n# This will cause a division by zero error\nresult = 10 / 0\n```',
+          },
           agentId: runtime.agentId,
           roomId,
           createdAt: Date.now(),
@@ -114,7 +116,10 @@ export class E2BBasicE2ETestSuite implements TestSuite {
         }
 
         // Should contain error information
-        if (!callbackResponse.text.includes('Error') && !callbackResponse.text.includes('ZeroDivisionError')) {
+        if (
+          !callbackResponse.text.includes('Error') &&
+          !callbackResponse.text.includes('ZeroDivisionError')
+        ) {
           throw new Error(`Expected error information in response: ${callbackResponse.text}`);
         }
 
@@ -169,7 +174,9 @@ export class E2BBasicE2ETestSuite implements TestSuite {
         // Verify sandbox was created
         const afterCreateSandboxes = e2bService.listSandboxes();
         if (afterCreateSandboxes.length !== initialCount + 1) {
-          throw new Error(`Expected ${initialCount + 1} sandboxes, got ${afterCreateSandboxes.length}`);
+          throw new Error(
+            `Expected ${initialCount + 1} sandboxes, got ${afterCreateSandboxes.length}`
+          );
         }
 
         // Test listing sandboxes
@@ -205,7 +212,7 @@ export class E2BBasicE2ETestSuite implements TestSuite {
 
         elizaLogger.info('✓ Sandbox management works correctly', {
           initialCount,
-          finalCount: afterCreateSandboxes.length
+          finalCount: afterCreateSandboxes.length,
         });
       },
     },
@@ -265,7 +272,9 @@ export class E2BBasicE2ETestSuite implements TestSuite {
         const firstMessage: Memory = {
           id: createUniqueUuid(runtime, 'test-msg-6'),
           entityId: runtime.agentId,
-          content: { text: '```python\nmy_variable = "Hello from E2B"\nprint("Variable set")\n```' },
+          content: {
+            text: '```python\nmy_variable = "Hello from E2B"\nprint("Variable set")\n```',
+          },
           agentId: runtime.agentId,
           roomId,
           createdAt: Date.now(),

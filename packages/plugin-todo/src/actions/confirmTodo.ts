@@ -138,7 +138,8 @@ ${pendingTask.recurring ? `Recurring: ${pendingTask.recurring}` : ''}
 export const confirmTodoAction: Action = {
   name: 'CONFIRM_TODO',
   similes: ['CONFIRM_TASK', 'APPROVE_TODO', 'APPROVE_TASK', 'TODO_CONFIRM'],
-  description: 'Confirms or cancels pending todo creation after user review. Processes confirmation intent and creates task if approved. Returns created task details or cancellation status. Used after CREATE_TODO_PREVIEW action.',
+  description:
+    'Confirms or cancels pending todo creation after user review. Processes confirmation intent and creates task if approved. Returns created task details or cancellation status. Used after CREATE_TODO_PREVIEW action.',
 
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
     // This action is only valid if there's a pending todo in the state

@@ -9,7 +9,9 @@ export default defineConfig({
   out: './drizzle/migrations',
   dialect: 'postgresql',
   dbCredentials: {
-    url: process.env.DATABASE_URL || 'postgresql://localhost:5432/elizaos_platform',
+    url:
+      process.env.DATABASE_URL ||
+      'postgresql://localhost:5432/elizaos_platform',
   },
   verbose: true,
   strict: true,

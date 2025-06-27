@@ -494,7 +494,7 @@ export function getExecutionOrder(plan: ActionPlan): UUID[][] {
 
   // For parallel and DAG execution, group by dependency levels
   const levels: UUID[][] = [];
-  const _processed = new Set<UUID>();
+  // const _processed = new Set<UUID>();
 
   function getLevel(stepId: UUID): number {
     const step = plan.steps.find((s) => s.id === stepId);

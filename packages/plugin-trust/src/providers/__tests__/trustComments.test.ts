@@ -1,4 +1,5 @@
-import { describe, it, expect, mock, beforeEach } from 'bun:test';
+import { describe, it, expect, beforeEach } from 'bun:test';
+import { mock } from '@elizaos/core/test-utils';
 import { trustProfileProvider } from '../trustProfile';
 import { createMockRuntime, createMockMemory, createMockState } from '../../__tests__/test-utils';
 
@@ -8,8 +9,6 @@ describe('Trust Comments', () => {
   let mockTrustDatabase: any;
 
   beforeEach(() => {
-    mock.restore();
-
     mockTrustDatabase = {
       getLatestTrustComment: mock(),
       getTrustCommentHistory: mock(),
@@ -21,12 +20,14 @@ describe('Trust Comments', () => {
       getRecentInteractions: mock(),
       calculateTrust: mock(),
       recordInteraction: mock(),
+      getTrustScore: mock(),
+      getLatestTrustComment: mock(),
     };
 
     mockRuntime = createMockRuntime({
-      getService: mock((nameOrClass: string | any) => {
+      getService: mock().mockImplementation((nameOrClass: string | any) => {
         if (typeof nameOrClass === 'string') {
-          if (nameOrClass === 'trust-engine') {
+          if (nameOrClass === 'trust-engine' || nameOrClass === 'trust') {
             return mockTrustEngine;
           }
           if (nameOrClass === 'trust-database') {
@@ -34,13 +35,14 @@ describe('Trust Comments', () => {
           }
         }
         return null;
-      }) as any,
+      }),
     });
   });
 
   describe('trustProfileProvider with comments', () => {
     it('should include trust comment in provider response', async () => {
       const mockProfile = {
+        overall: 75,
         overallTrust: 75,
         dimensions: {
           reliability: 80,
@@ -49,7 +51,7 @@ describe('Trust Comments', () => {
           benevolence: 75,
           transparency: 75,
         },
-        trend: { direction: 'stable' },
+        trend: 'stable',
         interactionCount: 25,
       };
 
@@ -65,9 +67,8 @@ describe('Trust Comments', () => {
         metadata: {},
       };
 
-      mockTrustEngine.evaluateTrust.mockResolvedValue(mockProfile);
-      mockTrustEngine.getRecentInteractions.mockResolvedValue([]);
-      mockTrustDatabase.getLatestTrustComment.mockResolvedValue(mockComment);
+      mockTrustEngine.getTrustScore.mockResolvedValue(mockProfile);
+      mockTrustEngine.getLatestTrustComment.mockResolvedValue(mockComment);
 
       const message = createMockMemory('Hello', 'test-entity' as any);
       const state = createMockState();
@@ -83,6 +84,7 @@ describe('Trust Comments', () => {
 
     it('should handle missing trust comment gracefully', async () => {
       const mockProfile = {
+        overall: 45,
         overallTrust: 45,
         dimensions: {
           reliability: 50,
@@ -91,13 +93,12 @@ describe('Trust Comments', () => {
           benevolence: 45,
           transparency: 45,
         },
-        trend: { direction: 'stable' },
+        trend: 'stable',
         interactionCount: 10,
       };
 
-      mockTrustEngine.evaluateTrust.mockResolvedValue(mockProfile);
-      mockTrustEngine.getRecentInteractions.mockResolvedValue([]);
-      mockTrustDatabase.getLatestTrustComment.mockResolvedValue(null);
+      mockTrustEngine.getTrustScore.mockResolvedValue(mockProfile);
+      mockTrustEngine.getLatestTrustComment.mockResolvedValue(null);
 
       const message = createMockMemory('Hello', 'test-entity' as any);
       const state = createMockState();
@@ -249,6 +250,7 @@ describe('Trust Comments', () => {
 
       for (const { score, expected } of trustLevels) {
         const mockProfile = {
+          overall: score,
           overallTrust: score,
           dimensions: {
             reliability: score,
@@ -257,13 +259,12 @@ describe('Trust Comments', () => {
             benevolence: score,
             transparency: score,
           },
-          trend: { direction: 'stable' },
+          trend: 'stable',
           interactionCount: 20,
         };
 
-        mockTrustEngine.evaluateTrust.mockResolvedValue(mockProfile);
-        mockTrustEngine.getRecentInteractions.mockResolvedValue([]);
-        mockTrustDatabase.getLatestTrustComment.mockResolvedValue(null);
+        mockTrustEngine.getTrustScore.mockResolvedValue(mockProfile);
+        mockTrustEngine.getLatestTrustComment.mockResolvedValue(null);
 
         const message = createMockMemory('Test message', 'test-entity' as any);
         const state = createMockState();

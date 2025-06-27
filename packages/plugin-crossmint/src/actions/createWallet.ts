@@ -18,10 +18,13 @@ import { CrossMintError } from '../types/crossmint';
 export const createWalletAction: Action = {
   name: 'CREATE_CROSSMINT_WALLET',
   similes: ['CREATE_WALLET', 'NEW_WALLET', 'GENERATE_WALLET'],
-  description: 'Create a new MPC or custodial wallet using CrossMint. Can be chained with TRANSFER for initial funding or CREATE_X402_PAYMENT to enable payment acceptance',
+  description:
+    'Create a new MPC or custodial wallet using CrossMint. Can be chained with TRANSFER for initial funding or CREATE_X402_PAYMENT to enable payment acceptance',
 
   validate: async (runtime: IAgentRuntime, _message: Memory) => {
-    const crossmintService = runtime.getService<CrossMintUniversalWalletService>('crossmint-universal-wallet');
+    const crossmintService = runtime.getService<CrossMintUniversalWalletService>(
+      'crossmint-universal-wallet'
+    );
     return !!crossmintService;
   },
 
@@ -33,7 +36,9 @@ export const createWalletAction: Action = {
     callback?: HandlerCallback
   ): Promise<ActionResult> => {
     try {
-      const crossmintService = runtime.getService<CrossMintUniversalWalletService>('crossmint-universal-wallet');
+      const crossmintService = runtime.getService<CrossMintUniversalWalletService>(
+        'crossmint-universal-wallet'
+      );
       if (!crossmintService) {
         throw new CrossMintError('CrossMint service not available');
       }
@@ -105,7 +110,8 @@ export const createWalletAction: Action = {
 **Name:** ${walletDetails.name}
 **Status:** ${wallet.isActive ? 'Active' : 'Inactive'}
 
-${wallet.type === 'mpc'
+${
+  wallet.type === 'mpc'
     ? 'This is an MPC wallet providing enhanced security through distributed key management.'
     : 'This is a custodial wallet managed by CrossMint.'
 }`;
@@ -188,7 +194,8 @@ ${wallet.type === 'mpc'
         name: '{{agent}}',
         content: {
           text: "I'll create a new wallet and configure it for X.402 payment acceptance.",
-          thought: 'User wants wallet creation followed by payment setup - a complete payment infrastructure workflow.',
+          thought:
+            'User wants wallet creation followed by payment setup - a complete payment infrastructure workflow.',
           actions: ['CREATE_CROSSMINT_WALLET', 'CREATE_X402_PAYMENT'],
         },
       },

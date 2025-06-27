@@ -21,7 +21,7 @@ export const sandboxActions = [
   // - getTeamStatusAction
 ];
 
-export const sandboxServices = [SandboxManager, MockSandboxManager, WebSocketBridge];
+export const sandboxServices = [SandboxManager, MockSandboxManager];
 
 export const sandboxPlugin: Plugin = {
   name: 'sandbox-dev-team',

@@ -1,7 +1,7 @@
 /**
  * Billing Plugin Runtime Integration Tests
  * Tests billing functionality using real ElizaOS runtime with actual agent scenarios
- * 
+ *
  * TEMPORARILY DISABLED: Interface incompatibilities with ElizaOS core types
  * The MessageExample and ActionExample interfaces don't match the expected structure
  * This test needs to be updated when the core types are stabilized

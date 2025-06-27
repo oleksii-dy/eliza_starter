@@ -12,7 +12,8 @@ const paymentReceiveTransactionScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'Your ETH wallet address is 0x742d35Cc6634C0532925a3b844Bc9e7595f7E123. You can share this to receive Ethereum or ERC-20 tokens.',
+        content:
+          'Your ETH wallet address is 0x742d35Cc6634C0532925a3b844Bc9e7595f7E123. You can share this to receive Ethereum or ERC-20 tokens.',
         action: 'GET_WALLET_ADDRESS',
       },
     ],
@@ -23,18 +24,20 @@ const paymentReceiveTransactionScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'Let me check your recent transactions. I found an incoming payment of 50 USDC from 0x123...abc received 10 minutes ago.',
+        content:
+          'Let me check your recent transactions. I found an incoming payment of 50 USDC from 0x123...abc received 10 minutes ago.',
         action: 'CHECK_TRANSACTION',
       },
     ],
     [
       {
         user: 'carol',
-        content: 'What\'s my Solana wallet balance?',
+        content: "What's my Solana wallet balance?",
       },
       {
         user: 'agent',
-        content: 'Your Solana wallet balance is 125.5 SOL. You have 3 recent incoming transactions totaling 25 SOL in the last 24 hours.',
+        content:
+          'Your Solana wallet balance is 125.5 SOL. You have 3 recent incoming transactions totaling 25 SOL in the last 24 hours.',
         action: 'CHECK_BALANCE',
       },
     ],

@@ -108,12 +108,12 @@ The CrossmintAdapter is automatically detected and loaded by the PaymentService 
 
 Common errors and solutions:
 
-| Error | Solution |
-|-------|----------|
+| Error                         | Solution                                                        |
+| ----------------------------- | --------------------------------------------------------------- |
 | "No Crossmint services found" | Ensure the Crossmint plugin is loaded before the payment plugin |
-| "Invalid API credentials" | Check CROSSMINT_API_KEY and CROSSMINT_PROJECT_ID |
-| "Unsupported chain" | Verify the payment method is supported by Crossmint |
-| "Insufficient balance" | The MPC wallet needs to be funded |
+| "Invalid API credentials"     | Check CROSSMINT_API_KEY and CROSSMINT_PROJECT_ID                |
+| "Unsupported chain"           | Verify the payment method is supported by Crossmint             |
+| "Insufficient balance"        | The MPC wallet needs to be funded                               |
 
 ## Testing
 
@@ -141,6 +141,7 @@ npm test -- --scenario=payment-crossmint-integration
 ## Support
 
 For issues specific to the CrossmintAdapter:
+
 - Check the [Crossmint documentation](https://docs.crossmint.com)
 - Review the adapter logs for detailed error messages
-- Ensure all required services are properly initialized 
+- Ensure all required services are properly initialized

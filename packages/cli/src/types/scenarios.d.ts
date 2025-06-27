@@ -9,10 +9,11 @@ declare module '@elizaos/scenarios' {
   export interface ScenarioStep {
     id: string;
     type: string;
-    config: any;
+    config: unknown;
   }
 
   export function loadScenarios(): Promise<Scenario[]>;
-  export function runScenario(scenario: Scenario): Promise<any>;
-  export default any;
+  export function runScenario(scenario: Scenario): Promise<unknown>;
+  const defaultExport: unknown;
+  export default defaultExport;
 }

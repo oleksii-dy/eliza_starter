@@ -4,7 +4,10 @@
 
 import { describe, test, expect, beforeAll, afterAll } from '@jest/globals';
 import { IAgentRuntime } from '@elizaos/core';
-import { createTestRuntime, RuntimeTestHarness } from '@elizaos/core/test-utils';
+import {
+  createTestRuntime,
+  RuntimeTestHarness,
+} from '@elizaos/core/test-utils';
 
 describe('Basic Runtime Integration', () => {
   let runtime: IAgentRuntime | null = null;
@@ -13,25 +16,29 @@ describe('Basic Runtime Integration', () => {
   beforeAll(async () => {
     // Skip runtime tests if core package has ESM import.meta issues
     try {
-      const { runtime: testRuntime, harness: testHarness } = await createTestRuntime({
-        character: {
-          name: 'TestAgent',
-          bio: ['Test agent for basic integration'],
-          system: 'You are a test agent.',
-          messageExamples: [],
-          postExamples: [],
-          topics: ['testing'],
-          knowledge: [],
-          plugins: [],
-        },
-      });
+      const { runtime: testRuntime, harness: testHarness } =
+        await createTestRuntime({
+          character: {
+            name: 'TestAgent',
+            bio: ['Test agent for basic integration'],
+            system: 'You are a test agent.',
+            messageExamples: [],
+            postExamples: [],
+            topics: ['testing'],
+            knowledge: [],
+            plugins: [],
+          },
+        });
 
       runtime = testRuntime;
       harness = testHarness;
 
       console.log('Basic test runtime created successfully');
     } catch (error) {
-      console.warn('Runtime creation failed (ESM compatibility issue):', (error as Error).message);
+      console.warn(
+        'Runtime creation failed (ESM compatibility issue):',
+        (error as Error).message,
+      );
       // Don't throw - let individual tests handle the null runtime
     }
   });
@@ -44,7 +51,9 @@ describe('Basic Runtime Integration', () => {
 
   test('should create runtime with valid configuration', () => {
     if (!runtime) {
-      console.log('Skipping runtime test: Runtime creation failed due to ESM compatibility');
+      console.log(
+        'Skipping runtime test: Runtime creation failed due to ESM compatibility',
+      );
       return;
     }
 

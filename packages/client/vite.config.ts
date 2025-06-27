@@ -11,16 +11,7 @@ export default defineConfig({
       tsDecorators: false,
     }),
     nodePolyfills({
-      include: [
-        'crypto',
-        'stream', 
-        'buffer',
-        'util',
-        'events',
-        'path',
-        'fs',
-        'module'
-      ],
+      include: ['crypto', 'stream', 'buffer', 'util', 'events', 'path', 'fs', 'module'],
       globals: {
         Buffer: true,
         global: true,
@@ -42,11 +33,11 @@ export default defineConfig({
     noDiscovery: true,
     include: [
       'buffer',
-      'events', 
+      'events',
       'crypto-browserify',
       'stream-browserify',
       'util',
-      '@elizaos/core'
+      '@elizaos/core',
     ],
   },
   build: {

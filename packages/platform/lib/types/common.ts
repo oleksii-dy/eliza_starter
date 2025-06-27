@@ -146,15 +146,21 @@ export interface AudioGenerationRequestTyped extends GenerationRequestWithAuth {
 }
 
 // Type guards
-export function isImageGenerationRequest(req: GenerationRequestWithAuth): req is ImageGenerationRequestTyped {
+export function isImageGenerationRequest(
+  req: GenerationRequestWithAuth,
+): req is ImageGenerationRequestTyped {
   return req.type === 'IMAGE';
 }
 
-export function isVideoGenerationRequest(req: GenerationRequestWithAuth): req is VideoGenerationRequestTyped {
+export function isVideoGenerationRequest(
+  req: GenerationRequestWithAuth,
+): req is VideoGenerationRequestTyped {
   return req.type === 'VIDEO';
 }
 
-export function isAudioGenerationRequest(req: GenerationRequestWithAuth): req is AudioGenerationRequestTyped {
+export function isAudioGenerationRequest(
+  req: GenerationRequestWithAuth,
+): req is AudioGenerationRequestTyped {
   return req.type === 'AUDIO';
 }
 
@@ -170,4 +176,4 @@ export function isAuthPayload(payload: unknown): payload is AuthPayload {
     'organizationId' in payload &&
     'email' in payload
   );
-} 
+}

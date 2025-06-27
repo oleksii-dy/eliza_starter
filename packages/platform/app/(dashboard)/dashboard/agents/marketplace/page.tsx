@@ -6,7 +6,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
+import {
   MagnifyingGlassIcon,
   StarIcon,
   DownloadIcon,
@@ -17,7 +17,7 @@ import {
   HeartIcon,
   CheckCircledIcon,
   ExternalLinkIcon,
-  PlusIcon
+  PlusIcon,
 } from '@radix-ui/react-icons';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -54,7 +54,7 @@ const categories = [
   { id: 'entertainment', name: 'Entertainment', count: 19 },
   { id: 'finance', name: 'Finance', count: 8 },
   { id: 'healthcare', name: 'Healthcare', count: 6 },
-  { id: 'development', name: 'Development', count: 13 }
+  { id: 'development', name: 'Development', count: 13 },
 ];
 
 const sortOptions = [
@@ -62,18 +62,19 @@ const sortOptions = [
   { id: 'newest', name: 'Newest' },
   { id: 'rating', name: 'Highest Rated' },
   { id: 'downloads', name: 'Most Downloaded' },
-  { id: 'updated', name: 'Recently Updated' }
+  { id: 'updated', name: 'Recently Updated' },
 ];
 
 const mockAgents: Agent[] = [
   {
     id: 'agent-1',
     name: 'Customer Support Pro',
-    description: 'Advanced customer support agent with multilingual capabilities, sentiment analysis, and escalation handling.',
+    description:
+      'Advanced customer support agent with multilingual capabilities, sentiment analysis, and escalation handling.',
     creator: {
       id: 'creator-1',
       name: 'TechCorp Solutions',
-      verified: true
+      verified: true,
     },
     category: 'customer-service',
     tags: ['customer-support', 'multilingual', 'sentiment-analysis'],
@@ -82,16 +83,17 @@ const mockAgents: Agent[] = [
     likes: 89,
     price: 0,
     featured: true,
-    lastUpdated: new Date('2024-01-15')
+    lastUpdated: new Date('2024-01-15'),
   },
   {
     id: 'agent-2',
     name: 'Content Creator Assistant',
-    description: 'AI assistant specialized in social media content creation, hashtag optimization, and trend analysis.',
+    description:
+      'AI assistant specialized in social media content creation, hashtag optimization, and trend analysis.',
     creator: {
       id: 'creator-2',
       name: 'CreativeAI Labs',
-      verified: true
+      verified: true,
     },
     category: 'content-creation',
     tags: ['social-media', 'content', 'marketing'],
@@ -100,16 +102,17 @@ const mockAgents: Agent[] = [
     likes: 156,
     price: 9.99,
     featured: false,
-    lastUpdated: new Date('2024-01-10')
+    lastUpdated: new Date('2024-01-10'),
   },
   {
     id: 'agent-3',
     name: 'Data Analyst Bot',
-    description: 'Comprehensive data analysis agent that can process CSV files, generate insights, and create visualizations.',
+    description:
+      'Comprehensive data analysis agent that can process CSV files, generate insights, and create visualizations.',
     creator: {
       id: 'creator-3',
       name: 'DataWorks Inc',
-      verified: false
+      verified: false,
     },
     category: 'data-analysis',
     tags: ['analytics', 'csv', 'visualization'],
@@ -118,8 +121,8 @@ const mockAgents: Agent[] = [
     likes: 72,
     price: 19.99,
     featured: true,
-    lastUpdated: new Date('2024-01-08')
-  }
+    lastUpdated: new Date('2024-01-08'),
+  },
 ];
 
 export default function AgentMarketplacePage() {
@@ -133,7 +136,7 @@ export default function AgentMarketplacePage() {
   const [filters, setFilters] = useState({
     priceRange: 'all', // 'free', 'paid', 'all'
     rating: 0,
-    verified: false
+    verified: false,
   });
 
   useEffect(() => {
@@ -142,39 +145,48 @@ export default function AgentMarketplacePage() {
 
     // Search filter
     if (searchQuery) {
-      filteredAgents = filteredAgents.filter(agent =>
-        agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        agent.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        agent.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+      filteredAgents = filteredAgents.filter(
+        (agent) =>
+          agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          agent.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          agent.tags.some((tag) =>
+            tag.toLowerCase().includes(searchQuery.toLowerCase()),
+          ),
       );
     }
 
     // Category filter
     if (selectedCategory !== 'all') {
-      filteredAgents = filteredAgents.filter(agent => agent.category === selectedCategory);
+      filteredAgents = filteredAgents.filter(
+        (agent) => agent.category === selectedCategory,
+      );
     }
 
     // Price filter
     if (filters.priceRange === 'free') {
-      filteredAgents = filteredAgents.filter(agent => agent.price === 0);
+      filteredAgents = filteredAgents.filter((agent) => agent.price === 0);
     } else if (filters.priceRange === 'paid') {
-      filteredAgents = filteredAgents.filter(agent => agent.price > 0);
+      filteredAgents = filteredAgents.filter((agent) => agent.price > 0);
     }
 
     // Rating filter
     if (filters.rating > 0) {
-      filteredAgents = filteredAgents.filter(agent => agent.rating >= filters.rating);
+      filteredAgents = filteredAgents.filter(
+        (agent) => agent.rating >= filters.rating,
+      );
     }
 
     // Verified filter
     if (filters.verified) {
-      filteredAgents = filteredAgents.filter(agent => agent.creator.verified);
+      filteredAgents = filteredAgents.filter((agent) => agent.creator.verified);
     }
 
     // Sort
     switch (sortBy) {
       case 'newest':
-        filteredAgents.sort((a, b) => b.lastUpdated.getTime() - a.lastUpdated.getTime());
+        filteredAgents.sort(
+          (a, b) => b.lastUpdated.getTime() - a.lastUpdated.getTime(),
+        );
         break;
       case 'rating':
         filteredAgents.sort((a, b) => b.rating - a.rating);
@@ -183,10 +195,14 @@ export default function AgentMarketplacePage() {
         filteredAgents.sort((a, b) => b.downloads - a.downloads);
         break;
       case 'updated':
-        filteredAgents.sort((a, b) => b.lastUpdated.getTime() - a.lastUpdated.getTime());
+        filteredAgents.sort(
+          (a, b) => b.lastUpdated.getTime() - a.lastUpdated.getTime(),
+        );
         break;
       default: // popular
-        filteredAgents.sort((a, b) => (b.downloads + b.likes) - (a.downloads + a.likes));
+        filteredAgents.sort(
+          (a, b) => b.downloads + b.likes - (a.downloads + a.likes),
+        );
     }
 
     setAgents(filteredAgents);
@@ -196,13 +212,15 @@ export default function AgentMarketplacePage() {
     setLoading(true);
     try {
       // Mock installation
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setAgents(prev => prev.map(agent => 
-        agent.id === agentId 
-          ? { ...agent, installed: true, downloads: agent.downloads + 1 }
-          : agent
-      ));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      setAgents((prev) =>
+        prev.map((agent) =>
+          agent.id === agentId
+            ? { ...agent, installed: true, downloads: agent.downloads + 1 }
+            : agent,
+        ),
+      );
     } catch (error) {
       console.error('Installation failed:', error);
     } finally {
@@ -211,27 +229,31 @@ export default function AgentMarketplacePage() {
   };
 
   const handleLikeAgent = (agentId: string) => {
-    setAgents(prev => prev.map(agent => 
-      agent.id === agentId 
-        ? { ...agent, likes: agent.likes + 1 }
-        : agent
-    ));
+    setAgents((prev) =>
+      prev.map((agent) =>
+        agent.id === agentId ? { ...agent, likes: agent.likes + 1 } : agent,
+      ),
+    );
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex h-full flex-col">
       {/* Header */}
       <div className="border-b border-stroke-weak p-6">
-        <div className="flex items-center justify-between mb-6">
+        <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-typography-strong">Agent Marketplace</h1>
-            <p className="text-typography-weak">Discover and install community-created AI agents</p>
+            <h1 className="text-2xl font-bold text-typography-strong">
+              Agent Marketplace
+            </h1>
+            <p className="text-typography-weak">
+              Discover and install community-created AI agents
+            </p>
           </div>
-          
+
           <div className="flex items-center gap-3">
             <Link
               href="/dashboard/agents/publish"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              className="inline-flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-white transition-colors hover:bg-purple-700"
             >
               <Share1Icon className="h-4 w-4" />
               Publish Agent
@@ -241,34 +263,36 @@ export default function AgentMarketplacePage() {
 
         {/* Search and Filters */}
         <div className="flex items-center gap-4">
-          <div className="flex-1 relative">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-typography-weak" />
+          <div className="relative flex-1">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transform text-typography-weak" />
             <input
               type="text"
               placeholder="Search agents, categories, or tags..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-stroke-weak rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full rounded-lg border border-stroke-weak py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
 
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="px-3 py-2 border border-stroke-weak rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="rounded-lg border border-stroke-weak px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500"
           >
-            {sortOptions.map(option => (
-              <option key={option.id} value={option.id}>{option.name}</option>
+            {sortOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.name}
+              </option>
             ))}
           </select>
 
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={cn(
-              "flex items-center gap-2 px-3 py-2 border rounded-lg transition-colors",
+              'flex items-center gap-2 rounded-lg border px-3 py-2 transition-colors',
               showFilters
-                ? "bg-purple-500/10 border-purple-200 text-purple-600"
-                : "border-stroke-weak hover:bg-hover"
+                ? 'border-purple-200 bg-purple-500/10 text-purple-600'
+                : 'border-stroke-weak hover:bg-hover',
             )}
           >
             <MixerVerticalIcon className="h-4 w-4" />
@@ -278,14 +302,19 @@ export default function AgentMarketplacePage() {
 
         {/* Filters Panel */}
         {showFilters && (
-          <div className="mt-4 p-4 bg-background border border-stroke-weak rounded-lg">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="mt-4 rounded-lg border border-stroke-weak bg-background p-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Price</label>
+                <label className="mb-2 block text-sm font-medium">Price</label>
                 <select
                   value={filters.priceRange}
-                  onChange={(e) => setFilters(prev => ({ ...prev, priceRange: e.target.value }))}
-                  className="w-full p-2 border border-stroke-weak rounded-lg"
+                  onChange={(e) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      priceRange: e.target.value,
+                    }))
+                  }
+                  className="w-full rounded-lg border border-stroke-weak p-2"
                 >
                   <option value="all">All</option>
                   <option value="free">Free</option>
@@ -294,11 +323,18 @@ export default function AgentMarketplacePage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Minimum Rating</label>
+                <label className="mb-2 block text-sm font-medium">
+                  Minimum Rating
+                </label>
                 <select
                   value={filters.rating}
-                  onChange={(e) => setFilters(prev => ({ ...prev, rating: parseFloat(e.target.value) }))}
-                  className="w-full p-2 border border-stroke-weak rounded-lg"
+                  onChange={(e) =>
+                    setFilters((prev) => ({
+                      ...prev,
+                      rating: parseFloat(e.target.value),
+                    }))
+                  }
+                  className="w-full rounded-lg border border-stroke-weak p-2"
                 >
                   <option value={0}>Any</option>
                   <option value={3}>3+ Stars</option>
@@ -312,10 +348,17 @@ export default function AgentMarketplacePage() {
                   <input
                     type="checkbox"
                     checked={filters.verified}
-                    onChange={(e) => setFilters(prev => ({ ...prev, verified: e.target.checked }))}
+                    onChange={(e) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        verified: e.target.checked,
+                      }))
+                    }
                     className="rounded"
                   />
-                  <span className="text-sm font-medium">Verified creators only</span>
+                  <span className="text-sm font-medium">
+                    Verified creators only
+                  </span>
                 </label>
               </div>
             </div>
@@ -323,24 +366,26 @@ export default function AgentMarketplacePage() {
         )}
       </div>
 
-      <div className="flex-1 flex">
+      <div className="flex flex-1">
         {/* Categories Sidebar */}
         <div className="w-64 border-r border-stroke-weak p-6">
-          <h3 className="font-semibold mb-4">Categories</h3>
+          <h3 className="mb-4 font-semibold">Categories</h3>
           <div className="space-y-1">
-            {categories.map(category => (
+            {categories.map((category) => (
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
                 className={cn(
-                  "w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors",
+                  'flex w-full items-center justify-between rounded-lg px-3 py-2 text-left transition-colors',
                   selectedCategory === category.id
-                    ? "bg-purple-500/10 text-purple-600"
-                    : "hover:bg-hover"
+                    ? 'bg-purple-500/10 text-purple-600'
+                    : 'hover:bg-hover',
                 )}
               >
                 <span className="text-sm">{category.name}</span>
-                <span className="text-xs text-typography-weak">{category.count}</span>
+                <span className="text-xs text-typography-weak">
+                  {category.count}
+                </span>
               </button>
             ))}
           </div>
@@ -351,36 +396,56 @@ export default function AgentMarketplacePage() {
           {/* Featured Agents */}
           {selectedCategory === 'all' && !searchQuery && (
             <div className="mb-8">
-              <h2 className="text-xl font-semibold mb-4">Featured Agents</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {agents.filter(agent => agent.featured).map(agent => (
-                  <AgentCard key={agent.id} agent={agent} onInstall={handleInstallAgent} onLike={handleLikeAgent} />
-                ))}
+              <h2 className="mb-4 text-xl font-semibold">Featured Agents</h2>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {agents
+                  .filter((agent) => agent.featured)
+                  .map((agent) => (
+                    <AgentCard
+                      key={agent.id}
+                      agent={agent}
+                      onInstall={handleInstallAgent}
+                      onLike={handleLikeAgent}
+                    />
+                  ))}
               </div>
             </div>
           )}
 
           {/* All Agents */}
           <div>
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold">
-                {selectedCategory === 'all' ? 'All Agents' : categories.find(c => c.id === selectedCategory)?.name}
+                {selectedCategory === 'all'
+                  ? 'All Agents'
+                  : categories.find((c) => c.id === selectedCategory)?.name}
               </h2>
-              <span className="text-sm text-typography-weak">{agents.length} agents</span>
+              <span className="text-sm text-typography-weak">
+                {agents.length} agents
+              </span>
             </div>
 
             {agents.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="py-12 text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
                   <PersonIcon className="h-8 w-8 text-gray-400" />
                 </div>
-                <h3 className="text-lg font-medium text-typography-strong mb-2">No agents found</h3>
-                <p className="text-typography-weak">Try adjusting your search or filters</p>
+                <h3 className="mb-2 text-lg font-medium text-typography-strong">
+                  No agents found
+                </h3>
+                <p className="text-typography-weak">
+                  Try adjusting your search or filters
+                </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {agents.map(agent => (
-                  <AgentCard key={agent.id} agent={agent} onInstall={handleInstallAgent} onLike={handleLikeAgent} />
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {agents.map((agent) => (
+                  <AgentCard
+                    key={agent.id}
+                    agent={agent}
+                    onInstall={handleInstallAgent}
+                    onLike={handleLikeAgent}
+                  />
                 ))}
               </div>
             )}
@@ -399,19 +464,21 @@ interface AgentCardProps {
 
 function AgentCard({ agent, onInstall, onLike }: AgentCardProps) {
   return (
-    <div className="bg-card border border-stroke-weak rounded-lg p-6 hover:shadow-lg transition-shadow">
+    <div className="bg-card rounded-lg border border-stroke-weak p-6 transition-shadow hover:shadow-lg">
       {/* Header */}
-      <div className="flex items-start justify-between mb-4">
+      <div className="mb-4 flex items-start justify-between">
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <h3 className="font-semibold text-typography-strong">{agent.name}</h3>
+          <div className="mb-1 flex items-center gap-2">
+            <h3 className="font-semibold text-typography-strong">
+              {agent.name}
+            </h3>
             {agent.featured && (
               <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">
                 Featured
               </span>
             )}
           </div>
-          
+
           <div className="flex items-center gap-2 text-sm text-typography-weak">
             <span>{agent.creator.name}</span>
             {agent.creator.verified && (
@@ -430,16 +497,16 @@ function AgentCard({ agent, onInstall, onLike }: AgentCardProps) {
       </div>
 
       {/* Description */}
-      <p className="text-sm text-typography-weak mb-4 line-clamp-3">
+      <p className="mb-4 line-clamp-3 text-sm text-typography-weak">
         {agent.description}
       </p>
 
       {/* Tags */}
-      <div className="flex flex-wrap gap-1 mb-4">
-        {agent.tags.slice(0, 3).map(tag => (
+      <div className="mb-4 flex flex-wrap gap-1">
+        {agent.tags.slice(0, 3).map((tag) => (
           <span
             key={tag}
-            className="inline-flex items-center gap-1 px-2 py-1 bg-background rounded-full text-xs"
+            className="inline-flex items-center gap-1 rounded-full bg-background px-2 py-1 text-xs"
           >
             <TargetIcon className="h-3 w-3" />
             {tag}
@@ -453,9 +520,9 @@ function AgentCard({ agent, onInstall, onLike }: AgentCardProps) {
       </div>
 
       {/* Stats */}
-      <div className="flex items-center gap-4 mb-4 text-sm text-typography-weak">
+      <div className="mb-4 flex items-center gap-4 text-sm text-typography-weak">
         <div className="flex items-center gap-1">
-          <StarIcon className="h-4 w-4 text-yellow-500 fill-current" />
+          <StarIcon className="h-4 w-4 fill-current text-yellow-500" />
           <span>{agent.rating}</span>
         </div>
         <div className="flex items-center gap-1">
@@ -474,10 +541,10 @@ function AgentCard({ agent, onInstall, onLike }: AgentCardProps) {
           onClick={() => onInstall(agent.id)}
           disabled={agent.installed}
           className={cn(
-            "flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-medium transition-colors",
+            'flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 font-medium transition-colors',
             agent.installed
-              ? "bg-green-100 text-green-700 cursor-default"
-              : "bg-purple-600 text-white hover:bg-purple-700"
+              ? 'cursor-default bg-green-100 text-green-700'
+              : 'bg-purple-600 text-white hover:bg-purple-700',
           )}
         >
           {agent.installed ? (
@@ -495,14 +562,14 @@ function AgentCard({ agent, onInstall, onLike }: AgentCardProps) {
 
         <button
           onClick={() => onLike(agent.id)}
-          className="p-2 border border-stroke-weak rounded-lg hover:bg-hover transition-colors"
+          className="rounded-lg border border-stroke-weak p-2 transition-colors hover:bg-hover"
         >
           <HeartIcon className="h-4 w-4" />
         </button>
 
         <Link
           href={`/dashboard/agents/marketplace/${agent.id}`}
-          className="p-2 border border-stroke-weak rounded-lg hover:bg-hover transition-colors"
+          className="rounded-lg border border-stroke-weak p-2 transition-colors hover:bg-hover"
         >
           <ExternalLinkIcon className="h-4 w-4" />
         </Link>

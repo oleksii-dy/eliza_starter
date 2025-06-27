@@ -15,11 +15,11 @@ describe('Plugin Manager Index', () => {
   it('should export pluginManagerPlugin with correct definitions', () => {
     expect(pluginManagerPlugin.name).toBe('plugin-manager');
     expect(pluginManagerPlugin.description).toBe(
-      'Manages the full lifecycle of plugins with health monitoring, dependency resolution, trust-based access control, and advanced features.'
+      'Manages the full lifecycle of plugins with health monitoring, dependency resolution, trust-based access control, and enhanced platform registry supporting plugins, MCPs, and workflows.'
     );
-    expect(pluginManagerPlugin.services).toEqual([PluginManagerService]);
+    expect(pluginManagerPlugin.services).toHaveLength(2); // PluginManagerService and PlatformRegistryService
     expect(pluginManagerPlugin.providers).toHaveLength(0); // All providers migrated to actions
-    expect(pluginManagerPlugin.actions).toHaveLength(16); // 12 original + 4 new info actions
+    expect(pluginManagerPlugin.actions).toHaveLength(20); // 16 core actions + 4 platform registry actions
     expect(pluginManagerPlugin.actions).toContainEqual(loadPluginAction);
     expect(pluginManagerPlugin.actions).toContainEqual(unloadPluginAction);
     expect(pluginManagerPlugin.actions).toContainEqual(startPluginConfigurationAction);

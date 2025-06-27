@@ -1,5 +1,5 @@
 import { loadProject } from '@/src/project';
-import AgentServer from '@elizaos/server';
+// AgentServer imported dynamically
 // Dynamic imports for utilities that may not be properly exported
 let jsonToCharacter: any;
 let loadCharacterTryPath: any;
@@ -62,7 +62,7 @@ export async function runE2eTests(
     }
   }
 
-  let server: AgentServer | undefined;
+  let server: any | undefined;
   try {
     const runtimes: IAgentRuntime[] = [];
     const projectAgents: ProjectAgent[] = [];
@@ -148,7 +148,8 @@ export async function runE2eTests(
 
     // Create server instance
     logger.info('Creating server instance...');
-    server = new AgentServer();
+    const { default: AgentServer } = (await import('@elizaos/server')) as any;
+    server = new AgentServer() as any;
     logger.info('Server instance created');
 
     // Initialize the server explicitly before starting

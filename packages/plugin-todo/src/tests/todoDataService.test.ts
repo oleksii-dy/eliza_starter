@@ -1,5 +1,6 @@
 import type { IAgentRuntime, UUID } from '@elizaos/core';
 import { afterEach, beforeEach, describe, expect, it, mock } from 'bun:test';
+import { createMockRuntime } from '@elizaos/core/test-utils';
 import { todosTable, todoTagsTable } from '../schema.ts';
 import { createTodoDataService, TodoDataService } from '../services/todoDataService.ts';
 
@@ -44,10 +45,10 @@ describe('TodoDataService', () => {
       execute: mock(),
     };
 
-    mockRuntime = {
+    mockRuntime = createMockRuntime({
       agentId: 'test-agent' as UUID,
       db: mockDb,
-    } as any;
+    }) as any;
 
     service = createTodoDataService(mockRuntime);
   });
@@ -241,7 +242,10 @@ describe('TodoDataService', () => {
       mockThenable.then.mockImplementationOnce((resolve: any) => resolve(existingTags));
       mockThenable.then.mockImplementationOnce((resolve: any) => resolve(true));
 
-      const success = await service.addTags('00000000-0000-0000-0000-000000000001' as UUID, ['urgent', 'high-priority']);
+      const success = await service.addTags('00000000-0000-0000-0000-000000000001' as UUID, [
+        'urgent',
+        'high-priority',
+      ]);
 
       expect(mockDb.select).toHaveBeenCalled();
       expect(mockDb.insert).toHaveBeenCalledWith(todoTagsTable);
@@ -252,7 +256,10 @@ describe('TodoDataService', () => {
       const existingTags = [{ tag: 'TODO' }, { tag: 'urgent' }];
       mockThenable.then.mockImplementationOnce((resolve: any) => resolve(existingTags));
 
-      const success = await service.addTags('00000000-0000-0000-0000-000000000002' as UUID, ['urgent', 'TODO']);
+      const success = await service.addTags('00000000-0000-0000-0000-000000000002' as UUID, [
+        'urgent',
+        'TODO',
+      ]);
 
       expect(mockDb.select).toHaveBeenCalled();
       expect(mockDb.insert).not.toHaveBeenCalled();
@@ -264,7 +271,10 @@ describe('TodoDataService', () => {
     it('should remove tags from a todo', async () => {
       mockThenable.then.mockImplementationOnce((resolve: any) => resolve(true));
 
-      const success = await service.removeTags('00000000-0000-0000-0000-000000000001' as UUID, ['urgent', 'outdated']);
+      const success = await service.removeTags('00000000-0000-0000-0000-000000000001' as UUID, [
+        'urgent',
+        'outdated',
+      ]);
 
       expect(mockDb.delete).toHaveBeenCalledWith(todoTagsTable);
       expect(mockThenable.where).toHaveBeenCalled();

@@ -13,6 +13,37 @@
  * - Real verification using actual LLM evaluation
  */
 
+// Load environment variables first
+import { config as loadEnv } from 'dotenv';
+import { existsSync } from 'fs';
+import { join } from 'path';
+
+// Load .env file from project root
+const envPath = join(process.cwd(), '.env');
+if (existsSync(envPath)) {
+  loadEnv({ path: envPath });
+  console.log('📁 Loaded environment variables from .env file');
+} else {
+  // Try to find .env in parent directories
+  let currentDir = process.cwd();
+  let envFound = false;
+
+  for (let i = 0; i < 3; i++) {
+    const parentEnvPath = join(currentDir, '.env');
+    if (existsSync(parentEnvPath)) {
+      loadEnv({ path: parentEnvPath });
+      console.log(`📁 Loaded environment variables from ${parentEnvPath}`);
+      envFound = true;
+      break;
+    }
+    currentDir = join(currentDir, '..');
+  }
+
+  if (!envFound) {
+    console.log('⚠️  No .env file found, using system environment variables only');
+  }
+}
+
 import { IAgentRuntime, Character, Plugin, Memory, UUID } from '@elizaos/core';
 import { RuntimeTestHarness } from '@elizaos/core/test-utils';
 import { loadAllScenarios } from './scenarios-loader.js';
@@ -125,8 +156,31 @@ export class RealBenchmarkRunner {
   }
 
   private validateApiKeys(): void {
+    const requiredKeys = ['SECRET_SALT'];
     const recommendedKeys = ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY'];
-    const additionalKeys = ['TAVILY_API_KEY', 'EXA_API_KEY', 'FIRECRAWL_API_KEY'];
+    const additionalKeys = [
+      'TAVILY_API_KEY',
+      'EXA_API_KEY',
+      'FIRECRAWL_API_KEY',
+      'GITHUB_TOKEN',
+      'SERPER_API_KEY',
+      'SERPAPI_API_KEY',
+    ];
+
+    // Check required keys first
+    const missingRequired = requiredKeys.filter(
+      (key) => !this.options.apiKeys[key] && !process.env[key]
+    );
+
+    if (missingRequired.length > 0) {
+      console.log(
+        chalk.red(`❌ Missing REQUIRED environment variables: ${missingRequired.join(', ')}`)
+      );
+      if (missingRequired.includes('SECRET_SALT')) {
+        console.log(chalk.yellow('💡 To generate SECRET_SALT: openssl rand -base64 32'));
+      }
+      throw new Error(`Missing required environment variables: ${missingRequired.join(', ')}`);
+    }
 
     const availableKeys = recommendedKeys.filter(
       (key) => this.options.apiKeys[key] || process.env[key]
@@ -252,6 +306,10 @@ export class RealBenchmarkRunner {
   private async createRealActorRuntimes(scenario: Scenario): Promise<Map<string, IAgentRuntime>> {
     const runtimes = new Map<string, IAgentRuntime>();
 
+    // Ensure test environment is properly detected
+    process.env.NODE_ENV = 'test';
+    process.env.ELIZA_ENV = 'test';
+
     for (const actor of scenario.actors) {
       // Create REAL character configuration
       const character: Character = {
@@ -270,29 +328,10 @@ export class RealBenchmarkRunner {
         knowledge: [],
       };
 
-      // Create REAL runtime with REAL plugins (skip if plugins have import issues)
-      let actualPlugins: string[] = [];
-
-      if (actor.plugins && actor.plugins.length > 0) {
-        // Test if plugins can be loaded
-        for (const plugin of actor.plugins) {
-          try {
-            await import(plugin);
-            actualPlugins.push(plugin);
-            console.log(chalk.green(`   ✅ Plugin ${plugin} loaded successfully`));
-          } catch (error) {
-            console.log(
-              chalk.yellow(
-                `   ⚠️  Plugin ${plugin} has import issues, skipping: ${error instanceof Error ? error.message.slice(0, 100) : String(error).slice(0, 100)}...`
-              )
-            );
-          }
-        }
-      }
-
+      // Let RuntimeTestHarness handle plugin loading
       const runtimeConfig = {
         character,
-        plugins: actualPlugins,
+        plugins: actor.plugins || [],
         apiKeys: this.options.apiKeys,
       };
 
@@ -303,18 +342,9 @@ export class RealBenchmarkRunner {
 
       console.log(
         chalk.blue(
-          `🤖 Created REAL runtime for ${actor.name} with plugins: ${actualPlugins.join(', ') || 'none'}`
+          `🤖 Created REAL runtime for ${actor.name} with plugins: ${(actor.plugins || []).join(', ') || 'none'}`
         )
       );
-
-      if (actor.plugins && actor.plugins.length > actualPlugins.length) {
-        const skippedPlugins = actor.plugins.filter((p) => !actualPlugins.includes(p));
-        console.log(
-          chalk.yellow(
-            `   📝 Note: ${skippedPlugins.length} plugin(s) skipped due to import issues: ${skippedPlugins.join(', ')}`
-          )
-        );
-      }
     }
 
     return runtimes;
@@ -489,8 +519,8 @@ Respond with a JSON object:
       throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json();
-    const content = data.choices[0]?.message?.content;
+    const data = await response.json() as any;
+    const content = data.choices?.[0]?.message?.content;
 
     try {
       return JSON.parse(content);
@@ -530,8 +560,8 @@ Respond with a JSON object:
       throw new Error(`Anthropic API error: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json();
-    const content = data.content[0]?.text;
+    const data = await response.json() as any;
+    const content = data.content?.[0]?.text;
 
     try {
       return JSON.parse(content);
@@ -646,6 +676,15 @@ async function main() {
       ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',
       TAVILY_API_KEY: process.env.TAVILY_API_KEY || '',
       EXA_API_KEY: process.env.EXA_API_KEY || '',
+      SERPER_API_KEY: process.env.SERPER_API_KEY || '',
+      SERPAPI_API_KEY: process.env.SERPAPI_API_KEY || '',
+      GITHUB_TOKEN: process.env.GITHUB_TOKEN || '',
+      SECRET_SALT: process.env.SECRET_SALT || '',
+      SOL_ADDRESS: process.env.SOL_ADDRESS || '',
+      SLIPPAGE: process.env.SLIPPAGE || '',
+      WALLET_SECRET_KEY: process.env.WALLET_SECRET_KEY || '',
+      SOLANA_RPC_URL: process.env.SOLANA_RPC_URL || '',
+      SOLANA_NETWORK: process.env.SOLANA_NETWORK || '',
     },
     verbose: args.includes('--verbose'),
     timeoutMs: 300000, // 5 minutes max per scenario

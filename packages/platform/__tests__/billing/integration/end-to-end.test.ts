@@ -9,11 +9,16 @@ import { AutoTopUpService } from '@/lib/billing/auto-topup-service';
 import { WebhookDeduplicationService } from '@/lib/billing/webhook-deduplication';
 import { CryptoPaymentVerifier } from '@/lib/billing/crypto-payment-verifier';
 import { getDatabase } from '@/lib/database/connection';
-import { organizations, creditTransactions, webhooks } from '@/lib/database/schema';
+import {
+  organizations,
+  creditTransactions,
+  webhooks,
+} from '@/lib/database/schema';
 import { eq, and } from 'drizzle-orm';
 import Stripe from 'stripe';
 
-const TEST_STRIPE_SECRET_KEY = process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
+const TEST_STRIPE_SECRET_KEY =
+  process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
 const TEST_ORGANIZATION_ID = 'e2e-test-org-' + Date.now();
 const TEST_USER_ID = 'e2e-test-user-' + Date.now();
 
@@ -82,9 +87,15 @@ describe('End-to-End Billing Integration Tests', () => {
 
     // Cleanup database
     const db = getDatabase();
-    await db.delete(organizations).where(eq(organizations.id, TEST_ORGANIZATION_ID));
-    await db.delete(creditTransactions).where(eq(creditTransactions.organizationId, TEST_ORGANIZATION_ID));
-    await db.delete(webhooks).where(eq(webhooks.organizationId, TEST_ORGANIZATION_ID));
+    await db
+      .delete(organizations)
+      .where(eq(organizations.id, TEST_ORGANIZATION_ID));
+    await db
+      .delete(creditTransactions)
+      .where(eq(creditTransactions.organizationId, TEST_ORGANIZATION_ID));
+    await db
+      .delete(webhooks)
+      .where(eq(webhooks.organizationId, TEST_ORGANIZATION_ID));
   });
 
   beforeEach(async () => {
@@ -101,8 +112,12 @@ describe('End-to-End Billing Integration Tests', () => {
       .where(eq(organizations.id, TEST_ORGANIZATION_ID));
 
     // Clear previous transactions
-    await db.delete(creditTransactions).where(eq(creditTransactions.organizationId, TEST_ORGANIZATION_ID));
-    await db.delete(webhooks).where(eq(webhooks.organizationId, TEST_ORGANIZATION_ID));
+    await db
+      .delete(creditTransactions)
+      .where(eq(creditTransactions.organizationId, TEST_ORGANIZATION_ID));
+    await db
+      .delete(webhooks)
+      .where(eq(webhooks.organizationId, TEST_ORGANIZATION_ID));
   });
 
   describe('Complete Stripe Payment Flow', () => {
@@ -123,9 +138,12 @@ describe('End-to-End Billing Integration Tests', () => {
       expect(paymentIntent.amount).toBe(5000);
 
       // Step 2: Confirm payment (simulates frontend confirmation)
-      const confirmedPayment = await stripe.paymentIntents.confirm(paymentIntent.id, {
-        payment_method: testPaymentMethodId,
-      });
+      const confirmedPayment = await stripe.paymentIntents.confirm(
+        paymentIntent.id,
+        {
+          payment_method: testPaymentMethodId,
+        },
+      );
 
       expect(confirmedPayment.status).toBe('succeeded');
 
@@ -151,18 +169,19 @@ describe('End-to-End Billing Integration Tests', () => {
         },
       };
 
-      const webhookResult = await WebhookDeduplicationService.processWebhookSafely(
-        webhookEvent,
-        async () => {
-          // Simulate webhook handler
-          await StripeService.confirmPaymentAndAddCredits({
-            organizationId: TEST_ORGANIZATION_ID,
-            userId: TEST_USER_ID,
-            amount: 50.00,
-            paymentIntentId: paymentIntent.id,
-          });
-        }
-      );
+      const webhookResult =
+        await WebhookDeduplicationService.processWebhookSafely(
+          webhookEvent,
+          async () => {
+            // Simulate webhook handler
+            await StripeService.confirmPaymentAndAddCredits({
+              organizationId: TEST_ORGANIZATION_ID,
+              userId: TEST_USER_ID,
+              amount: 50.0,
+              paymentIntentId: paymentIntent.id,
+            });
+          },
+        );
 
       expect(webhookResult.success).toBe(true);
 
@@ -174,16 +193,18 @@ describe('End-to-End Billing Integration Tests', () => {
         .where(eq(organizations.id, TEST_ORGANIZATION_ID))
         .limit(1);
 
-      expect(parseFloat(org.creditBalance)).toBe(150.00); // 100 + 50
+      expect(parseFloat(org.creditBalance)).toBe(150.0); // 100 + 50
 
       const transactions = await db
         .select()
         .from(creditTransactions)
         .where(eq(creditTransactions.organizationId, TEST_ORGANIZATION_ID));
 
-      const purchaseTransaction = transactions.find((t: any) => t.type === 'purchase');
+      const purchaseTransaction = transactions.find(
+        (t: any) => t.type === 'purchase',
+      );
       expect(purchaseTransaction).toBeDefined();
-      expect(parseFloat(purchaseTransaction!.amount)).toBe(50.00);
+      expect(parseFloat(purchaseTransaction!.amount)).toBe(50.0);
       expect(purchaseTransaction!.stripePaymentIntentId).toBe(paymentIntent.id);
     });
 
@@ -225,7 +246,7 @@ describe('End-to-End Billing Integration Tests', () => {
         .where(eq(organizations.id, TEST_ORGANIZATION_ID))
         .limit(1);
 
-      expect(parseFloat(org.creditBalance)).toBe(100.00); // Unchanged
+      expect(parseFloat(org.creditBalance)).toBe(100.0); // Unchanged
     });
   });
 
@@ -239,7 +260,8 @@ describe('End-to-End Billing Integration Tests', () => {
         .where(eq(organizations.id, TEST_ORGANIZATION_ID));
 
       // Step 2: Trigger auto top-up check
-      const triggered = await AutoTopUpService.checkAndTriggerAutoTopUp(TEST_ORGANIZATION_ID);
+      const triggered =
+        await AutoTopUpService.checkAndTriggerAutoTopUp(TEST_ORGANIZATION_ID);
       expect(triggered).toBe(true);
 
       // Step 3: Find the created payment intent
@@ -249,16 +271,19 @@ describe('End-to-End Billing Integration Tests', () => {
       });
 
       expect(paymentIntents.data.length).toBeGreaterThan(0);
-      
-      const autoTopUpIntent = paymentIntents.data.find(pi => 
-        pi.metadata.type === 'auto_topup'
+
+      const autoTopUpIntent = paymentIntents.data.find(
+        (pi) => pi.metadata.type === 'auto_topup',
       );
 
       if (autoTopUpIntent) {
         // Step 4: Confirm the payment (would happen automatically with saved payment method)
-        const confirmedPayment = await stripe.paymentIntents.confirm(autoTopUpIntent.id, {
-          payment_method: testPaymentMethodId,
-        });
+        const confirmedPayment = await stripe.paymentIntents.confirm(
+          autoTopUpIntent.id,
+          {
+            payment_method: testPaymentMethodId,
+          },
+        );
 
         expect(confirmedPayment.status).toBe('succeeded');
 
@@ -288,10 +313,10 @@ describe('End-to-End Billing Integration Tests', () => {
             await StripeService.confirmPaymentAndAddCredits({
               organizationId: TEST_ORGANIZATION_ID,
               userId: TEST_USER_ID,
-              amount: 75.00,
+              amount: 75.0,
               paymentIntentId: autoTopUpIntent.id,
             });
-          }
+          },
         );
 
         // Step 6: Verify final balance
@@ -301,7 +326,7 @@ describe('End-to-End Billing Integration Tests', () => {
           .where(eq(organizations.id, TEST_ORGANIZATION_ID))
           .limit(1);
 
-        expect(parseFloat(updatedOrg.creditBalance)).toBe(120.00); // 45 + 75
+        expect(parseFloat(updatedOrg.creditBalance)).toBe(120.0); // 45 + 75
       }
     });
 
@@ -313,11 +338,13 @@ describe('End-to-End Billing Integration Tests', () => {
         .set({ creditBalance: '40.00' })
         .where(eq(organizations.id, TEST_ORGANIZATION_ID));
 
-      const firstTrigger = await AutoTopUpService.checkAndTriggerAutoTopUp(TEST_ORGANIZATION_ID);
+      const firstTrigger =
+        await AutoTopUpService.checkAndTriggerAutoTopUp(TEST_ORGANIZATION_ID);
       expect(firstTrigger).toBe(true);
 
       // Immediate second attempt should be prevented
-      const secondTrigger = await AutoTopUpService.checkAndTriggerAutoTopUp(TEST_ORGANIZATION_ID);
+      const secondTrigger =
+        await AutoTopUpService.checkAndTriggerAutoTopUp(TEST_ORGANIZATION_ID);
       expect(secondTrigger).toBe(false);
     });
   });
@@ -328,13 +355,14 @@ describe('End-to-End Billing Integration Tests', () => {
       const paymentRequest = {
         organizationId: TEST_ORGANIZATION_ID,
         userId: TEST_USER_ID,
-        amount: 100.00,
+        amount: 100.0,
         walletAddress: '0x742d35Cc6e1A4Fbe1CfA8BD2A4eA2c18F4B8Ee1d',
         network: 'ethereum' as const,
         currency: 'ETH' as const,
       };
 
-      const { paymentId } = await CryptoPaymentVerifier.startPaymentMonitoring(paymentRequest);
+      const { paymentId } =
+        await CryptoPaymentVerifier.startPaymentMonitoring(paymentRequest);
 
       // Step 2: Verify initial status
       let status = await CryptoPaymentVerifier.getPaymentStatus(paymentId);
@@ -342,8 +370,9 @@ describe('End-to-End Billing Integration Tests', () => {
 
       // Step 3: Simulate payment confirmation
       const mockVerification = {
-        transactionHash: '0xe2e123456789abcdef123456789abcdef123456789abcdef123456789abcdef',
-        amount: 100.00,
+        transactionHash:
+          '0xe2e123456789abcdef123456789abcdef123456789abcdef123456789abcdef',
+        amount: 100.0,
         confirmations: 15,
         isConfirmed: true,
         gasUsed: '21000',
@@ -352,12 +381,17 @@ describe('End-to-End Billing Integration Tests', () => {
         timestamp: Math.floor(Date.now() / 1000),
       };
 
-      await CryptoPaymentVerifier.processConfirmedPayment(paymentId, mockVerification);
+      await CryptoPaymentVerifier.processConfirmedPayment(
+        paymentId,
+        mockVerification,
+      );
 
       // Step 4: Verify final status
       status = await CryptoPaymentVerifier.getPaymentStatus(paymentId);
       expect(status.status).toBe('confirmed');
-      expect(status.verification?.transactionHash).toBe(mockVerification.transactionHash);
+      expect(status.verification?.transactionHash).toBe(
+        mockVerification.transactionHash,
+      );
 
       // Step 5: Verify database state
       const db = getDatabase();
@@ -368,15 +402,17 @@ describe('End-to-End Billing Integration Tests', () => {
         .limit(1);
 
       expect(transaction.type).toBe('purchase');
-      expect(parseFloat(transaction.amount)).toBe(100.00);
-      expect(transaction.cryptoTransactionHash).toBe(mockVerification.transactionHash);
+      expect(parseFloat(transaction.amount)).toBe(100.0);
+      expect(transaction.cryptoTransactionHash).toBe(
+        mockVerification.transactionHash,
+      );
     });
 
     test('should handle crypto payment expiration correctly', async () => {
       // Create payment that expires immediately
       const db = getDatabase();
       const expiredPaymentId = 'crypto_e2e_expired_' + Date.now();
-      
+
       await db.insert(creditTransactions).values({
         id: expiredPaymentId,
         organizationId: TEST_ORGANIZATION_ID,
@@ -386,7 +422,7 @@ describe('End-to-End Billing Integration Tests', () => {
         description: 'E2E expired crypto payment',
         balanceAfter: '100.00',
         metadata: {
-          expectedUsdAmount: 50.00,
+          expectedUsdAmount: 50.0,
           walletAddress: '0x742d35Cc6e1A4Fbe1CfA8BD2A4eA2c18F4B8Ee1d',
           network: 'ethereum',
           currency: 'ETH',
@@ -395,7 +431,8 @@ describe('End-to-End Billing Integration Tests', () => {
       });
 
       // Check status
-      const status = await CryptoPaymentVerifier.getPaymentStatus(expiredPaymentId);
+      const status =
+        await CryptoPaymentVerifier.getPaymentStatus(expiredPaymentId);
       expect(status.status).toBe('expired');
 
       // Run cleanup
@@ -416,7 +453,10 @@ describe('End-to-End Billing Integration Tests', () => {
     test('should handle concurrent payment processing safely', async () => {
       // Create multiple concurrent payment operations
       const concurrentCount = 5;
-      const paymentAmounts = Array.from({ length: concurrentCount }, (_, i) => (i + 1) * 10);
+      const paymentAmounts = Array.from(
+        { length: concurrentCount },
+        (_, i) => (i + 1) * 10,
+      );
 
       const paymentPromises = paymentAmounts.map(async (amount, index) => {
         const paymentIntent = await StripeService.createPaymentIntent({
@@ -459,7 +499,7 @@ describe('End-to-End Billing Integration Tests', () => {
         .where(eq(organizations.id, TEST_ORGANIZATION_ID))
         .limit(1);
 
-      expect(parseFloat(org.creditBalance)).toBe(100.00 + totalAdded);
+      expect(parseFloat(org.creditBalance)).toBe(100.0 + totalAdded);
 
       // Verify all transactions were recorded
       const transactions = await db
@@ -468,8 +508,8 @@ describe('End-to-End Billing Integration Tests', () => {
         .where(
           and(
             eq(creditTransactions.organizationId, TEST_ORGANIZATION_ID),
-            eq(creditTransactions.type, 'purchase')
-          )
+            eq(creditTransactions.type, 'purchase'),
+          ),
         );
 
       expect(transactions).toHaveLength(concurrentCount);
@@ -482,7 +522,7 @@ describe('End-to-End Billing Integration Tests', () => {
       let processingCount = 0;
       const processingFunction = async () => {
         processingCount++;
-        await new Promise(resolve => setTimeout(resolve, 50)); // Simulate processing time
+        await new Promise((resolve) => setTimeout(resolve, 50)); // Simulate processing time
       };
 
       // Send same webhook event multiple times concurrently
@@ -495,14 +535,14 @@ describe('End-to-End Billing Integration Tests', () => {
             organizationId: TEST_ORGANIZATION_ID,
             data: { object: { id: 'pi_concurrent_dedup_test' } },
           },
-          processingFunction
-        )
+          processingFunction,
+        ),
       );
 
       const results = await Promise.all(webhookPromises);
 
       // All should succeed but only one should actually process
-      const successfulResults = results.filter(r => r.success);
+      const successfulResults = results.filter((r) => r.success);
       expect(successfulResults).toHaveLength(3); // All should return success due to deduplication
       expect(processingCount).toBe(1);
     });
@@ -512,13 +552,16 @@ describe('End-to-End Billing Integration Tests', () => {
     test('should handle bulk auto top-up operations efficiently', async () => {
       // Create multiple organizations needing auto top-up
       const orgCount = 10;
-      const testOrgIds = Array.from({ length: orgCount }, (_, i) => `bulk_test_org_${i}_${Date.now()}`);
-      
+      const testOrgIds = Array.from(
+        { length: orgCount },
+        (_, i) => `bulk_test_org_${i}_${Date.now()}`,
+      );
+
       const db = getDatabase();
 
       // Setup organizations
       await Promise.all(
-        testOrgIds.map(orgId =>
+        testOrgIds.map((orgId) =>
           db.insert(organizations).values({
             id: orgId,
             name: `Bulk Test Org ${orgId}`,
@@ -527,8 +570,8 @@ describe('End-to-End Billing Integration Tests', () => {
             autoTopUpEnabled: true,
             creditThreshold: '50.00',
             autoTopUpAmount: '100.00',
-          })
-        )
+          }),
+        ),
       );
 
       // Run bulk auto top-up check
@@ -537,7 +580,9 @@ describe('End-to-End Billing Integration Tests', () => {
       const duration = Date.now() - startTime;
 
       console.log(`Bulk auto top-up check completed in ${duration}ms`);
-      console.log(`Results: ${bulkResult.triggered}/${bulkResult.checked} triggered, ${bulkResult.failed} failed`);
+      console.log(
+        `Results: ${bulkResult.triggered}/${bulkResult.checked} triggered, ${bulkResult.failed} failed`,
+      );
 
       expect(bulkResult.checked).toBeGreaterThanOrEqual(orgCount);
       expect(bulkResult.errors.length).toBe(bulkResult.failed);
@@ -545,8 +590,14 @@ describe('End-to-End Billing Integration Tests', () => {
 
       // Cleanup
       await Promise.all([
-        ...testOrgIds.map(orgId => db.delete(organizations).where(eq(organizations.id, orgId))),
-        ...testOrgIds.map(orgId => db.delete(creditTransactions).where(eq(creditTransactions.organizationId, orgId))),
+        ...testOrgIds.map((orgId) =>
+          db.delete(organizations).where(eq(organizations.id, orgId)),
+        ),
+        ...testOrgIds.map((orgId) =>
+          db
+            .delete(creditTransactions)
+            .where(eq(creditTransactions.organizationId, orgId)),
+        ),
       ]);
     });
 
@@ -564,7 +615,7 @@ describe('End-to-End Billing Integration Tests', () => {
           });
           return intent.id;
         }),
-        
+
         // Webhook processing
         ...Array.from({ length: 5 }, (_, i) => async () => {
           return WebhookDeduplicationService.processWebhookSafely(
@@ -575,10 +626,10 @@ describe('End-to-End Billing Integration Tests', () => {
               organizationId: TEST_ORGANIZATION_ID,
               data: { object: { id: `pi_load_test_${i}` } },
             },
-            async () => Promise.resolve()
+            async () => Promise.resolve(),
           );
         }),
-        
+
         // Balance checks using public method
         ...Array.from({ length: 5 }, () => async () => {
           const db = getDatabase();
@@ -592,13 +643,13 @@ describe('End-to-End Billing Integration Tests', () => {
       ];
 
       const startTime = Date.now();
-      const results = await Promise.allSettled(operations.map(op => op()));
+      const results = await Promise.allSettled(operations.map((op) => op()));
       const duration = Date.now() - startTime;
 
       console.log(`Mixed load test completed in ${duration}ms`);
 
       // All operations should either succeed or fail gracefully
-      const failed = results.filter(r => r.status === 'rejected');
+      const failed = results.filter((r) => r.status === 'rejected');
       expect(failed.length).toBe(0); // No unhandled errors
 
       expect(duration).toBeLessThan(15000); // Should complete within 15 seconds

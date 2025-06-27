@@ -35,19 +35,22 @@ export default [
         clearInterval: 'readonly',
         setImmediate: 'readonly',
         clearImmediate: 'readonly',
-        
+
         // Web APIs available in both browser and Node.js
         FormData: 'readonly',
         File: 'readonly',
         Blob: 'readonly',
         URL: 'readonly',
         URLSearchParams: 'readonly',
-        
+
         // DOM globals for React components
         HTMLElement: 'readonly',
         HTMLInputElement: 'readonly',
         HTMLButtonElement: 'readonly',
         HTMLDivElement: 'readonly',
+        HTMLCanvasElement: 'readonly',
+        HTMLTextAreaElement: 'readonly',
+        HTMLSelectElement: 'readonly',
         HTMLTableElement: 'readonly',
         HTMLTableSectionElement: 'readonly',
         HTMLTableRowElement: 'readonly',
@@ -55,6 +58,43 @@ export default [
         HTMLTableCaptionElement: 'readonly',
         Element: 'readonly',
         Document: 'readonly',
+
+        // Event types
+        PointerEvent: 'readonly',
+        MouseEvent: 'readonly',
+        KeyboardEvent: 'readonly',
+        Event: 'readonly',
+        EventTarget: 'readonly',
+
+        // Canvas and WebGL
+        CanvasRenderingContext2D: 'readonly',
+        WebGLRenderingContext: 'readonly',
+        WebGL2RenderingContext: 'readonly',
+
+        // SVG
+        SVGElement: 'readonly',
+        SVGSVGElement: 'readonly',
+
+        // Other DOM APIs
+        ScrollBehavior: 'readonly',
+        MutationObserver: 'readonly',
+        ResizeObserver: 'readonly',
+        IntersectionObserver: 'readonly',
+
+        // Media APIs
+        ImageData: 'readonly',
+        DOMRect: 'readonly',
+        FileReader: 'readonly',
+
+        // Browser APIs
+        navigator: 'readonly',
+        requestAnimationFrame: 'readonly',
+        cancelAnimationFrame: 'readonly',
+
+        // Arrays and Buffers
+        ArrayBuffer: 'readonly',
+        Uint8Array: 'readonly',
+        Float32Array: 'readonly',
         fetch: 'readonly',
         performance: 'readonly',
         AbortController: 'readonly',
@@ -66,6 +106,19 @@ export default [
         atob: 'readonly',
         Bun: 'readonly',
         Response: 'readonly',
+        BufferEncoding: 'readonly',
+
+        // Test framework globals
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        jest: 'readonly',
+        vitest: 'readonly',
       },
     },
     plugins: {
@@ -73,14 +126,17 @@ export default [
     },
     rules: {
       // TypeScript specific rules - relaxed for large legacy codebase
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+      ],
       '@typescript-eslint/no-explicit-any': 'off', // Too noisy for legacy codebase
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-inferrable-types': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/ban-ts-comment': 'warn',
-      
+
       // General JavaScript/TypeScript rules
       'no-unused-vars': 'off', // Use TypeScript version instead
       'no-console': 'off',
@@ -96,9 +152,9 @@ export default [
       'no-multiple-empty-lines': ['error', { max: 2, maxEOF: 1 }],
       'eol-last': 'error',
       'comma-dangle': ['error', 'only-multiline'],
-      'semi': ['error', 'always'],
-      'quotes': ['error', 'single', { avoidEscape: true }],
-      'indent': ['error', 2, { SwitchCase: 1 }],
+      semi: ['error', 'always'],
+      quotes: ['error', 'single', { avoidEscape: true }],
+      indent: ['error', 2, { SwitchCase: 1 }],
       'no-trailing-spaces': 'error',
       'keyword-spacing': 'error',
       'space-before-blocks': 'error',
@@ -106,18 +162,21 @@ export default [
       'array-bracket-spacing': ['error', 'never'],
       'computed-property-spacing': ['error', 'never'],
       'space-in-parens': ['error', 'never'],
-      'space-before-function-paren': ['error', { 
-        anonymous: 'always', 
-        named: 'never', 
-        asyncArrow: 'always' 
-      }],
-      
+      'space-before-function-paren': [
+        'error',
+        {
+          anonymous: 'always',
+          named: 'never',
+          asyncArrow: 'always',
+        },
+      ],
+
       // Import/Export rules
       'no-duplicate-imports': 'off', // Common in large codebases
-      
+
       // Best practices
-      'eqeqeq': ['error', 'always'],
-      'curly': ['error', 'all'],
+      eqeqeq: ['error', 'always'],
+      curly: ['error', 'all'],
       'no-eval': 'error',
       'no-implied-eval': 'error',
       'no-new-func': 'error',
@@ -131,9 +190,9 @@ export default [
       'no-useless-concat': 'error',
       'no-useless-return': 'error',
       'prefer-promise-reject-errors': 'error',
-      'radix': 'warn', // Common to omit radix for base 10
-      'yoda': 'warn',
-      
+      radix: 'warn', // Common to omit radix for base 10
+      yoda: 'warn',
+
       // Relax some patterns common in this codebase
       'no-useless-catch': 'warn',
       'no-fallthrough': 'warn',
@@ -152,7 +211,13 @@ export default [
     },
   },
   {
-    files: ['**/*.test.{js,ts,tsx}', '**/*.spec.{js,ts,tsx}', '**/__tests__/**/*'],
+    files: [
+      '**/*.test.{js,ts,tsx}',
+      '**/*.spec.{js,ts,tsx}',
+      '**/__tests__/**/*',
+      '**/test-utils/**/*',
+      '**/tests/**/*',
+    ],
     rules: {
       // Relax rules for test files - they often have different patterns
       '@typescript-eslint/no-explicit-any': 'off',
@@ -169,6 +234,20 @@ export default [
     },
   },
   {
+    files: ['**/packages/hyperfy/**/*.{js,ts,tsx,jsx}'],
+    languageOptions: {
+      globals: {
+        React: 'readonly',
+        world: 'readonly',
+      },
+    },
+    rules: {
+      'no-undef': 'off', // TypeScript handles type checking
+      '@typescript-eslint/no-explicit-any': 'off',
+      'react/react-in-jsx-scope': 'off',
+    },
+  },
+  {
     ignores: [
       // Dependencies and package managers
       '**/node_modules/',
@@ -179,7 +258,7 @@ export default [
       'yarn.lock',
       'pnpm-lock.yaml',
       'bun.lockb',
-      
+
       // Build outputs and generated files
       '**/dist/',
       '**/build/',
@@ -197,213 +276,100 @@ export default [
       '**/temp/',
       '*.tsbuildinfo',
       '**/*.tsbuildinfo',
-      
+
       // Minified and compiled files
       '**/*.min.js',
       '**/*.min.css',
       '**/*.bundle.js',
       '**/*.chunk.js',
       '**/*.map',
-      
+
       // Static assets and public directories
       '**/public/',
       '**/static/',
       '**/assets/',
-      
+
       // Environment and config files
       '.env*',
       '!.env.example',
-      '**/*.config.js',
-      '**/*.config.ts',
-      '**/*.config.mjs',
-      '**/*.config.cjs',
-      '**/vitest.config.*',
-      '**/vite.config.*',
-      '**/playwright.config.*',
-      '**/cypress.config.*',
-      '**/tailwind.config.*',
-      '**/postcss.config.*',
-      '**/jest.config.*',
-      '**/babel.config.*',
-      '**/webpack.config.*',
       '**/rollup.config.*',
       '**/tsconfig*.json',
-      
+
       // IDE and editor files
       '**/.vscode/',
       '**/.idea/',
       '**/*.swp',
       '**/*.swo',
       '**/.vim/',
-      
+
       // OS files
       '**/.DS_Store',
       '**/Thumbs.db',
       '**/desktop.ini',
-      
+
       // Version control
       '**/.git/',
       '**/.svn/',
       '**/.hg/',
-      
+
       // Logs and debugging
       '**/*.log',
       '**/logs/',
       '**/.nyc_output/',
-      
+
       // Test artifacts
       '**/cypress/screenshots/',
       '**/cypress/videos/',
       '**/test-results/',
       '**/playwright-report/',
       '**/__screenshots__/',
-      
+
       // Database files
       '**/*.db',
       '**/*.sqlite',
       '**/*.sqlite3',
-      
+
       // Archive files
       '**/*.zip',
       '**/*.tar.gz',
       '**/*.rar',
       '**/*.7z',
-      
+
       // Binary files
       '**/*.exe',
       '**/*.dll',
       '**/*.so',
       '**/*.dylib',
       '**/*.bin',
-      
-      // ElizaOS specific ignores - be very aggressive
-      '**/.eliza*',
-      '**/.eliza*/**',
-      '**/:memory:*',
-      '**/:memory:*/**',
-      '**/training_recording*',
-      '**/training_recording*/**',
-      '**/research_logs',
-      '**/research_logs/**',
-      // Autocoder files moved to .eliza/
-      '**/verification-snapshots',
-      '**/verification-snapshots/**',
-      '**/.claude',
-      '**/.claude/**',
-      '**/.cursor',
-      '**/.cursor/**',
-      '**/.husky',
-      '**/.husky/**',
-      '**/.devcontainer',
-      '**/.devcontainer/**',
-      '**/.github',
-      '**/.github/**',
-      '**/scenarios',
-      '**/scenarios/**',
-      '**/archives',
-      '**/archives/**',
-      '**/data',
-      '**/data/**',
-      '**/test-data',
-      '**/test-data/**',
-      '**/plugin-data',
-      '**/plugin-data/**',
-      '**/enhanced-plugin-data',
-      '**/enhanced-plugin-data/**',
-      '**/plugin-fixes',
-      '**/plugin-fixes/**',
-      '**/temp',
-      '**/temp/**',
-      '**/plans',
-      '**/plans/**',
-      '**/world',
-      '**/world/**',
-      
-      // Large documentation and data files
-      'CLAUDE.md',
-      'AGENTS.md',
-      'CHANGELOG.md',
-      'CODE_OF_CONDUCT.md',
-      'llms.txt',
-      '*.postman.json',
-      'ARCHITECTURAL_REVIEW_*.md',
-      'IMPLEMENTATION_REPORT*.md',
-      'FINAL_*.md',
-      'PRODUCTION_STATUS.md',
-      'BENCHMARK_RESULTS.md',
-      'CRITICAL_REVIEW.md',
-      'FRAMEWORK_ISSUES_ANALYSIS.md',
-      '**/visual-test-screenshots',
-      '**/visual-test-screenshots/**',
-      '**/screenshots',
-      '**/screenshots/**',
-      '**/images',
-      '**/images/**',
-      '**/benchmarks',
-      '**/benchmarks/**',
-      '**/benchmark_results',
-      '**/benchmark_results/**',
-      '**/results',
-      '**/results/**',
-      '**/multi-swe-bench',
-      '**/multi-swe-bench/**',
-      // test-benchmark moved to .eliza/
-      '**/deep_research_bench',
-      '**/deep_research_bench/**',
-      '**/cypress',
-      '**/cypress/**',
-      '**/gazebo',
-      '**/gazebo/**',
-      '**/urdf',
-      '**/urdf/**',
-      '**/hyperfy-ts',
-      '**/hyperfy-ts/**',
-      '**/docs',
-      '**/docs/**',
-      '**/README.md',
-      '**/*.md',
-      '!src/**/*.md',
-      
+
       // Documentation build outputs
       '**/docs/.vitepress/dist/',
       '**/docs/.vitepress/cache/',
       '**/storybook-static/',
-      
+
       // Docker and container files
       'Dockerfile*',
       'docker-compose*.yml',
       'docker-compose*.yaml',
       '.dockerignore',
-      
+
       // CI/CD and automation
       '**/.circleci/',
       '**/.travis.yml',
       '**/.appveyor.yml',
       '**/jenkins*',
-      
+
       // Additional large directories and files
       '**/packages/**/*.md',
-      '**/scripts',
-      '**/scripts/**',
-      '**/templates',
-      '**/templates/**',
-      '**/examples',
-      '**/examples/**',
-      '**/mocks',
-      '**/mocks/**',
-      '**/__mocks__',
-      '**/__mocks__/**',
       '**/docker',
       '**/docker/**',
-      '**/src-tauri',
-      '**/src-tauri/**',
       '**/components.json',
       '**/bunfig.toml',
       '**/analyze-errors.cjs',
       '**/debug-*.js',
       '**/*.debug.js',
       '**/*.config.json',
-      
+
       // Misc
       '**/.*rc.js',
       '**/.*rc.json',
@@ -411,4 +377,4 @@ export default [
       '**/.*rc.yaml',
     ],
   },
-]; 
+];

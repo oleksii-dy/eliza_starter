@@ -28,11 +28,17 @@ export class ShellBasicE2ETestSuite implements TestSuite {
         let callbackResponse: any = null;
 
         const state: State = { values: {}, data: {}, text: '' };
-        await runShellCommandAction.handler(runtime, message, state, {}, async (response) => {
-          callbackCalled = true;
-          callbackResponse = response;
-          return [];
-        });
+        await runShellCommandAction.handler(
+          runtime,
+          message,
+          state,
+          {},
+          async (response) => {
+            callbackCalled = true;
+            callbackResponse = response;
+            return [];
+          }
+        );
 
         if (!callbackCalled) {
           throw new Error('Callback was not called');
@@ -64,12 +70,22 @@ export class ShellBasicE2ETestSuite implements TestSuite {
 
         const state: State = { values: {}, data: {}, text: '' };
         let response: any = null;
-        await runShellCommandAction.handler(runtime, message, state, {}, async (resp) => {
-          response = resp;
-          return [];
-        });
+        await runShellCommandAction.handler(
+          runtime,
+          message,
+          state,
+          {},
+          async (resp) => {
+            response = resp;
+            return [];
+          }
+        );
 
-        if (!response || !response.attachments || response.attachments.length === 0) {
+        if (
+          !response ||
+          !response.attachments ||
+          response.attachments.length === 0
+        ) {
           throw new Error('No attachments returned with shell output');
         }
 
@@ -77,11 +93,15 @@ export class ShellBasicE2ETestSuite implements TestSuite {
         const outputData = JSON.parse(attachment.text);
 
         if (outputData.exitCode !== 0) {
-          throw new Error(`ls command failed with exit code: ${outputData.exitCode}`);
+          throw new Error(
+            `ls command failed with exit code: ${outputData.exitCode}`
+          );
         }
 
         console.log('✓ ls command executed successfully');
-        console.log(`  Files found: ${outputData.stdout.split('\n').length - 1} items`);
+        console.log(
+          `  Files found: ${outputData.stdout.split('\n').length - 1} items`
+        );
       },
     },
 
@@ -102,12 +122,22 @@ export class ShellBasicE2ETestSuite implements TestSuite {
 
         const state: State = { values: {}, data: {}, text: '' };
         let response: any = null;
-        await runShellCommandAction.handler(runtime, message, state, {}, async (resp) => {
-          response = resp;
-          return [];
-        });
+        await runShellCommandAction.handler(
+          runtime,
+          message,
+          state,
+          {},
+          async (resp) => {
+            response = resp;
+            return [];
+          }
+        );
 
-        if (!response || !response.attachments || response.attachments.length === 0) {
+        if (
+          !response ||
+          !response.attachments ||
+          response.attachments.length === 0
+        ) {
           throw new Error('No error information returned');
         }
 
@@ -132,7 +162,9 @@ export class ShellBasicE2ETestSuite implements TestSuite {
         const message: Memory = {
           id: createUniqueUuid(runtime, 'test-msg-4'),
           entityId: runtime.agentId,
-          content: { text: 'Can you show me what files are in the current directory?' },
+          content: {
+            text: 'Can you show me what files are in the current directory?',
+          },
           agentId: runtime.agentId,
           roomId,
           createdAt: Date.now(),
@@ -140,12 +172,22 @@ export class ShellBasicE2ETestSuite implements TestSuite {
 
         const state: State = { values: {}, data: {}, text: '' };
         let response: any = null;
-        await runShellCommandAction.handler(runtime, message, state, {}, async (resp) => {
-          response = resp;
-          return [];
-        });
+        await runShellCommandAction.handler(
+          runtime,
+          message,
+          state,
+          {},
+          async (resp) => {
+            response = resp;
+            return [];
+          }
+        );
 
-        if (!response || !response.attachments || response.attachments.length === 0) {
+        if (
+          !response ||
+          !response.attachments ||
+          response.attachments.length === 0
+        ) {
           throw new Error('Command extraction failed');
         }
 
@@ -153,8 +195,13 @@ export class ShellBasicE2ETestSuite implements TestSuite {
         const outputData = JSON.parse(attachment.text);
 
         // Check if a listing command was executed (ls, dir, etc.)
-        if (!outputData.command.includes('ls') && !outputData.command.includes('dir')) {
-          throw new Error(`Unexpected command extracted: ${outputData.command}`);
+        if (
+          !outputData.command.includes('ls') &&
+          !outputData.command.includes('dir')
+        ) {
+          throw new Error(
+            `Unexpected command extracted: ${outputData.command}`
+          );
         }
 
         console.log('✓ Natural language command extraction successful');
@@ -194,9 +241,15 @@ export class ShellBasicE2ETestSuite implements TestSuite {
         };
 
         const state: State = { values: {}, data: {}, text: '' };
-        await clearShellHistoryAction.handler(runtime, message, state, {}, async () => {
-          return [];
-        });
+        await clearShellHistoryAction.handler(
+          runtime,
+          message,
+          state,
+          {},
+          async () => {
+            return [];
+          }
+        );
 
         // Verify history is cleared
         history = shellService.getHistory();

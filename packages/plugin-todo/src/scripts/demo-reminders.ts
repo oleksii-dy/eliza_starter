@@ -175,7 +175,7 @@ export async function setupReminderDemo(runtime: IAgentRuntime) {
     await reminderService.checkTasksForReminders();
     console.log('✅ Reminder check complete!');
   } else {
-    console.log('⚠️ Reminder service not found - make sure it\'s initialized');
+    console.log("⚠️ Reminder service not found - make sure it's initialized");
   }
 
   console.log('\n📱 Expected behavior:');
@@ -217,7 +217,7 @@ export async function monitorReminders(runtime: IAgentRuntime, duration: number 
   }, checkInterval);
 
   // Wait for monitoring to complete
-  await new Promise(resolve => setTimeout(resolve, duration));
+  await new Promise((resolve) => setTimeout(resolve, duration));
 }
 
 /**

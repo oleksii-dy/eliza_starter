@@ -1,13 +1,13 @@
 // PhysX Global Type Definitions
 
 declare global {
-  const PHYSX: any;
+  const PHYSX: any
   interface Window {
-    PHYSX?: any;
+    PHYSX?: any
   }
   interface GlobalThis {
-    PHYSX?: any;
+    PHYSX?: any
   }
 }
 
-export {};
+export {}

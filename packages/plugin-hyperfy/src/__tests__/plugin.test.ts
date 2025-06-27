@@ -12,6 +12,7 @@ import {
 import { hyperfyPlugin } from '../index';
 import { HyperfyService } from '../service';
 import { ModelType, logger } from '@elizaos/core';
+import { createMockRuntime } from './test-utils';
 import dotenv from 'dotenv';
 
 // Setup environment variables
@@ -29,11 +30,11 @@ afterAll(() => {
   mock.restore();
 });
 
-// Create a real runtime for testing
-function createRealRuntime() {
+// Create a runtime for testing using the unified mock system
+function createTestRuntime() {
   const services = new Map();
 
-  // Create a real service instance if needed
+  // Create a service instance if needed
   const createService = (serviceType: string) => {
     if (serviceType === HyperfyService.serviceName) {
       return new HyperfyService({
@@ -46,7 +47,7 @@ function createRealRuntime() {
     return null;
   };
 
-  return {
+  return createMockRuntime({
     character: {
       name: 'Test Character',
       system: 'You are a helpful assistant for testing.',
@@ -77,7 +78,7 @@ function createRealRuntime() {
       logger.debug(`Registering service: ${serviceType}`);
       services.set(serviceType, service);
     },
-  };
+  });
 }
 
 describe('Plugin Configuration', () => {
@@ -97,8 +98,8 @@ describe('Plugin Configuration', () => {
     try {
       process.env.WS_URL = 'wss://test.hyperfy.xyz/ws';
 
-      // Initialize with config - using real runtime
-      const runtime = createRealRuntime();
+      // Initialize with config - using test runtime
+      const runtime = createTestRuntime();
 
       if (hyperfyPlugin.init) {
         await hyperfyPlugin.init(
@@ -143,7 +144,7 @@ describe('Plugin Actions', () => {
 
 describe('HyperfyService', () => {
   it('should start the service', async () => {
-    const runtime = createRealRuntime();
+    const runtime = createTestRuntime();
     const startResult = await HyperfyService.start(runtime as any);
 
     expect(startResult).toBeDefined();
@@ -154,7 +155,7 @@ describe('HyperfyService', () => {
   });
 
   it('should stop the service', async () => {
-    const runtime = createRealRuntime();
+    const runtime = createTestRuntime();
 
     // Register a real service first
     const service = new HyperfyService(runtime as any);
@@ -171,7 +172,7 @@ describe('HyperfyService', () => {
   });
 
   it('should throw an error when stopping a non-existent service', async () => {
-    const runtime = createRealRuntime();
+    const runtime = createTestRuntime();
     // Don't register a service, so getService will return null
 
     // We'll patch the getService function to ensure it returns null

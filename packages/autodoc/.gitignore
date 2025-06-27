@@ -23,3 +23,7 @@ bun-debug.log*
 *.ntvs*
 *.njsproj
 *.sln
+AGENTS.md
+.cursor/rules/elizaos
+CLAUDE.md
+.cursorignore

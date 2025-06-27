@@ -27,7 +27,7 @@ async function runSingleInstance() {
     agentId: 'test-agent',
     getSetting: (key: string) => process.env[key],
     logger: elizaLogger,
-    getService: (name: string) => null
+    getService: (name: string) => null,
   } as unknown as IAgentRuntime;
 
   // Create runner with short timeout and debug options
@@ -39,13 +39,13 @@ async function runSingleInstance() {
     cleanup_after_run: false, // Keep files for debugging
     timeout_per_instance: SHORT_TIMEOUT, // 30 seconds instead of 5 minutes
     useEnhancedGenerator: true,
-    useClaudeCode: false
+    useClaudeCode: false,
   });
 
   await runner.initialize();
 
   // Run with debug output
-  elizaLogger.info(`⏱️  Running with ${SHORT_TIMEOUT/1000}s timeout...`);
+  elizaLogger.info(`⏱️  Running with ${SHORT_TIMEOUT / 1000}s timeout...`);
 
   const startTime = Date.now();
   const report = await runner.runBenchmark({
@@ -53,7 +53,7 @@ async function runSingleInstance() {
     max_instances: 1,
     save_artifacts: true,
     skip_evaluation: false,
-    language_filter: ['TypeScript', 'JavaScript']
+    language_filter: ['TypeScript', 'JavaScript'],
   });
   const duration = Date.now() - startTime;
 
@@ -71,10 +71,7 @@ async function runSingleInstance() {
   const analysisDir = `swe-bench-analysis/single-${INSTANCE_ID.replace(/[^a-zA-Z0-9-_]/g, '-')}-${Date.now()}`;
   await fs.mkdir(analysisDir, { recursive: true });
 
-  await fs.writeFile(
-    path.join(analysisDir, 'report.json'),
-    JSON.stringify(report, null, 2)
-  );
+  await fs.writeFile(path.join(analysisDir, 'report.json'), JSON.stringify(report, null, 2));
 
   // Create summary
   const summary = `# SWE-bench Single Instance Analysis
@@ -94,10 +91,7 @@ async function runSingleInstance() {
 - Logs: \`.swe-bench-work-single/logs\`
 `;
 
-  await fs.writeFile(
-    path.join(analysisDir, 'README.md'),
-    summary
-  );
+  await fs.writeFile(path.join(analysisDir, 'README.md'), summary);
 
   elizaLogger.info(`\n📁 Results saved to: ${analysisDir}`);
 
@@ -116,7 +110,7 @@ async function runSingleInstance() {
 }
 
 // Run the script
-runSingleInstance().catch(error => {
+runSingleInstance().catch((error) => {
   elizaLogger.error('Fatal error:', error);
   console.error('Stack trace:', error.stack);
   process.exit(1);

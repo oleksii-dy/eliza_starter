@@ -86,7 +86,7 @@ class UnifiedAuthService {
 
       // Check for existing session
       const session = await this.getStoredSession();
-      if (session && await this.isSessionValid(session)) {
+      if (session && (await this.isSessionValid(session))) {
         this.setState({
           isAuthenticated: true,
           user: session.user,
@@ -131,11 +131,11 @@ class UnifiedAuthService {
    */
   async startOAuthFlow(
     providerId: string,
-    options: { returnTo?: string; sessionId?: string } = {}
+    options: { returnTo?: string; sessionId?: string } = {},
   ): Promise<OAuthResult> {
     try {
       // Validate provider
-      const provider = OAUTH_PROVIDERS.find(p => p.id === providerId);
+      const provider = OAUTH_PROVIDERS.find((p) => p.id === providerId);
       if (!provider) {
         return {
           success: false,
@@ -200,7 +200,7 @@ class UnifiedAuthService {
       const response = await fetch(oauthUrl, {
         method: 'GET',
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
         },
       });
 
@@ -214,18 +214,21 @@ class UnifiedAuthService {
 
       // If this is a redirect response, we need to follow it
       const finalUrl = response.url;
-      
+
       // For Tauri, open the OAuth URL in external browser
       try {
         // Use window.open as a fallback if Tauri shell is not available
         window.open(finalUrl, '_blank');
-        
+
         // Listen for the OAuth callback
         this.listenForOAuthCallback();
-        
+
         return { success: true };
       } catch (shellError) {
-        console.warn('Tauri shell not available, using window.open:', shellError);
+        console.warn(
+          'Tauri shell not available, using window.open:',
+          shellError,
+        );
         window.open(finalUrl, '_blank');
         return { success: true };
       }
@@ -267,7 +270,7 @@ class UnifiedAuthService {
       }
 
       const data = await response.json();
-      
+
       if (data.session) {
         await this.setSession(data.session);
         return true;
@@ -357,13 +360,17 @@ class UnifiedAuthService {
    */
   private async storeSession(session: AuthSession): Promise<void> {
     const sessionData = JSON.stringify(session);
-    
+
     if (this.state.platform === 'tauri') {
       try {
         // Try to use Tauri's secure storage
-        if (typeof window !== 'undefined' && '__TAURI__' in window && (window as any).__TAURI__.invoke) {
-          await (window as any).__TAURI__.invoke('store_auth_session', { 
-            session: sessionData 
+        if (
+          typeof window !== 'undefined' &&
+          '__TAURI__' in window &&
+          (window as any).__TAURI__.invoke
+        ) {
+          await (window as any).__TAURI__.invoke('store_auth_session', {
+            session: sessionData,
           });
           return;
         }
@@ -371,7 +378,7 @@ class UnifiedAuthService {
         console.warn('Tauri storage failed, using localStorage:', error);
       }
     }
-    
+
     // Fallback to localStorage
     if (typeof window !== 'undefined' && window.localStorage) {
       window.localStorage.setItem('elizaos_auth_session', sessionData);
@@ -389,11 +396,20 @@ class UnifiedAuthService {
 
       if (this.state.platform === 'tauri') {
         try {
-          if (typeof window !== 'undefined' && '__TAURI__' in window && (window as any).__TAURI__.invoke) {
-            sessionData = await (window as any).__TAURI__.invoke('get_auth_session');
+          if (
+            typeof window !== 'undefined' &&
+            '__TAURI__' in window &&
+            (window as any).__TAURI__.invoke
+          ) {
+            sessionData = await (window as any).__TAURI__.invoke(
+              'get_auth_session',
+            );
           }
         } catch (error) {
-          console.warn('Tauri storage access failed, using localStorage:', error);
+          console.warn(
+            'Tauri storage access failed, using localStorage:',
+            error,
+          );
         }
       }
 
@@ -423,14 +439,18 @@ class UnifiedAuthService {
   private async clearStoredSession(): Promise<void> {
     if (this.state.platform === 'tauri') {
       try {
-        if (typeof window !== 'undefined' && '__TAURI__' in window && (window as any).__TAURI__.invoke) {
+        if (
+          typeof window !== 'undefined' &&
+          '__TAURI__' in window &&
+          (window as any).__TAURI__.invoke
+        ) {
           await (window as any).__TAURI__.invoke('clear_auth_session');
         }
       } catch (error) {
         console.warn('Tauri storage clear failed, using localStorage:', error);
       }
     }
-    
+
     // Always clear localStorage as well
     if (typeof window !== 'undefined' && window.localStorage) {
       window.localStorage.removeItem('elizaos_auth_session');
@@ -454,10 +474,10 @@ class UnifiedAuthService {
       const response = await fetch(`${apiUrl}/api/auth/verify`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${session.accessToken}`,
+          Authorization: `Bearer ${session.accessToken}`,
         },
       });
-      
+
       return response.ok;
     } catch (error) {
       console.warn('Session verification failed:', error);
@@ -470,10 +490,16 @@ class UnifiedAuthService {
    */
   private getApiBaseUrl(): string {
     // For Tauri apps, use absolute URLs
-    if (this.state.platform === 'tauri' || (typeof window !== 'undefined' && '__TAURI__' in window)) {
-      return process.env.NEXT_PUBLIC_API_BASE_URL || 'https://api.platform.elizaos.com';
+    if (
+      this.state.platform === 'tauri' ||
+      (typeof window !== 'undefined' && '__TAURI__' in window)
+    ) {
+      return (
+        process.env.NEXT_PUBLIC_API_BASE_URL ||
+        'https://api.platform.elizaos.com'
+      );
     }
-    
+
     // For web apps, use relative URLs
     return '';
   }
@@ -490,7 +516,7 @@ class UnifiedAuthService {
    */
   subscribe(listener: AuthListener): () => void {
     this.listeners.push(listener);
-    
+
     return () => {
       const index = this.listeners.indexOf(listener);
       if (index > -1) {
@@ -504,7 +530,7 @@ class UnifiedAuthService {
    */
   private setState(updates: Partial<AuthState>): void {
     this.state = { ...this.state, ...updates };
-    this.listeners.forEach(listener => {
+    this.listeners.forEach((listener) => {
       try {
         listener(this.state);
       } catch (error) {

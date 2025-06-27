@@ -2,7 +2,8 @@ type Scenario = any;
 
 const coinbaseAgentKitScenario: Scenario = {
   name: 'Payment: Coinbase AgentKit Operations',
-  description: 'Demonstrates using Coinbase AgentKit for automated trading and portfolio management',
+  description:
+    'Demonstrates using Coinbase AgentKit for automated trading and portfolio management',
   category: 'payment',
   examples: [
     [
@@ -12,7 +13,8 @@ const coinbaseAgentKitScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'Configuring Coinbase AgentKit DCA strategy: $100 BTC weekly purchases. Starting next Monday at 9 AM UTC. Funding from your USD balance. Estimated fees: $2.99 per purchase.',
+        content:
+          'Configuring Coinbase AgentKit DCA strategy: $100 BTC weekly purchases. Starting next Monday at 9 AM UTC. Funding from your USD balance. Estimated fees: $2.99 per purchase.',
         action: 'AGENTKIT_DCA_SETUP',
       },
     ],
@@ -23,7 +25,8 @@ const coinbaseAgentKitScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'Initiating portfolio rebalance via AgentKit:\nCurrent: BTC 45%, ETH 40%, SOL 15%\nTarget: BTC 60%, ETH 30%, SOL 10%\nRequired trades: Sell 0.5 ETH, 25 SOL → Buy 0.15 BTC\nEstimated cost: $45 in fees',
+        content:
+          'Initiating portfolio rebalance via AgentKit:\nCurrent: BTC 45%, ETH 40%, SOL 15%\nTarget: BTC 60%, ETH 30%, SOL 10%\nRequired trades: Sell 0.5 ETH, 25 SOL → Buy 0.15 BTC\nEstimated cost: $45 in fees',
         action: 'AGENTKIT_REBALANCE',
       },
     ],
@@ -34,7 +37,8 @@ const coinbaseAgentKitScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'AgentKit smart routing enabled. Your ETH orders will be split across Coinbase Pro, Coinbase Advanced, and partner exchanges for best execution. Typical savings: 0.1-0.3% vs single venue.',
+        content:
+          'AgentKit smart routing enabled. Your ETH orders will be split across Coinbase Pro, Coinbase Advanced, and partner exchanges for best execution. Typical savings: 0.1-0.3% vs single venue.',
         action: 'AGENTKIT_SMART_ROUTE',
       },
     ],
@@ -42,8 +46,7 @@ const coinbaseAgentKitScenario: Scenario = {
   actions: ['AGENTKIT_DCA_SETUP', 'AGENTKIT_REBALANCE', 'AGENTKIT_SMART_ROUTE'],
   evaluator: (response: string) => {
     const hasAgentKit =
-      response.toLowerCase().includes('agentkit') ||
-      response.toLowerCase().includes('coinbase');
+      response.toLowerCase().includes('agentkit') || response.toLowerCase().includes('coinbase');
 
     const hasAutomation =
       response.toLowerCase().includes('automat') ||

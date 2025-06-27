@@ -33,7 +33,7 @@ const updateAgentSchema = z.object({
 /**
  * GET /api/v1/agents/[id] - Get agent by ID
  */
-export async function GET(
+export async function handleGET(
   request: NextRequest,
   props: { params: Promise<{ id: string }> },
 ) {

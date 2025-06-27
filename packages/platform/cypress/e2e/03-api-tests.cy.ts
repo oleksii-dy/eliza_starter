@@ -13,10 +13,10 @@ describe('API Tests', () => {
         'Content-Type': 'application/json',
         ...(options.auth && { Authorization: `Bearer ${authToken}` }),
         ...(options.apiKey && { 'X-API-Key': options.apiKey }),
-        ...options.headers
+        ...options.headers,
       },
       body: options.body,
-      failOnStatusCode: false
+      failOnStatusCode: false,
     });
   };
 
@@ -35,41 +35,47 @@ describe('API Tests', () => {
     const testUser = {
       email: `test-${Date.now()}@elizaos.ai`,
       password: 'TestPassword123!',
-      name: 'Test User'
+      name: 'Test User',
     };
 
     it('should register a new user', () => {
-      apiRequest('POST', '/auth/register', { body: testUser }).then((response) => {
-        expect(response.status).to.eq(201);
-        expect(response.body.success).to.be.true;
-        expect(response.body.data).to.have.property('user');
-        expect(response.body.data).to.have.property('token');
-        expect(response.body.data.user.email).to.eq(testUser.email);
-        expect(response.body.data.user.name).to.eq(testUser.name);
-        authToken = response.body.data.token;
-      });
+      apiRequest('POST', '/auth/register', { body: testUser }).then(
+        (response) => {
+          expect(response.status).to.eq(201);
+          expect(response.body.success).to.be.true;
+          expect(response.body.data).to.have.property('user');
+          expect(response.body.data).to.have.property('token');
+          expect(response.body.data.user.email).to.eq(testUser.email);
+          expect(response.body.data.user.name).to.eq(testUser.name);
+          authToken = response.body.data.token;
+        },
+      );
     });
 
     it('should not register duplicate email', () => {
-      apiRequest('POST', '/auth/register', { body: testUser }).then((response) => {
-        expect(response.status).to.eq(409);
-        expect(response.body.success).to.be.false;
-        expect(response.body.error).to.include('already exists');
-      });
+      apiRequest('POST', '/auth/register', { body: testUser }).then(
+        (response) => {
+          expect(response.status).to.eq(409);
+          expect(response.body.success).to.be.false;
+          expect(response.body.error).to.include('already exists');
+        },
+      );
     });
 
     it('should validate registration input', () => {
       const invalidUser = { email: 'invalid-email', password: '123', name: '' };
-      apiRequest('POST', '/auth/register', { body: invalidUser }).then((response) => {
-        expect(response.status).to.eq(400);
-        expect(response.body.success).to.be.false;
-        expect(response.body.error).to.include('Invalid input');
-      });
+      apiRequest('POST', '/auth/register', { body: invalidUser }).then(
+        (response) => {
+          expect(response.status).to.eq(400);
+          expect(response.body.success).to.be.false;
+          expect(response.body.error).to.include('Invalid input');
+        },
+      );
     });
 
     it('should login with valid credentials', () => {
       apiRequest('POST', '/auth/login', {
-        body: { email: testUser.email, password: testUser.password }
+        body: { email: testUser.email, password: testUser.password },
       }).then((response) => {
         expect(response.status).to.eq(200);
         expect(response.body.success).to.be.true;
@@ -81,7 +87,7 @@ describe('API Tests', () => {
 
     it('should not login with invalid credentials', () => {
       apiRequest('POST', '/auth/login', {
-        body: { email: testUser.email, password: 'WrongPassword' }
+        body: { email: testUser.email, password: 'WrongPassword' },
       }).then((response) => {
         expect(response.status).to.eq(401);
         expect(response.body.success).to.be.false;
@@ -115,10 +121,15 @@ describe('API Tests', () => {
   describe('API Keys', () => {
     before(() => {
       // Login to get auth token for API key tests
-      const loginUser = { email: 'test@elizaos.ai', password: 'TestPassword123!' };
-      apiRequest('POST', '/auth/login', { body: loginUser }).then((response) => {
-        authToken = response.body.data.token;
-      });
+      const loginUser = {
+        email: 'test@elizaos.ai',
+        password: 'TestPassword123!',
+      };
+      apiRequest('POST', '/auth/login', { body: loginUser }).then(
+        (response) => {
+          authToken = response.body.data.token;
+        },
+      );
     });
 
     it('should list API keys (initially empty)', () => {
@@ -134,7 +145,7 @@ describe('API Tests', () => {
     it('should create a new API key', () => {
       apiRequest('POST', '/api-keys', {
         auth: true,
-        body: { name: 'Test API Key', expiresIn: '30d' }
+        body: { name: 'Test API Key', expiresIn: '30d' },
       }).then((response) => {
         expect(response.status).to.eq(201);
         expect(response.body.success).to.be.true;
@@ -149,7 +160,7 @@ describe('API Tests', () => {
     it('should validate API key creation input', () => {
       apiRequest('POST', '/api-keys', {
         auth: true,
-        body: { name: '' }
+        body: { name: '' },
       }).then((response) => {
         expect(response.status).to.eq(400);
         expect(response.body.success).to.be.false;
@@ -160,7 +171,9 @@ describe('API Tests', () => {
       apiRequest('GET', '/api-keys', { auth: true }).then((response) => {
         expect(response.status).to.eq(200);
         expect(response.body.data.apiKeys).to.have.length.greaterThan(0);
-        const key = response.body.data.apiKeys.find((k: any) => k.id === testApiKeyId);
+        const key = response.body.data.apiKeys.find(
+          (k: any) => k.id === testApiKeyId,
+        );
         expect(key).to.exist;
         expect(key.name).to.eq('Test API Key');
         // Key should be masked
@@ -176,10 +189,12 @@ describe('API Tests', () => {
     });
 
     it('should delete API key', () => {
-      apiRequest('DELETE', `/api-keys/${testApiKeyId}`, { auth: true }).then((response) => {
-        expect(response.status).to.eq(200);
-        expect(response.body.success).to.be.true;
-      });
+      apiRequest('DELETE', `/api-keys/${testApiKeyId}`, { auth: true }).then(
+        (response) => {
+          expect(response.status).to.eq(200);
+          expect(response.body.success).to.be.true;
+        },
+      );
     });
 
     it('should not authenticate with deleted API key', () => {
@@ -190,10 +205,12 @@ describe('API Tests', () => {
     });
 
     it('should not delete non-existent API key', () => {
-      apiRequest('DELETE', '/api-keys/non-existent-id', { auth: true }).then((response) => {
-        expect(response.status).to.eq(404);
-        expect(response.body.success).to.be.false;
-      });
+      apiRequest('DELETE', '/api-keys/non-existent-id', { auth: true }).then(
+        (response) => {
+          expect(response.status).to.eq(404);
+          expect(response.body.success).to.be.false;
+        },
+      );
     });
   });
 
@@ -201,10 +218,15 @@ describe('API Tests', () => {
     before(() => {
       // Ensure we have auth token
       if (!authToken) {
-        const loginUser = { email: 'test@elizaos.ai', password: 'TestPassword123!' };
-        apiRequest('POST', '/auth/login', { body: loginUser }).then((response) => {
-          authToken = response.body.data.token;
-        });
+        const loginUser = {
+          email: 'test@elizaos.ai',
+          password: 'TestPassword123!',
+        };
+        apiRequest('POST', '/auth/login', { body: loginUser }).then(
+          (response) => {
+            authToken = response.body.data.token;
+          },
+        );
       }
     });
 
@@ -219,7 +241,7 @@ describe('API Tests', () => {
     it('should create a new organization', () => {
       apiRequest('POST', '/organizations', {
         auth: true,
-        body: { name: 'Test Organization' }
+        body: { name: 'Test Organization' },
       }).then((response) => {
         expect(response.status).to.eq(201);
         expect(response.body.success).to.be.true;
@@ -232,7 +254,7 @@ describe('API Tests', () => {
     it('should validate organization creation input', () => {
       apiRequest('POST', '/organizations', {
         auth: true,
-        body: { name: '' }
+        body: { name: '' },
       }).then((response) => {
         expect(response.status).to.eq(400);
         expect(response.body.success).to.be.false;
@@ -243,7 +265,9 @@ describe('API Tests', () => {
       apiRequest('GET', '/organizations', { auth: true }).then((response) => {
         expect(response.status).to.eq(200);
         expect(response.body.data.organizations).to.have.length.greaterThan(0);
-        const org = response.body.data.organizations.find((o: any) => o.name === 'Test Organization');
+        const org = response.body.data.organizations.find(
+          (o: any) => o.name === 'Test Organization',
+        );
         expect(org).to.exist;
       });
     });
@@ -253,26 +277,33 @@ describe('API Tests', () => {
     before(() => {
       // Ensure we have auth token
       if (!authToken) {
-        const loginUser = { email: 'test@elizaos.ai', password: 'TestPassword123!' };
-        apiRequest('POST', '/auth/login', { body: loginUser }).then((response) => {
-          authToken = response.body.data.token;
-        });
+        const loginUser = {
+          email: 'test@elizaos.ai',
+          password: 'TestPassword123!',
+        };
+        apiRequest('POST', '/auth/login', { body: loginUser }).then(
+          (response) => {
+            authToken = response.body.data.token;
+          },
+        );
       }
     });
 
     it('should get subscription details (free tier)', () => {
-      apiRequest('GET', '/billing/subscription', { auth: true }).then((response) => {
-        expect(response.status).to.eq(200);
-        expect(response.body.success).to.be.true;
-        expect(response.body.data.subscription).to.have.property('status');
-        expect(response.body.data.subscription).to.have.property('plan');
-      });
+      apiRequest('GET', '/billing/subscription', { auth: true }).then(
+        (response) => {
+          expect(response.status).to.eq(200);
+          expect(response.body.success).to.be.true;
+          expect(response.body.data.subscription).to.have.property('status');
+          expect(response.body.data.subscription).to.have.property('plan');
+        },
+      );
     });
 
     it('should create checkout session', () => {
       apiRequest('POST', '/billing/checkout', {
         auth: true,
-        body: { plan: 'pro' }
+        body: { plan: 'pro' },
       }).then((response) => {
         expect(response.status).to.eq(200);
         expect(response.body.success).to.be.true;
@@ -284,7 +315,7 @@ describe('API Tests', () => {
     it('should validate checkout plan', () => {
       apiRequest('POST', '/billing/checkout', {
         auth: true,
-        body: { plan: 'invalid-plan' }
+        body: { plan: 'invalid-plan' },
       }).then((response) => {
         expect(response.status).to.eq(400);
         expect(response.body.success).to.be.false;
@@ -295,13 +326,13 @@ describe('API Tests', () => {
   describe('Rate Limiting', () => {
     it('should handle rate limiting gracefully', () => {
       // Make multiple rapid requests
-      const requests = Array(10).fill(null).map(() => 
-        apiRequest('GET', '/health')
-      );
-      
+      const requests = Array(10)
+        .fill(null)
+        .map(() => apiRequest('GET', '/health'));
+
       cy.wrap(Promise.all(requests)).then((responses) => {
         // All should succeed or some should be rate limited
-        (responses as any[]).forEach(response => {
+        (responses as any[]).forEach((response) => {
           expect([200, 429]).to.include(response.status);
         });
       });
@@ -321,10 +352,10 @@ describe('API Tests', () => {
         url: `${API_URL}/auth/login`,
         headers: { 'Content-Type': 'application/json' },
         body: 'invalid json',
-        failOnStatusCode: false
+        failOnStatusCode: false,
       }).then((response) => {
         expect(response.status).to.eq(400);
       });
     });
   });
-}); 
+});

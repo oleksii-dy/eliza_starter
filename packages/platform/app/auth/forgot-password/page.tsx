@@ -47,7 +47,9 @@ export default function ForgotPasswordPage() {
         onSubmit={async (e) => {
           e.preventDefault();
 
-          if (!email) { return; }
+          if (!email) {
+            return;
+          }
 
           setLoading(true);
           await axios

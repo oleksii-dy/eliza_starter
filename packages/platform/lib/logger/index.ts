@@ -92,7 +92,7 @@ export class Logger {
     level: keyof typeof LogLevel,
     message: string,
     metadata?: Record<string, any>,
-    error?: Error
+    error?: Error,
   ): LogEntry {
     const entry: LogEntry = {
       timestamp: new Date().toISOString(),
@@ -145,8 +145,8 @@ export class Logger {
   private writeToConsole(entry: LogEntry): void {
     const colors = {
       DEBUG: '\x1b[36m', // Cyan
-      INFO: '\x1b[32m',  // Green
-      WARN: '\x1b[33m',  // Yellow
+      INFO: '\x1b[32m', // Green
+      WARN: '\x1b[33m', // Yellow
       ERROR: '\x1b[31m', // Red
       CRITICAL: '\x1b[35m', // Magenta
       RESET: '\x1b[0m',
@@ -154,11 +154,11 @@ export class Logger {
 
     const color = colors[entry.level];
     const timestamp = new Date(entry.timestamp).toLocaleTimeString();
-    
+
     const prefix = `${color}[${timestamp}] ${entry.level}${colors.RESET}`;
     const service = entry.service ? ` (${entry.service})` : '';
     const context = entry.userId ? ` user:${entry.userId}` : '';
-    
+
     const logMessage = `${prefix}${service}${context}: ${entry.message}`;
 
     // Use appropriate console method
@@ -235,7 +235,11 @@ export class Logger {
   /**
    * Critical error logging
    */
-  critical(message: string, error?: Error, metadata?: Record<string, any>): void {
+  critical(
+    message: string,
+    error?: Error,
+    metadata?: Record<string, any>,
+  ): void {
     this.writeLog(this.createLogEntry('CRITICAL', message, metadata, error));
   }
 
@@ -256,55 +260,72 @@ export class Logger {
     url: string,
     statusCode: number,
     duration: number,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
   ): void {
-    const level = statusCode >= 500 ? 'ERROR' : statusCode >= 400 ? 'WARN' : 'INFO';
-    
-    this.writeLog(this.createLogEntry(
-      level,
-      `${method} ${url} ${statusCode} - ${duration}ms`,
-      {
-        httpRequest: {
-          method,
-          url,
-          statusCode,
-          duration,
+    const level =
+      statusCode >= 500 ? 'ERROR' : statusCode >= 400 ? 'WARN' : 'INFO';
+
+    this.writeLog(
+      this.createLogEntry(
+        level,
+        `${method} ${url} ${statusCode} - ${duration}ms`,
+        {
+          httpRequest: {
+            method,
+            url,
+            statusCode,
+            duration,
+          },
+          ...metadata,
         },
-        ...metadata,
-      }
-    ));
+      ),
+    );
   }
 
   /**
    * Log authentication events
    */
   logAuth(event: string, metadata?: Record<string, any>): void {
-    this.writeLog(this.createLogEntry('INFO', `Auth: ${event}`, {
-      category: 'authentication',
-      ...metadata,
-    }));
+    this.writeLog(
+      this.createLogEntry('INFO', `Auth: ${event}`, {
+        category: 'authentication',
+        ...metadata,
+      }),
+    );
   }
 
   /**
    * Log security events
    */
   logSecurity(event: string, metadata?: Record<string, any>): void {
-    this.writeLog(this.createLogEntry('WARN', `Security: ${event}`, {
-      category: 'security',
-      ...metadata,
-    }));
+    this.writeLog(
+      this.createLogEntry('WARN', `Security: ${event}`, {
+        category: 'security',
+        ...metadata,
+      }),
+    );
   }
 
   /**
    * Log database operations
    */
-  logDatabase(operation: string, table?: string, metadata?: Record<string, any>): void {
-    this.writeLog(this.createLogEntry('DEBUG', `DB: ${operation}${table ? ` on ${table}` : ''}`, {
-      category: 'database',
-      operation,
-      table,
-      ...metadata,
-    }));
+  logDatabase(
+    operation: string,
+    table?: string,
+    metadata?: Record<string, any>,
+  ): void {
+    this.writeLog(
+      this.createLogEntry(
+        'DEBUG',
+        `DB: ${operation}${table ? ` on ${table}` : ''}`,
+        {
+          category: 'database',
+          operation,
+          table,
+          ...metadata,
+        },
+      ),
+    );
   }
 }
 

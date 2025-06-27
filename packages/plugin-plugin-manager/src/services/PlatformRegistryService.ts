@@ -22,7 +22,7 @@ import type {
   RegistryItemType,
   RegistryAuthor,
   RegistryAnalytics,
-  RegistryCollection
+  RegistryCollection,
 } from '../types/registry.js';
 
 interface PlatformDatabase {
@@ -38,7 +38,8 @@ interface PlatformDatabase {
 export class PlatformRegistryService extends Service {
   static serviceName = 'platform-registry';
 
-  capabilityDescription = 'Enhanced registry service supporting plugins, MCPs, and workflows with AI-powered platform features';
+  capabilityDescription =
+    'Enhanced registry service supporting plugins, MCPs, and workflows with AI-powered platform features';
 
   private database: PlatformDatabase;
   private databasePath: string;
@@ -47,7 +48,9 @@ export class PlatformRegistryService extends Service {
 
   constructor() {
     super();
-    this.databasePath = process.env.PLATFORM_REGISTRY_DB_PATH || join(process.cwd(), 'data', 'platform-registry.json');
+    this.databasePath =
+      process.env.PLATFORM_REGISTRY_DB_PATH ||
+      join(process.cwd(), 'data', 'platform-registry.json');
     this.database = {
       items: [],
       buildJobs: [],
@@ -55,7 +58,7 @@ export class PlatformRegistryService extends Service {
       analytics: {},
       stats: this.createEmptyStats(),
       version: '1.0.0',
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
     // Initialize runtime placeholder - will be set in start()
     this.runtime = {} as IAgentRuntime;
@@ -99,14 +102,14 @@ export class PlatformRegistryService extends Service {
             ...item,
             createdAt: new Date(item.createdAt),
             updatedAt: new Date(item.updatedAt),
-            publishedAt: item.publishedAt ? new Date(item.publishedAt) : undefined
+            publishedAt: item.publishedAt ? new Date(item.publishedAt) : undefined,
           })),
           buildJobs: parsed.buildJobs.map((job: any) => ({
             ...job,
             startedAt: new Date(job.startedAt),
-            finishedAt: job.finishedAt ? new Date(job.finishedAt) : undefined
+            finishedAt: job.finishedAt ? new Date(job.finishedAt) : undefined,
           })),
-          lastUpdated: new Date(parsed.lastUpdated)
+          lastUpdated: new Date(parsed.lastUpdated),
         };
 
         elizaLogger.info(`Loaded ${this.database.items.length} registry items from database`);
@@ -119,7 +122,7 @@ export class PlatformRegistryService extends Service {
           analytics: {},
           stats: this.createEmptyStats(),
           version: '1.0.0',
-          lastUpdated: new Date()
+          lastUpdated: new Date(),
         };
       }
     } else {
@@ -136,7 +139,7 @@ export class PlatformRegistryService extends Service {
 
       const dataToSave = {
         ...this.database,
-        lastUpdated: new Date()
+        lastUpdated: new Date(),
       };
 
       writeFileSync(this.databasePath, JSON.stringify(dataToSave, null, 2));
@@ -152,8 +155,8 @@ export class PlatformRegistryService extends Service {
     this.validateCreateRequest(request);
 
     // Check for duplicate names
-    const existing = this.database.items.find(item =>
-      item.name === request.name && item.type === request.type
+    const existing = this.database.items.find(
+      (item) => item.name === request.name && item.type === request.type
     );
     if (existing) {
       throw new Error(`${request.type} with name '${request.name}' already exists`);
@@ -163,7 +166,10 @@ export class PlatformRegistryService extends Service {
     const itemId = this.generateId(request.type, request.name);
 
     // Create base item
-    const baseItem: Omit<RegistryItem, 'type' | keyof (PluginRegistryItem | MCPRegistryItem | WorkflowRegistryItem)> = {
+    const baseItem: Omit<
+      RegistryItem,
+      'type' | keyof (PluginRegistryItem | MCPRegistryItem | WorkflowRegistryItem)
+    > = {
       id: itemId,
       name: request.name,
       displayName: request.displayName || request.name,
@@ -182,28 +188,28 @@ export class PlatformRegistryService extends Service {
         forks: 0,
         views: 0,
         averageRating: 0,
-        reviewCount: 0
+        reviewCount: 0,
       },
       repository: {
         type: 'local',
         url: '',
-        ...request.repository
+        ...request.repository,
       },
       installation: {
         method: 'npm',
         command: `npm install ${request.name}`,
-        instructions: 'Standard npm installation'
+        instructions: 'Standard npm installation',
       },
       compatibility: {
         elizaosVersions: ['1.0.0'],
         nodeVersions: ['18.x', '20.x'],
-        platforms: ['linux', 'macos', 'windows']
+        platforms: ['linux', 'macos', 'windows'],
       },
       createdAt: now,
       updatedAt: now,
       readme: request.readme,
       isVerified: false,
-      reportCount: 0
+      reportCount: 0,
     };
 
     // Create type-specific item
@@ -213,19 +219,19 @@ export class PlatformRegistryService extends Service {
       item = {
         ...baseItem,
         type: 'plugin',
-        pluginData: request.pluginData
+        pluginData: request.pluginData,
       } as PluginRegistryItem;
     } else if (request.type === 'mcp' && request.mcpData) {
       item = {
         ...baseItem,
         type: 'mcp',
-        mcpData: request.mcpData
+        mcpData: request.mcpData,
       } as MCPRegistryItem;
     } else if (request.type === 'workflow' && request.workflowData) {
       item = {
         ...baseItem,
         type: 'workflow',
-        workflowData: request.workflowData
+        workflowData: request.workflowData,
       } as WorkflowRegistryItem;
     } else {
       throw new Error(`Invalid ${request.type} data provided`);
@@ -240,7 +246,7 @@ export class PlatformRegistryService extends Service {
   }
 
   async getItem(id: string): Promise<RegistryItem | null> {
-    const item = this.database.items.find(item => item.id === id);
+    const item = this.database.items.find((item) => item.id === id);
 
     if (item) {
       // Increment view count
@@ -273,11 +279,11 @@ export class PlatformRegistryService extends Service {
       ...(request.metadata && { metadata: { ...item.metadata, ...request.metadata } }),
       ...(request.readme && { readme: request.readme }),
       ...(request.changelog && { changelog: request.changelog }),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     // Update in database
-    const index = this.database.items.findIndex(i => i.id === request.id);
+    const index = this.database.items.findIndex((i) => i.id === request.id);
     this.database.items[index] = updatedItem;
 
     this.updateStats();
@@ -299,7 +305,7 @@ export class PlatformRegistryService extends Service {
     }
 
     // Remove from database
-    this.database.items = this.database.items.filter(i => i.id !== id);
+    this.database.items = this.database.items.filter((i) => i.id !== id);
 
     this.updateStats();
     this.saveDatabase();
@@ -313,45 +319,43 @@ export class PlatformRegistryService extends Service {
     // Apply filters
     if (query.search) {
       const searchLower = query.search.toLowerCase();
-      items = items.filter(item =>
-        item.name.toLowerCase().includes(searchLower) ||
-        item.description.toLowerCase().includes(searchLower) ||
-        item.tags.some(tag => tag.toLowerCase().includes(searchLower)) ||
-        (item.displayName && item.displayName.toLowerCase().includes(searchLower))
+      items = items.filter(
+        (item) =>
+          item.name.toLowerCase().includes(searchLower) ||
+          item.description.toLowerCase().includes(searchLower) ||
+          item.tags.some((tag) => tag.toLowerCase().includes(searchLower)) ||
+          (item.displayName && item.displayName.toLowerCase().includes(searchLower))
       );
     }
 
     if (query.type) {
-      items = items.filter(item => item.type === query.type);
+      items = items.filter((item) => item.type === query.type);
     }
 
     if (query.category) {
-      items = items.filter(item => item.category === query.category);
+      items = items.filter((item) => item.category === query.category);
     }
 
     if (query.tags && query.tags.length > 0) {
-      items = items.filter(item =>
-        query.tags!.some(tag => item.tags.includes(tag))
-      );
+      items = items.filter((item) => query.tags!.some((tag) => item.tags.includes(tag)));
     }
 
     if (query.author) {
-      items = items.filter(item =>
-        item.author.username === query.author ||
-        item.author.id === query.author
+      items = items.filter(
+        (item) => item.author.username === query.author || item.author.id === query.author
       );
     }
 
     if (query.status) {
-      items = items.filter(item => item.status === query.status);
+      items = items.filter((item) => item.status === query.status);
     }
 
     if (query.visibility) {
-      items = items.filter(item => item.visibility === query.visibility);
+      items = items.filter((item) => item.visibility === query.visibility);
     }
 
     if (query.minRating) {
-      items = items.filter(item => item.stats.averageRating >= query.minRating!);
+      items = items.filter((item) => item.stats.averageRating >= query.minRating!);
     }
 
     // Apply sorting
@@ -413,7 +417,7 @@ export class PlatformRegistryService extends Service {
       page,
       limit,
       hasMore: endIndex < items.length,
-      aggregations
+      aggregations,
     };
   }
 
@@ -432,13 +436,13 @@ export class PlatformRegistryService extends Service {
       progress: 0,
       phase: 'Queued for building',
       logs: [],
-      startedAt: new Date()
+      startedAt: new Date(),
     };
 
     this.database.buildJobs.push(buildJob);
 
     // Update item with build job reference
-    const itemIndex = this.database.items.findIndex(i => i.id === request.itemId);
+    const itemIndex = this.database.items.findIndex((i) => i.id === request.itemId);
     if (itemIndex !== -1) {
       this.database.items[itemIndex].buildJobId = jobId;
       this.database.items[itemIndex].buildStatus = 'pending';
@@ -453,26 +457,30 @@ export class PlatformRegistryService extends Service {
   }
 
   async getBuildStatus(jobId: string): Promise<RegistryBuildStatus | null> {
-    return this.database.buildJobs.find(job => job.jobId === jobId) || null;
+    return this.database.buildJobs.find((job) => job.jobId === jobId) || null;
   }
 
   async updateBuildStatus(jobId: string, update: Partial<RegistryBuildStatus>): Promise<void> {
-    const jobIndex = this.database.buildJobs.findIndex(job => job.jobId === jobId);
+    const jobIndex = this.database.buildJobs.findIndex((job) => job.jobId === jobId);
     if (jobIndex === -1) {
       throw new Error(`Build job with ID '${jobId}' not found`);
     }
 
     this.database.buildJobs[jobIndex] = {
       ...this.database.buildJobs[jobIndex],
-      ...update
+      ...update,
     };
 
     // Update corresponding registry item
     if (update.status) {
-      const itemIndex = this.database.items.findIndex(i => i.buildJobId === jobId);
+      const itemIndex = this.database.items.findIndex((i) => i.buildJobId === jobId);
       if (itemIndex !== -1) {
-        this.database.items[itemIndex].buildStatus = update.status === 'success' ? 'success' :
-          update.status === 'failed' ? 'failed' : 'building';
+        this.database.items[itemIndex].buildStatus =
+          update.status === 'success'
+            ? 'success'
+            : update.status === 'failed'
+              ? 'failed'
+              : 'building';
       }
     }
 
@@ -486,7 +494,7 @@ export class PlatformRegistryService extends Service {
   }
 
   async getItemsByAuthor(authorId: string): Promise<RegistryItem[]> {
-    return this.database.items.filter(item => item.author.id === authorId);
+    return this.database.items.filter((item) => item.author.id === authorId);
   }
 
   async incrementDownloads(itemId: string): Promise<void> {
@@ -540,7 +548,7 @@ export class PlatformRegistryService extends Service {
     return {
       id: authorId,
       username: authorId,
-      displayName: authorId
+      displayName: authorId,
     };
   }
 
@@ -555,10 +563,10 @@ export class PlatformRegistryService extends Service {
       categories: {} as Record<string, number>,
       tags: {} as Record<string, number>,
       authors: {} as Record<string, number>,
-      types: { plugin: 0, mcp: 0, workflow: 0 } as Record<RegistryItemType, number>
+      types: { plugin: 0, mcp: 0, workflow: 0 } as Record<RegistryItemType, number>,
     };
 
-    items.forEach(item => {
+    items.forEach((item) => {
       // Categories
       aggregations.categories[item.category] = (aggregations.categories[item.category] || 0) + 1;
 
@@ -566,12 +574,13 @@ export class PlatformRegistryService extends Service {
       aggregations.types[item.type]++;
 
       // Tags
-      item.tags.forEach(tag => {
+      item.tags.forEach((tag) => {
         aggregations.tags[tag] = (aggregations.tags[tag] || 0) + 1;
       });
 
       // Authors
-      aggregations.authors[item.author.username] = (aggregations.authors[item.author.username] || 0) + 1;
+      aggregations.authors[item.author.username] =
+        (aggregations.authors[item.author.username] || 0) + 1;
     });
 
     return aggregations;
@@ -587,41 +596,54 @@ export class PlatformRegistryService extends Service {
     this.database.stats = {
       totalItems: items.length,
       itemsByType: {
-        plugin: items.filter(i => i.type === 'plugin').length,
-        mcp: items.filter(i => i.type === 'mcp').length,
-        workflow: items.filter(i => i.type === 'workflow').length
+        plugin: items.filter((i) => i.type === 'plugin').length,
+        mcp: items.filter((i) => i.type === 'mcp').length,
+        workflow: items.filter((i) => i.type === 'workflow').length,
       },
-      itemsByCategory: items.reduce((acc, item) => {
-        acc[item.category] = (acc[item.category] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>),
-      itemsByStatus: items.reduce((acc, item) => {
-        acc[item.status] = (acc[item.status] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>),
+      itemsByCategory: items.reduce(
+        (acc, item) => {
+          acc[item.category] = (acc[item.category] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>
+      ),
+      itemsByStatus: items.reduce(
+        (acc, item) => {
+          acc[item.status] = (acc[item.status] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>
+      ),
       totalDownloads: items.reduce((sum, item) => sum + item.stats.downloads, 0),
-      totalAuthors: new Set(items.map(item => item.author.id)).size,
-      activeAuthors: new Set(items.filter(item => item.updatedAt >= monthAgo).map(item => item.author.id)).size,
+      totalAuthors: new Set(items.map((item) => item.author.id)).size,
+      activeAuthors: new Set(
+        items.filter((item) => item.updatedAt >= monthAgo).map((item) => item.author.id)
+      ).size,
       growth: {
-        daily: items.filter(item => item.createdAt >= dayAgo).length,
-        weekly: items.filter(item => item.createdAt >= weekAgo).length,
-        monthly: items.filter(item => item.createdAt >= monthAgo).length
+        daily: items.filter((item) => item.createdAt >= dayAgo).length,
+        weekly: items.filter((item) => item.createdAt >= weekAgo).length,
+        monthly: items.filter((item) => item.createdAt >= monthAgo).length,
       },
       topItems: {
         mostDownloaded: items.sort((a, b) => b.stats.downloads - a.stats.downloads).slice(0, 5),
-        highestRated: items.sort((a, b) => b.stats.averageRating - a.stats.averageRating).slice(0, 5),
+        highestRated: items
+          .sort((a, b) => b.stats.averageRating - a.stats.averageRating)
+          .slice(0, 5),
         trending: items.sort((a, b) => b.stats.views - a.stats.views).slice(0, 5),
-        newest: items.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 5)
+        newest: items.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()).slice(0, 5),
       },
       buildMetrics: {
         totalBuilds: this.database.buildJobs.length,
-        successRate: this.database.buildJobs.length > 0 ?
-          this.database.buildJobs.filter(job => job.status === 'success').length / this.database.buildJobs.length : 0,
+        successRate:
+          this.database.buildJobs.length > 0
+            ? this.database.buildJobs.filter((job) => job.status === 'success').length /
+              this.database.buildJobs.length
+            : 0,
         averageBuildTime: this.calculateAverageBuildTime(),
-        activeBuilds: this.database.buildJobs.filter(job =>
+        activeBuilds: this.database.buildJobs.filter((job) =>
           ['queued', 'building', 'testing'].includes(job.status)
-        ).length
-      }
+        ).length,
+      },
     };
   }
 
@@ -636,16 +658,18 @@ export class PlatformRegistryService extends Service {
       activeAuthors: 0,
       growth: { daily: 0, weekly: 0, monthly: 0 },
       topItems: { mostDownloaded: [], highestRated: [], trending: [], newest: [] },
-      buildMetrics: { totalBuilds: 0, successRate: 0, averageBuildTime: 0, activeBuilds: 0 }
+      buildMetrics: { totalBuilds: 0, successRate: 0, averageBuildTime: 0, activeBuilds: 0 },
     };
   }
 
   private calculateAverageBuildTime(): number {
-    const completedJobs = this.database.buildJobs.filter(job =>
-      job.status === 'success' || job.status === 'failed'
+    const completedJobs = this.database.buildJobs.filter(
+      (job) => job.status === 'success' || job.status === 'failed'
     );
 
-    if (completedJobs.length === 0) {return 0;}
+    if (completedJobs.length === 0) {
+      return 0;
+    }
 
     const totalTime = completedJobs.reduce((sum, job) => {
       if (job.finishedAt) {
@@ -666,7 +690,7 @@ export class PlatformRegistryService extends Service {
       analytics: {},
       stats: this.createEmptyStats(),
       version: '1.0.0',
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
     this.saveDatabase();
   }

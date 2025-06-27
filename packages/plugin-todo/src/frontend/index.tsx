@@ -1,4 +1,4 @@
-/* eslint-disable no-alert */
+/* eslint-disable no-alert, no-undef */
 
 import React, { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -160,11 +160,7 @@ const useAddTask = () => {
 const useCompleteTask = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<
-    any,
-    Error,
-    { taskId: string }
-  >({
+  return useMutation<any, Error, { taskId: string }>({
     mutationFn: async ({ taskId }) => {
       const response = await fetch(`/api/todos/${taskId}/complete`, {
         method: 'PUT',
@@ -299,7 +295,9 @@ const AddTaskForm = ({ worlds }: { worlds: WorldWithRooms[] }) => {
     const taskData: any = { name: name.trim(), type, roomId: selectedRoomId };
     if (type === 'one-off') {
       taskData.priority = parseInt(priority, 10);
-      if (dueDate) {taskData.dueDate = dueDate;}
+      if (dueDate) {
+        taskData.dueDate = dueDate;
+      }
       taskData.isUrgent = isUrgent;
     }
     addTaskMutation.mutate(taskData, {
@@ -528,9 +526,7 @@ const TaskItem = ({ task }: { task: Task }) => {
           {task.name}
           <span className="text-xs text-muted-foreground ml-1">{details}</span>
           {isCompleted && (
-            <span className="text-xs text-green-600 ml-2">
-              (Completed {completedDate})
-            </span>
+            <span className="text-xs text-green-600 ml-2">(Completed {completedDate})</span>
           )}
         </Label>
       </div>
@@ -730,14 +726,14 @@ function App() {
                       <CardContent className="space-y-1 p-2 pt-1">
                         {room.tasks.filter((task) => !task.tags?.includes('completed')).length >
                         0 ? (
-                            room.tasks
-                              .filter((task) => !task.tags?.includes('completed'))
-                              .map((task) => <TaskItem key={task.id} task={task} />)
-                          ) : (
-                            <p className="text-muted-foreground text-xs px-2 py-1">
+                          room.tasks
+                            .filter((task) => !task.tags?.includes('completed'))
+                            .map((task) => <TaskItem key={task.id} task={task} />)
+                        ) : (
+                          <p className="text-muted-foreground text-xs px-2 py-1">
                             No pending tasks in this room.
-                            </p>
-                          )}
+                          </p>
+                        )}
                         {room.tasks.some((task) => task.tags?.includes('completed')) && (
                           <>
                             <Separator className="my-2" />

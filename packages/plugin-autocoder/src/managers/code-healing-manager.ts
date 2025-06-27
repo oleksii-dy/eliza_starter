@@ -62,7 +62,11 @@ export class CodeHealingManager {
     return 'Provides code healing capabilities to fix TypeScript, ESLint, and build errors';
   }
 
-  async fixTypeScriptError(_code: string, errorMessage: string, _fileName: string): Promise<string> {
+  async fixTypeScriptError(
+    _code: string,
+    errorMessage: string,
+    _fileName: string
+  ): Promise<string> {
     // Analyze the error and apply appropriate fix
     let fixedCode = _code;
 
@@ -88,9 +92,15 @@ export class CodeHealingManager {
         );
         if (returnMatch) {
           const returnValue = returnMatch[1].trim();
-          if (/^\d+$/.test(returnValue)) {return _match.replace('{', ': number {');}
-          if (/^["']/.test(returnValue)) {return _match.replace('{', ': string {');}
-          if (/^true|false$/.test(returnValue)) {return _match.replace('{', ': boolean {');}
+          if (/^\d+$/.test(returnValue)) {
+            return _match.replace('{', ': number {');
+          }
+          if (/^["']/.test(returnValue)) {
+            return _match.replace('{', ': string {');
+          }
+          if (/^true|false$/.test(returnValue)) {
+            return _match.replace('{', ': boolean {');
+          }
         }
         return _match.replace('{', ': unknown {');
       });
@@ -363,7 +373,9 @@ export class CodeHealingManager {
 
   async healTypeScriptErrors(_project: PluginProject): Promise<void> {
     const projectPath = _project.localPath;
-    if (!projectPath) {return;}
+    if (!projectPath) {
+      return;
+    }
 
     // Run tsc to get errors
     try {
@@ -391,7 +403,9 @@ export class CodeHealingManager {
 
   async healESLintErrors(_project: PluginProject): Promise<void> {
     const projectPath = _project.localPath;
-    if (!projectPath) {return;}
+    if (!projectPath) {
+      return;
+    }
 
     // Run eslint to get errors
     try {

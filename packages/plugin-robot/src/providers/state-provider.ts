@@ -15,7 +15,11 @@ export const robotStateProvider: Provider = {
     'Provides real-time robot hardware status including joint positions, operational mode, battery level, and safety warnings when agent needs to understand physical robot state for movement or troubleshooting decisions',
   dynamic: false, // Always include robot state for context
 
-  get: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<ProviderResult> => {
+  get: async (
+    runtime: IAgentRuntime,
+    _message: Memory,
+    _state?: State
+  ): Promise<ProviderResult> => {
     try {
       const robotService = runtime.getService<RobotService>(RobotServiceType.ROBOT);
 

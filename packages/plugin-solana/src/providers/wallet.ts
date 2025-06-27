@@ -1,12 +1,14 @@
-import type { IAgentRuntime, Memory, Provider, State } from '@elizaos/core';
-import { logger } from '@elizaos/core';
-import BigNumber from 'bignumber.js';
+import { HandlerCallback, IAgentRuntime, Memory, Provider, State, logger } from '@elizaos/core';
+import * as BigNumberJS from 'bignumber.js';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { SOLANA_WALLET_DATA_CACHE_KEY } from '../constants';
 import { getWalletKey } from '../keypairUtils';
 import type { WalletPortfolio } from '../types';
 import { PriceOracleService } from '../services/PriceOracleService';
 import { TokenService } from '../services/TokenService';
+import { SolanaService } from '../service';
+
+const BigNumber = BigNumberJS.default || BigNumberJS;
 
 // Define the ProviderResult interface if not already imported
 /**

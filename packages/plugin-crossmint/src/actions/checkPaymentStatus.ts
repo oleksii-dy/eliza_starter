@@ -18,10 +18,13 @@ import { CrossMintError } from '../types/crossmint';
 export const checkPaymentStatusAction: Action = {
   name: 'CHECK_PAYMENT_STATUS',
   similes: ['PAYMENT_STATUS', 'CHECK_PAYMENT', 'VERIFY_PAYMENT'],
-  description: 'Check the status of an X.402 payment request. Can be chained with CREATE_X402_PAYMENT to verify payment completion or with MINT_NFT after payment confirmation',
+  description:
+    'Check the status of an X.402 payment request. Can be chained with CREATE_X402_PAYMENT to verify payment completion or with MINT_NFT after payment confirmation',
 
   validate: async (runtime: IAgentRuntime, _message: Memory) => {
-    const crossmintService = runtime.getService<CrossMintUniversalWalletService>('crossmint-universal-wallet');
+    const crossmintService = runtime.getService<CrossMintUniversalWalletService>(
+      'crossmint-universal-wallet'
+    );
     return !!crossmintService;
   },
 
@@ -33,7 +36,9 @@ export const checkPaymentStatusAction: Action = {
     callback?: HandlerCallback
   ): Promise<ActionResult> => {
     try {
-      const crossmintService = runtime.getService<CrossMintUniversalWalletService>('crossmint-universal-wallet');
+      const crossmintService = runtime.getService<CrossMintUniversalWalletService>(
+        'crossmint-universal-wallet'
+      );
       if (!crossmintService) {
         throw new CrossMintError('CrossMint service not available');
       }
@@ -59,7 +64,9 @@ export const checkPaymentStatusAction: Action = {
       const paymentId = response.trim().replace(/["'`]/g, '');
 
       if (!paymentId || paymentId === 'null' || paymentId.length < 5) {
-        throw new CrossMintError('Could not extract payment ID from message. Please provide a valid payment ID.');
+        throw new CrossMintError(
+          'Could not extract payment ID from message. Please provide a valid payment ID.'
+        );
       }
 
       // Verify payment
@@ -79,7 +86,8 @@ ${verification.transactionHash ? `**Transaction Hash:** ${verification.transacti
 ${verification.settlementTime ? `**Settlement Time:** ${Math.round(verification.settlementTime / 1000 / 60)} minutes` : ''}
 **X.402 Compliant:** ${verification.x402Compliant ? 'Yes' : 'No'}
 
-${verification.valid
+${
+  verification.valid
     ? 'Payment has been successfully completed and verified on the blockchain.'
     : 'Payment is still pending or has failed. Please check again later.'
 }`;
@@ -146,7 +154,8 @@ ${verification.valid
         name: '{{agent}}',
         content: {
           text: "I'll create the payment request and then check its status.",
-          thought: 'First I need to create an X.402 payment request, then monitor its status to confirm when payment is received',
+          thought:
+            'First I need to create an X.402 payment request, then monitor its status to confirm when payment is received',
           actions: ['CREATE_X402_PAYMENT', 'CHECK_PAYMENT_STATUS'],
         },
       },
@@ -163,7 +172,8 @@ ${verification.valid
         name: '{{agent}}',
         content: {
           text: "I'll check the payment status and mint your NFT if the payment is complete.",
-          thought: 'I need to verify the payment status first, and only proceed with NFT minting if the payment is confirmed and valid',
+          thought:
+            'I need to verify the payment status first, and only proceed with NFT minting if the payment is confirmed and valid',
           actions: ['CHECK_PAYMENT_STATUS', 'MINT_NFT'],
         },
       },
@@ -180,7 +190,8 @@ ${verification.valid
         name: '{{agent}}',
         content: {
           text: "I'll verify the payment status and transfer funds to treasury upon confirmation.",
-          thought: 'First check payment verification, then if valid and completed, initiate transfer to the treasury address',
+          thought:
+            'First check payment verification, then if valid and completed, initiate transfer to the treasury address',
           actions: ['CHECK_PAYMENT_STATUS', 'TRANSFER'],
         },
       },

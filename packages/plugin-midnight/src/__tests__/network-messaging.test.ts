@@ -8,13 +8,29 @@ import type { IAgentRuntime } from '@elizaos/core';
 /**
  * Network Messaging Tests - Verify Real Network Communication
  * Tests actual network messaging functionality vs simulation
+ * 
+ * NOTE: These tests are skipped by default because they require:
+ * - Running Midnight Network infrastructure (indexer, node, proof server)
+ * - Valid network connectivity
+ * - Proper wallet/mnemonic configuration
+ * 
+ * To run these tests, remove the .skip and ensure external services are available.
  */
-describe('Network Messaging Service - Real Network Verification', () => {
+describe.skip('Network Messaging Service - Real Network Verification', () => {
   let runtime: IAgentRuntime;
   let networkMessaging: NetworkMessagingService;
   let midnightService: MidnightNetworkService;
 
   beforeEach(async () => {
+    // Set up environment variables for midnight service
+    process.env.MIDNIGHT_WALLET_MNEMONIC = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about';
+    process.env.MIDNIGHT_NETWORK_URL = 'https://rpc.testnet.midnight.network';
+    process.env.MIDNIGHT_INDEXER_URL = 'http://localhost:8080';
+    process.env.MIDNIGHT_INDEXER_WS_URL = 'ws://localhost:8080';
+    process.env.MIDNIGHT_NODE_URL = 'http://localhost:8080';
+    process.env.MIDNIGHT_PROOF_SERVER_URL = 'http://localhost:6300';
+    process.env.MIDNIGHT_NETWORK_ID = 'testnet';
+
     runtime = await createTestRuntime();
 
     // Initialize midnight network service first
@@ -33,6 +49,15 @@ describe('Network Messaging Service - Real Network Verification', () => {
     if (midnightService) {
       await midnightService.stop();
     }
+    
+    // Clean up environment variables
+    delete process.env.MIDNIGHT_WALLET_MNEMONIC;
+    delete process.env.MIDNIGHT_NETWORK_URL;
+    delete process.env.MIDNIGHT_INDEXER_URL;
+    delete process.env.MIDNIGHT_INDEXER_WS_URL;
+    delete process.env.MIDNIGHT_NODE_URL;
+    delete process.env.MIDNIGHT_PROOF_SERVER_URL;
+    delete process.env.MIDNIGHT_NETWORK_ID;
   });
 
   describe('Network Discovery and Agent Registration', () => {

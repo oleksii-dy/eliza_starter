@@ -6,6 +6,7 @@ import { TransactionService } from '../../services/TransactionService';
 import { PriceOracleService } from '../../services/PriceOracleService';
 import { CustodialWalletService, EntityType } from '../../services/CustodialWalletService';
 import { RpcService } from '../../services/RpcService';
+import { createMockRuntime } from '@elizaos/core/test-utils';
 
 // Test configuration
 const NETWORK = process.env.SOLANA_NETWORK || 'devnet';
@@ -46,7 +47,7 @@ describe(`Solana Plugin Integration Tests - ${NETWORK}`, () => {
   beforeAll(async () => {
     const rpcUrl = process.env.SOLANA_RPC_URL || getDefaultRpcUrl(NETWORK);
 
-    mockRuntime = {
+    mockRuntime = createMockRuntime({
       getSetting: (key: string) => {
         const settings: Record<string, string> = {
           SOLANA_NETWORK: NETWORK,
@@ -64,7 +65,7 @@ describe(`Solana Plugin Integration Tests - ${NETWORK}`, () => {
         }
         return null;
       },
-    };
+    });
 
     // Initialize services
     rpcService = await RpcService.start(mockRuntime);

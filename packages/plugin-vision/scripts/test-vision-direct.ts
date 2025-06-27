@@ -5,20 +5,24 @@ import { logger } from '@elizaos/core';
 const mockRuntime = {
   getSetting: (key: string) => {
     const settings: Record<string, string> = {
-      'VISION_MODE': 'BOTH',
-      'VISION_ENABLE_OBJECT_DETECTION': 'true',
-      'VISION_ENABLE_POSE_DETECTION': 'true',
-      'VISION_OCR_ENABLED': 'true',
-      'VISION_FLORENCE2_ENABLED': 'true',
-      'VISION_PIXEL_CHANGE_THRESHOLD': '30',
-      'VISION_TF_UPDATE_INTERVAL': '1000',
-      'VISION_VLM_UPDATE_INTERVAL': '5000',
-      'VISION_SCREEN_CAPTURE_INTERVAL': '2000',
+      VISION_MODE: 'BOTH',
+      VISION_ENABLE_OBJECT_DETECTION: 'true',
+      VISION_ENABLE_POSE_DETECTION: 'true',
+      VISION_OCR_ENABLED: 'true',
+      VISION_FLORENCE2_ENABLED: 'true',
+      VISION_PIXEL_CHANGE_THRESHOLD: '30',
+      VISION_TF_UPDATE_INTERVAL: '1000',
+      VISION_VLM_UPDATE_INTERVAL: '5000',
+      VISION_SCREEN_CAPTURE_INTERVAL: '2000',
     };
     return settings[key] || process.env[key];
   },
   useModel: async (type: any, input: any) => {
-    console.log('[MockRuntime] Model request:', type, typeof input === 'string' ? 'image data' : input);
+    console.log(
+      '[MockRuntime] Model request:',
+      type,
+      typeof input === 'string' ? 'image data' : input
+    );
     return { description: 'I see a computer screen with a terminal and code editor' };
   },
   logger,
@@ -43,7 +47,7 @@ async function testVisionService() {
 
     // Wait for initial captures
     console.log('⏳ Waiting for initial captures...');
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
     // Test camera capture
     console.log('\n📷 Testing Camera Capture...');
@@ -68,7 +72,7 @@ async function testVisionService() {
       console.log('  - Total Tiles:', screen.tiles.length);
 
       // Check for tile analysis
-      const analyzedTiles = screen.tiles.filter(t => t.analysis);
+      const analyzedTiles = screen.tiles.filter((t) => t.analysis);
       console.log('  - Analyzed Tiles:', analyzedTiles.length);
 
       if (analyzedTiles.length > 0) {
@@ -91,7 +95,10 @@ async function testVisionService() {
     if (enhanced) {
       console.log('✅ Enhanced scene available');
       if (enhanced.screenAnalysis) {
-        console.log('  - Full OCR:', enhanced.screenAnalysis.fullScreenOCR ? 'Available' : 'Not available');
+        console.log(
+          '  - Full OCR:',
+          enhanced.screenAnalysis.fullScreenOCR ? 'Available' : 'Not available'
+        );
         console.log('  - Grid Summary:', enhanced.screenAnalysis.gridSummary);
         console.log('  - Focused App:', enhanced.screenAnalysis.focusedApp || 'Unknown');
       }
@@ -114,8 +121,10 @@ async function testVisionService() {
       const currentScene = await service.getSceneDescription();
       if (currentScene && currentScene.sceneChanged) {
         changeCount++;
-        console.log(`[${new Date().toLocaleTimeString()}] Change #${changeCount}:`,
-          `${currentScene.description.substring(0, 80)}...`);
+        console.log(
+          `[${new Date().toLocaleTimeString()}] Change #${changeCount}:`,
+          `${currentScene.description.substring(0, 80)}...`
+        );
       }
     }, 1000);
 
@@ -131,7 +140,6 @@ async function testVisionService() {
 
       process.exit(0);
     }, 10000);
-
   } catch (error) {
     console.error('❌ Error:', error);
     process.exit(1);

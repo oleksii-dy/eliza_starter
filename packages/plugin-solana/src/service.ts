@@ -1,11 +1,13 @@
 import { IAgentRuntime, Service, logger } from '@elizaos/core';
 import { Connection, PublicKey } from '@solana/web3.js';
-import BigNumber from 'bignumber.js';
+import * as BigNumberJS from 'bignumber.js';
 import { SOLANA_SERVICE_NAME, SOLANA_WALLET_DATA_CACHE_KEY } from './constants.js';
 import { getWalletKey, KeypairResult } from './keypairUtils.js';
 import type { Item, Prices, WalletPortfolio } from './types.js';
 import { Keypair } from '@solana/web3.js';
 import bs58 from 'bs58';
+
+const BigNumber = BigNumberJS.default || BigNumberJS;
 
 const PROVIDER_CONFIG = {
   BIRDEYE_API: 'https://public-api.birdeye.so',

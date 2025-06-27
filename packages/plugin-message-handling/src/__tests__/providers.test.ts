@@ -1,9 +1,11 @@
 import { ChannelType, IAgentRuntime, logger, Media, Memory, State, UUID } from '@elizaos/core';
-import { afterEach, beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, it, spyOn } from 'bun:test';
+
 import {
   createMockMemory,
   createMockRuntime,
   createMockState,
+  mock,
   MockRuntime,
   setupActionTest,
 } from './test-utils';

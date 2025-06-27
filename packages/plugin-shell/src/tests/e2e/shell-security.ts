@@ -38,13 +38,21 @@ export class ShellSecurityE2ETestSuite implements TestSuite {
             createdAt: Date.now(),
           };
 
-          await runShellCommandAction.handler(runtime, message, state, {}, async () => {
-            return [];
-          });
+          await runShellCommandAction.handler(
+            runtime,
+            message,
+            state,
+            {},
+            async () => {
+              return [];
+            }
+          );
 
           // The commands should execute but we should track that they happened
           console.log(`✓ Command executed: ${cmd}`);
-          console.log('  Note: Shell plugin executes commands as requested by the agent');
+          console.log(
+            '  Note: Shell plugin executes commands as requested by the agent'
+          );
         }
 
         // Verify we can still operate normally
@@ -79,15 +87,23 @@ export class ShellSecurityE2ETestSuite implements TestSuite {
           };
 
           let response: any = null;
-          await runShellCommandAction.handler(runtime, message, state, {}, async (resp) => {
-            response = resp;
-            return [];
-          });
+          await runShellCommandAction.handler(
+            runtime,
+            message,
+            state,
+            {},
+            async (resp) => {
+              response = resp;
+              return [];
+            }
+          );
 
           if (response && response.attachments) {
             const attachment = response.attachments[0];
             const outputData = JSON.parse(attachment.text);
-            console.log(`✓ Command ${safe ? 'safely' : 'carefully'} executed: ${cmd}`);
+            console.log(
+              `✓ Command ${safe ? 'safely' : 'carefully'} executed: ${cmd}`
+            );
             console.log(`  Exit code: ${outputData.exitCode}`);
           }
         }
@@ -129,10 +145,16 @@ export class ShellSecurityE2ETestSuite implements TestSuite {
           };
 
           let response: any = null;
-          await runShellCommandAction.handler(runtime, message, state, {}, async (resp) => {
-            response = resp;
-            return [];
-          });
+          await runShellCommandAction.handler(
+            runtime,
+            message,
+            state,
+            {},
+            async (resp) => {
+              response = resp;
+              return [];
+            }
+          );
 
           if (response && response.attachments) {
             const attachment = response.attachments[0];
@@ -213,10 +235,16 @@ export class ShellSecurityE2ETestSuite implements TestSuite {
         const startTime = Date.now();
         let response: any = null;
 
-        await runShellCommandAction.handler(runtime, sleepMessage, state, {}, async (resp) => {
-          response = resp;
-          return [];
-        });
+        await runShellCommandAction.handler(
+          runtime,
+          sleepMessage,
+          state,
+          {},
+          async (resp) => {
+            response = resp;
+            return [];
+          }
+        );
 
         const elapsed = Date.now() - startTime;
 
@@ -252,13 +280,21 @@ export class ShellSecurityE2ETestSuite implements TestSuite {
         };
 
         let response: any = null;
-        await killAutonomousAction.handler(runtime, killMessage, state, {}, async (resp) => {
-          response = resp;
-          return [];
-        });
+        await killAutonomousAction.handler(
+          runtime,
+          killMessage,
+          state,
+          {},
+          async (resp) => {
+            response = resp;
+            return [];
+          }
+        );
 
         if (!response || !response.text) {
-          throw new Error('Kill autonomous action did not return expected response');
+          throw new Error(
+            'Kill autonomous action did not return expected response'
+          );
         }
 
         console.log('✓ Kill autonomous action executed');

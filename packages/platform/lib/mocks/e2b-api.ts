@@ -10,20 +10,22 @@ export class E2BClient {
   };
 
   constructor(options?: any) {
-    console.warn('Using mock E2B client - container hosting features are disabled');
-    
+    console.warn(
+      'Using mock E2B client - container hosting features are disabled',
+    );
+
     this.deployments = {
       get: async (id: string) => {
         return {
           id,
           status: 'running',
-          endpoint: 'mock-endpoint'
+          endpoint: 'mock-endpoint',
         };
       },
       delete: async (id: string) => {
         // Mock delete - no-op
         return;
-      }
+      },
     };
   }
 
@@ -32,7 +34,7 @@ export class E2BClient {
     return {
       id: 'mock-deployment-id',
       status: 'running',
-      endpoint: 'mock-endpoint'
+      endpoint: 'mock-endpoint',
     };
   }
 

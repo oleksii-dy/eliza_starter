@@ -2,7 +2,7 @@ describe('Agent GUI (Chat Interface) Page', () => {
   beforeEach(() => {
     // Clear any existing authentication
     cy.clearAuthState();
-    
+
     // Set up API intercepts for the agent GUI page
     cy.intercept('GET', '**/api/auth/identity', {
       statusCode: 200,
@@ -16,17 +16,17 @@ describe('Agent GUI (Chat Interface) Page', () => {
             lastName: 'User',
             organizationId: 'a0000000-0000-4000-8000-000000000002',
             role: 'owner',
-            emailVerified: true
+            emailVerified: true,
           },
           organization: {
             id: 'a0000000-0000-4000-8000-000000000002',
             name: 'ElizaOS Development',
             slug: 'elizaos-dev',
             creditBalance: '1000.0',
-            subscriptionTier: 'premium'
-          }
-        }
-      }
+            subscriptionTier: 'premium',
+          },
+        },
+      },
     }).as('identity');
 
     // Mock chat/messaging APIs
@@ -41,11 +41,11 @@ describe('Agent GUI (Chat Interface) Page', () => {
               title: 'Test Conversation',
               agentId: 'agent-1',
               lastMessage: 'Hello, how can I help you?',
-              lastUpdated: '2024-01-01T00:00:00Z'
-            }
-          ]
-        }
-      }
+              lastUpdated: '2024-01-01T00:00:00Z',
+            },
+          ],
+        },
+      },
     }).as('conversations');
 
     cy.intercept('POST', '**/api/chat/send', {
@@ -55,9 +55,9 @@ describe('Agent GUI (Chat Interface) Page', () => {
         data: {
           messageId: 'msg-123',
           response: 'Thank you for your message! How can I assist you today?',
-          timestamp: '2024-01-01T00:00:00Z'
-        }
-      }
+          timestamp: '2024-01-01T00:00:00Z',
+        },
+      },
     }).as('sendMessage');
 
     // Mock available agents
@@ -71,18 +71,18 @@ describe('Agent GUI (Chat Interface) Page', () => {
               id: 'agent-1',
               name: 'Assistant',
               description: 'General purpose assistant',
-              status: 'active'
-            }
-          ]
-        }
-      }
+              status: 'active',
+            },
+          ],
+        },
+      },
     }).as('agents');
   });
 
   it('should load agent GUI page successfully', () => {
     cy.devLogin();
     cy.visit('/client', { failOnStatusCode: false });
-    
+
     // Check for main chat interface elements
     cy.get('[data-cy="chat-interface"]').should('be.visible');
     cy.get('[data-cy="chat-container"]').should('be.visible');
@@ -91,10 +91,10 @@ describe('Agent GUI (Chat Interface) Page', () => {
   it('should navigate to agent GUI from sidebar', () => {
     cy.devLogin();
     cy.visit('/dashboard', { failOnStatusCode: false });
-    
+
     // Click on Agent GUI in sidebar
     cy.get('[data-cy="sidebar-link-agent-gui"]').click();
-    
+
     // Should navigate to agent GUI
     cy.url().should('include', '/client');
   });
@@ -102,24 +102,24 @@ describe('Agent GUI (Chat Interface) Page', () => {
   it('should display chat interface components', () => {
     cy.devLogin();
     cy.visit('/client', { failOnStatusCode: false });
-    
+
     // Check for essential chat components
     cy.get('body').then(($body) => {
       // Message input area
       if ($body.find('[data-cy="message-input"]').length > 0) {
         cy.get('[data-cy="message-input"]').should('be.visible');
       }
-      
+
       // Send button
       if ($body.find('[data-cy="send-button"]').length > 0) {
         cy.get('[data-cy="send-button"]').should('be.visible');
       }
-      
+
       // Chat messages area
       if ($body.find('[data-cy="chat-messages"]').length > 0) {
         cy.get('[data-cy="chat-messages"]').should('be.visible');
       }
-      
+
       // Chat header
       if ($body.find('[data-cy="chat-header"]').length > 0) {
         cy.get('[data-cy="chat-header"]').should('be.visible');
@@ -130,24 +130,28 @@ describe('Agent GUI (Chat Interface) Page', () => {
   it('should handle message sending workflow', () => {
     cy.devLogin();
     cy.visit('/client', { failOnStatusCode: false });
-    
+
     // Wait for page to load
     cy.wait(1000);
-    
+
     // Try to send a message if input exists
     cy.get('body').then(($body) => {
       if ($body.find('[data-cy="message-input"]').length > 0) {
-        cy.get('[data-cy="message-input"]').type('Hello, this is a test message');
+        cy.get('[data-cy="message-input"]').type(
+          'Hello, this is a test message',
+        );
         cy.get('[data-cy="send-button"]').click();
-        
+
         // Wait for message to be processed
         cy.wait('@sendMessage');
-        
+
         // Should show the sent message
         cy.contains('Hello, this is a test message').should('be.visible');
       } else if ($body.find('input[type="text"]').length > 0) {
         // Fallback to generic input if data-cy not available
-        cy.get('input[type="text"]').first().type('Hello, this is a test message{enter}');
+        cy.get('input[type="text"]')
+          .first()
+          .type('Hello, this is a test message{enter}');
       } else if ($body.find('textarea').length > 0) {
         // Fallback to textarea
         cy.get('textarea').first().type('Hello, this is a test message{enter}');
@@ -158,10 +162,10 @@ describe('Agent GUI (Chat Interface) Page', () => {
   it('should display conversation history', () => {
     cy.devLogin();
     cy.visit('/client', { failOnStatusCode: false });
-    
+
     // Wait for conversations to load
     cy.wait('@conversations');
-    
+
     // Check for conversation list or history
     cy.get('body').then(($body) => {
       if ($body.find('[data-cy="conversation-list"]').length > 0) {
@@ -175,7 +179,7 @@ describe('Agent GUI (Chat Interface) Page', () => {
   it('should show agent selection interface', () => {
     cy.devLogin();
     cy.visit('/client', { failOnStatusCode: false });
-    
+
     // Check for agent selection elements
     cy.get('body').then(($body) => {
       if ($body.find('[data-cy="agent-selector"]').length > 0) {
@@ -189,7 +193,7 @@ describe('Agent GUI (Chat Interface) Page', () => {
   it('should handle file upload functionality', () => {
     cy.devLogin();
     cy.visit('/client', { failOnStatusCode: false });
-    
+
     // Check for file upload elements
     cy.get('body').then(($body) => {
       if ($body.find('[data-cy="file-upload"]').length > 0) {
@@ -204,10 +208,10 @@ describe('Agent GUI (Chat Interface) Page', () => {
     cy.devLogin();
     cy.viewport(375, 667); // iPhone SE dimensions
     cy.visit('/client', { failOnStatusCode: false });
-    
+
     // Check that chat interface is still accessible
     cy.get('[data-cy="chat-interface"]').should('be.visible');
-    
+
     // Check mobile menu functionality if needed
     cy.get('body').then(($body) => {
       if ($body.find('[data-cy="mobile-menu-button"]').length > 0) {
@@ -221,7 +225,7 @@ describe('Agent GUI (Chat Interface) Page', () => {
   it('should handle real-time message updates', () => {
     cy.devLogin();
     cy.visit('/client', { failOnStatusCode: false });
-    
+
     // Mock real-time message
     cy.intercept('GET', '**/api/chat/messages*', {
       statusCode: 200,
@@ -233,31 +237,31 @@ describe('Agent GUI (Chat Interface) Page', () => {
               id: 'msg-1',
               content: 'Hello! How can I help you today?',
               sender: 'agent',
-              timestamp: '2024-01-01T00:00:00Z'
-            }
-          ]
-        }
-      }
+              timestamp: '2024-01-01T00:00:00Z',
+            },
+          ],
+        },
+      },
     }).as('messages');
-    
+
     // Should display messages
     cy.get('body').should('contain.text', 'Agent GUI');
   });
 
   it('should handle error states gracefully', () => {
     cy.devLogin();
-    
+
     // Mock API error
     cy.intercept('GET', '**/api/chat/conversations*', {
       statusCode: 500,
       body: {
         success: false,
-        error: 'Internal server error'
-      }
+        error: 'Internal server error',
+      },
     }).as('conversationsError');
-    
+
     cy.visit('/client', { failOnStatusCode: false });
-    
+
     // Should still show the chat interface even with errors
     cy.get('body').should('contain.text', 'Agent');
   });
@@ -265,7 +269,7 @@ describe('Agent GUI (Chat Interface) Page', () => {
   it('should support keyboard shortcuts', () => {
     cy.devLogin();
     cy.visit('/client', { failOnStatusCode: false });
-    
+
     // Check for common keyboard shortcuts
     cy.get('body').then(($body) => {
       if ($body.find('[data-cy="message-input"]').length > 0) {

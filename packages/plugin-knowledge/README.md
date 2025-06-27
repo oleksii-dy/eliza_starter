@@ -81,6 +81,7 @@ The knowledge plugin now intelligently handles attachments:
 - **Smart detection** - The agent automatically detects when you want to save attachments
 
 Examples:
+
 - "Save these documents" + [attach PDFs]
 - "Add this to your knowledge" + [attach text file]
 - "Learn from this website" + [URL attachment]
@@ -94,6 +95,7 @@ http://localhost:3000/api/agents/[your-agent-id]/plugins/knowledge/display
 ```
 
 Features:
+
 - 📋 List all documents with metadata
 - 🔍 Search through your knowledge base
 - 📊 Visual graph of document relationships
@@ -251,6 +253,7 @@ const results = await knowledgeService.advancedSearch({
 ```
 
 Natural language search examples:
+
 - "Search for pdf documents about AI from last week"
 - "Find recent markdown files sorted by relevant"
 - "Look for documents with blockchain tags from today"

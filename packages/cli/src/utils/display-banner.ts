@@ -102,15 +102,18 @@ export async function getLatestCliVersion(currentVersion: string): Promise<strin
 
 // --- Utility: Display compact, professional update notification ---
 export function showUpdateNotification(currentVersion: string, latestVersion: string) {
-  const blue = '\x1b[38;5;27m'; // Blue border to match ASCII art
-  const orange = '\x1b[38;5;208m'; // Bright orange for warning text
-  const green = '\x1b[38;5;46m'; // Bright green for new version
-  const reset = '\x1b[0m';
-  const bold = '\x1b[1m';
+  // Check if colors should be disabled
+  const colorsEnabled = !process.env.NO_COLOR && !process.env.ELIZA_NO_COLOR;
+
+  const blue = colorsEnabled ? '\x1b[38;5;27m' : ''; // Blue border to match ASCII art
+  const orange = colorsEnabled ? '\x1b[38;5;208m' : ''; // Bright orange for warning text
+  const green = colorsEnabled ? '\x1b[38;5;46m' : ''; // Bright green for new version
+  const reset = colorsEnabled ? '\x1b[0m' : '';
+  const bold = colorsEnabled ? '\x1b[1m' : '';
 
   // Friendly, conversational notification following CLI design principles
   const width = 68;
-  const border = `${blue}${'─'.repeat(width)}${reset}`;
+  const border = colorsEnabled ? `${blue}${'─'.repeat(width)}${reset}` : '─'.repeat(width);
 
   console.log('');
   console.log(border);
@@ -145,12 +148,16 @@ export async function displayBanner(skipUpdateCheck: boolean = false) {
     // Terminal does not support UTF-8, skip banner
     return;
   }
+
+  // Check if colors should be disabled
+  const colorsEnabled = !process.env.NO_COLOR && !process.env.ELIZA_NO_COLOR;
+
   // Color ANSI escape codes
-  const b = '\x1b[38;5;27m';
-  const lightblue = '\x1b[38;5;51m';
-  const w = '\x1b[38;5;255m';
-  const r = '\x1b[0m';
-  const orange = '\x1b[38;5;208m';
+  const b = colorsEnabled ? '\x1b[38;5;27m' : '';
+  const lightblue = colorsEnabled ? '\x1b[38;5;51m' : '';
+  const w = colorsEnabled ? '\x1b[38;5;255m' : '';
+  const r = colorsEnabled ? '\x1b[0m' : '';
+  const orange = colorsEnabled ? '\x1b[38;5;208m' : '';
   let versionColor = lightblue;
 
   const version = getVersion();

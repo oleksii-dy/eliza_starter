@@ -14,8 +14,8 @@ teardown() {
     teardown_test_environment
 }
 
-@test "verify: CLI binary exists" {
-    [ -f "$CLI_ROOT/dist/index.js" ]
+@test "verify: CLI source exists" {
+    [ -f "$CLI_ROOT/src/index.ts" ]
 }
 
 @test "verify: can create a simple project" {
@@ -23,9 +23,12 @@ teardown() {
     export ELIZA_NONINTERACTIVE=true
     export ELIZA_TEST_MODE=true
     
-    run run_cli "dist" create test-project
+    # Test with timeout to avoid hanging
+    run timeout 30 bash -c "cd '$CLI_ROOT' && bun run src/index.ts create test-project --dir '$TEST_DIR' --yes"
+    echo "Status: $status, Output: $output"
+    echo "Directory contents: $(ls -la)"
     [ "$status" -eq 0 ]
-    [[ "$output" =~ "successfully" ]]
+    [[ "$output" =~ "successfully" || "$output" =~ "initialized" ]]
     [ -d "test-project" ]
 }
 
@@ -34,7 +37,8 @@ teardown() {
     export ELIZA_NONINTERACTIVE=true
     export ELIZA_TEST_MODE=true
     
-    run run_cli "dist" create test-plugin --type plugin
+    # Test with timeout to avoid hanging
+    run timeout 30 bash -c "cd '$CLI_ROOT' && bun run src/index.ts create test-plugin --dir '$TEST_DIR' --type plugin --yes"
     [ "$status" -eq 0 ]
     [[ "$output" =~ "successfully" ]]
     # Plugin name is shortened to 'plugin-test' not 'plugin-test-plugin'

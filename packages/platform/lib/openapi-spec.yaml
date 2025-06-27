@@ -3,16 +3,16 @@ info:
   title: ElizaOS Platform API
   description: |
     The ElizaOS Platform API provides programmatic access to manage AI agents, organizations, API keys, and billing.
-    
+
     ## Authentication
-    
+
     The API supports two authentication methods:
-    
+
     1. **Bearer Token (JWT)**: Include the access token in the Authorization header
        ```
        Authorization: Bearer <access_token>
        ```
-    
+
     2. **API Key**: Include your API key in the X-API-Key header
        ```
        X-API-Key: pk_live_...
@@ -241,7 +241,7 @@ paths:
                 $ref: '#/components/schemas/UserProfileResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
-    
+
     patch:
       tags:
         - Users
@@ -285,7 +285,7 @@ paths:
                 $ref: '#/components/schemas/OrganizationsListResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
-    
+
     post:
       tags:
         - Organizations
@@ -330,7 +330,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-    
+
     patch:
       tags:
         - Organizations
@@ -378,7 +378,7 @@ paths:
                 $ref: '#/components/schemas/ApiKeysListResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
-    
+
     post:
       tags:
         - API Keys
@@ -423,7 +423,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-    
+
     patch:
       tags:
         - API Keys
@@ -451,7 +451,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-    
+
     delete:
       tags:
         - API Keys
@@ -512,7 +512,7 @@ paths:
                 $ref: '#/components/schemas/SubscriptionResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
-    
+
     post:
       tags:
         - Billing
@@ -536,7 +536,7 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
-    
+
     patch:
       tags:
         - Billing
@@ -616,7 +616,7 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalServerError'
-    
+
     post:
       tags:
         - Analytics
@@ -761,7 +761,7 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: JWT access token obtained from login or refresh endpoints
-    
+
     apiKeyAuth:
       type: apiKey
       in: header
@@ -777,7 +777,7 @@ components:
         type: integer
         minimum: 1
         default: 1
-    
+
     limit:
       name: limit
       in: query
@@ -787,7 +787,7 @@ components:
         minimum: 1
         maximum: 100
         default: 20
-    
+
     sessionId:
       name: sessionId
       in: path
@@ -795,7 +795,7 @@ components:
       description: Session ID
       schema:
         type: string
-    
+
     organizationId:
       name: organizationId
       in: path
@@ -803,7 +803,7 @@ components:
       description: Organization ID
       schema:
         type: string
-    
+
     apiKeyId:
       name: apiKeyId
       in: path
@@ -1558,4 +1558,4 @@ components:
             success: false
             error:
               code: INTERNAL_SERVER_ERROR
-              message: An unexpected error occurred 
+              message: An unexpected error occurred

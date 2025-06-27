@@ -8,8 +8,8 @@
 // Simulate the createUniqueUuid function since we can't import from @elizaos/core in a standalone demo
 function createUniqueUuid(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = Math.random() * 16 | 0;
-    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
 }
@@ -19,15 +19,18 @@ class MockRuntime {
   agentId = createUniqueUuid();
   character = {
     name: 'AiNex Robot Assistant',
-    bio: ['I am an AI-powered humanoid robot with 24 degrees of freedom and visual perception capabilities'],
-    system: 'You are controlling an AiNex humanoid robot. You can see through my camera, control my joints, and learn new motions through teaching.'
+    bio: [
+      'I am an AI-powered humanoid robot with 24 degrees of freedom and visual perception capabilities',
+    ],
+    system:
+      'You are controlling an AiNex humanoid robot. You can see through my camera, control my joints, and learn new motions through teaching.',
   };
 
   logger = {
     info: (msg: string, data?: any) => console.log(`[INFO] ${msg}`, data || ''),
     error: (msg: string, data?: any) => console.error(`[ERROR] ${msg}`, data || ''),
     warn: (msg: string, data?: any) => console.warn(`[WARN] ${msg}`, data || ''),
-    debug: (msg: string, data?: any) => console.log(`[DEBUG] ${msg}`, data || '')
+    debug: (msg: string, data?: any) => console.log(`[DEBUG] ${msg}`, data || ''),
   };
 
   getSetting(key: string): string | undefined {
@@ -35,7 +38,7 @@ class MockRuntime {
       USE_SIMULATION: 'true',
       ROBOT_SERIAL_PORT: '/dev/ttyUSB0',
       ROBOT_BAUD_RATE: '115200',
-      ROS_WEBSOCKET_URL: 'ws://localhost:9090'
+      ROS_WEBSOCKET_URL: 'ws://localhost:9090',
     };
     return settings[key];
   }
@@ -73,15 +76,15 @@ const robotState = {
     right_hip_roll: { position: 0, velocity: 0, effort: 0 },
     right_knee_pitch: { position: 0, velocity: 0, effort: 0 },
     right_ankle_pitch: { position: 0, velocity: 0, effort: 0 },
-    right_ankle_roll: { position: 0, velocity: 0, effort: 0 }
+    right_ankle_roll: { position: 0, velocity: 0, effort: 0 },
   },
   battery: 85,
   temperature: 32,
   imu: {
     orientation: { x: 0, y: 0, z: 0, w: 1 },
     angularVelocity: { x: 0, y: 0, z: 0 },
-    linearAcceleration: { x: 0, y: 0, z: 9.81 }
-  }
+    linearAcceleration: { x: 0, y: 0, z: 9.81 },
+  },
 };
 
 // Simulate vision capabilities
@@ -90,22 +93,26 @@ const visionCapabilities = {
     objects: ['desk', 'laptop', 'coffee cup', 'person'],
     people: [{ name: 'Unknown', position: 'in front', distance: '2 meters' }],
     text: ['ElizaOS', 'Robot Control'],
-    description: 'I see a workspace with a desk, laptop, and coffee cup. There is a person standing in front of me.'
-  }
+    description:
+      'I see a workspace with a desk, laptop, and coffee cup. There is a person standing in front of me.',
+  },
 };
 
 // Demonstrate scenarios
-async function runScenario(title: string, interactions: Array<{user: string, action: () => void}>) {
+async function runScenario(
+  title: string,
+  interactions: Array<{ user: string; action: () => void }>
+) {
   console.log(`\n${'═'.repeat(60)}`);
   console.log(`📋 ${title}`);
   console.log(`${'═'.repeat(60)}\n`);
 
   for (const interaction of interactions) {
     console.log(`👤 User: "${interaction.user}"`);
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
     interaction.action();
     console.log();
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 }
 
@@ -129,14 +136,16 @@ async function main() {
         console.log('🤖 Robot: Looking around...');
         console.log(`   📷 I see ${visionCapabilities.currentScene.description}`);
         console.log('   Objects detected:', visionCapabilities.currentScene.objects.join(', '));
-      }
+      },
     },
     {
       user: 'Can you read any text?',
       action: () => {
         console.log('🤖 Robot: Analyzing text in view...');
-        console.log(`   📝 I can see text that says: "${visionCapabilities.currentScene.text.join('", "')}"`);
-      }
+        console.log(
+          `   📝 I can see text that says: "${visionCapabilities.currentScene.text.join('", "')}"`
+        );
+      },
     },
     {
       user: 'Look at the person and wave',
@@ -149,8 +158,8 @@ async function main() {
         console.log('      - right_elbow_pitch → -0.5 rad');
         console.log('      - Moving hand side to side...');
         console.log('   ✅ Wave complete!');
-      }
-    }
+      },
+    },
   ]);
 
   // Scenario 2: Robot Control
@@ -162,7 +171,7 @@ async function main() {
         console.log('   🎯 Setting head_yaw to 0.785 rad (45°)');
         robotState.joints.head_yaw.position = 0.785;
         console.log('   ✅ Head moved to left position');
-      }
+      },
     },
     {
       user: 'Stand in a ready position',
@@ -176,7 +185,7 @@ async function main() {
         console.log('      - shoulder_pitch: -0.2 rad');
         console.log('      - elbow_pitch: -0.5 rad');
         console.log('   ✅ Ready position achieved');
-      }
+      },
     },
     {
       user: 'Show me your battery level',
@@ -186,8 +195,8 @@ async function main() {
         console.log(`   🌡️ Temperature: ${robotState.temperature}°C`);
         console.log('   📊 IMU Status: Stable (upright orientation)');
         console.log('   ⚙️ All servos: Operational');
-      }
-    }
+      },
+    },
   ]);
 
   // Scenario 3: Teaching Mode
@@ -200,7 +209,7 @@ async function main() {
         console.log('   🎓 Servos are now compliant');
         console.log('   👐 You can now move my joints manually');
         console.log('   💡 Say "record pose" when you want to save a position');
-      }
+      },
     },
     {
       user: 'Record this pose as greeting',
@@ -211,7 +220,7 @@ async function main() {
         console.log('      - right_elbow_pitch: -1.2 rad');
         console.log('      - left_shoulder_pitch: -0.8 rad');
         console.log('   💾 Pose saved as "greeting"');
-      }
+      },
     },
     {
       user: 'Save this motion sequence as handshake',
@@ -224,8 +233,8 @@ async function main() {
         console.log('      Frame 4: Shake motion (3 cycles)');
         console.log('   💾 Motion "handshake" saved with 4 keyframes');
         console.log('   ⏱️ Total duration: 3.5 seconds');
-      }
-    }
+      },
+    },
   ]);
 
   // Scenario 4: Autonomous Behavior
@@ -243,7 +252,7 @@ async function main() {
         console.log('      - right_shoulder_roll → -0.3 rad');
         console.log('      - right_elbow_pitch → 0.0 rad (extended)');
         console.log('   ✅ Pointing at coffee cup');
-      }
+      },
     },
     {
       user: 'If you see a person, wave. Otherwise, nod.',
@@ -253,8 +262,8 @@ async function main() {
         console.log('   🤔 Decision: Execute wave gesture');
         console.log('   👋 Performing wave motion...');
         console.log('   ✅ Social gesture completed');
-      }
-    }
+      },
+    },
   ]);
 
   // Scenario 5: Safety Features
@@ -268,7 +277,7 @@ async function main() {
         console.log('   🎯 Acceleration limits: Max 5.0 rad/s² for smooth motion');
         console.log('   🛡️ Collision detection: IMU-based fall detection');
         console.log('   🛑 Emergency stop: Instant halt on command');
-      }
+      },
     },
     {
       user: 'Emergency stop!',
@@ -279,7 +288,7 @@ async function main() {
         console.log('   🛑 All motors halted immediately');
         console.log('   🔒 Motion commands disabled');
         console.log('   📢 Waiting for reset command...');
-      }
+      },
     },
     {
       user: 'Reset emergency stop',
@@ -290,8 +299,8 @@ async function main() {
         console.log('   ✅ Systems back online');
         console.log('   🔄 Running self-diagnostic...');
         console.log('   ✅ All systems operational');
-      }
-    }
+      },
+    },
   ]);
 
   // Summary

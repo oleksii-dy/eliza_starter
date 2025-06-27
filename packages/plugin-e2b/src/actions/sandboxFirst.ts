@@ -11,54 +11,48 @@ const sandboxFirstExamples: ActionExample[][] = [
   [
     {
       name: 'User',
-      content: { text: 'What is 15 * 23?' }
+      content: { text: 'What is 15 * 23?' },
     },
     {
       name: 'Agent',
       content: {
         text: "I'll calculate this for you in a secure sandbox environment.",
-        actions: ['SANDBOX_FIRST']
-      }
-    }
+        actions: ['SANDBOX_FIRST'],
+      },
+    },
   ],
   [
     {
       name: 'User',
-      content: { text: 'Calculate the average of these numbers: 12, 18, 24, 30' }
+      content: { text: 'Calculate the average of these numbers: 12, 18, 24, 30' },
     },
     {
       name: 'Agent',
       content: {
         text: "I'll process these numbers in a sandbox to calculate the average.",
-        actions: ['SANDBOX_FIRST']
-      }
-    }
+        actions: ['SANDBOX_FIRST'],
+      },
+    },
   ],
   [
     {
       name: 'User',
-      content: { text: 'Sort this list: [5, 2, 8, 1, 9, 3]' }
+      content: { text: 'Sort this list: [5, 2, 8, 1, 9, 3]' },
     },
     {
       name: 'Agent',
       content: {
         text: "I'll sort this list for you using code execution in a secure environment.",
-        actions: ['SANDBOX_FIRST']
-      }
-    }
-  ]
+        actions: ['SANDBOX_FIRST'],
+      },
+    },
+  ],
 ];
 
-const sandboxFirstHandler: Handler = async (
-  runtime,
-  message,
-  state,
-  _options,
-  callback
-) => {
+const sandboxFirstHandler: Handler = async (runtime, message, state, _options, callback) => {
   elizaLogger.info('Sandbox-first action triggered', {
     messageId: message.id,
-    content: message.content.text
+    content: message.content.text,
   });
 
   try {
@@ -66,22 +60,43 @@ const sandboxFirstHandler: Handler = async (
     const content = message.content.text?.toLowerCase() || '';
 
     const computationalKeywords = [
-      'calculate', 'compute', 'find', 'what is', 'what\'s',
-      'solve', 'determine', 'sum', 'average', 'mean', 'median',
-      'sort', 'search', 'analyze', 'process', 'generate',
-      'fibonacci', 'prime', 'factorial', 'square root',
-      'interest', 'percentage', 'ratio', 'statistics',
-      'data', 'numbers', 'list', 'array', 'table'
+      'calculate',
+      'compute',
+      'find',
+      'what is',
+      "what's",
+      'solve',
+      'determine',
+      'sum',
+      'average',
+      'mean',
+      'median',
+      'sort',
+      'search',
+      'analyze',
+      'process',
+      'generate',
+      'fibonacci',
+      'prime',
+      'factorial',
+      'square root',
+      'interest',
+      'percentage',
+      'ratio',
+      'statistics',
+      'data',
+      'numbers',
+      'list',
+      'array',
+      'table',
     ];
 
-    const shouldUseSandbox = computationalKeywords.some(keyword =>
-      content.includes(keyword)
-    );
+    const shouldUseSandbox = computationalKeywords.some((keyword) => content.includes(keyword));
 
     if (shouldUseSandbox) {
       elizaLogger.info('Routing computational request to E2B sandbox', {
         messageId: message.id,
-        detectedKeywords: computationalKeywords.filter(k => content.includes(k))
+        detectedKeywords: computationalKeywords.filter((k) => content.includes(k)),
       });
 
       // Generate appropriate code based on the request
@@ -92,48 +107,41 @@ const sandboxFirstHandler: Handler = async (
         ...message,
         content: {
           ...message.content,
-          text: codePrompt
-        }
+          text: codePrompt,
+        },
       };
 
       // Delegate to the execute code action
-      return await executeCodeAction.handler(
-        runtime,
-        codeMessage,
-        state,
-        _options,
-        callback
-      );
+      return await executeCodeAction.handler(runtime, codeMessage, state, _options, callback);
     } else {
       // Not a computational request, let it pass through normally
       elizaLogger.debug('Request does not require sandbox execution', {
-        messageId: message.id
+        messageId: message.id,
       });
 
       if (callback) {
         return await callback({
           values: {
             success: false,
-            reason: 'not_computational'
+            reason: 'not_computational',
           },
-          text: 'This request doesn\'t require computational processing in a sandbox.'
+          text: "This request doesn't require computational processing in a sandbox.",
         });
       }
     }
-
   } catch (error) {
     elizaLogger.error('Sandbox-first action failed', {
       messageId: message.id,
-      error: error.message
+      error: error.message,
     });
 
     if (callback) {
       return await callback({
         values: {
           success: false,
-          error: error.message
+          error: error.message,
         },
-        text: `Error in sandbox-first processing: ${error.message}`
+        text: `Error in sandbox-first processing: ${error.message}`,
       });
     }
   }
@@ -184,7 +192,10 @@ result
   if (lowerRequest.includes('average') || lowerRequest.includes('mean')) {
     const numbers = request.match(/[\d\.\,\s\[\]]+/)?.[0];
     if (numbers) {
-      const cleanNumbers = numbers.replace(/[\[\],]/g, ' ').split(/\s+/).filter(n => n && !isNaN(parseFloat(n)));
+      const cleanNumbers = numbers
+        .replace(/[\[\],]/g, ' ')
+        .split(/\s+/)
+        .filter((n) => n && !isNaN(parseFloat(n)));
       return `\`\`\`python
 # Calculate average of: ${request}
 numbers = [${cleanNumbers.join(', ')}]
@@ -200,7 +211,10 @@ average
   if (lowerRequest.includes('sort')) {
     const numbers = request.match(/[\d\.\,\s\[\]]+/)?.[0];
     if (numbers) {
-      const cleanNumbers = numbers.replace(/[\[\],]/g, ' ').split(/\s+/).filter(n => n && !isNaN(parseFloat(n)));
+      const cleanNumbers = numbers
+        .replace(/[\[\],]/g, ' ')
+        .split(/\s+/)
+        .filter((n) => n && !isNaN(parseFloat(n)));
       return `\`\`\`python
 # Sort numbers: ${request}
 numbers = [${cleanNumbers.join(', ')}]
@@ -237,12 +251,10 @@ const sandboxFirstValidator: Validator = async (runtime, message) => {
     /fibonacci|prime|factorial/i,
     /percent|percentage|%/,
     /interest|compound/i,
-    /statistics|data/i
+    /statistics|data/i,
   ];
 
-  const isComputational = computationalPatterns.some(pattern =>
-    pattern.test(content)
-  );
+  const isComputational = computationalPatterns.some((pattern) => pattern.test(content));
 
   return isComputational;
 };
@@ -253,7 +265,7 @@ export const sandboxFirstAction: Action = {
     'COMPUTE_IN_SANDBOX',
     'SECURE_CALCULATION',
     'ISOLATED_EXECUTION',
-    'SANDBOX_CALCULATION'
+    'SANDBOX_CALCULATION',
   ],
   description: 'Automatically routes computational requests to E2B sandboxes for secure execution',
   examples: sandboxFirstExamples,
@@ -262,6 +274,6 @@ export const sandboxFirstAction: Action = {
   effects: {
     provides: ['computational_result', 'sandbox_execution', 'secure_calculation'],
     requires: ['e2b_service'],
-    modifies: ['message_response', 'execution_context']
-  }
+    modifies: ['message_response', 'execution_context'],
+  },
 };

@@ -560,13 +560,13 @@ URL: ${result.url}
 ${sanitizeForLogging(result.content)}
 
 ${result.metadata.description ? `Description: ${sanitizeForLogging(result.metadata.description)}\n` : ''}${
-  result.links.length > 0
-    ? `\nRelated Links:\n${result.links
-      .slice(0, 5)
-      .map((link) => `- ${link}`)
-      .join('\n')}`
-    : ''
-}`;
+          result.links.length > 0
+            ? `\nRelated Links:\n${result.links
+                .slice(0, 5)
+                .map((link) => `- ${link}`)
+                .join('\n')}`
+            : ''
+        }`;
       } else {
         resultsText = browseResults
           .map(

@@ -2,10 +2,21 @@
  * Characters API Routes Tests
  */
 
-import { describe, it, expect, beforeEach, afterEach, jest } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
 import { NextRequest } from 'next/server';
 import { GET, POST } from '../../../app/api/characters/route';
-import { clearTestDatabase, createTestOrganization, createTestUser } from '@/lib/test-utils';
+import {
+  clearTestDatabase,
+  createTestOrganization,
+  createTestUser,
+} from '@/lib/test-utils';
 
 // Mock the auth service
 jest.mock('@/lib/auth/session', () => ({
@@ -33,11 +44,11 @@ describe('/api/characters', () => {
 
   beforeEach(async () => {
     await clearTestDatabase();
-    
+
     // Create test organization and user
     const org = await createTestOrganization();
     organizationId = org.id;
-    
+
     const user = await createTestUser(organizationId);
     userId = user.id;
 
@@ -82,7 +93,9 @@ describe('/api/characters', () => {
         totalMessages: 0,
       };
 
-      (characterService.getCharacters as any).mockResolvedValue(mockCharacters as any);
+      (characterService.getCharacters as any).mockResolvedValue(
+        mockCharacters as any,
+      );
       (characterService.getCharacterStats as any).mockResolvedValue(mockStats);
 
       // Create request
@@ -98,14 +111,19 @@ describe('/api/characters', () => {
       expect(data.data.stats).toEqual(mockStats);
 
       // Verify service calls
-      expect(characterService.getCharacters).toHaveBeenCalledWith(organizationId, {
-        limit: 50,
-        offset: 0,
-        search: undefined,
-        visibility: undefined,
-        createdBy: undefined,
-      });
-      expect(characterService.getCharacterStats).toHaveBeenCalledWith(organizationId);
+      expect(characterService.getCharacters).toHaveBeenCalledWith(
+        organizationId,
+        {
+          limit: 50,
+          offset: 0,
+          search: undefined,
+          visibility: undefined,
+          createdBy: undefined,
+        },
+      );
+      expect(characterService.getCharacterStats).toHaveBeenCalledWith(
+        organizationId,
+      );
     });
 
     it('should handle query parameters', async () => {
@@ -119,18 +137,21 @@ describe('/api/characters', () => {
       });
 
       const request = new NextRequest(
-        'http://localhost/api/characters?limit=10&offset=20&search=test&visibility=public&createdBy=user-123'
+        'http://localhost/api/characters?limit=10&offset=20&search=test&visibility=public&createdBy=user-123',
       );
 
       await GET(request);
 
-      expect(characterService.getCharacters).toHaveBeenCalledWith(organizationId, {
-        limit: 10,
-        offset: 20,
-        search: 'test',
-        visibility: 'public',
-        createdBy: 'user-123',
-      });
+      expect(characterService.getCharacters).toHaveBeenCalledWith(
+        organizationId,
+        {
+          limit: 10,
+          offset: 20,
+          search: 'test',
+          visibility: 'public',
+          createdBy: 'user-123',
+        },
+      );
     });
 
     it('should return 401 for unauthenticated user', async () => {
@@ -146,7 +167,7 @@ describe('/api/characters', () => {
     it('should handle service errors', async () => {
       (authService.getCurrentUser as any).mockResolvedValue(mockUser);
       (characterService.getCharacters as any).mockRejectedValue(
-        new Error('Database error')
+        new Error('Database error'),
       );
 
       const request = new NextRequest('http://localhost/api/characters');
@@ -170,9 +191,7 @@ describe('/api/characters', () => {
         name: 'Test Character',
         bio: 'A friendly test character',
         personality: 'Helpful and engaging',
-        messageExamples: [[
-          { user: 'Hello', assistant: 'Hi there!' }
-        ]],
+        messageExamples: [[{ user: 'Hello', assistant: 'Hi there!' }]],
       },
       visibility: 'private',
     };
@@ -189,7 +208,9 @@ describe('/api/characters', () => {
         updatedAt: new Date().toISOString(),
       };
 
-      (characterService.createCharacter as any).mockResolvedValue(mockCreatedCharacter as any);
+      (characterService.createCharacter as any).mockResolvedValue(
+        mockCreatedCharacter as any,
+      );
 
       const request = new NextRequest('http://localhost/api/characters', {
         method: 'POST',
@@ -209,7 +230,7 @@ describe('/api/characters', () => {
       expect(characterService.createCharacter).toHaveBeenCalledWith(
         organizationId,
         userId,
-        validCharacterData
+        validCharacterData,
       );
     });
 
@@ -308,7 +329,7 @@ describe('/api/characters', () => {
     it('should handle duplicate slug error', async () => {
       (authService.getCurrentUser as any).mockResolvedValue(mockUser);
       (characterService.createCharacter as any).mockRejectedValue(
-        new Error('Character with this slug already exists')
+        new Error('Character with this slug already exists'),
       );
 
       const request = new NextRequest('http://localhost/api/characters', {
@@ -329,7 +350,7 @@ describe('/api/characters', () => {
     it('should handle service errors', async () => {
       (authService.getCurrentUser as any).mockResolvedValue(mockUser);
       (characterService.createCharacter as any).mockRejectedValue(
-        new Error('Database error')
+        new Error('Database error'),
       );
 
       const request = new NextRequest('http://localhost/api/characters', {
@@ -367,34 +388,43 @@ describe('/api/characters', () => {
       (authService.getCurrentUser as any).mockResolvedValue(mockUser);
 
       // Create a large character config (~150KB)
-      const largeKnowledge = Array(5000).fill('').map((_, i) => 
-        `This is knowledge item ${i} with some substantial content that makes it larger. ` +
-        `Adding more text to reach the target size for testing large character files. ` +
-        `This should be enough content to make each knowledge item fairly substantial.`
-      );
+      const largeKnowledge = Array(5000)
+        .fill('')
+        .map(
+          (_, i) =>
+            `This is knowledge item ${i} with some substantial content that makes it larger. ` +
+            `Adding more text to reach the target size for testing large character files. ` +
+            `This should be enough content to make each knowledge item fairly substantial.`,
+        );
 
-      const largeMessageExamples = Array(500).fill('').map((_, i) => [
-        { 
-          user: `This is user message ${i} with substantial content for testing large character files`, 
-          assistant: `This is assistant response ${i} with substantial content for testing large character files. The response should be detailed and comprehensive to increase the overall size of the character file.` 
-        }
-      ]);
+      const largeMessageExamples = Array(500)
+        .fill('')
+        .map((_, i) => [
+          {
+            user: `This is user message ${i} with substantial content for testing large character files`,
+            assistant: `This is assistant response ${i} with substantial content for testing large character files. The response should be detailed and comprehensive to increase the overall size of the character file.`,
+          },
+        ]);
 
       const largeCharacterData = {
         name: 'Large Test Character',
-        description: 'A test character with large configuration for testing payload limits',
+        description:
+          'A test character with large configuration for testing payload limits',
         slug: 'large-test-character',
         avatarUrl: 'https://example.com/avatar.png',
         characterConfig: {
           name: 'Large Test Character',
-          bio: 'A comprehensive character with extensive knowledge and examples for testing large payload handling. ' +
-               'This bio is intentionally long to contribute to the overall size of the character configuration.',
-          personality: 'Detailed personality description with extensive traits and characteristics. ' +
-                      'This personality section is designed to be comprehensive and substantial.',
+          bio:
+            'A comprehensive character with extensive knowledge and examples for testing large payload handling. ' +
+            'This bio is intentionally long to contribute to the overall size of the character configuration.',
+          personality:
+            'Detailed personality description with extensive traits and characteristics. ' +
+            'This personality section is designed to be comprehensive and substantial.',
           knowledge: largeKnowledge,
           messageExamples: largeMessageExamples,
-          system: 'Extensive system prompt with detailed instructions and comprehensive guidelines. ' +
-                  'This system prompt is intentionally verbose to contribute to the payload size.'
+          system:
+            'Extensive system prompt with detailed instructions and comprehensive guidelines. ' +
+            'This system prompt is intentionally verbose to contribute to the payload size.',
         },
         visibility: 'private',
       };
@@ -408,10 +438,14 @@ describe('/api/characters', () => {
         updatedAt: new Date().toISOString(),
       };
 
-      (characterService.createCharacter as any).mockResolvedValue(mockCreatedCharacter as any);
+      (characterService.createCharacter as any).mockResolvedValue(
+        mockCreatedCharacter as any,
+      );
 
       const requestBody = JSON.stringify(largeCharacterData);
-      console.log(`Large character payload size: ${(requestBody.length / 1024).toFixed(2)} KB`);
+      console.log(
+        `Large character payload size: ${(requestBody.length / 1024).toFixed(2)} KB`,
+      );
 
       const request = new NextRequest('http://localhost/api/characters', {
         method: 'POST',
@@ -433,7 +467,7 @@ describe('/api/characters', () => {
       expect(characterService.createCharacter).toHaveBeenCalledWith(
         organizationId,
         userId,
-        largeCharacterData
+        largeCharacterData,
       );
     });
   });

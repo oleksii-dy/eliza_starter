@@ -1,13 +1,14 @@
 import { describe, it, expect } from 'bun:test';
 import { CacheManager } from '../services/cacheManager';
 import { NotificationManager } from '../services/notificationManager';
+import { createMockRuntime } from '@elizaos/core/test-utils';
 import type { IAgentRuntime, UUID } from '@elizaos/core';
 
 describe('Internal Managers', () => {
-  const mockRuntime: IAgentRuntime = {
-    agentId: 'test-agent' as UUID,
+  // @ts-ignore - test mock
+  const mockRuntime: IAgentRuntime = createMockRuntime({
     emitEvent: () => Promise.resolve(),
-  } as any;
+  });
 
   describe('CacheManager', () => {
     it('should initialize successfully', () => {
@@ -80,7 +81,7 @@ describe('Internal Managers', () => {
       await cache.set('expiring-key', 'value', 1); // 1ms TTL
 
       // Wait for expiration
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const value = await cache.get('expiring-key');
       expect(value).toBeNull();
@@ -120,12 +121,14 @@ describe('Internal Managers', () => {
     it('should queue notifications', async () => {
       const notificationManager = new NotificationManager(mockRuntime);
 
-      await expect(notificationManager.queueNotification({
-        title: 'Test Notification',
-        body: 'Test body',
-        type: 'system',
-        roomId: 'room-1' as UUID,
-      })).resolves.toBeUndefined();
+      await expect(
+        notificationManager.queueNotification({
+          title: 'Test Notification',
+          body: 'Test body',
+          type: 'system',
+          roomId: 'room-1' as UUID,
+        })
+      ).resolves.toBeUndefined();
     });
 
     it('should get user preferences', () => {
@@ -142,10 +145,12 @@ describe('Internal Managers', () => {
     it('should update user preferences', async () => {
       const notificationManager = new NotificationManager(mockRuntime);
 
-      await expect(notificationManager.updateUserPreferences('user-1' as UUID, {
-        enabled: false,
-        sound: false,
-      })).resolves.toBeUndefined();
+      await expect(
+        notificationManager.updateUserPreferences('user-1' as UUID, {
+          enabled: false,
+          sound: false,
+        })
+      ).resolves.toBeUndefined();
 
       const prefs = notificationManager.getUserPreferences('user-1' as UUID);
       expect(prefs.enabled).toBe(false);

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { db } from '@/lib/database';
+import { getDatabase } from '@/lib/database';
 import { users, organizations, userSessions } from '@/lib/database/schema';
 import { eq, and } from 'drizzle-orm';
 import { verifyJWT } from '@/lib/server/utils/jwt';
@@ -30,7 +30,9 @@ export interface AuthenticationResult {
 /**
  * Authenticate user from request using JWT token or session cookie
  */
-export async function authenticateUser(request: NextRequest): Promise<AuthenticationResult> {
+export async function authenticateUser(
+  request: NextRequest,
+): Promise<AuthenticationResult> {
   try {
     // Try JWT token first (Authorization header)
     const authHeader = request.headers.get('authorization');
@@ -41,7 +43,9 @@ export async function authenticateUser(request: NextRequest): Promise<Authentica
         const jwtSecret = process.env.JWT_SECRET;
         if (!jwtSecret) {
           // SECURITY: Fail-safe when JWT_SECRET is missing
-          console.error('❌ JWT_SECRET not configured - rejecting JWT authentication');
+          console.error(
+            '❌ JWT_SECRET not configured - rejecting JWT authentication',
+          );
           // Do NOT continue to session cookies for JWT auth - fail fast
           return { user: null, organization: null, session: null };
         }
@@ -78,16 +82,21 @@ export async function authenticateUser(request: NextRequest): Promise<Authentica
 /**
  * Authenticate using session token
  */
-async function authenticateSession(sessionToken: string): Promise<AuthenticationResult> {
+async function authenticateSession(
+  sessionToken: string,
+): Promise<AuthenticationResult> {
   try {
     // Find active session
-    const [session] = await db
+    const database = await getDatabase();
+    const [session] = await database
       .select()
       .from(userSessions)
-      .where(and(
-        eq(userSessions.sessionToken, sessionToken),
-        // Session not expired (comparing with current timestamp)
-      ))
+      .where(
+        and(
+          eq(userSessions.sessionToken, sessionToken),
+          // Session not expired (comparing with current timestamp)
+        ),
+      )
       .limit(1);
 
     if (!session || new Date() > session.expiresAt) {
@@ -95,7 +104,8 @@ async function authenticateSession(sessionToken: string): Promise<Authentication
     }
 
     // Update last active timestamp
-    await db
+    const database2 = await getDatabase();
+    await database2
       .update(userSessions)
       .set({ lastActiveAt: new Date() })
       .where(eq(userSessions.id, session.id));
@@ -110,9 +120,12 @@ async function authenticateSession(sessionToken: string): Promise<Authentication
 /**
  * Get user with organization details
  */
-async function getUserWithOrganization(userId: string): Promise<AuthenticationResult> {
+async function getUserWithOrganization(
+  userId: string,
+): Promise<AuthenticationResult> {
   try {
-    const [result] = await db
+    const database = await getDatabase();
+    const [result] = await database
       .select({
         user: {
           id: users.id,
@@ -128,14 +141,11 @@ async function getUserWithOrganization(userId: string): Promise<AuthenticationRe
           slug: organizations.slug,
           creditBalance: organizations.creditBalance,
           stripeCustomerId: organizations.stripeCustomerId,
-        }
+        },
       })
       .from(users)
       .innerJoin(organizations, eq(users.organizationId, organizations.id))
-      .where(and(
-        eq(users.id, userId),
-        eq(users.isActive, true)
-      ))
+      .where(and(eq(users.id, userId), eq(users.isActive, true)))
       .limit(1);
 
     if (!result) {
@@ -166,11 +176,14 @@ export class SessionManager {
     return SessionManager.instance;
   }
 
-  async createSession(userId: string, options: {
-    ipAddress?: string;
-    userAgent?: string;
-    expiresInDays?: number;
-  } = {}): Promise<{ sessionToken: string; refreshToken: string }> {
+  async createSession(
+    userId: string,
+    options: {
+      ipAddress?: string;
+      userAgent?: string;
+      expiresInDays?: number;
+    } = {},
+  ): Promise<{ sessionToken: string; refreshToken: string }> {
     const { ipAddress, userAgent, expiresInDays = 30 } = options;
 
     // Generate secure tokens
@@ -178,7 +191,8 @@ export class SessionManager {
     const refreshToken = crypto.randomUUID();
 
     // Get user's organization
-    const [user] = await db
+    const database = await getDatabase();
+    const [user] = await database
       .select({ organizationId: users.organizationId })
       .from(users)
       .where(eq(users.id, userId))
@@ -193,7 +207,8 @@ export class SessionManager {
     expiresAt.setDate(expiresAt.getDate() + expiresInDays);
 
     // Store session in database
-    await db.insert(userSessions).values({
+    const database2 = await getDatabase();
+    await database2.insert(userSessions).values({
       userId,
       organizationId: user.organizationId,
       sessionToken,
@@ -206,15 +221,20 @@ export class SessionManager {
     return { sessionToken, refreshToken };
   }
 
-  async validateSession(sessionToken: string): Promise<AuthenticatedUser | null> {
+  async validateSession(
+    sessionToken: string,
+  ): Promise<AuthenticatedUser | null> {
     const result = await authenticateSession(sessionToken);
     return result.user;
   }
 
-  async refreshSession(refreshToken: string): Promise<{ sessionToken: string; refreshToken: string } | null> {
+  async refreshSession(
+    refreshToken: string,
+  ): Promise<{ sessionToken: string; refreshToken: string } | null> {
     try {
       // Find session by refresh token
-      const [session] = await db
+      const database = await getDatabase();
+      const [session] = await database
         .select()
         .from(userSessions)
         .where(eq(userSessions.refreshToken, refreshToken))
@@ -229,7 +249,8 @@ export class SessionManager {
       const newRefreshToken = crypto.randomUUID();
 
       // Update session with new tokens
-      await db
+      const database2 = await getDatabase();
+      await database2
         .update(userSessions)
         .set({
           sessionToken: newSessionToken,
@@ -249,14 +270,14 @@ export class SessionManager {
   }
 
   async deleteSession(sessionToken: string): Promise<void> {
-    await db
+    const database = await getDatabase();
+    await database
       .delete(userSessions)
       .where(eq(userSessions.sessionToken, sessionToken));
   }
 
   async deleteAllUserSessions(userId: string): Promise<void> {
-    await db
-      .delete(userSessions)
-      .where(eq(userSessions.userId, userId));
+    const database = await getDatabase();
+    await database.delete(userSessions).where(eq(userSessions.userId, userId));
   }
 }

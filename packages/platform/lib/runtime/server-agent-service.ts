@@ -102,7 +102,13 @@ export class ServerAgentService {
   /**
    * Get or create JWT token for organization
    */
-  private async getJWTToken(organizationId: string, userId: string, userEmail: string, userName: string, userRole: string): Promise<string> {
+  private async getJWTToken(
+    organizationId: string,
+    userId: string,
+    userEmail: string,
+    userName: string,
+    userRole: string,
+  ): Promise<string> {
     const cacheKey = `${organizationId}:${userId}`;
     const cached = this.jwtTokenCache.get(cacheKey);
 
@@ -150,13 +156,19 @@ export class ServerAgentService {
     userEmail: string,
     userName: string,
     userRole: string,
-    body?: any
+    body?: any,
   ): Promise<any> {
-    const token = await this.getJWTToken(organizationId, userId, userEmail, userName, userRole);
+    const token = await this.getJWTToken(
+      organizationId,
+      userId,
+      userEmail,
+      userName,
+      userRole,
+    );
     const url = `${serverUrl.replace(/\/$/, '')}${endpoint}`;
 
     const headers: Record<string, string> = {
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
       'User-Agent': 'ElizaOS-Platform/1.0.0',
     };
@@ -178,14 +190,16 @@ export class ServerAgentService {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Server request failed: ${response.status} ${response.statusText} - ${errorText}`);
+        throw new Error(
+          `Server request failed: ${response.status} ${response.statusText} - ${errorText}`,
+        );
       }
 
       const result = await response.json();
       return result;
     } catch (error) {
       logger.error(
-        `[ServerAgentService] Server request failed - Method: ${method}, URL: ${url}, Error: ${error instanceof Error ? error.message : String(error)}`
+        `[ServerAgentService] Server request failed - Method: ${method}, URL: ${url}, Error: ${error instanceof Error ? error.message : String(error)}`,
       );
       throw error;
     }
@@ -204,8 +218,12 @@ export class ServerAgentService {
 
     // Find server with lowest capacity usage
     const onlineServers = Array.from(this.serverInstances.values())
-      .filter(s => s.status === 'online')
-      .sort((a, b) => (a.capacity.current / a.capacity.maximum) - (b.capacity.current / b.capacity.maximum));
+      .filter((s) => s.status === 'online')
+      .sort(
+        (a, b) =>
+          a.capacity.current / a.capacity.maximum -
+          b.capacity.current / b.capacity.maximum,
+      );
 
     if (onlineServers.length === 0) {
       throw new Error('No online server instances available');
@@ -242,11 +260,13 @@ export class ServerAgentService {
           characterJson: config.character,
           settings: config.settings,
           plugins: config.plugins,
-        }
+        },
       );
 
       if (!response.success) {
-        throw new Error(`Server agent creation failed: ${response.error?.message || 'Unknown error'}`);
+        throw new Error(
+          `Server agent creation failed: ${response.error?.message || 'Unknown error'}`,
+        );
       }
 
       const agentId = response.data.id;
@@ -279,9 +299,11 @@ export class ServerAgentService {
       return agentId;
     } catch (error) {
       logger.error(
-        `[ServerAgentService] Agent deployment failed - Error: ${error instanceof Error ? error.message : String(error)}, Organization: ${config.organizationId}, Character: ${config.character.name}`
+        `[ServerAgentService] Agent deployment failed - Error: ${error instanceof Error ? error.message : String(error)}, Organization: ${config.organizationId}, Character: ${config.character.name}`,
       );
-      throw new Error(`Agent deployment failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Agent deployment failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -303,13 +325,15 @@ export class ServerAgentService {
         agentInfo.userId,
         '', // userEmail - would need to store this
         '', // userName - would need to store this
-        'admin' // userRole - would need to store this
+        'admin', // userRole - would need to store this
       );
 
       agentInfo.status = 'active';
       agentInfo.lastActivity = new Date();
 
-      logger.info('[ServerAgentService] Agent started successfully', { agentId });
+      logger.info('[ServerAgentService] Agent started successfully', {
+        agentId,
+      });
     } catch (error) {
       agentInfo.status = 'error';
       agentInfo.error = error instanceof Error ? error.message : String(error);
@@ -335,12 +359,14 @@ export class ServerAgentService {
         agentInfo.userId,
         '', // userEmail - would need to store this
         '', // userName - would need to store this
-        'admin' // userRole - would need to store this
+        'admin', // userRole - would need to store this
       );
 
       agentInfo.status = 'inactive';
 
-      logger.info('[ServerAgentService] Agent stopped successfully', { agentId });
+      logger.info('[ServerAgentService] Agent stopped successfully', {
+        agentId,
+      });
     } catch (error) {
       agentInfo.status = 'error';
       agentInfo.error = error instanceof Error ? error.message : String(error);
@@ -366,7 +392,7 @@ export class ServerAgentService {
         agentInfo.userId,
         '', // userEmail - would need to store this
         '', // userName - would need to store this
-        'admin' // userRole - would need to store this
+        'admin', // userRole - would need to store this
       );
 
       // Update server capacity
@@ -375,10 +401,12 @@ export class ServerAgentService {
       // Remove from tracking
       this.deployedAgents.delete(agentId);
 
-      logger.info('[ServerAgentService] Agent deleted successfully', { agentId });
+      logger.info('[ServerAgentService] Agent deleted successfully', {
+        agentId,
+      });
     } catch (error) {
       logger.error(
-        `[ServerAgentService] Agent deletion failed - Agent ID: ${agentId}, Error: ${error instanceof Error ? error.message : String(error)}`
+        `[ServerAgentService] Agent deletion failed - Agent ID: ${agentId}, Error: ${error instanceof Error ? error.message : String(error)}`,
       );
       throw error;
     }
@@ -394,22 +422,30 @@ export class ServerAgentService {
   /**
    * Get all agents for an organization
    */
-  async getOrganizationAgents(organizationId: string): Promise<ServerAgentInfo[]> {
-    return Array.from(this.deployedAgents.values())
-      .filter(agent => agent.organizationId === organizationId);
+  async getOrganizationAgents(
+    organizationId: string,
+  ): Promise<ServerAgentInfo[]> {
+    return Array.from(this.deployedAgents.values()).filter(
+      (agent) => agent.organizationId === organizationId,
+    );
   }
 
   /**
    * Send message to agent and get response
    */
-  async interactWithAgent(agentId: UUID, request: AgentInteractionRequest): Promise<AgentInteractionResponse> {
+  async interactWithAgent(
+    agentId: UUID,
+    request: AgentInteractionRequest,
+  ): Promise<AgentInteractionResponse> {
     const agentInfo = this.deployedAgents.get(agentId);
     if (!agentInfo) {
       throw new Error(`Agent ${agentId} not found`);
     }
 
     if (agentInfo.status !== 'active') {
-      throw new Error(`Agent ${agentId} is not active (status: ${agentInfo.status})`);
+      throw new Error(
+        `Agent ${agentId} is not active (status: ${agentInfo.status})`,
+      );
     }
 
     try {
@@ -431,7 +467,7 @@ export class ServerAgentService {
           raw_message: request,
           metadata: request.metadata,
           attachments: request.attachments,
-        }
+        },
       );
 
       agentInfo.lastActivity = new Date();
@@ -444,7 +480,7 @@ export class ServerAgentService {
       };
     } catch (error) {
       logger.error(
-        `[ServerAgentService] Agent interaction failed - Agent ID: ${agentId}, Error: ${error instanceof Error ? error.message : String(error)}`
+        `[ServerAgentService] Agent interaction failed - Agent ID: ${agentId}, Error: ${error instanceof Error ? error.message : String(error)}`,
       );
       throw error;
     }
@@ -468,7 +504,7 @@ export class ServerAgentService {
         agentInfo.userId,
         '', // userEmail - would need to store this
         '', // userName - would need to store this
-        'admin' // userRole - would need to store this
+        'admin', // userRole - would need to store this
       );
 
       const isHealthy = response.success && response.data?.status === 'active';
@@ -505,23 +541,32 @@ export class ServerAgentService {
 
     return {
       totalAgents: agents.length,
-      activeAgents: agents.filter(a => a.status === 'active').length,
-      inactiveAgents: agents.filter(a => a.status === 'inactive').length,
-      errorAgents: agents.filter(a => a.status === 'error').length,
+      activeAgents: agents.filter((a) => a.status === 'active').length,
+      inactiveAgents: agents.filter((a) => a.status === 'inactive').length,
+      errorAgents: agents.filter((a) => a.status === 'error').length,
       totalServers: servers.length,
-      onlineServers: servers.filter(s => s.status === 'online').length,
-      organizationCounts: agents.reduce((acc, agent) => {
-        acc[agent.organizationId] = (acc[agent.organizationId] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>),
-      serverCapacity: servers.reduce((acc, server) => {
-        acc[server.id] = {
-          current: server.capacity.current,
-          maximum: server.capacity.maximum,
-          utilization: server.capacity.current / server.capacity.maximum,
-        };
-        return acc;
-      }, {} as Record<string, { current: number; maximum: number; utilization: number }>),
+      onlineServers: servers.filter((s) => s.status === 'online').length,
+      organizationCounts: agents.reduce(
+        (acc, agent) => {
+          acc[agent.organizationId] = (acc[agent.organizationId] || 0) + 1;
+          return acc;
+        },
+        {} as Record<string, number>,
+      ),
+      serverCapacity: servers.reduce(
+        (acc, server) => {
+          acc[server.id] = {
+            current: server.capacity.current,
+            maximum: server.capacity.maximum,
+            utilization: server.capacity.current / server.capacity.maximum,
+          };
+          return acc;
+        },
+        {} as Record<
+          string,
+          { current: number; maximum: number; utilization: number }
+        >,
+      ),
     };
   }
 

@@ -8,7 +8,6 @@
  */
 
 import { createUniqueUuid, type UUID, type Character } from '@elizaos/core';
-import AgentServer from '@elizaos/server';
 import { ScenarioRunner } from './index.js';
 import { runProductionVerificationTests } from './integration-test.js';
 import type { Scenario } from './types.js';
@@ -17,7 +16,7 @@ async function main() {
   console.log('🚀 Starting Real Runtime Test for Scenario Runner');
   console.log('This test bypasses all mocks and uses real infrastructure\n');
 
-  let server: AgentServer | null = null;
+  let server: any | null = null;
   let testPort: number;
 
   try {
@@ -86,7 +85,8 @@ async function main() {
 
     // Initialize real AgentServer
     console.log('🔧 Initializing real AgentServer...');
-    server = new AgentServer();
+    const AgentServerClass = (await import('@elizaos/server')).default as any;
+    server = new AgentServerClass() as any;
 
     // Initialize with real database
     await server.initialize({

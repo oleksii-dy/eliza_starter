@@ -161,11 +161,11 @@ async function runSelectiveSWEBench() {
 | # | Instance ID | Repository | Resolved | Tests Passed | Compiled | Time (s) | Notes |
 |---|-------------|------------|----------|--------------|----------|----------|-------|
 ${analysis.instances
-    .map(
-      (inst, idx) =>
-        `| ${idx + 1} | ${inst.instance_id} | ${inst.repo} | ${inst.resolved ? '✅' : '❌'} | ${inst.tests_passed ? '✅' : '❌'} | ${inst.compilation_success ? '✅' : '❌'} | ${(inst.execution_time / 1000).toFixed(1)} | ${inst.error || '-'} |`
-    )
-    .join('\n')}
+  .map(
+    (inst, idx) =>
+      `| ${idx + 1} | ${inst.instance_id} | ${inst.repo} | ${inst.resolved ? '✅' : '❌'} | ${inst.tests_passed ? '✅' : '❌'} | ${inst.compilation_success ? '✅' : '❌'} | ${(inst.execution_time / 1000).toFixed(1)} | ${inst.error || '-'} |`
+  )
+  .join('\n')}
 
 ## Analysis
 
@@ -176,9 +176,9 @@ ${
     ? `
 ### Failed Instances Requiring Improvement:
 ${analysis.instances
-    .filter((inst) => !inst.resolved)
-    .map((inst) => `- **${inst.instance_id}**: ${inst.analysis.failure_reason || 'Unknown failure'}`)
-    .join('\n')}
+  .filter((inst) => !inst.resolved)
+  .map((inst) => `- **${inst.instance_id}**: ${inst.analysis.failure_reason || 'Unknown failure'}`)
+  .join('\n')}
 `
     : '### All instances resolved successfully! 🎉'
 }

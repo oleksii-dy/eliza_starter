@@ -13,7 +13,7 @@ export const e2bProvider: Provider = {
       if (!e2bService) {
         return {
           text: 'E2B service is not available',
-          data: { available: false }
+          data: { available: false },
         };
       }
 
@@ -22,12 +22,12 @@ export const e2bProvider: Provider = {
       const isHealthy = await e2bService.isHealthy();
 
       // Determine if code execution is currently possible
-      const canExecuteCode = isHealthy && sandboxes.some(s => s.isActive);
+      const canExecuteCode = isHealthy && sandboxes.some((s) => s.isActive);
 
       // Get the most recent active sandbox
-      const activeSandboxes = sandboxes.filter(s => s.isActive);
-      const latestSandbox = activeSandboxes.sort((a, b) =>
-        b.lastActivity.getTime() - a.lastActivity.getTime()
+      const activeSandboxes = sandboxes.filter((s) => s.isActive);
+      const latestSandbox = activeSandboxes.sort(
+        (a, b) => b.lastActivity.getTime() - a.lastActivity.getTime()
       )[0];
 
       // Calculate total uptime and activity stats
@@ -35,8 +35,9 @@ export const e2bProvider: Provider = {
         return total + (Date.now() - s.createdAt.getTime());
       }, 0);
 
-      const recentActivity = latestSandbox ?
-        Date.now() - latestSandbox.lastActivity.getTime() : null;
+      const recentActivity = latestSandbox
+        ? Date.now() - latestSandbox.lastActivity.getTime()
+        : null;
 
       // Provide contextual information
       let contextText = '';
@@ -44,10 +45,13 @@ export const e2bProvider: Provider = {
       if (!isHealthy) {
         contextText = 'E2B sandboxes are currently unavailable. Code execution is not possible.';
       } else if (activeSandboxes.length === 0) {
-        contextText = 'No active sandboxes. A new sandbox will be created automatically for code execution.';
-      } else if (recentActivity && recentActivity < 60000) { // Less than 1 minute
+        contextText =
+          'No active sandboxes. A new sandbox will be created automatically for code execution.';
+      } else if (recentActivity && recentActivity < 60000) {
+        // Less than 1 minute
         contextText = `Active sandbox available (${activeSandboxes.length} total). Recent activity detected. Ready for immediate code execution.`;
-      } else if (recentActivity && recentActivity < 300000) { // Less than 5 minutes
+      } else if (recentActivity && recentActivity < 300000) {
+        // Less than 5 minutes
         contextText = `Active sandbox available (${activeSandboxes.length} total). Last used ${Math.round(recentActivity / 1000)} seconds ago. Ready for code execution.`;
       } else {
         contextText = `Active sandbox available (${activeSandboxes.length} total). May need warming up for optimal performance.`;
@@ -63,7 +67,8 @@ export const e2bProvider: Provider = {
           recommendations.push('Multiple sandboxes active - consider cleanup');
         }
 
-        if (recentActivity && recentActivity > 600000) { // 10+ minutes
+        if (recentActivity && recentActivity > 600000) {
+          // 10+ minutes
           recommendations.push('Sandbox may be idle - expect slight startup delay');
         }
       } else {
@@ -84,7 +89,7 @@ export const e2bProvider: Provider = {
         data: {
           available: true,
           service: 'e2b',
-          sandboxes: sandboxes.map(s => ({
+          sandboxes: sandboxes.map((s) => ({
             id: s.sandboxId,
             isActive: s.isActive,
             template: s.template,
@@ -103,11 +108,13 @@ export const e2bProvider: Provider = {
           stats: {
             totalUptime,
             averageUptimePerSandbox: sandboxes.length > 0 ? totalUptime / sandboxes.length : 0,
-            oldestSandbox: sandboxes.length > 0 ? Math.min(...sandboxes.map(s => Date.now() - s.createdAt.getTime())) : null,
-          }
-        }
+            oldestSandbox:
+              sandboxes.length > 0
+                ? Math.min(...sandboxes.map((s) => Date.now() - s.createdAt.getTime()))
+                : null,
+          },
+        },
       };
-
     } catch (error) {
       elizaLogger.error('E2B provider error', { error: error.message });
 
@@ -120,9 +127,9 @@ export const e2bProvider: Provider = {
         },
         data: {
           available: false,
-          error: error.message
-        }
+          error: error.message,
+        },
       };
     }
-  }
+  },
 };

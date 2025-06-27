@@ -4,7 +4,7 @@ import {
   type IAgentRuntime,
   type Memory,
   type Character,
-  elizaLogger
+  elizaLogger,
 } from '@elizaos/core';
 // Test utilities not available, using mock runtime
 // import { createTestAgent, cleanupTestAgents } from '@elizaos/core/test-utils';
@@ -19,7 +19,7 @@ describe('Agent-Sandbox Integration E2E Tests', () => {
   it.skip('E2E tests require full runtime integration', () => {
     expect(true).toBe(true);
   });
-  
+
   /*
   let sandboxAgent: IAgentRuntime;
 
@@ -30,13 +30,13 @@ describe('Agent-Sandbox Integration E2E Tests', () => {
 
 CRITICAL RULES:
 1. Never perform calculations in your head or provide estimates
-2. Always use code execution for any mathematical operation  
+2. Always use code execution for any mathematical operation
 3. Write Python code for all data analysis, calculations, and processing
 4. Use sandboxes for file operations, data manipulation, and computations
 5. Verify results by running code rather than providing theoretical answers
 
 When a user asks for any computation:
-1. Write the appropriate code 
+1. Write the appropriate code
 2. Execute it in the sandbox
 3. Show both the code and the results
 4. Explain the process

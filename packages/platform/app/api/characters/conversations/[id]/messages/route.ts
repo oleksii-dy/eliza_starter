@@ -22,7 +22,7 @@ const sendMessageSchema = z.object({
 /**
  * POST /api/characters/conversations/[id]/messages - Send message to character
  */
-export async function POST(
+export async function handlePOST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {

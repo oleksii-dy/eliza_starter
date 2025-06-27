@@ -28,4 +28,4 @@
     "cypress/**/*.ts"
   ],
   "exclude": ["node_modules"]
-} 
+}

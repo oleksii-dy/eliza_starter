@@ -285,7 +285,9 @@ export class VisionWorkerManager {
     try {
       // Calculate tile index from ID
       const match = tileId.match(/tile-(\d+)-(\d+)/);
-      if (!match) {return null;}
+      if (!match) {
+        return null;
+      }
 
       const row = parseInt(match[1], 10);
       const col = parseInt(match[2], 10);
@@ -293,11 +295,13 @@ export class VisionWorkerManager {
 
       const RESULTS_HEADER_SIZE = 16;
       const MAX_RESULT_SIZE = 4096;
-      const offset = RESULTS_HEADER_SIZE + (tileIndex * MAX_RESULT_SIZE);
+      const offset = RESULTS_HEADER_SIZE + tileIndex * MAX_RESULT_SIZE;
 
       // Read length
       const length = this.florence2ResultsView.getUint32(offset, true);
-      if (length === 0 || length > MAX_RESULT_SIZE - 4) {return null;}
+      if (length === 0 || length > MAX_RESULT_SIZE - 4) {
+        return null;
+      }
 
       // Read JSON data
       const bytes = new Uint8Array(length);
@@ -320,7 +324,9 @@ export class VisionWorkerManager {
 
       // Read length
       const length = this.ocrResultsView.getUint32(offset, true);
-      if (length === 0) {return null;}
+      if (length === 0) {
+        return null;
+      }
 
       // Read frame ID and timestamp
       const _frameId = this.ocrResultsView.getUint32(offset + 4, true);
@@ -383,9 +389,15 @@ export class VisionWorkerManager {
     const allTags = new Set<string>();
 
     this.latestFlorence2Results.forEach((result) => {
-      if (result.caption) {florence2Captions.push(result.caption);}
-      if (result.objects) {allObjects.push(...result.objects);}
-      if (result.tags) {result.tags.forEach(tag => allTags.add(tag));}
+      if (result.caption) {
+        florence2Captions.push(result.caption);
+      }
+      if (result.objects) {
+        allObjects.push(...result.objects);
+      }
+      if (result.tags) {
+        result.tags.forEach((tag) => allTags.add(tag));
+      }
     });
 
     const _tiles = this.generateTiles(screenCapture?.width || 0, screenCapture?.height || 0);
@@ -406,7 +418,7 @@ export class VisionWorkerManager {
           ocr: this.latestOCRResult || undefined,
         },
         gridSummary: `${screenCapture?.tiles.length || 0} tiles analyzed`,
-        uiElements: allObjects.map(obj => ({
+        uiElements: allObjects.map((obj) => ({
           type: obj.label,
           text: '',
           position: obj.bbox,
@@ -415,7 +427,10 @@ export class VisionWorkerManager {
     };
   }
 
-  private generateTiles(width: number, height: number): Array<{
+  private generateTiles(
+    width: number,
+    height: number
+  ): Array<{
     id: string;
     row: number;
     col: number;
@@ -467,7 +482,9 @@ export class VisionWorkerManager {
     }
   }
 
-  async setTextRegions(regions: Array<{ x: number; y: number; width: number; height: number }>): Promise<void> {
+  async setTextRegions(
+    regions: Array<{ x: number; y: number; width: number; height: number }>
+  ): Promise<void> {
     if (this.ocrWorker) {
       this.ocrWorker.postMessage({
         type: 'update_regions',
@@ -482,24 +499,30 @@ export class VisionWorkerManager {
     const stopPromises: Promise<void>[] = [];
 
     if (this.screenCaptureWorker) {
-      stopPromises.push(new Promise((resolve) => {
-        this.screenCaptureWorker!.once('exit', () => resolve());
-        this.screenCaptureWorker!.postMessage({ type: 'stop' });
-      }));
+      stopPromises.push(
+        new Promise((resolve) => {
+          this.screenCaptureWorker!.once('exit', () => resolve());
+          this.screenCaptureWorker!.postMessage({ type: 'stop' });
+        })
+      );
     }
 
     if (this.florence2Worker) {
-      stopPromises.push(new Promise((resolve) => {
-        this.florence2Worker!.once('exit', () => resolve());
-        this.florence2Worker!.postMessage({ type: 'stop' });
-      }));
+      stopPromises.push(
+        new Promise((resolve) => {
+          this.florence2Worker!.once('exit', () => resolve());
+          this.florence2Worker!.postMessage({ type: 'stop' });
+        })
+      );
     }
 
     if (this.ocrWorker) {
-      stopPromises.push(new Promise((resolve) => {
-        this.ocrWorker!.once('exit', () => resolve());
-        this.ocrWorker!.postMessage({ type: 'stop' });
-      }));
+      stopPromises.push(
+        new Promise((resolve) => {
+          this.ocrWorker!.once('exit', () => resolve());
+          this.ocrWorker!.postMessage({ type: 'stop' });
+        })
+      );
     }
 
     await Promise.all(stopPromises);

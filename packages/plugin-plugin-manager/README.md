@@ -7,6 +7,7 @@ The Plugin Manager enables dynamic loading and unloading of plugins at runtime w
 ## Features
 
 ### Core Features
+
 - **Dynamic Plugin Loading**: Load plugins at runtime without restarting the agent
 - **Safe Plugin Unloading**: Unload plugins and clean up their resources
 - **Plugin State Management**: Track plugin states (building, ready, loaded, error, unloaded)
@@ -15,6 +16,7 @@ The Plugin Manager enables dynamic loading and unloading of plugins at runtime w
 - **Component Registration**: Automatically registers actions, providers, evaluators, and services
 
 ### Advanced Features (New!)
+
 - **Dependency Resolution**: Analyze and resolve plugin dependencies with conflict detection
 - **Version Management**: Git-based version control for plugin development
 - **Health Monitoring**: Track plugin health and resource usage
@@ -316,7 +318,9 @@ class PluginManagerService {
 ### New Actions
 
 #### CHECK_DEPENDENCIES
+
 Analyzes plugin dependencies and detects conflicts:
+
 ```typescript
 {
   name: 'CHECK_DEPENDENCIES',
@@ -326,7 +330,9 @@ Analyzes plugin dependencies and detects conflicts:
 ```
 
 #### MANAGE_PLUGIN_BRANCH
+
 Manages plugin versions using git branches:
+
 ```typescript
 {
   name: 'MANAGE_PLUGIN_BRANCH',
@@ -336,7 +342,9 @@ Manages plugin versions using git branches:
 ```
 
 #### RECOVER_PLUGIN
+
 Recovers crashed or unhealthy plugins:
+
 ```typescript
 {
   name: 'RECOVER_PLUGIN',
@@ -349,16 +357,16 @@ Recovers crashed or unhealthy plugins:
 
 ```typescript
 // Search plugins by content
-async function searchPluginsByContent(query: string): Promise<PluginSearchResult[]>
+async function searchPluginsByContent(query: string): Promise<PluginSearchResult[]>;
 
 // Clone a plugin for development
-async function clonePlugin(pluginName: string): Promise<CloneResult>
+async function clonePlugin(pluginName: string): Promise<CloneResult>;
 
 // Publish a plugin to npm
-async function publishPlugin(pluginPath: string): Promise<PublishResult>
+async function publishPlugin(pluginPath: string): Promise<PublishResult>;
 
 // Fetch plugin knowledge for searching
-async function fetchPluginKnowledge(): Promise<Map<string, PluginKnowledge>>
+async function fetchPluginKnowledge(): Promise<Map<string, PluginKnowledge>>;
 ```
 
 ### Plugin State

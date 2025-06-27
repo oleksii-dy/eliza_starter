@@ -19,9 +19,9 @@ cypress/
 │   └── flows/              # Complete user journey tests
 │       └── 01-complete-user-journey.cy.ts
 ├── fixtures/               # Test data
-│   ├── users/             
-│   ├── worlds/            
-│   └── entities/          
+│   ├── users/
+│   ├── worlds/
+│   └── entities/
 ├── support/                # Custom commands and utilities
 │   ├── commands/          # Custom Cypress commands
 │   │   ├── world.ts       # World interaction commands
@@ -29,8 +29,8 @@ cypress/
 │   │   ├── entity.ts      # Entity management commands
 │   │   └── player.ts      # Player control commands
 │   └── utils/             # Helper utilities
-│       ├── helpers.ts     
-│       └── selectors.ts   
+│       ├── helpers.ts
+│       └── selectors.ts
 ├── screenshots/            # Test screenshots (auto-generated)
 ├── videos/                 # Test videos (auto-generated)
 └── downloads/              # Downloaded files during tests
@@ -41,6 +41,7 @@ cypress/
 ### Prerequisites
 
 1. Make sure the dev server is running:
+
    ```bash
    bun run dev:vite
    ```
@@ -99,11 +100,13 @@ bun run test:cypress
 ## Custom Commands
 
 ### World Commands
+
 - `cy.waitForWorldLoad()` - Wait for 3D world to fully load
 - `cy.connectToWorld(wsUrl?)` - Connect to world server
 - `cy.getWorld()` - Get world instance
 
 ### UI Commands
+
 - `cy.openSidebar()` - Open the sidebar
 - `cy.closeSidebar()` - Close the sidebar
 - `cy.selectSidebarTab(tab)` - Select a sidebar tab
@@ -111,11 +114,13 @@ bun run test:cypress
 - `cy.closeMenu()` - Close the main menu
 
 ### Entity Commands
+
 - `cy.createEntity(type, data)` - Create a new entity
 - `cy.selectEntity(entityId)` - Select an entity
 - `cy.getEntity(entityId)` - Get entity by ID
 
 ### Player Commands
+
 - `cy.movePlayer(direction, duration)` - Move player in direction
 - `cy.rotateCamera(deltaX, deltaY)` - Rotate camera
 - `cy.getPlayerPosition()` - Get current player position
@@ -123,6 +128,7 @@ bun run test:cypress
 ## Test Coverage
 
 ### UI Components
+
 - ✅ Basic rendering and WebGL context
 - ✅ Sidebar functionality and all tabs
 - ✅ Menu system and navigation
@@ -130,6 +136,7 @@ bun run test:cypress
 - ✅ Performance monitoring
 
 ### Game Systems
+
 - ✅ Player movement and controls
 - ✅ Camera rotation and views
 - ✅ Inventory management
@@ -144,6 +151,7 @@ bun run test:cypress
 - ✅ Minigames
 
 ### Integration Tests
+
 - ✅ Complete user journey from login to quest completion
 - ✅ Multiplayer interactions
 - ✅ Error handling and edge cases
@@ -152,10 +160,12 @@ bun run test:cypress
 ## CI/CD Integration
 
 Tests are automatically run on GitHub Actions for:
+
 - Every push to main/develop branches
 - Every pull request
 
 The CI pipeline:
+
 1. Sets up the environment
 2. Installs dependencies
 3. Builds the application
@@ -165,6 +175,7 @@ The CI pipeline:
 ## Configuration
 
 ### cypress.config.ts
+
 - Base URL: http://localhost:4445
 - Default viewport: 1920x1080
 - Video recording: Enabled
@@ -172,6 +183,7 @@ The CI pipeline:
 - Retries: 2 (in CI), 0 (locally)
 
 ### Environment Variables
+
 - `CYPRESS_RECORD_KEY` - For recording to Cypress Dashboard
 - `WS_URL` - WebSocket URL for world connection
 
@@ -187,12 +199,15 @@ The CI pipeline:
 ## Troubleshooting
 
 ### WebGL Context Issues
+
 If you see WebGL errors, the tests handle them gracefully. These are common in headless browsers.
 
 ### Timing Issues
+
 Use `cy.waitUntil()` for dynamic content instead of fixed `cy.wait()` times.
 
 ### Memory Issues
+
 Tests automatically clear state between runs. If issues persist, restart Cypress.
 
 ## Writing New Tests
@@ -212,4 +227,4 @@ Component tests are also supported for testing React components in isolation:
 bun run cypress:component
 ```
 
-Example component test available at: `src/client/components/Sidebar.cy.tsx` 
+Example component test available at: `src/client/components/Sidebar.cy.tsx`

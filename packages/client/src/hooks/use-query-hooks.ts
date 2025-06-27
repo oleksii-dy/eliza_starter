@@ -114,8 +114,8 @@ export function useAgents(options = {}) {
     // Configure based on network conditions
     ...(!network.isOffline &&
       network.effectiveType === 'slow-2g' && {
-        refetchInterval: STALE_TIMES.STANDARD, // Poll less frequently on slow connections
-      }),
+      refetchInterval: STALE_TIMES.STANDARD, // Poll less frequently on slow connections
+    }),
     // Allow overriding any options
     ...options,
   });
@@ -143,8 +143,8 @@ export function useAgent(agentId: UUID | undefined | null, options = {}) {
     // Configure based on network conditions
     ...(!network.isOffline &&
       network.effectiveType === 'slow-2g' && {
-        refetchInterval: STALE_TIMES.STANDARD, // Poll less frequently on slow connections
-      }),
+      refetchInterval: STALE_TIMES.STANDARD, // Poll less frequently on slow connections
+    }),
     // Allow overriding any options
     ...options,
   });
@@ -802,8 +802,8 @@ export function useAgentPanels(agentId: UUID | undefined | null, options = {}) {
     refetchIntervalInBackground: false,
     ...(!network.isOffline &&
       network.effectiveType === 'slow-2g' && {
-        refetchInterval: STALE_TIMES.NEVER, // Or even disable for slow connections
-      }),
+      refetchInterval: STALE_TIMES.NEVER, // Or even disable for slow connections
+    }),
     ...options,
   });
 }
@@ -844,8 +844,8 @@ export function useAgentsWithDetails(): AgentsWithDetailsResult {
       refetchIntervalInBackground: false,
       ...(!network.isOffline &&
         network.effectiveType === 'slow-2g' && {
-          refetchInterval: STALE_TIMES.STANDARD,
-        }),
+        refetchInterval: STALE_TIMES.STANDARD,
+      }),
     })),
   });
 

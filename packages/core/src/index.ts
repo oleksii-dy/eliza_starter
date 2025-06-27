@@ -45,6 +45,12 @@ export type {
 // Export utils first to avoid circular dependency issues
 export * from './utils';
 
+// Export build utilities for plugin development
+export * from './build/plugin-config';
+
+// Export standard configurations for package development
+// Note: configs export removed to fix TypeScript build issues
+
 // Export schemas
 export * from './schemas/character';
 

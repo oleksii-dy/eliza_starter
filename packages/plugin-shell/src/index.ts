@@ -1,6 +1,10 @@
 // Shell plugin -- give an agent shell access
 import { type Plugin } from '@elizaos/core';
-import { runShellCommandAction, clearShellHistoryAction, killAutonomousAction } from './action';
+import {
+  runShellCommandAction,
+  clearShellHistoryAction,
+  killAutonomousAction,
+} from './action';
 import { shellProvider } from './provider';
 import { ShellService } from './service';
 import './types'; // Ensure module augmentation is loaded
@@ -13,15 +17,21 @@ import shellSecurityE2ETests from './tests/e2e/shell-security';
 
 export const shellPlugin: Plugin = {
   name: 'plugin-shell',
-  description: 'Provides shell access to the agent, allowing it to run commands and view history.',
+  description:
+    'Provides shell access to the agent, allowing it to run commands and view history.',
   actions: [
     runShellCommandAction, // Has enabled: false property
     killAutonomousAction, // Has enabled: false property
-    clearShellHistoryAction // Has enabled: false property
+    clearShellHistoryAction, // Has enabled: false property
   ],
   providers: [shellProvider],
   services: [ShellService],
-  tests: [shellBasicE2ETests, shellStatefulE2ETests, shellAdvancedE2ETests, shellSecurityE2ETests],
+  tests: [
+    shellBasicE2ETests,
+    shellStatefulE2ETests,
+    shellAdvancedE2ETests,
+    shellSecurityE2ETests,
+  ],
   init: async (_config, _runtime) => {
     // You could add specific initialization logic here if needed
     // For example, checking for required system dependencies for the shell

@@ -299,7 +299,7 @@ export class ErrorMonitor {
     errorCounts: Map<ErrorCategory, number>;
     criticalErrorCount: number;
     recentErrors: number;
-  } {
+    } {
     const oneHourAgo = Date.now() - 60 * 60 * 1000;
     const recentErrors = this.errorHistory.filter((entry) => entry.timestamp > oneHourAgo).length;
 

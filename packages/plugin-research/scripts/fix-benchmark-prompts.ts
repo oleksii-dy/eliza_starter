@@ -6,7 +6,8 @@ import path from 'path';
 const correctedResults = [
   {
     id: '51',
-    prompt: 'From 2020 to 2050, how many elderly people will there be in Japan? What is their consumption potential across various aspects such as clothing, food, housing, and transportation? Based on population projections, elderly consumer willingness, and potential changes in their consumption habits, please produce a market size analysis report for the elderly demographic.',
+    prompt:
+      'From 2020 to 2050, how many elderly people will there be in Japan? What is their consumption potential across various aspects such as clothing, food, housing, and transportation? Based on population projections, elderly consumer willingness, and potential changes in their consumption habits, please produce a market size analysis report for the elderly demographic.',
     article: `# Japan's Aging Society: Market Size Analysis for Elderly Demographics (2020-2050)
 
 ## Executive Summary
@@ -50,11 +51,12 @@ Key strategic recommendations include: early investment in technology platforms 
 [1] National Institute of Population and Social Security Research (IPSS). Population Projections for Japan 2016-2065. Tokyo: IPSS, 2017.
 [2] Ministry of Health, Labour and Welfare. Annual Report on the Ageing Society 2021. Tokyo: MHLW, 2021.
 [3] Cabinet Office. White Paper on Aging Society 2021. Tokyo: Government of Japan, 2021.
-[4] Nomura Research Institute. Silver Market Research Report 2020-2050. Tokyo: NRI, 2020.`
+[4] Nomura Research Institute. Silver Market Research Report 2020-2050. Tokyo: NRI, 2020.`,
   },
   {
     id: '62',
-    prompt: 'What are the most effective approaches to scaling ion trap quantum computing from small-scale demonstration projects to large-scale systems capable of solving real-world problems? This research should investigate the various proposed scaling strategies, assess their feasibility, and evaluate which approaches are most likely to succeed based on current technological advancements and practical implementation challenges.',
+    prompt:
+      'What are the most effective approaches to scaling ion trap quantum computing from small-scale demonstration projects to large-scale systems capable of solving real-world problems? This research should investigate the various proposed scaling strategies, assess their feasibility, and evaluate which approaches are most likely to succeed based on current technological advancements and practical implementation challenges.',
     article: `# Scaling Ion Trap Quantum Computing: Pathways to Large-Scale Implementation
 
 ## Executive Summary
@@ -104,11 +106,12 @@ Key strategic recommendations include: prioritizing manufacturing process develo
 [1] Monroe, C. & Kim, J. "Scaling the Ion Trap Quantum Processor." Science 339, 1164-1169 (2013).
 [2] Debnath, S. et al. "Demonstration of a small programmable quantum computer with atomic qubits." Nature 536, 63-66 (2016).
 [3] Wright, K. et al. "Benchmarking an 11-qubit quantum computer." Nature Communications 10, 5464 (2019).
-[4] Pino, J. M. et al. "Demonstration of the trapped-ion quantum CCD computer architecture." Nature 592, 209-213 (2021).`
+[4] Pino, J. M. et al. "Demonstration of the trapped-ion quantum CCD computer architecture." Nature 592, 209-213 (2021).`,
   },
   {
     id: '70',
-    prompt: 'Trace the evolution from Java Servlets to the Spring Boot framework. Explain the problems each iteration aimed to solve, and detail the core functionalities of the Spring framework along with essential knowledge required for developers working with it.',
+    prompt:
+      'Trace the evolution from Java Servlets to the Spring Boot framework. Explain the problems each iteration aimed to solve, and detail the core functionalities of the Spring framework along with essential knowledge required for developers working with it.',
     article: `# The Evolution from Java Servlets to Spring Boot: A Comprehensive Framework Journey
 
 ## Executive Summary
@@ -178,24 +181,36 @@ Understanding this evolutionary journey provides essential context for modern Ja
 [1] Oracle Corporation. "Java Servlet Specification 4.0." Oracle Technology Network, 2017.
 [2] Johnson, Rod. "Expert One-on-One J2EE Design and Development." Wrox Press, 2002.
 [3] Spring Framework Documentation. "Spring Framework Reference Documentation." VMware, 2023.
-[4] Walls, Craig. "Spring Boot in Action." Manning Publications, 2018.`
-  }
+[4] Walls, Craig. "Spring Boot in Action." Manning Publications, 2018.`,
+  },
 ];
 
 async function fixBenchmarkData() {
   console.log('🔧 Fixing benchmark prompts to match query file exactly...');
 
   // Overwrite both raw and cleaned data
-  const rawPath = path.join(__dirname, 'deep_research_bench/data/test_data/raw_data/eliza.jsonl');
-  const cleanedPath = path.join(__dirname, 'deep_research_bench/data/test_data/cleaned_data/eliza.jsonl');
+  const rawPath = path.join(
+    __dirname,
+    'deep_research_bench/data/test_data/raw_data/eliza.jsonl'
+  );
+  const cleanedPath = path.join(
+    __dirname,
+    'deep_research_bench/data/test_data/cleaned_data/eliza.jsonl'
+  );
 
-  const outputContent = correctedResults.map(result => JSON.stringify(result)).join('\n');
+  const outputContent = correctedResults
+    .map((result) => JSON.stringify(result))
+    .join('\n');
 
   await fs.writeFile(rawPath, outputContent);
   await fs.writeFile(cleanedPath, outputContent);
 
-  console.log('✅ Fixed benchmark data saved to both raw and cleaned directories');
-  console.log(`📊 Updated ${correctedResults.length} research reports with exact prompt matches`);
+  console.log(
+    '✅ Fixed benchmark data saved to both raw and cleaned directories'
+  );
+  console.log(
+    `📊 Updated ${correctedResults.length} research reports with exact prompt matches`
+  );
 
   return correctedResults;
 }

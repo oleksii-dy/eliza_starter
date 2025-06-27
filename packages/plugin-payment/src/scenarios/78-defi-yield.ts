@@ -12,7 +12,8 @@ const defiYieldScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'Depositing 1000 USDC to Aave V3:\nCurrent APY: 3.45%\nEstimated yearly return: 34.5 USDC\nYou\'ll receive 1000 aUSDC tokens\nGas cost: ~$15\nTransaction confirming...',
+        content:
+          "Depositing 1000 USDC to Aave V3:\nCurrent APY: 3.45%\nEstimated yearly return: 34.5 USDC\nYou'll receive 1000 aUSDC tokens\nGas cost: ~$15\nTransaction confirming...",
         action: 'DEFI_STAKE',
       },
     ],
@@ -23,7 +24,8 @@ const defiYieldScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'Setting up Uniswap V3 liquidity position:\nPool: ETH/USDC 0.3%\nRange: $2,100-$2,500\nDeposit: 0.5 ETH + 1,122.50 USDC\nEstimated APR: 24.5% (fees + rewards)\nImpermanent loss risk: Medium',
+        content:
+          'Setting up Uniswap V3 liquidity position:\nPool: ETH/USDC 0.3%\nRange: $2,100-$2,500\nDeposit: 0.5 ETH + 1,122.50 USDC\nEstimated APR: 24.5% (fees + rewards)\nImpermanent loss risk: Medium',
         action: 'DEFI_PROVIDE_LIQUIDITY',
       },
     ],
@@ -34,7 +36,8 @@ const defiYieldScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'Top yield opportunities for 10,000 DAI:\n1. Compound: 4.2% APY (low risk)\n2. Yearn DAI vault: 7.8% APY (medium risk)\n3. Curve 3pool: 5.5% + CRV rewards\n4. Convex staking: 12.3% APY (higher risk)\nRecommended: Split between Compound and Yearn for balanced risk/reward.',
+        content:
+          'Top yield opportunities for 10,000 DAI:\n1. Compound: 4.2% APY (low risk)\n2. Yearn DAI vault: 7.8% APY (medium risk)\n3. Curve 3pool: 5.5% + CRV rewards\n4. Convex staking: 12.3% APY (higher risk)\nRecommended: Split between Compound and Yearn for balanced risk/reward.',
         action: 'DEFI_YIELD_SEARCH',
       },
     ],

@@ -49,7 +49,9 @@ export const todosProvider: Provider = {
 
       // Get completed tasks in the last 7 days
       const completedTodos = allEntityTodos.filter((todo) => {
-        if (!todo.isCompleted) {return false;}
+        if (!todo.isCompleted) {
+          return false;
+        }
 
         // Check completion date if available
         if (todo.completedAt) {
@@ -128,7 +130,8 @@ export const todosProvider: Provider = {
         .join('\n');
 
       // Build the provider output
-      let output = '# User\'s Todos (Tasks)\n\nThese are the tasks which the agent is managing for the user. This is the actual list of todos, any other is probably from previous conversations.\n\n';
+      let output =
+        "# User's Todos (Tasks)\n\nThese are the tasks which the agent is managing for the user. This is the actual list of todos, any other is probably from previous conversations.\n\n";
 
       // Daily tasks
       output += '\n## Daily Todos\n';

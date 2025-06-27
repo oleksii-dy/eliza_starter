@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "bun run typecheck && vite build && tauri build",
+    "build": "bun run typecheck && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "test": "elizaos test",
+    "test": "bun test src/",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
     "typecheck": "tsc --noEmit",

@@ -10,12 +10,25 @@ import { v4 as uuidv4 } from 'uuid';
 // Import real API route handlers
 import { POST as createPaymentIntent } from '../../app/api/billing/payment-intent/route';
 import { GET as getBillingOverview } from '../../app/api/billing/overview/route';
-import { GET as getAgents, POST as createAgent } from '../../app/api/agents/route';
+import {
+  GET as getAgents,
+  POST as createAgent,
+} from '../../app/api/agents/route';
 
 // Import real services for setup
 import { agentService } from '../../lib/agents/service';
-import { addCredits, getCreditBalance } from '../../lib/server/services/billing-service';
-import { getDatabase, organizations, users, creditTransactions, apiKeys, usageRecords } from '../../lib/database';
+import {
+  addCredits,
+  getCreditBalance,
+} from '../../lib/server/services/billing-service';
+import {
+  getDatabase,
+  organizations,
+  users,
+  creditTransactions,
+  apiKeys,
+  usageRecords,
+} from '../../lib/database';
 import { eq } from 'drizzle-orm';
 
 // Test configuration - use proper UUIDs
@@ -26,20 +39,22 @@ const TEST_USER_EMAIL = 'api-integration-test@example.com';
 // Mock authentication for tests
 jest.mock('../../lib/auth/session', () => ({
   authService: {
-    getCurrentUser: jest.fn(() => Promise.resolve({
-      id: TEST_USER_ID,
-      organizationId: TEST_ORG_ID,
-      email: TEST_USER_EMAIL,
-      role: 'admin'
-    }))
-  }
+    getCurrentUser: jest.fn(() =>
+      Promise.resolve({
+        id: TEST_USER_ID,
+        organizationId: TEST_ORG_ID,
+        email: TEST_USER_EMAIL,
+        role: 'admin',
+      }),
+    ),
+  },
 }));
 
 // Helper function to create mock requests
 function createMockRequest(
   method: 'GET' | 'POST' | 'PUT' | 'DELETE',
   url: string,
-  body?: any
+  body?: any,
 ): NextRequest {
   const request = new NextRequest(url, {
     method,
@@ -65,7 +80,7 @@ describe('API Integration Tests', () => {
         name: 'Test Organization',
         slug: `test-org-${Date.now()}`,
         subscriptionTier: 'pro',
-        creditBalance: '100.00'
+        creditBalance: '100.00',
       });
 
       // Create test user
@@ -74,7 +89,7 @@ describe('API Integration Tests', () => {
         organizationId: TEST_ORG_ID,
         email: TEST_USER_EMAIL,
         role: 'admin',
-        isActive: true
+        isActive: true,
       });
 
       // Add initial credits
@@ -83,7 +98,7 @@ describe('API Integration Tests', () => {
         userId: TEST_USER_ID,
         amount: 100.0,
         description: 'Initial test credits',
-        type: 'adjustment'
+        type: 'adjustment',
       });
     } catch (error) {
       console.warn('Test setup failed (may already exist):', error);
@@ -98,16 +113,26 @@ describe('API Integration Tests', () => {
       const { agents } = require('../../lib/database/schema');
 
       // Delete dependent records first
-      await database.delete(usageRecords).where(eq(usageRecords.organizationId, TEST_ORG_ID));
-      await database.delete(creditTransactions).where(eq(creditTransactions.organizationId, TEST_ORG_ID));
-      await database.delete(apiKeys).where(eq(apiKeys.organizationId, TEST_ORG_ID));
+      await database
+        .delete(usageRecords)
+        .where(eq(usageRecords.organizationId, TEST_ORG_ID));
+      await database
+        .delete(creditTransactions)
+        .where(eq(creditTransactions.organizationId, TEST_ORG_ID));
+      await database
+        .delete(apiKeys)
+        .where(eq(apiKeys.organizationId, TEST_ORG_ID));
 
       // Delete agents that reference this user
-      await database.delete(agents).where(eq(agents.organizationId, TEST_ORG_ID));
+      await database
+        .delete(agents)
+        .where(eq(agents.organizationId, TEST_ORG_ID));
 
       // Now safe to delete users and organizations
       await database.delete(users).where(eq(users.id, TEST_USER_ID));
-      await database.delete(organizations).where(eq(organizations.id, TEST_ORG_ID));
+      await database
+        .delete(organizations)
+        .where(eq(organizations.id, TEST_ORG_ID));
     } catch (error) {
       console.warn('Test cleanup failed:', error);
     }
@@ -120,7 +145,10 @@ describe('API Integration Tests', () => {
 
   describe('Billing API', () => {
     test('GET /api/billing/overview should return billing information', async () => {
-      const request = createMockRequest('GET', 'http://localhost:3000/api/billing/overview');
+      const request = createMockRequest(
+        'GET',
+        'http://localhost:3000/api/billing/overview',
+      );
       const response = await getBillingOverview(request);
 
       expect(response.status).toBe(200);
@@ -133,20 +161,25 @@ describe('API Integration Tests', () => {
 
     test('POST /api/billing/payment-intent should create payment intent', async () => {
       // Skip this test if Stripe is not configured
-      if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY.includes('test')) {
-        console.warn('Skipping payment intent test - Stripe not properly configured');
+      if (
+        !process.env.STRIPE_SECRET_KEY ||
+        process.env.STRIPE_SECRET_KEY.includes('test')
+      ) {
+        console.warn(
+          'Skipping payment intent test - Stripe not properly configured',
+        );
         return;
       }
 
       const requestBody = {
-        amount: 10.00,
-        currency: 'usd'
+        amount: 10.0,
+        currency: 'usd',
       };
 
       const request = createMockRequest(
         'POST',
         'http://localhost:3000/api/billing/payment-intent',
-        requestBody
+        requestBody,
       );
 
       const response = await createPaymentIntent(request);
@@ -168,7 +201,10 @@ describe('API Integration Tests', () => {
 
   describe('Agents API', () => {
     test('GET /api/agents should return agent list', async () => {
-      const request = createMockRequest('GET', 'http://localhost:3000/api/agents');
+      const request = createMockRequest(
+        'GET',
+        'http://localhost:3000/api/agents',
+      );
       const response = await getAgents(request);
 
       expect(response.status).toBe(200);
@@ -194,21 +230,21 @@ describe('API Integration Tests', () => {
           style: {
             all: ['Be helpful'],
             chat: ['Respond clearly'],
-            post: ['Keep it brief']
+            post: ['Keep it brief'],
           },
         },
         plugins: [],
         runtimeConfig: {
           temperature: 0.7,
-          maxTokens: 1000
+          maxTokens: 1000,
         },
-        visibility: 'private'
+        visibility: 'private',
       };
 
       const request = createMockRequest(
         'POST',
         'http://localhost:3000/api/agents',
-        agentData
+        agentData,
       );
 
       const response = await createAgent(request);
@@ -226,7 +262,7 @@ describe('API Integration Tests', () => {
       // Test character validation
       const validCharacter = {
         name: 'Valid Agent',
-        bio: 'A valid character for testing'
+        bio: 'A valid character for testing',
       };
 
       const validation = agentService.validateCharacterConfig(validCharacter);
@@ -236,10 +272,11 @@ describe('API Integration Tests', () => {
       // Test invalid character
       const invalidCharacter = {
         name: '',
-        bio: ''
+        bio: '',
       };
 
-      const invalidValidation = agentService.validateCharacterConfig(invalidCharacter);
+      const invalidValidation =
+        agentService.validateCharacterConfig(invalidCharacter);
       expect(invalidValidation.isValid).toBe(false);
       expect(invalidValidation.errors.length).toBeGreaterThan(0);
     });
@@ -256,7 +293,7 @@ describe('API Integration Tests', () => {
         userId: TEST_USER_ID,
         amount: 25.0,
         description: 'Test credit addition',
-        type: 'adjustment'
+        type: 'adjustment',
       });
 
       const newBalance = await getCreditBalance(TEST_ORG_ID);
@@ -279,7 +316,10 @@ describe('API Integration Tests', () => {
       const originalGetCurrentUser = authService.getCurrentUser;
       authService.getCurrentUser = jest.fn(() => Promise.resolve(null));
 
-      const request = createMockRequest('GET', 'http://localhost:3000/api/billing/overview');
+      const request = createMockRequest(
+        'GET',
+        'http://localhost:3000/api/billing/overview',
+      );
       const response = await getBillingOverview(request);
 
       expect(response.status).toBe(401);
@@ -298,16 +338,16 @@ describe('API Integration Tests', () => {
         slug: 'invalid-slug-!@#', // Invalid - special characters
         character: {
           name: '',
-          bio: ''
+          bio: '',
         },
         plugins: 'not-an-array', // Invalid - should be array
-        visibility: 'invalid-visibility' // Invalid enum value
+        visibility: 'invalid-visibility', // Invalid enum value
       };
 
       const request = createMockRequest(
         'POST',
         'http://localhost:3000/api/agents',
-        invalidAgentData
+        invalidAgentData,
       );
 
       const response = await createAgent(request);

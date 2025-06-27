@@ -43,7 +43,11 @@ class Florence2Worker {
   private readonly RESULTS_HEADER_SIZE = 16;
   private readonly MAX_RESULT_SIZE = 4096; // Per tile
 
-  constructor(config: WorkerConfig, sharedBuffer: SharedArrayBuffer, resultsBuffer: SharedArrayBuffer) {
+  constructor(
+    config: WorkerConfig,
+    sharedBuffer: SharedArrayBuffer,
+    resultsBuffer: SharedArrayBuffer
+  ) {
     this.config = config;
     this.sharedBuffer = sharedBuffer;
     this.dataView = new DataView(sharedBuffer);
@@ -90,11 +94,11 @@ class Florence2Worker {
           }
         } else {
           // No new frame, brief yield
-          await new Promise(resolve => setImmediate(resolve));
+          await new Promise((resolve) => setImmediate(resolve));
         }
       } catch (error) {
         logger.error('[Florence2Worker] Processing error:', error);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
     }
   }
@@ -114,13 +118,15 @@ class Florence2Worker {
 
     // Process priority tiles first
     const tilesToProcess = this.config.priorityTiles
-      ? this.config.priorityTiles.map(i => tiles[i]).filter(Boolean)
+      ? this.config.priorityTiles.map((i) => tiles[i]).filter(Boolean)
       : tiles;
 
     // Process tiles
     for (let i = 0; i < tilesToProcess.length; i++) {
       const tile = tilesToProcess[i];
-      if (!tile) {continue;}
+      if (!tile) {
+        continue;
+      }
 
       try {
         // Extract tile data from shared buffer
@@ -176,7 +182,10 @@ class Florence2Worker {
     return tiles;
   }
 
-  private async extractTileFromSharedBuffer(tile: ScreenTile, metadata: SharedMetadata): Promise<Buffer> {
+  private async extractTileFromSharedBuffer(
+    tile: ScreenTile,
+    metadata: SharedMetadata
+  ): Promise<Buffer> {
     // Calculate byte positions for the tile
     const bytesPerPixel = 4; // RGBA
     const rowStride = metadata.width * bytesPerPixel;
@@ -187,7 +196,7 @@ class Florence2Worker {
     // Copy tile data row by row
     for (let row = 0; row < tile.height; row++) {
       const sourceY = tile.y + row;
-      const sourceOffset = this.DATA_OFFSET + (sourceY * rowStride) + (tile.x * bytesPerPixel);
+      const sourceOffset = this.DATA_OFFSET + sourceY * rowStride + tile.x * bytesPerPixel;
       const destOffset = row * tile.width * bytesPerPixel;
 
       // Copy one row of tile data
@@ -203,12 +212,18 @@ class Florence2Worker {
         height: tile.height,
         channels: 4,
       },
-    }).png().toBuffer();
+    })
+      .png()
+      .toBuffer();
 
     return pngBuffer;
   }
 
-  private async writeResultToBuffer(tileId: string, result: Florence2Result, frameId: number): Promise<void> {
+  private async writeResultToBuffer(
+    tileId: string,
+    result: Florence2Result,
+    frameId: number
+  ): Promise<void> {
     // Serialize result to JSON
     const resultJson = JSON.stringify({
       tileId,
@@ -221,14 +236,16 @@ class Florence2Worker {
 
     // Calculate tile index from ID
     const match = tileId.match(/tile-(\d+)-(\d+)/);
-    if (!match) {return;}
+    if (!match) {
+      return;
+    }
 
     const row = parseInt(match[1], 10);
     const col = parseInt(match[2], 10);
     const tileIndex = row * 10 + col; // Assuming max 10 columns
 
     // Write to results buffer
-    const offset = this.RESULTS_HEADER_SIZE + (tileIndex * this.MAX_RESULT_SIZE);
+    const offset = this.RESULTS_HEADER_SIZE + tileIndex * this.MAX_RESULT_SIZE;
 
     // Write length
     this.resultsView.setUint32(offset, resultBytes.length, true);

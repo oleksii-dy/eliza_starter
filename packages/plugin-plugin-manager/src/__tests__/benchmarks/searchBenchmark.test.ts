@@ -30,8 +30,12 @@ describe('Search Functionality Benchmarks', () => {
       useModel: async () => 'mock response',
       getService: (serviceName: string) => {
         // Return null for services we don't need in the test
-        if (serviceName === 'GITHUB') {return null;}
-        if (serviceName === PluginManagerServiceType.PLUGIN_MANAGER) {return pluginManager;}
+        if (serviceName === 'GITHUB') {
+          return null;
+        }
+        if (serviceName === PluginManagerServiceType.PLUGIN_MANAGER) {
+          return pluginManager;
+        }
         return null;
       },
     } as any;

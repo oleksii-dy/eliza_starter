@@ -7,3 +7,7 @@ dist
 .elizadb-test/
 coverage/
 *.log
+AGENTS.md
+.cursor/rules/elizaos
+CLAUDE.md
+.cursorignore

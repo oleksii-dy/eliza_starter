@@ -16,12 +16,14 @@ async function runE2ETests() {
     getSetting: (key: string) => {
       const settings: Record<string, string> = {
         CAMERA_NAME: 'test',
-        PIXEL_CHANGE_THRESHOLD: '50'
+        PIXEL_CHANGE_THRESHOLD: '50',
       };
       return settings[key] || null;
     },
     getService: (name: string) => {
-      if (name === 'VISION') {return visionService;}
+      if (name === 'VISION') {
+        return visionService;
+      }
       return null;
     },
     createMemory: async () => {},
@@ -30,10 +32,10 @@ async function runE2ETests() {
       values: {
         visionAvailable: visionService?.isActive() || false,
         cameraStatus: visionService?.isActive() ? 'connected' : 'not connected',
-        sceneDescription: 'Test scene'
+        sceneDescription: 'Test scene',
       },
       data: {},
-      text: 'Visual Perception: Available'
+      text: 'Visual Perception: Available',
     }),
     useModel: async (type: string, _params: any) => {
       if (type === 'IMAGE_DESCRIPTION') {
@@ -46,10 +48,7 @@ async function runE2ETests() {
   const visionService = await VisionService.start(runtime);
   runtime.services = new Map([['VISION', visionService]]);
 
-  const testSuites = [
-    visionBasicE2ETests,
-    visionAutonomyE2ETests,
-  ];
+  const testSuites = [visionBasicE2ETests, visionAutonomyE2ETests];
 
   let totalTests = 0;
   let passedTests = 0;

@@ -16,13 +16,15 @@ const TEST_USER_EMAIL = 'test@example.com';
 // Mock authentication for tests
 jest.mock('../../lib/auth/session', () => ({
   authService: {
-    getCurrentUser: jest.fn(() => Promise.resolve({
-      id: TEST_USER_ID,
-      organizationId: TEST_ORG_ID,
-      email: TEST_USER_EMAIL,
-      role: 'admin'
-    }))
-  }
+    getCurrentUser: jest.fn(() =>
+      Promise.resolve({
+        id: TEST_USER_ID,
+        organizationId: TEST_ORG_ID,
+        email: TEST_USER_EMAIL,
+        role: 'admin',
+      }),
+    ),
+  },
 }));
 
 // Mock ElizaOS imports to avoid ES module issues in Jest
@@ -31,15 +33,15 @@ jest.mock('@elizaos/core', () => ({
     info: jest.fn(),
     warn: jest.fn(),
     error: jest.fn(),
-    debug: jest.fn()
-  }
+    debug: jest.fn(),
+  },
 }));
 
 // Helper function to create mock requests
 function createMockRequest(
   method: 'GET' | 'POST' | 'PUT' | 'DELETE',
   url: string,
-  body?: any
+  body?: any,
 ): NextRequest {
   const request = new NextRequest(url, {
     method,
@@ -59,8 +61,10 @@ describe('Platform API Tests', () => {
       writable: true,
       configurable: true,
     });
-    process.env.DATABASE_URL = process.env.DATABASE_URL || 'postgresql://localhost:5432/elizaos_platform_test';
-    
+    process.env.DATABASE_URL =
+      process.env.DATABASE_URL ||
+      'postgresql://localhost:5432/elizaos_platform_test';
+
     // Initialize database
     const database = await getDatabase();
     initializeDbProxy(database);
@@ -71,12 +75,12 @@ describe('Platform API Tests', () => {
       // Test that our API responses follow the expected format
       const successResponse = {
         success: true,
-        data: { test: 'data' }
+        data: { test: 'data' },
       };
 
       const errorResponse = {
         success: false,
-        error: 'Test error message'
+        error: 'Test error message',
       };
 
       expect(successResponse.success).toBe(true);
@@ -91,13 +95,13 @@ describe('Platform API Tests', () => {
       try {
         // Import agent service
         const { AgentService } = await import('../../lib/agents/service');
-        
+
         // Create instance directly to test validation method
         const agentService = new AgentService();
 
         const validCharacter = {
           name: 'Test Agent',
-          bio: 'A valid test agent'
+          bio: 'A valid test agent',
         };
 
         const validation = agentService.validateCharacterConfig(validCharacter);
@@ -107,18 +111,24 @@ describe('Platform API Tests', () => {
         // Test invalid character
         const invalidCharacter = {
           name: '',
-          bio: ''
+          bio: '',
         };
 
-        const invalidValidation = agentService.validateCharacterConfig(invalidCharacter);
+        const invalidValidation =
+          agentService.validateCharacterConfig(invalidCharacter);
         expect(invalidValidation.isValid).toBe(false);
         expect(invalidValidation.errors.length).toBeGreaterThan(0);
-        expect(invalidValidation.errors).toContain('Character name is required');
+        expect(invalidValidation.errors).toContain(
+          'Character name is required',
+        );
         expect(invalidValidation.errors).toContain('Character bio is required');
       } catch (error) {
         // If AgentService can't be instantiated due to dependencies, test the validation logic directly
-        console.warn('AgentService instantiation failed, testing validation logic directly:', (error as Error).message);
-        
+        console.warn(
+          'AgentService instantiation failed, testing validation logic directly:',
+          (error as Error).message,
+        );
+
         // Direct validation logic test
         const validateCharacterConfig = (character: Record<string, any>) => {
           const errors: string[] = [];
@@ -126,16 +136,21 @@ describe('Platform API Tests', () => {
           if (!character.bio) errors.push('Character bio is required');
           return { isValid: errors.length === 0, errors };
         };
-        
-        const validCharacter = { name: 'Test Agent', bio: 'A valid test agent' };
+
+        const validCharacter = {
+          name: 'Test Agent',
+          bio: 'A valid test agent',
+        };
         const validation = validateCharacterConfig(validCharacter);
         expect(validation.isValid).toBe(true);
         expect(validation.errors).toHaveLength(0);
-        
+
         const invalidCharacter = { name: '', bio: '' };
         const invalidValidation = validateCharacterConfig(invalidCharacter);
         expect(invalidValidation.isValid).toBe(false);
-        expect(invalidValidation.errors).toContain('Character name is required');
+        expect(invalidValidation.errors).toContain(
+          'Character name is required',
+        );
         expect(invalidValidation.errors).toContain('Character bio is required');
       }
     });
@@ -168,11 +183,11 @@ describe('Platform API Tests', () => {
       const validChatRequest = {
         messages: [
           { role: 'user', content: 'Hello' },
-          { role: 'assistant', content: 'Hi there!' }
+          { role: 'assistant', content: 'Hi there!' },
         ],
         model: 'gpt-3.5-turbo',
         temperature: 0.7,
-        max_tokens: 1000
+        max_tokens: 1000,
       };
 
       // Basic validation checks
@@ -190,14 +205,14 @@ describe('Platform API Tests', () => {
         slug: 'test-agent',
         character: {
           name: 'Test Agent',
-          bio: 'Test bio'
+          bio: 'Test bio',
         },
         plugins: [],
         runtimeConfig: {
           temperature: 0.7,
-          maxTokens: 1000
+          maxTokens: 1000,
         },
-        visibility: 'private'
+        visibility: 'private',
       };
 
       // Validation checks
@@ -206,17 +221,16 @@ describe('Platform API Tests', () => {
       expect(validAgentRequest.character.name).toBeDefined();
       expect(validAgentRequest.character.bio).toBeDefined();
       expect(Array.isArray(validAgentRequest.plugins)).toBe(true);
-      expect(['private', 'organization', 'public']).toContain(validAgentRequest.visibility);
+      expect(['private', 'organization', 'public']).toContain(
+        validAgentRequest.visibility,
+      );
     });
   });
 
   describe('Environment Configuration', () => {
     test('should validate required environment variables', () => {
       // Test critical environment variables
-      const requiredEnvVars = [
-        'DATABASE_URL',
-        'JWT_SECRET'
-      ];
+      const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET'];
 
       for (const envVar of requiredEnvVars) {
         if (process.env.NODE_ENV === 'production') {
@@ -247,7 +261,9 @@ describe('Platform API Tests', () => {
   describe('Database Schema Validation', () => {
     test('should validate database schema types', async () => {
       // Import database types
-      const { organizations, users, agents } = await import('../../lib/database');
+      const { organizations, users, agents } = await import(
+        '../../lib/database'
+      );
 
       // Validate table structures exist
       expect(organizations).toBeDefined();
@@ -255,7 +271,9 @@ describe('Platform API Tests', () => {
       expect(agents).toBeDefined();
 
       // These are Drizzle table objects, so they should have table names
-      expect((organizations as any)[Symbol.for('drizzle:Name')]).toBe('organizations');
+      expect((organizations as any)[Symbol.for('drizzle:Name')]).toBe(
+        'organizations',
+      );
       expect((users as any)[Symbol.for('drizzle:Name')]).toBe('users');
       expect((agents as any)[Symbol.for('drizzle:Name')]).toBe('agents');
     });
@@ -268,11 +286,18 @@ describe('Platform API Tests', () => {
 
       expect(uuid1).not.toBe(uuid2);
       expect(uuid1.length).toBe(36);
-      expect(uuid1.match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)).toBeTruthy();
+      expect(
+        uuid1.match(
+          /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+        ),
+      ).toBeTruthy();
     });
 
     test('should validate mock request creation', () => {
-      const request = createMockRequest('GET', 'http://localhost:3000/api/test');
+      const request = createMockRequest(
+        'GET',
+        'http://localhost:3000/api/test',
+      );
 
       expect(request.method).toBe('GET');
       expect(request.url).toBe('http://localhost:3000/api/test');
@@ -301,7 +326,7 @@ describe('Platform API Tests', () => {
       const errorResponse = {
         success: false,
         error: 'Test error message',
-        details: 'Additional error details'
+        details: 'Additional error details',
       };
 
       expect(errorResponse.success).toBe(false);

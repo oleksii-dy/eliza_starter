@@ -16,7 +16,8 @@ const paymentBasicFlowScenario: any = {
       },
       {
         user: 'agent',
-        content: 'I can help you research quantum computing developments. This research service costs 1 USDC. Would you like to proceed?',
+        content:
+          'I can help you research quantum computing developments. This research service costs 1 USDC. Would you like to proceed?',
       },
     ],
     [
@@ -26,7 +27,8 @@ const paymentBasicFlowScenario: any = {
       },
       {
         user: 'agent',
-        content: 'Processing payment of 1 USDC... Payment confirmed! Now conducting research on quantum computing developments...',
+        content:
+          'Processing payment of 1 USDC... Payment confirmed! Now conducting research on quantum computing developments...',
       },
     ],
   ],

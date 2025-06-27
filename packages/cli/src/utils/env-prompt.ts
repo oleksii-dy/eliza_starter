@@ -239,23 +239,23 @@ async function promptForEnvVar(config: EnvVarConfig): Promise<string | null> {
 
   const value = await (config.secret
     ? clack.password({
-        message: `Enter your ${config.name}:`,
-        validate: (input: string) => {
-          if (config.required && (!input || input.trim() === '')) {
-            return 'This field is required';
-          }
-          return undefined;
-        },
-      })
+      message: `Enter your ${config.name}:`,
+      validate: (input: string) => {
+        if (config.required && (!input || input.trim() === '')) {
+          return 'This field is required';
+        }
+        return undefined;
+      },
+    })
     : clack.text({
-        message: `Enter your ${config.name}:`,
-        validate: (input: string) => {
-          if (config.required && (!input || input.trim() === '')) {
-            return 'This field is required';
-          }
-          return undefined;
-        },
-      }));
+      message: `Enter your ${config.name}:`,
+      validate: (input: string) => {
+        if (config.required && (!input || input.trim() === '')) {
+          return 'This field is required';
+        }
+        return undefined;
+      },
+    }));
 
   if (clack.isCancel(value)) {
     clack.cancel('Operation cancelled.');

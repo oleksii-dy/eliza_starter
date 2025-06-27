@@ -5,6 +5,7 @@ A comprehensive task management plugin for Eliza agents with advanced reminder c
 ## 🌟 Features
 
 ### Core Goal Management
+
 - ✅ **Complete CRUD operations** for goals with natural language
 - 📅 **Daily recurring tasks** with streak tracking and bonus points
 - 🎯 **One-off tasks** with due dates, priorities (1-4), and urgency flags
@@ -14,6 +15,7 @@ A comprehensive task management plugin for Eliza agents with advanced reminder c
 - 📊 **Custom database schema** using Drizzle ORM for reliability
 
 ### Advanced Reminder System
+
 - 🔔 **Smart reminder timing** based on learned user behavior patterns
 - 📱 **Cross-platform notifications** via deep rolodex plugin integration
 - ⏰ **Multiple reminder windows** (5min, 15min, 30min, 1hr, 2hr, 24hr)
@@ -23,6 +25,7 @@ A comprehensive task management plugin for Eliza agents with advanced reminder c
 - 🧠 **Adaptive frequency** based on user response patterns
 
 ### Interactive User Experience
+
 - 💬 **Rich confirmation workflows** with customizable options
 - 🔄 **Smart action choices**: snooze, dismiss, reschedule, complete
 - 🧠 **Behavior learning engine** that adapts to user preferences
@@ -32,6 +35,7 @@ A comprehensive task management plugin for Eliza agents with advanced reminder c
 - 🔄 **Bulk confirmation support** for multiple related tasks
 
 ### Enterprise Integration & Performance
+
 - 🔗 **Deep rolodex integration** for entity management and messaging
 - ⚡ **Plugin-task integration** for sophisticated confirmation workflows
 - 📊 **Real-time monitoring** with health metrics and alerting
@@ -47,6 +51,7 @@ A comprehensive task management plugin for Eliza agents with advanced reminder c
 The plugin follows a microservices-inspired architecture with clear separation of concerns:
 
 #### GoalReminderService (Core Engine)
+
 - **Batch-optimized reminder processing** with configurable concurrency
 - **Multiple reminder types**: overdue, upcoming, daily, scheduled
 - **Intelligent filtering** to prevent duplicate processing
@@ -54,6 +59,7 @@ The plugin follows a microservices-inspired architecture with clear separation o
 - **Performance monitoring** with metrics collection
 
 #### GoalIntegrationBridge (Integration Hub)
+
 - **Central service discovery** for rolodex and plugin-task
 - **Entity synchronization** between goal users and rolodex contacts
 - **Cross-platform message routing** with platform preference handling
@@ -61,6 +67,7 @@ The plugin follows a microservices-inspired architecture with clear separation o
 - **Caching layer** for improved performance
 
 #### GoalConfirmationService (User Interaction)
+
 - **Workflow orchestration** for user confirmations
 - **Preference learning and storage** with behavioral adaptation
 - **Bulk confirmation support** with intelligent grouping
@@ -68,6 +75,7 @@ The plugin follows a microservices-inspired architecture with clear separation o
 - **A/B testing framework** for optimization
 
 #### SmartReminderService (AI/ML Engine)
+
 - **User behavior analysis** with pattern recognition
 - **Optimal timing calculation** based on historical data
 - **Confidence scoring** for recommendation quality
@@ -75,6 +83,7 @@ The plugin follows a microservices-inspired architecture with clear separation o
 - **Continuous learning** with preference adaptation
 
 #### NotificationService (Delivery Layer)
+
 - **Multi-channel notification delivery** (browser, in-app, cross-platform)
 - **Queue management** with retry logic and priority handling
 - **User preference enforcement** (quiet hours, channel selection)
@@ -82,6 +91,7 @@ The plugin follows a microservices-inspired architecture with clear separation o
 - **Analytics collection** for optimization
 
 #### GoalMonitoringService (Operations)
+
 - **Comprehensive health monitoring** across all services
 - **Performance metrics collection** with historical tracking
 - **Intelligent alerting** with configurable rules
@@ -91,6 +101,7 @@ The plugin follows a microservices-inspired architecture with clear separation o
 ### Data Architecture
 
 #### Enhanced Database Schema
+
 ```sql
 -- Core goal management
 goals (id, name, type, priority, due_date, metadata, ...)
@@ -119,8 +130,8 @@ const agent = new Agent({
   plugins: [
     GoalsPlugin,
     // Recommended companion plugins
-    RolodexPlugin,  // For cross-platform messaging
-    TaskPlugin      // For confirmation workflows
+    RolodexPlugin, // For cross-platform messaging
+    TaskPlugin, // For confirmation workflows
   ],
   // ... other configuration
 });
@@ -130,12 +141,12 @@ const agent = new Agent({
 
 ```typescript
 // Environment variables for fine-tuning
-process.env.GOAL_CHECK_INTERVAL = '60000';          // Reminder check frequency
-process.env.GOAL_BATCH_SIZE = '10';                 // Batch processing size
-process.env.GOAL_MAX_CONCURRENT = '5';              // Concurrent reminder limit
-process.env.GOAL_REMINDER_COOLDOWN = '86400000';    // 24hr cooldown period
-process.env.GOAL_ENABLE_SMART_REMINDERS = 'true';   // Enable ML features
-process.env.GOAL_ENABLE_MONITORING = 'true';        // Enable health monitoring
+process.env.GOAL_CHECK_INTERVAL = '60000'; // Reminder check frequency
+process.env.GOAL_BATCH_SIZE = '10'; // Batch processing size
+process.env.GOAL_MAX_CONCURRENT = '5'; // Concurrent reminder limit
+process.env.GOAL_REMINDER_COOLDOWN = '86400000'; // 24hr cooldown period
+process.env.GOAL_ENABLE_SMART_REMINDERS = 'true'; // Enable ML features
+process.env.GOAL_ENABLE_MONITORING = 'true'; // Enable health monitoring
 ```
 
 ## 💡 Usage Examples
@@ -144,16 +155,16 @@ process.env.GOAL_ENABLE_MONITORING = 'true';        // Enable health monitoring
 
 ```typescript
 // Daily tasks with streak tracking
-"Add a daily task to exercise for 30 minutes"
-"Create a daily reminder to take vitamins"
+'Add a daily task to exercise for 30 minutes';
+'Create a daily reminder to take vitamins';
 
 // Priority-based one-off tasks
-"Add a high priority task to submit the report by Friday"
-"Create an urgent goal to call the client today"
+'Add a high priority task to submit the report by Friday';
+'Create an urgent goal to call the client today';
 
 // Aspirational goals
-"I want to learn Japanese someday"
-"Add a goal to write a novel"
+'I want to learn Japanese someday';
+'Add a goal to write a novel';
 ```
 
 ### Smart Reminder Interactions
@@ -175,7 +186,9 @@ process.env.GOAL_ENABLE_MONITORING = 'true';        // Enable health monitoring
 // Smart reminder recommendations
 const smartService = runtime.getService('SMART_REMINDER');
 const recommendation = await smartService.getSmartReminderRecommendation(goal);
-console.log(`Optimal time: ${recommendation.optimalTime}, confidence: ${recommendation.confidence}`);
+console.log(
+  `Optimal time: ${recommendation.optimalTime}, confidence: ${recommendation.confidence}`
+);
 
 // Cross-platform messaging
 const bridge = runtime.getService('GOAL_INTEGRATION_BRIDGE');
@@ -194,17 +207,19 @@ const alerts = await monitoring.getActiveAlerts();
 ## 📊 Monitoring & Analytics
 
 ### Real-Time Metrics
+
 - **Reminder Success Rate**: >95% typical delivery success
-- **User Engagement**: 60-80% confirmation response rate  
+- **User Engagement**: 60-80% confirmation response rate
 - **Processing Performance**: <2 seconds average reminder processing
 - **Cross-Platform Delivery**: Real-time success/failure tracking
 - **Memory Usage**: Optimized for <100MB sustained usage
 
 ### Health Monitoring
+
 ```typescript
 // Service health dashboard data
 const healthReports = await monitoring.checkServiceHealth();
-// Returns status for: GOAL_REMINDER, GOAL_INTEGRATION_BRIDGE, 
+// Returns status for: GOAL_REMINDER, GOAL_INTEGRATION_BRIDGE,
 //                     GOAL_CONFIRMATION, SMART_REMINDER, NOTIFICATION
 
 // Performance analytics
@@ -213,6 +228,7 @@ const performanceMetrics = await monitoring.trackPerformanceMetrics();
 ```
 
 ### Alert System
+
 - **Automatic alerts** for service failures, high error rates, performance degradation
 - **Intelligent recovery** with circuit breakers and service restart
 - **Escalation rules** based on severity and impact
@@ -225,11 +241,13 @@ const performanceMetrics = await monitoring.trackPerformanceMetrics();
 The plugin includes sophisticated ML capabilities:
 
 1. **Behavioral Pattern Recognition**
+
    - Learns optimal reminder times per user
    - Adapts to response patterns and preferences
    - Optimizes message content based on success rates
 
 2. **Predictive Analytics**
+
    - Forecasts best times for task completion
    - Predicts user availability and responsiveness
    - Confidence scoring for all recommendations
@@ -242,11 +260,13 @@ The plugin includes sophisticated ML capabilities:
 ### Enterprise Features
 
 1. **High Availability**
+
    - Automatic failover and service recovery
    - Circuit breaker patterns for external dependencies
    - Graceful degradation during partial outages
 
 2. **Scalability**
+
    - Batch processing for 100+ concurrent reminders
    - Configurable concurrency limits
    - Intelligent queue management with priority handling
@@ -293,6 +313,7 @@ npm run test:watch       # Continuous testing
 ### Common Issues
 
 #### Reminders Not Sending
+
 ```bash
 # Check service health
 curl http://localhost:3000/api/goal/health
@@ -305,6 +326,7 @@ npm run test:db
 ```
 
 #### Cross-Platform Integration Issues
+
 ```bash
 # Verify rolodex plugin installation
 DEBUG=rolodex:* npm start
@@ -317,6 +339,7 @@ curl -X POST http://localhost:3000/api/goal/test-message
 ```
 
 #### Performance Issues
+
 ```bash
 # Monitor memory usage
 curl http://localhost:3000/api/goal/metrics
@@ -333,16 +356,17 @@ DEBUG=goal:performance npm start
 ```typescript
 // Optimize for high-volume scenarios
 const config = {
-  GOAL_BATCH_SIZE: '20',           // Increase batch size
-  GOAL_MAX_CONCURRENT: '10',       // Increase concurrency
-  GOAL_CHECK_INTERVAL: '30000',    // More frequent checks
-  GOAL_CACHE_TTL: '300000'         // Longer cache retention
+  GOAL_BATCH_SIZE: '20', // Increase batch size
+  GOAL_MAX_CONCURRENT: '10', // Increase concurrency
+  GOAL_CHECK_INTERVAL: '30000', // More frequent checks
+  GOAL_CACHE_TTL: '300000', // Longer cache retention
 };
 ```
 
 ## 📈 Roadmap
 
 ### Upcoming Features
+
 - **AI-powered task prioritization** based on user behavior
 - **Advanced analytics dashboard** with custom metrics
 - **Multi-language support** for international users
@@ -352,6 +376,7 @@ const config = {
 - **Voice interaction** capabilities
 
 ### Integration Expansions
+
 - **Calendar integration** for due date synchronization
 - **Slack/Discord bot** commands
 - **Email reminder** integration

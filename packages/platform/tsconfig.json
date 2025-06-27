@@ -1,23 +1,12 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../core/configs/typescript/tsconfig.frontend.json",
   "compilerOptions": {
-    "target": "ESNext",
-    "lib": ["ESNext", "DOM", "DOM.Iterable"],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": true,
+    "baseUrl": ".",
     "noEmit": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
     "downlevelIteration": true,
-    "allowImportingTsExtensions": true,
-    "moduleDetection": "force",
-    "forceConsistentCasingInFileNames": true,
     "plugins": [
       {
         "name": "next"
@@ -25,12 +14,24 @@
     ],
     "paths": {
       "@/*": ["./*"],
+      "@lib/*": ["./lib/*"],
       "@elizaos/client": ["../client/dist/lib/index"],
       "@elizaos/client/css": ["../client/dist/lib/client.css"],
       "@elizaos/core": ["../core/src/index.ts"],
       "@elizaos/server": ["../server/src/index.ts"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "types/**/*.d.ts"],
-  "exclude": ["node_modules", "cypress", "drizzle.config.ts", "cypress.config.ts"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "types/**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "cypress",
+    "drizzle.config.ts",
+    "cypress.config.ts"
+  ]
 }

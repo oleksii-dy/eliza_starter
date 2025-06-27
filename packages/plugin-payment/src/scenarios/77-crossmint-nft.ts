@@ -2,7 +2,8 @@ type Scenario = any;
 
 const crossmintNFTScenario: Scenario = {
   name: 'Payment: Crossmint NFT Minting and Trading',
-  description: 'Demonstrates using Crossmint for NFT minting, purchasing, and cross-chain operations',
+  description:
+    'Demonstrates using Crossmint for NFT minting, purchasing, and cross-chain operations',
   category: 'payment',
   examples: [
     [
@@ -12,7 +13,8 @@ const crossmintNFTScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'Initiating NFT mint via Crossmint: Your artwork will be minted on Ethereum mainnet. Cost: $25 (includes gas). Payment via credit card accepted. Metadata uploading to IPFS...',
+        content:
+          'Initiating NFT mint via Crossmint: Your artwork will be minted on Ethereum mainnet. Cost: $25 (includes gas). Payment via credit card accepted. Metadata uploading to IPFS...',
         action: 'CROSSMINT_NFT_MINT',
       },
     ],
@@ -23,7 +25,8 @@ const crossmintNFTScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'Processing NFT purchase through Crossmint:\nBored Ape #1234 - Price: 45 ETH ($101,250)\nPayment: Visa ending in 4242\nCrossmint fee: 4.5%\nTotal: $105,806.25\nRequires verification for high-value purchase.',
+        content:
+          'Processing NFT purchase through Crossmint:\nBored Ape #1234 - Price: 45 ETH ($101,250)\nPayment: Visa ending in 4242\nCrossmint fee: 4.5%\nTotal: $105,806.25\nRequires verification for high-value purchase.',
         action: 'CROSSMINT_NFT_PURCHASE',
       },
     ],
@@ -34,7 +37,8 @@ const crossmintNFTScenario: Scenario = {
       },
       {
         user: 'agent',
-        content: 'Setting up cross-chain NFT bridge via Crossmint:\nSource: Solana (15 NFTs detected)\nDestination: Polygon\nEstimated time: 10-15 minutes\nBridge fee: $3.50 per NFT\nTotal cost: $52.50',
+        content:
+          'Setting up cross-chain NFT bridge via Crossmint:\nSource: Solana (15 NFTs detected)\nDestination: Polygon\nEstimated time: 10-15 minutes\nBridge fee: $3.50 per NFT\nTotal cost: $52.50',
         action: 'CROSSMINT_NFT_BRIDGE',
       },
     ],

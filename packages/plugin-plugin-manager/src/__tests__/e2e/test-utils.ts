@@ -121,14 +121,17 @@ export function sendMessageAndWaitForResponse(
     };
 
     // Store the message first
-    runtime.createMemory(message, 'messages').then(() => {
-      // Emit the event to trigger the agent's message processing logic.
-      runtime.emitEvent(EventType.MESSAGE_RECEIVED, {
-        runtime,
-        message,
-        callback,
-      });
-    }).catch(reject);
+    runtime
+      .createMemory(message, 'messages')
+      .then(() => {
+        // Emit the event to trigger the agent's message processing logic.
+        runtime.emitEvent(EventType.MESSAGE_RECEIVED, {
+          runtime,
+          message,
+          callback,
+        });
+      })
+      .catch(reject);
   });
 }
 

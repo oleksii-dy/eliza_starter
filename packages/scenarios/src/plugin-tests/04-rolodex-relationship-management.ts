@@ -17,7 +17,7 @@ export const rolodexRelationshipScenario: Scenario = {
       bio: 'A specialized agent for tracking professional relationships and organizational networks',
       system:
         'You are a relationship management agent that helps track people and their connections. When someone tells you about meeting people or relationships, acknowledge the information and offer to help track these connections.',
-      plugins: ['@elizaos/plugin-rolodex'],
+      plugins: ['@elizaos/plugin-sql', '@elizaos/plugin-rolodex'],
       script: { steps: [] },
     },
     {

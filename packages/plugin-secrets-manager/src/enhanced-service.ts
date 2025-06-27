@@ -1,5 +1,11 @@
-import type { IAgentRuntime, UUID, Component } from '@elizaos/core';
-import { elizaLogger as logger, createUniqueUuid, Role } from '@elizaos/core';
+import {
+  elizaLogger as logger,
+  createUniqueUuid,
+  Role,
+  type IAgentRuntime,
+  type UUID,
+  type Component,
+} from '@elizaos/core';
 import { secureCrypto } from './security/crypto';
 import { EnvManagerService } from './service';
 import type {
@@ -322,8 +328,8 @@ export class EnhancedSecretManager extends EnvManagerService {
 
     // Load from world metadata
     const world = await this.runtime.getWorld(worldId as UUID);
-    if (world?.metadata?.secrets?.[key]) {
-      const secretData = world.metadata.secrets[key];
+    if ((world?.metadata?.secrets as any)?.[key]) {
+      const secretData = (world?.metadata?.secrets as any)?.[key];
       if (typeof secretData === 'object' && secretData.encrypted) {
         return await this.decrypt(secretData.value);
       }
@@ -583,7 +589,8 @@ export class EnhancedSecretManager extends EnvManagerService {
         return false;
       }
 
-      const requesterRole = world.metadata?.roles?.[context.requesterId || ''] || Role.NONE;
+      const requesterRole =
+        (world.metadata?.roles as any)?.[context.requesterId || ''] || Role.NONE;
 
       if (action === 'read') {
         return true; // All world members can read
@@ -831,7 +838,7 @@ export class EnhancedSecretManager extends EnvManagerService {
 
         if (await this.set(key, setting.value, context, config)) {
           // Remove from settings
-          delete settings[key];
+          delete (settings as any)[key];
           migrated++;
         }
       }

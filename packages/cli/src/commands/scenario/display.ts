@@ -259,8 +259,8 @@ async function saveHtmlResults(results: ScenarioResult[], outputPath: string): P
 
     <div class="results">
         ${results
-          .map(
-            (result) => `
+    .map(
+      (result) => `
             <div class="result">
                 <div class="result-header">
                     <h3>${result.name}</h3>
@@ -273,12 +273,12 @@ async function saveHtmlResults(results: ScenarioResult[], outputPath: string): P
                 <p><strong>Tokens:</strong> ${result.metrics.tokenUsage.total}</p>
                 
                 ${
-                  result.verificationResults.length > 0
-                    ? `
+  result.verificationResults.length > 0
+    ? `
                     <h4>Verification Results:</h4>
                     ${result.verificationResults
-                      .map(
-                        (verification) => `
+    .map(
+      (verification) => `
                         <div class="verification">
                             <span class="${verification.passed ? 'verification-pass' : 'verification-fail'}">
                                 ${verification.passed ? '✓' : '✗'} ${verification.ruleName}
@@ -286,26 +286,26 @@ async function saveHtmlResults(results: ScenarioResult[], outputPath: string): P
                             <br><small>${verification.reason}</small>
                         </div>
                     `
-                      )
-                      .join('')}
+    )
+    .join('')}
                 `
-                    : ''
-                }
+    : ''
+}
                 
                 ${
-                  result.errors && result.errors.length > 0
-                    ? `
+  result.errors && result.errors.length > 0
+    ? `
                     <h4>Errors:</h4>
                     <ul>
                         ${result.errors.map((error) => `<li class="verification-fail">${error}</li>`).join('')}
                     </ul>
                 `
-                    : ''
-                }
+    : ''
+}
             </div>
         `
-          )
-          .join('')}
+    )
+    .join('')}
     </div>
 </body>
 </html>`;

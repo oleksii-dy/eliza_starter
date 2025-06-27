@@ -5,8 +5,17 @@
 
 import { describe, test, expect } from '@jest/globals';
 import { NextRequest } from 'next/server';
-import { sanitizeHtml, sanitizeText, sanitizeEmail, sanitizeUUID, createAgentSchema } from '../../lib/security/sanitization';
-import { apiAuthMiddleware, authRateLimitMiddleware } from '../../lib/middleware/auth';
+import {
+  sanitizeHtml,
+  sanitizeText,
+  sanitizeEmail,
+  sanitizeUUID,
+  createAgentSchema,
+} from '../../lib/security/sanitization';
+import {
+  apiAuthMiddleware,
+  authRateLimitMiddleware,
+} from '../../lib/middleware/auth';
 
 describe('Security Fixes Validation', () => {
   describe('Input Sanitization', () => {
@@ -20,7 +29,8 @@ describe('Security Fixes Validation', () => {
     });
 
     test('should sanitize text input', () => {
-      const maliciousInput = '<img src="x" onerror="alert(1)">Hello & <script>World</script>';
+      const maliciousInput =
+        '<img src="x" onerror="alert(1)">Hello & <script>World</script>';
       const sanitized = sanitizeText(maliciousInput);
 
       expect(sanitized).not.toContain('<img');
@@ -31,7 +41,9 @@ describe('Security Fixes Validation', () => {
 
     test('should validate and sanitize email addresses', () => {
       expect(() => sanitizeEmail('user@example.com')).not.toThrow();
-      expect(() => sanitizeEmail('<script>alert(1)</script>@example.com')).toThrow();
+      expect(() =>
+        sanitizeEmail('<script>alert(1)</script>@example.com'),
+      ).toThrow();
       expect(() => sanitizeEmail('invalid-email')).toThrow();
 
       const validEmail = sanitizeEmail('  User@EXAMPLE.COM  ');
@@ -52,13 +64,13 @@ describe('Security Fixes Validation', () => {
         slug: 'test-agent',
         character: {
           name: 'Test Agent',
-          bio: 'Test bio'
+          bio: 'Test bio',
         },
         plugins: [],
         runtimeConfig: {
-          temperature: 0.7
+          temperature: 0.7,
         },
-        visibility: 'private'
+        visibility: 'private',
       };
 
       const result = createAgentSchema.safeParse(validAgent);
@@ -71,11 +83,11 @@ describe('Security Fixes Validation', () => {
         slug: 'test-agent',
         character: {
           name: '<script>evil()</script>',
-          bio: '<iframe src="evil.com"></iframe>'
+          bio: '<iframe src="evil.com"></iframe>',
         },
         plugins: ['<script>'],
         runtimeConfig: {},
-        visibility: 'private'
+        visibility: 'private',
       };
 
       const maliciousResult = createAgentSchema.safeParse(maliciousAgent);
@@ -91,7 +103,7 @@ describe('Security Fixes Validation', () => {
   describe('Authentication Security', () => {
     test('should block access to protected API routes without authentication', async () => {
       const request = new NextRequest('http://localhost:3000/api/agents', {
-        method: 'GET'
+        method: 'GET',
       });
 
       const response = await apiAuthMiddleware(request);
@@ -108,12 +120,12 @@ describe('Security Fixes Validation', () => {
       const publicRoutes = [
         '/api/v1/health',
         '/api/auth/signup',
-        '/api/auth/login'
+        '/api/auth/login',
       ];
 
       for (const route of publicRoutes) {
         const request = new NextRequest(`http://localhost:3000${route}`, {
-          method: 'GET'
+          method: 'GET',
         });
 
         const response = await apiAuthMiddleware(request);
@@ -133,9 +145,12 @@ describe('Security Fixes Validation', () => {
       });
 
       try {
-        const request = new NextRequest('http://localhost:3000/api/auth/dev-login', {
-          method: 'POST'
-        });
+        const request = new NextRequest(
+          'http://localhost:3000/api/auth/dev-login',
+          {
+            method: 'POST',
+          },
+        );
 
         const response = await apiAuthMiddleware(request);
 
@@ -160,8 +175,8 @@ describe('Security Fixes Validation', () => {
       const request = new NextRequest('http://localhost:3000/api/auth/login', {
         method: 'POST',
         headers: {
-          'x-forwarded-for': '192.168.1.100'
-        }
+          'x-forwarded-for': '192.168.1.100',
+        },
       });
 
       // First request should pass
@@ -177,7 +192,7 @@ describe('Security Fixes Validation', () => {
       const responses = await Promise.all(requests);
 
       // Some requests should be rate limited
-      const rateLimitedResponses = responses.filter(r => r !== null);
+      const rateLimitedResponses = responses.filter((r) => r !== null);
       expect(rateLimitedResponses.length).toBeGreaterThan(0);
 
       if (rateLimitedResponses.length > 0) {
@@ -196,7 +211,8 @@ describe('Security Fixes Validation', () => {
       // The actual endpoint should return a 501 status with appropriate error message
       const expectedResponse = {
         code: 'endpoint_disabled',
-        error: 'This endpoint has been disabled for security reasons. Use WorkOS authentication.'
+        error:
+          'This endpoint has been disabled for security reasons. Use WorkOS authentication.',
       };
 
       // This validates the structure we expect from the disabled endpoint
@@ -212,7 +228,7 @@ describe('Security Fixes Validation', () => {
         "' OR '1'='1",
         "1' UNION SELECT * FROM users--",
         "<script>alert('xss')</script>",
-        "' OR 1=1 --"
+        "' OR 1=1 --",
       ];
 
       for (const maliciousInput of maliciousInputs) {
@@ -235,17 +251,17 @@ describe('Security Fixes Validation', () => {
     test('should validate file upload restrictions', () => {
       // Test file size validation
       const largeFile = new File(['x'.repeat(10 * 1024 * 1024)], 'large.jpg', {
-        type: 'image/jpeg'
+        type: 'image/jpeg',
       });
 
       // Test invalid file type
       const invalidFile = new File(['test'], 'test.exe', {
-        type: 'application/x-executable'
+        type: 'application/x-executable',
       });
 
       // Test malicious filename
       const maliciousFile = new File(['test'], '../../../etc/passwd', {
-        type: 'image/jpeg'
+        type: 'image/jpeg',
       });
 
       // These tests validate the structure exists
@@ -263,7 +279,7 @@ describe('Security Fixes Validation', () => {
         'JWT_SECRET',
         'DATABASE_URL',
         'STRIPE_SECRET_KEY',
-        'WORKOS_SECRET_KEY'
+        'WORKOS_SECRET_KEY',
       ];
 
       // In a real environment, these should be set but not exposed
@@ -296,7 +312,7 @@ describe('Security Fixes Validation', () => {
     test('should not expose sensitive information in error responses', () => {
       const errorResponse = {
         success: false,
-        error: 'Authentication failed'
+        error: 'Authentication failed',
       };
 
       // Error responses should not contain:

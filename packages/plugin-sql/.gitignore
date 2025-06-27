@@ -185,3 +185,7 @@ coverage/
 .eliza*
 
 .test-*
+AGENTS.md
+.cursor/rules/elizaos
+CLAUDE.md
+.cursorignore

@@ -86,15 +86,18 @@ describe('CrossMint Real Integration Tests', () => {
           CROSSMINT_API_KEY: testApiKey,
           CROSSMINT_ENVIRONMENT: 'staging',
           X402_FACILITATOR_URL: 'https://x402.coinbase.com',
-        }
+        },
       };
 
       // Create runtime with real character and SQL adapter
       const testAgentId = asUUID('00000000-0000-0000-0000-000000000001');
       const sqlPlugin = await import('@elizaos/plugin-sql');
-      const adapter = sqlPlugin.createDatabaseAdapter({
-        dataDir: ':memory:', // Use in-memory for tests
-      }, testAgentId);
+      const adapter = sqlPlugin.createDatabaseAdapter(
+        {
+          dataDir: ':memory:', // Use in-memory for tests
+        },
+        testAgentId
+      );
 
       runtime = new AgentRuntime({
         adapter,
@@ -116,17 +119,27 @@ describe('CrossMint Real Integration Tests', () => {
   });
 
   afterAll(async () => {
-    if (skipRealTests) {return;}
+    if (skipRealTests) {
+      return;
+    }
 
     // Cleanup services
-    if (crossMintService) {await crossMintService.stop();}
-    if (x402Service) {await x402Service.stop();}
-    if (walletService) {await walletService.stop();}
+    if (crossMintService) {
+      await crossMintService.stop();
+    }
+    if (x402Service) {
+      await x402Service.stop();
+    }
+    if (walletService) {
+      await walletService.stop();
+    }
   });
 
   describe('RealCrossMintService', () => {
     it('should validate API configuration with real API call', async () => {
-      if (skipRealTests || !crossMintService) {return;}
+      if (skipRealTests || !crossMintService) {
+        return;
+      }
 
       const isValid = await crossMintService.validateConfiguration();
 
@@ -135,7 +148,9 @@ describe('CrossMint Real Integration Tests', () => {
     });
 
     it('should get supported chains from real service', async () => {
-      if (skipRealTests || !crossMintService) {return;}
+      if (skipRealTests || !crossMintService) {
+        return;
+      }
 
       const chains = crossMintService.getSupportedChains();
 
@@ -146,16 +161,18 @@ describe('CrossMint Real Integration Tests', () => {
     });
 
     it('should handle real API errors gracefully', async () => {
-      if (skipRealTests || !crossMintService) {return;}
+      if (skipRealTests || !crossMintService) {
+        return;
+      }
 
       // Try to get a non-existent wallet
-      await expect(crossMintService.getWallet('non-existent-wallet-id'))
-        .rejects
-        .toThrow();
+      await expect(crossMintService.getWallet('non-existent-wallet-id')).rejects.toThrow();
     });
 
     it('should create real wallet via API call', async () => {
-      if (skipRealTests || !crossMintService) {return;}
+      if (skipRealTests || !crossMintService) {
+        return;
+      }
 
       // This test would create a real wallet - commented out to avoid spam
       // Uncomment for actual testing with valid API key
@@ -178,7 +195,9 @@ describe('CrossMint Real Integration Tests', () => {
 
   describe('RealX402Service', () => {
     it('should connect to real X.402 facilitator', async () => {
-      if (skipRealTests || !x402Service) {return;}
+      if (skipRealTests || !x402Service) {
+        return;
+      }
 
       // Test facilitator connectivity
       const schemes = await x402Service.getSupportedSchemes();
@@ -188,7 +207,9 @@ describe('CrossMint Real Integration Tests', () => {
     });
 
     it('should create valid X.402 payment request', async () => {
-      if (skipRealTests || !x402Service) {return;}
+      if (skipRealTests || !x402Service) {
+        return;
+      }
 
       const paymentRequest = await x402Service.createPaymentRequest({
         scheme: 'coinbase',
@@ -206,7 +227,9 @@ describe('CrossMint Real Integration Tests', () => {
     });
 
     it('should create and parse payment headers correctly', async () => {
-      if (skipRealTests || !x402Service) {return;}
+      if (skipRealTests || !x402Service) {
+        return;
+      }
 
       const paymentData = {
         scheme: 'coinbase',
@@ -228,7 +251,9 @@ describe('CrossMint Real Integration Tests', () => {
     });
 
     it('should check X.402 support for URLs', async () => {
-      if (skipRealTests || !x402Service) {return;}
+      if (skipRealTests || !x402Service) {
+        return;
+      }
 
       // Test with a known non-X.402 URL
       const hasSupport = await x402Service.checkX402Support('https://httpbin.org/status/200');
@@ -238,7 +263,9 @@ describe('CrossMint Real Integration Tests', () => {
 
   describe('HybridCrossMintUniversalWalletService', () => {
     it('should implement all required IUniversalWalletService methods', async () => {
-      if (skipRealTests || !walletService) {return;}
+      if (skipRealTests || !walletService) {
+        return;
+      }
 
       // Test service properties
       expect(walletService.chainSupport).toBeDefined();
@@ -253,7 +280,9 @@ describe('CrossMint Real Integration Tests', () => {
     });
 
     it('should get portfolio with real API calls', async () => {
-      if (skipRealTests || !walletService) {return;}
+      if (skipRealTests || !walletService) {
+        return;
+      }
 
       const portfolio = await walletService.getPortfolio();
 
@@ -265,21 +294,25 @@ describe('CrossMint Real Integration Tests', () => {
     });
 
     it('should get supported chains', async () => {
-      if (skipRealTests || !walletService) {return;}
+      if (skipRealTests || !walletService) {
+        return;
+      }
 
       const chains = await walletService.getSupportedChains();
 
       expect(Array.isArray(chains)).toBe(true);
       expect(chains.length).toBeGreaterThan(0);
 
-      const ethereumChain = chains.find(c => c.id === 'ethereum');
+      const ethereumChain = chains.find((c) => c.id === 'ethereum');
       expect(ethereumChain).toBeDefined();
       expect(ethereumChain?.name).toBe('Ethereum');
       expect(ethereumChain?.nativeToken.symbol).toBe('ETH');
     });
 
     it('should create X.402 payment request with real implementation', async () => {
-      if (skipRealTests || !walletService) {return;}
+      if (skipRealTests || !walletService) {
+        return;
+      }
 
       const paymentRequest = await walletService.createPaymentRequest({
         amount: '5.00',
@@ -296,32 +329,40 @@ describe('CrossMint Real Integration Tests', () => {
     });
 
     it('should handle errors appropriately', async () => {
-      if (skipRealTests || !walletService) {return;}
+      if (skipRealTests || !walletService) {
+        return;
+      }
 
       // Test unsupported chain
       expect(() => walletService.isChainSupported('unsupported-chain')).not.toThrow();
       expect(walletService.isChainSupported('unsupported-chain')).toBe(false);
 
       // Test unsupported operations
-      await expect(walletService.swap({
-        fromToken: 'ETH',
-        toToken: 'USDC',
-        amount: '1',
-        chain: 'ethereum',
-      })).rejects.toThrow();
+      await expect(
+        walletService.swap({
+          fromToken: 'ETH',
+          toToken: 'USDC',
+          amount: '1',
+          chain: 'ethereum',
+        })
+      ).rejects.toThrow();
 
-      await expect(walletService.bridge({
-        fromChain: 'ethereum',
-        toChain: 'polygon',
-        amount: '1',
-        token: 'USDC',
-      })).rejects.toThrow();
+      await expect(
+        walletService.bridge({
+          fromChain: 'ethereum',
+          toChain: 'polygon',
+          amount: '1',
+          token: 'USDC',
+        })
+      ).rejects.toThrow();
     });
   });
 
   describe('Runtime Integration', () => {
     it('should register services with runtime correctly', async () => {
-      if (skipRealTests || !runtime.getService) {return;}
+      if (skipRealTests || !runtime.getService) {
+        return;
+      }
 
       // Test service registration
       const registeredCrossMint = runtime.getService('real-crossmint');
@@ -341,7 +382,9 @@ describe('CrossMint Real Integration Tests', () => {
     });
 
     it('should handle service dependencies correctly', async () => {
-      if (skipRealTests || !walletService) {return;}
+      if (skipRealTests || !walletService) {
+        return;
+      }
 
       // The hybrid wallet service depends on both CrossMint and X.402 services
       expect(walletService['crossMintService']).toBeDefined();
@@ -349,7 +392,9 @@ describe('CrossMint Real Integration Tests', () => {
     });
 
     it('should process messages with real runtime context', async () => {
-      if (skipRealTests || !runtime.composeState) {return;}
+      if (skipRealTests || !runtime.composeState) {
+        return;
+      }
 
       // Create a test message
       const message: Memory = {
@@ -374,11 +419,13 @@ describe('CrossMint Real Integration Tests', () => {
 
   describe('Error Handling and Edge Cases', () => {
     it('should handle network errors gracefully', async () => {
-      if (skipRealTests) {return;}
+      if (skipRealTests) {
+        return;
+      }
 
       // Test with invalid API key
       const invalidRuntime = createMockRuntime({
-        getSetting: (key: string) => key === 'CROSSMINT_API_KEY' ? 'invalid-key' : null,
+        getSetting: (key: string) => (key === 'CROSSMINT_API_KEY' ? 'invalid-key' : null),
       });
 
       const invalidService = new RealCrossMintService(invalidRuntime, 'invalid-key', 'staging');
@@ -395,7 +442,9 @@ describe('CrossMint Real Integration Tests', () => {
     });
 
     it('should handle rate limiting appropriately', async () => {
-      if (skipRealTests || !crossMintService) {return;}
+      if (skipRealTests || !crossMintService) {
+        return;
+      }
 
       // In a real test, you might make multiple rapid requests to test rate limiting
       // For now, we'll just verify the error handling exists
@@ -403,14 +452,18 @@ describe('CrossMint Real Integration Tests', () => {
     });
 
     it('should validate input parameters', async () => {
-      if (skipRealTests || !walletService) {return;}
+      if (skipRealTests || !walletService) {
+        return;
+      }
 
       // Test wallet creation with invalid parameters
-      await expect(walletService.createWallet({
-        chain: 'invalid-chain',
-        type: 'mpc',
-        name: 'Test Wallet',
-      })).rejects.toThrow();
+      await expect(
+        walletService.createWallet({
+          chain: 'invalid-chain',
+          type: 'mpc',
+          name: 'Test Wallet',
+        })
+      ).rejects.toThrow();
     });
   });
 });

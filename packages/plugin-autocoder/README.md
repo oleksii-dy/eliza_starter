@@ -5,6 +5,7 @@ A comprehensive AI-powered code generation system for ElizaOS that enables auton
 ## Overview
 
 The AutoCoder plugin transforms ElizaOS into a powerful autonomous code generation system capable of:
+
 - Creating complete ElizaOS plugins from natural language descriptions
 - Building n8n workflow automations with AI-generated configurations
 - Generating Model Context Protocol (MCP) servers for tool integration
@@ -17,6 +18,7 @@ The AutoCoder plugin transforms ElizaOS into a powerful autonomous code generati
 ### 🚀 Code Generation Capabilities
 
 #### ElizaOS Plugin Development
+
 - **AI-Powered Code Generation**: Uses Claude (Anthropic) for sophisticated TypeScript plugin generation
 - **Iterative Development**: Automatically refines code through up to 5 iterations with self-improvement
 - **Comprehensive Testing**: Built-in linting, testing with vitest, and validation
@@ -25,6 +27,7 @@ The AutoCoder plugin transforms ElizaOS into a powerful autonomous code generati
 - **Plugin Manager Integration**: Seamlessly integrates with ElizaOS Plugin Manager
 
 #### N8n Workflow Creation
+
 - **Natural Language to Workflow**: Generate complete n8n workflows from descriptions
 - **JSON Specification Support**: Create workflows from detailed JSON specs
 - **Integration Code Generation**: Automatically generates JavaScript for function nodes
@@ -33,12 +36,14 @@ The AutoCoder plugin transforms ElizaOS into a powerful autonomous code generati
 - **Import-Ready Output**: Generates workflow.json files ready for n8n import
 
 #### MCP Server Generation
+
 - **Tool Creation**: Build custom tools for AI model integration
 - **Resource Management**: Generate resource endpoints for data access
 - **Type-Safe Implementation**: Full TypeScript support with proper typing
 - **Production Ready**: Complete with tests, documentation, and deployment configs
 
 ### 🧪 Multi-SWE-bench Evaluation System
+
 - **Real-World Testing**: Evaluate code generation capabilities on actual GitHub issues from top repositories
 - **Automated Patch Generation**: Generate fixes for TypeScript/JavaScript repositories using advanced AI
 - **13-Step Workflow**: Complete iterative fix process with build validation and test execution
@@ -84,6 +89,7 @@ const agent = new Agent({
 ### Usage Examples
 
 #### Creating an ElizaOS Plugin
+
 ```
 User: Create a plugin that tracks cryptocurrency prices and sends alerts
 
@@ -91,6 +97,7 @@ Agent: I'll create a cryptocurrency price tracking plugin with alert capabilitie
 ```
 
 #### Building N8n Workflows
+
 ```
 User: Create an n8n workflow that monitors GitHub for new issues and posts them to Slack
 
@@ -98,6 +105,7 @@ Agent: I'll create an n8n workflow that monitors GitHub for new issues and sends
 ```
 
 #### Generating MCP Servers
+
 ```
 User: Build an MCP server with tools for weather data and file operations
 
@@ -111,8 +119,9 @@ The AutoCoder plugin features a comprehensive integration with Multi-SWE-bench, 
 ## What is SWE-bench?
 
 SWE-bench (Software Engineering Benchmark) is a curated collection of real GitHub issues from top open-source repositories including:
+
 - **microsoft/TypeScript** - Core language implementation issues
-- **axios/axios** - HTTP client library bugs and features  
+- **axios/axios** - HTTP client library bugs and features
 - **lodash/lodash** - Utility library improvements
 - **webpack/webpack** - Build system enhancements
 - And 50+ other high-quality repositories
@@ -124,6 +133,7 @@ It tests the ability to automatically generate production-ready code fixes for a
 ### Required Configuration
 
 1. **Anthropic API Key** (Required)
+
    ```bash
    export ANTHROPIC_API_KEY="your-api-key-here"
    ```
@@ -169,6 +179,7 @@ User: Show me SWE-bench statistics
 ```
 
 **Expected Response:**
+
 ```
 📊 Multi-SWE-bench Dataset Statistics
 
@@ -225,10 +236,12 @@ User: Run SWE-bench on 50 instances
 Each SWE-bench instance follows a rigorous 13-step process designed to mirror real-world development:
 
 ### Phase 1: Setup & Analysis (Steps 1-2)
+
 1. **🚀 Repository Cloning**: Clone target repository at the exact commit where the issue was reported
 2. **📚 Issue Research**: AI analyzes the GitHub issue, codebase structure, and related discussions
 
 ### Phase 2: Iterative Development (Steps 3-9)
+
 3. **🔧 Fix Implementation**: Generate solution using advanced AI code generation with full codebase context
 4. **✅ TypeScript Compilation**: Verify code compiles without errors (`tsc --noEmit`)
 5. **✅ Linting**: Run code quality checks (ESLint where available)
@@ -238,6 +251,7 @@ Each SWE-bench instance follows a rigorous 13-step process designed to mirror re
 9. **📊 Iteration Analysis**: If tests fail, analyze failures and generate improved solution (up to 5 iterations)
 
 ### Phase 3: Validation & Finalization (Steps 10-13)
+
 10. **🎯 Critical Review**: AI-powered code review of the solution for quality and correctness
 11. **✔️ Final Verification**: Complete build and test validation to ensure production readiness
 12. **📋 Result Generation**: Compile comprehensive metrics including performance, cost, and success metrics
@@ -250,6 +264,7 @@ Each SWE-bench instance follows a rigorous 13-step process designed to mirror re
 The easiest way to run SWE-bench evaluations is through natural language conversations with your ElizaOS agent:
 
 #### Basic Usage
+
 ```bash
 # Start your ElizaOS agent with the AutoCoder plugin
 elizaos start
@@ -261,6 +276,7 @@ User: Run SWE-bench instance microsoft__TypeScript-50497
 ```
 
 #### Advanced Usage
+
 ```bash
 # Filter by repository
 User: Run SWE-bench on microsoft/TypeScript instances
@@ -280,6 +296,7 @@ User: Run SWE-bench on all JavaScript instances
 For programmatic usage or CI/CD integration:
 
 #### Single Test Instance
+
 ```bash
 # Run individual test with default settings
 bun scripts/run-swe-bench-test.ts
@@ -291,6 +308,7 @@ bun scripts/run-swe-bench-test.ts
 ```
 
 #### Comprehensive Evaluation
+
 ```bash
 # Run comprehensive evaluation
 bun scripts/run-swe-bench-comprehensive.ts
@@ -318,7 +336,9 @@ const runner = new SWEBenchRunner(runtime, {
 await runner.initialize();
 const report = await runner.runBenchmark();
 
-console.log(`Resolved ${report.results.resolved_instances}/${report.results.total_instances} instances`);
+console.log(
+  `Resolved ${report.results.resolved_instances}/${report.results.total_instances} instances`
+);
 ```
 
 #### Advanced Configuration Options
@@ -327,21 +347,21 @@ console.log(`Resolved ${report.results.resolved_instances}/${report.results.tota
 const runner = new SWEBenchRunner(runtime, {
   // Instance Selection
   instance_ids: ['axios__axios-5919', 'microsoft__TypeScript-50497'], // Specific instances
-  max_instances: 10,                    // Limit total instances
-  language_filter: ['TypeScript'],      // Filter by language
+  max_instances: 10, // Limit total instances
+  language_filter: ['TypeScript'], // Filter by language
   repo_filter: ['microsoft/TypeScript'], // Filter by repository
   complexity_filter: ['low', 'medium'], // Filter by estimated complexity
-  
+
   // Execution Control
-  timeout_per_instance: 300000,         // 5 minutes per instance
-  docker_enabled: false,                // Use Docker isolation (future)
-  save_artifacts: true,                 // Save generated patches and logs
-  verbose: true,                        // Detailed logging
-  skip_evaluation: false,               // Skip final evaluation step
-  
+  timeout_per_instance: 300000, // 5 minutes per instance
+  docker_enabled: false, // Use Docker isolation (future)
+  save_artifacts: true, // Save generated patches and logs
+  verbose: true, // Detailed logging
+  skip_evaluation: false, // Skip final evaluation step
+
   // Performance
-  max_parallel_instances: 1,            // Concurrent processing limit
-  cleanup_after_run: true,              // Clean up temporary files
+  max_parallel_instances: 1, // Concurrent processing limit
+  cleanup_after_run: true, // Clean up temporary files
 });
 ```
 
@@ -352,18 +372,21 @@ const runner = new SWEBenchRunner(runtime, {
 The evaluation generates comprehensive metrics for thorough analysis:
 
 #### Core Success Metrics
+
 - **Resolution Rate**: Percentage of issues successfully fixed and verified (target: >30% for production systems)
 - **Compilation Success Rate**: Percentage of patches that compile without errors (target: >90%)
 - **Test Pass Rate**: Percentage of solutions that pass all existing tests (target: >80%)
 - **Exact Match Rate**: Percentage matching ground truth solutions (research metric)
 
 #### Performance Metrics
+
 - **Average Execution Time**: Time per instance processing (typical: 2-5 minutes per instance)
 - **Token Usage**: Total AI tokens consumed (prompt + completion)
 - **Cost Analysis**: Detailed breakdown of API costs per instance and total
 - **Iteration Count**: Average number of fix attempts before success
 
 #### Quality Metrics
+
 - **Success by Complexity**: Performance breakdown by estimated issue difficulty
 - **Success by Repository**: Performance per source repository
 - **Error Classification**: Common failure patterns and root causes
@@ -371,19 +394,22 @@ The evaluation generates comprehensive metrics for thorough analysis:
 
 ### Result Categories & Interpretation
 
-#### ✅ **Fully Resolved** 
+#### ✅ **Fully Resolved**
+
 - Issue completely fixed
 - All tests pass
 - Code compiles successfully
 - Requirements fully met
 
 #### ⚠️ **Partially Resolved**
+
 - Code compiles successfully
 - Some tests pass
 - Issue partially addressed
 - May require manual refinement
 
 #### ❌ **Failed**
+
 - Compilation errors persist
 - Tests fail after all iterations
 - Unable to understand issue
@@ -470,14 +496,14 @@ Agent: 🚀 Starting SWE-bench evaluation on 3 TypeScript instances...
 - **Duration**: 8.5 minutes
 - **Total Instances**: 3
 - **Resolved**: 2 (66.7%) ⭐
-- **Compilation Success**: 100% 
+- **Compilation Success**: 100%
 - **Test Pass Rate**: 66.7%
 
 📈 **Performance Analysis**:
 - **Avg Execution Time**: 2.8 minutes per instance
 - **Token Usage**: 45,230 tokens total
 - **Total Cost**: $0.45 USD
-- **Success by Complexity**: 
+- **Success by Complexity**:
   - Medium: 2/2 (100%)
   - High: 0/1 (0%)
 
@@ -498,6 +524,7 @@ Agent: 🚀 Starting SWE-bench evaluation on 3 TypeScript instances...
 #### 🚫 **API & Authentication Issues**
 
 **Problem**: `Authentication Error` or `API key not configured`
+
 ```bash
 # Solution: Verify API key is set correctly
 echo $ANTHROPIC_API_KEY
@@ -505,6 +532,7 @@ export ANTHROPIC_API_KEY="your-actual-api-key-here"
 ```
 
 **Problem**: `API Rate Limits` exceeded
+
 ```bash
 # Solution: Reduce concurrent instances and add delays
 export SWE_BENCH_MAX_INSTANCES=1
@@ -514,6 +542,7 @@ export SWE_BENCH_TIMEOUT=600000  # Longer timeout
 #### 🌐 **Repository Access Errors**
 
 **Problem**: `Git clone failed` or `Repository not accessible`
+
 ```bash
 # Solution 1: Check internet connection and GitHub access
 curl -I https://github.com/microsoft/TypeScript
@@ -524,6 +553,7 @@ git config --global user.email "your.email@example.com"
 ```
 
 **Problem**: `Repository size too large`
+
 ```bash
 # Solution: Increase timeout and disk space
 export SWE_BENCH_TIMEOUT=900000  # 15 minutes
@@ -533,6 +563,7 @@ export SWE_BENCH_TIMEOUT=900000  # 15 minutes
 #### 🔧 **Build & Test Failures**
 
 **Problem**: `Build Error` - Compilation failures
+
 ```bash
 # Solution 1: Check logs for specific errors
 cat .swe-bench-work/logs/*/repository.log
@@ -543,6 +574,7 @@ npm --version
 ```
 
 **Problem**: `Test Failure` - Tests not passing
+
 ```bash
 # Solution: Review test execution logs
 cat .swe-bench-work/logs/*/evaluation.log
@@ -554,6 +586,7 @@ ls node_modules/.bin/  # Should contain test runners
 #### 💾 **Resource & Performance Issues**
 
 **Problem**: `Memory Issues` or system slowdown
+
 ```bash
 # Solution: Reduce resource usage
 export SWE_BENCH_MAX_INSTANCES=1
@@ -564,6 +597,7 @@ top -p $(pgrep -f "swe-bench")
 ```
 
 **Problem**: `Disk space full`
+
 ```bash
 # Solution: Clean up working directories
 rm -rf .swe-bench-work/artifacts/  # Remove old artifacts
@@ -573,6 +607,7 @@ rm -rf .swe-bench-cache/          # Clear cache
 #### ⏰ **Timeout & Hanging Issues**
 
 **Problem**: Evaluations hanging or timing out
+
 ```bash
 # Solution: Increase timeouts and enable verbose logging
 export SWE_BENCH_TIMEOUT=900000    # 15 minutes
@@ -599,6 +634,7 @@ export DEBUG=elizaos:*
 ```
 
 **Log Locations:**
+
 ```bash
 # Main execution logs
 tail -f .swe-bench-work/logs/*/runner.log
@@ -615,11 +651,13 @@ tail -f .swe-bench-work/logs/*/evaluation.log
 #### 🔧 **Resource Management**
 
 **Memory Allocation:**
+
 - **Per Instance**: 500MB-1GB RAM during active processing
 - **Concurrent Instances**: `memory_gb / 1GB = max_parallel_instances`
 - **Total Peak**: `max_instances * 1GB + 2GB system overhead`
 
 **Disk Space Planning:**
+
 - **Per Repository**: 100-500MB for source code
 - **Build Artifacts**: 200-800MB for compiled output
 - **Total Per Instance**: 1-2GB including logs and patches
@@ -628,6 +666,7 @@ tail -f .swe-bench-work/logs/*/evaluation.log
 #### ⚡ **Performance Tuning**
 
 **For Fast Iteration (Development):**
+
 ```bash
 export SWE_BENCH_MAX_INSTANCES=3
 export SWE_BENCH_TIMEOUT=300000      # 5 minutes
@@ -636,6 +675,7 @@ export SWE_BENCH_SAVE_ARTIFACTS=false
 ```
 
 **For Comprehensive Evaluation (Research):**
+
 ```bash
 export SWE_BENCH_MAX_INSTANCES=50
 export SWE_BENCH_TIMEOUT=900000      # 15 minutes
@@ -644,6 +684,7 @@ export SWE_BENCH_CLEANUP_AFTER_RUN=false  # Keep for analysis
 ```
 
 **For Production Benchmarking:**
+
 ```bash
 export SWE_BENCH_MAX_INSTANCES=100
 export SWE_BENCH_TIMEOUT=1800000     # 30 minutes
@@ -654,11 +695,13 @@ export SWE_BENCH_SAVE_ARTIFACTS=true
 #### 💰 **Cost Optimization**
 
 **Token Usage Estimation:**
+
 - **Simple Issues**: 5,000-15,000 tokens (~$0.05-$0.15)
 - **Medium Issues**: 15,000-40,000 tokens (~$0.15-$0.40)
 - **Complex Issues**: 40,000-100,000+ tokens (~$0.40-$1.00+)
 
 **Cost Reduction Strategies:**
+
 ```bash
 # Start with small batches to estimate costs
 User: Run SWE-bench on 3 instances
@@ -719,22 +762,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-          
+
       - name: Install dependencies
         run: npm install
-        
+
       - name: Run SWE-bench evaluation
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           SWE_BENCH_ENABLED: true
           SWE_BENCH_MAX_INSTANCES: 5
         run: bun scripts/run-swe-bench-test.ts
-        
+
       - name: Upload results
         uses: actions/upload-artifact@v3
         with:
@@ -767,7 +810,7 @@ User: Create a plugin with the following specification:
             }
         },
         {
-            "name": "getWeatherForecast", 
+            "name": "getWeatherForecast",
             "description": "Get 7-day weather forecast with detailed conditions",
             "parameters": {
                 "location": "string",
@@ -799,7 +842,7 @@ User: I need a plugin that helps manage todo lists with add, remove, list, and p
 
 Agent: I'll create a comprehensive todo management plugin for you with:
 - SQLite database integration
-- Priority levels and due date support  
+- Priority levels and due date support
 - Category organization
 - Full CRUD operations
 - Search and filtering capabilities
@@ -845,12 +888,12 @@ Agent: 🔄 **Plugin Creation Status: In Progress**
 ```
 AutoCodeService (Main Service)
 ├── OrchestrationManager           # Plugin lifecycle & workflow management
-├── ComponentCreationManager       # AI-powered code generation engine  
+├── ComponentCreationManager       # AI-powered code generation engine
 ├── DynamicLoaderManager          # Runtime plugin loading & validation
 └── SWEBenchRunner                # Advanced evaluation & benchmarking
     ├── DataLoader                # Multi-SWE-bench dataset management
     ├── RepositoryManager         # Git operations & dependency handling
-    ├── IssueAnalyzer            # AI-powered issue understanding  
+    ├── IssueAnalyzer            # AI-powered issue understanding
     ├── PatchGenerator           # Intelligent code fix generation
     ├── EnhancedPatchGenerator   # Advanced multi-iteration fixes
     ├── ClaudeCodePatchGenerator # Claude Code SDK integration
@@ -885,10 +928,10 @@ packages/plugin-autocoder/
 │   └── utils/                         # Shared utilities
 ├── scripts/
 │   ├── run-swe-bench-test.ts          # Single instance evaluation
-│   └── run-swe-bench-comprehensive.ts # Full benchmark evaluation  
+│   └── run-swe-bench-comprehensive.ts # Full benchmark evaluation
 └── __tests__/                         # Comprehensive test suite
     ├── unit/                          # Unit tests
-    ├── integration/                   # Integration tests  
+    ├── integration/                   # Integration tests
     └── e2e/                          # End-to-end tests
 ```
 
@@ -920,23 +963,23 @@ AUTOCODER_TIMEOUT=600000                 # 10 minutes per plugin creation
 // AutoCode service configuration options
 const autocoderConfig = {
   // Plugin Development Settings
-  maxIterations: 5,                      // Maximum refinement iterations per plugin
-  timeout: 600000,                       // Job timeout in milliseconds (10 minutes)
-  workspace: "./workspace",              // Custom workspace directory
-  buildCommand: "npm run build",         // Custom build command
-  testCommand: "npm test",               // Custom test command
-  
-  // SWE-bench Evaluation Settings  
-  cleanup_after_run: true,              // Clean up temporary files after evaluation
-  max_parallel_instances: 1,            // Concurrent evaluation limit
-  save_intermediate_results: true,       // Save results after each instance
-  docker_enabled: false,                // Use Docker isolation (future feature)
-  
+  maxIterations: 5, // Maximum refinement iterations per plugin
+  timeout: 600000, // Job timeout in milliseconds (10 minutes)
+  workspace: './workspace', // Custom workspace directory
+  buildCommand: 'npm run build', // Custom build command
+  testCommand: 'npm test', // Custom test command
+
+  // SWE-bench Evaluation Settings
+  cleanup_after_run: true, // Clean up temporary files after evaluation
+  max_parallel_instances: 1, // Concurrent evaluation limit
+  save_intermediate_results: true, // Save results after each instance
+  docker_enabled: false, // Use Docker isolation (future feature)
+
   // AI Model Configuration
-  useClaudeCode: true,                   // Use Claude Code SDK (recommended)
-  useEnhancedGenerator: false,           // Use enhanced patch generator
-  model_temperature: 0.2,               // AI creativity level (0.0-1.0)
-  max_tokens_per_request: 8192,         // Maximum tokens per AI request
+  useClaudeCode: true, // Use Claude Code SDK (recommended)
+  useEnhancedGenerator: false, // Use enhanced patch generator
+  model_temperature: 0.2, // AI creativity level (0.0-1.0)
+  max_tokens_per_request: 8192, // Maximum tokens per AI request
 };
 ```
 
@@ -948,7 +991,8 @@ const autocoderConfig = {
 // Complex database integration plugin
 const databasePluginSpec = {
   name: '@elizaos/plugin-advanced-database',
-  description: 'Enterprise-grade database operations with connection pooling, migrations, and monitoring',
+  description:
+    'Enterprise-grade database operations with connection pooling, migrations, and monitoring',
   actions: [
     {
       name: 'executeQuery',
@@ -957,8 +1001,8 @@ const databasePluginSpec = {
         query: 'string',
         params: 'array',
         timeout: 'number',
-        returnMode: 'all|first|count'
-      }
+        returnMode: 'all|first|count',
+      },
     },
     {
       name: 'runMigration',
@@ -966,22 +1010,22 @@ const databasePluginSpec = {
       parameters: {
         migrationFile: 'string',
         direction: 'up|down',
-        dryRun: 'boolean'
-      }
+        dryRun: 'boolean',
+      },
     },
     {
       name: 'getConnectionStats',
       description: 'Monitor database connection pool statistics',
       parameters: {
-        detailed: 'boolean'
-      }
-    }
+        detailed: 'boolean',
+      },
+    },
   ],
   dependencies: {
-    'pg': '^8.11.0',
-    'pg-pool': '^3.6.0', 
-    'knex': '^2.5.0',
-    '@types/pg': '^8.10.0'
+    pg: '^8.11.0',
+    'pg-pool': '^3.6.0',
+    knex: '^2.5.0',
+    '@types/pg': '^8.10.0',
   },
   environmentVariables: [
     {
@@ -989,21 +1033,21 @@ const databasePluginSpec = {
       description: 'PostgreSQL connection string with SSL support',
       required: true,
       sensitive: true,
-      validation: '^postgresql://.*'
+      validation: '^postgresql://.*',
     },
     {
       name: 'DB_POOL_SIZE',
       description: 'Maximum database connection pool size',
       required: false,
-      defaultValue: '10'
-    }
+      defaultValue: '10',
+    },
   ],
   testingStrategy: {
     unitTests: true,
     integrationTests: true,
     performanceTests: true,
-    mockDatabase: false  // Use real database for testing
-  }
+    mockDatabase: false, // Use real database for testing
+  },
 };
 ```
 
@@ -1013,7 +1057,7 @@ const databasePluginSpec = {
 # Repository-specific evaluation
 User: Run SWE-bench on all microsoft/TypeScript instances with complexity medium or high
 
-# Language and size filtering  
+# Language and size filtering
 User: Run SWE-bench on 25 JavaScript instances from popular repositories
 
 # Specific issue types
@@ -1026,6 +1070,7 @@ User: Run SWE-bench on these specific instances: axios__axios-5919, lodash__loda
 ## 🎯 Best Practices & Guidelines
 
 ### Plugin Development Excellence
+
 1. **📋 Detailed Specifications**: Provide comprehensive descriptions, parameters, and use cases for optimal AI generation
 2. **🔄 Iterative Refinement**: Allow the system to complete all 5 iterations for highest quality results
 3. **🧪 Comprehensive Testing**: Generated plugins include unit, integration, and type checking tests
@@ -1033,6 +1078,7 @@ User: Run SWE-bench on these specific instances: axios__axios-5919, lodash__loda
 5. **📖 Documentation**: Auto-generated plugins include detailed README and API documentation
 
 ### SWE-bench Evaluation Mastery
+
 1. **🚀 Start Small**: Begin with 3-5 instances to understand system capabilities and resource requirements
 2. **📊 Monitor Resources**: Track memory usage, disk space, and API costs during evaluations
 3. **💾 Save Artifacts**: Enable artifact saving for detailed analysis of generated solutions
@@ -1041,6 +1087,7 @@ User: Run SWE-bench on these specific instances: axios__axios-5919, lodash__loda
 6. **⚡ Performance Tuning**: Adjust timeouts and concurrency based on system capabilities
 
 ### Production Deployment
+
 1. **🔒 Environment Security**: Never commit API keys; use environment variables and secret management
 2. **📈 Scaling Considerations**: Plan for memory and disk usage when running large evaluations
 3. **🔄 CI/CD Integration**: Integrate SWE-bench evaluations into automated testing pipelines
@@ -1051,12 +1098,14 @@ User: Run SWE-bench on these specific instances: axios__axios-5919, lodash__loda
 We welcome contributions to the AutoCoder plugin! Here's how to get involved:
 
 ### Development Setup
+
 1. **Fork the repository** and clone your fork
 2. **Install dependencies**: `npm install` or `bun install`
 3. **Set up environment**: Copy `.env.example` to `.env` and configure API keys
 4. **Run tests**: `elizaos test` to ensure everything works
 
 ### Contribution Guidelines
+
 1. **🔧 Feature Development**: Create plugins, improve evaluation accuracy, or enhance the SWE-bench system
 2. **🧪 Testing**: Add comprehensive tests for new functionality
 3. **📊 Benchmarking**: Run SWE-bench evaluations to verify improvements
@@ -1064,6 +1113,7 @@ We welcome contributions to the AutoCoder plugin! Here's how to get involved:
 5. **🔄 Pull Requests**: Submit well-documented PRs with clear descriptions
 
 ### Areas for Contribution
+
 - **🎯 Evaluation Accuracy**: Improve success rates on SWE-bench instances
 - **⚡ Performance**: Optimize resource usage and execution speed
 - **🔌 Plugin Templates**: Create templates for common plugin patterns

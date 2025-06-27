@@ -2,7 +2,7 @@ import { execSync } from 'child_process';
 import { mkdir, mkdtemp, rm } from 'fs/promises';
 import { tmpdir } from 'os';
 import { join } from 'path';
-import { afterEach, describe, expect, it, beforeAll  } from 'bun:test';
+import { afterEach, describe, expect, it, beforeAll } from 'bun:test';
 import { TEST_TIMEOUTS } from '../test-timeouts';
 import {
   killProcessOnPort,
@@ -46,7 +46,7 @@ describe('ElizaOS Start Commands', () => {
       const cliPackageDir = join(scriptDir, '..');
       execSync('bun run build', {
         cwd: cliPackageDir,
-        stdio: 'inherit'
+        stdio: 'inherit',
       });
     }
 
@@ -86,21 +86,17 @@ describe('ElizaOS Start Commands', () => {
   ): Promise<any> => {
     await mkdir(join(testTmpDir, 'elizadb'), { recursive: true });
 
-    const serverProcess = processManager.spawn(
-      'bun',
-      [cliPath, 'start', ...args.split(' ')],
-      {
-        env: {
-          ...process.env,
-          LOG_LEVEL: 'debug',
-          PGLITE_DATA_DIR: join(testTmpDir, 'elizadb'),
-          SERVER_PORT: testServerPort.toString(),
-          NODE_ENV: 'test',
-          FORCE_PGLITE: 'true',
-        },
-        cwd: testTmpDir,
-      }
-    );
+    const serverProcess = processManager.spawn('bun', [cliPath, 'start', ...args.split(' ')], {
+      env: {
+        ...process.env,
+        LOG_LEVEL: 'debug',
+        PGLITE_DATA_DIR: join(testTmpDir, 'elizadb'),
+        SERVER_PORT: testServerPort.toString(),
+        NODE_ENV: 'test',
+        FORCE_PGLITE: 'true',
+      },
+      cwd: testTmpDir,
+    });
 
     try {
       // Wait for server to be ready
@@ -109,7 +105,9 @@ describe('ElizaOS Start Commands', () => {
       // If server failed to start, check if process is still running
       if (serverProcess.killed || serverProcess.exitCode !== null) {
         console.error(`Server process exited with code: ${serverProcess.exitCode}`);
-        throw new Error(`Server process died during startup with exit code: ${serverProcess.exitCode}`);
+        throw new Error(
+          `Server process died during startup with exit code: ${serverProcess.exitCode}`
+        );
       }
       throw error;
     }
@@ -207,14 +205,7 @@ describe('ElizaOS Start Commands', () => {
 
       const serverProcess = processManager.spawn(
         'bun',
-        [
-          cliPath,
-          'start',
-          '-p',
-          newPort.toString(),
-          '--character',
-          adaPath,
-        ],
+        [cliPath, 'start', '-p', newPort.toString(), '--character', adaPath],
         {
           env: {
             ...process.env,

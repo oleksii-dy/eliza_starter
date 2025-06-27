@@ -241,10 +241,14 @@ export async function recordPluginManagerAction(
 ): Promise<void> {
   try {
     const trustService = runtime.getService('trust-engine');
-    if (!trustService) {return;}
+    if (!trustService) {
+      return;
+    }
 
     const entityId = message.entityId;
-    if (!entityId) {return;}
+    if (!entityId) {
+      return;
+    }
 
     // Calculate trust impact based on action type and outcome
     let trustChange = 0;
@@ -252,7 +256,9 @@ export async function recordPluginManagerAction(
       // Positive trust for successful actions
       if ((PLUGIN_MANAGER_TRUST_REQUIREMENTS as any)[actionName]?.requiredRole === 'ADMIN_ROLE') {
         trustChange = 0.03; // Higher boost for admin actions
-      } else if ((PLUGIN_MANAGER_TRUST_REQUIREMENTS as any)[actionName]?.requiredRole === 'DEVELOPER_ROLE') {
+      } else if (
+        (PLUGIN_MANAGER_TRUST_REQUIREMENTS as any)[actionName]?.requiredRole === 'DEVELOPER_ROLE'
+      ) {
         trustChange = 0.02; // Medium boost for dev actions
       } else {
         trustChange = 0.01; // Small boost for user actions
@@ -303,7 +309,9 @@ export function wrapPluginManagerActionWithTrust(
       // First run original validation
       if (originalValidate) {
         const originalValid = await originalValidate(runtime, _message, _state);
-        if (!originalValid) {return false;}
+        if (!originalValid) {
+          return false;
+        }
       }
 
       // Then check trust requirements

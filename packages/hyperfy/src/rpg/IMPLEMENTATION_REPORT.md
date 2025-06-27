@@ -49,17 +49,19 @@ src/rpg/
 - **Runtime Tests**: 4 comprehensive runtime test suites
   - Trading System: Complete trade flow testing
   - Prayer System: Prayer mechanics and point management
-  - Shop System: Buy/sell mechanics and stock management  
+  - Shop System: Buy/sell mechanics and stock management
   - Magic System: Spell casting and rune consumption
 
 ### Technical Implementation Details
 
 #### Architecture Patterns
+
 - **Entity-Component-System (ECS)**: All systems follow Hyperfy's ECS architecture
 - **Event-Driven**: Systems communicate via events for loose coupling
 - **Type Safety**: Full TypeScript implementation with strict typing
 
 #### Key Features
+
 - **Performance Optimized**: Entity pooling, spatial indexing for large worlds
 - **Network Ready**: All systems designed for multiplayer synchronization
 - **Extensible**: Easy to add new content (items, NPCs, spells, etc.)
@@ -68,6 +70,7 @@ src/rpg/
 ### System Integration
 
 All systems are properly integrated:
+
 - Systems registered in `src/rpg/index.ts`
 - Exported as Hyperfy plugin
 - Type definitions in `src/rpg/types/index.ts`
@@ -84,28 +87,32 @@ All systems are properly integrated:
 ## Runtime Test Implementation
 
 ### Test Strategy
+
 Instead of mock-based unit tests, we implemented true runtime tests that:
+
 - Use `createTestWorld()` to create actual Hyperfy worlds
 - Test real system interactions
 - Validate actual game mechanics
 - Run in real game time
 
 ### Example: Trading System Test
+
 ```typescript
-const world = await createTestWorld();
-const tradingSystem = world.getSystem('trading');
-const player1 = world.createTestPlayer('player1');
-const player2 = world.createTestPlayer('player2');
+const world = await createTestWorld()
+const tradingSystem = world.getSystem('trading')
+const player1 = world.createTestPlayer('player1')
+const player2 = world.createTestPlayer('player2')
 
 // Test actual trade flow
-tradingSystem.requestTrade('player1', 'player2');
-tradingSystem.acceptTradeRequest('player2', 'player1');
+tradingSystem.requestTrade('player1', 'player2')
+tradingSystem.acceptTradeRequest('player2', 'player1')
 // ... continue with real trade mechanics
 ```
 
 ## Production Readiness
 
 ### Completed
+
 - ✅ All systems fully implemented
 - ✅ Type safety throughout
 - ✅ Event system integration
@@ -113,6 +120,7 @@ tradingSystem.acceptTradeRequest('player2', 'player1');
 - ✅ Build passes without errors
 
 ### Next Steps
+
 1. **Database Integration**: Implement persistence layer
 2. **Network Sync**: Add multiplayer state synchronization
 3. **Content Creation**: Add game content (items, NPCs, maps)
@@ -121,4 +129,4 @@ tradingSystem.acceptTradeRequest('player2', 'player1');
 
 ## Conclusion
 
-The RuneScape-style RPG system is now fully implemented within Hyperfy. All 21 systems are functional, properly typed, and tested. The codebase is production-ready pending database integration and content creation. 
+The RuneScape-style RPG system is now fully implemented within Hyperfy. All 21 systems are functional, properly typed, and tested. The codebase is production-ready pending database integration and content creation.

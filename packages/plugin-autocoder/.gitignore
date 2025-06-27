@@ -83,3 +83,7 @@ generated-plugins
 mcp-projects
 .validation-checkpoints
 .claude
+AGENTS.md
+.cursor/rules/elizaos
+CLAUDE.md
+.cursorignore

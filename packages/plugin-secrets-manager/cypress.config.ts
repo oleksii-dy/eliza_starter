@@ -27,8 +27,8 @@ export default defineConfig({
       TEST_TOKEN: 'test-token-value',
       // Ngrok configuration
       NGROK_AUTH_TOKEN: 'test-ngrok-token',
-      NGROK_DOMAIN: 'test-domain.ngrok-free.app'
-    }
+      NGROK_DOMAIN: 'test-domain.ngrok-free.app',
+    },
   },
   component: {
     devServer: {

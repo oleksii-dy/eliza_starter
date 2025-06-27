@@ -34,7 +34,7 @@ elizaos start
 
 ```bash
 npm run test                    # Run all tests
-npm run test:unit              # Run unit tests  
+npm run test:unit              # Run unit tests
 npm run test:scenarios         # Run scenario tests (autocoder + github-todo workflow)
 npm run test:cli               # Run CLI command tests
 ```
@@ -51,6 +51,7 @@ npm run dev                   # Development mode
 ## Examples
 
 ### Basic Agent Setup
+
 ```bash
 elizaos create my-bot
 cd my-bot
@@ -59,6 +60,7 @@ elizaos start --character ./characters/bot.json
 ```
 
 ### Plugin Development
+
 ```bash
 elizaos create my-plugin --type plugin
 cd my-plugin

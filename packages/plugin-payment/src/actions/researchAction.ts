@@ -18,7 +18,8 @@ import { createPaymentMiddleware } from '../middleware/paymentMiddleware';
 export const researchAction: Action = {
   name: 'RESEARCH',
   similes: ['SEARCH', 'INVESTIGATE', 'ANALYZE', 'STUDY', 'EXPLORE'],
-  description: 'Performs in-depth research on a topic (requires payment). Supports action chaining by providing research results that can be analyzed further, compiled into reports, or used for decision-making workflows.',
+  description:
+    'Performs in-depth research on a topic (requires payment). Supports action chaining by providing research results that can be analyzed further, compiled into reports, or used for decision-making workflows.',
 
   validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
     // Check if message contains a research request
@@ -50,7 +51,7 @@ export const researchAction: Action = {
         return {
           text: 'Please specify what you would like me to research.',
           values: { success: false, error: 'no_topic_specified' },
-          data: { action: 'RESEARCH' }
+          data: { action: 'RESEARCH' },
         };
       }
 
@@ -122,7 +123,7 @@ export const researchAction: Action = {
           success: true,
           topic,
           paymentCompleted: true,
-          resultCount: 3
+          resultCount: 3,
         },
         data: {
           action: 'RESEARCH',
@@ -130,9 +131,9 @@ export const researchAction: Action = {
             topic,
             paymentAmount: '1000000',
             paymentMethod: PaymentMethod.USDC_ETH,
-            completedAt: new Date().toISOString()
-          }
-        }
+            completedAt: new Date().toISOString(),
+          },
+        },
       };
     } catch (error) {
       logger.error('[ResearchAction] Error in research action', error);
@@ -145,13 +146,13 @@ export const researchAction: Action = {
         text: error instanceof Error ? error.message : 'An error occurred during research.',
         values: {
           success: false,
-          error: error instanceof Error ? error.message : 'unknown_error'
+          error: error instanceof Error ? error.message : 'unknown_error',
         },
         data: {
           action: 'RESEARCH',
           errorType: 'research_failed',
-          errorDetails: error instanceof Error ? error.stack : undefined
-        }
+          errorDetails: error instanceof Error ? error.stack : undefined,
+        },
       };
     }
   },
@@ -182,8 +183,9 @@ export const researchAction: Action = {
       {
         name: '{{agent}}',
         content: {
-          text: 'I\'ll research AI in healthcare first, then use those findings to create a comprehensive business plan.',
-          thought: 'User wants research followed by business planning - I should conduct the paid research first, then use those results for strategic planning.',
+          text: "I'll research AI in healthcare first, then use those findings to create a comprehensive business plan.",
+          thought:
+            'User wants research followed by business planning - I should conduct the paid research first, then use those results for strategic planning.',
           actions: ['RESEARCH'],
         },
       },
@@ -191,7 +193,8 @@ export const researchAction: Action = {
         name: '{{agent}}',
         content: {
           text: '**AI Healthcare Research Complete!** Found key opportunities in diagnostic accuracy, drug discovery, and personalized medicine. Now creating business plan...',
-          thought: 'Research data shows strong market opportunities. I can now develop a business plan based on these research findings.',
+          thought:
+            'Research data shows strong market opportunities. I can now develop a business plan based on these research findings.',
           actions: ['CREATE_BUSINESS_PLAN'],
         },
       },
@@ -206,8 +209,9 @@ export const researchAction: Action = {
       {
         name: '{{agent}}',
         content: {
-          text: 'I\'ll conduct comprehensive research on renewable energy trends, analyze the findings, and provide an investment recommendation.',
-          thought: 'This requires a three-step workflow: 1) Paid research on renewable energy, 2) Analysis of the data, 3) Investment recommendations. Each step builds on the previous.',
+          text: "I'll conduct comprehensive research on renewable energy trends, analyze the findings, and provide an investment recommendation.",
+          thought:
+            'This requires a three-step workflow: 1) Paid research on renewable energy, 2) Analysis of the data, 3) Investment recommendations. Each step builds on the previous.',
           actions: ['RESEARCH'],
         },
       },
@@ -215,7 +219,8 @@ export const researchAction: Action = {
         name: '{{agent}}',
         content: {
           text: 'Renewable energy research completed! Key trends identified in solar, wind, and battery storage. Now analyzing the market data...',
-          thought: 'Research shows promising trends across multiple renewable sectors. I can now analyze this data for investment insights.',
+          thought:
+            'Research shows promising trends across multiple renewable sectors. I can now analyze this data for investment insights.',
           actions: ['ANALYZE_DATA'],
         },
       },
@@ -223,7 +228,8 @@ export const researchAction: Action = {
         name: '{{agent}}',
         content: {
           text: 'Analysis complete! Based on the research findings, I recommend focusing on battery storage companies with strong growth potential...',
-          thought: 'Data analysis reveals battery storage as the highest opportunity sector. I can now provide specific investment recommendations.',
+          thought:
+            'Data analysis reveals battery storage as the highest opportunity sector. I can now provide specific investment recommendations.',
           actions: ['CREATE_INVESTMENT_REPORT'],
         },
       },
@@ -312,13 +318,15 @@ async function performResearch(topic: string, runtime: IAgentRuntime): Promise<R
   } catch (error) {
     logger.error('[ResearchAction] Error performing research', error);
     // Return minimal results on error
-    return [{
-      title: `Research on ${topic}`,
-      summary: 'Research completed but limited results available due to technical issues.',
-      source: 'Internal',
-      relevance: 0.5,
-      date: new Date().toISOString(),
-    }];
+    return [
+      {
+        title: `Research on ${topic}`,
+        summary: 'Research completed but limited results available due to technical issues.',
+        source: 'Internal',
+        relevance: 0.5,
+        date: new Date().toISOString(),
+      },
+    ];
   }
 }
 

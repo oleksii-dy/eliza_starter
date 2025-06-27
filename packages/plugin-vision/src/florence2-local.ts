@@ -21,13 +21,17 @@ export class Florence2Local {
   constructor(config?: Florence2LocalConfig) {
     this.config = {
       modelPath: config?.modelPath || './models/florence2',
-      modelUrl: config?.modelUrl || 'https://huggingface.co/microsoft/Florence-2-base/resolve/main/model.json',
+      modelUrl:
+        config?.modelUrl ||
+        'https://huggingface.co/microsoft/Florence-2-base/resolve/main/model.json',
       cacheDir: config?.cacheDir || './models/cache',
     };
   }
 
   async initialize(): Promise<void> {
-    if (this.initialized) {return;}
+    if (this.initialized) {
+      return;
+    }
 
     try {
       logger.info('[Florence2Local] Initializing local Florence-2 model...');
@@ -40,7 +44,9 @@ export class Florence2Local {
       // we'll use TensorFlow.js with MobileNet for basic image understanding
       // and combine it with other models for a Florence-2-like experience
 
-      this.model = await tf.loadGraphModel('https://tfhub.dev/google/tfjs-model/imagenet/mobilenet_v3_small_100_224/feature_vector/5/default/1');
+      this.model = await tf.loadGraphModel(
+        'https://tfhub.dev/google/tfjs-model/imagenet/mobilenet_v3_small_100_224/feature_vector/5/default/1'
+      );
 
       this.initialized = true;
       logger.info('[Florence2Local] Model initialized successfully');
@@ -144,8 +150,19 @@ export class Florence2Local {
 
   private extractTagsFromCaption(caption: string): string[] {
     const words = caption.toLowerCase().split(/\s+/);
-    const validTags = ['indoor', 'outdoor', 'person', 'computer', 'desk', 'office', 'room', 'furniture', 'monitor', 'workspace'];
-    return words.filter(word => validTags.includes(word));
+    const validTags = [
+      'indoor',
+      'outdoor',
+      'person',
+      'computer',
+      'desk',
+      'office',
+      'room',
+      'furniture',
+      'monitor',
+      'workspace',
+    ];
+    return words.filter((word) => validTags.includes(word));
   }
 
   private async enhancedFallback(imageBuffer: Buffer): Promise<Florence2Result> {
@@ -154,7 +171,8 @@ export class Florence2Local {
     const stats = await sharp(imageBuffer).stats();
 
     // Determine scene type based on image characteristics
-    const brightness = (stats.channels[0].mean + stats.channels[1].mean + stats.channels[2].mean) / 3;
+    const brightness =
+      (stats.channels[0].mean + stats.channels[1].mean + stats.channels[2].mean) / 3;
     const isIndoor = brightness < 180; // Simplified heuristic
 
     // Generate contextual caption

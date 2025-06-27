@@ -156,7 +156,8 @@ export const unloadPluginAction: Action = {
       const isOriginalPluginError = errorMessage.includes('Cannot unload original plugin');
 
       if (isOriginalPluginError) {
-        const originalPluginMessage = 'Cannot unload this plugin because it\'s an original plugin that was loaded at startup. Only dynamically loaded plugins can be unloaded.';
+        const originalPluginMessage =
+          "Cannot unload this plugin because it's an original plugin that was loaded at startup. Only dynamically loaded plugins can be unloaded.";
         if (callback) {
           await callback({
             text: originalPluginMessage,

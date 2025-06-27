@@ -5,7 +5,7 @@ export const basicScenario = {
   steps: [
     {
       type: 'message',
-      content: 'Testing autonomy plugin basic functionality'
-    }
-  ]
+      content: 'Testing autonomy plugin basic functionality',
+    },
+  ],
 };

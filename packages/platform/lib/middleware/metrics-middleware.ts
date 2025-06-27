@@ -4,15 +4,20 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { recordAPIRequest, recordDatabaseQuery } from '@/lib/monitoring/metrics';
+import {
+  recordAPIRequest,
+  recordDatabaseQuery,
+} from '@/lib/monitoring/metrics';
 import { hasStatusCode } from '@/lib/types/common';
 
-export function withMetrics<T extends(...args: any[]) => Promise<NextResponse>>(
+export function withMetrics<
+  T extends (...args: any[]) => Promise<NextResponse>,
+>(
   handler: T,
   options: {
     path: string;
     trackDatabase?: boolean;
-  }
+  },
 ): T {
   return (async (request: NextRequest, ...args: any[]) => {
     const startTime = Date.now();
@@ -26,7 +31,9 @@ export function withMetrics<T extends(...args: any[]) => Promise<NextResponse>>(
       statusCode = response.status;
       return response;
     } catch (error) {
-      statusCode = hasStatusCode(error) ? (error.status || error.statusCode || 500) : 500;
+      statusCode = hasStatusCode(error)
+        ? error.status || error.statusCode || 500
+        : 500;
       throw error;
     } finally {
       const duration = Date.now() - startTime;
@@ -46,9 +53,9 @@ export function withMetrics<T extends(...args: any[]) => Promise<NextResponse>>(
  * Enhanced metrics middleware for API routes with detailed tracking
  */
 export function createMetricsMiddleware(routeName: string) {
-  return function metricsMiddleware<T extends(...args: any[]) => Promise<NextResponse>>(
-    handler: T
-  ): T {
+  return function metricsMiddleware<
+    T extends (...args: any[]) => Promise<NextResponse>,
+  >(handler: T): T {
     return withMetrics(handler, {
       path: routeName,
       trackDatabase: true,
@@ -60,7 +67,7 @@ export function createMetricsMiddleware(routeName: string) {
  * Middleware for tracking credit transactions
  */
 export function withCreditMetrics<T extends Function>(handler: T): T {
-  return ((async (...args: any[]) => {
+  return (async (...args: any[]) => {
     const startTime = Date.now();
 
     try {
@@ -68,11 +75,13 @@ export function withCreditMetrics<T extends Function>(handler: T): T {
 
       // If result has credit transaction data, record it
       if (result && typeof result === 'object' && 'amount' in result) {
-        const { recordCreditTransaction } = await import('@/lib/monitoring/metrics');
+        const { recordCreditTransaction } = await import(
+          '@/lib/monitoring/metrics'
+        );
         recordCreditTransaction(
           parseFloat(result.amount),
           result.type || 'usage',
-          result.organizationId
+          result.organizationId,
         );
       }
 
@@ -82,5 +91,5 @@ export function withCreditMetrics<T extends Function>(handler: T): T {
       const { recordDatabaseQuery } = await import('@/lib/monitoring/metrics');
       recordDatabaseQuery(duration, 'credit_operation', 'credit_transactions');
     }
-  }) as unknown) as T;
+  }) as unknown as T;
 }

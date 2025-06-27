@@ -1,5 +1,8 @@
 #!/usr/bin/env node
-import { AgentRuntime as _AgentRuntime, createUniqueUuid as _createUniqueUuid } from '@elizaos/core';
+import {
+  AgentRuntime as _AgentRuntime,
+  createUniqueUuid as _createUniqueUuid,
+} from '@elizaos/core';
 import { VisionService } from '../../service';
 import visionBasicE2ETests from './vision-basic';
 import visionAutonomyE2ETests from './vision-autonomy';

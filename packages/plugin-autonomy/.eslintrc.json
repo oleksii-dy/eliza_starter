@@ -35,12 +35,12 @@
       "error",
       { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }
     ],
-    
+
     // React specific rules
     "react/prop-types": "off",
     "react/react-in-jsx-scope": "off",
     "react/display-name": "off",
-    
+
     // General rules
     "no-console": "off",
     "no-debugger": "error",
@@ -60,4 +60,4 @@
     "tsup.config.ts",
     "vitest.config.ts"
   ]
-} 
+}

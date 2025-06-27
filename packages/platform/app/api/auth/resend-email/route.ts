@@ -5,7 +5,7 @@ const resendEmailSchema = z.object({
   email: z.string().email('Invalid email address'),
 });
 
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   try {
     const body = await request.json();
     const { email } = resendEmailSchema.parse(body);
@@ -17,27 +17,33 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        message: 'Email resent'
-      }
+        message: 'Email resent',
+      },
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({
-        success: false,
-        error: {
-          code: 'validation_error',
-          message: 'Invalid email address'
-        }
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'validation_error',
+            message: 'Invalid email address',
+          },
+        },
+        { status: 400 },
+      );
     }
 
     console.error('Resend email error:', error);
-    return NextResponse.json({
-      success: false,
-      error: {
-        code: 'internal_error',
-        message: 'Failed to resend email'
-      }
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: 'internal_error',
+          message: 'Failed to resend email',
+        },
+      },
+      { status: 500 },
+    );
   }
 }

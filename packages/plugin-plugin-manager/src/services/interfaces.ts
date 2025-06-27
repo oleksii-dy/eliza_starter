@@ -1,6 +1,4 @@
-import type {
-  PublishResult as _PublishResult,
-} from '../types.ts';
+import type { PublishResult as _PublishResult } from '../types.ts';
 
 // Supporting interfaces
 export interface SearchOptions {

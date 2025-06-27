@@ -1,6 +1,11 @@
 import { Service, elizaLogger, type IAgentRuntime, EventType } from '@elizaos/core';
 import { Sandbox } from '@e2b/code-interpreter';
-import type { E2BServiceType, E2BSandboxOptions, E2BExecutionResult, E2BSandboxHandle } from '../types.js';
+import type {
+  E2BServiceType,
+  E2BSandboxOptions,
+  E2BExecutionResult,
+  E2BSandboxHandle,
+} from '../types.js';
 import { loadE2BConfig, type E2BConfig } from '../config/E2BConfig.js';
 
 /**
@@ -17,7 +22,8 @@ export class ImprovedE2BService extends Service implements E2BServiceType {
   static readonly serviceType = 'e2b' as const;
 
   private e2bConfig: E2BConfig;
-  private sandboxPool: Map<string, { sandbox: Sandbox; handle: E2BSandboxHandle; inUse: boolean }> = new Map();
+  private sandboxPool: Map<string, { sandbox: Sandbox; handle: E2BSandboxHandle; inUse: boolean }> =
+    new Map();
   private activeSandboxes: Map<string, { sandbox: Sandbox; handle: E2BSandboxHandle }> = new Map();
   private executionQueue: Map<string, Promise<E2BExecutionResult>> = new Map();
   private resourceLock = new Set<string>(); // Simple lock mechanism
@@ -29,16 +35,17 @@ export class ImprovedE2BService extends Service implements E2BServiceType {
     executionsFailed: 0,
     currentExecutions: 0,
     sandboxesCreated: 0,
-    sandboxesDestroyed: 0
+    sandboxesDestroyed: 0,
   };
 
-  capabilityDescription = 'Provides secure, resource-managed code execution in isolated E2B sandboxes with production-ready controls';
+  capabilityDescription =
+    'Provides secure, resource-managed code execution in isolated E2B sandboxes with production-ready controls';
 
   constructor(runtime?: IAgentRuntime) {
     super(runtime);
     this.e2bConfig = loadE2BConfig(runtime);
     elizaLogger.info('ImprovedE2BService initialized', {
-      config: this.getConfigSummary()
+      config: this.getConfigSummary(),
     });
   }
 
@@ -53,7 +60,7 @@ export class ImprovedE2BService extends Service implements E2BServiceType {
     try {
       elizaLogger.info('Initializing improved E2B service', {
         environment: this.e2bConfig.environment,
-        poolSize: this.e2bConfig.resources.sandboxPoolSize
+        poolSize: this.e2bConfig.resources.sandboxPoolSize,
       });
 
       // Validate configuration
@@ -75,14 +82,13 @@ export class ImprovedE2BService extends Service implements E2BServiceType {
         await this.runtime.emitEvent(EventType.ACTION_STARTED, {
           serviceName: 'e2b',
           serviceType: 'code-execution',
-          capabilities: this.capabilityDescription
+          capabilities: this.capabilityDescription,
         });
       }
-
     } catch (error) {
       elizaLogger.error('Failed to initialize improved E2B service', {
         error: error.message,
-        config: this.getConfigSummary()
+        config: this.getConfigSummary(),
       });
       throw error;
     }
@@ -99,7 +105,7 @@ export class ImprovedE2BService extends Service implements E2BServiceType {
       try {
         const testSandbox = await Sandbox.create({
           apiKey: this.e2bConfig.apiKey,
-          timeoutMs: 10000
+          timeoutMs: 10000,
         });
         await testSandbox.kill();
         elizaLogger.info('E2B connectivity validated');
@@ -111,7 +117,7 @@ export class ImprovedE2BService extends Service implements E2BServiceType {
 
   private async initializeSandboxPool(): Promise<void> {
     elizaLogger.info('Initializing sandbox pool', {
-      poolSize: this.e2bConfig.resources.sandboxPoolSize
+      poolSize: this.e2bConfig.resources.sandboxPoolSize,
     });
 
     const poolPromises = Array(this.e2bConfig.resources.sandboxPoolSize)
@@ -125,25 +131,24 @@ export class ImprovedE2BService extends Service implements E2BServiceType {
             createdAt: new Date(),
             lastActivity: new Date(),
             template: 'base',
-            metadata: { poolIndex: index.toString() }
+            metadata: { poolIndex: index.toString() },
           };
 
           this.sandboxPool.set(sandbox.sandboxId, {
             sandbox,
             handle,
-            inUse: false
+            inUse: false,
           });
 
           this.metrics.sandboxesCreated++;
           elizaLogger.debug('Sandbox added to pool', {
             sandboxId: sandbox.sandboxId,
-            poolIndex: index
+            poolIndex: index,
           });
-
         } catch (error) {
           elizaLogger.error('Failed to create sandbox for pool', {
             poolIndex: index,
-            error: error.message
+            error: error.message,
           });
         }
       });
@@ -151,7 +156,7 @@ export class ImprovedE2BService extends Service implements E2BServiceType {
     await Promise.allSettled(poolPromises);
     elizaLogger.info('Sandbox pool initialized', {
       poolSize: this.sandboxPool.size,
-      targetSize: this.e2bConfig.resources.sandboxPoolSize
+      targetSize: this.e2bConfig.resources.sandboxPoolSize,
     });
   }
 
@@ -166,8 +171,8 @@ export class ImprovedE2BService extends Service implements E2BServiceType {
       envs: {
         ELIZA_EXECUTION: 'true',
         EXECUTION_TIMEOUT: this.e2bConfig.security.maxExecutionTime.toString(),
-        MEMORY_LIMIT: this.e2bConfig.resources.memoryLimitMB.toString()
-      }
+        MEMORY_LIMIT: this.e2bConfig.resources.memoryLimitMB.toString(),
+      },
     });
   }
 
@@ -191,14 +196,14 @@ export class ImprovedE2BService extends Service implements E2BServiceType {
           actionName: 'EXECUTE_CODE',
           executionId,
           language,
-          codeSize: code.length
+          codeSize: code.length,
         });
       }
 
       elizaLogger.info('Starting code execution', {
         executionId,
         language,
-        codeSize: code.length
+        codeSize: code.length,
       });
 
       // Get sandbox from pool or create new one
@@ -216,7 +221,7 @@ export class ImprovedE2BService extends Service implements E2BServiceType {
             actionName: 'EXECUTE_CODE',
             executionId,
             success: true,
-            executionTime: Date.now() - parseInt(executionId.split('-')[1], 10)
+            executionTime: Date.now() - parseInt(executionId.split('-')[1], 10),
           });
         }
 
@@ -226,12 +231,10 @@ export class ImprovedE2BService extends Service implements E2BServiceType {
         }
 
         return result;
-
       } finally {
         // Return sandbox to pool
         this.releaseSandbox(sandbox.sandboxId);
       }
-
     } catch (error) {
       this.metrics.executionsFailed++;
 
@@ -240,17 +243,16 @@ export class ImprovedE2BService extends Service implements E2BServiceType {
         await this.runtime.emitEvent(EventType.ACTION_COMPLETED, {
           actionName: 'EXECUTE_CODE',
           executionId,
-          error: error.message
+          error: error.message,
         });
       }
 
       elizaLogger.error('Code execution failed', {
         executionId,
-        error: error.message
+        error: error.message,
       });
 
       throw error;
-
     } finally {
       this.metrics.currentExecutions--;
     }
@@ -259,12 +261,16 @@ export class ImprovedE2BService extends Service implements E2BServiceType {
   private validateCodeInput(code: string, language: string): void {
     // Check code size
     if (code.length > this.e2bConfig.security.maxCodeSize) {
-      throw new Error(`Code size exceeds maximum limit of ${this.e2bConfig.security.maxCodeSize} characters`);
+      throw new Error(
+        `Code size exceeds maximum limit of ${this.e2bConfig.security.maxCodeSize} characters`
+      );
     }
 
     // Check language is allowed
     if (!this.e2bConfig.security.allowedLanguages.includes(language.toLowerCase())) {
-      throw new Error(`Language '${language}' is not allowed. Allowed languages: ${this.e2bConfig.security.allowedLanguages.join(', ')}`);
+      throw new Error(
+        `Language '${language}' is not allowed. Allowed languages: ${this.e2bConfig.security.allowedLanguages.join(', ')}`
+      );
     }
 
     // Basic security checks
@@ -275,14 +281,14 @@ export class ImprovedE2BService extends Service implements E2BServiceType {
       /eval\s*\(/i,
       /__import__/i,
       /open\s*\(/i,
-      /file\s*\(/i
+      /file\s*\(/i,
     ];
 
     for (const pattern of dangerousPatterns) {
       if (pattern.test(code)) {
         elizaLogger.warn('Potentially dangerous code pattern detected', {
           pattern: pattern.toString(),
-          codePreview: code.substring(0, 100)
+          codePreview: code.substring(0, 100),
         });
         // In production, you might want to throw an error here
         // throw new Error(`Dangerous code pattern detected: ${pattern.toString()}`);
@@ -299,7 +305,9 @@ export class ImprovedE2BService extends Service implements E2BServiceType {
 
     // This is a simplified implementation - in production you'd track per user/IP
     if (this.metrics.currentExecutions >= this.e2bConfig.security.maxConcurrentExecutions) {
-      throw new Error(`Maximum concurrent executions (${this.e2bConfig.security.maxConcurrentExecutions}) exceeded`);
+      throw new Error(
+        `Maximum concurrent executions (${this.e2bConfig.security.maxConcurrentExecutions}) exceeded`
+      );
     }
   }
 
@@ -325,7 +333,7 @@ export class ImprovedE2BService extends Service implements E2BServiceType {
         createdAt: new Date(),
         lastActivity: new Date(),
         template: 'base',
-        metadata: { temporary: 'true' }
+        metadata: { temporary: 'true' },
       };
 
       this.activeSandboxes.set(sandbox.sandboxId, { sandbox, handle });
@@ -370,31 +378,35 @@ export class ImprovedE2BService extends Service implements E2BServiceType {
       // Set up execution timeout
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => {
-          reject(new Error(`Code execution timeout after ${this.e2bConfig.security.maxExecutionTime}ms`));
+          reject(
+            new Error(`Code execution timeout after ${this.e2bConfig.security.maxExecutionTime}ms`)
+          );
         }, this.e2bConfig.security.maxExecutionTime);
       });
 
       // Execute code with timeout
       const executionPromise = sandbox.runCode(code, {
         language,
-        timeoutMs: this.e2bConfig.security.maxExecutionTime
+        timeoutMs: this.e2bConfig.security.maxExecutionTime,
       });
 
       const execution = await Promise.race([executionPromise, timeoutPromise]);
 
       const result: E2BExecutionResult = {
         text: execution.text,
-        results: execution.results.map(r => r.toJSON()),
+        results: execution.results.map((r) => r.toJSON()),
         logs: execution.logs,
-        error: execution.error ? {
-          name: execution.error.name,
-          value: execution.error.value,
-          traceback: execution.error.traceback,
-        } : undefined,
+        error: execution.error
+          ? {
+              name: execution.error.name,
+              value: execution.error.value,
+              traceback: execution.error.traceback,
+            }
+          : undefined,
         executionCount: execution.executionCount,
         executionTime: Date.now() - startTime,
         sandboxId: sandbox.sandboxId,
-        language
+        language,
       };
 
       elizaLogger.debug('Code execution completed', {
@@ -402,18 +414,17 @@ export class ImprovedE2BService extends Service implements E2BServiceType {
         sandboxId: sandbox.sandboxId,
         executionTime: result.executionTime,
         hasResult: !!result.text,
-        hasError: !!result.error
+        hasError: !!result.error,
       });
 
       return result;
-
     } catch (error) {
       const executionTime = Date.now() - startTime;
       elizaLogger.error('Code execution failed in sandbox', {
         executionId,
         sandboxId: sandbox.sandboxId,
         executionTime,
-        error: error.message
+        error: error.message,
       });
 
       throw error;
@@ -426,7 +437,9 @@ export class ImprovedE2BService extends Service implements E2BServiceType {
     language: string,
     executionId: string
   ): Promise<void> {
-    if (!this.runtime) {return;}
+    if (!this.runtime) {
+      return;
+    }
 
     try {
       const memoryContent = {
@@ -438,8 +451,8 @@ export class ImprovedE2BService extends Service implements E2BServiceType {
           sandboxId: result.sandboxId,
           executionTime: result.executionTime,
           hasError: !!result.error,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       };
 
       // Generate embedding if enabled
@@ -447,31 +460,33 @@ export class ImprovedE2BService extends Service implements E2BServiceType {
       if (this.e2bConfig.integration.embeddingEnabled) {
         try {
           embedding = await this.runtime.useModel('TEXT_EMBEDDING', {
-            text: `${code}\n${result.text || ''}`
+            text: `${code}\n${result.text || ''}`,
           });
         } catch (embeddingError) {
           elizaLogger.warn('Failed to generate embedding for execution memory', {
             executionId,
-            error: embeddingError.message
+            error: embeddingError.message,
           });
         }
       }
 
       // Store memory - create a default roomId for service-level executions
       const roomId = this.runtime.agentId; // Use agentId as default roomId for service executions
-      await this.runtime.createMemory({
-        entityId: this.runtime.agentId,
-        roomId,
-        content: memoryContent,
-        embedding
-      }, 'executions');
+      await this.runtime.createMemory(
+        {
+          entityId: this.runtime.agentId,
+          roomId,
+          content: memoryContent,
+          embedding,
+        },
+        'executions'
+      );
 
       elizaLogger.debug('Execution memory stored', { executionId });
-
     } catch (error) {
       elizaLogger.error('Failed to store execution memory', {
         executionId,
-        error: error.message
+        error: error.message,
       });
     }
   }
@@ -496,8 +511,7 @@ export class ImprovedE2BService extends Service implements E2BServiceType {
   }
 
   async killSandbox(sandboxId: string): Promise<void> {
-    const sandboxData = this.activeSandboxes.get(sandboxId) ||
-                       this.sandboxPool.get(sandboxId);
+    const sandboxData = this.activeSandboxes.get(sandboxId) || this.sandboxPool.get(sandboxId);
 
     if (!sandboxData) {
       elizaLogger.warn('Attempted to kill non-existent sandbox', { sandboxId });
@@ -519,17 +533,16 @@ export class ImprovedE2BService extends Service implements E2BServiceType {
   }
 
   getSandbox(sandboxId: string): E2BSandboxHandle | null {
-    const sandboxData = this.activeSandboxes.get(sandboxId) ||
-                       this.sandboxPool.get(sandboxId);
+    const sandboxData = this.activeSandboxes.get(sandboxId) || this.sandboxPool.get(sandboxId);
     return sandboxData?.handle || null;
   }
 
   listSandboxes(): E2BSandboxHandle[] {
     const allSandboxes = [
       ...Array.from(this.activeSandboxes.values()),
-      ...Array.from(this.sandboxPool.values())
+      ...Array.from(this.sandboxPool.values()),
     ];
-    return allSandboxes.map(data => data.handle);
+    return allSandboxes.map((data) => data.handle);
   }
 
   async isHealthy(): Promise<boolean> {
@@ -607,7 +620,7 @@ export class ImprovedE2BService extends Service implements E2BServiceType {
         if (this.e2bConfig.integration.enableEventEmission && this.runtime) {
           await this.runtime.emitEvent(EventType.ACTION_COMPLETED, {
             serviceName: 'e2b',
-            reason: 'health_check_failed'
+            reason: 'health_check_failed',
           });
         }
       }
@@ -623,13 +636,13 @@ export class ImprovedE2BService extends Service implements E2BServiceType {
       security: {
         maxCodeSize: this.e2bConfig.security.maxCodeSize,
         maxExecutionTime: this.e2bConfig.security.maxExecutionTime,
-        allowedLanguages: this.e2bConfig.security.allowedLanguages.length
+        allowedLanguages: this.e2bConfig.security.allowedLanguages.length,
       },
       resources: {
         sandboxPoolSize: this.e2bConfig.resources.sandboxPoolSize,
-        maxActiveSandboxes: this.e2bConfig.resources.maxActiveSandboxes
+        maxActiveSandboxes: this.e2bConfig.resources.maxActiveSandboxes,
       },
-      integration: this.e2bConfig.integration
+      integration: this.e2bConfig.integration,
     };
   }
 
@@ -667,7 +680,7 @@ export class ImprovedE2BService extends Service implements E2BServiceType {
     if (this.e2bConfig.integration.enableEventEmission && this.runtime) {
       await this.runtime.emitEvent(EventType.ACTION_COMPLETED, {
         serviceName: 'e2b',
-        metrics: this.metrics
+        metrics: this.metrics,
       });
     }
 

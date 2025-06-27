@@ -105,9 +105,11 @@ export class CorePaymentProvider implements IPaymentProvider {
       // Calculate profile statistics
       const totalTransactions = history.length;
       const totalVolume = history
-        .filter(tx => tx.status === PaymentStatus.COMPLETED)
+        .filter((tx) => tx.status === PaymentStatus.COMPLETED)
         .reduce((sum, tx) => sum + Number(tx.amount), 0);
-      const successfulTransactions = history.filter(tx => tx.status === PaymentStatus.COMPLETED).length;
+      const successfulTransactions = history.filter(
+        (tx) => tx.status === PaymentStatus.COMPLETED
+      ).length;
 
       // Get current balances from wallet adapters
       const balances = await this.paymentService.getUserBalance(entityId, this.runtime);
@@ -117,12 +119,12 @@ export class CorePaymentProvider implements IPaymentProvider {
       let trustScore = 0.5; // Default trust score
       if (totalTransactions > 0) {
         const successRate = successfulTransactions / totalTransactions;
-        trustScore = Math.min(0.9, 0.3 + (successRate * 0.6)); // Scale from 0.3 to 0.9
+        trustScore = Math.min(0.9, 0.3 + successRate * 0.6); // Scale from 0.3 to 0.9
       }
 
       const profile: PaymentProfile = {
         entityId,
-        preferredMethod: this.getPreferredMethods(balances)[0] || 'usdc_eth' as any,
+        preferredMethod: this.getPreferredMethods(balances)[0] || ('usdc_eth' as any),
         verifiedMethods: this.getVerifiedMethods(balances),
         trustScore,
         transactionHistory: {
@@ -133,7 +135,11 @@ export class CorePaymentProvider implements IPaymentProvider {
           averageAmount: totalTransactions > 0 ? totalVolume / totalTransactions : 0,
           lastTransactionAt: history.length > 0 ? history[0].timestamp : undefined,
         },
-        riskLevel: this.calculateRiskLevel(trustScore, totalVolume, successfulTransactions / Math.max(totalTransactions, 1)) as any,
+        riskLevel: this.calculateRiskLevel(
+          trustScore,
+          totalVolume,
+          successfulTransactions / Math.max(totalTransactions, 1)
+        ) as any,
         limits: {
           dailyLimit: settings.maxDailySpend,
           maxTransactionAmount: 10000, // From capabilities
@@ -269,9 +275,11 @@ export class CorePaymentProvider implements IPaymentProvider {
       }
 
       // Transaction history risk
-      const successRate = (profile as any).transactionHistory?.totalTransactions > 0
-        ? (profile as any).transactionHistory.successfulTransactions / (profile as any).transactionHistory.totalTransactions
-        : 0;
+      const successRate =
+        (profile as any).transactionHistory?.totalTransactions > 0
+          ? (profile as any).transactionHistory.successfulTransactions /
+            (profile as any).transactionHistory.totalTransactions
+          : 0;
 
       if (successRate < 0.8) {
         riskScore += 0.2;
@@ -284,7 +292,8 @@ export class CorePaymentProvider implements IPaymentProvider {
       }
 
       // Daily spending limit risk
-      const dailyRemaining = (profile as any).limits?.dailyLimit - ((profile as any).metadata?.dailySpent || 0);
+      const dailyRemaining =
+        (profile as any).limits?.dailyLimit - ((profile as any).metadata?.dailySpent || 0);
       if (amountNum > dailyRemaining) {
         riskScore += 0.3;
         reasonCodes.push('EXCEEDS_DAILY_LIMIT');
@@ -349,16 +358,12 @@ export class CorePaymentProvider implements IPaymentProvider {
   /**
    * Check if the entity can make a payment of the specified amount
    */
-  async canMakePayment(
-    entityId: UUID,
-    amount: string,
-    method: PaymentMethod
-  ): Promise<boolean> {
+  async canMakePayment(entityId: UUID, amount: string, method: PaymentMethod): Promise<boolean> {
     try {
       logger.debug('[CorePaymentProvider] Checking if entity can make payment:', {
         entityId,
         amount,
-        method
+        method,
       });
 
       const pluginMethod = this.convertPaymentMethod(method);
@@ -376,10 +381,7 @@ export class CorePaymentProvider implements IPaymentProvider {
   /**
    * Get user balance for all or specific payment methods
    */
-  async getUserBalance(
-    entityId: UUID,
-    method: PaymentMethod
-  ): Promise<string> {
+  async getUserBalance(entityId: UUID, method: PaymentMethod): Promise<string> {
     try {
       logger.debug('[CorePaymentProvider] Getting user balance:', { entityId, method });
 
@@ -397,12 +399,10 @@ export class CorePaymentProvider implements IPaymentProvider {
   /**
    * Create a payment confirmation
    */
-  async createPaymentConfirmation(
-    request: PaymentRequest
-  ): Promise<PaymentConfirmation> {
+  async createPaymentConfirmation(request: PaymentRequest): Promise<PaymentConfirmation> {
     try {
       logger.debug('[CorePaymentProvider] Creating payment confirmation:', {
-        requestId: request.id
+        requestId: request.id,
       });
 
       const confirmationId = asUUID(`confirmation-${request.id}-${Date.now()}`);
@@ -429,7 +429,7 @@ export class CorePaymentProvider implements IPaymentProvider {
     try {
       logger.info('[CorePaymentProvider] Updating payment settings:', {
         entityId,
-        settings
+        settings,
       });
 
       // Map to plugin settings format
@@ -453,14 +453,11 @@ export class CorePaymentProvider implements IPaymentProvider {
   /**
    * Get payment analytics for an entity
    */
-  async getPaymentAnalytics(
-    entityId: UUID,
-    period: string
-  ): Promise<PaymentAnalytics> {
+  async getPaymentAnalytics(entityId: UUID, period: string): Promise<PaymentAnalytics> {
     try {
       logger.debug('[CorePaymentProvider] Getting payment analytics:', {
         entityId,
-        period
+        period,
       });
 
       // Parse period string (e.g., "7d", "30d", "1y")
@@ -481,35 +478,25 @@ export class CorePaymentProvider implements IPaymentProvider {
         start.setDate(now.getDate() - 30);
       }
 
-      const history = await this.paymentService.getPaymentHistory(
-        entityId,
-        1000,
-        0,
-        this.runtime
-      );
+      const history = await this.paymentService.getPaymentHistory(entityId, 1000, 0, this.runtime);
 
       // Filter by period
       const startTime = start.getTime();
       const endTime = now.getTime();
-      const periodTransactions = history.filter(tx =>
-        tx.timestamp >= startTime && tx.timestamp <= endTime
+      const periodTransactions = history.filter(
+        (tx) => tx.timestamp >= startTime && tx.timestamp <= endTime
       );
 
       // Calculate metrics
       const totalTransactions = periodTransactions.length;
       const completedTransactions = periodTransactions.filter(
-        tx => tx.status === PaymentStatus.COMPLETED
+        (tx) => tx.status === PaymentStatus.COMPLETED
       );
-      const totalVolume = completedTransactions.reduce(
-        (sum, tx) => sum + Number(tx.amount),
-        0
-      );
-      const successRate = totalTransactions > 0
-        ? completedTransactions.length / totalTransactions
-        : 0;
-      const averageAmount = completedTransactions.length > 0
-        ? totalVolume / completedTransactions.length
-        : 0;
+      const totalVolume = completedTransactions.reduce((sum, tx) => sum + Number(tx.amount), 0);
+      const successRate =
+        totalTransactions > 0 ? completedTransactions.length / totalTransactions : 0;
+      const averageAmount =
+        completedTransactions.length > 0 ? totalVolume / completedTransactions.length : 0;
 
       // Calculate top methods
       const methodStats = new Map<string, { count: number; volume: number }>();
@@ -566,16 +553,16 @@ export class CorePaymentProvider implements IPaymentProvider {
 
   private convertPaymentMethod(coreMethod: PaymentMethod): PluginPaymentMethod {
     const methodMap: any = {
-      'usdc_eth': PluginPaymentMethod.USDC_ETH,
-      'usdc_sol': PluginPaymentMethod.USDC_SOL,
-      'eth': PluginPaymentMethod.ETH,
-      'sol': PluginPaymentMethod.SOL,
-      'btc': PluginPaymentMethod.BTC,
-      'matic': PluginPaymentMethod.MATIC,
-      'arb': PluginPaymentMethod.ARB,
-      'op': PluginPaymentMethod.OP,
-      'base': PluginPaymentMethod.BASE,
-      'other': PluginPaymentMethod.OTHER,
+      usdc_eth: PluginPaymentMethod.USDC_ETH,
+      usdc_sol: PluginPaymentMethod.USDC_SOL,
+      eth: PluginPaymentMethod.ETH,
+      sol: PluginPaymentMethod.SOL,
+      btc: PluginPaymentMethod.BTC,
+      matic: PluginPaymentMethod.MATIC,
+      arb: PluginPaymentMethod.ARB,
+      op: PluginPaymentMethod.OP,
+      base: PluginPaymentMethod.BASE,
+      other: PluginPaymentMethod.OTHER,
     };
 
     return methodMap[coreMethod] || PluginPaymentMethod.OTHER;
@@ -583,16 +570,16 @@ export class CorePaymentProvider implements IPaymentProvider {
 
   private getCurrencyFromMethod(method: PaymentMethod): string {
     const methodToCurrency: any = {
-      'usdc_eth': 'USDC',
-      'usdc_sol': 'USDC',
-      'eth': 'ETH',
-      'sol': 'SOL',
-      'btc': 'BTC',
-      'matic': 'MATIC',
-      'arb': 'ARB',
-      'op': 'OP',
-      'base': 'ETH',
-      'other': 'UNKNOWN',
+      usdc_eth: 'USDC',
+      usdc_sol: 'USDC',
+      eth: 'ETH',
+      sol: 'SOL',
+      btc: 'BTC',
+      matic: 'MATIC',
+      arb: 'ARB',
+      op: 'OP',
+      base: 'ETH',
+      other: 'UNKNOWN',
     };
 
     return methodToCurrency[method] || 'UNKNOWN';
@@ -644,10 +631,12 @@ export class CorePaymentProvider implements IPaymentProvider {
       [PluginPaymentMethod.OTHER]: 'other',
     };
 
-    return methodMap[method] || 'other' as any;
+    return methodMap[method] || ('other' as any);
   }
 
-  private formatBalancesForProfile(balances: Map<PluginPaymentMethod, bigint>): Record<string, string> {
+  private formatBalancesForProfile(
+    balances: Map<PluginPaymentMethod, bigint>
+  ): Record<string, string> {
     const formatted: Record<string, string> = {};
 
     for (const [method, balance] of balances) {
@@ -658,7 +647,9 @@ export class CorePaymentProvider implements IPaymentProvider {
     return formatted;
   }
 
-  private convertPaymentStatus(pluginStatus: PaymentStatus): 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled' {
+  private convertPaymentStatus(
+    pluginStatus: PaymentStatus
+  ): 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled' {
     switch (pluginStatus) {
       case PaymentStatus.PENDING:
         return 'pending';
@@ -683,19 +674,32 @@ export class CorePaymentProvider implements IPaymentProvider {
     let riskScore = 0;
 
     // Trust-based risk
-    if (trustScore < 0.3) {riskScore += 0.4;}
-    else if (trustScore < 0.6) {riskScore += 0.2;}
+    if (trustScore < 0.3) {
+      riskScore += 0.4;
+    } else if (trustScore < 0.6) {
+      riskScore += 0.2;
+    }
 
     // Volume-based risk
-    if (totalVolume > 100000) {riskScore += 0.1;}
-    else if (totalVolume < 100) {riskScore += 0.2;}
+    if (totalVolume > 100000) {
+      riskScore += 0.1;
+    } else if (totalVolume < 100) {
+      riskScore += 0.2;
+    }
 
     // Success rate risk
-    if (successRate < 0.8) {riskScore += 0.3;}
-    else if (successRate < 0.9) {riskScore += 0.1;}
+    if (successRate < 0.8) {
+      riskScore += 0.3;
+    } else if (successRate < 0.9) {
+      riskScore += 0.1;
+    }
 
-    if (riskScore >= 0.6) {return 'high';}
-    if (riskScore >= 0.3) {return 'medium';}
+    if (riskScore >= 0.6) {
+      return 'high';
+    }
+    if (riskScore >= 0.3) {
+      return 'medium';
+    }
     return 'low';
   }
 

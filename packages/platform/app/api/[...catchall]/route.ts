@@ -90,10 +90,14 @@ function mapClientToPlatformApi(clientPath: string): string | null {
 
 // Helper function to detect build time
 function isBuildTime(): boolean {
-  return process.env.NEXT_PHASE === 'phase-production-build' ||
-         process.env.BUILD_MODE === 'export' ||
-         process.env.NEXT_EXPORT === 'true' ||
-         (typeof window === 'undefined' && process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL);
+  return (
+    process.env.NEXT_PHASE === 'phase-production-build' ||
+    process.env.BUILD_MODE === 'export' ||
+    process.env.NEXT_EXPORT === 'true' ||
+    (typeof window === 'undefined' &&
+      process.env.NODE_ENV === 'production' &&
+      !process.env.DATABASE_URL)
+  );
 }
 
 async function handleClientApiCall(
@@ -104,7 +108,7 @@ async function handleClientApiCall(
   if (isBuildTime()) {
     return NextResponse.json(
       { error: 'API not available during build time' },
-      { status: 503 }
+      { status: 503 },
     );
   }
 
@@ -113,12 +117,12 @@ async function handleClientApiCall(
   // Handle runtime/ping directly without authentication
   if (path === 'runtime/ping') {
     return NextResponse.json(
-      { 
-        pong: true, 
+      {
+        pong: true,
         timestamp: new Date().toISOString(),
-        uptime: process.uptime() 
-      }, 
-      { status: 200 }
+        uptime: process.uptime(),
+      },
+      { status: 200 },
     );
   }
 
@@ -185,7 +189,7 @@ async function handleClientApiCall(
 }
 
 // HTTP method handlers
-export async function GET(
+export async function handleGET(
   request: NextRequest,
   props: { params: Promise<{ catchall: string[] }> },
 ) {
@@ -193,7 +197,7 @@ export async function GET(
   return handleClientApiCall(request, params.catchall);
 }
 
-export async function POST(
+export async function handlePOST(
   request: NextRequest,
   props: { params: Promise<{ catchall: string[] }> },
 ) {

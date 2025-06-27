@@ -1,10 +1,25 @@
-import { describe, it, expect, mock, beforeEach, type Mock } from 'bun:test';
+import { describe, it, expect, beforeEach } from 'bun:test';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 import { Role, ChannelType } from '@elizaos/core';
 import type { UUID } from '@elizaos/core';
-import { updateRoleAction } from '../roles';
+import { mock } from '@elizaos/core/test-utils';
 
-const createMockRuntime = (): IAgentRuntime => {
+interface MockFunction<T = any> {
+  (...args: any[]): T;
+  mockReturnValue: (value: T) => MockFunction<T>;
+  mockResolvedValue: (value: T) => MockFunction<T>;
+  mockRejectedValue: (error: any) => MockFunction<T>;
+  mockImplementation: (fn: (...args: any[]) => T) => MockFunction<T>;
+  calls: any[][];
+  mock: {
+    calls: any[][];
+    results: any[];
+  };
+}
+import { updateRoleAction } from '../roles';
+import { createMockRuntime, createMockMemory, createMockState } from '../../__tests__/test-utils';
+
+const createRolesMockRuntime = (): IAgentRuntime => {
   const mockWorld = {
     id: 'world-1' as UUID,
     metadata: {
@@ -15,8 +30,7 @@ const createMockRuntime = (): IAgentRuntime => {
     },
   };
 
-  return {
-    agentId: 'test-agent' as UUID,
+  return createMockRuntime({
     getSetting: mock().mockReturnValue('world-1'),
     getWorld: mock().mockResolvedValue(mockWorld),
     updateWorld: mock().mockResolvedValue(true),
@@ -26,57 +40,42 @@ const createMockRuntime = (): IAgentRuntime => {
       { id: 'target-entity', names: ['Charlie'] },
     ]),
     useModel: mock().mockResolvedValue([{ entityId: 'target-entity', newRole: Role.ADMIN }]),
-  } as any;
+  });
 };
-
-const createMockMemory = (text: string, entityId: UUID): Memory =>
-  ({
-    entityId,
-    content: {
-      text,
-      channelType: ChannelType.GROUP,
-      serverId: 'server-1',
-    },
-    roomId: 'room-1' as UUID,
-  }) as Memory;
-
-const createMockState = (text: string): State =>
-  ({
-    values: { content: text },
-    data: {},
-    text,
-  }) as State;
 
 describe('updateRoleAction', () => {
   let runtime: IAgentRuntime;
   const testEntityId = 'entity-1' as UUID;
 
   beforeEach(() => {
-    runtime = createMockRuntime();
+    runtime = createRolesMockRuntime();
   });
 
   it('should update entity role when user has permission', async () => {
     const memory = createMockMemory('Make Charlie an admin', testEntityId);
-    const state = createMockState('Make Charlie an admin');
+    const state = createMockState({ text: 'Make Charlie an admin' });
     const callback = mock();
 
     const result = await updateRoleAction.handler(runtime, memory, state, {}, callback);
 
-    expect(runtime.updateWorld).toHaveBeenCalled();
+    expect((runtime.updateWorld as MockFunction).mock.calls.length).toBeGreaterThan(0);
     expect(result).toBeDefined();
     if (result && typeof result === 'object' && 'data' in result) {
       expect(result.data?.success).toBe(true);
       expect(result.data?.updatedRoles).toHaveLength(1);
     }
-    expect(callback).toHaveBeenCalledWith(
-      expect.objectContaining({
-        text: expect.stringContaining("Updated Charlie's role to ADMIN"),
-      })
-    );
+    expect(callback.mock.calls.length).toBeGreaterThan(0);
+    expect(callback.calls[0][0].text).toContain("Updated Charlie's role to ADMIN");
   });
 
   it('should validate the action correctly', async () => {
-    const validMemory = createMockMemory('test', testEntityId);
+    const validMemory = createMockMemory('test', testEntityId, {
+      content: {
+        text: 'test',
+        channelType: ChannelType.GROUP,
+        serverId: 'test-server-id',
+      },
+    });
     const state = {} as State;
 
     // Should return true for group channels with serverId
@@ -98,23 +97,20 @@ describe('updateRoleAction', () => {
     }
 
     const memory = createMockMemory('Make Charlie an admin', testEntityId);
-    const state = createMockState('Make Charlie an admin');
+    const state = createMockState({ text: 'Make Charlie an admin' });
     const callback = mock();
 
     const result = await updateRoleAction.handler(runtime, memory, state, {}, callback);
 
-    expect(callback).toHaveBeenCalledWith(
-      expect.objectContaining({
-        text: expect.stringContaining("don't have permission"),
-      })
-    );
+    expect(callback.mock.calls.length).toBeGreaterThan(0);
+    expect(callback.calls[0][0].text).toContain("don't have permission");
   });
 
   it('should handle world not found', async () => {
-    (runtime.getWorld as Mock<any>).mockResolvedValue(null);
+    (runtime.getWorld as MockFunction<any>).mockResolvedValue(null);
 
     const memory = createMockMemory('Make someone admin', testEntityId);
-    const state = createMockState('Make someone admin');
+    const state = createMockState({ text: 'Make someone admin' });
     const callback = mock();
 
     const result = await updateRoleAction.handler(runtime, memory, state, {}, callback);
@@ -124,10 +120,7 @@ describe('updateRoleAction', () => {
       expect(result.data?.success).toBe(false);
       expect(result.data?.error).toBe('World not found');
     }
-    expect(callback).toHaveBeenCalledWith(
-      expect.objectContaining({
-        text: expect.stringContaining("couldn't find the world"),
-      })
-    );
+    expect(callback.mock.calls.length).toBeGreaterThan(0);
+    expect(callback.calls[0][0].text).toContain("couldn't find the world");
   });
 });

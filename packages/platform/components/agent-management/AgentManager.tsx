@@ -11,7 +11,7 @@ interface AgentManagerProps {
 
 export function AgentManager({
   className = 'w-full h-full border-0',
-  serverBaseUrl = 'http://localhost:3000'
+  serverBaseUrl = 'http://localhost:3000',
 }: AgentManagerProps) {
   const [embedUrl, setEmbedUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -34,18 +34,26 @@ export function AgentManager({
         const payload = {
           sub: user.id,
           email: user.email,
-          name: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email,
+          name:
+            user.firstName && user.lastName
+              ? `${user.firstName} ${user.lastName}`
+              : user.email,
           organizationId: user.organizationId,
           role: user.role,
-          tenantId: user.organizationId // Use organizationId as tenantId
+          tenantId: user.organizationId, // Use organizationId as tenantId
         };
 
         // Generate embed URL with JWT token
-        const url = await createServerEmbedUrl(`${serverBaseUrl}/admin`, payload);
+        const url = await createServerEmbedUrl(
+          `${serverBaseUrl}/admin`,
+          payload,
+        );
         setEmbedUrl(url);
       } catch (err) {
         console.error('Failed to setup agent manager embed URL:', err);
-        setError(err instanceof Error ? err.message : 'Failed to setup agent manager');
+        setError(
+          err instanceof Error ? err.message : 'Failed to setup agent manager',
+        );
       } finally {
         setLoading(false);
       }
@@ -56,8 +64,8 @@ export function AgentManager({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="flex h-64 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
         <span className="ml-2 text-gray-600">Loading agent management...</span>
       </div>
     );
@@ -65,12 +73,12 @@ export function AgentManager({
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 bg-red-50 border border-red-200 rounded-lg">
-        <div className="text-red-600 mb-2">Failed to load agent management</div>
+      <div className="flex h-64 flex-col items-center justify-center rounded-lg border border-red-200 bg-red-50">
+        <div className="mb-2 text-red-600">Failed to load agent management</div>
         <div className="text-sm text-red-500">{error}</div>
         <button
           onClick={() => window.location.reload()}
-          className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          className="mt-4 rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700"
         >
           Retry
         </button>
@@ -80,14 +88,16 @@ export function AgentManager({
 
   if (!embedUrl) {
     return (
-      <div className="flex items-center justify-center h-64 bg-gray-50 border border-gray-200 rounded-lg">
-        <div className="text-gray-600">Unable to load agent management interface</div>
+      <div className="flex h-64 items-center justify-center rounded-lg border border-gray-200 bg-gray-50">
+        <div className="text-gray-600">
+          Unable to load agent management interface
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative h-full w-full">
       <iframe
         src={embedUrl}
         className={className}

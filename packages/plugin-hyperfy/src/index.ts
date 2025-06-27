@@ -20,6 +20,25 @@ import { hyperfyEmoteProvider } from './providers/emote';
 import { hyperfyActionsProvider } from './providers/actions';
 import { characterProvider } from './providers/character';
 import { hyperfyEvents } from './events';
+import { hyperfyStatsAction } from './rpg/actions/stats';
+import { hyperfyCombatAction } from './rpg/actions/combat';
+import { hyperfyFishingAction } from './rpg/actions/fishing';
+import { hyperfyWoodcuttingAction } from './rpg/actions/woodcutting';
+import { hyperfyHunterAction } from './rpg/actions/hunter';
+import { hyperfySmithingAction } from './rpg/actions/smithing';
+import { hyperfyCookingAction } from './rpg/actions/cooking';
+import { hyperfyCraftingAction } from './rpg/actions/crafting';
+import { hyperfyFletchingAction } from './rpg/actions/fletching';
+import { hyperfyHerbloreAction } from './rpg/actions/herblore';
+import { hyperfyRunecraftingAction } from './rpg/actions/runecrafting';
+import { hyperfyAgilityAction } from './rpg/actions/agility';
+import { hyperfyThievingAction } from './rpg/actions/thieving';
+import { hyperfySlayerAction } from './rpg/actions/slayer';
+import { hyperfyFarmingAction } from './rpg/actions/farming';
+import { hyperfyConstructionAction } from './rpg/actions/construction';
+import { hyperfyMonsterAction } from './rpg/actions/monster';
+import { hyperfyNPCAction } from './rpg/actions/npc';
+import { hyperfyWorldAction } from './rpg/actions/world';
 
 // --- Hardcoded values matching agent/index.mjs ---
 const HYPERFY_WS_URL = process.env.WS_URL || 'wss://chill.hyperfy.xyz/ws';
@@ -73,6 +92,25 @@ export const hyperfyPlugin: Plugin = {
     hyperfyEditEntityAction,
     replyAction,
     ignoreAction,
+    hyperfyStatsAction,
+    hyperfyCombatAction,
+    hyperfyFishingAction,
+    hyperfyWoodcuttingAction,
+    hyperfyHunterAction,
+    hyperfySmithingAction,
+    hyperfyCookingAction,
+    hyperfyCraftingAction,
+    hyperfyFletchingAction,
+    hyperfyHerbloreAction,
+    hyperfyRunecraftingAction,
+    hyperfyAgilityAction,
+    hyperfyThievingAction,
+    hyperfySlayerAction,
+    hyperfyFarmingAction,
+    hyperfyConstructionAction,
+    hyperfyMonsterAction,
+    hyperfyNPCAction,
+    hyperfyWorldAction,
   ],
   providers: [hyperfyProvider, hyperfyEmoteProvider, hyperfyActionsProvider, characterProvider],
   routes: [],

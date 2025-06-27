@@ -5,7 +5,6 @@ import { TestPatternGenerator } from '../test-pattern-generator';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
-
 const execAsync = promisify(exec);
 
 export class VisionWorkerE2ETestSuite implements TestSuite {
@@ -70,12 +69,14 @@ export class VisionWorkerE2ETestSuite implements TestSuite {
           }
 
           // Non-blocking check
-          await new Promise(resolve => setImmediate(resolve));
+          await new Promise((resolve) => setImmediate(resolve));
         }
 
         const totalTime = (Date.now() - startTime) / 1000;
         const avgFPS = frameCount / totalTime;
-        console.log(`✓ Captured ${frameCount} unique frames in ${totalTime.toFixed(2)}s (${avgFPS.toFixed(2)} FPS)`);
+        console.log(
+          `✓ Captured ${frameCount} unique frames in ${totalTime.toFixed(2)}s (${avgFPS.toFixed(2)} FPS)`
+        );
 
         if (avgFPS < 1) {
           console.warn('⚠️  FPS is lower than expected - workers may not be enabled');
@@ -110,7 +111,7 @@ export class VisionWorkerE2ETestSuite implements TestSuite {
         try {
           // Wait for OCR to process
           console.log('Waiting for OCR processing...');
-          await new Promise(resolve => setTimeout(resolve, 3000));
+          await new Promise((resolve) => setTimeout(resolve, 3000));
 
           // Get enhanced scene with OCR results
           const scene = await visionService.getEnhancedSceneDescription();
@@ -166,7 +167,7 @@ export class VisionWorkerE2ETestSuite implements TestSuite {
             console.log(`  Screen: ${scene.screenCapture.width}x${scene.screenCapture.height}`);
           }
 
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise((resolve) => setTimeout(resolve, 500));
         }
 
         console.log(`✓ Monitored ${displayCount} displays`);
@@ -225,15 +226,19 @@ export class VisionWorkerE2ETestSuite implements TestSuite {
               console.log(`  Florence-2 detections: ${stats.florence2Detections}`);
             }
 
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise((resolve) => setTimeout(resolve, 100));
           }
 
           const totalTime = (Date.now() - startTime) / 1000;
           console.log('\nFinal statistics:');
           console.log(`  Total frames: ${stats.frames}`);
           console.log(`  Average FPS: ${(stats.frames / totalTime).toFixed(2)}`);
-          console.log(`  OCR success rate: ${((stats.ocrDetections / stats.frames) * 100).toFixed(1)}%`);
-          console.log(`  Florence-2 success rate: ${((stats.florence2Detections / stats.frames) * 100).toFixed(1)}%`);
+          console.log(
+            `  OCR success rate: ${((stats.ocrDetections / stats.frames) * 100).toFixed(1)}%`
+          );
+          console.log(
+            `  Florence-2 success rate: ${((stats.florence2Detections / stats.frames) * 100).toFixed(1)}%`
+          );
 
           await closeTestPattern();
         } catch (error) {
@@ -259,7 +264,9 @@ async function getDisplayCount(): Promise<number> {
       const { stdout } = await execAsync('xrandr --query | grep " connected" | wc -l');
       return parseInt(stdout.trim(), 10) || 1;
     } else if (platform === 'win32') {
-      const { stdout } = await execAsync('wmic path Win32_DesktopMonitor get DeviceID /format:csv | find /c "DISPLAY"');
+      const { stdout } = await execAsync(
+        'wmic path Win32_DesktopMonitor get DeviceID /format:csv | find /c "DISPLAY"'
+      );
       return parseInt(stdout.trim(), 10) || 1;
     }
   } catch (error) {
@@ -289,7 +296,7 @@ async function displayTestPattern(imagePath: string): Promise<void> {
     }
 
     // Give time for window to open
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   } catch (error) {
     console.warn('Could not display test pattern:', error);
   }

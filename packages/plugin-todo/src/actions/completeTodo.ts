@@ -104,7 +104,8 @@ async function extractTaskCompletion(
 export const completeTodoAction: Action = {
   name: 'COMPLETE_TODO',
   similes: ['MARK_COMPLETE', 'FINISH_TASK', 'DONE', 'TASK_DONE', 'TASK_COMPLETED'],
-  description: 'Marks a todo item as completed. Matches task by name from user message. Updates task status and completion metadata. Returns completed task details including ID, name, and type. Can be chained with LIST_TODOS or CREATE_TODO for workflow continuation.',
+  description:
+    'Marks a todo item as completed. Matches task by name from user message. Updates task status and completion metadata. Returns completed task details including ID, name, and type. Can be chained with LIST_TODOS or CREATE_TODO for workflow continuation.',
 
   validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
     // Only validate if there are active (non-completed) todos in the current room
@@ -205,9 +206,9 @@ export const completeTodoAction: Action = {
       if (!taskCompletion.isFound) {
         if (callback) {
           await callback({
-            text:
-              `I couldn't determine which task you're marking as completed. Could you be more specific? Here are your current tasks:\n\n${
-                availableTodos.map((task) => `- ${task.name}`).join('\n')}`,
+            text: `I couldn't determine which task you're marking as completed. Could you be more specific? Here are your current tasks:\n\n${availableTodos
+              .map((task) => `- ${task.name}`)
+              .join('\n')}`,
             actions: ['COMPLETE_TODO_NOT_FOUND'],
             source: message.content.source,
           });

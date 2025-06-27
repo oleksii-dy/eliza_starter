@@ -1,6 +1,11 @@
-import { elizaLogger as logger, createUniqueUuid, type IAgentRuntime, type UUID } from '@elizaos/core';
-import { secureCrypto } from '../security/crypto';
+import {
+  elizaLogger as logger,
+  createUniqueUuid,
+  type IAgentRuntime,
+  type UUID,
+} from '@elizaos/core';
 import { EnhancedSecretManager } from '../enhanced-service';
+import { secureCrypto } from '../security/crypto';
 import type {
   SecretContext,
   SecretConfig,
@@ -434,11 +439,11 @@ class StorageManager {
 
   private async getWorldSecret(key: string, worldId: string): Promise<string | null> {
     const world = await this.runtime.getWorld(worldId as UUID);
-    if (!world?.metadata?.secrets?.[key]) {
+    if (!(world?.metadata?.secrets as any)?.[key]) {
       return null;
     }
 
-    const secretData = world.metadata.secrets[key];
+    const secretData = (world?.metadata?.secrets as any)?.[key];
     if (typeof secretData === 'object' && secretData.encrypted) {
       return await this.encryption.decrypt(secretData.value);
     }
@@ -476,12 +481,14 @@ class StorageManager {
 
   private async deleteWorldSecret(key: string, worldId: string): Promise<boolean> {
     const world = await this.runtime.getWorld(worldId as UUID);
-    if (!world?.metadata?.secrets?.[key]) {
+    if (!(world?.metadata?.secrets as any)?.[key]) {
       return false;
     }
 
-    delete world.metadata.secrets[key];
-    await this.runtime.updateWorld(world);
+    if (world?.metadata?.secrets) {
+      delete (world.metadata.secrets as any)[key];
+      await this.runtime.updateWorld(world);
+    }
     return true;
   }
 
@@ -597,7 +604,7 @@ class AccessControlManager {
         return false;
       }
 
-      const requester = world.metadata?.roles?.[context.requesterId || ''] || 'NONE';
+      const requester = (world.metadata?.roles as any)?.[context.requesterId || ''] || 'NONE';
 
       if (action === 'read') {
         return true;

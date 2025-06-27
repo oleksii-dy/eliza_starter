@@ -1,10 +1,4 @@
-import {
-  type Provider,
-  type IAgentRuntime,
-  type Memory,
-  type State,
-  logger,
-} from '@elizaos/core';
+import { type Provider, type IAgentRuntime, type Memory, type State, logger } from '@elizaos/core';
 import { CrossMintUniversalWalletService } from '../services/CrossMintUniversalWalletService';
 
 /**
@@ -13,12 +7,15 @@ import { CrossMintUniversalWalletService } from '../services/CrossMintUniversalW
  */
 export const crossmintWalletProvider: Provider = {
   name: 'CROSSMINT_WALLET',
-  description: 'Provides CrossMint MPC wallet status, supported blockchain networks, and enterprise infrastructure capabilities when agent needs to manage cross-chain transactions or X.402 payments',
+  description:
+    'Provides CrossMint MPC wallet status, supported blockchain networks, and enterprise infrastructure capabilities when agent needs to manage cross-chain transactions or X.402 payments',
   position: 5,
 
   get: async (runtime: IAgentRuntime, _message: Memory, _state: State) => {
     try {
-      const crossmintService = runtime.getService<CrossMintUniversalWalletService>('crossmint-universal-wallet');
+      const crossmintService = runtime.getService<CrossMintUniversalWalletService>(
+        'crossmint-universal-wallet'
+      );
 
       if (!crossmintService) {
         return {
@@ -31,7 +28,7 @@ export const crossmintWalletProvider: Provider = {
       const wallets = await crossmintService.getWallets();
       const supportedChains = await crossmintService.getSupportedChains();
 
-      const walletSummary = wallets.map(wallet => ({
+      const walletSummary = wallets.map((wallet) => ({
         id: wallet.id,
         address: wallet.address,
         type: wallet.type,
@@ -41,9 +38,9 @@ export const crossmintWalletProvider: Provider = {
 
       const text = `[CROSSMINT WALLET CAPABILITIES]
 Available Wallets: ${wallets.length}
-${wallets.map(w => `- ${w.type.toUpperCase()} wallet on ${w.chain}: ${w.address.slice(0, 8)}...${w.address.slice(-6)}`).join('\n')}
+${wallets.map((w) => `- ${w.type.toUpperCase()} wallet on ${w.chain}: ${w.address.slice(0, 8)}...${w.address.slice(-6)}`).join('\n')}
 
-Supported Networks: ${supportedChains.map(c => c.name).join(', ')}
+Supported Networks: ${supportedChains.map((c) => c.name).join(', ')}
 
 Capabilities:
 - MPC (Multi-Party Computation) wallets for enhanced security
@@ -64,7 +61,7 @@ Available Actions:
         text,
         values: {
           crossmintWalletsCount: wallets.length,
-          crossmintSupportedChains: supportedChains.map(c => c.id),
+          crossmintSupportedChains: supportedChains.map((c) => c.id),
           crossmintCapabilities: [
             'X402_PAYMENTS',
             'MPC_WALLETS',

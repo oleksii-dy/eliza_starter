@@ -9,13 +9,13 @@ import {
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { sql } from 'drizzle-orm';
 import pgvector from 'pgvector';
-import { BaseDrizzleAdapter } from '../base';
-import { DIMENSION_MAP, type EmbeddingDimensionColumn } from '../schema/embedding';
-import type { PgManager } from './manager';
-import { connectionRegistry } from '../connection-registry';
-import { UnifiedMigrator, createMigrator } from '../unified-migrator';
-import { setDatabaseType } from '../schema/factory';
-import * as schema from '../schema';
+import { BaseDrizzleAdapter } from '../base.js';
+import { DIMENSION_MAP, type EmbeddingDimensionColumn } from '../schema/embedding.js';
+import type { PgManager } from './manager.js';
+import { connectionRegistry } from '../connection-registry.js';
+import { UnifiedMigrator, createMigrator } from '../unified-migrator.js';
+import { setDatabaseType } from '../schema/factory.js';
+import * as schema from '../schema/index.js';
 
 export interface PgAdapterConfig {
   enableVectors?: boolean;

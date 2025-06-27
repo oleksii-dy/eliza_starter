@@ -4,7 +4,6 @@
  */
 
 import { getBillingService } from '@/lib/billing';
-import { getDatabaseClient } from '@/lib/database';
 import { GenerationRequest } from '@/lib/domains/generation/types';
 import { logger } from '@/lib/logger';
 import { getStorageManager } from '@/lib/services/storage';
@@ -16,7 +15,7 @@ export async function generateHandler(req: NextRequest): Promise<NextResponse> {
   try {
     // Parse request body
     const body = await req.json();
-    
+
     // Validate request
     const validation = generationRequestSchema.safeParse(body);
     if (!validation.success) {
@@ -25,9 +24,9 @@ export async function generateHandler(req: NextRequest): Promise<NextResponse> {
           success: false,
           error: 'Invalid request',
           code: 'VALIDATION_ERROR',
-          details: validation.error.errors
+          details: validation.error.errors,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -42,24 +41,23 @@ export async function generateHandler(req: NextRequest): Promise<NextResponse> {
         {
           success: false,
           error: 'Authentication required',
-          code: 'UNAUTHORIZED'
+          code: 'UNAUTHORIZED',
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
     // Add user context and required fields to request
     request.userId = userId;
     request.organizationId = organizationId;
-    
+
     // Add default values for required fields if missing
     if (!request.priority) request.priority = 'normal';
-    
+
     // Initialize services
-    const database = getDatabaseClient();
     const storage = await getStorageManager();
     const billing = getBillingService();
-    const generationService = new GenerationService(database, storage, billing);
+    const generationService = new GenerationService(storage, billing);
 
     // Create generation
     const result = await generationService.createGeneration(request);
@@ -75,21 +73,23 @@ export async function generateHandler(req: NextRequest): Promise<NextResponse> {
       userId,
       organizationId,
       type: request.type,
-      provider: request.provider
+      provider: request.provider,
     });
 
     return NextResponse.json(result, { status: 201 });
-
   } catch (error) {
-    logger.error('Generation handler error:', error instanceof Error ? error : new Error(String(error)));
-    
+    logger.error(
+      'Generation handler error:',
+      error instanceof Error ? error : new Error(String(error)),
+    );
+
     return NextResponse.json(
       {
         success: false,
         error: 'Internal server error',
-        code: 'INTERNAL_ERROR'
+        code: 'INTERNAL_ERROR',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -99,19 +99,19 @@ export async function generateHandler(req: NextRequest): Promise<NextResponse> {
  */
 export async function getGenerationHandler(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ): Promise<NextResponse> {
   try {
     const generationId = params.id;
-    
+
     if (!generationId) {
       return NextResponse.json(
         {
           success: false,
           error: 'Generation ID required',
-          code: 'MISSING_ID'
+          code: 'MISSING_ID',
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -124,17 +124,16 @@ export async function getGenerationHandler(
         {
           success: false,
           error: 'Authentication required',
-          code: 'UNAUTHORIZED'
+          code: 'UNAUTHORIZED',
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
     // Initialize services
-    const database = getDatabaseClient();
     const storage = await getStorageManager();
     const billing = getBillingService();
-    const generationService = new GenerationService(database, storage, billing);
+    const generationService = new GenerationService(storage, billing);
 
     // Get generation
     const result = await generationService.getGeneration(generationId);
@@ -150,24 +149,26 @@ export async function getGenerationHandler(
         {
           success: false,
           error: 'Access denied',
-          code: 'FORBIDDEN'
+          code: 'FORBIDDEN',
         },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
     return NextResponse.json(result);
-
   } catch (error) {
-    logger.error('Get generation handler error:', error instanceof Error ? error : new Error(String(error)));
-    
+    logger.error(
+      'Get generation handler error:',
+      error instanceof Error ? error : new Error(String(error)),
+    );
+
     return NextResponse.json(
       {
         success: false,
         error: 'Internal server error',
-        code: 'INTERNAL_ERROR'
+        code: 'INTERNAL_ERROR',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -177,19 +178,19 @@ export async function getGenerationHandler(
  */
 export async function cancelGenerationHandler(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ): Promise<NextResponse> {
   try {
     const generationId = params.id;
-    
+
     if (!generationId) {
       return NextResponse.json(
         {
           success: false,
           error: 'Generation ID required',
-          code: 'MISSING_ID'
+          code: 'MISSING_ID',
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -202,17 +203,16 @@ export async function cancelGenerationHandler(
         {
           success: false,
           error: 'Authentication required',
-          code: 'UNAUTHORIZED'
+          code: 'UNAUTHORIZED',
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
     // Initialize services
-    const database = getDatabaseClient();
     const storage = await getStorageManager();
     const billing = getBillingService();
-    const generationService = new GenerationService(database, storage, billing);
+    const generationService = new GenerationService(storage, billing);
 
     // Get generation first to verify ownership
     const getResult = await generationService.getGeneration(generationId);
@@ -227,9 +227,9 @@ export async function cancelGenerationHandler(
         {
           success: false,
           error: 'Access denied',
-          code: 'FORBIDDEN'
+          code: 'FORBIDDEN',
         },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -245,21 +245,23 @@ export async function cancelGenerationHandler(
     logger.info('Generation cancelled', {
       generationId,
       userId,
-      organizationId
+      organizationId,
     });
 
     return NextResponse.json(result);
-
   } catch (error) {
-    logger.error('Cancel generation handler error:', error instanceof Error ? error : new Error(String(error)));
-    
+    logger.error(
+      'Cancel generation handler error:',
+      error instanceof Error ? error : new Error(String(error)),
+    );
+
     return NextResponse.json(
       {
         success: false,
         error: 'Internal server error',
-        code: 'INTERNAL_ERROR'
+        code: 'INTERNAL_ERROR',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

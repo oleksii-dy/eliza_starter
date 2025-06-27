@@ -7,13 +7,21 @@
 import { NextRequest } from 'next/server';
 import { WebhookDeduplicationService } from '@/lib/billing/webhook-deduplication';
 import { getDatabase } from '@/lib/database/connection';
-import { organizations, creditTransactions, webhooks } from '@/lib/database/schema';
+import {
+  organizations,
+  creditTransactions,
+  webhooks,
+} from '@/lib/database/schema';
 import { eq } from 'drizzle-orm';
 import Stripe from 'stripe';
 import crypto from 'crypto';
 
 // Mock Stripe webhook signature generation
-function generateTestWebhookSignature(payload: string, secret: string, timestamp: number): string {
+function generateTestWebhookSignature(
+  payload: string,
+  secret: string,
+  timestamp: number,
+): string {
   const signedPayload = `${timestamp}.${payload}`;
   const signature = crypto
     .createHmac('sha256', secret)
@@ -45,7 +53,9 @@ describe('Webhook Security Tests', () => {
     // Cleanup
     const db = getDatabase();
     await db.delete(organizations).where(eq(organizations.id, TEST_ORG_ID));
-    await db.delete(creditTransactions).where(eq(creditTransactions.organizationId, TEST_ORG_ID));
+    await db
+      .delete(creditTransactions)
+      .where(eq(creditTransactions.organizationId, TEST_ORG_ID));
     await db.delete(webhooks).where(eq(webhooks.organizationId, TEST_ORG_ID));
   });
 
@@ -76,7 +86,11 @@ describe('Webhook Security Tests', () => {
       });
 
       const timestamp = Math.floor(Date.now() / 1000);
-      const signature = generateTestWebhookSignature(webhookPayload, TEST_WEBHOOK_SECRET, timestamp);
+      const signature = generateTestWebhookSignature(
+        webhookPayload,
+        TEST_WEBHOOK_SECRET,
+        timestamp,
+      );
 
       const result = await WebhookDeduplicationService.processWebhookSafely(
         {
@@ -89,7 +103,7 @@ describe('Webhook Security Tests', () => {
         async () => {
           // Simulate successful webhook processing
           return Promise.resolve();
-        }
+        },
       );
 
       expect(result.success).toBe(true);
@@ -117,7 +131,7 @@ describe('Webhook Security Tests', () => {
         },
         async () => {
           throw new Error('Signature validation failed');
-        }
+        },
       );
 
       expect(result.success).toBe(false);
@@ -149,7 +163,7 @@ describe('Webhook Security Tests', () => {
         async () => {
           processingCalled = true;
           return Promise.resolve();
-        }
+        },
       );
 
       expect(result.success).toBe(true);
@@ -169,7 +183,7 @@ describe('Webhook Security Tests', () => {
       // Process first time
       const result1 = await WebhookDeduplicationService.processWebhookSafely(
         webhookEvent,
-        async () => Promise.resolve()
+        async () => Promise.resolve(),
       );
 
       expect(result1.success).toBe(true);
@@ -178,7 +192,7 @@ describe('Webhook Security Tests', () => {
       // Process second time (duplicate)
       const result2 = await WebhookDeduplicationService.processWebhookSafely(
         webhookEvent,
-        async () => Promise.resolve()
+        async () => Promise.resolve(),
       );
 
       expect(result2.success).toBe(true);
@@ -199,13 +213,16 @@ describe('Webhook Security Tests', () => {
       const processingFunction = async () => {
         processingCount++;
         // Simulate processing time
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
         return Promise.resolve();
       };
 
       // Process same webhook concurrently
       const promises = Array.from({ length: 5 }, () =>
-        WebhookDeduplicationService.processWebhookSafely(webhookEvent, processingFunction)
+        WebhookDeduplicationService.processWebhookSafely(
+          webhookEvent,
+          processingFunction,
+        ),
       );
 
       const results = await Promise.all(promises);
@@ -213,7 +230,7 @@ describe('Webhook Security Tests', () => {
       // Only one should have processed
       // const processedResults = results.filter(r => r.processed); // processed property doesn't exist
       // const duplicateResults = results.filter(r => r.duplicate); // duplicate property doesn't exist
-      const successfulResults = results.filter(r => r.success);
+      const successfulResults = results.filter((r) => r.success);
 
       // expect(processedResults).toHaveLength(1); // processed property doesn't exist
       // expect(duplicateResults.length).toBeGreaterThan(0); // duplicate property doesn't exist
@@ -224,7 +241,7 @@ describe('Webhook Security Tests', () => {
 
   describe('Replay Attack Protection', () => {
     test('should reject webhooks with old timestamps', async () => {
-      const oldTimestamp = Math.floor(Date.now() / 1000) - (10 * 60); // 10 minutes ago
+      const oldTimestamp = Math.floor(Date.now() / 1000) - 10 * 60; // 10 minutes ago
       const webhookEvent = {
         id: 'evt_old_timestamp_' + Date.now(),
         type: 'payment_intent.succeeded',
@@ -235,7 +252,7 @@ describe('Webhook Security Tests', () => {
 
       const result = await WebhookDeduplicationService.processWebhookSafely(
         webhookEvent,
-        async () => Promise.resolve()
+        async () => Promise.resolve(),
       );
 
       expect(result.success).toBe(false);
@@ -254,7 +271,7 @@ describe('Webhook Security Tests', () => {
 
       const result = await WebhookDeduplicationService.processWebhookSafely(
         webhookEvent,
-        async () => Promise.resolve()
+        async () => Promise.resolve(),
       );
 
       expect(result.success).toBe(true);
@@ -276,7 +293,7 @@ describe('Webhook Security Tests', () => {
         webhookEvent,
         async () => {
           throw new Error('Simulated processing error');
-        }
+        },
       );
 
       expect(result.success).toBe(false);
@@ -285,7 +302,7 @@ describe('Webhook Security Tests', () => {
 
     test('should track webhook processing statistics', async () => {
       const baseId = 'evt_stats_test_' + Date.now();
-      
+
       // Process successful webhook
       await WebhookDeduplicationService.processWebhookSafely(
         {
@@ -295,7 +312,7 @@ describe('Webhook Security Tests', () => {
           organizationId: TEST_ORG_ID,
           data: { object: { id: 'pi_stats_success' } },
         },
-        async () => Promise.resolve()
+        async () => Promise.resolve(),
       );
 
       // Process failed webhook
@@ -309,7 +326,7 @@ describe('Webhook Security Tests', () => {
         },
         async () => {
           throw new Error('Test failure');
-        }
+        },
       );
 
       // Process duplicate
@@ -321,7 +338,7 @@ describe('Webhook Security Tests', () => {
           organizationId: TEST_ORG_ID,
           data: { object: { id: 'pi_stats_duplicate' } },
         },
-        async () => Promise.resolve()
+        async () => Promise.resolve(),
       );
 
       const stats = await WebhookDeduplicationService.getProcessingStats();
@@ -348,10 +365,10 @@ describe('Webhook Security Tests', () => {
           },
           async () => {
             // Simulate minimal processing time
-            await new Promise(resolve => setTimeout(resolve, 10));
+            await new Promise((resolve) => setTimeout(resolve, 10));
             return Promise.resolve();
-          }
-        )
+          },
+        ),
       );
 
       const results = await Promise.all(webhookPromises);
@@ -360,33 +377,36 @@ describe('Webhook Security Tests', () => {
       console.log(`Processed ${webhookCount} webhooks in ${duration}ms`);
 
       // All webhooks should process successfully
-      expect(results.every(r => r.success)).toBe(true);
-      
+      expect(results.every((r) => r.success)).toBe(true);
+
       // Should complete within reasonable time (10 seconds for 50 webhooks)
       expect(duration).toBeLessThan(10000);
     });
 
     test('should maintain performance with database contention', async () => {
       // Simulate multiple organizations processing webhooks simultaneously
-      const orgIds = Array.from({ length: 5 }, (_, i) => `load_test_org_${i}_${Date.now()}`);
-      
+      const orgIds = Array.from(
+        { length: 5 },
+        (_, i) => `load_test_org_${i}_${Date.now()}`,
+      );
+
       // Setup organizations
       const db = getDatabase();
       await Promise.all(
-        orgIds.map(orgId =>
+        orgIds.map((orgId) =>
           db.insert(organizations).values({
             id: orgId,
             name: `Load Test Org ${orgId}`,
             slug: `load-test-org-${orgId}`,
             creditBalance: '100.00',
-          })
-        )
+          }),
+        ),
       );
 
       const startTime = Date.now();
 
       // Process webhooks for multiple organizations concurrently
-      const webhookPromises = orgIds.flatMap(orgId =>
+      const webhookPromises = orgIds.flatMap((orgId) =>
         Array.from({ length: 10 }, (_, i) =>
           WebhookDeduplicationService.processWebhookSafely(
             {
@@ -398,25 +418,31 @@ describe('Webhook Security Tests', () => {
             },
             async () => {
               // Simulate database operations
-              await new Promise(resolve => setTimeout(resolve, 20));
+              await new Promise((resolve) => setTimeout(resolve, 20));
               return Promise.resolve();
-            }
-          )
-        )
+            },
+          ),
+        ),
       );
 
       const results = await Promise.all(webhookPromises);
       const duration = Date.now() - startTime;
 
-      console.log(`Processed ${results.length} concurrent webhooks across ${orgIds.length} organizations in ${duration}ms`);
+      console.log(
+        `Processed ${results.length} concurrent webhooks across ${orgIds.length} organizations in ${duration}ms`,
+      );
 
       // All should succeed
-      expect(results.every(r => r.success)).toBe(true);
+      expect(results.every((r) => r.success)).toBe(true);
 
       // Cleanup
       await Promise.all([
-        ...orgIds.map(orgId => db.delete(organizations).where(eq(organizations.id, orgId))),
-        ...orgIds.map(orgId => db.delete(webhooks).where(eq(webhooks.organizationId, orgId))),
+        ...orgIds.map((orgId) =>
+          db.delete(organizations).where(eq(organizations.id, orgId)),
+        ),
+        ...orgIds.map((orgId) =>
+          db.delete(webhooks).where(eq(webhooks.organizationId, orgId)),
+        ),
       ]);
     });
   });

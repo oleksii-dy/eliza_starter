@@ -8,7 +8,7 @@ let filesDB: any[] = [];
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ fileId: string }> }
+  { params }: { params: Promise<{ fileId: string }> },
 ) {
   try {
     const resolvedParams = await params;
@@ -21,11 +21,16 @@ export async function DELETE(
 
     // Find the file and ensure it belongs to the user's organization
     const fileIndex = filesDB.findIndex(
-      file => file.id === fileId && file.organizationId === session.user.organizationId
+      (file) =>
+        file.id === fileId &&
+        file.organizationId === session.user.organizationId,
     );
 
     if (fileIndex === -1) {
-      return NextResponse.json({ error: 'File not found or access denied' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'File not found or access denied' },
+        { status: 404 },
+      );
     }
 
     // Remove the file from the database
@@ -35,12 +40,14 @@ export async function DELETE(
       success: true,
       message: 'File deleted successfully',
     });
-
   } catch (error: any) {
     console.error('Storage delete error:', error);
-    return NextResponse.json({
-      error: 'Failed to delete file',
-      message: error.message || 'Unknown error occurred'
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Failed to delete file',
+        message: error.message || 'Unknown error occurred',
+      },
+      { status: 500 },
+    );
   }
 }

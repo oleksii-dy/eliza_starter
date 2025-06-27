@@ -30,6 +30,19 @@ function DeviceAuthContent() {
     if (codeFromUrl) {
       setUserCode(codeFromUrl);
     }
+
+    // For testing: auto-populate with mock device codes if in development
+    if (process.env.NODE_ENV === 'development' && !codeFromUrl) {
+      // Generate mock device codes for testing
+      const mockCodes = ['ABCD-EFGH', '1234-5678', 'TEST-CODE'];
+      const randomCode = mockCodes[Math.floor(Math.random() * mockCodes.length)];
+      
+      // Add some indicators this is a test page
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('test') === 'true') {
+        setUserCode(randomCode);
+      }
+    }
   }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -51,7 +64,7 @@ function DeviceAuthContent() {
       }
 
       const userData = await userResponse.json();
-      
+
       if (!userData.success || !userData.data?.user) {
         setError('Unable to get user information. Please log in again.');
         return;
@@ -71,16 +84,17 @@ function DeviceAuthContent() {
           authorize: true,
           user: {
             id: user.id,
-            name: user.firstName && user.lastName 
-              ? `${user.firstName} ${user.lastName}`.trim()
-              : user.email.split('@')[0],
-            email: user.email
-          }
+            name:
+              user.firstName && user.lastName
+                ? `${user.firstName} ${user.lastName}`.trim()
+                : user.email.split('@')[0],
+            email: user.email,
+          },
         }),
       });
 
       const result = await response.json();
-      
+
       if (result.success) {
         setSuccess(true);
       } else {
@@ -95,13 +109,13 @@ function DeviceAuthContent() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center">
-          <div className="text-green-500 text-6xl mb-4">✓</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+        <div className="w-full max-w-md rounded-lg bg-white p-8 text-center shadow-xl">
+          <div className="mb-4 text-6xl text-green-500">✓</div>
+          <h1 className="mb-4 text-2xl font-bold text-gray-900">
             Authorization Successful!
           </h1>
-          <p className="text-gray-600 mb-6">
+          <p className="mb-6 text-gray-600">
             You can now close this window and return to your terminal.
           </p>
           <p className="text-sm text-gray-500">
@@ -113,20 +127,57 @@ function DeviceAuthContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Device Authorization
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-xl">
+        <div className="mb-8 text-center">
+          <h1 className="mb-2 text-3xl font-bold text-gray-900">
+            Device Authentication
           </h1>
           <p className="text-gray-600">
-            Authorize your ElizaOS CLI to access your account
+            Follow these steps to authenticate your device
           </p>
+        </div>
+
+        {/* Instructions */}
+        <div className="mb-6 space-y-3 text-sm text-gray-600">
+          <div className="flex items-start gap-3">
+            <span className="font-semibold">Step 1:</span>
+            <span>Go to device.elizaos.ai/verify on your browser</span>
+          </div>
+          <div className="flex items-start gap-3">
+            <span className="font-semibold">Step 2:</span>
+            <span>Enter the code: {userCode || 'XXXX-XXXX'}</span>
+            {userCode && (
+              <button
+                data-cy="copy-user-code"
+                onClick={() => {
+                  navigator.clipboard.writeText(userCode);
+                  setError('');
+                  setSuccess(false);
+                  // Show temporary feedback
+                  const btn = document.querySelector('[data-cy="copy-user-code"]') as HTMLElement;
+                  if (btn) {
+                    const original = btn.textContent;
+                    btn.textContent = 'Copied!';
+                    setTimeout(() => {
+                      btn.textContent = original;
+                    }, 2000);
+                  }
+                }}
+                className="ml-2 text-xs text-blue-600 hover:text-blue-800"
+              >
+                Copy
+              </button>
+            )}
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="user_code" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="user_code"
+              className="mb-2 block text-sm font-medium text-gray-700"
+            >
               Enter the code from your terminal:
             </label>
             <input
@@ -135,7 +186,7 @@ function DeviceAuthContent() {
               value={userCode}
               onChange={(e) => setUserCode(e.target.value.toUpperCase())}
               placeholder="XXXX-XXXX"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-2xl font-mono tracking-wider"
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-center font-mono text-2xl tracking-wider focus:border-transparent focus:ring-2 focus:ring-blue-500"
               pattern="[A-Z0-9]{4}-[A-Z0-9]{4}"
               maxLength={9}
               required
@@ -143,15 +194,15 @@ function DeviceAuthContent() {
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-red-700 text-sm">{error}</p>
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+              <p className="text-sm text-red-700">{error}</p>
             </div>
           )}
 
           <button
             type="submit"
             disabled={isLoading || userCode.length !== 9}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full rounded-lg bg-blue-600 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             data-cy="authorize-device-button"
           >
             {isLoading ? 'Authorizing...' : 'Authorize Device'}
@@ -170,14 +221,16 @@ function DeviceAuthContent() {
 
 export default function DeviceAuthPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+          <div className="w-full max-w-md rounded-lg bg-white p-8 text-center shadow-xl">
+            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
+            <p className="mt-4 text-gray-600">Loading...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <DeviceAuthContent />
     </Suspense>
   );

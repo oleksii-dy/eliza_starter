@@ -1,17 +1,17 @@
 /**
  * Container Hosting Service
- * 
+ *
  * Manages container deployment and billing using e2b platform
  * Handles MCPs, agents, and workflow hosting with usage-based billing
  */
 
 import { E2BClient } from '@/lib/mocks/e2b-api';
-import { db } from '../database';
-import { 
-  hostedContainers, 
-  assetUsageRecords, 
-  marketplaceAssets, 
-  assetVersions 
+import { getDatabase } from '../database';
+import {
+  hostedContainers,
+  assetUsageRecords,
+  marketplaceAssets,
+  assetVersions,
 } from '../database/marketplace-schema';
 import { eq, and, gte, lte, sum } from 'drizzle-orm';
 
@@ -20,17 +20,17 @@ export interface ContainerDeploymentConfig {
   versionId: string;
   userId: string;
   organizationId: string;
-  
+
   // Resource Requirements
   memory: number; // MB
   cpu: number; // CPU units (1000 = 1 vCPU)
   storage: number; // GB
-  
+
   // Container Configuration
   image?: string;
   environment?: Record<string, string>;
   ports?: number[];
-  
+
   // Billing Configuration
   estimatedUsageHours?: number;
 }
@@ -39,27 +39,33 @@ export interface ContainerInstance {
   id: string;
   assetId: string;
   userId: string;
-  
+
   // Container Info
   containerName: string;
   e2bDeploymentId: string;
   endpoint?: string;
   internalEndpoint?: string;
-  
+
   // Status
-  status: 'pending' | 'starting' | 'running' | 'stopping' | 'stopped' | 'failed';
+  status:
+    | 'pending'
+    | 'starting'
+    | 'running'
+    | 'stopping'
+    | 'stopped'
+    | 'failed';
   healthStatus: 'healthy' | 'unhealthy' | 'unknown';
-  
+
   // Resource Usage
   memory: number;
   cpu: number;
   storage: number;
-  
+
   // Billing Info
   baseCostPerHour: number;
   markupPercentage: number;
   billedCostPerHour: number;
-  
+
   // Timestamps
   startedAt?: Date;
   stoppedAt?: Date;
@@ -80,7 +86,7 @@ export class ContainerHostingService {
   private e2bClient: E2BClient;
   private readonly MARKUP_PERCENTAGE = 20; // 20% markup on e2b costs
   private readonly CREATOR_SHARE = 0.5; // 50% revenue share to creators
-  
+
   // Resource limits and defaults
   private readonly MIN_MEMORY = 128; // 128MB minimum
   private readonly MAX_MEMORY = 8192; // 8GB maximum
@@ -98,15 +104,26 @@ export class ContainerHostingService {
   /**
    * Deploy a container for an asset
    */
-  async deployContainer(config: ContainerDeploymentConfig): Promise<ContainerInstance> {
+  async deployContainer(
+    config: ContainerDeploymentConfig,
+  ): Promise<ContainerInstance> {
     try {
       // Validate deployment configuration
       this.validateDeploymentConfig(config);
 
       // Get asset and version information
+      const db = await getDatabase();
       const [asset, version] = await Promise.all([
-        db.select().from(marketplaceAssets).where(eq(marketplaceAssets.id, config.assetId)).limit(1),
-        db.select().from(assetVersions).where(eq(assetVersions.id, config.versionId)).limit(1)
+        db
+          .select()
+          .from(marketplaceAssets)
+          .where(eq(marketplaceAssets.id, config.assetId))
+          .limit(1),
+        db
+          .select()
+          .from(assetVersions)
+          .where(eq(assetVersions.id, config.versionId))
+          .limit(1),
       ]);
 
       if (!asset[0] || !version[0]) {
@@ -117,14 +134,26 @@ export class ContainerHostingService {
       const versionData = version[0];
 
       // Apply resource optimization based on asset type
-      const optimizedConfig = this.optimizeResourceAllocation(config, assetData);
+      const optimizedConfig = this.optimizeResourceAllocation(
+        config,
+        assetData,
+      );
 
       // Calculate e2b resource costs
-      const baseCostPerHour = this.calculateBaseCost(optimizedConfig.memory, optimizedConfig.cpu, optimizedConfig.storage);
-      const billedCostPerHour = baseCostPerHour * (1 + this.MARKUP_PERCENTAGE / 100);
+      const baseCostPerHour = this.calculateBaseCost(
+        optimizedConfig.memory,
+        optimizedConfig.cpu,
+        optimizedConfig.storage,
+      );
+      const billedCostPerHour =
+        baseCostPerHour * (1 + this.MARKUP_PERCENTAGE / 100);
 
       // Create container configuration for e2b
-      const containerConfig = this.buildEnhancedContainerConfig(assetData, versionData, optimizedConfig);
+      const containerConfig = this.buildEnhancedContainerConfig(
+        assetData,
+        versionData,
+        optimizedConfig,
+      );
 
       // Validate container configuration
       this.validateContainerConfig(containerConfig);
@@ -137,8 +166,8 @@ export class ContainerHostingService {
         resources: {
           memory: optimizedConfig.memory,
           cpu: optimizedConfig.cpu,
-          storage: optimizedConfig.storage
-        }
+          storage: optimizedConfig.storage,
+        },
       });
 
       // Store container info in database
@@ -161,10 +190,13 @@ export class ContainerHostingService {
         billedCostPerHour: billedCostPerHour.toString(),
         startedAt: new Date(),
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
-      const result = await db.insert(hostedContainers).values(containerData).returning();
+      const result = await db
+        .insert(hostedContainers)
+        .values(containerData)
+        .returning();
       const container = result[0];
 
       // Start health monitoring
@@ -176,7 +208,9 @@ export class ContainerHostingService {
       return this.mapContainerToInstance(container);
     } catch (error) {
       console.error('Failed to deploy container:', error);
-      throw new Error(`Container deployment failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Container deployment failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -186,12 +220,16 @@ export class ContainerHostingService {
   async stopContainer(containerId: string, userId: string): Promise<void> {
     try {
       // Get container info
-      const containers = await db.select()
+      const db = await getDatabase();
+      const containers = await db
+        .select()
         .from(hostedContainers)
-        .where(and(
-          eq(hostedContainers.id, containerId),
-          eq(hostedContainers.userId, userId)
-        ))
+        .where(
+          and(
+            eq(hostedContainers.id, containerId),
+            eq(hostedContainers.userId, userId),
+          ),
+        )
         .limit(1);
 
       if (!containers[0]) {
@@ -204,17 +242,17 @@ export class ContainerHostingService {
       await this.e2bClient.deleteSandbox(container.e2bDeploymentId);
 
       // Update container status
-      await db.update(hostedContainers)
+      await db
+        .update(hostedContainers)
         .set({
           status: 'stopped',
           stoppedAt: new Date(),
-          updatedAt: new Date()
+          updatedAt: new Date(),
         })
         .where(eq(hostedContainers.id, containerId));
 
       // Record final usage
       await this.recordUsage(containerId);
-
     } catch (error) {
       console.error('Failed to stop container:', error);
       throw new Error(`Container shutdown failed: ${error}`);
@@ -224,14 +262,21 @@ export class ContainerHostingService {
   /**
    * Get container status and metrics
    */
-  async getContainerStatus(containerId: string, userId: string): Promise<ContainerInstance> {
+  async getContainerStatus(
+    containerId: string,
+    userId: string,
+  ): Promise<ContainerInstance> {
     try {
-      const containers = await db.select()
+      const db = await getDatabase();
+      const containers = await db
+        .select()
         .from(hostedContainers)
-        .where(and(
-          eq(hostedContainers.id, containerId),
-          eq(hostedContainers.userId, userId)
-        ))
+        .where(
+          and(
+            eq(hostedContainers.id, containerId),
+            eq(hostedContainers.userId, userId),
+          ),
+        )
         .limit(1);
 
       if (!containers[0]) {
@@ -243,19 +288,27 @@ export class ContainerHostingService {
       // Get current status from e2b
       if (container.status === 'running') {
         try {
-          const deployment = await this.e2bClient.getSandbox(container.e2bDeploymentId);
-          
-          // Update status if changed (deployment may be null in mock mode)  
-          if (deployment && typeof deployment === 'object' && 'status' in deployment) {
+          const deployment = await this.e2bClient.getSandbox(
+            container.e2bDeploymentId,
+          );
+
+          // Update status if changed (deployment may be null in mock mode)
+          if (
+            deployment &&
+            typeof deployment === 'object' &&
+            'status' in deployment
+          ) {
             const deploymentStatus = (deployment as any).status;
             if (deploymentStatus && deploymentStatus !== container.status) {
-              await db.update(hostedContainers)
+              const db = await getDatabase();
+              await db
+                .update(hostedContainers)
                 .set({
                   status: deploymentStatus,
-                  updatedAt: new Date()
+                  updatedAt: new Date(),
                 })
                 .where(eq(hostedContainers.id, containerId));
-              
+
               container.status = deploymentStatus;
             }
           }
@@ -274,26 +327,36 @@ export class ContainerHostingService {
   /**
    * Get usage metrics for a container
    */
-  async getContainerUsage(containerId: string, userId: string, startDate?: Date, endDate?: Date): Promise<UsageMetrics> {
+  async getContainerUsage(
+    containerId: string,
+    userId: string,
+    startDate?: Date,
+    endDate?: Date,
+  ): Promise<UsageMetrics> {
     try {
-      const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // 30 days ago
+      const start =
+        startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // 30 days ago
       const end = endDate || new Date();
 
       // Get usage records
-      const usage = await db.select({
-        totalCost: sum(assetUsageRecords.totalCost),
-        creatorRevenue: sum(assetUsageRecords.creatorRevenue),
-        platformRevenue: sum(assetUsageRecords.platformRevenue),
-        totalHours: sum(assetUsageRecords.quantity)
-      })
-      .from(assetUsageRecords)
-      .where(and(
-        eq(assetUsageRecords.containerId, containerId),
-        eq(assetUsageRecords.userId, userId),
-        gte(assetUsageRecords.createdAt, start),
-        lte(assetUsageRecords.createdAt, end),
-        eq(assetUsageRecords.usageType, 'container_hour')
-      ));
+      const db = await getDatabase();
+      const usage = await db
+        .select({
+          totalCost: sum(assetUsageRecords.totalCost),
+          creatorRevenue: sum(assetUsageRecords.creatorRevenue),
+          platformRevenue: sum(assetUsageRecords.platformRevenue),
+          totalHours: sum(assetUsageRecords.quantity),
+        })
+        .from(assetUsageRecords)
+        .where(
+          and(
+            eq(assetUsageRecords.containerId, containerId),
+            eq(assetUsageRecords.userId, userId),
+            gte(assetUsageRecords.createdAt, start),
+            lte(assetUsageRecords.createdAt, end),
+            eq(assetUsageRecords.usageType, 'container_hour'),
+          ),
+        );
 
       const metrics = usage[0];
 
@@ -303,7 +366,7 @@ export class ContainerHostingService {
         creatorRevenue: Number(metrics.creatorRevenue || 0),
         platformRevenue: Number(metrics.platformRevenue || 0),
         averageCpuUsage: 0, // TODO: Implement CPU metrics from e2b
-        averageMemoryUsage: 0 // TODO: Implement memory metrics from e2b
+        averageMemoryUsage: 0, // TODO: Implement memory metrics from e2b
       };
     } catch (error) {
       console.error('Failed to get container usage:', error);
@@ -314,17 +377,26 @@ export class ContainerHostingService {
   /**
    * List user's containers
    */
-  async listUserContainers(userId: string, organizationId: string): Promise<ContainerInstance[]> {
+  async listUserContainers(
+    userId: string,
+    organizationId: string,
+  ): Promise<ContainerInstance[]> {
     try {
-      const containers = await db.select()
+      const db = await getDatabase();
+      const containers = await db
+        .select()
         .from(hostedContainers)
-        .where(and(
-          eq(hostedContainers.userId, userId),
-          eq(hostedContainers.organizationId, organizationId)
-        ))
+        .where(
+          and(
+            eq(hostedContainers.userId, userId),
+            eq(hostedContainers.organizationId, organizationId),
+          ),
+        )
         .orderBy(hostedContainers.createdAt);
 
-      return containers.map((container: any) => this.mapContainerToInstance(container));
+      return containers.map((container: any) =>
+        this.mapContainerToInstance(container),
+      );
     } catch (error) {
       console.error('Failed to list containers:', error);
       throw error;
@@ -334,21 +406,35 @@ export class ContainerHostingService {
   /**
    * Calculate base cost per hour for given resources
    */
-  private calculateBaseCost(memory: number, cpu: number, storage: number): number {
+  private calculateBaseCost(
+    memory: number,
+    cpu: number,
+    storage: number,
+  ): number {
     // e2b pricing (approximate)
     const memoryCostPerMBHour = 0.000001; // $0.001 per GB-hour
-    const cpuCostPerUnitHour = 0.00001; // $0.01 per vCPU-hour  
+    const cpuCostPerUnitHour = 0.00001; // $0.01 per vCPU-hour
     const storageCostPerGBHour = 0.0000001; // $0.0001 per GB-hour
 
-    return (memory * memoryCostPerMBHour) + (cpu * cpuCostPerUnitHour) + (storage * storageCostPerGBHour);
+    return (
+      memory * memoryCostPerMBHour +
+      cpu * cpuCostPerUnitHour +
+      storage * storageCostPerGBHour
+    );
   }
 
   /**
    * Build container configuration for e2b deployment
    */
-  private buildContainerConfig(asset: any, version: any, config: ContainerDeploymentConfig) {
-    const containerConfig = version.configuration?.containerConfig || asset.configuration?.containerConfig;
-    
+  private buildContainerConfig(
+    asset: any,
+    version: any,
+    config: ContainerDeploymentConfig,
+  ) {
+    const containerConfig =
+      version.configuration?.containerConfig ||
+      asset.configuration?.containerConfig;
+
     if (!containerConfig) {
       throw new Error('No container configuration found for asset');
     }
@@ -360,14 +446,14 @@ export class ContainerHostingService {
         ...config.environment,
         ASSET_ID: config.assetId,
         VERSION_ID: config.versionId,
-        USER_ID: config.userId
+        USER_ID: config.userId,
       },
       ports: containerConfig.ports || [3000],
       resources: {
         memory: config.memory,
         cpu: config.cpu,
-        storage: config.storage
-      }
+        storage: config.storage,
+      },
     };
   }
 
@@ -394,7 +480,9 @@ export class ContainerHostingService {
    */
   private async recordUsage(containerId: string): Promise<void> {
     try {
-      const containers = await db.select()
+      const db = await getDatabase();
+      const containers = await db
+        .select()
         .from(hostedContainers)
         .where(eq(hostedContainers.id, containerId))
         .limit(1);
@@ -402,10 +490,14 @@ export class ContainerHostingService {
       if (!containers[0]) return;
 
       const container = containers[0];
-      
+
       // Calculate usage hours
-      const startTime = container.startedAt ? new Date(container.startedAt).getTime() : Date.now();
-      const endTime = container.stoppedAt ? new Date(container.stoppedAt).getTime() : Date.now();
+      const startTime = container.startedAt
+        ? new Date(container.startedAt).getTime()
+        : Date.now();
+      const endTime = container.stoppedAt
+        ? new Date(container.stoppedAt).getTime()
+        : Date.now();
       const hoursUsed = (endTime - startTime) / (1000 * 60 * 60);
 
       if (hoursUsed <= 0) return;
@@ -431,10 +523,9 @@ export class ContainerHostingService {
           source: 'container_hosting',
           memory: container.memory,
           cpu: container.cpu,
-          storage: container.storage
-        }
+          storage: container.storage,
+        },
       });
-
     } catch (error) {
       console.error('Failed to record usage:', error);
     }
@@ -446,21 +537,35 @@ export class ContainerHostingService {
   private validateDeploymentConfig(config: ContainerDeploymentConfig): void {
     // Validate memory
     if (config.memory < this.MIN_MEMORY || config.memory > this.MAX_MEMORY) {
-      throw new Error(`Memory must be between ${this.MIN_MEMORY}MB and ${this.MAX_MEMORY}MB`);
+      throw new Error(
+        `Memory must be between ${this.MIN_MEMORY}MB and ${this.MAX_MEMORY}MB`,
+      );
     }
 
     // Validate CPU
     if (config.cpu < this.MIN_CPU || config.cpu > this.MAX_CPU) {
-      throw new Error(`CPU must be between ${this.MIN_CPU} and ${this.MAX_CPU} units`);
+      throw new Error(
+        `CPU must be between ${this.MIN_CPU} and ${this.MAX_CPU} units`,
+      );
     }
 
     // Validate storage
-    if (config.storage < this.MIN_STORAGE || config.storage > this.MAX_STORAGE) {
-      throw new Error(`Storage must be between ${this.MIN_STORAGE}GB and ${this.MAX_STORAGE}GB`);
+    if (
+      config.storage < this.MIN_STORAGE ||
+      config.storage > this.MAX_STORAGE
+    ) {
+      throw new Error(
+        `Storage must be between ${this.MIN_STORAGE}GB and ${this.MAX_STORAGE}GB`,
+      );
     }
 
     // Validate required fields
-    if (!config.assetId || !config.versionId || !config.userId || !config.organizationId) {
+    if (
+      !config.assetId ||
+      !config.versionId ||
+      !config.userId ||
+      !config.organizationId
+    ) {
       throw new Error('Missing required deployment configuration fields');
     }
   }
@@ -468,7 +573,10 @@ export class ContainerHostingService {
   /**
    * Optimize resource allocation based on asset type
    */
-  private optimizeResourceAllocation(config: ContainerDeploymentConfig, asset: any): ContainerDeploymentConfig {
+  private optimizeResourceAllocation(
+    config: ContainerDeploymentConfig,
+    asset: any,
+  ): ContainerDeploymentConfig {
     const optimized = { ...config };
 
     // Apply asset-type specific optimizations
@@ -478,19 +586,19 @@ export class ContainerHostingService {
         optimized.memory = Math.max(config.memory, 256);
         optimized.cpu = Math.max(config.cpu, 500);
         break;
-        
+
       case 'agent':
         // Agents might need more memory for model processing
         optimized.memory = Math.max(config.memory, 512);
         optimized.cpu = Math.max(config.cpu, 1000);
         break;
-        
+
       case 'workflow':
         // Workflows might need variable resources
         optimized.memory = Math.max(config.memory, 384);
         optimized.cpu = Math.max(config.cpu, 750);
         break;
-        
+
       default:
         // Keep original values for unknown types
         break;
@@ -534,32 +642,44 @@ export class ContainerHostingService {
   /**
    * Deploy with retry logic
    */
-  private async deployWithRetry(deploymentConfig: any, maxRetries: number = 3): Promise<any> {
+  private async deployWithRetry(
+    deploymentConfig: any,
+    maxRetries: number = 3,
+  ): Promise<any> {
     let lastError: Error;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(`Deployment attempt ${attempt}/${maxRetries} for ${deploymentConfig.name}`);
-        
+        console.log(
+          `Deployment attempt ${attempt}/${maxRetries} for ${deploymentConfig.name}`,
+        );
+
         const deployment = await this.e2bClient.createSandbox(deploymentConfig);
-        
+
         console.log(`Deployment successful: ${deployment.id}`);
         return deployment;
-        
       } catch (error) {
-        lastError = error instanceof Error ? error : new Error('Unknown deployment error');
-        console.error(`Deployment attempt ${attempt} failed:`, lastError.message);
-        
+        lastError =
+          error instanceof Error
+            ? error
+            : new Error('Unknown deployment error');
+        console.error(
+          `Deployment attempt ${attempt} failed:`,
+          lastError.message,
+        );
+
         if (attempt < maxRetries) {
           // Wait before retrying (exponential backoff)
           const waitTime = Math.pow(2, attempt) * 1000;
           console.log(`Waiting ${waitTime}ms before retry...`);
-          await new Promise(resolve => setTimeout(resolve, waitTime));
+          await new Promise((resolve) => setTimeout(resolve, waitTime));
         }
       }
     }
 
-    throw new Error(`Deployment failed after ${maxRetries} attempts: ${lastError!.message}`);
+    throw new Error(
+      `Deployment failed after ${maxRetries} attempts: ${lastError!.message}`,
+    );
   }
 
   /**
@@ -570,7 +690,7 @@ export class ContainerHostingService {
       mcp: 'node:18-alpine',
       agent: 'node:18-slim',
       workflow: 'node:18-alpine',
-      plugin: 'node:18-alpine'
+      plugin: 'node:18-alpine',
     };
 
     return templates[assetType as keyof typeof templates] || 'node:18-alpine';
@@ -579,9 +699,15 @@ export class ContainerHostingService {
   /**
    * Build enhanced container configuration
    */
-  private buildEnhancedContainerConfig(asset: any, version: any, config: ContainerDeploymentConfig) {
-    const containerConfig = version.configuration?.containerConfig || asset.configuration?.containerConfig;
-    
+  private buildEnhancedContainerConfig(
+    asset: any,
+    version: any,
+    config: ContainerDeploymentConfig,
+  ) {
+    const containerConfig =
+      version.configuration?.containerConfig ||
+      asset.configuration?.containerConfig;
+
     if (!containerConfig) {
       // Create default configuration based on asset type
       return {
@@ -592,19 +718,20 @@ export class ContainerHostingService {
           VERSION_ID: config.versionId,
           USER_ID: config.userId,
           ASSET_TYPE: asset.assetType,
-          ...config.environment
+          ...config.environment,
         },
         ports: [3000],
         resources: {
           memory: config.memory,
           cpu: config.cpu,
-          storage: config.storage
-        }
+          storage: config.storage,
+        },
       };
     }
 
     return {
-      template: containerConfig.image || this.getContainerTemplate(asset.assetType),
+      template:
+        containerConfig.image || this.getContainerTemplate(asset.assetType),
       environment: {
         NODE_ENV: 'production',
         ...containerConfig.environment,
@@ -612,14 +739,14 @@ export class ContainerHostingService {
         ASSET_ID: config.assetId,
         VERSION_ID: config.versionId,
         USER_ID: config.userId,
-        ASSET_TYPE: asset.assetType
+        ASSET_TYPE: asset.assetType,
       },
       ports: containerConfig.ports || [3000],
       resources: {
         memory: config.memory,
         cpu: config.cpu,
-        storage: config.storage
-      }
+        storage: config.storage,
+      },
     };
   }
 
@@ -646,7 +773,7 @@ export class ContainerHostingService {
       startedAt: container.startedAt,
       stoppedAt: container.stoppedAt,
       createdAt: container.createdAt,
-      updatedAt: container.updatedAt
+      updatedAt: container.updatedAt,
     };
   }
 }

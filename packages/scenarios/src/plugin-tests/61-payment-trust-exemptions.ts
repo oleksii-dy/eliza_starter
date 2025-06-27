@@ -22,7 +22,12 @@ const paymentTrustExemptionsScenario: Scenario = {
 IMPORTANT: Admins and Owners are exempt from payment requirements.
 High-trust users (trust score > 80) get 50% discount.
 Always check user roles and trust before charging.`,
-      plugins: ['@elizaos/plugin-payment', '@elizaos/plugin-trust', '@elizaos/plugin-research'],
+      plugins: [
+        '@elizaos/plugin-sql',
+        '@elizaos/plugin-payment',
+        '@elizaos/plugin-trust',
+        '@elizaos/plugin-research',
+      ],
       script: { steps: [] },
     },
     {

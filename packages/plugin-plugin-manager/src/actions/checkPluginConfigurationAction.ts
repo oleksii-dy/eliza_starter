@@ -13,7 +13,8 @@ import { TrustService } from '@elizaos/plugin-trust';
 
 export const checkPluginConfigurationAction: Action = {
   name: 'CHECK_PLUGIN_CONFIGURATION',
-  description: 'Check the configuration status of all plugins, including missing environment variables',
+  description:
+    'Check the configuration status of all plugins, including missing environment variables',
   examples: [
     [
       {
@@ -25,7 +26,7 @@ export const checkPluginConfigurationAction: Action = {
       {
         name: '{{agentName}}',
         content: {
-          text: 'I\'ll check the configuration status of all plugins for you.',
+          text: "I'll check the configuration status of all plugins for you.",
           actions: ['CHECK_PLUGIN_CONFIGURATION'],
         },
       },
@@ -55,7 +56,7 @@ export const checkPluginConfigurationAction: Action = {
       {
         name: '{{agentName}}',
         content: {
-          text: 'I\'ll identify all plugins that need configuration.',
+          text: "I'll identify all plugins that need configuration.",
           actions: ['CHECK_PLUGIN_CONFIGURATION'],
         },
       },
@@ -136,14 +137,14 @@ export const checkPluginConfigurationAction: Action = {
 
       // Check if user has permission to configure plugins
       const trustService = runtime.getService<TrustService>('TRUST');
-      const canConfigure = trustService ?
-        await (trustService as any).checkPermission(message.entityId, 'plugin:configure') :
-        true; // Default to true if trust service not available
+      const canConfigure = trustService
+        ? await (trustService as any).checkPermission(message.entityId, 'plugin:configure')
+        : true; // Default to true if trust service not available
 
       if (statusData.needsConfiguration > 0 && canConfigure) {
         statusText += '\n\nYou can use START_PLUGIN_CONFIGURATION to configure these plugins.';
       } else if (statusData.needsConfiguration > 0 && !canConfigure) {
-        statusText += '\n\nYou don\'t have permission to configure plugins. Contact an admin.';
+        statusText += "\n\nYou don't have permission to configure plugins. Contact an admin.";
       }
 
       await callback?.({

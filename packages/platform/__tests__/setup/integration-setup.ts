@@ -18,21 +18,22 @@ jest.setTimeout(30000);
 beforeAll(() => {
   // Ensure required environment variables are set for tests
   if (!process.env.DATABASE_URL) {
-    process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/platform_test';
+    process.env.DATABASE_URL =
+      'postgresql://test:test@localhost:5432/platform_test';
   }
-  
+
   if (!process.env.STRIPE_SECRET_KEY && !process.env.STRIPE_TEST_SECRET_KEY) {
     process.env.STRIPE_SECRET_KEY = 'sk_test_mock_key_for_testing';
   }
-  
+
   if (!process.env.STRIPE_WEBHOOK_SECRET) {
     process.env.STRIPE_WEBHOOK_SECRET = 'whsec_test_webhook_secret';
   }
-  
+
   if (!process.env.NEXT_PUBLIC_APP_URL) {
     process.env.NEXT_PUBLIC_APP_URL = 'http://localhost:3000';
   }
-  
+
   // Set test mode (NODE_ENV is read-only in some environments)
   // process.env.NODE_ENV = 'test';
 });
@@ -54,7 +55,7 @@ afterAll(async () => {
 beforeEach(() => {
   // Clear all mocks
   jest.clearAllMocks();
-  
+
   // Reset console to catch unexpected logs
   jest.spyOn(console, 'error').mockImplementation(() => {});
   jest.spyOn(console, 'warn').mockImplementation(() => {});
@@ -72,17 +73,21 @@ process.on('uncaughtException', (error) => {
 // Performance monitoring for tests
 const originalTest = global.test;
 (global.test as any) = (name: string, fn: any, timeout?: number) => {
-  return originalTest(name, async () => {
-    const startTime = Date.now();
-    try {
-      await fn();
-    } finally {
-      const duration = Date.now() - startTime;
-      if (duration > 5000) {
-        console.warn(`Test "${name}" took ${duration}ms (longer than 5s)`);
+  return originalTest(
+    name,
+    async () => {
+      const startTime = Date.now();
+      try {
+        await fn();
+      } finally {
+        const duration = Date.now() - startTime;
+        if (duration > 5000) {
+          console.warn(`Test "${name}" took ${duration}ms (longer than 5s)`);
+        }
       }
-    }
-  }, timeout);
+    },
+    timeout,
+  );
 };
 
 // Database health check for integration tests
@@ -90,7 +95,7 @@ beforeAll(async () => {
   try {
     const { getDatabase } = await import('@/lib/database/connection');
     const db = getDatabase();
-    
+
     // Simple connection test
     // await db.execute('SELECT 1');
     console.log('Database connection verified for integration tests');
@@ -102,23 +107,26 @@ beforeAll(async () => {
 
 // Stripe configuration validation
 beforeAll(async () => {
-  const stripeKey = process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
-  
+  const stripeKey =
+    process.env.STRIPE_TEST_SECRET_KEY || process.env.STRIPE_SECRET_KEY;
+
   if (!stripeKey) {
-    console.warn('No Stripe API key found - Stripe integration tests will be skipped');
+    console.warn(
+      'No Stripe API key found - Stripe integration tests will be skipped',
+    );
     return;
   }
-  
+
   if (!stripeKey.startsWith('sk_test_')) {
     console.warn('Using live Stripe key in tests - this is not recommended');
   }
-  
+
   try {
     const Stripe = (await import('stripe')).default;
     const stripe = new Stripe(stripeKey, {
       apiVersion: '2025-02-24.acacia',
     });
-    
+
     // Test API connection
     await stripe.balance.retrieve();
     console.log('Stripe API connection verified for integration tests');
@@ -132,16 +140,22 @@ beforeAll(async () => {
 global.cleanupTestData = async (organizationId: string) => {
   try {
     const { getDatabase } = await import('@/lib/database/connection');
-    const { organizations, creditTransactions, webhooks } = await import('@/lib/database/schema');
+    const { organizations, creditTransactions, webhooks } = await import(
+      '@/lib/database/schema'
+    );
     const { eq } = await import('drizzle-orm');
-    
+
     const db = getDatabase();
-    
+
     // Clean up in correct order due to foreign key constraints
-    await db.delete(webhooks).where(eq(webhooks.organizationId, organizationId));
-    await db.delete(creditTransactions).where(eq(creditTransactions.organizationId, organizationId));
+    await db
+      .delete(webhooks)
+      .where(eq(webhooks.organizationId, organizationId));
+    await db
+      .delete(creditTransactions)
+      .where(eq(creditTransactions.organizationId, organizationId));
     await db.delete(organizations).where(eq(organizations.id, organizationId));
-    
+
     console.log(`Cleaned up test data for organization: ${organizationId}`);
   } catch (error) {
     console.error('Failed to cleanup test data:', error);
@@ -152,7 +166,7 @@ global.cleanupTestData = async (organizationId: string) => {
 global.createTestOrganization = async (orgId: string) => {
   const { getDatabase } = await import('@/lib/database/connection');
   const { organizations } = await import('@/lib/database/schema');
-  
+
   const db = getDatabase();
   await db.insert(organizations).values({
     id: orgId,
@@ -160,20 +174,21 @@ global.createTestOrganization = async (orgId: string) => {
     slug: `test-org-${orgId}`,
     creditBalance: '100.00',
   });
-  
+
   return orgId;
 };
 
 // Export common test utilities
 export const testUtils = {
-  generateTestId: () => `test-${Date.now()}-${Math.random().toString(36).substring(2)}`,
-  
-  waitFor: (ms: number) => new Promise(resolve => setTimeout(resolve, ms)),
-  
+  generateTestId: () =>
+    `test-${Date.now()}-${Math.random().toString(36).substring(2)}`,
+
+  waitFor: (ms: number) => new Promise((resolve) => setTimeout(resolve, ms)),
+
   retryAsync: async <T>(
-    fn: () => Promise<T>, 
-    retries: number = 3, 
-    delay: number = 1000
+    fn: () => Promise<T>,
+    retries: number = 3,
+    delay: number = 1000,
   ): Promise<T> => {
     try {
       return await fn();
@@ -185,14 +200,14 @@ export const testUtils = {
       throw error;
     }
   },
-  
+
   expectEventually: async (
     assertion: () => Promise<void> | void,
     timeout: number = 5000,
-    interval: number = 100
+    interval: number = 100,
   ): Promise<void> => {
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < timeout) {
       try {
         await assertion();
@@ -201,7 +216,7 @@ export const testUtils = {
         await testUtils.waitFor(interval);
       }
     }
-    
+
     // Final attempt to get the actual error
     await assertion();
   },

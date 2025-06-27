@@ -5,27 +5,7 @@
 
 import type { Action, IAgentRuntime, Memory, State } from '@elizaos/core';
 import { logger, parseJSONObjectFromText } from '@elizaos/core';
-
-export interface TaskAssignment {
-  id: string;
-  title: string;
-  description: string;
-  assignedTo: string; // Agent role
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  estimatedHours?: number;
-  dependencies?: string[]; // Other task IDs
-  deliverables: string[];
-  acceptanceCriteria: string[];
-  dueDate?: string;
-  status: 'assigned' | 'in_progress' | 'completed' | 'blocked';
-}
-
-export interface TaskDelegationRequest {
-  projectId?: string;
-  tasks: Omit<TaskAssignment, 'id' | 'status'>[];
-  sprintGoal?: string;
-  deadline?: string;
-}
+import type { TaskAssignment, TaskDelegationRequest } from './spawnDevTeam.js';
 
 export const delegateTaskAction: Action = {
   name: 'DELEGATE_TASK',
@@ -42,13 +22,13 @@ export const delegateTaskAction: Action = {
   examples: [
     [
       {
-        user: '{{user1}}',
+        name: 'user',
         content: {
           text: 'Assign the backend team to create user authentication and the frontend team to build the login form',
         },
       },
       {
-        user: '{{agent}}',
+        name: 'agent',
         content: {
           text: "I'll delegate these tasks to the appropriate team members right away!",
           action: 'DELEGATE_TASK',
@@ -57,13 +37,13 @@ export const delegateTaskAction: Action = {
     ],
     [
       {
-        user: '{{user1}}',
+        name: 'user',
         content: {
           text: 'Create tasks for setting up the database schema and building the API endpoints',
         },
       },
       {
-        user: '{{agent}}',
+        name: 'agent',
         content: {
           text: "Perfect! I'll break this down into specific tasks and assign them to the backend and devops teams.",
           action: 'DELEGATE_TASK',
@@ -95,7 +75,7 @@ export const delegateTaskAction: Action = {
     return hasTaskIntent && hasTeamMention;
   },
 
-  handler: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<any> => {
+  handler: async (runtime: IAgentRuntime, message: Memory, _state?: State): Promise<any> => {
     try {
       logger.info('Starting DELEGATE_TASK action');
 
@@ -112,17 +92,21 @@ export const delegateTaskAction: Action = {
       const tasks = await generateTaskAssignments(delegationRequest);
 
       // Create task tracking memory
-      await runtime.createMemory({
-        roomId,
-        content: {
-          text: `Task delegation created: ${tasks.length} tasks assigned`,
-          tasks,
-          sprintGoal: delegationRequest.sprintGoal,
-          createdAt: new Date().toISOString(),
-          type: 'task_delegation',
+      await runtime.createMemory(
+        {
+          roomId,
+          entityId: runtime.agentId,
+          content: {
+            text: `Task delegation created: ${tasks.length} tasks assigned`,
+            tasks,
+            sprintGoal: delegationRequest.sprintGoal,
+            createdAt: new Date().toISOString(),
+            type: 'task_delegation',
+          },
         },
-        unique: false,
-      });
+        'messages',
+        false
+      );
 
       // Send individual task assignments to each agent
       const assignmentPromises = tasks.map((task) => sendTaskAssignment(runtime, roomId, task));
@@ -131,16 +115,24 @@ export const delegateTaskAction: Action = {
 
       // Send summary to room
       const summary = generateTaskSummary(tasks, delegationRequest.sprintGoal);
-      await runtime.sendMessage(roomId, {
-        text: summary,
-        tasks: tasks.map((t) => ({
-          id: t.id,
-          title: t.title,
-          assignedTo: t.assignedTo,
-          priority: t.priority,
-        })),
-        type: 'task_summary',
-      });
+      await runtime.createMemory(
+        {
+          roomId,
+          entityId: runtime.agentId,
+          content: {
+            text: summary,
+            tasks: tasks.map((t) => ({
+              id: t.id,
+              title: t.title,
+              assignedTo: t.assignedTo,
+              priority: t.priority,
+            })),
+            type: 'task_summary',
+          },
+        },
+        'messages',
+        false
+      );
 
       return {
         text: `📋 **Tasks Delegated Successfully!**
@@ -191,7 +183,10 @@ async function parseTaskDelegation(text: string): Promise<TaskDelegationRequest>
   try {
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      request = parseJSONObjectFromText(jsonMatch[0]);
+      const parsed = parseJSONObjectFromText(jsonMatch[0]);
+      if (parsed) {
+        request = parsed as Partial<TaskDelegationRequest>;
+      }
     }
   } catch {
     // Fall back to natural language parsing
@@ -384,12 +379,20 @@ ${task.dependencies?.length ? `**Dependencies:** ${task.dependencies.join(', ')}
 
 Please acknowledge this task and provide an estimated start time. Update the room when you begin work!`;
 
-  await runtime.sendMessage(roomId, {
-    text: assignmentMessage,
-    task,
-    recipient: task.assignedTo,
-    type: 'task_assignment',
-  });
+  await runtime.createMemory(
+    {
+      roomId: roomId as any,
+      entityId: runtime.agentId,
+      content: {
+        text: assignmentMessage,
+        task,
+        recipient: task.assignedTo,
+        type: 'task_assignment',
+      },
+    },
+    'messages',
+    false
+  );
 }
 
 /**

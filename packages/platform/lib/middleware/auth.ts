@@ -21,32 +21,36 @@ const PUBLIC_API_ROUTES = [
   '/api/v1/status',
   '/api/health',
   '/api/ping',
-  '/api/runtime/ping'
+  '/api/runtime/ping',
 ];
 
 // Development-only routes
-const DEV_ONLY_ROUTES = [
-  '/api/auth/dev-login'
-];
+const DEV_ONLY_ROUTES = ['/api/auth/dev-login'];
 
 /**
  * Check if a route is public (doesn't require authentication)
  */
 function isPublicRoute(pathname: string): boolean {
-  return PUBLIC_API_ROUTES.some(route => pathname === route || pathname.startsWith(`${route}/`));
+  return PUBLIC_API_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  );
 }
 
 /**
  * Check if a route is development-only
  */
 function isDevOnlyRoute(pathname: string): boolean {
-  return DEV_ONLY_ROUTES.some(route => pathname === route || pathname.startsWith(`${route}/`));
+  return DEV_ONLY_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  );
 }
 
 /**
  * API Authentication Middleware
  */
-export async function apiAuthMiddleware(request: NextRequest): Promise<NextResponse | null> {
+export async function apiAuthMiddleware(
+  request: NextRequest,
+): Promise<NextResponse | null> {
   const pathname = request.nextUrl.pathname;
 
   // Skip non-API routes
@@ -59,9 +63,9 @@ export async function apiAuthMiddleware(request: NextRequest): Promise<NextRespo
     return NextResponse.json(
       {
         success: false,
-        error: 'Endpoint not available in production'
+        error: 'Endpoint not available in production',
       },
-      { status: 404 } // Return 404 to avoid revealing endpoint existence
+      { status: 404 }, // Return 404 to avoid revealing endpoint existence
     );
   }
 
@@ -78,9 +82,9 @@ export async function apiAuthMiddleware(request: NextRequest): Promise<NextRespo
       return NextResponse.json(
         {
           success: false,
-          error: 'Authentication required'
+          error: 'Authentication required',
         },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -89,9 +93,9 @@ export async function apiAuthMiddleware(request: NextRequest): Promise<NextRespo
       return NextResponse.json(
         {
           success: false,
-          error: 'Account is disabled'
+          error: 'Account is disabled',
         },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -107,9 +111,9 @@ export async function apiAuthMiddleware(request: NextRequest): Promise<NextRespo
     return NextResponse.json(
       {
         success: false,
-        error: 'Authentication failed'
+        error: 'Authentication failed',
       },
-      { status: 401 }
+      { status: 401 },
     );
   }
 }
@@ -117,7 +121,9 @@ export async function apiAuthMiddleware(request: NextRequest): Promise<NextRespo
 /**
  * Rate limiting middleware for authentication endpoints
  */
-export async function authRateLimitMiddleware(request: NextRequest): Promise<NextResponse | null> {
+export async function authRateLimitMiddleware(
+  request: NextRequest,
+): Promise<NextResponse | null> {
   const pathname = request.nextUrl.pathname;
 
   // Only apply to auth endpoints
@@ -126,9 +132,10 @@ export async function authRateLimitMiddleware(request: NextRequest): Promise<Nex
   }
 
   // Get client IP
-  const clientIP = request.headers.get('x-forwarded-for') ||
-                   request.headers.get('x-real-ip') ||
-                   'unknown';
+  const clientIP =
+    request.headers.get('x-forwarded-for') ||
+    request.headers.get('x-real-ip') ||
+    'unknown';
 
   // Simple in-memory rate limiting (in production, use Redis)
   const rateLimit = await checkRateLimit(clientIP, pathname);
@@ -138,14 +145,14 @@ export async function authRateLimitMiddleware(request: NextRequest): Promise<Nex
       {
         success: false,
         error: 'Too many requests. Please try again later.',
-        retryAfter: rateLimit.retryAfter
+        retryAfter: rateLimit.retryAfter,
       },
       {
         status: 429,
         headers: {
-          'Retry-After': rateLimit.retryAfter.toString()
-        }
-      }
+          'Retry-After': rateLimit.retryAfter.toString(),
+        },
+      },
     );
   }
 
@@ -155,7 +162,10 @@ export async function authRateLimitMiddleware(request: NextRequest): Promise<Nex
 // Simple in-memory rate limiting (replace with Redis in production)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
-async function checkRateLimit(clientIP: string, endpoint: string): Promise<{ allowed: boolean; retryAfter: number }> {
+async function checkRateLimit(
+  clientIP: string,
+  endpoint: string,
+): Promise<{ allowed: boolean; retryAfter: number }> {
   // Disable rate limiting in development for testing
   if (process.env.NODE_ENV === 'development') {
     return { allowed: true, retryAfter: 0 };
@@ -197,11 +207,17 @@ export function securityHeadersMiddleware(request: NextRequest): NextResponse {
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-XSS-Protection', '1; mode=block');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.headers.set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
+  response.headers.set(
+    'Permissions-Policy',
+    'geolocation=(), microphone=(), camera=()',
+  );
 
   // Only set HSTS in production with HTTPS
   if (process.env.NODE_ENV === 'production') {
-    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    response.headers.set(
+      'Strict-Transport-Security',
+      'max-age=31536000; includeSubDomains',
+    );
   }
 
   // CSP header
@@ -215,7 +231,7 @@ export function securityHeadersMiddleware(request: NextRequest): NextResponse {
     "frame-src 'self' http://localhost:3000", // Allow server iframe
     "frame-ancestors 'self'", // Allow self-embedding
     "base-uri 'self'",
-    "form-action 'self'"
+    "form-action 'self'",
   ].join('; ');
 
   response.headers.set('Content-Security-Policy', cspHeader);

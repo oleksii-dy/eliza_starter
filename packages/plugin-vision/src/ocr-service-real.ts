@@ -9,7 +9,9 @@ export class RealOCRService {
   private initPromise: Promise<void> | null = null;
 
   async initialize(): Promise<void> {
-    if (this.initialized) {return;}
+    if (this.initialized) {
+      return;
+    }
 
     // Prevent multiple initializations
     if (this.initPromise) {
@@ -99,7 +101,8 @@ export class RealOCRService {
     // Process lines as blocks
     const lines = (result.data as any).lines || [];
     for (const line of lines) {
-      if (line.confidence > 30) { // Filter low confidence
+      if (line.confidence > 30) {
+        // Filter low confidence
         blocks.push({
           text: line.text.trim(),
           bbox: {
@@ -173,7 +176,7 @@ export class RealOCRService {
         // Sort blocks by X position
         rowBlocks.sort((a, b) => a.bbox.x - b.bbox.x);
 
-        const rowTexts = rowBlocks.map(b => b.text);
+        const rowTexts = rowBlocks.map((b) => b.text);
         tableRows.push(rowTexts);
 
         // Update table bounds
@@ -181,9 +184,8 @@ export class RealOCRService {
           tableBounds = { ...rowBlocks[0].bbox };
         } else {
           tableBounds.x = Math.min(tableBounds.x, rowBlocks[0].bbox.x);
-          tableBounds.width = Math.max(
-            ...rowBlocks.map(b => b.bbox.x + b.bbox.width)
-          ) - tableBounds.x;
+          tableBounds.width =
+            Math.max(...rowBlocks.map((b) => b.bbox.x + b.bbox.width)) - tableBounds.x;
           tableBounds.height = y + rowBlocks[0].bbox.height - tableBounds.y;
         }
       } else if (tableRows.length > 1 && tableBounds) {
@@ -208,7 +210,9 @@ export class RealOCRService {
     return tables;
   }
 
-  private detectForms(ocrResult: OCRResult): Array<{ label: string; value: string; bbox: BoundingBox }> {
+  private detectForms(
+    ocrResult: OCRResult
+  ): Array<{ label: string; value: string; bbox: BoundingBox }> {
     const forms: Array<{ label: string; value: string; bbox: BoundingBox }> = [];
 
     // Look for label-value patterns
@@ -227,8 +231,8 @@ export class RealOCRService {
 
           // Check if horizontally aligned or just below
           const isAligned = Math.abs(current.bbox.y - next.bbox.y) < 10;
-          const isBelow = next.bbox.y > current.bbox.y &&
-                          next.bbox.y < current.bbox.y + current.bbox.height + 30;
+          const isBelow =
+            next.bbox.y > current.bbox.y && next.bbox.y < current.bbox.y + current.bbox.height + 30;
 
           if (isAligned || isBelow) {
             forms.push({
@@ -237,10 +241,9 @@ export class RealOCRService {
               bbox: {
                 x: Math.min(current.bbox.x, next.bbox.x),
                 y: current.bbox.y,
-                width: Math.max(
-                  current.bbox.x + current.bbox.width,
-                  next.bbox.x + next.bbox.width
-                ) - Math.min(current.bbox.x, next.bbox.x),
+                width:
+                  Math.max(current.bbox.x + current.bbox.width, next.bbox.x + next.bbox.width) -
+                  Math.min(current.bbox.x, next.bbox.x),
                 height: next.bbox.y + next.bbox.height - current.bbox.y,
               },
             });
@@ -261,7 +264,9 @@ export class RealOCRService {
 
     for (const block of ocrResult.blocks) {
       // Check for list markers
-      const listMatch = block.text.match(/^[\u2022\u2023\u25E6\u2043\u2219•·‣⁃◦▪▫◆◇○●\-\*]\s+(.+)$/);
+      const listMatch = block.text.match(
+        /^[\u2022\u2023\u25E6\u2043\u2219•·‣⁃◦▪▫◆◇○●\-\*]\s+(.+)$/
+      );
       const numberedMatch = block.text.match(/^(\d+\.|\d+\)|\(\d+\)|[a-zA-Z]\.)\s+(.+)$/);
 
       if (listMatch || numberedMatch) {

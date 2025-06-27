@@ -9,7 +9,6 @@ import { withAuth, AuthenticatedRequest } from '@/lib/api/middleware';
 const getAgentService = () =>
   import('@/lib/agents/service').then((m) => m.AgentService);
 
-
 /**
  * GET /api/v1/organizations/config - Get organization configuration
  */
@@ -21,7 +20,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
     const agentService = new AgentService();
     const config = await agentService.getOrganizationConfig(
       user.organizationId,
-      user.id
+      user.id,
     );
 
     return NextResponse.json({
@@ -33,7 +32,7 @@ export const GET = withAuth(async (request: AuthenticatedRequest) => {
     console.error('GET /api/v1/organizations/config error:', error);
     return NextResponse.json(
       { error: 'Failed to get organization configuration' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 });

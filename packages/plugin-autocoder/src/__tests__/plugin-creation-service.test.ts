@@ -37,7 +37,9 @@ mock.module('../utils/plugin-templates', () => ({
   generateProviderCode: mock(
     (name: string) => `export const ${name}Provider = { name: "${name}" };`
   ),
-  generateServiceCode: mock((name: string) => `export class ${name} extends Service { /* empty */ };`),
+  generateServiceCode: mock(
+    (name: string) => `export class ${name} extends Service { /* empty */ };`
+  ),
   generateEvaluatorCode: mock(
     (name: string) => `export const ${name}Evaluator = { name: "${name}" };`
   ),
@@ -53,19 +55,7 @@ import * as pluginTemplates from '../utils/plugin-templates';
 
 // Import the service after mocks are set up
 import { PluginCreationService } from '../services/PluginCreationService.js';
-
-// Create mock runtime
-const createMockRuntime = (): IAgentRuntime => {
-  return {
-    getSetting: mock((key: string) => {
-      const settings: Record<string, string> = {
-        ANTHROPIC_API_KEY: 'test-api-key',
-      };
-      return settings[key];
-    }),
-    agentId: 'test-agent-id',
-  } as any;
-};
+import { createMockRuntime } from './test-utils.js';
 
 describe('PluginCreationService', () => {
   let service: any;
@@ -265,7 +255,7 @@ describe('PluginCreationService', () => {
       });
 
       // Give job a moment to start processing
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       service.cancelJob(jobId);
 
@@ -359,7 +349,7 @@ describe('PluginCreationService', () => {
       const specification = { name: '@test/plugin', description: 'Test plugin' };
       const jobId = await service.createPlugin(specification, 'test-api-key');
 
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const job = service.getJobStatus(jobId);
       expect(job?.status).toMatch(/^(pending|running|completed|failed)$/);

@@ -1,23 +1,10 @@
-import { describe, it, expect, mock, beforeEach, type Mock } from 'bun:test';
+import { describe, it, expect, beforeEach } from 'bun:test';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 import type { UUID } from '@elizaos/core';
+import { mock } from '@elizaos/core/test-utils';
 import { recordTrustInteractionAction } from '../recordTrustInteraction';
 import type { TrustInteraction } from '../../types/trust';
-
-const createMockRuntime = (): IAgentRuntime =>
-  ({
-    agentId: 'test-agent' as UUID,
-    getService: mock(),
-  }) as any;
-
-const createMockMemory = (text: string, entityId: UUID): Memory =>
-  ({
-    entityId,
-    content: {
-      text,
-    },
-    roomId: 'room-1' as UUID,
-  }) as Memory;
+import { createMockRuntime, createMockMemory } from '../../__tests__/test-utils';
 
 describe('recordTrustInteractionAction', () => {
   let runtime: IAgentRuntime;
@@ -25,11 +12,18 @@ describe('recordTrustInteractionAction', () => {
   const testEntityId = 'entity-1' as UUID;
 
   beforeEach(() => {
-    runtime = createMockRuntime();
     trustService = {
       recordInteraction: mock().mockResolvedValue({ success: true }),
     };
-    (runtime.getService as unknown as Mock<any>).mockReturnValue(trustService);
+
+    runtime = createMockRuntime({
+      getService: mock().mockImplementation((name: string) => {
+        if (name === 'trust-engine') {
+          return trustService;
+        }
+        return null;
+      }),
+    });
   });
 
   it('should record a trust interaction', async () => {
@@ -40,10 +34,10 @@ describe('recordTrustInteractionAction', () => {
 
     const result = await recordTrustInteractionAction.handler(runtime, memory);
 
-    expect(trustService.recordInteraction).toHaveBeenCalled();
-    const calledWith = trustService.recordInteraction.mock.calls[0][0];
+    expect(trustService.recordInteraction.calls.length).toBeGreaterThan(0);
+    const calledWith = trustService.recordInteraction.calls[0][0];
     expect(calledWith.sourceEntityId).toBe(testEntityId);
-    expect(calledWith.targetEntityId).toBe('test-agent');
+    expect(calledWith.targetEntityId).toBe('test-agent-id');
     expect(calledWith.type).toBe('HELPFUL_ACTION');
     expect(calledWith.impact).toBe(5); // Now properly converted to number
     expect(calledWith.details.description).toBe('Helped with task');
@@ -56,18 +50,16 @@ describe('recordTrustInteractionAction', () => {
     const memory = createMockMemory('test', testEntityId);
     const state = {} as State;
 
-    // Mock trust-engine service
-    (runtime.getService as unknown as Mock<any>).mockImplementation((name: string) => {
-      if (name === 'trust-engine') {
-        return trustService;
-      }
-      return null;
-    });
-
+    // Should validate when trust-engine service is available
     expect(await recordTrustInteractionAction.validate(runtime, memory, state)).toBe(true);
 
-    (runtime.getService as unknown as Mock<any>).mockReturnValue(null);
-    expect(await recordTrustInteractionAction.validate(runtime, memory, state)).toBe(false);
+    // Test with no service available
+    const runtimeWithoutService = createMockRuntime({
+      getService: mock().mockReturnValue(null),
+    });
+    expect(await recordTrustInteractionAction.validate(runtimeWithoutService, memory, state)).toBe(
+      false
+    );
   });
 
   it('should handle errors gracefully', async () => {

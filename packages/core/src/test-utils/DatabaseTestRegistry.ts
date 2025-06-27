@@ -4,7 +4,7 @@
  */
 
 import type { IDatabaseAdapter } from '../types/database';
-import type { UUID as _UUID } from '../types/primitives';
+import type { UUID } from '../types/primitives';
 
 export interface DatabaseTestCapabilities {
   isReady: boolean;
@@ -99,7 +99,7 @@ export class DatabaseTestRegistry {
         adapterType = 'mock';
       } else {
         throw new Error(
-          `Failed to create required database adapter for test ${testId}: ${_error.message}`
+          `Failed to create required database adapter for test ${testId}: ${_error instanceof Error ? _error.message : String(_error)}`
         );
       }
     }
@@ -139,7 +139,7 @@ export class DatabaseTestRegistry {
         if (!postgresUrl) {
           throw new Error('PostgreSQL URL not available');
         }
-        return await createDatabaseAdapter({ postgresUrl }, `test-agent-${testId}`);
+        return await createDatabaseAdapter({ postgresUrl }, `test-agent-${testId}` as UUID);
       } else {
         throw new Error(`Unsupported database adapter type: ${type}`);
       }
@@ -188,11 +188,11 @@ export class DatabaseTestRegistry {
 
   private async initializeTestSchema(instance: TestDatabaseInstance): Promise<void> {
     try {
-      // Run core migrations for test database
+      // Core migrations are handled by the adapter initialization
       try {
         const sqlPlugin = await import('@elizaos/plugin-sql');
-        if (sqlPlugin.UnifiedMigrator?.migrateCoreTablesV2) {
-          await sqlPlugin.UnifiedMigrator.migrateCoreTablesV2(instance.adapter);
+        if (sqlPlugin.UnifiedMigrator?.migrateCoreTablesV1) {
+          await sqlPlugin.UnifiedMigrator.migrateCoreTablesV1(instance.adapter);
         }
       } catch (migrationError) {
         console.warn('Core migrations not available:', migrationError);
@@ -288,7 +288,9 @@ export class DatabaseTestRegistry {
           await testAdapter.close();
         }
       } catch (_error) {
-        result._errors.push(`Required adapter ${adapterType} is not available: ${_error.message}`);
+        result._errors.push(
+          `Required adapter ${adapterType} is not available: ${_error instanceof Error ? _error.message : String(_error)}`
+        );
       }
     }
 

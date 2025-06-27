@@ -418,9 +418,9 @@ bun install @elizaos/plugin-${pluginName}
 
 \`\`\`typescript
 import { plugin${pluginName
-      .split('-')
-      .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
-      .join('')} } from '@elizaos/plugin-${pluginName}';
+    .split('-')
+    .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+    .join('')} } from '@elizaos/plugin-${pluginName}';
 
 // Add to your ElizaOS configuration
 \`\`\`
@@ -432,9 +432,9 @@ import { plugin${pluginName
     const indexContent = `import { Plugin } from '@elizaos/core';
 
 export const plugin${pluginName
-      .split('-')
-      .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
-      .join('')}: Plugin = {
+    .split('-')
+    .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+    .join('')}: Plugin = {
   name: 'plugin-${pluginName}',
   version: '0.1.0',
   actions: [],
@@ -444,9 +444,9 @@ export const plugin${pluginName
 };
 
 export default plugin${pluginName
-      .split('-')
-      .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
-      .join('')};
+    .split('-')
+    .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+    .join('')};
 `;
 
     await fs.writeFile(path.join(this.pluginPath!, 'src/index.ts'), indexContent);

@@ -8,7 +8,7 @@ interface MigrationRequest {
   userEmail: string;
 }
 
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   try {
     const body: MigrationRequest = await request.json();
     const { sessionId, userId, userEmail } = body;
@@ -16,26 +16,28 @@ export async function POST(request: NextRequest) {
     if (!sessionId || !userId) {
       return NextResponse.json(
         { error: 'Session ID and user ID are required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Migrate the session using the repository
-    const migrationResult = await anonymousSessionRepo.migrateToUser(sessionId, userId);
+    const migrationResult = await anonymousSessionRepo.migrateToUser(
+      sessionId,
+      userId,
+    );
 
     return NextResponse.json(migrationResult);
-
   } catch (error) {
     console.error('Session migration error:', error);
     return NextResponse.json(
       { error: 'Failed to migrate session' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 // Endpoint to get session statistics
-export async function GET(request: NextRequest) {
+export async function handleGET(request: NextRequest) {
   try {
     const stats = await anonymousSessionRepo.getSessionStats();
     return NextResponse.json({ success: true, stats });
@@ -43,7 +45,7 @@ export async function GET(request: NextRequest) {
     console.error('Get session stats error:', error);
     return NextResponse.json(
       { error: 'Failed to retrieve session statistics' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

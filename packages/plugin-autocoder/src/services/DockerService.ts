@@ -42,7 +42,9 @@ export class DockerService extends Service implements IDockerService {
     try {
       // Initialize Docker client
       const dockerHost = this.runtime?.getSetting('DOCKER_HOST') || undefined;
-      const dockerOptions: Docker.DockerOptions = { /* empty */ };
+      const dockerOptions: Docker.DockerOptions = {
+        /* empty */
+      };
 
       if (dockerHost) {
         dockerOptions.host = dockerHost;
@@ -126,8 +128,16 @@ export class DockerService extends Service implements IDockerService {
       'eliza.task.id': agentConfig.taskContext?.taskId || '',
     };
 
-    const portBindings: { [key: string]: any } = { /* empty */ };
-    const exposedPorts: { [key: string]: { /* empty */ } } = { /* empty */ };
+    const portBindings: { [key: string]: any } = {
+      /* empty */
+    };
+    const exposedPorts: {
+      [key: string]: {
+        /* empty */
+      };
+    } = {
+      /* empty */
+    };
 
     // Bind communication and health ports
     const commPortKey = `${agentConfig.communicationPort}/tcp`;
@@ -135,8 +145,12 @@ export class DockerService extends Service implements IDockerService {
 
     portBindings[commPortKey] = [{ HostPort: agentConfig.communicationPort.toString() }];
     portBindings[healthPortKey] = [{ HostPort: agentConfig.healthPort.toString() }];
-    exposedPorts[commPortKey] = { /* empty */ };
-    exposedPorts[healthPortKey] = { /* empty */ };
+    exposedPorts[commPortKey] = {
+      /* empty */
+    };
+    exposedPorts[healthPortKey] = {
+      /* empty */
+    };
 
     const config: Docker.ContainerCreateOptions = {
       Image: request.image,
@@ -164,12 +178,12 @@ export class DockerService extends Service implements IDockerService {
       },
       NetworkingConfig: networkConfig
         ? {
-          EndpointsConfig: {
-            [networkConfig.name]: {
-              Aliases: networkConfig.aliases || [request.name],
+            EndpointsConfig: {
+              [networkConfig.name]: {
+                Aliases: networkConfig.aliases || [request.name],
+              },
             },
-          },
-        }
+          }
         : undefined,
       Healthcheck: {
         Test: ['CMD-SHELL', `curl -f http://localhost:${agentConfig.healthPort}/health || exit 1`],
@@ -236,11 +250,17 @@ export class DockerService extends Service implements IDockerService {
     const networkSettings = inspect.NetworkSettings;
 
     let containerState: ContainerStatus['state'] = 'error';
-    if (state.Running) {containerState = 'running';}
-    else if (state.Paused) {containerState = 'paused';}
-    else if (state.ExitCode === 0) {containerState = 'exited';}
-    else if (state.ExitCode !== 0) {containerState = 'error';}
-    else {containerState = 'stopped';}
+    if (state.Running) {
+      containerState = 'running';
+    } else if (state.Paused) {
+      containerState = 'paused';
+    } else if (state.ExitCode === 0) {
+      containerState = 'exited';
+    } else if (state.ExitCode !== 0) {
+      containerState = 'error';
+    } else {
+      containerState = 'stopped';
+    }
 
     let health: ContainerStatus['health'] = 'none';
     if (state.Health) {
@@ -311,7 +331,8 @@ export class DockerService extends Service implements IDockerService {
     }
   }
 
-  async getContainerLogs(_containerId: string,
+  async getContainerLogs(
+    _containerId: string,
     _options?: ContainerLogOptions
   ): Promise<NodeJS.ReadableStream> {
     try {
@@ -324,8 +345,12 @@ export class DockerService extends Service implements IDockerService {
         timestamps: _options?.timestamps || false,
       };
 
-      if (_options?.tail) {logOptions.tail = _options.tail;}
-      if (_options?.since) {logOptions.since = Math.floor(_options.since.getTime() / 1000);}
+      if (_options?.tail) {
+        logOptions.tail = _options.tail;
+      }
+      if (_options?.since) {
+        logOptions.since = Math.floor(_options.since.getTime() / 1000);
+      }
 
       return (await container.logs(logOptions)) as any;
     } catch (_error) {
@@ -385,8 +410,12 @@ export class DockerService extends Service implements IDockerService {
     let blockWrite = 0;
     if (blkioStats.io_service_bytes_recursive) {
       for (const stat of blkioStats.io_service_bytes_recursive) {
-        if (stat.op === 'Read') {blockRead += stat.value;}
-        if (stat.op === 'Write') {blockWrite += stat.value;}
+        if (stat.op === 'Read') {
+          blockRead += stat.value;
+        }
+        if (stat.op === 'Write') {
+          blockWrite += stat.value;
+        }
       }
     }
 
@@ -415,7 +444,8 @@ export class DockerService extends Service implements IDockerService {
     };
   }
 
-  async executeInContainer(_containerId: string,
+  async executeInContainer(
+    _containerId: string,
     _options: ContainerExecuteOptions
   ): Promise<ContainerExecuteResult> {
     try {
@@ -583,18 +613,18 @@ export class DockerService extends Service implements IDockerService {
         Name: _config.name,
         IPAM: _config.subnet
           ? {
-            Config: [
-              {
-                Subnet: _config.subnet,
-                Gateway: _config.gateway,
-              },
-            ],
-          }
+              Config: [
+                {
+                  Subnet: _config.subnet,
+                  Gateway: _config.gateway,
+                },
+              ],
+            }
           : undefined,
         Options: _config.isolated
           ? {
-            'com.docker.network.bridge.enable_icc': 'false',
-          }
+              'com.docker.network.bridge.enable_icc': 'false',
+            }
           : undefined,
       };
 

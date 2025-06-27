@@ -18,7 +18,7 @@ interface GeneratedAsset {
   downloadUrl?: string;
 }
 
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   try {
     const body: GenerationRequest = await request.json();
     const { type, requirements, userContext, sessionId } = body;
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     if (!type || !sessionId) {
       return NextResponse.json(
         { error: 'Type and session ID are required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -34,23 +34,28 @@ export async function POST(request: NextRequest) {
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       start(controller) {
-        generateAssetWithProgress(type, requirements, { ...userContext, sessionId }, controller, encoder);
-      }
+        generateAssetWithProgress(
+          type,
+          requirements,
+          { ...userContext, sessionId },
+          controller,
+          encoder,
+        );
+      },
     });
 
     return new Response(stream, {
       headers: {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
+        Connection: 'keep-alive',
       },
     });
-
   } catch (error) {
     console.error('Generation API error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -60,7 +65,7 @@ async function generateAssetWithProgress(
   requirements: Record<string, any>,
   userContext: Record<string, any>,
   controller: ReadableStreamDefaultController,
-  encoder: TextEncoder
+  encoder: TextEncoder,
 ) {
   try {
     // Send progress updates
@@ -70,22 +75,26 @@ async function generateAssetWithProgress(
     };
 
     sendProgress(10, 'Analyzing requirements...');
-    
+
     // Build description from requirements for AI generation
-    const description = buildDescriptionFromRequirements(type, requirements, userContext);
-    
+    const description = buildDescriptionFromRequirements(
+      type,
+      requirements,
+      userContext,
+    );
+
     sendProgress(30, 'Generating solution with AI...');
-    
+
     // Use real AI generation instead of fake delays
     const asset = await chatService.generateAsset({
       type: type as 'n8n_workflow' | 'mcp' | 'agent_config',
       description,
       requirements,
-      userContext
+      userContext,
     });
-    
+
     sendProgress(80, 'Finalizing asset...');
-    
+
     // Save generated content to session if sessionId provided
     if (userContext.sessionId) {
       await anonymousSessionRepo.addGeneratedContent(userContext.sessionId, {
@@ -95,7 +104,7 @@ async function generateAssetWithProgress(
         data: asset.data,
         preview: asset.preview,
         downloadUrl: asset.downloadUrl,
-        createdAt: new Date()
+        createdAt: new Date(),
       });
     }
 
@@ -106,12 +115,11 @@ async function generateAssetWithProgress(
     controller.enqueue(encoder.encode(`data: ${completeData}\n\n`));
 
     controller.close();
-
   } catch (error) {
     console.error('Generation error:', error);
-    const errorData = JSON.stringify({ 
-      type: 'error', 
-      message: error instanceof Error ? error.message : 'Generation failed' 
+    const errorData = JSON.stringify({
+      type: 'error',
+      message: error instanceof Error ? error.message : 'Generation failed',
     });
     controller.enqueue(encoder.encode(`data: ${errorData}\n\n`));
     controller.close();
@@ -124,25 +132,25 @@ async function generateAssetWithProgress(
 function buildDescriptionFromRequirements(
   type: string,
   requirements: Record<string, any>,
-  userContext: Record<string, any>
+  userContext: Record<string, any>,
 ): string {
   let description = `A ${type.replace('_', ' ')} that`;
-  
+
   // Add requirements to description
   const reqKeys = Object.keys(requirements);
   if (reqKeys.length > 0) {
-    const reqStrings = reqKeys.map(key => `${key}: ${requirements[key]}`);
+    const reqStrings = reqKeys.map((key) => `${key}: ${requirements[key]}`);
     description += ` handles ${reqStrings.join(', ')}`;
   }
-  
+
   // Add user context
   if (userContext.businessDomain) {
     description += ` for ${userContext.businessDomain} domain`;
   }
-  
+
   if (userContext.useCase) {
     description += ` to ${userContext.useCase}`;
   }
-  
+
   return description;
 }

@@ -5,7 +5,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { authService } from '@/lib/auth/session';
-import { addCredits, getCreditBalance } from '@/lib/server/services/billing-service';
+import {
+  addCredits,
+  getCreditBalance,
+} from '@/lib/server/services/billing-service';
 import { loadConfig } from '@/lib/server/utils/config';
 import Stripe from 'stripe';
 import { z } from 'zod';
@@ -20,15 +23,18 @@ const confirmPaymentSchema = z.object({
   amount: z.number().min(5).max(10000),
 });
 
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   try {
     // Get current user session
     const user = await authService.getCurrentUser();
     if (!user) {
-      return NextResponse.json({
-        success: false,
-        error: 'Unauthorized'
-      }, { status: 401 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Unauthorized',
+        },
+        { status: 401 },
+      );
     }
 
     // Parse request body
@@ -36,21 +42,29 @@ export async function POST(request: NextRequest) {
     const validatedData = confirmPaymentSchema.parse(body);
 
     // Verify payment intent with Stripe
-    const paymentIntent = await stripe.paymentIntents.retrieve(validatedData.paymentIntentId);
+    const paymentIntent = await stripe.paymentIntents.retrieve(
+      validatedData.paymentIntentId,
+    );
 
     if (paymentIntent.status !== 'succeeded') {
-      return NextResponse.json({
-        success: false,
-        error: 'Payment has not succeeded'
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Payment has not succeeded',
+        },
+        { status: 400 },
+      );
     }
 
     // Verify the payment intent belongs to this organization
     if (paymentIntent.metadata.organizationId !== user.organizationId) {
-      return NextResponse.json({
-        success: false,
-        error: 'Payment intent metadata mismatch'
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Payment intent metadata mismatch',
+        },
+        { status: 400 },
+      );
     }
 
     // Add credits to organization
@@ -78,7 +92,7 @@ export async function POST(request: NextRequest) {
       data: {
         creditBalance: newBalance,
         message: `Successfully added $${validatedData.amount} in credits`,
-      }
+      },
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -86,9 +100,9 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           error: 'Invalid request data',
-          details: error.errors
+          details: error.errors,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -96,9 +110,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to confirm payment'
+        error:
+          error instanceof Error ? error.message : 'Failed to confirm payment',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

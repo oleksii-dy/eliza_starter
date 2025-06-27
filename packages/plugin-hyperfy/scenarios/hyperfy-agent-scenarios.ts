@@ -80,38 +80,39 @@ export const agentMovementScenario: Scenario = {
       name: 'NavigatorAgent',
       role: 'subject',
       bio: 'I am an explorer who loves to navigate 3D worlds and find interesting places.',
-      system: 'You are in a 3D virtual world. Use movement actions to explore and navigate to specific locations or entities.',
+      system:
+        'You are in a 3D virtual world. Use movement actions to explore and navigate to specific locations or entities.',
       plugins: ['@elizaos/plugin-hyperfy'],
       script: {
         steps: [
           {
             type: 'message',
             content: 'I want to explore this world. Let me look around first.',
-            description: 'Initial exploration request'
+            description: 'Initial exploration request',
           },
           {
             type: 'wait',
             waitTime: 2000,
-            description: 'Wait for perception'
+            description: 'Wait for perception',
           },
           {
             type: 'message',
             content: 'Can you go to the glowing crystal over there?',
-            description: 'Request navigation to specific object'
+            description: 'Request navigation to specific object',
           },
           {
             type: 'wait',
             waitTime: 5000,
-            description: 'Wait for navigation'
+            description: 'Wait for navigation',
           },
           {
             type: 'message',
             content: 'Now walk around randomly for a bit.',
-            description: 'Test random walking'
-          }
-        ]
-      }
-    }
+            description: 'Test random walking',
+          },
+        ],
+      },
+    },
   ],
 
   verification: {
@@ -121,9 +122,10 @@ export const agentMovementScenario: Scenario = {
         type: 'llm',
         description: 'Verify agent used HYPERFY_SCENE_PERCEPTION to look around',
         config: {
-          successCriteria: 'Agent should have used the HYPERFY_SCENE_PERCEPTION action to observe the environment',
-          priority: 'high'
-        }
+          successCriteria:
+            'Agent should have used the HYPERFY_SCENE_PERCEPTION action to observe the environment',
+          priority: 'high',
+        },
       },
       {
         id: 'navigation-check',
@@ -131,8 +133,8 @@ export const agentMovementScenario: Scenario = {
         description: 'Verify agent navigated to requested location',
         config: {
           successCriteria: 'Agent should have used HYPERFY_GOTO_ENTITY to move to the crystal',
-          priority: 'high'
-        }
+          priority: 'high',
+        },
       },
       {
         id: 'random-walk-check',
@@ -140,11 +142,11 @@ export const agentMovementScenario: Scenario = {
         description: 'Verify agent can walk randomly',
         config: {
           successCriteria: 'Agent should have used HYPERFY_WALK_RANDOMLY action',
-          priority: 'medium'
-        }
-      }
-    ]
-  }
+          priority: 'medium',
+        },
+      },
+    ],
+  },
 };
 
 /**
@@ -164,38 +166,39 @@ export const agentBuildingScenario: Scenario = {
       name: 'BuilderAgent',
       role: 'subject',
       bio: 'I am a creative builder who loves to construct and modify virtual worlds.',
-      system: 'You are a builder in a 3D world. Use building actions to create, modify, and delete objects.',
+      system:
+        'You are a builder in a 3D world. Use building actions to create, modify, and delete objects.',
       plugins: ['@elizaos/plugin-hyperfy'],
       script: {
         steps: [
           {
             type: 'message',
             content: 'I want to build something. Can you duplicate that block over there?',
-            description: 'Request object duplication'
+            description: 'Request object duplication',
           },
           {
             type: 'wait',
             waitTime: 3000,
-            description: 'Wait for duplication'
+            description: 'Wait for duplication',
           },
           {
             type: 'message',
             content: 'Now move it 5 meters to the left.',
-            description: 'Request object translation'
+            description: 'Request object translation',
           },
           {
             type: 'wait',
             waitTime: 3000,
-            description: 'Wait for movement'
+            description: 'Wait for movement',
           },
           {
             type: 'message',
             content: 'Can you import a new sculpture at position 10, 0, 10?',
-            description: 'Test importing new objects'
-          }
-        ]
-      }
-    }
+            description: 'Test importing new objects',
+          },
+        ],
+      },
+    },
   ],
 
   verification: {
@@ -206,8 +209,8 @@ export const agentBuildingScenario: Scenario = {
         description: 'Verify agent duplicated an object',
         config: {
           successCriteria: 'Agent should have used HYPERFY_EDIT_ENTITY with duplicate operation',
-          priority: 'high'
-        }
+          priority: 'high',
+        },
       },
       {
         id: 'translation-check',
@@ -215,20 +218,21 @@ export const agentBuildingScenario: Scenario = {
         description: 'Verify agent moved the object',
         config: {
           successCriteria: 'Agent should have used HYPERFY_EDIT_ENTITY with translate operation',
-          priority: 'high'
-        }
+          priority: 'high',
+        },
       },
       {
         id: 'import-check',
         type: 'llm',
         description: 'Verify agent imported new object',
         config: {
-          successCriteria: 'Agent should have used HYPERFY_EDIT_ENTITY with import operation at specified position',
-          priority: 'high'
-        }
-      }
-    ]
-  }
+          successCriteria:
+            'Agent should have used HYPERFY_EDIT_ENTITY with import operation at specified position',
+          priority: 'high',
+        },
+      },
+    ],
+  },
 };
 
 /**
@@ -248,37 +252,38 @@ export const agentSocialScenario: Scenario = {
       name: 'SocialAgent',
       role: 'subject',
       bio: 'I am a friendly agent who loves to meet people and express emotions.',
-      system: 'You are a social agent in a 3D world. Use emotes and communication to interact naturally.',
+      system:
+        'You are a social agent in a 3D world. Use emotes and communication to interact naturally.',
       plugins: ['@elizaos/plugin-hyperfy'],
       script: {
         steps: [
           {
             type: 'message',
             content: 'Hello everyone! *waves enthusiastically*',
-            description: 'Greeting with emote'
+            description: 'Greeting with emote',
           },
           {
             type: 'wait',
             waitTime: 2000,
-            description: 'Wait for wave emote'
+            description: 'Wait for wave emote',
           },
           {
             type: 'message',
             content: 'I am so happy to be here! Let me dance!',
-            description: 'Express joy with dance'
+            description: 'Express joy with dance',
           },
           {
             type: 'wait',
             waitTime: 5000,
-            description: 'Wait for dance emote'
+            description: 'Wait for dance emote',
           },
           {
             type: 'message',
             content: 'Sometimes I like to talk to myself when exploring...',
-            description: 'Test ambient speech'
-          }
-        ]
-      }
+            description: 'Test ambient speech',
+          },
+        ],
+      },
     },
     {
       id: uuid(),
@@ -290,26 +295,26 @@ export const agentSocialScenario: Scenario = {
           {
             type: 'wait',
             waitTime: 1000,
-            description: 'Initial wait'
+            description: 'Initial wait',
           },
           {
             type: 'message',
             content: 'Hello! Nice to meet you!',
-            description: 'Respond to greeting'
+            description: 'Respond to greeting',
           },
           {
             type: 'wait',
             waitTime: 8000,
-            description: 'Watch agent actions'
+            description: 'Watch agent actions',
           },
           {
             type: 'message',
             content: 'Your dance was amazing!',
-            description: 'Compliment the agent'
-          }
-        ]
-      }
-    }
+            description: 'Compliment the agent',
+          },
+        ],
+      },
+    },
   ],
 
   verification: {
@@ -320,8 +325,8 @@ export const agentSocialScenario: Scenario = {
         description: 'Verify agent used wave emote',
         config: {
           successCriteria: 'Agent should have played a waving emote when greeting',
-          priority: 'high'
-        }
+          priority: 'high',
+        },
       },
       {
         id: 'dance-emote-check',
@@ -329,8 +334,8 @@ export const agentSocialScenario: Scenario = {
         description: 'Verify agent used dance emote',
         config: {
           successCriteria: 'Agent should have played a dance emote when expressing happiness',
-          priority: 'high'
-        }
+          priority: 'high',
+        },
       },
       {
         id: 'ambient-speech-check',
@@ -338,20 +343,21 @@ export const agentSocialScenario: Scenario = {
         description: 'Verify agent used ambient speech',
         config: {
           successCriteria: 'Agent should have used HYPERFY_AMBIENT_SPEECH for self-directed speech',
-          priority: 'medium'
-        }
+          priority: 'medium',
+        },
       },
       {
         id: 'social-response-check',
         type: 'llm',
         description: 'Verify agent responded appropriately to social cues',
         config: {
-          successCriteria: 'Agent should have responded to compliments and maintained natural conversation',
-          priority: 'high'
-        }
-      }
-    ]
-  }
+          successCriteria:
+            'Agent should have responded to compliments and maintained natural conversation',
+          priority: 'high',
+        },
+      },
+    ],
+  },
 };
 
 /**
@@ -371,38 +377,39 @@ export const agentItemInteractionScenario: Scenario = {
       name: 'InteractionAgent',
       role: 'subject',
       bio: 'I am curious about objects and love to interact with things in the world.',
-      system: 'You are an agent who can interact with items. Use item actions to pick up and use objects.',
+      system:
+        'You are an agent who can interact with items. Use item actions to pick up and use objects.',
       plugins: ['@elizaos/plugin-hyperfy'],
       script: {
         steps: [
           {
             type: 'message',
             content: 'I see some interesting items nearby. Let me check what is around.',
-            description: 'Initial observation'
+            description: 'Initial observation',
           },
           {
             type: 'wait',
             waitTime: 2000,
-            description: 'Wait for perception'
+            description: 'Wait for perception',
           },
           {
             type: 'message',
             content: 'I want to pick up that glowing orb.',
-            description: 'Request item pickup'
+            description: 'Request item pickup',
           },
           {
             type: 'wait',
             waitTime: 3000,
-            description: 'Wait for item use'
+            description: 'Wait for item use',
           },
           {
             type: 'message',
             content: 'This is heavy, I should put it down.',
-            description: 'Request item release'
-          }
-        ]
-      }
-    }
+            description: 'Request item release',
+          },
+        ],
+      },
+    },
   ],
 
   verification: {
@@ -413,8 +420,8 @@ export const agentItemInteractionScenario: Scenario = {
         description: 'Verify agent detected nearby items',
         config: {
           successCriteria: 'Agent should have identified interactable items in the environment',
-          priority: 'high'
-        }
+          priority: 'high',
+        },
       },
       {
         id: 'item-use-check',
@@ -422,8 +429,8 @@ export const agentItemInteractionScenario: Scenario = {
         description: 'Verify agent picked up item',
         config: {
           successCriteria: 'Agent should have used HYPERFY_USE_ITEM to pick up the orb',
-          priority: 'high'
-        }
+          priority: 'high',
+        },
       },
       {
         id: 'item-release-check',
@@ -431,11 +438,11 @@ export const agentItemInteractionScenario: Scenario = {
         description: 'Verify agent released item',
         config: {
           successCriteria: 'Agent should have used HYPERFY_UNUSE_ITEM to release the orb',
-          priority: 'high'
-        }
-      }
-    ]
-  }
+          priority: 'high',
+        },
+      },
+    ],
+  },
 };
 
 /**
@@ -455,18 +462,19 @@ export const agentAutonomyScenario: Scenario = {
       name: 'AutonomousAgent',
       role: 'subject',
       bio: 'I am an autonomous agent with my own goals and decision-making capabilities.',
-      system: 'You are an autonomous agent with goals. Use the OODA loop to observe, orient, decide, and act in the world.',
+      system:
+        'You are an autonomous agent with goals. Use the OODA loop to observe, orient, decide, and act in the world.',
       plugins: ['@elizaos/plugin-hyperfy', '@elizaos/plugin-autonomy'],
       script: {
         steps: [
           {
             type: 'wait',
             waitTime: 30000,
-            description: 'Let autonomy system run for 30 seconds'
-          }
-        ]
-      }
-    }
+            description: 'Let autonomy system run for 30 seconds',
+          },
+        ],
+      },
+    },
   ],
 
   setup: {
@@ -476,27 +484,27 @@ export const agentAutonomyScenario: Scenario = {
           id: uuid(),
           description: 'Explore the virtual world and catalog interesting objects',
           priority: 1,
-          progress: 0
+          progress: 0,
         },
         {
           id: uuid(),
           description: 'Build a small structure in an empty area',
           priority: 2,
-          progress: 0
+          progress: 0,
         },
         {
           id: uuid(),
           description: 'Interact with other entities in the world',
           priority: 3,
-          progress: 0
-        }
-      ]
-    }
+          progress: 0,
+        },
+      ],
+    },
   },
 
   execution: {
     maxDuration: 60000,
-    maxSteps: 50
+    maxSteps: 50,
   },
 
   verification: {
@@ -506,9 +514,10 @@ export const agentAutonomyScenario: Scenario = {
         type: 'llm',
         description: 'Verify agent autonomously observed environment',
         config: {
-          successCriteria: 'Agent should have used perception actions without explicit user commands',
-          priority: 'high'
-        }
+          successCriteria:
+            'Agent should have used perception actions without explicit user commands',
+          priority: 'high',
+        },
       },
       {
         id: 'autonomy-decision-check',
@@ -516,29 +525,31 @@ export const agentAutonomyScenario: Scenario = {
         description: 'Verify agent made autonomous decisions',
         config: {
           successCriteria: 'Agent should have decided on actions based on goals and observations',
-          priority: 'high'
-        }
+          priority: 'high',
+        },
       },
       {
         id: 'autonomy-action-check',
         type: 'llm',
         description: 'Verify agent executed autonomous actions',
         config: {
-          successCriteria: 'Agent should have performed movement, building, or interaction actions autonomously',
-          priority: 'high'
-        }
+          successCriteria:
+            'Agent should have performed movement, building, or interaction actions autonomously',
+          priority: 'high',
+        },
       },
       {
         id: 'goal-progress-check',
         type: 'llm',
         description: 'Verify agent made progress on goals',
         config: {
-          successCriteria: 'Agent should have made measurable progress on at least one defined goal',
-          priority: 'medium'
-        }
-      }
-    ]
-  }
+          successCriteria:
+            'Agent should have made measurable progress on at least one defined goal',
+          priority: 'medium',
+        },
+      },
+    ],
+  },
 };
 
 // Export all scenarios
@@ -547,14 +558,14 @@ export const hyperfyScenarios = [
   agentBuildingScenario,
   agentSocialScenario,
   agentItemInteractionScenario,
-  agentAutonomyScenario
+  agentAutonomyScenario,
 ];
 
 // Import autonomous exploration scenarios
 export {
   autonomousMultiAgentExploration,
   autonomousExplorationWithObservation,
-  autonomousExplorationSmall
+  autonomousExplorationSmall,
 } from './hyperfy-autonomous-exploration';
 
 // Import RPG scenarios
@@ -562,21 +573,13 @@ import {
   allRPGScenarios,
   rpgBasicScenarios,
   rpgQuestScenarios,
-  rpgSelfImprovementScenarios
+  rpgSelfImprovementScenarios,
 } from './rpg-scenarios-index';
 
 // Export RPG scenarios for external use
-export {
-  allRPGScenarios,
-  rpgBasicScenarios,
-  rpgQuestScenarios,
-  rpgSelfImprovementScenarios
-};
+export { allRPGScenarios, rpgBasicScenarios, rpgQuestScenarios, rpgSelfImprovementScenarios };
 
 // Combined scenario collection
-const allHyperfyScenarios = [
-  ...hyperfyScenarios,
-  ...allRPGScenarios
-];
+const allHyperfyScenarios = [...hyperfyScenarios, ...allRPGScenarios];
 
 export default allHyperfyScenarios;

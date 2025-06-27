@@ -164,7 +164,9 @@ async function extractTaskUpdate(
   try {
     // Format task details for the prompt
     let taskDetails = `Name: ${task.name}\n`;
-    if (task.description) {taskDetails += `Description: ${task.description}\n`;}
+    if (task.description) {
+      taskDetails += `Description: ${task.description}\n`;
+    }
 
     // Add task type
     taskDetails += `Type: ${task.type}\n`;
@@ -217,11 +219,16 @@ async function extractTaskUpdate(
         delete finalUpdate.priority;
       }
     }
-    if (finalUpdate.urgent !== undefined)
-    {finalUpdate.urgent = String(finalUpdate.urgent) === 'true';}
-    if (finalUpdate.dueDate === 'null') {finalUpdate.dueDate = null;}
-    else if (finalUpdate.dueDate === undefined) {delete finalUpdate.dueDate;}
-    else {finalUpdate.dueDate = String(finalUpdate.dueDate);}
+    if (finalUpdate.urgent !== undefined) {
+      finalUpdate.urgent = String(finalUpdate.urgent) === 'true';
+    }
+    if (finalUpdate.dueDate === 'null') {
+      finalUpdate.dueDate = null;
+    } else if (finalUpdate.dueDate === undefined) {
+      delete finalUpdate.dueDate;
+    } else {
+      finalUpdate.dueDate = String(finalUpdate.dueDate);
+    }
 
     if (finalUpdate.recurring) {
       const recurringVal = String(finalUpdate.recurring);
@@ -371,9 +378,9 @@ export const updateTodoAction: Action = {
       if (!taskSelection.isFound) {
         if (callback) {
           await callback({
-            text:
-              `I couldn't determine which task you want to update. Could you be more specific? Here are your current tasks:\n\n${
-                availableTasks.map((task) => `- ${task.name}`).join('\n')}`,
+            text: `I couldn't determine which task you want to update. Could you be more specific? Here are your current tasks:\n\n${availableTasks
+              .map((task) => `- ${task.name}`)
+              .join('\n')}`,
             actions: ['UPDATE_TODO_NOT_FOUND'],
             source: message.content.source,
           });

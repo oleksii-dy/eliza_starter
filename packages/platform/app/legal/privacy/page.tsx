@@ -28,10 +28,10 @@ export default function PrivacyPolicy() {
         <div className="prose prose-gray max-w-none">
           <h2>1. Information We Collect</h2>
           <p>
-            We collect information you provide directly to us, such as when you create an account, 
-            use our services, or contact us for support.
+            We collect information you provide directly to us, such as when you
+            create an account, use our services, or contact us for support.
           </p>
-          
+
           <h3>Account Information</h3>
           <ul>
             <li>Email address and name</li>
@@ -69,33 +69,34 @@ export default function PrivacyPolicy() {
 
           <h2>3. Information Sharing</h2>
           <p>
-            We do not sell, trade, or otherwise transfer your personal information to third parties 
-            except as described in this policy:
+            We do not sell, trade, or otherwise transfer your personal
+            information to third parties except as described in this policy:
           </p>
-          
+
           <h3>Service Providers</h3>
           <p>
-            We may share information with trusted service providers who assist us in operating 
-            our platform, including payment processors, cloud infrastructure providers, and 
-            analytics services.
+            We may share information with trusted service providers who assist
+            us in operating our platform, including payment processors, cloud
+            infrastructure providers, and analytics services.
           </p>
 
           <h3>Legal Requirements</h3>
           <p>
-            We may disclose information if required by law, court order, or government request, 
-            or to protect our rights and safety.
+            We may disclose information if required by law, court order, or
+            government request, or to protect our rights and safety.
           </p>
 
           <h3>Business Transfers</h3>
           <p>
-            In the event of a merger, acquisition, or sale of assets, your information may be 
-            transferred as part of the transaction.
+            In the event of a merger, acquisition, or sale of assets, your
+            information may be transferred as part of the transaction.
           </p>
 
           <h2>4. Data Security</h2>
           <p>
-            We implement appropriate security measures to protect your information against 
-            unauthorized access, alteration, disclosure, or destruction:
+            We implement appropriate security measures to protect your
+            information against unauthorized access, alteration, disclosure, or
+            destruction:
           </p>
           <ul>
             <li>Encryption in transit and at rest</li>
@@ -106,9 +107,9 @@ export default function PrivacyPolicy() {
 
           <h2>5. Data Retention</h2>
           <p>
-            We retain your information for as long as necessary to provide our services and 
-            comply with legal obligations. You may request deletion of your account and 
-            associated data at any time.
+            We retain your information for as long as necessary to provide our
+            services and comply with legal obligations. You may request deletion
+            of your account and associated data at any time.
           </p>
 
           <h2>6. Your Rights</h2>
@@ -124,32 +125,34 @@ export default function PrivacyPolicy() {
 
           <h2>7. Cookies and Analytics</h2>
           <p>
-            We use cookies and similar technologies to improve your experience and analyze 
-            service usage. You can control cookie settings through your browser preferences.
+            We use cookies and similar technologies to improve your experience
+            and analyze service usage. You can control cookie settings through
+            your browser preferences.
           </p>
 
           <h2>8. International Transfers</h2>
           <p>
-            Your information may be processed and stored in countries other than your own. 
-            We ensure appropriate safeguards are in place for international data transfers.
+            Your information may be processed and stored in countries other than
+            your own. We ensure appropriate safeguards are in place for
+            international data transfers.
           </p>
 
           <h2>9. Children's Privacy</h2>
           <p>
-            Our services are not intended for children under 13. We do not knowingly collect 
-            personal information from children under 13.
+            Our services are not intended for children under 13. We do not
+            knowingly collect personal information from children under 13.
           </p>
 
           <h2>10. Changes to This Policy</h2>
           <p>
-            We may update this privacy policy from time to time. We will notify you of any 
-            material changes by email or through our platform.
+            We may update this privacy policy from time to time. We will notify
+            you of any material changes by email or through our platform.
           </p>
 
           <h2>11. Contact Us</h2>
           <p>
-            If you have any questions about this privacy policy or our data practices, 
-            please contact us at:
+            If you have any questions about this privacy policy or our data
+            practices, please contact us at:
           </p>
           <ul>
             <li>Email: privacy@elizaos.ai</li>

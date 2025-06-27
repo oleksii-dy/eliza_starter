@@ -33,16 +33,20 @@ describeIfAlchemy('Crypto Payment Integration Tests', () => {
   afterAll(async () => {
     // Cleanup
     const db = getDatabase();
-    await db.delete(organizations).where(eq(organizations.id, TEST_ORGANIZATION_ID));
-    await db.delete(creditTransactions).where(eq(creditTransactions.organizationId, TEST_ORGANIZATION_ID));
+    await db
+      .delete(organizations)
+      .where(eq(organizations.id, TEST_ORGANIZATION_ID));
+    await db
+      .delete(creditTransactions)
+      .where(eq(creditTransactions.organizationId, TEST_ORGANIZATION_ID));
   });
 
   beforeEach(async () => {
     // Clear crypto transactions before each test
     const db = getDatabase();
-    await db.delete(creditTransactions).where(
-      eq(creditTransactions.organizationId, TEST_ORGANIZATION_ID)
-    );
+    await db
+      .delete(creditTransactions)
+      .where(eq(creditTransactions.organizationId, TEST_ORGANIZATION_ID));
   });
 
   describe('Payment Monitoring Setup', () => {
@@ -50,13 +54,14 @@ describeIfAlchemy('Crypto Payment Integration Tests', () => {
       const paymentRequest = {
         organizationId: TEST_ORGANIZATION_ID,
         userId: TEST_USER_ID,
-        amount: 50.00,
+        amount: 50.0,
         walletAddress: TEST_WALLET_ADDRESS,
         network: 'ethereum' as const,
         currency: 'ETH' as const,
       };
 
-      const result = await CryptoPaymentVerifier.startPaymentMonitoring(paymentRequest);
+      const result =
+        await CryptoPaymentVerifier.startPaymentMonitoring(paymentRequest);
 
       expect(result.paymentId).toBeDefined();
       expect(result.paymentId).toContain('crypto_');
@@ -76,7 +81,7 @@ describeIfAlchemy('Crypto Payment Integration Tests', () => {
       expect(transaction.metadata).toBeDefined();
 
       const metadata = transaction.metadata as any;
-      expect(metadata.expectedUsdAmount).toBe(50.00);
+      expect(metadata.expectedUsdAmount).toBe(50.0);
       expect(metadata.walletAddress).toBe(TEST_WALLET_ADDRESS);
       expect(metadata.network).toBe('ethereum');
       expect(metadata.currency).toBe('ETH');
@@ -86,13 +91,14 @@ describeIfAlchemy('Crypto Payment Integration Tests', () => {
       const paymentRequest = {
         organizationId: TEST_ORGANIZATION_ID,
         userId: TEST_USER_ID,
-        amount: 25.00,
+        amount: 25.0,
         walletAddress: TEST_WALLET_ADDRESS,
         network: 'ethereum' as const,
         currency: 'USDC' as const,
       };
 
-      const result = await CryptoPaymentVerifier.startPaymentMonitoring(paymentRequest);
+      const result =
+        await CryptoPaymentVerifier.startPaymentMonitoring(paymentRequest);
 
       const db = getDatabase();
       const [transaction] = await db
@@ -116,13 +122,16 @@ describeIfAlchemy('Crypto Payment Integration Tests', () => {
     test('should connect to Alchemy API successfully', async () => {
       // Test with a well-known Ethereum address that has transactions
       const testAddress = '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045'; // Vitalik's address
-      
+
       try {
-        const payments = await CryptoPaymentVerifier.checkPayments(testAddress, 'ethereum');
-        
+        const payments = await CryptoPaymentVerifier.checkPayments(
+          testAddress,
+          'ethereum',
+        );
+
         // Should return an array (may be empty if no recent transactions)
         expect(Array.isArray(payments)).toBe(true);
-        
+
         // If there are payments, they should have the correct structure
         if (payments.length > 0) {
           const payment = payments[0];
@@ -134,13 +143,19 @@ describeIfAlchemy('Crypto Payment Integration Tests', () => {
       } catch (error) {
         // If API is rate limited or unavailable, test should still pass
         expect(error).toBeDefined();
-        console.warn('Alchemy API test skipped due to:', (error as Error).message);
+        console.warn(
+          'Alchemy API test skipped due to:',
+          (error as Error).message,
+        );
       }
     });
 
     test('should handle unsupported networks gracefully', async () => {
       await expect(
-        CryptoPaymentVerifier.checkPayments(TEST_WALLET_ADDRESS, 'unsupported-network')
+        CryptoPaymentVerifier.checkPayments(
+          TEST_WALLET_ADDRESS,
+          'unsupported-network',
+        ),
       ).rejects.toThrow('Unsupported network');
     });
 
@@ -151,7 +166,7 @@ describeIfAlchemy('Crypto Payment Integration Tests', () => {
 
       try {
         await expect(
-          CryptoPaymentVerifier.checkPayments(TEST_WALLET_ADDRESS, 'ethereum')
+          CryptoPaymentVerifier.checkPayments(TEST_WALLET_ADDRESS, 'ethereum'),
         ).rejects.toThrow('ALCHEMY_API_KEY not configured');
       } finally {
         // Restore API key
@@ -166,20 +181,24 @@ describeIfAlchemy('Crypto Payment Integration Tests', () => {
     test('should verify specific transaction details', async () => {
       // Use a known Ethereum transaction hash for testing
       // This is a real transaction, but amounts won't match our test expectations
-      const knownTxHash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
-      
+      const knownTxHash =
+        '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+
       try {
-        const verification = await CryptoPaymentVerifier.verifySpecificTransaction(
-          knownTxHash,
-          1.0, // Expected amount
-          TEST_WALLET_ADDRESS,
-          'ethereum'
-        );
+        const verification =
+          await CryptoPaymentVerifier.verifySpecificTransaction(
+            knownTxHash,
+            1.0, // Expected amount
+            TEST_WALLET_ADDRESS,
+            'ethereum',
+          );
 
         // Transaction likely won't match our test criteria, so verification should be null
         // But the API call should work without throwing errors
-        expect(verification === null || typeof verification === 'object').toBe(true);
-        
+        expect(verification === null || typeof verification === 'object').toBe(
+          true,
+        );
+
         if (verification) {
           expect(verification.transactionHash).toBe(knownTxHash);
           expect(typeof verification.amount).toBe('number');
@@ -188,19 +207,24 @@ describeIfAlchemy('Crypto Payment Integration Tests', () => {
         }
       } catch (error) {
         // API might be rate limited or transaction might not exist
-        console.warn('Transaction verification test skipped:', (error as Error).message);
+        console.warn(
+          'Transaction verification test skipped:',
+          (error as Error).message,
+        );
       }
     });
 
     test('should return null for non-existent transactions', async () => {
-      const nonExistentTxHash = '0x0000000000000000000000000000000000000000000000000000000000000000';
-      
-      const verification = await CryptoPaymentVerifier.verifySpecificTransaction(
-        nonExistentTxHash,
-        1.0,
-        TEST_WALLET_ADDRESS,
-        'ethereum'
-      );
+      const nonExistentTxHash =
+        '0x0000000000000000000000000000000000000000000000000000000000000000';
+
+      const verification =
+        await CryptoPaymentVerifier.verifySpecificTransaction(
+          nonExistentTxHash,
+          1.0,
+          TEST_WALLET_ADDRESS,
+          'ethereum',
+        );
 
       expect(verification).toBeNull();
     });
@@ -212,18 +236,20 @@ describeIfAlchemy('Crypto Payment Integration Tests', () => {
       const paymentRequest = {
         organizationId: TEST_ORGANIZATION_ID,
         userId: TEST_USER_ID,
-        amount: 75.00,
+        amount: 75.0,
         walletAddress: TEST_WALLET_ADDRESS,
         network: 'ethereum' as const,
         currency: 'ETH' as const,
       };
 
-      const { paymentId } = await CryptoPaymentVerifier.startPaymentMonitoring(paymentRequest);
+      const { paymentId } =
+        await CryptoPaymentVerifier.startPaymentMonitoring(paymentRequest);
 
       // Simulate confirmed payment verification
       const mockVerification = {
-        transactionHash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
-        amount: 75.00,
+        transactionHash:
+          '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
+        amount: 75.0,
         confirmations: 15,
         isConfirmed: true,
         gasUsed: '21000',
@@ -232,7 +258,10 @@ describeIfAlchemy('Crypto Payment Integration Tests', () => {
         timestamp: Math.floor(Date.now() / 1000),
       };
 
-      await CryptoPaymentVerifier.processConfirmedPayment(paymentId, mockVerification);
+      await CryptoPaymentVerifier.processConfirmedPayment(
+        paymentId,
+        mockVerification,
+      );
 
       // Verify payment was processed
       const db = getDatabase();
@@ -243,8 +272,10 @@ describeIfAlchemy('Crypto Payment Integration Tests', () => {
         .limit(1);
 
       expect(transaction.type).toBe('purchase');
-      expect(parseFloat(transaction.amount)).toBe(75.00);
-      expect(transaction.cryptoTransactionHash).toBe(mockVerification.transactionHash);
+      expect(parseFloat(transaction.amount)).toBe(75.0);
+      expect(transaction.cryptoTransactionHash).toBe(
+        mockVerification.transactionHash,
+      );
 
       const metadata = transaction.metadata as any;
       expect(metadata.status).toBe('confirmed');
@@ -255,7 +286,7 @@ describeIfAlchemy('Crypto Payment Integration Tests', () => {
     test('should prevent processing non-existent payments', async () => {
       const mockVerification = {
         transactionHash: '0x1234567890abcdef',
-        amount: 50.00,
+        amount: 50.0,
         confirmations: 12,
         isConfirmed: true,
         blockNumber: 18500000,
@@ -263,7 +294,10 @@ describeIfAlchemy('Crypto Payment Integration Tests', () => {
       };
 
       await expect(
-        CryptoPaymentVerifier.processConfirmedPayment('non_existent_payment_id', mockVerification)
+        CryptoPaymentVerifier.processConfirmedPayment(
+          'non_existent_payment_id',
+          mockVerification,
+        ),
       ).rejects.toThrow('Pending payment not found');
     });
 
@@ -272,17 +306,18 @@ describeIfAlchemy('Crypto Payment Integration Tests', () => {
       const paymentRequest = {
         organizationId: TEST_ORGANIZATION_ID,
         userId: TEST_USER_ID,
-        amount: 30.00,
+        amount: 30.0,
         walletAddress: TEST_WALLET_ADDRESS,
         network: 'ethereum' as const,
         currency: 'USDC' as const,
       };
 
-      const { paymentId } = await CryptoPaymentVerifier.startPaymentMonitoring(paymentRequest);
+      const { paymentId } =
+        await CryptoPaymentVerifier.startPaymentMonitoring(paymentRequest);
 
       const mockVerification = {
         transactionHash: '0xfedcba0987654321',
-        amount: 30.00,
+        amount: 30.0,
         confirmations: 12,
         isConfirmed: true,
         blockNumber: 18500001,
@@ -290,11 +325,17 @@ describeIfAlchemy('Crypto Payment Integration Tests', () => {
       };
 
       // First processing should succeed
-      await CryptoPaymentVerifier.processConfirmedPayment(paymentId, mockVerification);
+      await CryptoPaymentVerifier.processConfirmedPayment(
+        paymentId,
+        mockVerification,
+      );
 
       // Second processing should fail
       await expect(
-        CryptoPaymentVerifier.processConfirmedPayment(paymentId, mockVerification)
+        CryptoPaymentVerifier.processConfirmedPayment(
+          paymentId,
+          mockVerification,
+        ),
       ).rejects.toThrow('Payment already processed');
     });
   });
@@ -304,13 +345,14 @@ describeIfAlchemy('Crypto Payment Integration Tests', () => {
       const paymentRequest = {
         organizationId: TEST_ORGANIZATION_ID,
         userId: TEST_USER_ID,
-        amount: 40.00,
+        amount: 40.0,
         walletAddress: TEST_WALLET_ADDRESS,
         network: 'polygon' as const,
         currency: 'MATIC' as const,
       };
 
-      const { paymentId } = await CryptoPaymentVerifier.startPaymentMonitoring(paymentRequest);
+      const { paymentId } =
+        await CryptoPaymentVerifier.startPaymentMonitoring(paymentRequest);
 
       const status = await CryptoPaymentVerifier.getPaymentStatus(paymentId);
 
@@ -323,32 +365,38 @@ describeIfAlchemy('Crypto Payment Integration Tests', () => {
       const paymentRequest = {
         organizationId: TEST_ORGANIZATION_ID,
         userId: TEST_USER_ID,
-        amount: 60.00,
+        amount: 60.0,
         walletAddress: TEST_WALLET_ADDRESS,
         network: 'ethereum' as const,
         currency: 'ETH' as const,
       };
 
-      const { paymentId } = await CryptoPaymentVerifier.startPaymentMonitoring(paymentRequest);
+      const { paymentId } =
+        await CryptoPaymentVerifier.startPaymentMonitoring(paymentRequest);
 
       // Process the payment
       const mockVerification = {
         transactionHash: '0x9876543210fedcba',
-        amount: 60.00,
+        amount: 60.0,
         confirmations: 20,
         isConfirmed: true,
         blockNumber: 18500002,
         timestamp: Math.floor(Date.now() / 1000),
       };
 
-      await CryptoPaymentVerifier.processConfirmedPayment(paymentId, mockVerification);
+      await CryptoPaymentVerifier.processConfirmedPayment(
+        paymentId,
+        mockVerification,
+      );
 
       const status = await CryptoPaymentVerifier.getPaymentStatus(paymentId);
 
       expect(status.status).toBe('confirmed');
       expect(status.verification).toBeDefined();
-      expect(status.verification!.transactionHash).toBe(mockVerification.transactionHash);
-      expect(status.verification!.amount).toBe(60.00);
+      expect(status.verification!.transactionHash).toBe(
+        mockVerification.transactionHash,
+      );
+      expect(status.verification!.amount).toBe(60.0);
       expect(status.verification!.isConfirmed).toBe(true);
     });
 
@@ -356,7 +404,7 @@ describeIfAlchemy('Crypto Payment Integration Tests', () => {
       // Create a payment with past expiration
       const db = getDatabase();
       const expiredPaymentId = 'crypto_expired_' + Date.now();
-      
+
       await db.insert(creditTransactions).values({
         id: expiredPaymentId,
         organizationId: TEST_ORGANIZATION_ID,
@@ -366,7 +414,7 @@ describeIfAlchemy('Crypto Payment Integration Tests', () => {
         description: 'Expired crypto payment test',
         balanceAfter: '100.00',
         metadata: {
-          expectedUsdAmount: 20.00,
+          expectedUsdAmount: 20.0,
           walletAddress: TEST_WALLET_ADDRESS,
           network: 'ethereum',
           currency: 'ETH',
@@ -375,7 +423,8 @@ describeIfAlchemy('Crypto Payment Integration Tests', () => {
         },
       });
 
-      const status = await CryptoPaymentVerifier.getPaymentStatus(expiredPaymentId);
+      const status =
+        await CryptoPaymentVerifier.getPaymentStatus(expiredPaymentId);
 
       expect(status.status).toBe('expired');
       expect(status.expiresAt).toBeDefined();
@@ -383,7 +432,9 @@ describeIfAlchemy('Crypto Payment Integration Tests', () => {
     });
 
     test('should return failed status for non-existent payments', async () => {
-      const status = await CryptoPaymentVerifier.getPaymentStatus('non_existent_payment');
+      const status = await CryptoPaymentVerifier.getPaymentStatus(
+        'non_existent_payment',
+      );
 
       expect(status.status).toBe('failed');
     });
@@ -394,7 +445,7 @@ describeIfAlchemy('Crypto Payment Integration Tests', () => {
       // Create multiple payments with different expiration times
       const db = getDatabase();
       const now = new Date();
-      
+
       const expiredPaymentIds = [
         'crypto_expired_1_' + Date.now(),
         'crypto_expired_2_' + Date.now(),
@@ -412,7 +463,7 @@ describeIfAlchemy('Crypto Payment Integration Tests', () => {
           description: 'Test expired payment',
           balanceAfter: '100.00',
           metadata: {
-            expectedUsdAmount: 10.00,
+            expectedUsdAmount: 10.0,
             walletAddress: TEST_WALLET_ADDRESS,
             network: 'ethereum',
             currency: 'ETH',
@@ -430,7 +481,7 @@ describeIfAlchemy('Crypto Payment Integration Tests', () => {
         description: 'Test active payment',
         balanceAfter: '100.00',
         metadata: {
-          expectedUsdAmount: 15.00,
+          expectedUsdAmount: 15.0,
           walletAddress: TEST_WALLET_ADDRESS,
           network: 'ethereum',
           currency: 'ETH',
@@ -447,7 +498,9 @@ describeIfAlchemy('Crypto Payment Integration Tests', () => {
         .from(creditTransactions)
         .where(eq(creditTransactions.type, 'crypto_expired'));
 
-      expect(expiredTransactions.length).toBeGreaterThanOrEqual(expiredPaymentIds.length);
+      expect(expiredTransactions.length).toBeGreaterThanOrEqual(
+        expiredPaymentIds.length,
+      );
 
       // Check that active payment remains unchanged
       const [activeTransaction] = await db
@@ -464,7 +517,10 @@ describeIfAlchemy('Crypto Payment Integration Tests', () => {
     test('should handle network API errors gracefully', async () => {
       // Test with invalid wallet address format
       await expect(
-        CryptoPaymentVerifier.checkPayments('invalid_address_format', 'ethereum')
+        CryptoPaymentVerifier.checkPayments(
+          'invalid_address_format',
+          'ethereum',
+        ),
       ).rejects.toThrow();
     });
 
@@ -485,7 +541,8 @@ describeIfAlchemy('Crypto Payment Integration Tests', () => {
       };
 
       // Should still create monitoring record (validation might be at UI level)
-      const result = await CryptoPaymentVerifier.startPaymentMonitoring(paymentRequest);
+      const result =
+        await CryptoPaymentVerifier.startPaymentMonitoring(paymentRequest);
       expect(result.paymentId).toBeDefined();
     });
   });

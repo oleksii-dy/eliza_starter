@@ -12,7 +12,6 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-
 async function main() {
   console.log('🤖 Starting Visual Assistant with full sensory capabilities...');
   console.log('📷 Camera: Enabled');

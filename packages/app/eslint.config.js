@@ -34,20 +34,27 @@ export default [
         Error: 'readonly',
         JSON: 'readonly',
         Promise: 'readonly',
+        RequestInit: 'readonly',
+        Blob: 'readonly',
+        FormData: 'readonly',
+        Response: 'readonly',
       },
     },
     plugins: {
       '@typescript-eslint': typescript,
-      'react': react,
+      react: react,
       'react-hooks': reactHooks,
       'react-refresh': reactRefresh,
     },
     rules: {
       // TypeScript rules
-      '@typescript-eslint/no-unused-vars': ['warn', { 
-        argsIgnorePattern: '^_',
-        varsIgnorePattern: '^_',
-      }],
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+        },
+      ],
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-non-null-assertion': 'warn',
@@ -57,7 +64,7 @@ export default [
       'react/prop-types': 'off',
       'react/jsx-uses-react': 'off',
       'react/jsx-uses-vars': 'error',
-      
+
       // React Hooks rules
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
@@ -71,7 +78,7 @@ export default [
       'no-unused-vars': 'off', // TypeScript handles this
       'prefer-const': 'warn',
       'no-var': 'error',
-      'eqeqeq': ['error', 'smart'],
+      eqeqeq: ['error', 'smart'],
     },
   },
   {
@@ -89,7 +96,15 @@ export default [
     },
   },
   {
+    // Special rules for test files
+    files: ['**/__tests__/**/*.{ts,tsx}', '**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}'],
+    rules: {
+      'no-console': 'off', // Allow console statements in tests
+      '@typescript-eslint/no-explicit-any': 'off', // Allow any in test mocks
+    },
+  },
+  {
     // Ignore patterns
     ignores: ['dist/**', 'node_modules/**', '.turbo/**', 'src-tauri/**'],
   },
-]; 
+];

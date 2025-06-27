@@ -7,23 +7,20 @@ export default function DropdownMenuItem({
   kbd,
   handleClick,
 }: {
-	icon: undefined | null | React.ReactNode;
-	label: string;
-	href?: string;
-	kbd?: string;
-	handleClick?: () => void;
+  icon: undefined | null | React.ReactNode;
+  label: string;
+  href?: string;
+  kbd?: string;
+  handleClick?: () => void;
 }) {
   const iconStyles =
-		'ml-auto hidden font-sans text-xs text-typography-weak group-hover:text-typography-strong';
+    'ml-auto hidden font-sans text-xs text-typography-weak group-hover:text-typography-strong';
   const buttonStyles =
-		'flex items-center gap-3 cursor-pointer hover:bg-hover w-full p-2 rounded-md data-[focus]:bg-fill no-underline text-sm text-typography-weak hover:text-typography-strong';
+    'flex items-center gap-3 cursor-pointer hover:bg-hover w-full p-2 rounded-md data-[focus]:bg-fill no-underline text-sm text-typography-weak hover:text-typography-strong';
 
   if (href) {
     return (
-      <Link
-        href={href}
-        className={buttonStyles}
-      >
+      <Link href={href} className={buttonStyles}>
         {icon}
         <span className="text-inherit">{label}</span>
         {kbd && <kbd className={iconStyles}>{kbd}</kbd>}
@@ -31,10 +28,7 @@ export default function DropdownMenuItem({
     );
   } else {
     return (
-      <button
-        className={buttonStyles}
-        onClick={handleClick}
-      >
+      <button className={buttonStyles} onClick={handleClick}>
         {icon}
         <span className="text-inherit">{label}</span>
         {kbd && <kbd className={iconStyles}>{kbd}</kbd>}

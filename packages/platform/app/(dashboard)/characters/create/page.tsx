@@ -39,9 +39,12 @@ export default function CreateCharacterPage() {
     },
     visibility: 'private' as 'private' | 'organization' | 'public',
   });
-  
+
   const [newKnowledgeItem, setNewKnowledgeItem] = useState('');
-  const [currentExample, setCurrentExample] = useState<MessageExample>({ user: '', assistant: '' });
+  const [currentExample, setCurrentExample] = useState<MessageExample>({
+    user: '',
+    assistant: '',
+  });
 
   const generateSlug = (name: string) => {
     return name
@@ -51,7 +54,7 @@ export default function CreateCharacterPage() {
   };
 
   const handleNameChange = (name: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       name,
       slug: generateSlug(name),
@@ -64,11 +67,14 @@ export default function CreateCharacterPage() {
 
   const addKnowledgeItem = () => {
     if (newKnowledgeItem.trim()) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         characterConfig: {
           ...prev.characterConfig,
-          knowledge: [...prev.characterConfig.knowledge, newKnowledgeItem.trim()],
+          knowledge: [
+            ...prev.characterConfig.knowledge,
+            newKnowledgeItem.trim(),
+          ],
         },
       }));
       setNewKnowledgeItem('');
@@ -76,7 +82,7 @@ export default function CreateCharacterPage() {
   };
 
   const removeKnowledgeItem = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       characterConfig: {
         ...prev.characterConfig,
@@ -87,11 +93,14 @@ export default function CreateCharacterPage() {
 
   const addMessageExample = () => {
     if (currentExample.user.trim() && currentExample.assistant.trim()) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         characterConfig: {
           ...prev.characterConfig,
-          messageExamples: [...prev.characterConfig.messageExamples, [currentExample]],
+          messageExamples: [
+            ...prev.characterConfig.messageExamples,
+            [currentExample],
+          ],
         },
       }));
       setCurrentExample({ user: '', assistant: '' });
@@ -99,11 +108,13 @@ export default function CreateCharacterPage() {
   };
 
   const removeMessageExample = (index: number) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       characterConfig: {
         ...prev.characterConfig,
-        messageExamples: prev.characterConfig.messageExamples.filter((_, i) => i !== index),
+        messageExamples: prev.characterConfig.messageExamples.filter(
+          (_, i) => i !== index,
+        ),
       },
     }));
   };
@@ -138,8 +149,8 @@ export default function CreateCharacterPage() {
   };
 
   return (
-    <div className="container mx-auto py-8 max-w-4xl">
-      <div className="flex items-center gap-4 mb-8">
+    <div className="container mx-auto max-w-4xl py-8">
+      <div className="mb-8 flex items-center gap-4">
         <Link href="/characters">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="h-4 w-4" />
@@ -147,7 +158,7 @@ export default function CreateCharacterPage() {
         </Link>
         <div>
           <h1 className="text-3xl font-bold">Create Character</h1>
-          <p className="text-gray-600 mt-2">
+          <p className="mt-2 text-gray-600">
             Create a new AI character for your organization
           </p>
         </div>
@@ -163,7 +174,7 @@ export default function CreateCharacterPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
                 <Label htmlFor="name">Character Name *</Label>
                 <Input
@@ -181,7 +192,9 @@ export default function CreateCharacterPage() {
                   type="text"
                   htmlFor="slug"
                   value={formData.slug}
-                  onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, slug: e.target.value }))
+                  }
                   placeholder="character-name"
                   required
                 />
@@ -193,7 +206,12 @@ export default function CreateCharacterPage() {
               <Textarea
                 id="description"
                 value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
+                }
                 placeholder="Brief description of the character"
                 rows={3}
               />
@@ -205,7 +223,12 @@ export default function CreateCharacterPage() {
                 htmlFor="avatarUrl"
                 type="url"
                 value={formData.avatarUrl}
-                onChange={(e) => setFormData(prev => ({ ...prev, avatarUrl: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    avatarUrl: e.target.value,
+                  }))
+                }
                 placeholder="https://example.com/avatar.png"
               />
             </div>
@@ -215,11 +238,16 @@ export default function CreateCharacterPage() {
               <select
                 id="visibility"
                 value={formData.visibility}
-                onChange={(e) => setFormData(prev => ({ 
-                  ...prev, 
-                  visibility: e.target.value as 'private' | 'organization' | 'public' 
-                }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    visibility: e.target.value as
+                      | 'private'
+                      | 'organization'
+                      | 'public',
+                  }))
+                }
+                className="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="private">Private (Only you)</option>
                 <option value="organization">Organization (All members)</option>
@@ -240,10 +268,15 @@ export default function CreateCharacterPage() {
               <Textarea
                 id="bio"
                 value={formData.characterConfig.bio}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  characterConfig: { ...prev.characterConfig, bio: e.target.value }
-                }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    characterConfig: {
+                      ...prev.characterConfig,
+                      bio: e.target.value,
+                    },
+                  }))
+                }
                 placeholder="Describe the character's background and personality"
                 rows={4}
                 required
@@ -255,10 +288,15 @@ export default function CreateCharacterPage() {
               <Textarea
                 id="personality"
                 value={formData.characterConfig.personality}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  characterConfig: { ...prev.characterConfig, personality: e.target.value }
-                }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    characterConfig: {
+                      ...prev.characterConfig,
+                      personality: e.target.value,
+                    },
+                  }))
+                }
                 placeholder="Describe the character's personality traits"
                 rows={3}
               />
@@ -269,10 +307,15 @@ export default function CreateCharacterPage() {
               <Textarea
                 id="style"
                 value={formData.characterConfig.style}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  characterConfig: { ...prev.characterConfig, style: e.target.value }
-                }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    characterConfig: {
+                      ...prev.characterConfig,
+                      style: e.target.value,
+                    },
+                  }))
+                }
                 placeholder="How does the character communicate? (formal, casual, humorous, etc.)"
                 rows={3}
               />
@@ -283,10 +326,15 @@ export default function CreateCharacterPage() {
               <Textarea
                 id="system"
                 value={formData.characterConfig.system}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  characterConfig: { ...prev.characterConfig, system: e.target.value }
-                }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    characterConfig: {
+                      ...prev.characterConfig,
+                      system: e.target.value,
+                    },
+                  }))
+                }
                 placeholder="Additional system instructions for the character"
                 rows={3}
               />
@@ -306,7 +354,9 @@ export default function CreateCharacterPage() {
                 value={newKnowledgeItem}
                 onChange={(e) => setNewKnowledgeItem(e.target.value)}
                 placeholder="Add knowledge topic or expertise"
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addKnowledgeItem())}
+                onKeyPress={(e) =>
+                  e.key === 'Enter' && (e.preventDefault(), addKnowledgeItem())
+                }
               />
               <Button type="button" onClick={addKnowledgeItem}>
                 Add
@@ -335,17 +385,23 @@ export default function CreateCharacterPage() {
           <CardHeader>
             <CardTitle>Message Examples</CardTitle>
             <p className="text-sm text-gray-600">
-              Provide examples of how the character should respond to help train its behavior
+              Provide examples of how the character should respond to help train
+              its behavior
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
                 <Label htmlFor="example-user">User Message</Label>
                 <Textarea
                   id="example-user"
                   value={currentExample.user}
-                  onChange={(e) => setCurrentExample(prev => ({ ...prev, user: e.target.value }))}
+                  onChange={(e) =>
+                    setCurrentExample((prev) => ({
+                      ...prev,
+                      user: e.target.value,
+                    }))
+                  }
                   placeholder="What a user might say..."
                   rows={3}
                 />
@@ -355,7 +411,12 @@ export default function CreateCharacterPage() {
                 <Textarea
                   id="example-assistant"
                   value={currentExample.assistant}
-                  onChange={(e) => setCurrentExample(prev => ({ ...prev, assistant: e.target.value }))}
+                  onChange={(e) =>
+                    setCurrentExample((prev) => ({
+                      ...prev,
+                      assistant: e.target.value,
+                    }))
+                  }
                   placeholder="How the character should respond..."
                   rows={3}
                 />
@@ -368,35 +429,43 @@ export default function CreateCharacterPage() {
 
             {formData.characterConfig.messageExamples.length > 0 && (
               <div className="space-y-3">
-                {formData.characterConfig.messageExamples.map((example, index) => (
-                  <div key={index} className="border rounded-lg p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="text-sm font-medium">Example {index + 1}</span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeMessageExample(index)}
-                      >
-                        ×
-                      </Button>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <div className="font-medium text-gray-600 mb-1">User:</div>
-                        <div className="bg-gray-50 p-2 rounded">
-                          {example[0].user}
+                {formData.characterConfig.messageExamples.map(
+                  (example, index) => (
+                    <div key={index} className="rounded-lg border p-4">
+                      <div className="mb-2 flex items-start justify-between">
+                        <span className="text-sm font-medium">
+                          Example {index + 1}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeMessageExample(index)}
+                        >
+                          ×
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
+                        <div>
+                          <div className="mb-1 font-medium text-gray-600">
+                            User:
+                          </div>
+                          <div className="rounded bg-gray-50 p-2">
+                            {example[0].user}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="mb-1 font-medium text-gray-600">
+                            Character:
+                          </div>
+                          <div className="rounded bg-blue-50 p-2">
+                            {example[0].assistant}
+                          </div>
                         </div>
                       </div>
-                      <div>
-                        <div className="font-medium text-gray-600 mb-1">Character:</div>
-                        <div className="bg-blue-50 p-2 rounded">
-                          {example[0].assistant}
-                        </div>
-                      </div>
                     </div>
-                  </div>
-                ))}
+                  ),
+                )}
               </div>
             )}
           </CardContent>
@@ -410,7 +479,7 @@ export default function CreateCharacterPage() {
             </Button>
           </Link>
           <Button type="submit" disabled={loading}>
-            <Save className="h-4 w-4 mr-2" />
+            <Save className="mr-2 h-4 w-4" />
             {loading ? 'Creating...' : 'Create Character'}
           </Button>
         </div>

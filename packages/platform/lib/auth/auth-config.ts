@@ -9,28 +9,28 @@ import { sessionService } from './session';
 // Mock NextAuth configuration that redirects to our custom auth system
 export const authOptions: NextAuthOptions = {
   providers: [],
-  
+
   callbacks: {
     async session({ session, token }) {
       // This shouldn't be called since we're using custom auth
       return session;
     },
-    
+
     async jwt({ token, user }) {
       // This shouldn't be called since we're using custom auth
       return token;
     },
   },
-  
+
   pages: {
     signIn: '/auth/login',
     error: '/auth/error',
   },
-  
+
   session: {
     strategy: 'jwt',
   },
-  
+
   secret: process.env.NEXTAUTH_SECRET || process.env.JWT_SECRET,
 };
 
@@ -41,11 +41,11 @@ export const authOptions: NextAuthOptions = {
 export async function getServerSession(options?: NextAuthOptions) {
   try {
     const sessionData = await sessionService.getSessionFromCookies();
-    
+
     if (!sessionData) {
       return null;
     }
-    
+
     // Return session in NextAuth format
     return {
       user: {

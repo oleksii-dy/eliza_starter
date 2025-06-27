@@ -17,4 +17,4 @@ export const buildConfig: BuildConfig = {
     'pdfjs-dist',
   ],
   naming: '[dir]/[name].[ext]',
-}; 
+};

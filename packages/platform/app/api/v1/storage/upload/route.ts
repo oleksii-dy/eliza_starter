@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { validateApiKey, checkApiKeyPermission } from '@/lib/server/services/api-key-service';
+import {
+  validateApiKey,
+  checkApiKeyPermission,
+} from '@/lib/server/services/api-key-service';
 import { deductCredits } from '@/lib/server/services/billing-service';
 import { trackUsage } from '@/lib/server/services/usage-tracking-service';
 
@@ -21,32 +28,41 @@ const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME!;
 const R2_PRICING = {
   storagePerGBMonth: 0.015,
   requestPer1M: 0.36,
-  egressPerGB: 0.00, // Free egress to internet
+  egressPerGB: 0.0, // Free egress to internet
 };
 
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   try {
     // Extract API key from Authorization header
     const authHeader = request.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Missing or invalid API key' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Missing or invalid API key' },
+        { status: 401 },
+      );
     }
 
     const apiKeyValue = authHeader.substring(7);
     const apiKey = await validateApiKey(apiKeyValue);
 
     if (!apiKey) {
-      return NextResponse.json({ error: 'Invalid or expired API key' }, { status: 401 });
+      return NextResponse.json(
+        { error: 'Invalid or expired API key' },
+        { status: 401 },
+      );
     }
 
     // Check permissions
-    if (!await checkApiKeyPermission(apiKey, 'storage:write')) {
-      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 });
+    if (!(await checkApiKeyPermission(apiKey, 'storage:write'))) {
+      return NextResponse.json(
+        { error: 'Insufficient permissions' },
+        { status: 403 },
+      );
     }
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
-    const path = formData.get('path') as string || '';
+    const path = (formData.get('path') as string) || '';
     const isPublic = formData.get('public') === 'true';
 
     if (!file) {
@@ -56,11 +72,14 @@ export async function POST(request: NextRequest) {
     // Validate file size (max 100MB)
     const maxSize = 100 * 1024 * 1024; // 100MB
     if (file.size > maxSize) {
-      return NextResponse.json({
-        error: 'File too large',
-        maxSize,
-        actualSize: file.size
-      }, { status: 413 });
+      return NextResponse.json(
+        {
+          error: 'File too large',
+          maxSize,
+          actualSize: file.size,
+        },
+        { status: 413 },
+      );
     }
 
     // Generate unique filename
@@ -71,7 +90,9 @@ export async function POST(request: NextRequest) {
 
     // Construct full path
     const orgPrefix = `org_${apiKey.organizationId}`;
-    const fullPath = path ? `${orgPrefix}/${path}/${filename}` : `${orgPrefix}/${filename}`;
+    const fullPath = path
+      ? `${orgPrefix}/${path}/${filename}`
+      : `${orgPrefix}/${filename}`;
 
     const startTime = Date.now();
 
@@ -151,7 +172,9 @@ export async function POST(request: NextRequest) {
       Bucket: R2_BUCKET_NAME,
       Key: fullPath,
     });
-    const signedUrl = await getSignedUrl(r2Client, getCommand, { expiresIn: 3600 });
+    const signedUrl = await getSignedUrl(r2Client, getCommand, {
+      expiresIn: 3600,
+    });
 
     return NextResponse.json({
       success: true,
@@ -172,7 +195,6 @@ export async function POST(request: NextRequest) {
         },
       },
     });
-
   } catch (error: any) {
     console.error('R2 upload error:', error);
 
@@ -199,15 +221,22 @@ export async function POST(request: NextRequest) {
     }
 
     if (error.message.includes('Insufficient credit balance')) {
-      return NextResponse.json({
-        error: 'Insufficient credits',
-        message: 'Please add more credits to your account to continue using the API'
-      }, { status: 402 });
+      return NextResponse.json(
+        {
+          error: 'Insufficient credits',
+          message:
+            'Please add more credits to your account to continue using the API',
+        },
+        { status: 402 },
+      );
     }
 
-    return NextResponse.json({
-      error: 'Upload failed',
-      message: error.message || 'Unknown error occurred'
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Upload failed',
+        message: error.message || 'Unknown error occurred',
+      },
+      { status: 500 },
+    );
   }
 }

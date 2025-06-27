@@ -7,7 +7,7 @@ import { eq, and } from 'drizzle-orm';
 
 const monitoringService = new ContainerMonitoringService();
 
-export async function GET(request: NextRequest) {
+export async function handleGET(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -21,16 +21,22 @@ export async function GET(request: NextRequest) {
       // Get health status for specific container
       // First verify user owns the container
       const db = await getDatabase();
-      const containers = await db.select()
+      const containers = await db
+        .select()
         .from(hostedContainers)
-        .where(and(
-          eq(hostedContainers.id, containerId),
-          eq(hostedContainers.userId, session.user.id)
-        ))
+        .where(
+          and(
+            eq(hostedContainers.id, containerId),
+            eq(hostedContainers.userId, session.user.id),
+          ),
+        )
         .limit(1);
 
       if (!containers[0]) {
-        return NextResponse.json({ error: 'Container not found or access denied' }, { status: 404 });
+        return NextResponse.json(
+          { error: 'Container not found or access denied' },
+          { status: 404 },
+        );
       }
 
       const container = containers[0];
@@ -43,15 +49,20 @@ export async function GET(request: NextRequest) {
     } else {
       // Get health status for all user's containers
       const db = await getDatabase();
-      const userContainers = await db.select()
+      const userContainers = await db
+        .select()
         .from(hostedContainers)
-        .where(and(
-          eq(hostedContainers.userId, session.user.id),
-          eq(hostedContainers.organizationId, session.organizationId)
-        ));
+        .where(
+          and(
+            eq(hostedContainers.userId, session.user.id),
+            eq(hostedContainers.organizationId, session.organizationId),
+          ),
+        );
 
       const healthStatuses = await Promise.all(
-        userContainers.map((container: any) => monitoringService.checkContainerHealth(container))
+        userContainers.map((container: any) =>
+          monitoringService.checkContainerHealth(container),
+        ),
       );
 
       return NextResponse.json({
@@ -63,12 +74,12 @@ export async function GET(request: NextRequest) {
     console.error('Failed to get container health:', error);
     return NextResponse.json(
       { error: 'Failed to get container health' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -80,23 +91,29 @@ export async function POST(request: NextRequest) {
     if (!containerId || !action) {
       return NextResponse.json(
         { error: 'Missing required fields: containerId, action' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const db = await getDatabase();
-    
+
     // Verify user owns the container
-    const containers = await db.select()
+    const containers = await db
+      .select()
       .from(hostedContainers)
-      .where(and(
-        eq(hostedContainers.id, containerId),
-        eq(hostedContainers.userId, session.user.id)
-      ))
+      .where(
+        and(
+          eq(hostedContainers.id, containerId),
+          eq(hostedContainers.userId, session.user.id),
+        ),
+      )
       .limit(1);
 
     if (!containers[0]) {
-      return NextResponse.json({ error: 'Container not found or access denied' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Container not found or access denied' },
+        { status: 404 },
+      );
     }
 
     const container = containers[0];
@@ -111,7 +128,8 @@ export async function POST(request: NextRequest) {
 
       case 'force_billing':
         // Force a billing cycle for this container
-        const billingResult = await monitoringService['processContainerBilling'](container);
+        const billingResult =
+          await monitoringService['processContainerBilling'](container);
         return NextResponse.json({
           success: true,
           data: billingResult,
@@ -119,15 +137,18 @@ export async function POST(request: NextRequest) {
 
       default:
         return NextResponse.json(
-          { error: 'Invalid action. Supported actions: health_check, force_billing' },
-          { status: 400 }
+          {
+            error:
+              'Invalid action. Supported actions: health_check, force_billing',
+          },
+          { status: 400 },
         );
     }
   } catch (error) {
     console.error('Failed to perform container action:', error);
     return NextResponse.json(
       { error: 'Failed to perform container action' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

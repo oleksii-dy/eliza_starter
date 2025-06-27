@@ -68,6 +68,14 @@ export class N8nWorkflowService extends Service {
     this.outputDir = path.join(process.cwd(), '.eliza-temp', 'n8n-workflows');
   }
 
+  // Required static start method for service registration
+  static async start(runtime: IAgentRuntime): Promise<N8nWorkflowService> {
+    const service = new N8nWorkflowService(runtime);
+    service.runtime = runtime;
+    await service.start();
+    return service;
+  }
+
   async start(): Promise<void> {
     elizaLogger.info('[N8n] N8n Workflow Service started');
 
@@ -279,16 +287,24 @@ Return ONLY valid JSON, no explanations.`;
     const workflow: any = {
       name: spec.name,
       nodes: [],
-      connections: { /* empty */ },
+      connections: {
+        /* empty */
+      },
       active: false,
-      settings: spec.settings || { /* empty */ },
+      settings:
+        spec.settings ||
+        {
+          /* empty */
+        },
       versionId: uuidv4(),
       id: uuidv4(),
     };
 
     // Generate Start node (always required)
     workflow.nodes.push({
-      parameters: { /* empty */ },
+      parameters: {
+        /* empty */
+      },
       id: uuidv4(),
       name: 'Start',
       type: 'n8n-nodes-base.start',
@@ -301,7 +317,11 @@ Return ONLY valid JSON, no explanations.`;
     for (const trigger of spec.triggers || []) {
       const triggerId = uuidv4();
       workflow.nodes.push({
-        parameters: trigger.parameters || { /* empty */ },
+        parameters:
+          trigger.parameters ||
+          {
+            /* empty */
+          },
         id: triggerId,
         name: trigger.type.split('.').pop() || 'Trigger',
         type: trigger.type,
@@ -317,7 +337,11 @@ Return ONLY valid JSON, no explanations.`;
       const nodeId = uuidv4();
 
       workflow.nodes.push({
-        parameters: node.parameters || { /* empty */ },
+        parameters:
+          node.parameters ||
+          {
+            /* empty */
+          },
         id: nodeId,
         name: node.name,
         type: node.type,
@@ -337,7 +361,9 @@ Return ONLY valid JSON, no explanations.`;
 
         if (fromNode && toNode) {
           if (!workflow.connections[fromNode.name]) {
-            workflow.connections[fromNode.name] = { /* empty */ };
+            workflow.connections[fromNode.name] = {
+              /* empty */
+            };
           }
 
           const outputKey = conn.from.output || 'main';
@@ -397,7 +423,8 @@ Return ONLY valid JSON, no explanations.`;
   /**
    * Generate integration code for complex workflows
    */
-  private async generateIntegrationCode(spec: N8nWorkflowSpecification,
+  private async generateIntegrationCode(
+    spec: N8nWorkflowSpecification,
     _workflowJson: any
   ): Promise<string> {
     if (!this.anthropic) {
@@ -411,9 +438,9 @@ Description: ${spec.description}
 
 Nodes that need code:
 ${(spec.nodes || [])
-    .filter((n) => n.type.includes('function'))
-    .map((n) => `- ${n.name}: ${n.parameters?.description || 'Custom logic'}`)
-    .join('\n')}
+  .filter((n) => n.type.includes('function'))
+  .map((n) => `- ${n.name}: ${n.parameters?.description || 'Custom logic'}`)
+  .join('\n')}
 
 Generate clean, well-commented JavaScript code for each function node.
 Include error handling and logging.`;
@@ -440,7 +467,8 @@ Include error handling and logging.`;
   /**
    * Validate workflow structure
    */
-  private async validateWorkflow(workflowJson: any
+  private async validateWorkflow(
+    workflowJson: any
   ): Promise<{ valid: boolean; errors?: string[] }> {
     const errors: string[] = [];
 
@@ -464,7 +492,12 @@ Include error handling and logging.`;
     }
 
     // Validate connections
-    for (const [fromNode, connections] of Object.entries(workflowJson.connections || { /* empty */ })) {
+    for (const [fromNode, connections] of Object.entries(
+      workflowJson.connections ||
+        {
+          /* empty */
+        }
+    )) {
       const fromNodeExists = workflowJson.nodes.some((n: any) => n.name === fromNode);
       if (!fromNodeExists) {
         errors.push(`Connection from non-existent node: ${fromNode}`);
@@ -491,7 +524,8 @@ Include error handling and logging.`;
   /**
    * Generate documentation for the workflow
    */
-  private async generateDocumentation(spec: N8nWorkflowSpecification,
+  private async generateDocumentation(
+    spec: N8nWorkflowSpecification,
     workflowJson: any
   ): Promise<string> {
     const sections = [
@@ -554,7 +588,8 @@ Include error handling and logging.`;
   /**
    * Save workflow files
    */
-  private async saveWorkflow(jobId: string,
+  private async saveWorkflow(
+    jobId: string,
     workflowName: string,
     content: {
       workflow: any;
@@ -625,7 +660,9 @@ Include error handling and logging.`;
    * Map credential names to n8n format
    */
   private mapCredentials(credentials: string[]): Record<string, any> {
-    const mapped: Record<string, any> = { /* empty */ };
+    const mapped: Record<string, any> = {
+      /* empty */
+    };
 
     for (const cred of credentials) {
       // Map common credential types

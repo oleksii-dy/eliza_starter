@@ -1,6 +1,6 @@
-// Test setup file for Bun:test
+// Test setup file for Bun test
 import { GlobalRegistrator } from '@happy-dom/global-registrator';
-import { afterEach, beforeEach, expect, mock } from 'bun:test';
+import { afterEach, beforeEach, expect } from 'bun:test';
 import { cleanup } from '@testing-library/react';
 import * as matchers from '@testing-library/jest-dom/matchers';
 
@@ -9,6 +9,11 @@ import React from 'react';
 
 // Set up DOM environment with Happy DOM (recommended by Bun)
 GlobalRegistrator.register();
+
+// Ensure document and window are properly available
+if (typeof globalThis.document === 'undefined') {
+  GlobalRegistrator.register();
+}
 
 // Extend expect with jest-dom matchers
 expect.extend(matchers);
@@ -105,7 +110,7 @@ afterEach(() => {
 
 // React 19 specific setup - add missing APIs for testing-library compatibility
 try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
+
   const ReactCompat = require('react');
 
   // Add React.createRef polyfill for React 19 compatibility with testing-library
@@ -156,9 +161,17 @@ global.ResizeObserver = class MockResizeObserver {
   unobserve() {}
 } as CanvasRenderingContext2D;
 
-// Mock scrollTo for window and elements
-window.scrollTo = mock();
-Element.prototype.scrollTo = mock();
-Element.prototype.scrollIntoView = mock();
+// Mock scrollTo for window and elements - create simple mock functions
+window.scrollTo = () => {};
+Element.prototype.scrollTo = () => {};
+Element.prototype.scrollIntoView = () => {};
+
+// Set up test environment flag
+if (typeof window !== 'undefined') {
+  (window as any).__TESTING__ = true;
+}
+if (typeof global !== 'undefined') {
+  (global as any).__TESTING__ = true;
+}
 
 // Add any other global test setup here

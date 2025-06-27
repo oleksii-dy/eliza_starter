@@ -5,7 +5,7 @@ import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 
 // Mock the N8nWorkflowService
 mock.module('../../services/N8nWorkflowService', () => ({
-  N8nWorkflowService: mock()
+  N8nWorkflowService: mock(),
 }));
 
 describe('N8n Workflow Actions', () => {
@@ -44,8 +44,12 @@ describe('N8n Workflow Actions', () => {
     } as Memory;
 
     mockState = {
-      values: { /* empty */ },
-      data: { /* empty */ },
+      values: {
+        /* empty */
+      },
+      data: {
+        /* empty */
+      },
       text: '',
     } as State;
 
@@ -75,7 +79,9 @@ describe('N8n Workflow Actions', () => {
         mockRuntime,
         mockMemory,
         mockState,
-        { /* empty */ },
+        {
+          /* empty */
+        },
         mockCallback
       );
 
@@ -100,7 +106,9 @@ describe('N8n Workflow Actions', () => {
         mockRuntime,
         mockMemory,
         mockState,
-        { /* empty */ },
+        {
+          /* empty */
+        },
         mockCallback
       );
 
@@ -128,7 +136,15 @@ describe('N8n Workflow Actions', () => {
 
       mockMemory.content.text = JSON.stringify(jsonSpec);
 
-      await n8nWorkflowAction.handler(mockRuntime, mockMemory, mockState, { /* empty */ }, mockCallback);
+      await n8nWorkflowAction.handler(
+        mockRuntime,
+        mockMemory,
+        mockState,
+        {
+          /* empty */
+        },
+        mockCallback
+      );
 
       expect(mockService.createWorkflow).toHaveBeenCalledWith(jsonSpec);
     });

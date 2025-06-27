@@ -1,9 +1,4 @@
-import {
-  Service,
-  type IAgentRuntime,
-  type ServiceTypeName,
-  logger,
-} from '@elizaos/core';
+import { Service, type IAgentRuntime, type ServiceTypeName, logger } from '@elizaos/core';
 import '../types'; // Import to register service types
 
 /**
@@ -33,6 +28,8 @@ export class TodoIntegrationBridge extends Service {
 
   static async stop(runtime: IAgentRuntime): Promise<void> {
     const service = runtime.getService(TodoIntegrationBridge.serviceType);
-    if (service) {await service.stop();}
+    if (service) {
+      await service.stop();
+    }
   }
 }

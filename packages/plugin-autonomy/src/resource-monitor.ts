@@ -159,7 +159,7 @@ export class ResourceMonitorService extends Service {
               resolve(this.fallbackDiskUsage());
             });
           });
-        } catch (error) {
+        } catch (_error) {
           return this.fallbackDiskUsage();
         }
       } else {
@@ -219,7 +219,7 @@ export class ResourceMonitorService extends Service {
           resolve(this.fallbackDiskUsage());
         });
       });
-    } catch (error) {
+    } catch (_error) {
       return this.fallbackDiskUsage();
     }
   }

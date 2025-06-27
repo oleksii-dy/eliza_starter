@@ -10,9 +10,14 @@ export default defineConfig({
     screenshotOnRunFailure: true,
     viewportWidth: 1280,
     viewportHeight: 720,
-    defaultCommandTimeout: 10000,
-    requestTimeout: 10000,
-    responseTimeout: 10000,
+    defaultCommandTimeout: 15000,
+    requestTimeout: 15000,
+    responseTimeout: 15000,
+    pageLoadTimeout: 30000,
+    // Use Chrome instead of Electron to avoid renderer crashes
+    browser: 'chrome',
+    experimentalMemoryManagement: true,
+    numTestsKeptInMemory: 1,
     env: {
       API_BASE_URL: 'http://localhost:3333/api',
       TEST_USER_EMAIL: 'test@elizaos.ai',
@@ -58,7 +63,9 @@ export default defineConfig({
           return null;
         },
         getVerificationToken: (email: string) => {
-          const token = Buffer.from(email + ':' + Date.now()).toString('base64');
+          const token = Buffer.from(email + ':' + Date.now()).toString(
+            'base64',
+          );
           return token;
         },
         setupTestApiKey: ({ email }: { email: string }) => {
@@ -73,25 +80,28 @@ export default defineConfig({
           console.log(`Would add ${args.amount} credits for ${args.email}`);
           return null;
         },
-        makeApiRequest: async ({ 
-          endpoint, 
-          method = 'GET', 
-          apiKey, 
-          body 
+        makeApiRequest: async ({
+          endpoint,
+          method = 'GET',
+          apiKey,
+          body,
         }: {
           endpoint: string;
           method?: string;
           apiKey: string;
           body?: any;
         }) => {
-          const response = await fetch(`http://localhost:3333/api/v1${endpoint}`, {
-            method,
-            headers: {
-              'Authorization': `Bearer ${apiKey}`,
-              'Content-Type': 'application/json',
+          const response = await fetch(
+            `http://localhost:3333/api/v1${endpoint}`,
+            {
+              method,
+              headers: {
+                Authorization: `Bearer ${apiKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: body ? JSON.stringify(body) : undefined,
             },
-            body: body ? JSON.stringify(body) : undefined,
-          });
+          );
 
           return {
             status: response.status,
@@ -103,7 +113,9 @@ export default defineConfig({
             stripeMode: 'test',
             hasOpenAI: !!process.env.OPENAI_API_KEY,
             hasAnthropic: !!process.env.ANTHROPIC_API_KEY,
-            hasR2: !!(process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY),
+            hasR2: !!(
+              process.env.R2_ACCESS_KEY_ID && process.env.R2_SECRET_ACCESS_KEY
+            ),
           };
         },
       });
@@ -117,4 +129,4 @@ export default defineConfig({
       bundler: 'webpack',
     },
   },
-}); 
+});

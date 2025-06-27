@@ -98,7 +98,9 @@ async function quickTest() {
 
       if (updated.status === 'completed') {
         const duration = Date.now() - startTime;
-        console.log(`\n✅ Research completed in ${Math.round(duration / 1000)}s`);
+        console.log(
+          `\n✅ Research completed in ${Math.round(duration / 1000)}s`
+        );
 
         // Log basic statistics
         console.log('\n📊 Research Statistics:');
@@ -112,7 +114,9 @@ async function quickTest() {
           console.log(`${updated.report.summary.substring(0, 200)}...`);
         }
 
-        console.log('\n✅ SUCCESS: Deep research benchmark is working correctly!');
+        console.log(
+          '\n✅ SUCCESS: Deep research benchmark is working correctly!'
+        );
         return true;
       } else if (updated.status === 'failed') {
         console.error(`\n❌ Research failed: ${updated.error}`);
@@ -144,7 +148,7 @@ async function quickTest() {
         console.log(`Final status: ${final.status}, phase: ${final.phase}`);
         console.log(`Sources collected: ${final.sources.length}`);
         console.log(
-          '\n✅ PARTIAL SUCCESS: Research is progressing correctly, just didn\'t complete in the short timeframe.'
+          "\n✅ PARTIAL SUCCESS: Research is progressing correctly, just didn't complete in the short timeframe."
         );
       }
       return true; // Still a success - the system is working

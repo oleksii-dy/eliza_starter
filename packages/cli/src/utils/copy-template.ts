@@ -274,7 +274,8 @@ export async function copyTemplate(
     const isTestEnvironment =
       process.env.NODE_ENV === 'test' ||
       process.env.VITEST === 'true' ||
-      process.env.ELIZA_TEST_MODE === 'true';
+      process.env.ELIZA_TEST_MODE === 'true' ||
+      process.env.CLI_TEST_MODE === 'true';
 
     // Define which packages are published to npm vs workspace-only
     const publishedPackages = [

@@ -259,10 +259,10 @@ describe('Midnight Plugin Integration Tests', () => {
       }
 
       // 2. Test that actions are available
-      expect(midnightPlugin.actions).toHaveLength(7);
+      expect(midnightPlugin.actions).toHaveLength(9);
 
       // 3. Test that providers are available
-      expect(midnightPlugin.providers).toHaveLength(3);
+      expect(midnightPlugin.providers).toHaveLength(4);
 
       // 4. Test that routes are available
       expect(midnightPlugin.routes).toHaveLength(2);

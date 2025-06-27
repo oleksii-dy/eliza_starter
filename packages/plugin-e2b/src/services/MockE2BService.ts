@@ -1,5 +1,10 @@
 import { Service, elizaLogger, type IAgentRuntime } from '@elizaos/core';
-import type { E2BServiceType, E2BSandboxOptions, E2BExecutionResult, E2BSandboxHandle } from '../types.js';
+import type {
+  E2BServiceType,
+  E2BSandboxOptions,
+  E2BExecutionResult,
+  E2BSandboxHandle,
+} from '../types.js';
 import { ErrorInstrumentation, instrumented, retryable } from '../utils/errorInstrumentation.js';
 
 /**
@@ -10,10 +15,13 @@ export class MockE2BService extends Service implements E2BServiceType {
   static serviceName = 'e2b';
   static serviceType = 'e2b';
 
-  private mockSandboxes: Map<string, {
-    sandbox: any;
-    handle: E2BSandboxHandle;
-  }> = new Map();
+  private mockSandboxes: Map<
+    string,
+    {
+      sandbox: any;
+      handle: E2BSandboxHandle;
+    }
+  > = new Map();
 
   private nextSandboxId = 1;
 
@@ -35,7 +43,7 @@ export class MockE2BService extends Service implements E2BServiceType {
     // Create a default mock sandbox
     const defaultSandboxId = await this.createSandbox({
       timeoutMs: 300000,
-      metadata: { purpose: 'default', mock: 'true' }
+      metadata: { purpose: 'default', mock: 'true' },
     });
 
     elizaLogger.info('Mock E2B service initialized with default sandbox', { defaultSandboxId });
@@ -44,7 +52,7 @@ export class MockE2BService extends Service implements E2BServiceType {
     ErrorInstrumentation.logMetrics('MockE2BService', 'initialize', {
       defaultSandboxId,
       totalSandboxes: this.mockSandboxes.size,
-      serviceReady: true
+      serviceReady: true,
     });
   }
 
@@ -59,13 +67,13 @@ export class MockE2BService extends Service implements E2BServiceType {
     elizaLogger.debug('Mock executing code', { language, codeLength: code.length });
 
     // Simulate execution delay
-    await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 200));
+    await new Promise((resolve) => setTimeout(resolve, 100 + Math.random() * 200));
 
     // Log execution metrics
     ErrorInstrumentation.logMetrics('MockE2BService', 'executeCode', {
       language,
       codeLength: code.length,
-      executionStarted: true
+      executionStarted: true,
     });
 
     // Mock different types of code execution
@@ -77,9 +85,9 @@ export class MockE2BService extends Service implements E2BServiceType {
         error: {
           name: 'MockError',
           value: 'Simulated execution error',
-          traceback: 'Mock traceback for testing'
+          traceback: 'Mock traceback for testing',
         },
-        executionCount: 1
+        executionCount: 1,
       };
     }
 
@@ -127,10 +135,10 @@ export class MockE2BService extends Service implements E2BServiceType {
       results: mockResult ? [{ toJSON: () => ({ type: 'text', data: mockResult }) }] : [],
       logs: {
         stdout: mockOutput ? [mockOutput] : ['Mock execution output'],
-        stderr: []
+        stderr: [],
       },
       error: undefined,
-      executionCount: 1
+      executionCount: 1,
     };
   }
 
@@ -147,7 +155,7 @@ export class MockE2BService extends Service implements E2BServiceType {
         {
           service: 'MockE2BService',
           operation: 'createSandbox',
-          metadata: { sandboxId, opts }
+          metadata: { sandboxId, opts },
         }
       );
     }
@@ -158,7 +166,7 @@ export class MockE2BService extends Service implements E2BServiceType {
       createdAt: new Date(),
       lastActivity: new Date(),
       metadata: opts.metadata,
-      template: opts.template || 'base'
+      template: opts.template || 'base',
     };
 
     const mockSandbox = {
@@ -168,7 +176,7 @@ export class MockE2BService extends Service implements E2BServiceType {
       },
       runCode: async (code: string) => {
         return this.executeCode(code);
-      }
+      },
     };
 
     this.mockSandboxes.set(sandboxId, { sandbox: mockSandbox, handle });
@@ -194,7 +202,7 @@ export class MockE2BService extends Service implements E2BServiceType {
   }
 
   listSandboxes(): E2BSandboxHandle[] {
-    return Array.from(this.mockSandboxes.values()).map(data => data.handle);
+    return Array.from(this.mockSandboxes.values()).map((data) => data.handle);
   }
 
   async writeFileToSandbox(sandboxId: string, path: string, content: string): Promise<void> {
@@ -224,4 +232,3 @@ export class MockE2BService extends Service implements E2BServiceType {
     return true;
   }
 }
-

@@ -169,10 +169,10 @@ ${health.flakyTests.length > 0 ? health.flakyTests.map((t) => `- ${t}`).join('\n
 
 ## Test History (Last 5 Runs)
 ${recentRuns
-  .map(
-    (run) => `- ${run.date.toISOString()}: ${run.passed}/${run.total} passed (${run.duration}ms)`
-  )
-  .join('\n')}
+    .map(
+      (run) => `- ${run.date.toISOString()}: ${run.passed}/${run.total} passed (${run.duration}ms)`
+    )
+    .join('\n')}
     `.trim();
   }
 
@@ -180,7 +180,7 @@ ${recentRuns
     successRateHistory: number[];
     durationHistory: number[];
     dates: Date[];
-  } {
+    } {
     const health = this.getHealth();
     const history = health.testHistory.slice(-30); // Last 30 runs
 

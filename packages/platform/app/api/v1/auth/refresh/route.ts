@@ -10,7 +10,7 @@ const refreshSchema = z.object({
   refreshToken: z.string(),
 });
 
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   try {
     const config = loadConfig();
     const sessionManager = new SessionManager();
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       tokenHash: 'temp-hash',
       expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
       createdAt: new Date(),
-      isActive: true
+      isActive: true,
     };
 
     // Get user from database
@@ -86,12 +86,12 @@ export async function POST(request: NextRequest) {
     const {
       accessToken,
       refreshToken: newRefreshToken,
-      expiresAt
+      expiresAt,
     } = await createTokenPair(
       user,
       session,
       config.jwtSecret,
-      payload.organizationId
+      payload.organizationId,
     );
 
     const response: ApiResponse = {

@@ -15,7 +15,9 @@ async function runE2ETests() {
     agentId: createUniqueUuid(null as any, 'test-agent'),
     getSetting: (_key: string) => null,
     getService: (name: string) => {
-      if (name === 'SHELL') {return shellService;}
+      if (name === 'SHELL') {
+        return shellService;
+      }
       return null;
     },
     createMemory: async () => {},
@@ -52,7 +54,9 @@ async function runE2ETests() {
       } catch (error) {
         failedTests++;
         console.log('❌ FAILED');
-        console.error(`      Error: ${error instanceof Error ? error.message : String(error)}`);
+        console.error(
+          `      Error: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
     }
   }

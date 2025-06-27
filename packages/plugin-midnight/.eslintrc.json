@@ -14,6 +14,11 @@
     "node": true,
     "es2022": true
   },
+  "globals": {
+    "crypto": "readonly",
+    "TextEncoder": "readonly",
+    "TextDecoder": "readonly"
+  },
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",

@@ -1,13 +1,13 @@
-import type { World } from '../../types';
-import { createLogger } from '../../core/logger';
+import type { World } from '../../types'
+import { createLogger } from '../../core/logger'
 
-const logger = createLogger('DefaultRPGWorld');
+const logger = createLogger('DefaultRPGWorld')
 
 export interface CubeVisualConfig {
-  size: { x: number; y: number; z: number };
-  color: string;
-  emissive?: string;
-  emissiveIntensity?: number;
+  size: { x: number; y: number; z: number }
+  color: string
+  emissive?: string
+  emissiveIntensity?: number
 }
 
 // Visual configurations for different entity types
@@ -34,76 +34,79 @@ export const ENTITY_VISUALS: Record<string, CubeVisualConfig> = {
   // Environment
   spawn_point: { size: { x: 2, y: 0.1, z: 2 }, color: '#ff00ff', emissive: '#440044' },
   bank_chest: { size: { x: 1.5, y: 1.0, z: 1.0 }, color: '#8b7355' },
-  shop_stall: { size: { x: 3, y: 2.5, z: 2 }, color: '#daa520' }
-};
+  shop_stall: { size: { x: 3, y: 2.5, z: 2 }, color: '#daa520' },
+}
 
 export class DefaultRPGWorld {
-  private world: World;
+  private world: World
 
   constructor(world: World) {
-    this.world = world;
+    this.world = world
   }
 
   /**
    * Initialize the default RPG world with test content
    */
   async initialize(): Promise<void> {
-    logger.info('Initializing default RPG world...');
+    logger.info('Initializing default RPG world...')
 
     // Wait for all systems to be ready
-    await this.waitForSystems();
+    await this.waitForSystems()
 
     // Create spawn area
-    await this.createSpawnArea();
+    await this.createSpawnArea()
 
     // Spawn NPCs
-    await this.spawnTestNPCs();
+    await this.spawnTestNPCs()
 
     // Create shops and banks
-    await this.createServices();
+    await this.createServices()
 
     // Add some items on the ground
-    await this.spawnGroundItems();
+    await this.spawnGroundItems()
 
-    logger.info('Default RPG world initialized!');
+    logger.info('Default RPG world initialized!')
   }
 
   private async waitForSystems(): Promise<void> {
     // Wait for required systems
-    const requiredSystems = ['npc', 'spawning', 'inventory', 'loot'];
+    const requiredSystems = ['npc', 'spawning', 'inventory', 'loot']
 
-    for (let i = 0; i < 50; i++) { // Max 5 seconds
-      const allReady = requiredSystems.every(name => (this.world as any)[name]);
-      if (allReady) {return;}
-      await new Promise(resolve => setTimeout(resolve, 100));
+    for (let i = 0; i < 50; i++) {
+      // Max 5 seconds
+      const allReady = requiredSystems.every(name => (this.world as any)[name])
+      if (allReady) {
+        return
+      }
+      await new Promise(resolve => setTimeout(resolve, 100))
     }
 
-    logger.warn('Some systems may not be ready');
+    logger.warn('Some systems may not be ready')
   }
 
   private async createSpawnArea(): Promise<void> {
-    logger.info('Creating spawn area...');
+    logger.info('Creating spawn area...')
 
     // Create a visible spawn platform
-    const spawnPlatform = this.world.entities.create('spawn_platform');
+    const spawnPlatform = this.world.entities.create('spawn_platform')
     if (spawnPlatform) {
-      spawnPlatform.position = { x: 0, y: -0.5, z: 0 };
+      spawnPlatform.position = { x: 0, y: -0.5, z: 0 }
 
       // Add visual component for spawn area
-      this.addCubeVisual(spawnPlatform, ENTITY_VISUALS.spawn_point);
+      this.addCubeVisual(spawnPlatform, ENTITY_VISUALS.spawn_point)
 
       // Add name tag
-      this.addNameTag(spawnPlatform, 'Spawn Point');
+      this.addNameTag(spawnPlatform, 'Spawn Point')
     }
   }
 
   private async spawnTestNPCs(): Promise<void> {
-    logger.info('Spawning test NPCs...');
+    logger.info('Spawning test NPCs...')
 
-    const npcSystem = (this.world as any).npc;
+    const npcSystem = (this.world as any).npc
     if (!npcSystem) {
-      logger.error('NPC system not available');
-      return;
+      logger.error('NPC system not available')
+      return
     }
 
     // Spawn configurations
@@ -120,66 +123,66 @@ export class DefaultRPGWorld {
       // Mixed enemies
       { id: 1, position: { x: 10, y: 0, z: 10 }, name: 'goblin' },
       { id: 1, position: { x: -10, y: 0, z: 10 }, name: 'goblin' },
-    ];
+    ]
 
     for (const spawn of spawns) {
-      const npc = npcSystem.spawnNPC(spawn.id, spawn.position);
+      const npc = npcSystem.spawnNPC(spawn.id, spawn.position)
       if (npc) {
         // Add cube visual
-        this.addCubeVisual(npc, ENTITY_VISUALS[spawn.name]);
+        this.addCubeVisual(npc, ENTITY_VISUALS[spawn.name])
 
         // Add name tag
-        const npcComponent = npc.getComponent('npc');
+        const npcComponent = npc.getComponent('npc')
         if (npcComponent) {
-          this.addNameTag(npc, npcComponent.name);
+          this.addNameTag(npc, npcComponent.name)
         }
 
-        logger.debug(`Spawned ${spawn.name} at ${JSON.stringify(spawn.position)}`);
+        logger.debug(`Spawned ${spawn.name} at ${JSON.stringify(spawn.position)}`)
       }
     }
   }
 
   private async createServices(): Promise<void> {
-    logger.info('Creating services...');
+    logger.info('Creating services...')
 
     // Bank
-    const bank = this.world.entities.create('bank');
+    const bank = this.world.entities.create('bank')
     if (bank) {
-      bank.position = { x: -10, y: 0, z: -10 };
-      this.addCubeVisual(bank, ENTITY_VISUALS.bank_chest);
-      this.addNameTag(bank, 'Bank');
+      bank.position = { x: -10, y: 0, z: -10 }
+      this.addCubeVisual(bank, ENTITY_VISUALS.bank_chest)
+      this.addNameTag(bank, 'Bank')
 
       // Make it interactable
       bank.addComponent('interactable', {
         type: 'bank',
         range: 3,
-        action: 'Open Bank'
-      });
+        action: 'Open Bank',
+      })
     }
 
     // Shop
-    const shop = this.world.entities.create('shop');
+    const shop = this.world.entities.create('shop')
     if (shop) {
-      shop.position = { x: 10, y: 0, z: -10 };
-      this.addCubeVisual(shop, ENTITY_VISUALS.shop_stall);
-      this.addNameTag(shop, 'General Store');
+      shop.position = { x: 10, y: 0, z: -10 }
+      this.addCubeVisual(shop, ENTITY_VISUALS.shop_stall)
+      this.addNameTag(shop, 'General Store')
 
       // Make it interactable
       shop.addComponent('interactable', {
         type: 'shop',
         range: 3,
-        action: 'Browse Shop'
-      });
+        action: 'Browse Shop',
+      })
     }
   }
 
   private async spawnGroundItems(): Promise<void> {
-    logger.info('Spawning ground items...');
+    logger.info('Spawning ground items...')
 
-    const lootSystem = (this.world as any).loot;
+    const lootSystem = (this.world as any).loot
     if (!lootSystem) {
-      logger.error('Loot system not available');
-      return;
+      logger.error('Loot system not available')
+      return
     }
 
     // Spawn some test items on the ground
@@ -188,27 +191,27 @@ export class DefaultRPGWorld {
       { itemId: 1, quantity: 1, position: { x: -2, y: 0, z: 2 }, visual: 'sword' }, // Bronze sword
       { itemId: 2, quantity: 5, position: { x: 2, y: 0, z: -2 }, visual: 'food' }, // Bread
       { itemId: 3, quantity: 3, position: { x: -2, y: 0, z: -2 }, visual: 'bones' }, // Bones
-    ];
+    ]
 
     for (const item of groundItems) {
-      const lootEntity = this.world.entities.create(`loot_${Date.now()}_${Math.random()}`);
+      const lootEntity = this.world.entities.create(`loot_${Date.now()}_${Math.random()}`)
       if (lootEntity) {
-        lootEntity.position = item.position;
+        lootEntity.position = item.position
 
         // Add loot component
         lootEntity.addComponent('loot', {
           items: [{ itemId: item.itemId, quantity: item.quantity }],
           owner: null,
-          spawnTime: Date.now()
-        });
+          spawnTime: Date.now(),
+        })
 
         // Add visual
-        this.addCubeVisual(lootEntity, ENTITY_VISUALS[item.visual] || ENTITY_VISUALS.loot_pile);
+        this.addCubeVisual(lootEntity, ENTITY_VISUALS[item.visual] || ENTITY_VISUALS.loot_pile)
 
         // Add name tag
-        const itemDef = this.getItemDefinition(item.itemId);
+        const itemDef = this.getItemDefinition(item.itemId)
         if (itemDef) {
-          this.addNameTag(lootEntity, `${itemDef.name} (${item.quantity})`);
+          this.addNameTag(lootEntity, `${itemDef.name} (${item.quantity})`)
         }
       }
     }
@@ -225,17 +228,17 @@ export class DefaultRPGWorld {
         type: 'basic',
         color: config.color,
         emissive: config.emissive,
-        emissiveIntensity: config.emissiveIntensity || 0.2
-      }
-    });
+        emissiveIntensity: config.emissiveIntensity || 0.2,
+      },
+    })
 
     // Add slight hover animation for items
     if (config === ENTITY_VISUALS.coin || config === ENTITY_VISUALS.loot_pile) {
       entity.addComponent('animation', {
         type: 'hover',
         amplitude: 0.1,
-        speed: 2
-      });
+        speed: 2,
+      })
     }
   }
 
@@ -248,17 +251,17 @@ export class DefaultRPGWorld {
       offset: { x: 0, y: 2, z: 0 },
       size: 0.5,
       color: '#ffffff',
-      backgroundColor: 'rgba(0,0,0,0.5)'
-    });
+      backgroundColor: 'rgba(0,0,0,0.5)',
+    })
   }
 
   /**
    * Get item definition
    */
   private getItemDefinition(itemId: number): any {
-    const itemRegistry = (this.world as any).inventory?.itemRegistry;
+    const itemRegistry = (this.world as any).inventory?.itemRegistry
     if (itemRegistry) {
-      return itemRegistry.getItem(itemId);
+      return itemRegistry.getItem(itemId)
     }
 
     // Fallback definitions
@@ -266,10 +269,10 @@ export class DefaultRPGWorld {
       995: { name: 'Coins' },
       1: { name: 'Bronze Sword' },
       2: { name: 'Bread' },
-      3: { name: 'Bones' }
-    };
+      3: { name: 'Bones' },
+    }
 
-    return items[itemId];
+    return items[itemId]
   }
 }
 
@@ -277,6 +280,6 @@ export class DefaultRPGWorld {
  * Initialize default RPG world on server start
  */
 export async function initializeDefaultRPGWorld(world: World): Promise<void> {
-  const defaultWorld = new DefaultRPGWorld(world);
-  await defaultWorld.initialize();
+  const defaultWorld = new DefaultRPGWorld(world)
+  await defaultWorld.initialize()
 }

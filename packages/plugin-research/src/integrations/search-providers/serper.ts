@@ -365,7 +365,7 @@ export class SerperSearchProvider {
         limit: response.data.limit || 0,
         remaining: response.data.remaining || 0,
       };
-    } catch (error) {
+    } catch (_error) {
       logger.warn('[Serper] Could not fetch usage data');
       return null;
     }

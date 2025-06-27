@@ -15,7 +15,7 @@ describe('Service Integration Validation', () => {
       checkApiKeyPermission,
       generateApiKey,
       hashApiKey,
-      isValidPermission
+      isValidPermission,
     } = await import('@/lib/server/services/api-key-service');
 
     expect(typeof createApiKey).toBe('function');
@@ -32,7 +32,7 @@ describe('Service Integration Validation', () => {
       deductCredits,
       getCreditBalance,
       getCreditTransactions,
-      getUsageStatistics
+      getUsageStatistics,
     } = await import('@/lib/server/services/billing-service');
 
     expect(typeof addCredits).toBe('function');
@@ -43,7 +43,9 @@ describe('Service Integration Validation', () => {
   });
 
   test('should have usage tracking service available', async () => {
-    const { trackUsage } = await import('@/lib/server/services/usage-tracking-service');
+    const { trackUsage } = await import(
+      '@/lib/server/services/usage-tracking-service'
+    );
 
     expect(typeof trackUsage).toBe('function');
   });
@@ -55,7 +57,9 @@ describe('Service Integration Validation', () => {
   });
 
   test('should have JWT utilities available', async () => {
-    const { createTokenPair, verifyJWT, extractBearerToken } = await import('@/lib/server/utils/jwt');
+    const { createTokenPair, verifyJWT, extractBearerToken } = await import(
+      '@/lib/server/utils/jwt'
+    );
 
     expect(typeof createTokenPair).toBe('function');
     expect(typeof verifyJWT).toBe('function');
@@ -63,12 +67,9 @@ describe('Service Integration Validation', () => {
   });
 
   test('should have database schema types available', async () => {
-    const {
-      organizations,
-      users,
-      apiKeys,
-      usageRecords
-    } = await import('@/lib/database/schema');
+    const { organizations, users, apiKeys, usageRecords } = await import(
+      '@/lib/database/schema'
+    );
 
     expect(organizations).toBeDefined();
     expect(users).toBeDefined();
@@ -99,10 +100,9 @@ describe('Service Integration Validation', () => {
   });
 
   test('should validate permission checking logic', async () => {
-    const {
-      isValidPermission,
-      checkApiKeyPermission
-    } = await import('@/lib/server/services/api-key-service');
+    const { isValidPermission, checkApiKeyPermission } = await import(
+      '@/lib/server/services/api-key-service'
+    );
 
     // Test valid permissions
     expect(await isValidPermission('inference:openai')).toBe(true);
@@ -132,17 +132,24 @@ describe('Service Integration Validation', () => {
       updatedAt: new Date(),
     };
 
-    expect(await checkApiKeyPermission(mockApiKey, 'inference:openai')).toBe(true);
+    expect(await checkApiKeyPermission(mockApiKey, 'inference:openai')).toBe(
+      true,
+    );
     expect(await checkApiKeyPermission(mockApiKey, 'storage:read')).toBe(true);
     expect(await checkApiKeyPermission(mockApiKey, 'billing:read')).toBe(false);
 
     // Test admin permission
     const adminApiKey = { ...mockApiKey, permissions: ['admin:all'] };
-    expect(await checkApiKeyPermission(adminApiKey, 'any:permission')).toBe(true);
+    expect(await checkApiKeyPermission(adminApiKey, 'any:permission')).toBe(
+      true,
+    );
   });
 
   test('should validate API key hash consistency', () => {
-    const { generateApiKey, hashApiKey } = require('@/lib/server/services/api-key-service');
+    const {
+      generateApiKey,
+      hashApiKey,
+    } = require('@/lib/server/services/api-key-service');
 
     const { keyValue, keyHash } = generateApiKey();
 
@@ -187,9 +194,9 @@ describe('Runtime Integration Architecture', () => {
           'Validate JWT signature and expiration',
           'Look up user and organization in database',
           'Set database context for RLS',
-          'Return authenticated user and organization'
+          'Return authenticated user and organization',
         ],
-        expectedFunctions: ['authenticateUser', 'setContextFromUser']
+        expectedFunctions: ['authenticateUser', 'setContextFromUser'],
       },
 
       // 2. API key validation flow
@@ -200,9 +207,9 @@ describe('Runtime Integration Architecture', () => {
           'Query database for matching API key record',
           'Validate key is active and not expired',
           'Check rate limits and permissions',
-          'Return validated API key record'
+          'Return validated API key record',
         ],
-        expectedFunctions: ['validateApiKey', 'checkApiKeyPermission']
+        expectedFunctions: ['validateApiKey', 'checkApiKeyPermission'],
       },
 
       // 3. Usage tracking flow
@@ -214,9 +221,9 @@ describe('Runtime Integration Architecture', () => {
           'Calculate cost based on provider pricing',
           'Store usage record in database',
           'Update API key usage counter',
-          'Return usage record ID'
+          'Return usage record ID',
         ],
-        expectedFunctions: ['trackUsage']
+        expectedFunctions: ['trackUsage'],
       },
 
       // 4. Billing integration flow
@@ -227,9 +234,9 @@ describe('Runtime Integration Architecture', () => {
           'Deduct credits from balance',
           'Create credit transaction record',
           'Update organization balance',
-          'Return transaction record'
+          'Return transaction record',
         ],
-        expectedFunctions: ['deductCredits', 'getCreditBalance']
+        expectedFunctions: ['deductCredits', 'getCreditBalance'],
       },
 
       // 5. ElizaOS runtime integration
@@ -240,16 +247,16 @@ describe('Runtime Integration Architecture', () => {
           'Process messages through runtime',
           'Track usage through platform services',
           'Store memories and state',
-          'Return runtime responses'
+          'Return runtime responses',
         ],
         expectedIntegrations: [
           'Platform API key authentication',
           'Usage tracking for all model calls',
           'Credit deduction for billable operations',
           'Error tracking and monitoring',
-          'Performance metrics collection'
-        ]
-      }
+          'Performance metrics collection',
+        ],
+      },
     };
 
     // Validate that our implementation matches these patterns
@@ -257,23 +264,39 @@ describe('Runtime Integration Architecture', () => {
     expect(runtimeIntegrationPattern.apiKeyValidation.steps).toHaveLength(6);
     expect(runtimeIntegrationPattern.usageTracking.steps).toHaveLength(7);
     expect(runtimeIntegrationPattern.billingIntegration.steps).toHaveLength(6);
-    expect(runtimeIntegrationPattern.runtimeIntegration.expectedIntegrations).toHaveLength(5);
+    expect(
+      runtimeIntegrationPattern.runtimeIntegration.expectedIntegrations,
+    ).toHaveLength(5);
   });
 
   test('should validate end-to-end workflow structure', () => {
     // Test that we have all components for a complete workflow
     const workflowComponents = {
       authentication: ['JWT validation', 'Session management', 'User lookup'],
-      authorization: ['API key validation', 'Permission checking', 'Rate limiting'],
+      authorization: [
+        'API key validation',
+        'Permission checking',
+        'Rate limiting',
+      ],
       serviceExecution: ['LLM calls', 'Storage operations', 'Plugin execution'],
-      billing: ['Usage calculation', 'Credit deduction', 'Transaction recording'],
+      billing: [
+        'Usage calculation',
+        'Credit deduction',
+        'Transaction recording',
+      ],
       monitoring: ['Usage tracking', 'Error logging', 'Performance metrics'],
-      database: ['Multi-tenant schema', 'Row Level Security', 'Connection pooling']
+      database: [
+        'Multi-tenant schema',
+        'Row Level Security',
+        'Connection pooling',
+      ],
     };
 
     // Verify we have implementations for all components
     Object.keys(workflowComponents).forEach((component) => {
-      expect(workflowComponents[component as keyof typeof workflowComponents]).toHaveLength(3);
+      expect(
+        workflowComponents[component as keyof typeof workflowComponents],
+      ).toHaveLength(3);
     });
 
     expect(Object.keys(workflowComponents)).toEqual([
@@ -282,7 +305,7 @@ describe('Runtime Integration Architecture', () => {
       'serviceExecution',
       'billing',
       'monitoring',
-      'database'
+      'database',
     ]);
   });
 });

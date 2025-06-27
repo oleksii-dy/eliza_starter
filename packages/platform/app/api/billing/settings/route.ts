@@ -1,139 +1,171 @@
 /**
- * GET/PUT /api/billing/settings
- * Manage billing settings for the current organization
+ * Billing Settings API Route
+ * Manages billing preferences and payment methods for organizations
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { sessionService } from '@/lib/auth/session';
-import { initializeDatabase } from '@/lib/database/server';
-import { organizations } from '@/lib/database/schema';
-import { eq } from 'drizzle-orm';
 import { z } from 'zod';
+import { wrapHandlers } from '@/lib/api/route-wrapper';
 
-const settingsSchema = z.object({
-  autoTopUpEnabled: z.boolean(),
-  autoTopUpAmount: z.number().min(5).max(1000),
-  creditThreshold: z.number().min(0).max(100),
-  lowBalanceAlerts: z.boolean(),
-  emailNotifications: z.boolean(),
-  weeklyReports: z.boolean(),
+// Use dynamic imports to avoid database connection during build
+const getBillingService = () =>
+  import('@/lib/server/services/billing-service').then((m) => m.billingService);
+const getAuthService = () =>
+  import('@/lib/auth/session').then((m) => m.authService);
+
+// Validation schema for billing settings update
+const updateBillingSettingsSchema = z.object({
   billingEmail: z.string().email().optional(),
+  paymentMethod: z
+    .object({
+      type: z.enum(['card', 'bank', 'crypto']),
+      isDefault: z.boolean().optional(),
+    })
+    .optional(),
+  invoiceSettings: z
+    .object({
+      companyName: z.string().max(200).optional(),
+      taxId: z.string().max(50).optional(),
+      address: z
+        .object({
+          line1: z.string().max(200),
+          line2: z.string().max(200).optional(),
+          city: z.string().max(100),
+          state: z.string().max(100).optional(),
+          postalCode: z.string().max(20),
+          country: z.string().length(2), // ISO country code
+        })
+        .optional(),
+    })
+    .optional(),
+  notifications: z
+    .object({
+      lowCredits: z.boolean().optional(),
+      transactions: z.boolean().optional(),
+      invoices: z.boolean().optional(),
+    })
+    .optional(),
 });
 
-export async function GET(request: NextRequest) {
+/**
+ * GET /api/billing/settings - Get billing settings
+ */
+async function handleGET(request: NextRequest) {
   try {
-    // Get user session
-    const session = await sessionService.getSessionFromCookies();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const adapter = await initializeDatabase();
-    const db = adapter.getDatabase();
-
-    // Get organization settings
-    const [organization] = await db
-      .select()
-      .from(organizations)
-      .where(eq(organizations.id, session.organizationId))
-      .limit(1);
-
-    if (!organization) {
-      return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
-    }
-
-    const settings = {
-      autoTopUpEnabled: organization.autoTopUpEnabled,
-      autoTopUpAmount: parseFloat(organization.autoTopUpAmount),
-      creditThreshold: parseFloat(organization.creditThreshold),
-      billingEmail: organization.billingEmail || '',
-      subscriptionTier: organization.subscriptionTier,
-      // Get notification preferences from settings
-      lowBalanceAlerts: organization.settings?.notifications?.lowBalance ?? true,
-      emailNotifications: organization.settings?.notifications?.email ?? true,
-      weeklyReports: organization.settings?.notifications?.weeklyReports ?? false,
-    };
-
-    return NextResponse.json({
-      success: true,
-      settings,
-    });
-  } catch (error) {
-    console.error('Failed to get billing settings:', error);
-    return NextResponse.json(
-      { error: 'Failed to get billing settings' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function PUT(request: NextRequest) {
-  try {
-    // Get user session
-    const session = await sessionService.getSessionFromCookies();
-    if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Parse request body
-    const body = await request.json();
-    const validatedData = settingsSchema.parse(body);
-
-    const adapter = await initializeDatabase();
-    const db = adapter.getDatabase();
-
-    // Get current settings
-    const [currentOrg] = await db
-      .select()
-      .from(organizations)
-      .where(eq(organizations.id, session.organizationId))
-      .limit(1);
-
-    if (!currentOrg) {
-      return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
-    }
-
-    // Merge notification settings
-    const currentSettings = currentOrg.settings || {};
-    const updatedSettings = {
-      ...currentSettings,
-      notifications: {
-        ...currentSettings.notifications,
-        lowBalance: validatedData.lowBalanceAlerts,
-        email: validatedData.emailNotifications,
-        weeklyReports: validatedData.weeklyReports,
-      },
-    };
-
-    // Update organization settings
-    await db
-      .update(organizations)
-      .set({
-        autoTopUpEnabled: validatedData.autoTopUpEnabled,
-        autoTopUpAmount: validatedData.autoTopUpAmount.toString(),
-        creditThreshold: validatedData.creditThreshold.toString(),
-        billingEmail: validatedData.billingEmail || null,
-        settings: updatedSettings,
-        updatedAt: new Date(),
-      })
-      .where(eq(organizations.id, session.organizationId));
-
-    return NextResponse.json({
-      success: true,
-      message: 'Billing settings updated successfully',
-    });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
+    // Get current user session
+    const authService = await getAuthService();
+    const user = await authService.getCurrentUser();
+    if (!user) {
       return NextResponse.json(
-        { error: 'Invalid settings data', details: error.errors },
-        { status: 400 }
+        { success: false, error: 'Unauthorized' },
+        { status: 401 },
       );
     }
 
-    console.error('Failed to update billing settings:', error);
+    // Get billing service
+    const billingService = await getBillingService();
+
+    // Get billing settings
+    const settings = await billingService.getBillingSettings(
+      user.organizationId,
+    );
+
+    return NextResponse.json({
+      success: true,
+      data: settings,
+    });
+  } catch (error) {
+    console.error('Error fetching billing settings:', error);
     return NextResponse.json(
-      { error: 'Failed to update billing settings' },
-      { status: 500 }
+      {
+        success: false,
+        error: 'Failed to fetch billing settings',
+      },
+      { status: 500 },
     );
   }
 }
+
+/**
+ * PUT /api/billing/settings - Update billing settings
+ */
+async function handlePUT(request: NextRequest) {
+  try {
+    // Get current user session
+    const authService = await getAuthService();
+    const user = await authService.getCurrentUser();
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 },
+      );
+    }
+
+    // Check if user has permission to update billing settings
+    if (!['owner', 'admin'].includes(user.role)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            'Only organization owners and admins can update billing settings',
+        },
+        { status: 403 },
+      );
+    }
+
+    // Parse and validate request body
+    const body = await request.json();
+    const validation = updateBillingSettingsSchema.safeParse(body);
+
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid request',
+          details: validation.error.errors,
+        },
+        { status: 400 },
+      );
+    }
+
+    // Get billing service
+    const billingService = await getBillingService();
+
+    // Update billing settings
+    const updatedSettings = await billingService.updateBillingSettings(
+      user.organizationId,
+      validation.data,
+    );
+
+    return NextResponse.json({
+      success: true,
+      data: updatedSettings,
+    });
+  } catch (error) {
+    console.error('Error updating billing settings:', error);
+
+    // Handle specific errors
+    if (error instanceof Error) {
+      if (error.message.includes('Stripe')) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Payment service unavailable',
+          },
+          { status: 503 },
+        );
+      }
+    }
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to update billing settings',
+      },
+      { status: 500 },
+    );
+  }
+}
+
+// Export with security headers and authentication
+export const { GET, PUT } = wrapHandlers({ handleGET, handlePUT });

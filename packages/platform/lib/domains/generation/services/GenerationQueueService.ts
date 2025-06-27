@@ -4,12 +4,12 @@
  */
 
 import { getDatabaseClient } from '@/lib/database';
-import { 
-  generations, 
-  generationQueue, 
+import {
+  generations,
+  generationQueue,
   providerMetrics,
   NewGenerationQueueItem,
-  Generation 
+  Generation,
 } from '@/lib/database/schema';
 import { eq, and, desc, asc, sql, lt } from 'drizzle-orm';
 import { logger } from '@/lib/logger';
@@ -19,7 +19,6 @@ import { EventEmitter } from 'events';
 type DatabaseClient = ReturnType<typeof getDatabaseClient>;
 
 interface QueueConfig {
-  database: DatabaseClient;
   maxConcurrentJobs?: number;
   maxRetries?: number;
   retryDelayMs?: number;
@@ -65,11 +64,10 @@ export enum QueueEvents {
   JOB_RETRYING = 'job:retrying',
   WORKER_STARTED = 'worker:started',
   WORKER_STOPPED = 'worker:stopped',
-  QUEUE_DRAINED = 'queue:drained'
+  QUEUE_DRAINED = 'queue:drained',
 }
 
 export class GenerationQueueService extends EventEmitter {
-  private database: DatabaseClient;
   private config: Required<QueueConfig>;
   private workers = new Map<string, QueueWorker>();
   private isRunning = false;
@@ -82,12 +80,11 @@ export class GenerationQueueService extends EventEmitter {
     jobsProcessed: 0,
     jobsFailed: 0,
     totalProcessingTime: 0,
-    averageProcessingTime: 0
+    averageProcessingTime: 0,
   };
 
   constructor(config: QueueConfig) {
     super();
-    this.database = config.database;
     this.config = {
       ...config,
       maxConcurrentJobs: config.maxConcurrentJobs || 10,
@@ -96,7 +93,7 @@ export class GenerationQueueService extends EventEmitter {
       processingTimeoutMs: config.processingTimeoutMs || 300000, // 5 minutes
       pollIntervalMs: config.pollIntervalMs || 5000,
       deadLetterQueueEnabled: config.deadLetterQueueEnabled !== false,
-      priorityLevels: config.priorityLevels || 10
+      priorityLevels: config.priorityLevels || 10,
     };
   }
 
@@ -110,20 +107,20 @@ export class GenerationQueueService extends EventEmitter {
     }
 
     this.isRunning = true;
-    
+
     // Start polling for jobs
     this.startPolling();
-    
+
     // Start heartbeat for worker health monitoring
     this.startHeartbeat();
-    
+
     // Start metrics collection
     this.startMetricsCollection();
 
     logger.info('Generation queue service started', {
       maxConcurrentJobs: this.config.maxConcurrentJobs,
       pollIntervalMs: this.config.pollIntervalMs,
-      workers: this.workers.size
+      workers: this.workers.size,
     });
   }
 
@@ -168,7 +165,7 @@ export class GenerationQueueService extends EventEmitter {
     queueName: string,
     priority: number = 0,
     scheduledFor?: Date,
-    data: Record<string, any> = {}
+    data: Record<string, any> = {},
   ): Promise<string> {
     try {
       const queueItem: NewGenerationQueueItem = {
@@ -179,10 +176,12 @@ export class GenerationQueueService extends EventEmitter {
         status: 'pending',
         attempts: 0,
         maxAttempts: this.config.maxRetries,
-        metadata: data
+        metadata: data,
       };
 
-      const result = await this.database.insert(generationQueue)
+      const db = await getDatabaseClient();
+      const result = await db
+        .insert(generationQueue)
         .values(queueItem)
         .returning();
 
@@ -193,12 +192,15 @@ export class GenerationQueueService extends EventEmitter {
         generationId,
         queueName,
         priority,
-        scheduledFor: queueItem.scheduledFor
+        scheduledFor: queueItem.scheduledFor,
       });
 
       return jobId;
     } catch (error) {
-      logger.error('Failed to add job to queue', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        'Failed to add job to queue',
+        error instanceof Error ? error : new Error(String(error)),
+      );
       throw error;
     }
   }
@@ -210,7 +212,7 @@ export class GenerationQueueService extends EventEmitter {
     workerId: string,
     queueNames: string[],
     processor: (job: QueueJob) => Promise<QueueJobResult>,
-    concurrency: number = 1
+    concurrency: number = 1,
   ): void {
     const worker: QueueWorker = {
       id: workerId,
@@ -219,7 +221,7 @@ export class GenerationQueueService extends EventEmitter {
       isActive: true,
       lastHeartbeat: new Date(),
       currentJobs: new Set(),
-      processor
+      processor,
     };
 
     this.workers.set(workerId, worker);
@@ -228,7 +230,7 @@ export class GenerationQueueService extends EventEmitter {
       workerId,
       queueNames,
       concurrency,
-      totalWorkers: this.workers.size
+      totalWorkers: this.workers.size,
     });
 
     this.emit(QueueEvents.WORKER_STARTED, { workerId, queueNames });
@@ -247,7 +249,9 @@ export class GenerationQueueService extends EventEmitter {
 
     // Wait for current jobs to complete
     if (worker.currentJobs.size > 0) {
-      logger.info(`Waiting for ${worker.currentJobs.size} jobs to complete for worker ${workerId}`);
+      logger.info(
+        `Waiting for ${worker.currentJobs.size} jobs to complete for worker ${workerId}`,
+      );
       await this.waitForWorkerJobs(workerId, 30000);
     }
 
@@ -269,23 +273,31 @@ export class GenerationQueueService extends EventEmitter {
     activeJobs: number;
   }> {
     try {
-      const [pendingResult, processingResult, completedResult, failedResult] = await Promise.all([
-        this.database.select({ count: sql<number>`count(*)` })
-          .from(generationQueue)
-          .where(eq(generationQueue.status, 'pending')),
-        this.database.select({ count: sql<number>`count(*)` })
-          .from(generationQueue)
-          .where(eq(generationQueue.status, 'processing')),
-        this.database.select({ count: sql<number>`count(*)` })
-          .from(generationQueue)
-          .where(eq(generationQueue.status, 'completed')),
-        this.database.select({ count: sql<number>`count(*)` })
-          .from(generationQueue)
-          .where(eq(generationQueue.status, 'failed'))
-      ]);
+      const db = await getDatabaseClient();
+      const [pendingResult, processingResult, completedResult, failedResult] =
+        await Promise.all([
+          db
+            .select({ count: sql<number>`count(*)` })
+            .from(generationQueue)
+            .where(eq(generationQueue.status, 'pending')),
+          db
+            .select({ count: sql<number>`count(*)` })
+            .from(generationQueue)
+            .where(eq(generationQueue.status, 'processing')),
+          db
+            .select({ count: sql<number>`count(*)` })
+            .from(generationQueue)
+            .where(eq(generationQueue.status, 'completed')),
+          db
+            .select({ count: sql<number>`count(*)` })
+            .from(generationQueue)
+            .where(eq(generationQueue.status, 'failed')),
+        ]);
 
-      const activeJobs = Array.from(this.workers.values())
-        .reduce((total, worker) => total + worker.currentJobs.size, 0);
+      const activeJobs = Array.from(this.workers.values()).reduce(
+        (total, worker) => total + worker.currentJobs.size,
+        0,
+      );
 
       return {
         pending: pendingResult[0]?.count || 0,
@@ -293,10 +305,13 @@ export class GenerationQueueService extends EventEmitter {
         completed: completedResult[0]?.count || 0,
         failed: failedResult[0]?.count || 0,
         workers: this.workers.size,
-        activeJobs
+        activeJobs,
       };
     } catch (error) {
-      logger.error('Failed to get queue stats', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        'Failed to get queue stats',
+        error instanceof Error ? error : new Error(String(error)),
+      );
       throw error;
     }
   }
@@ -306,7 +321,9 @@ export class GenerationQueueService extends EventEmitter {
    */
   async getJob(jobId: string): Promise<QueueJob | null> {
     try {
-      const result = await this.database.select()
+      const db = await getDatabaseClient();
+      const result = await db
+        .select()
         .from(generationQueue)
         .where(eq(generationQueue.id, jobId))
         .limit(1);
@@ -325,10 +342,13 @@ export class GenerationQueueService extends EventEmitter {
         attempts: item.attempts,
         maxAttempts: item.maxAttempts,
         scheduledFor: item.scheduledFor,
-        createdAt: item.createdAt
+        createdAt: item.createdAt,
       };
     } catch (error) {
-      logger.error('Failed to get job', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        'Failed to get job',
+        error instanceof Error ? error : new Error(String(error)),
+      );
       return null;
     }
   }
@@ -338,12 +358,16 @@ export class GenerationQueueService extends EventEmitter {
    */
   async cancelJob(jobId: string): Promise<boolean> {
     try {
-      const result = await this.database.update(generationQueue)
+      const db = await getDatabaseClient();
+      const result = await db
+        .update(generationQueue)
         .set({ status: 'failed', lastError: 'Job cancelled by user' })
-        .where(and(
-          eq(generationQueue.id, jobId),
-          eq(generationQueue.status, 'pending')
-        ));
+        .where(
+          and(
+            eq(generationQueue.id, jobId),
+            eq(generationQueue.status, 'pending'),
+          ),
+        );
 
       if (result) {
         logger.info('Job cancelled', { jobId });
@@ -352,7 +376,10 @@ export class GenerationQueueService extends EventEmitter {
 
       return false;
     } catch (error) {
-      logger.error('Failed to cancel job', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        'Failed to cancel job',
+        error instanceof Error ? error : new Error(String(error)),
+      );
       return false;
     }
   }
@@ -362,12 +389,14 @@ export class GenerationQueueService extends EventEmitter {
    */
   async retryJob(jobId: string): Promise<boolean> {
     try {
-      const result = await this.database.update(generationQueue)
+      const db = await getDatabaseClient();
+      const result = await db
+        .update(generationQueue)
         .set({
           status: 'pending',
           attempts: 0,
           lastError: null,
-          scheduledFor: new Date()
+          scheduledFor: new Date(),
         })
         .where(eq(generationQueue.id, jobId));
 
@@ -378,7 +407,10 @@ export class GenerationQueueService extends EventEmitter {
 
       return false;
     } catch (error) {
-      logger.error('Failed to retry job', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        'Failed to retry job',
+        error instanceof Error ? error : new Error(String(error)),
+      );
       return false;
     }
   }
@@ -391,7 +423,10 @@ export class GenerationQueueService extends EventEmitter {
       try {
         await this.processAvailableJobs();
       } catch (error) {
-        logger.error('Error during job polling', error instanceof Error ? error : new Error(String(error)));
+        logger.error(
+          'Error during job polling',
+          error instanceof Error ? error : new Error(String(error)),
+        );
       }
     }, this.config.pollIntervalMs);
   }
@@ -410,7 +445,10 @@ export class GenerationQueueService extends EventEmitter {
       }
 
       const availableSlots = worker.concurrency - worker.currentJobs.size;
-      const jobs = await this.getAvailableJobs(worker.queueNames, availableSlots);
+      const jobs = await this.getAvailableJobs(
+        worker.queueNames,
+        availableSlots,
+      );
 
       for (const job of jobs) {
         if (worker.currentJobs.size >= worker.concurrency) {
@@ -425,16 +463,26 @@ export class GenerationQueueService extends EventEmitter {
   /**
    * Get available jobs for processing
    */
-  private async getAvailableJobs(queueNames: string[], limit: number): Promise<QueueJob[]> {
+  private async getAvailableJobs(
+    queueNames: string[],
+    limit: number,
+  ): Promise<QueueJob[]> {
     try {
-      const result = await this.database.select()
+      const db = await getDatabaseClient();
+      const result = await db
+        .select()
         .from(generationQueue)
-        .where(and(
-          sql`${generationQueue.queueName} = ANY(${queueNames})`,
-          eq(generationQueue.status, 'pending'),
-          lt(generationQueue.scheduledFor, new Date())
-        ))
-        .orderBy(desc(generationQueue.priority), asc(generationQueue.scheduledFor))
+        .where(
+          and(
+            sql`${generationQueue.queueName} = ANY(${queueNames})`,
+            eq(generationQueue.status, 'pending'),
+            lt(generationQueue.scheduledFor, new Date()),
+          ),
+        )
+        .orderBy(
+          desc(generationQueue.priority),
+          asc(generationQueue.scheduledFor),
+        )
         .limit(limit);
 
       return result.map((item: any) => ({
@@ -446,10 +494,13 @@ export class GenerationQueueService extends EventEmitter {
         attempts: item.attempts,
         maxAttempts: item.maxAttempts,
         scheduledFor: item.scheduledFor,
-        createdAt: item.createdAt
+        createdAt: item.createdAt,
       }));
     } catch (error) {
-      logger.error('Failed to get available jobs', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        'Failed to get available jobs',
+        error instanceof Error ? error : new Error(String(error)),
+      );
       return [];
     }
   }
@@ -474,7 +525,7 @@ export class GenerationQueueService extends EventEmitter {
         workerId: worker.id,
         generationId: job.generationId,
         queueName: job.queueName,
-        attempt: job.attempts + 1
+        attempt: job.attempts + 1,
       });
 
       // Set up timeout
@@ -491,30 +542,48 @@ export class GenerationQueueService extends EventEmitter {
         if (result.success) {
           await this.completeJob(job.id, result.data);
           this.stats.jobsProcessed++;
-          
+
           logger.info('Job completed successfully', {
             jobId: job.id,
             workerId: worker.id,
-            processingTime: Date.now() - startTime
+            processingTime: Date.now() - startTime,
           });
 
-          this.emit(QueueEvents.JOB_COMPLETED, { job, result, processingTime: Date.now() - startTime });
+          this.emit(QueueEvents.JOB_COMPLETED, {
+            job,
+            result,
+            processingTime: Date.now() - startTime,
+          });
         } else {
-          await this.handleJobFailure(job, result.error || 'Unknown error', result.retry, result.retryAfter);
+          await this.handleJobFailure(
+            job,
+            result.error || 'Unknown error',
+            result.retry,
+            result.retryAfter,
+          );
         }
       } catch (error) {
         clearTimeout(timeoutId);
-        await this.handleJobFailure(job, error instanceof Error ? error.message : String(error), true);
+        await this.handleJobFailure(
+          job,
+          error instanceof Error ? error.message : String(error),
+          true,
+        );
       }
     } catch (error) {
-      logger.error('Error processing job', error instanceof Error ? error : new Error(String(error)), { jobId: job.id });
+      logger.error(
+        'Error processing job',
+        error instanceof Error ? error : new Error(String(error)),
+        { jobId: job.id },
+      );
     } finally {
       worker.currentJobs.delete(job.id);
-      
+
       // Update processing time statistics
       const processingTime = Date.now() - startTime;
       this.stats.totalProcessingTime += processingTime;
-      this.stats.averageProcessingTime = this.stats.totalProcessingTime / 
+      this.stats.averageProcessingTime =
+        this.stats.totalProcessingTime /
         (this.stats.jobsProcessed + this.stats.jobsFailed);
     }
   }
@@ -524,22 +593,29 @@ export class GenerationQueueService extends EventEmitter {
    */
   private async claimJob(jobId: string, workerId: string): Promise<boolean> {
     try {
-      const result = await this.database.update(generationQueue)
+      const db = await getDatabaseClient();
+      const result = await db
+        .update(generationQueue)
         .set({
           status: 'processing',
           workerId,
           claimedAt: new Date(),
           attempts: sql`${generationQueue.attempts} + 1`,
-          lastAttemptAt: new Date()
+          lastAttemptAt: new Date(),
         })
-        .where(and(
-          eq(generationQueue.id, jobId),
-          eq(generationQueue.status, 'pending')
-        ));
+        .where(
+          and(
+            eq(generationQueue.id, jobId),
+            eq(generationQueue.status, 'pending'),
+          ),
+        );
 
       return !!result;
     } catch (error) {
-      logger.error('Failed to claim job', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        'Failed to claim job',
+        error instanceof Error ? error : new Error(String(error)),
+      );
       return false;
     }
   }
@@ -549,14 +625,19 @@ export class GenerationQueueService extends EventEmitter {
    */
   private async completeJob(jobId: string, data?: any): Promise<void> {
     try {
-      await this.database.update(generationQueue)
+      const db = await getDatabaseClient();
+      await db
+        .update(generationQueue)
         .set({
           status: 'completed',
-          metadata: data ? { result: data } : undefined
+          metadata: data ? { result: data } : undefined,
         })
         .where(eq(generationQueue.id, jobId));
     } catch (error) {
-      logger.error('Failed to complete job', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        'Failed to complete job',
+        error instanceof Error ? error : new Error(String(error)),
+      );
     }
   }
 
@@ -567,7 +648,7 @@ export class GenerationQueueService extends EventEmitter {
     job: QueueJob,
     error: string,
     shouldRetry: boolean = true,
-    retryAfter?: number
+    retryAfter?: number,
   ): Promise<void> {
     try {
       this.stats.jobsFailed++;
@@ -577,13 +658,15 @@ export class GenerationQueueService extends EventEmitter {
         const retryDelay = retryAfter || this.calculateRetryDelay(job.attempts);
         const scheduledFor = new Date(Date.now() + retryDelay);
 
-        await this.database.update(generationQueue)
+        const db = await getDatabaseClient();
+        await db
+          .update(generationQueue)
           .set({
             status: 'pending',
             lastError: error,
             scheduledFor,
             workerId: null,
-            claimedAt: null
+            claimedAt: null,
           })
           .where(eq(generationQueue.id, job.id));
 
@@ -592,23 +675,29 @@ export class GenerationQueueService extends EventEmitter {
           attempt: job.attempts + 1,
           maxAttempts: job.maxAttempts,
           retryAfter: retryDelay,
-          error
+          error,
         });
 
-        this.emit(QueueEvents.JOB_RETRYING, { job, error, retryAfter: retryDelay });
+        this.emit(QueueEvents.JOB_RETRYING, {
+          job,
+          error,
+          retryAfter: retryDelay,
+        });
       } else {
         // Mark as permanently failed
-        await this.database.update(generationQueue)
+        const db = await getDatabaseClient();
+        await db
+          .update(generationQueue)
           .set({
             status: 'failed',
-            lastError: error
+            lastError: error,
           })
           .where(eq(generationQueue.id, job.id));
 
         logger.error('Job failed permanently', new Error(error), {
           jobId: job.id,
           attempts: job.attempts,
-          maxAttempts: job.maxAttempts
+          maxAttempts: job.maxAttempts,
         });
 
         this.emit(QueueEvents.JOB_FAILED, { job, error });
@@ -619,7 +708,10 @@ export class GenerationQueueService extends EventEmitter {
         }
       }
     } catch (dbError) {
-      logger.error('Failed to handle job failure', dbError instanceof Error ? dbError : new Error(String(dbError)));
+      logger.error(
+        'Failed to handle job failure',
+        dbError instanceof Error ? dbError : new Error(String(dbError)),
+      );
     }
   }
 
@@ -627,12 +719,14 @@ export class GenerationQueueService extends EventEmitter {
    * Handle job timeout
    */
   private async handleJobTimeout(jobId: string): Promise<void> {
-    await this.database.update(generationQueue)
+    const db = await getDatabaseClient();
+    await db
+      .update(generationQueue)
       .set({
         status: 'pending',
         lastError: 'Job timed out',
         workerId: null,
-        claimedAt: null
+        claimedAt: null,
       })
       .where(eq(generationQueue.id, jobId));
   }
@@ -650,7 +744,10 @@ export class GenerationQueueService extends EventEmitter {
   /**
    * Move failed job to dead letter queue
    */
-  private async moveToDeadLetterQueue(job: QueueJob, error: string): Promise<void> {
+  private async moveToDeadLetterQueue(
+    job: QueueJob,
+    error: string,
+  ): Promise<void> {
     // Implementation would depend on your dead letter queue strategy
     logger.info('Moving job to dead letter queue', { jobId: job.id, error });
   }
@@ -674,7 +771,10 @@ export class GenerationQueueService extends EventEmitter {
       try {
         await this.collectMetrics();
       } catch (error) {
-        logger.error('Error collecting metrics', error instanceof Error ? error : new Error(String(error)));
+        logger.error(
+          'Error collecting metrics',
+          error instanceof Error ? error : new Error(String(error)),
+        );
       }
     }, 60000); // 1 minute
   }
@@ -684,12 +784,12 @@ export class GenerationQueueService extends EventEmitter {
    */
   private async collectMetrics(): Promise<void> {
     const stats = await this.getQueueStats();
-    
+
     logger.debug('Queue metrics', {
       ...stats,
       averageProcessingTime: this.stats.averageProcessingTime,
       jobsProcessed: this.stats.jobsProcessed,
-      jobsFailed: this.stats.jobsFailed
+      jobsFailed: this.stats.jobsFailed,
     });
 
     // Store metrics in database for analytics
@@ -701,30 +801,35 @@ export class GenerationQueueService extends EventEmitter {
    */
   private async waitForJobsToComplete(timeoutMs: number): Promise<void> {
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < timeoutMs) {
-      const activeJobs = Array.from(this.workers.values())
-        .reduce((total, worker) => total + worker.currentJobs.size, 0);
-        
+      const activeJobs = Array.from(this.workers.values()).reduce(
+        (total, worker) => total + worker.currentJobs.size,
+        0,
+      );
+
       if (activeJobs === 0) {
         break;
       }
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   }
 
   /**
    * Wait for specific worker jobs to complete
    */
-  private async waitForWorkerJobs(workerId: string, timeoutMs: number): Promise<void> {
+  private async waitForWorkerJobs(
+    workerId: string,
+    timeoutMs: number,
+  ): Promise<void> {
     const worker = this.workers.get(workerId);
     if (!worker) return;
 
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < timeoutMs && worker.currentJobs.size > 0) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   }
 
@@ -733,18 +838,30 @@ export class GenerationQueueService extends EventEmitter {
    */
   async cleanup(olderThanDays: number = 7): Promise<number> {
     try {
-      const cutoffDate = new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000);
-      
-      const result = await this.database.delete(generationQueue)
-        .where(and(
-          sql`${generationQueue.status} IN ('completed', 'failed')`,
-          lt(generationQueue.createdAt, cutoffDate)
-        ));
+      const cutoffDate = new Date(
+        Date.now() - olderThanDays * 24 * 60 * 60 * 1000,
+      );
 
-      logger.info('Queue cleanup completed', { deletedJobs: result, olderThanDays });
+      const db = await getDatabaseClient();
+      const result = await db
+        .delete(generationQueue)
+        .where(
+          and(
+            sql`${generationQueue.status} IN ('completed', 'failed')`,
+            lt(generationQueue.createdAt, cutoffDate),
+          ),
+        );
+
+      logger.info('Queue cleanup completed', {
+        deletedJobs: result,
+        olderThanDays,
+      });
       return result as number;
     } catch (error) {
-      logger.error('Failed to cleanup queue', error instanceof Error ? error : new Error(String(error)));
+      logger.error(
+        'Failed to cleanup queue',
+        error instanceof Error ? error : new Error(String(error)),
+      );
       return 0;
     }
   }

@@ -1,5 +1,11 @@
-import type { Action, HandlerCallback, IAgentRuntime, Memory } from '@elizaos/core';
-import { elizaLogger, parseJSONObjectFromText } from '@elizaos/core';
+import {
+  elizaLogger,
+  parseJSONObjectFromText,
+  type Action,
+  type HandlerCallback,
+  type IAgentRuntime,
+  type Memory,
+} from '@elizaos/core';
 import { SecretFormService } from '../services/secret-form-service';
 import type { SecretContext, SecretConfig } from '../types';
 import type { SecretFormRequest, FormSubmission } from '../types/form';

@@ -9,7 +9,7 @@ describe('Comprehensive Test Suite - ElizaOS Platform', () => {
     timeout: 60000,
     retries: 2,
     baseUrl: Cypress.config('baseUrl') || 'http://localhost:3333',
-    testEnvironment: Cypress.env('NODE_ENV') || 'test'
+    testEnvironment: Cypress.env('NODE_ENV') || 'test',
   };
 
   before(() => {
@@ -40,7 +40,7 @@ describe('Comprehensive Test Suite - ElizaOS Platform', () => {
     // Global error handling
     cy.on('uncaught:exception', (err, runnable) => {
       cy.log(`🚨 Uncaught Exception: ${err.message}`);
-      
+
       // Don't fail the test on uncaught exceptions during comprehensive testing
       // This allows us to continue testing even if individual components have issues
       return false;
@@ -85,13 +85,16 @@ describe('Comprehensive Test Suite - ElizaOS Platform', () => {
     // STEP 1: Check Application Availability
     // ==========================================
     cy.log('🌐 Step 1: Check Application Availability');
-    
-    cy.visit('/', { failOnStatusCode: false, timeout: testSuiteConfig.timeout });
-    
+
+    cy.visit('/', {
+      failOnStatusCode: false,
+      timeout: testSuiteConfig.timeout,
+    });
+
     // Check if application loads
     cy.get('body').should('exist');
     cy.title().should('exist').and('not.be.empty');
-    
+
     // Check for critical application elements
     cy.get('html').should('have.attr', 'lang');
     cy.get('head meta[charset]').should('exist');
@@ -101,24 +104,28 @@ describe('Comprehensive Test Suite - ElizaOS Platform', () => {
     // STEP 2: Check API Endpoints
     // ==========================================
     cy.log('🔌 Step 2: Check API Endpoints');
-    
+
     const criticalEndpoints = [
       '/api/health',
       '/api/auth/identity',
       '/api/dashboard/stats',
-      '/api/api-keys'
+      '/api/api-keys',
     ];
 
     criticalEndpoints.forEach((endpoint) => {
       cy.request({
         url: endpoint,
         failOnStatusCode: false,
-        timeout: 10000
+        timeout: 10000,
       }).then((response) => {
         if (response.status < 500) {
-          cy.log(`✅ Endpoint ${endpoint} is accessible (status: ${response.status})`);
+          cy.log(
+            `✅ Endpoint ${endpoint} is accessible (status: ${response.status})`,
+          );
         } else {
-          cy.log(`⚠️ Endpoint ${endpoint} returned server error (status: ${response.status})`);
+          cy.log(
+            `⚠️ Endpoint ${endpoint} returned server error (status: ${response.status})`,
+          );
         }
       });
     });
@@ -127,7 +134,7 @@ describe('Comprehensive Test Suite - ElizaOS Platform', () => {
     // STEP 3: Check Browser Capabilities
     // ==========================================
     cy.log('🌐 Step 3: Check Browser Capabilities');
-    
+
     cy.window().then((win) => {
       const capabilities = {
         fetch: typeof win.fetch !== 'undefined',
@@ -140,7 +147,7 @@ describe('Comprehensive Test Suite - ElizaOS Platform', () => {
         serviceWorker: 'serviceWorker' in win.navigator,
         intersectionObserver: 'IntersectionObserver' in win,
         resizeObserver: 'ResizeObserver' in win,
-        customElements: 'customElements' in win
+        customElements: 'customElements' in win,
       };
 
       Object.entries(capabilities).forEach(([feature, supported]) => {
@@ -163,14 +170,14 @@ describe('Comprehensive Test Suite - ElizaOS Platform', () => {
       { path: '/auth/login', name: 'Login' },
       { path: '/auth/signup', name: 'Signup' },
       { path: '/dashboard', name: 'Dashboard' },
-      { path: '/api-keys', name: 'API Keys' }
+      { path: '/api-keys', name: 'API Keys' },
     ];
 
     corePages.forEach((page) => {
       cy.log(`🔍 Scanning ${page.name} page for accessibility issues`);
-      
+
       cy.visit(page.path, { failOnStatusCode: false });
-      
+
       if (page.path !== '/auth/login' && page.path !== '/auth/signup') {
         cy.wait('@globalAuth');
       }
@@ -178,10 +185,10 @@ describe('Comprehensive Test Suite - ElizaOS Platform', () => {
       // Basic accessibility checks
       cy.get('html').should('have.attr', 'lang');
       cy.get('title').should('exist').and('not.be.empty');
-      
+
       // Check for heading structure
       cy.get('h1, h2, h3, h4, h5, h6').should('exist');
-      
+
       // Check for skip links (should exist on main pages)
       cy.get('body').then(($body) => {
         if ($body.find('a[href="#main"], [data-skip-link]').length > 0) {
@@ -201,12 +208,15 @@ describe('Comprehensive Test Suite - ElizaOS Platform', () => {
       // Check for form labels
       cy.get('input, select, textarea').each(($input) => {
         const id = $input.attr('id');
-        const hasLabel = $input.attr('aria-label') || 
-                        $input.attr('aria-labelledby') || 
-                        (id && Cypress.$(`label[for="${id}"]`).length > 0);
-        
+        const hasLabel =
+          $input.attr('aria-label') ||
+          $input.attr('aria-labelledby') ||
+          (id && Cypress.$(`label[for="${id}"]`).length > 0);
+
         if (!hasLabel) {
-          cy.log(`⚠️ Form input without label: ${$input.attr('name') || 'unnamed'}`);
+          cy.log(
+            `⚠️ Form input without label: ${$input.attr('name') || 'unnamed'}`,
+          );
         }
       });
     });
@@ -223,19 +233,19 @@ describe('Comprehensive Test Suite - ElizaOS Platform', () => {
       firstContentfulPaint: 1500, // 1.5 seconds
       largestContentfulPaint: 2500, // 2.5 seconds
       cumulativeLayoutShift: 0.1, // CLS score
-      firstInputDelay: 100 // 100ms
+      firstInputDelay: 100, // 100ms
     };
 
     // ==========================================
     // STEP 1: Dashboard Performance
     // ==========================================
     cy.log('📊 Step 1: Dashboard Performance');
-    
+
     const startTime = performance.now();
-    
+
     cy.visit('/dashboard', { failOnStatusCode: false });
     cy.wait('@globalAuth');
-    
+
     // Mock dashboard data for consistent testing
     cy.intercept('GET', '**/api/dashboard/stats', {
       statusCode: 200,
@@ -249,63 +259,74 @@ describe('Comprehensive Test Suite - ElizaOS Platform', () => {
           apiRequests24h: 10000,
           totalCost24h: '50.00',
           activeAgents: 8,
-          pendingInvites: 2
-        }
-      }
+          pendingInvites: 2,
+        },
+      },
     }).as('dashboardStats');
 
     cy.wait('@dashboardStats');
-    
-    cy.get('[data-cy="dashboard-header"]').should('be.visible').then(() => {
-      const endTime = performance.now();
-      const loadTime = endTime - startTime;
-      
-      cy.log(`Dashboard load time: ${loadTime.toFixed(2)}ms`);
-      
-      if (loadTime < performanceThresholds.pageLoad) {
-        cy.log('✅ Dashboard load time within threshold');
-      } else {
-        cy.log('⚠️ Dashboard load time exceeds threshold');
-      }
-    });
+
+    cy.get('[data-cy="dashboard-header"]')
+      .should('be.visible')
+      .then(() => {
+        const endTime = performance.now();
+        const loadTime = endTime - startTime;
+
+        cy.log(`Dashboard load time: ${loadTime.toFixed(2)}ms`);
+
+        if (loadTime < performanceThresholds.pageLoad) {
+          cy.log('✅ Dashboard load time within threshold');
+        } else {
+          cy.log('⚠️ Dashboard load time exceeds threshold');
+        }
+      });
 
     // ==========================================
     // STEP 2: Component Render Performance
     // ==========================================
     cy.log('🧩 Step 2: Component Render Performance');
-    
+
     const componentSelectors = [
       '[data-cy="stats-section"]',
       '[data-cy="quick-actions"]',
-      '[data-cy="recent-activity"]'
+      '[data-cy="recent-activity"]',
     ];
 
     componentSelectors.forEach((selector) => {
       const componentStartTime = performance.now();
-      
-      cy.get(selector).should('be.visible').then(() => {
-        const componentEndTime = performance.now();
-        const renderTime = componentEndTime - componentStartTime;
-        
-        cy.log(`${selector} render time: ${renderTime.toFixed(2)}ms`);
-      });
+
+      cy.get(selector)
+        .should('be.visible')
+        .then(() => {
+          const componentEndTime = performance.now();
+          const renderTime = componentEndTime - componentStartTime;
+
+          cy.log(`${selector} render time: ${renderTime.toFixed(2)}ms`);
+        });
     });
 
     // ==========================================
     // STEP 3: Memory Usage Check
     // ==========================================
     cy.log('💾 Step 3: Memory Usage Check');
-    
+
     cy.window().then((win) => {
       if ('performance' in win && 'memory' in win.performance) {
         const memory = (win.performance as any).memory;
-        
-        cy.log(`Used JS Heap Size: ${(memory.usedJSHeapSize / 1024 / 1024).toFixed(2)} MB`);
-        cy.log(`Total JS Heap Size: ${(memory.totalJSHeapSize / 1024 / 1024).toFixed(2)} MB`);
-        cy.log(`JS Heap Size Limit: ${(memory.jsHeapSizeLimit / 1024 / 1024).toFixed(2)} MB`);
-        
-        const memoryUsagePercent = (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100;
-        
+
+        cy.log(
+          `Used JS Heap Size: ${(memory.usedJSHeapSize / 1024 / 1024).toFixed(2)} MB`,
+        );
+        cy.log(
+          `Total JS Heap Size: ${(memory.totalJSHeapSize / 1024 / 1024).toFixed(2)} MB`,
+        );
+        cy.log(
+          `JS Heap Size Limit: ${(memory.jsHeapSizeLimit / 1024 / 1024).toFixed(2)} MB`,
+        );
+
+        const memoryUsagePercent =
+          (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100;
+
         if (memoryUsagePercent < 50) {
           cy.log('✅ Memory usage is within acceptable range');
         } else {
@@ -327,7 +348,7 @@ describe('Comprehensive Test Suite - ElizaOS Platform', () => {
       'x-frame-options',
       'x-content-type-options',
       'referrer-policy',
-      'permissions-policy'
+      'permissions-policy',
     ];
 
     const recommendedSecurityHeaders = [
@@ -335,46 +356,48 @@ describe('Comprehensive Test Suite - ElizaOS Platform', () => {
       'x-xss-protection',
       'cross-origin-embedder-policy',
       'cross-origin-opener-policy',
-      'cross-origin-resource-policy'
+      'cross-origin-resource-policy',
     ];
 
-    cy.request({ url: '/dashboard', failOnStatusCode: false }).then((response) => {
-      cy.log('🔍 Checking required security headers:');
-      
-      requiredSecurityHeaders.forEach((header) => {
-        if (response.headers[header]) {
-          cy.log(`✅ ${header}: ${response.headers[header]}`);
-        } else {
-          cy.log(`⚠️ ${header}: Missing`);
-        }
-      });
+    cy.request({ url: '/dashboard', failOnStatusCode: false }).then(
+      (response) => {
+        cy.log('🔍 Checking required security headers:');
 
-      cy.log('🔍 Checking recommended security headers:');
-      
-      recommendedSecurityHeaders.forEach((header) => {
-        if (response.headers[header]) {
-          cy.log(`✅ ${header}: ${response.headers[header]}`);
-        } else {
-          cy.log(`ℹ️ ${header}: Not present (recommended)`);
-        }
-      });
-
-      // Check for secure cookie settings
-      const setCookieHeaders = response.headers['set-cookie'];
-      if (setCookieHeaders) {
-        setCookieHeaders.forEach((cookie: string) => {
-          if (cookie.includes('Secure')) {
-            cy.log('✅ Secure cookie flag found');
-          }
-          if (cookie.includes('HttpOnly')) {
-            cy.log('✅ HttpOnly cookie flag found');
-          }
-          if (cookie.includes('SameSite')) {
-            cy.log('✅ SameSite cookie attribute found');
+        requiredSecurityHeaders.forEach((header) => {
+          if (response.headers[header]) {
+            cy.log(`✅ ${header}: ${response.headers[header]}`);
+          } else {
+            cy.log(`⚠️ ${header}: Missing`);
           }
         });
-      }
-    });
+
+        cy.log('🔍 Checking recommended security headers:');
+
+        recommendedSecurityHeaders.forEach((header) => {
+          if (response.headers[header]) {
+            cy.log(`✅ ${header}: ${response.headers[header]}`);
+          } else {
+            cy.log(`ℹ️ ${header}: Not present (recommended)`);
+          }
+        });
+
+        // Check for secure cookie settings
+        const setCookieHeaders = response.headers['set-cookie'];
+        if (setCookieHeaders) {
+          setCookieHeaders.forEach((cookie: string) => {
+            if (cookie.includes('Secure')) {
+              cy.log('✅ Secure cookie flag found');
+            }
+            if (cookie.includes('HttpOnly')) {
+              cy.log('✅ HttpOnly cookie flag found');
+            }
+            if (cookie.includes('SameSite')) {
+              cy.log('✅ SameSite cookie attribute found');
+            }
+          });
+        }
+      },
+    );
 
     cy.log('✅ Security Headers Validation Complete');
   });
@@ -384,55 +407,115 @@ describe('Comprehensive Test Suite - ElizaOS Platform', () => {
 
     const testCategories = {
       'Dashboard Functionality': {
-        tests: ['Page Load', 'Stats Display', 'Quick Actions', 'Recent Activity', 'Navigation', 'Error Handling'],
+        tests: [
+          'Page Load',
+          'Stats Display',
+          'Quick Actions',
+          'Recent Activity',
+          'Navigation',
+          'Error Handling',
+        ],
         coverage: '100%',
-        status: '✅'
+        status: '✅',
       },
       'Authentication Flows': {
-        tests: ['Login', 'Signup', 'Form Validation', 'Error Handling', 'Dev Mode', 'Navigation'],
+        tests: [
+          'Login',
+          'Signup',
+          'Form Validation',
+          'Error Handling',
+          'Dev Mode',
+          'Navigation',
+        ],
         coverage: '100%',
-        status: '✅'
+        status: '✅',
       },
       'API Key Management': {
-        tests: ['Create', 'Edit', 'Delete', 'Regenerate', 'Permissions', 'Validation', 'Error Handling'],
+        tests: [
+          'Create',
+          'Edit',
+          'Delete',
+          'Regenerate',
+          'Permissions',
+          'Validation',
+          'Error Handling',
+        ],
         coverage: '100%',
-        status: '✅'
+        status: '✅',
       },
       'Billing & Settings': {
-        tests: ['Payment Methods', 'Auto-recharge', 'Form Validation', 'Error Handling'],
+        tests: [
+          'Payment Methods',
+          'Auto-recharge',
+          'Form Validation',
+          'Error Handling',
+        ],
         coverage: '100%',
-        status: '✅'
+        status: '✅',
       },
       'Embedded Client': {
-        tests: ['Component Structure', 'Communication', 'Error Recovery', 'Loading States'],
+        tests: [
+          'Component Structure',
+          'Communication',
+          'Error Recovery',
+          'Loading States',
+        ],
         coverage: '100%',
-        status: '✅'
+        status: '✅',
       },
       'Accessibility (WCAG)': {
-        tests: ['ARIA Labels', 'Keyboard Navigation', 'Screen Reader', 'Color Contrast', 'Focus Management'],
+        tests: [
+          'ARIA Labels',
+          'Keyboard Navigation',
+          'Screen Reader',
+          'Color Contrast',
+          'Focus Management',
+        ],
         coverage: '100%',
-        status: '✅'
+        status: '✅',
       },
       'Performance Testing': {
-        tests: ['Load Times', 'Memory Usage', 'Core Web Vitals', 'Resource Optimization'],
+        tests: [
+          'Load Times',
+          'Memory Usage',
+          'Core Web Vitals',
+          'Resource Optimization',
+        ],
         coverage: '100%',
-        status: '✅'
+        status: '✅',
       },
       'Cross-Browser Compatibility': {
-        tests: ['Modern Features', 'Legacy Fallbacks', 'Mobile', 'Storage', 'Network'],
+        tests: [
+          'Modern Features',
+          'Legacy Fallbacks',
+          'Mobile',
+          'Storage',
+          'Network',
+        ],
         coverage: '100%',
-        status: '✅'
+        status: '✅',
       },
       'Security & Privacy': {
-        tests: ['XSS Prevention', 'CSRF Protection', 'Input Validation', 'Authentication', 'API Security'],
+        tests: [
+          'XSS Prevention',
+          'CSRF Protection',
+          'Input Validation',
+          'Authentication',
+          'API Security',
+        ],
         coverage: '100%',
-        status: '✅'
+        status: '✅',
       },
       'Component Unit Tests': {
-        tests: ['React Components', 'Props Validation', 'State Management', 'Error Boundaries'],
+        tests: [
+          'React Components',
+          'Props Validation',
+          'State Management',
+          'Error Boundaries',
+        ],
         coverage: '100%',
-        status: '✅'
-      }
+        status: '✅',
+      },
     };
 
     cy.log('📋 Test Coverage Summary:');
@@ -447,11 +530,17 @@ describe('Comprehensive Test Suite - ElizaOS Platform', () => {
 
     // Calculate overall statistics
     const totalCategories = Object.keys(testCategories).length;
-    const completedCategories = Object.values(testCategories).filter(cat => cat.status === '✅').length;
-    const overallCoverage = Math.round((completedCategories / totalCategories) * 100);
+    const completedCategories = Object.values(testCategories).filter(
+      (cat) => cat.status === '✅',
+    ).length;
+    const overallCoverage = Math.round(
+      (completedCategories / totalCategories) * 100,
+    );
 
     cy.log(`📊 Overall Test Coverage: ${overallCoverage}%`);
-    cy.log(`✅ Completed Categories: ${completedCategories}/${totalCategories}`);
+    cy.log(
+      `✅ Completed Categories: ${completedCategories}/${totalCategories}`,
+    );
     cy.log(`🎯 Test Quality Score: A+ (Comprehensive)`);
 
     // Recommendations
@@ -468,12 +557,16 @@ describe('Comprehensive Test Suite - ElizaOS Platform', () => {
     cy.log(`   • Environment: ${testSuiteConfig.testEnvironment}`);
     cy.log(`   • Base URL: ${testSuiteConfig.baseUrl}`);
     cy.log(`   • Browser: ${Cypress.browser.name} ${Cypress.browser.version}`);
-    cy.log(`   • Viewport: ${Cypress.config('viewportWidth')}x${Cypress.config('viewportHeight')}`);
+    cy.log(
+      `   • Viewport: ${Cypress.config('viewportWidth')}x${Cypress.config('viewportHeight')}`,
+    );
     cy.log(`   • Test Files: 10 comprehensive test suites`);
     cy.log(`   • Test Scenarios: 50+ individual test scenarios`);
     cy.log(`   • Data-cy Attributes: 100+ test selectors added`);
 
-    cy.log('🏆 Comprehensive Test Suite Complete - ElizaOS Platform is Production Ready!');
+    cy.log(
+      '🏆 Comprehensive Test Suite Complete - ElizaOS Platform is Production Ready!',
+    );
   });
 
   after(() => {

@@ -1,6 +1,9 @@
 import type { Action, IAgentRuntime, Memory, State } from '@elizaos/core';
 import { elizaLogger } from '@elizaos/core';
-import type { PluginCreationService, PluginSpecification } from '../services/PluginCreationService.js';
+import type {
+  PluginCreationService,
+  PluginSpecification,
+} from '../services/PluginCreationService.js';
 import { z } from 'zod';
 
 const CreatePluginProjectSchema = z.object({
@@ -34,7 +37,7 @@ export const createPluginProjectAction: Action = {
   validate: async (_runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
     const text = message.content.text?.toLowerCase() || '';
     const service = _runtime.getService<PluginCreationService>('plugin_creation');
-    return !!service && (text.includes('create') && text.includes('plugin'));
+    return !!service && text.includes('create') && text.includes('plugin');
   },
   handler: async (runtime: IAgentRuntime, message: Memory, _state?: State) => {
     try {
@@ -62,7 +65,7 @@ export const createPluginProjectAction: Action = {
       const specification: PluginSpecification = {
         name,
         description,
-        version: '1.0.0'
+        version: '1.0.0',
       };
 
       const jobId = await service.createPlugin(specification);
@@ -71,13 +74,13 @@ export const createPluginProjectAction: Action = {
       return {
         text: `✅ Started creating ${name} plugin! Job ID: ${jobId}. Use GET_JOB_STATUS to monitor progress.`,
         success: true,
-        values: { jobId, pluginName: name }
+        values: { jobId, pluginName: name },
       };
     } catch (error) {
       elizaLogger.error('[ORCHESTRATION] Plugin creation failed:', error);
       return {
         text: `Failed to create plugin: ${error instanceof Error ? error.message : String(error)}`,
-        success: false
+        success: false,
       };
     }
   },
@@ -125,7 +128,7 @@ export const checkProjectStatusAction: Action = {
         return {
           text: `Job ${jobId} status: ${job.status}`,
           success: true,
-          values: { jobId, status: job.status }
+          values: { jobId, status: job.status },
         };
       }
 
@@ -135,20 +138,20 @@ export const checkProjectStatusAction: Action = {
         return { text: 'No active plugin creation jobs.' };
       }
 
-      const jobsList = allJobs.map(job =>
-        `- ${job.id}: ${job.specification.name} (${job.status})`
-      ).join('\n');
+      const jobsList = allJobs
+        .map((job) => `- ${job.id}: ${job.specification.name} (${job.status})`)
+        .join('\n');
 
       return {
         text: `Active plugin creation jobs:\n${jobsList}`,
         success: true,
-        values: { totalJobs: allJobs.length }
+        values: { totalJobs: allJobs.length },
       };
     } catch (error) {
       elizaLogger.error('[ORCHESTRATION] Status check failed:', error);
       return {
         text: `Failed to check status: ${error instanceof Error ? error.message : String(error)}`,
-        success: false
+        success: false,
       };
     }
   },
@@ -175,7 +178,11 @@ export const listJobsAction: Action = {
   validate: async (_runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
     const text = message.content.text?.toLowerCase() || '';
     const service = _runtime.getService<PluginCreationService>('plugin_creation');
-    return !!service && (text.includes('list') || text.includes('show') || text.includes('all')) && text.includes('job');
+    return (
+      !!service &&
+      (text.includes('list') || text.includes('show') || text.includes('all')) &&
+      text.includes('job')
+    );
   },
   handler: async (runtime: IAgentRuntime, _message: Memory, _state?: State) => {
     try {
@@ -189,26 +196,33 @@ export const listJobsAction: Action = {
         return { text: 'No plugin creation jobs found.' };
       }
 
-      const jobsList = allJobs.map(job => {
-        const statusIcon = job.status === 'completed' ? '✅' :
-          job.status === 'failed' ? '❌' :
-            job.status === 'running' ? '🔄' : '⏳';
-        return `${statusIcon} ${job.id}: ${job.specification.name} (${job.status})`;
-      }).join('\n');
+      const jobsList = allJobs
+        .map((job) => {
+          const statusIcon =
+            job.status === 'completed'
+              ? '✅'
+              : job.status === 'failed'
+                ? '❌'
+                : job.status === 'running'
+                  ? '🔄'
+                  : '⏳';
+          return `${statusIcon} ${job.id}: ${job.specification.name} (${job.status})`;
+        })
+        .join('\n');
 
       return {
         text: `Plugin Creation Jobs (${allJobs.length} total):\n${jobsList}`,
         success: true,
         values: {
           totalJobs: allJobs.length,
-          jobs: allJobs.map(j => ({ id: j.id, name: j.specification.name, status: j.status }))
-        }
+          jobs: allJobs.map((j) => ({ id: j.id, name: j.specification.name, status: j.status })),
+        },
       };
     } catch (error) {
       elizaLogger.error('[ORCHESTRATION] Job listing failed:', error);
       return {
         text: `Failed to list jobs: ${error instanceof Error ? error.message : String(error)}`,
-        success: false
+        success: false,
       };
     }
   },

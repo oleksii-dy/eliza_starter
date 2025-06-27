@@ -26,9 +26,9 @@ const SettingsBox = forwardRef<HTMLFormElement, SettingsBoxProps>(
       submitText = 'Save Changes',
       showSubmitButton = true,
     },
-    ref
+    ref,
   ) => {
-  // const { isSubmitting } = useLastSubmit();
+    // const { isSubmitting } = useLastSubmit();
     const [disableSubmit, setDisableSubmit] = useState(false);
 
     return (
@@ -93,7 +93,8 @@ const SettingsBox = forwardRef<HTMLFormElement, SettingsBoxProps>(
         </div>
       </form>
     );
-  });
+  },
+);
 
 SettingsBox.displayName = 'SettingsBox';
 

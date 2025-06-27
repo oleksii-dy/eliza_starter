@@ -230,6 +230,7 @@ export class PaymentService extends Service {
 
       // Generate nonce for this payment
       const nonce = new Uint8Array(32);
+      // eslint-disable-next-line no-undef
       crypto.getRandomValues(nonce);
 
       const paymentProof = await proofGenerator.generatePaymentProof(

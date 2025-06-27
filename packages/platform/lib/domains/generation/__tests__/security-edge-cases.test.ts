@@ -51,7 +51,6 @@ describe('Security and Edge Cases', () => {
     generationService = new GenerationService(
       mockDatabase as any,
       mockStorage as any,
-      mockBilling as any,
     );
 
     openAIProvider = new OpenAIProvider({ apiKey: 'test-key' });

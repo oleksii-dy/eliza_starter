@@ -254,7 +254,6 @@ export function createMockRuntime(overrides: MockRuntimeOverrides = {}): IAgentR
     deleteTask: mock().mockResolvedValue(undefined),
 
     // World Management - additional methods
-    getMemoriesByWorldId: mock().mockResolvedValue([]),
 
     // Trust/Identity/Payment providers
 

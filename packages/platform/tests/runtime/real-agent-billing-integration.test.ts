@@ -119,7 +119,9 @@ describe('Real Agent Billing Integration', () => {
         .delete(creditTransactions)
         .where(eq(creditTransactions.organizationId, testOrgId));
       await database.delete(users).where(eq(users.organizationId, testOrgId));
-      await database.delete(organizations).where(eq(organizations.id, testOrgId));
+      await database
+        .delete(organizations)
+        .where(eq(organizations.id, testOrgId));
     } catch (error) {
       // Ignore cleanup errors for non-existent data
     }
@@ -165,11 +167,13 @@ describe('Real Agent Billing Integration', () => {
 
     // Clean up test data
     try {
-      await db
+      await database
         .delete(creditTransactions)
         .where(eq(creditTransactions.organizationId, testOrgId));
       await database.delete(users).where(eq(users.organizationId, testOrgId));
-      await database.delete(organizations).where(eq(organizations.id, testOrgId));
+      await database
+        .delete(organizations)
+        .where(eq(organizations.id, testOrgId));
     } catch (error) {
       console.warn('Error cleaning up test data:', error);
     }
@@ -425,9 +429,7 @@ describe('Real Agent Billing Integration', () => {
       expect(overview.agents.length).toBeGreaterThan(0);
       expect(overview.healthyAgents).toBeGreaterThan(0);
       expect(
-        overview.agents.some(
-          (agent: any) => agent.agentId === deployedAgentId,
-        ),
+        overview.agents.some((agent: any) => agent.agentId === deployedAgentId),
       ).toBe(true);
     });
 

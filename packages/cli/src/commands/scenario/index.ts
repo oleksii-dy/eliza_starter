@@ -37,7 +37,7 @@ scenarioCommand
   .option('--max-concurrency <num>', 'Maximum concurrent scenarios', '1')
   .option('--source <type>', 'Scenario source (plugin|standalone|all)', 'all')
   .option('--attempts <num>', 'Number of retry attempts per scenario', '3')
-  .option('--parallel <num>', 'Number of parallel executions per scenario', '1')
+  .option('--parallel-runs <num>', 'Number of parallel executions per scenario', '1')
   .option('--retry-delay <ms>', 'Base retry delay in milliseconds', '2000')
   .option('--exponential-backoff', 'Use exponential backoff for retries', true)
   .option(
@@ -898,4 +898,6 @@ async function saveResultsToFile(
   logger.info(`Results saved to: ${outputPath}`);
 }
 
+// Export default and alias for compatibility
 export default scenarioCommand;
+export { scenarioCommand as scenario };

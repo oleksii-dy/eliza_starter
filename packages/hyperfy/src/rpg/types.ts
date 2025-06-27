@@ -3,16 +3,16 @@
  */
 
 export interface Vector3 {
-  x: number;
-  y: number;
-  z: number;
+  x: number
+  y: number
+  z: number
 }
 
 export interface Quaternion {
-  x: number;
-  y: number;
-  z: number;
-  w: number;
+  x: number
+  y: number
+  z: number
+  w: number
 }
 
 // Combat Types
@@ -20,13 +20,13 @@ export enum CombatStyle {
   ACCURATE = 'accurate',
   AGGRESSIVE = 'aggressive',
   DEFENSIVE = 'defensive',
-  CONTROLLED = 'controlled'
+  CONTROLLED = 'controlled',
 }
 
 export enum AttackType {
   MELEE = 'melee',
   RANGED = 'ranged',
-  MAGIC = 'magic'
+  MAGIC = 'magic',
 }
 
 export enum WeaponType {
@@ -37,7 +37,7 @@ export enum WeaponType {
   AXE = 'axe',
   MACE = 'mace',
   SPEAR = 'spear',
-  CROSSBOW = 'crossbow'
+  CROSSBOW = 'crossbow',
 }
 
 export enum EquipmentSlot {
@@ -51,7 +51,7 @@ export enum EquipmentSlot {
   RING = 'ring',
   WEAPON = 'weapon',
   SHIELD = 'shield',
-  AMMUNITION = 'ammunition'
+  AMMUNITION = 'ammunition',
 }
 
 // NPC Types
@@ -61,14 +61,14 @@ export enum NPCType {
   GUARD = 'guard',
   MERCHANT = 'merchant',
   QUEST_GIVER = 'quest_giver',
-  HILL_GIANT = 'hill_giant'
+  HILL_GIANT = 'hill_giant',
 }
 
 export enum NPCBehavior {
   PASSIVE = 'passive',
   AGGRESSIVE = 'aggressive',
   NEUTRAL = 'neutral',
-  DEFENSIVE = 'defensive'
+  DEFENSIVE = 'defensive',
 }
 
 export enum NPCState {
@@ -77,7 +77,7 @@ export enum NPCState {
   FOLLOWING = 'following',
   ATTACKING = 'attacking',
   FLEEING = 'fleeing',
-  DEAD = 'dead'
+  DEAD = 'dead',
 }
 
 // Spawning Types
@@ -85,7 +85,7 @@ export enum SpawnerType {
   SINGLE = 'single',
   MULTIPLE = 'multiple',
   AREA = 'area',
-  RANDOM = 'random'
+  RANDOM = 'random',
 }
 
 // Construction Types
@@ -108,7 +108,7 @@ export enum RoomType {
   THRONE_ROOM = 'throne_room',
   OUBLIETTE = 'oubliette',
   DUNGEON = 'dungeon',
-  TREASURE_ROOM = 'treasure_room'
+  TREASURE_ROOM = 'treasure_room',
 }
 
 export enum HotspotType {
@@ -119,20 +119,20 @@ export enum HotspotType {
   BED = 'bed',
   WARDROBE = 'wardrobe',
   CARPET = 'carpet',
-  DECORATION = 'decoration'
+  DECORATION = 'decoration',
 }
 
 // Grand Exchange Types
 export enum OfferType {
   BUY = 'buy',
-  SELL = 'sell'
+  SELL = 'sell',
 }
 
 export enum OfferStatus {
   PENDING = 'pending',
   COMPLETED = 'completed',
   CANCELLED = 'cancelled',
-  PARTIAL = 'partial'
+  PARTIAL = 'partial',
 }
 
 // Clan Types
@@ -144,7 +144,7 @@ export enum ClanRank {
   LIEUTENANT = 'lieutenant',
   CAPTAIN = 'captain',
   GENERAL = 'general',
-  OWNER = 'owner'
+  OWNER = 'owner',
 }
 
 // Minigame Types
@@ -153,14 +153,14 @@ export enum MinigameType {
   PEST_CONTROL = 'pest_control',
   BARBARIAN_ASSAULT = 'barbarian_assault',
   TROUBLE_BREWING = 'trouble_brewing',
-  FISHING_TRAWLER = 'fishing_trawler'
+  FISHING_TRAWLER = 'fishing_trawler',
 }
 
 export enum MinigameStatus {
   WAITING = 'waiting',
   IN_PROGRESS = 'in_progress',
   COMPLETED = 'completed',
-  ABORTED = 'aborted'
+  ABORTED = 'aborted',
 }
 
 // Death System Types
@@ -168,116 +168,116 @@ export enum GravestoneTier {
   BASIC = 'basic',
   GRANITE = 'granite',
   MARBLE = 'marble',
-  PREMIUM = 'premium'
+  PREMIUM = 'premium',
 }
 
 // Component Interfaces
 export interface Component {
-  type: string;
-  entity: any;
-  data: any;
+  type: string
+  entity: any
+  data: any
 }
 
 export interface StatsComponent extends Component {
-  hitpoints: { current: number; max: number };
-  attack: { level: number; xp: number };
-  strength: { level: number; xp: number };
-  defence: { level: number; xp: number };
-  ranged: { level: number; xp: number };
-  magic: { level: number; xp: number };
-  prayer: { level: number; xp: number };
-  combatLevel: number;
+  hitpoints: { current: number; max: number }
+  attack: { level: number; xp: number }
+  strength: { level: number; xp: number }
+  defence: { level: number; xp: number }
+  ranged: { level: number; xp: number }
+  magic: { level: number; xp: number }
+  prayer: { level: number; xp: number }
+  combatLevel: number
 }
 
 export interface CombatComponent extends Component {
-  inCombat: boolean;
-  target: any | null;
-  lastAttackTime: number;
-  attackSpeed: number;
-  combatStyle: CombatStyle;
-  autoRetaliate: boolean;
-  hitSplatQueue: any[];
-  animationQueue: any[];
-  specialAttackEnergy: number;
-  specialAttackActive: boolean;
+  inCombat: boolean
+  target: any | null
+  lastAttackTime: number
+  attackSpeed: number
+  combatStyle: CombatStyle
+  autoRetaliate: boolean
+  hitSplatQueue: any[]
+  animationQueue: any[]
+  specialAttackEnergy: number
+  specialAttackActive: boolean
   protectionPrayers: {
-    melee: boolean;
-    ranged: boolean;
-    magic: boolean;
-  };
+    melee: boolean
+    ranged: boolean
+    magic: boolean
+  }
 }
 
 export interface InventoryComponent extends Component {
-  items: (InventoryItem | null)[];
-  capacity: number;
+  items: (InventoryItem | null)[]
+  capacity: number
 }
 
 export interface PlayerStats {
-  hitpoints: { current: number; max: number };
-  attack: { level: number; xp: number };
-  strength: { level: number; xp: number };
-  defence: { level: number; xp: number };
-  ranged?: { level: number; xp: number };
-  magic?: { level: number; xp: number };
-  prayer?: { level: number; xp: number };
-  combatLevel?: number;
+  hitpoints: { current: number; max: number }
+  attack: { level: number; xp: number }
+  strength: { level: number; xp: number }
+  defence: { level: number; xp: number }
+  ranged?: { level: number; xp: number }
+  magic?: { level: number; xp: number }
+  prayer?: { level: number; xp: number }
+  combatLevel?: number
 }
 
 export interface InventoryItem {
-  itemId: number;
-  itemType: string;
-  quantity: number;
-  stackable: boolean;
+  itemId: number
+  itemType: string
+  quantity: number
+  stackable: boolean
 }
 
 export interface BankAccount {
-  accountNumber: string;
-  balance: number;
-  pin?: string;
+  accountNumber: string
+  balance: number
+  pin?: string
 }
 
 export interface NPCDefinition {
-  npcId: number;
-  name: string;
-  combatLevel: number;
-  maxHitpoints: number;
-  behavior: NPCBehavior;
-  lootTable: number[];
-  spawnPosition: Vector3;
-  respawnTime: number;
-  aggroRadius: number;
-  wanderRadius: number;
+  npcId: number
+  name: string
+  combatLevel: number
+  maxHitpoints: number
+  behavior: NPCBehavior
+  lootTable: number[]
+  spawnPosition: Vector3
+  respawnTime: number
+  aggroRadius: number
+  wanderRadius: number
 }
 
 export interface ItemDefinition {
-  itemId: number;
-  name: string;
-  stackable: boolean;
-  tradeable: boolean;
-  equipSlot?: EquipmentSlot;
-  value: number;
+  itemId: number
+  name: string
+  stackable: boolean
+  tradeable: boolean
+  equipSlot?: EquipmentSlot
+  value: number
 }
 
 export interface TriggerZone {
-  id: string;
-  position: Vector3;
-  size: Vector3;
-  action?: string;
-  data?: any;
+  id: string
+  position: Vector3
+  size: Vector3
+  action?: string
+  data?: any
 }
 
 export interface BuildingConfig {
-  id: string;
-  name: string;
-  position: Vector3;
-  size: Vector3;
-  color: string;
-  triggerZones?: TriggerZone[];
-  interactionType?: 'bank' | 'shop' | 'building';
+  id: string
+  name: string
+  position: Vector3
+  size: Vector3
+  color: string
+  triggerZones?: TriggerZone[]
+  interactionType?: 'bank' | 'shop' | 'building'
 }
 
 export interface VisualConfig {
-  color?: string;
-  size?: { width: number; height: number; depth: number };
-  animation?: string;
+  color?: string
+  size?: { width: number; height: number; depth: number }
+  animation?: string
 }

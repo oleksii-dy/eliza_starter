@@ -21,32 +21,32 @@ function validateEnvironment() {
     'WORKOS_CLIENT_ID',
     'JWT_SECRET',
     'NEXT_PUBLIC_APP_URL',
-    'NEXT_PUBLIC_WORKOS_CLIENT_ID'
+    'NEXT_PUBLIC_WORKOS_CLIENT_ID',
   ];
 
-  const missing = required.filter(key => !process.env[key]);
-  
+  const missing = required.filter((key) => !process.env[key]);
+
   if (missing.length > 0) {
     console.error('❌ Missing required environment variables:');
-    missing.forEach(key => console.error(`  - ${key}`));
+    missing.forEach((key) => console.error(`  - ${key}`));
     process.exit(1);
   }
-  
+
   console.log('✅ Environment variables validated');
 }
 
 // Build the application
 function buildApplication() {
   console.log('📦 Building application...');
-  
+
   try {
-    execSync('npm run build:platform', { 
+    execSync('npm run build:platform', {
       stdio: 'inherit',
-      env: { 
-        ...process.env, 
+      env: {
+        ...process.env,
         NODE_ENV: 'production',
-        BUILD_MODE: 'default'
-      }
+        BUILD_MODE: 'default',
+      },
     });
     console.log('✅ Application built successfully');
   } catch (error) {
@@ -75,7 +75,7 @@ function deployToTarget() {
 
 function deployToVercel() {
   console.log('🚀 Deploying to Vercel...');
-  
+
   try {
     // Check if vercel CLI is installed
     execSync('which vercel', { stdio: 'ignore' });
@@ -83,7 +83,7 @@ function deployToVercel() {
     console.log('📦 Installing Vercel CLI...');
     execSync('npm install -g vercel', { stdio: 'inherit' });
   }
-  
+
   try {
     const deployCmd = ENVIRONMENT === 'production' ? 'vercel --prod' : 'vercel';
     execSync(deployCmd, { stdio: 'inherit' });
@@ -96,7 +96,7 @@ function deployToVercel() {
 
 function deployToNetlify() {
   console.log('🚀 Deploying to Netlify...');
-  
+
   try {
     // Check if netlify CLI is installed
     execSync('which netlify', { stdio: 'ignore' });
@@ -104,11 +104,12 @@ function deployToNetlify() {
     console.log('📦 Installing Netlify CLI...');
     execSync('npm install -g netlify-cli', { stdio: 'inherit' });
   }
-  
+
   try {
-    const deployCmd = ENVIRONMENT === 'production' 
-      ? 'netlify deploy --prod --dir=.next' 
-      : 'netlify deploy --dir=.next';
+    const deployCmd =
+      ENVIRONMENT === 'production'
+        ? 'netlify deploy --prod --dir=.next'
+        : 'netlify deploy --dir=.next';
     execSync(deployCmd, { stdio: 'inherit' });
     console.log('✅ Deployed to Netlify successfully');
   } catch (error) {
@@ -119,22 +120,24 @@ function deployToNetlify() {
 
 function deployStatic() {
   console.log('📦 Creating static deployment...');
-  
+
   // Create static export
   try {
-    execSync('npm run build', { 
+    execSync('npm run build', {
       stdio: 'inherit',
-      env: { 
-        ...process.env, 
+      env: {
+        ...process.env,
         NODE_ENV: 'production',
-        BUILD_MODE: 'export'
-      }
+        BUILD_MODE: 'export',
+      },
     });
-    
+
     const outDir = path.join(process.cwd(), 'out');
     if (fs.existsSync(outDir)) {
       console.log(`✅ Static files ready in: ${outDir}`);
-      console.log('📄 Upload the contents of the "out" directory to your web server');
+      console.log(
+        '📄 Upload the contents of the "out" directory to your web server',
+      );
     } else {
       throw new Error('Static export directory not found');
     }
@@ -150,11 +153,13 @@ function healthCheck() {
     console.log('⏭️  Skipping health check for static deployment');
     return;
   }
-  
-  const healthUrl = process.env.HEALTH_CHECK_URL || `${process.env.NEXT_PUBLIC_APP_URL}/api/health`;
-  
+
+  const healthUrl =
+    process.env.HEALTH_CHECK_URL ||
+    `${process.env.NEXT_PUBLIC_APP_URL}/api/health`;
+
   console.log(`🔍 Running health check on ${healthUrl}...`);
-  
+
   // Simple health check with curl
   try {
     execSync(`curl -f ${healthUrl}`, { stdio: 'ignore' });
@@ -170,13 +175,12 @@ async function main() {
     validateEnvironment();
     buildApplication();
     deployToTarget();
-    
+
     // Wait a moment before health check
     setTimeout(() => {
       healthCheck();
       console.log('🎉 Web deployment completed successfully!');
     }, 5000);
-    
   } catch (error) {
     console.error('❌ Deployment failed:', error.message);
     process.exit(1);

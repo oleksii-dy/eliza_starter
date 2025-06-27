@@ -29,9 +29,11 @@ export class RetryService {
     jitterMs: 100,
     shouldRetry: (error: Error) => {
       // Don't retry configuration or validation errors
-      if (error.message.includes('not configured') || 
-          error.message.includes('Invalid') ||
-          error.message.includes('not found')) {
+      if (
+        error.message.includes('not configured') ||
+        error.message.includes('Invalid') ||
+        error.message.includes('not found')
+      ) {
         return false;
       }
       return true;
@@ -43,7 +45,7 @@ export class RetryService {
    */
   static async executeWithRetry<T>(
     operation: () => Promise<T>,
-    options: Partial<RetryOptions> = {}
+    options: Partial<RetryOptions> = {},
   ): Promise<RetryResult<T>> {
     const config = { ...this.DEFAULT_OPTIONS, ...options };
     let lastError: Error | undefined;
@@ -60,7 +62,7 @@ export class RetryService {
         };
       } catch (error) {
         lastError = error instanceof Error ? error : new Error(String(error));
-        
+
         // Don't retry if shouldRetry returns false
         if (!config.shouldRetry!(lastError)) {
           return {
@@ -91,11 +93,15 @@ export class RetryService {
   /**
    * Calculate delay with exponential backoff and jitter
    */
-  private static calculateDelay(attempt: number, options: RetryOptions): number {
-    const exponentialDelay = options.baseDelayMs * Math.pow(options.exponentialBase, attempt - 1);
+  private static calculateDelay(
+    attempt: number,
+    options: RetryOptions,
+  ): number {
+    const exponentialDelay =
+      options.baseDelayMs * Math.pow(options.exponentialBase, attempt - 1);
     const jitter = options.jitterMs ? Math.random() * options.jitterMs : 0;
     const totalDelay = exponentialDelay + jitter;
-    
+
     return Math.min(totalDelay, options.maxDelayMs);
   }
 
@@ -103,7 +109,7 @@ export class RetryService {
    * Sleep for specified milliseconds
    */
   private static sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 
@@ -175,7 +181,11 @@ export class AutoTopUpCircuitBreaker {
   /**
    * Get current circuit breaker status
    */
-  getStatus(): { state: string; failureCount: number; lastFailureTime: number } {
+  getStatus(): {
+    state: string;
+    failureCount: number;
+    lastFailureTime: number;
+  } {
     return {
       state: this.state,
       failureCount: this.failureCount,
@@ -192,7 +202,10 @@ class CircuitBreakerRegistry {
 
   getCircuitBreaker(organizationId: string): AutoTopUpCircuitBreaker {
     if (!this.circuitBreakers.has(organizationId)) {
-      this.circuitBreakers.set(organizationId, new AutoTopUpCircuitBreaker(organizationId));
+      this.circuitBreakers.set(
+        organizationId,
+        new AutoTopUpCircuitBreaker(organizationId),
+      );
     }
     return this.circuitBreakers.get(organizationId)!;
   }
@@ -201,7 +214,10 @@ class CircuitBreakerRegistry {
     this.circuitBreakers.delete(organizationId);
   }
 
-  getAllStatuses(): Record<string, { state: string; failureCount: number; lastFailureTime: number }> {
+  getAllStatuses(): Record<
+    string,
+    { state: string; failureCount: number; lastFailureTime: number }
+  > {
     const statuses: Record<string, any> = {};
     this.circuitBreakers.forEach((breaker, orgId) => {
       statuses[orgId] = breaker.getStatus();

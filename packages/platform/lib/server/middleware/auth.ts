@@ -23,7 +23,7 @@ export async function withAuth(
   options?: {
     required?: boolean;
     allowApiKey?: boolean;
-  }
+  },
 ) {
   return async (req: NextRequest) => {
     const config = loadConfig();
@@ -41,13 +41,16 @@ export async function withAuth(
           // Check if expired
           if (apiKey.expiresAt && apiKey.expiresAt < new Date()) {
             if (options?.required) {
-              return NextResponse.json({
-                success: false,
-                error: {
-                  code: 'API_KEY_EXPIRED',
-                  message: 'API key has expired',
+              return NextResponse.json(
+                {
+                  success: false,
+                  error: {
+                    code: 'API_KEY_EXPIRED',
+                    message: 'API key has expired',
+                  },
                 },
-              }, { status: 401 });
+                { status: 401 },
+              );
             }
           } else {
             // Update last used
@@ -84,13 +87,16 @@ export async function withAuth(
 
         if (payload.type !== 'access') {
           if (options?.required) {
-            return NextResponse.json({
-              success: false,
-              error: {
-                code: 'INVALID_TOKEN_TYPE',
-                message: 'Invalid token type',
+            return NextResponse.json(
+              {
+                success: false,
+                error: {
+                  code: 'INVALID_TOKEN_TYPE',
+                  message: 'Invalid token type',
+                },
               },
-            }, { status: 401 });
+              { status: 401 },
+            );
           }
         } else {
           // TODO: Implement session validation if needed
@@ -116,26 +122,32 @@ export async function withAuth(
         }
       } catch (error) {
         if (options?.required) {
-          return NextResponse.json({
-            success: false,
-            error: {
-              code: 'INVALID_TOKEN',
-              message: 'Invalid authentication token',
+          return NextResponse.json(
+            {
+              success: false,
+              error: {
+                code: 'INVALID_TOKEN',
+                message: 'Invalid authentication token',
+              },
             },
-          }, { status: 401 });
+            { status: 401 },
+          );
         }
       }
     }
 
     // No authentication found
     if (options?.required) {
-      return NextResponse.json({
-        success: false,
-        error: {
-          code: 'AUTHENTICATION_REQUIRED',
-          message: 'Authentication is required',
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'AUTHENTICATION_REQUIRED',
+            message: 'Authentication is required',
+          },
         },
-      }, { status: 401 });
+        { status: 401 },
+      );
     }
 
     // Continue without authentication
@@ -147,7 +159,7 @@ export function requireAuth(
   handler: (req: AuthenticatedRequest) => Promise<NextResponse>,
   options?: {
     allowApiKey?: boolean;
-  }
+  },
 ) {
   return withAuth(handler, { ...options, required: true });
 }

@@ -17,7 +17,9 @@ describe('API Performance Tests', () => {
 
   beforeAll(async () => {
     // Skip load tests if test setup endpoints are not available
-    console.warn('Skipping load tests: Test setup endpoints not available in this environment');
+    console.warn(
+      'Skipping load tests: Test setup endpoints not available in this environment',
+    );
 
     // Mock test data for now
     testData = [];
@@ -56,11 +58,11 @@ describe('API Performance Tests', () => {
 
         for (let j = 0; j < REQUESTS_PER_USER; j++) {
           const promise = makeOpenAIRequest(apiKey, `Request ${i}-${j}`)
-            .then(result => {
+            .then((result) => {
               results.push(result);
               return result;
             })
-            .catch(error => {
+            .catch((error) => {
               results.push({ error: error.message, success: false });
               return { error: error.message, success: false };
             });
@@ -75,15 +77,16 @@ describe('API Performance Tests', () => {
       const duration = endTime - startTime;
 
       // Analyze results
-      const successful = results.filter(r => r.success).length;
-      const failed = results.filter(r => !r.success).length;
+      const successful = results.filter((r) => r.success).length;
+      const failed = results.filter((r) => !r.success).length;
       const successRate = (successful / results.length) * 100;
 
       const responseTimes = results
-        .filter(r => r.success && r.responseTime)
-        .map(r => r.responseTime);
+        .filter((r) => r.success && r.responseTime)
+        .map((r) => r.responseTime);
 
-      const avgResponseTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
+      const avgResponseTime =
+        responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
       const maxResponseTime = Math.max(...responseTimes);
       const minResponseTime = Math.min(...responseTimes);
 
@@ -95,7 +98,9 @@ describe('API Performance Tests', () => {
       console.log(`Avg Response Time: ${avgResponseTime.toFixed(2)}ms`);
       console.log(`Min Response Time: ${minResponseTime}ms`);
       console.log(`Max Response Time: ${maxResponseTime}ms`);
-      console.log(`Requests/second: ${(results.length / (duration / 1000)).toFixed(2)}`);
+      console.log(
+        `Requests/second: ${(results.length / (duration / 1000)).toFixed(2)}`,
+      );
 
       // Assertions
       expect(successRate).toBeGreaterThan(95); // 95% success rate minimum
@@ -116,12 +121,15 @@ describe('API Performance Tests', () => {
       // Make rapid requests
       for (let i = 0; i < rapidRequests; i++) {
         const promise = makeOpenAIRequest(apiKey, `Rapid ${i}`)
-          .then(result => {
+          .then((result) => {
             results.push({ ...result, status: 'success' });
             return result;
           })
-          .catch(error => {
-            if (error.message.includes('429') || error.message.includes('rate limit')) {
+          .catch((error) => {
+            if (
+              error.message.includes('429') ||
+              error.message.includes('rate limit')
+            ) {
               results.push({ status: 'rate_limited', timestamp: Date.now() });
             } else {
               results.push({ status: 'error', error: error.message });
@@ -133,8 +141,10 @@ describe('API Performance Tests', () => {
 
       await Promise.all(promises);
 
-      const rateLimited = results.filter(r => r.status === 'rate_limited').length;
-      const successful = results.filter(r => r.status === 'success').length;
+      const rateLimited = results.filter(
+        (r) => r.status === 'rate_limited',
+      ).length;
+      const successful = results.filter((r) => r.status === 'success').length;
 
       console.log('Rate Limiting Test:');
       console.log(`Successful: ${successful}`);
@@ -163,11 +173,11 @@ describe('API Performance Tests', () => {
         const apiKey = testApiKeys[i % testApiKeys.length];
 
         const promise = uploadTestFile(apiKey, `test-file-${i}.txt`)
-          .then(result => {
+          .then((result) => {
             results.push(result);
             return result;
           })
-          .catch(error => {
+          .catch((error) => {
             results.push({ error: error.message, success: false });
             return { error: error.message, success: false };
           });
@@ -177,8 +187,8 @@ describe('API Performance Tests', () => {
 
       await Promise.all(promises);
 
-      const successful = results.filter(r => r.success).length;
-      const failed = results.filter(r => !r.success).length;
+      const successful = results.filter((r) => r.success).length;
+      const failed = results.filter((r) => !r.success).length;
       const successRate = (successful / results.length) * 100;
 
       console.log('Storage Load Test Results:');
@@ -193,7 +203,9 @@ describe('API Performance Tests', () => {
   describe('Credit System Under Load', () => {
     test('should handle concurrent credit deductions correctly', async () => {
       if (testApiKeys.length === 0) {
-        console.warn('Skipping credit concurrency test: No test API keys available');
+        console.warn(
+          'Skipping credit concurrency test: No test API keys available',
+        );
         return;
       }
       // This tests the critical path of credit deduction to ensure no race conditions
@@ -210,7 +222,7 @@ describe('API Performance Tests', () => {
       }
 
       const results = await Promise.allSettled(promises);
-      const successful = results.filter(r => r.status === 'fulfilled').length;
+      const successful = results.filter((r) => r.status === 'fulfilled').length;
 
       // Get final balance
       const finalBalance = await getCreditBalance(apiKey);
@@ -256,7 +268,7 @@ describe('API Performance Tests', () => {
       const settled = await Promise.allSettled(promises);
       const endTime = Date.now();
 
-      const successful = settled.filter(r => r.status === 'fulfilled').length;
+      const successful = settled.filter((r) => r.status === 'fulfilled').length;
       const duration = endTime - startTime;
       const avgResponseTime = duration / settled.length;
 
@@ -280,7 +292,7 @@ async function makeOpenAIRequest(apiKey: string, content: string) {
   const response = await global.fetch(`${API_BASE_URL}/inference/openai`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
+      Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
@@ -309,13 +321,15 @@ async function makeOpenAIRequest(apiKey: string, content: string) {
 
 async function uploadTestFile(apiKey: string, filename: string) {
   const formData = new FormData();
-  const testFile = new Blob(['Test file content for load testing'], { type: 'text/plain' });
+  const testFile = new Blob(['Test file content for load testing'], {
+    type: 'text/plain',
+  });
   formData.append('file', testFile, filename);
 
   const response = await global.fetch(`${API_BASE_URL}/storage/upload`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
+      Authorization: `Bearer ${apiKey}`,
     },
     body: formData,
   });
@@ -336,7 +350,7 @@ async function getCreditBalance(apiKey: string): Promise<number> {
 
 async function getCreditInfo(apiKey: string) {
   const response = await global.fetch(`${API_BASE_URL}/billing/credits`, {
-    headers: { 'Authorization': `Bearer ${apiKey}` },
+    headers: { Authorization: `Bearer ${apiKey}` },
   });
 
   if (!response.ok) {
@@ -348,7 +362,7 @@ async function getCreditInfo(apiKey: string) {
 
 async function getApiKeyList(apiKey: string) {
   const response = await global.fetch(`${API_BASE_URL}/api-keys`, {
-    headers: { 'Authorization': `Bearer ${apiKey}` },
+    headers: { Authorization: `Bearer ${apiKey}` },
   });
 
   if (!response.ok) {
@@ -359,9 +373,12 @@ async function getApiKeyList(apiKey: string) {
 }
 
 async function getUsageStats(apiKey: string) {
-  const response = await global.fetch(`${API_BASE_URL}/billing/credits?period=day`, {
-    headers: { 'Authorization': `Bearer ${apiKey}` },
-  });
+  const response = await global.fetch(
+    `${API_BASE_URL}/billing/credits?period=day`,
+    {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    },
+  );
 
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}`);

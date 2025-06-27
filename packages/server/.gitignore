@@ -7,3 +7,7 @@ templates/
 .elizadb
 coverage/
 node_modules/
+AGENTS.md
+.cursor/rules/elizaos
+CLAUDE.md
+.cursorignore

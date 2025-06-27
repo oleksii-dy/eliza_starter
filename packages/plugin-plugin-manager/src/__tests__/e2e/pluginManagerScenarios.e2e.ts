@@ -1,6 +1,10 @@
 import type { IAgentRuntime, TestSuite } from '@elizaos/core';
 import { strict as assert } from 'node:assert';
-import { sendMessageAndWaitForResponse, sendMessageWithTimeoutHandling, setupScenario } from './test-utils.ts';
+import {
+  sendMessageAndWaitForResponse,
+  sendMessageWithTimeoutHandling,
+  setupScenario,
+} from './test-utils.ts';
 
 /**
  * Defines a suite of E2E tests for Plugin Manager real-world scenarios.

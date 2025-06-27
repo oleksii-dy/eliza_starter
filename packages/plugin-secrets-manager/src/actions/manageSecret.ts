@@ -141,7 +141,7 @@ export const manageSecretAction: Action = {
           };
 
           const _success = await secrets.set(params.key, params.value, context, _config);
-          if (success) {
+          if (_success) {
             result = `Successfully set ${context.level}-level secret "${params.key}"`;
           } else {
             result = `Failed to set secret "${params.key}" - check permissions`;

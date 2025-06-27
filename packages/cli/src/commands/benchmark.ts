@@ -4,9 +4,8 @@
  */
 
 import { Command } from 'commander';
-import AgentServer from '@elizaos/server';
 import { ScenarioRunner } from '../scenario-runner/index.js';
-import { createMockRuntime } from '../utils/mock-runtime.js';
+import { createMockRuntime } from '@elizaos/core/test-utils';
 // Using built-in Node.js console formatting instead of external dependencies
 
 // interface _BenchmarkOptions {
@@ -151,7 +150,8 @@ async function listBenchmarks(options: any): Promise<void> {
 
   try {
     const mockRuntime = createMockRuntime();
-    const server = new AgentServer();
+    const AgentServerClass = (await import('@elizaos/server')).default as any;
+    const server = new AgentServerClass();
     const runner = new ScenarioRunner(server, mockRuntime);
 
     const benchmarks = runner.getAvailableBenchmarks?.() || [];
@@ -202,7 +202,8 @@ async function registerAgent(options: AgentRegistrationOptions): Promise<void> {
 
   try {
     const mockRuntime = createMockRuntime();
-    const server = new AgentServer();
+    const AgentServerClass = (await import('@elizaos/server')).default as any;
+    const server = new AgentServerClass();
     const runner = new ScenarioRunner(server, mockRuntime);
 
     const capabilities = options.capabilities.split(',').map((c) => c.trim());
@@ -243,7 +244,8 @@ async function runBenchmark(options: BenchmarkRunOptions): Promise<void> {
 
   try {
     const mockRuntime = createMockRuntime();
-    const server = new AgentServer();
+    const AgentServerClass = (await import('@elizaos/server')).default as any;
+    const server = new AgentServerClass();
     const runner = new ScenarioRunner(server, mockRuntime);
 
     // Parse parameters
@@ -366,7 +368,8 @@ async function showLeaderboard(options: any): Promise<void> {
 
   try {
     const mockRuntime = createMockRuntime();
-    const server = new AgentServer();
+    const AgentServerClass = (await import('@elizaos/server')).default as any;
+    const server = new AgentServerClass();
     const runner = new ScenarioRunner(server, mockRuntime);
 
     const benchmarkTypes = options.benchmark
@@ -413,7 +416,8 @@ async function showAgentHistory(options: any): Promise<void> {
 
   try {
     const mockRuntime = createMockRuntime();
-    const server = new AgentServer();
+    const AgentServerClass = (await import('@elizaos/server')).default as any;
+    const server = new AgentServerClass();
     const runner = new ScenarioRunner(server, mockRuntime);
 
     const history = (await runner.getAgentBenchmarkHistory?.(options.agent)) || [];
@@ -456,6 +460,7 @@ async function showStats(options: any): Promise<void> {
 
     try {
       const mockRuntime = createMockRuntime();
+      const AgentServer = (await import('@elizaos/server')).default as any;
       const server = new AgentServer();
       const runner = new ScenarioRunner(server, mockRuntime);
 
@@ -529,7 +534,8 @@ async function monitorBenchmarks(_options: any): Promise<void> {
 
   try {
     const mockRuntime = createMockRuntime();
-    const server = new AgentServer();
+    const AgentServerClass = (await import('@elizaos/server')).default as any;
+    const server = new AgentServerClass();
     const runner = new ScenarioRunner(server, mockRuntime);
 
     // Start real-time monitoring
@@ -624,4 +630,5 @@ async function validateAgent(options: any): Promise<void> {
 }
 
 // Export the command
-export default createBenchmarkCommand();
+const benchmarkCommand = createBenchmarkCommand();
+export default benchmarkCommand;

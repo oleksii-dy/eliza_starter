@@ -1,64 +1,79 @@
 /**
  * Platform Runtime Integration Tests
- * 
+ *
  * These tests validate that the platform services work correctly with real ElizaOS runtime instances.
  * They replace mocked unit tests with real runtime tests as requested.
  */
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import { IAgentRuntime, Character, Memory, UUID } from '@elizaos/core';
-import { createTestRuntime, RuntimeTestHarness } from '@elizaos/core/test-utils';
+import {
+  createTestRuntime,
+  RuntimeTestHarness,
+} from '@elizaos/core/test-utils';
 import { anonymousSessionRepo } from '../../lib/database/repositories/anonymous-session';
 import { chatService } from '../../lib/services/chat-service';
 import { db, getDatabase, initializeDbProxy } from '../../lib/database';
-import type { ChatMessage, WorkflowProgress } from '../../lib/database/repositories/anonymous-session';
+import type {
+  ChatMessage,
+  WorkflowProgress,
+} from '../../lib/database/repositories/anonymous-session';
 
 // Test runtime configuration
 const testCharacter: Character = {
   name: 'Platform Test Agent',
   username: 'platform_test',
-  system: 'You are a helpful test agent for platform integration testing. You help validate platform functionality and test real AI integration with ElizaOS runtime.',
+  system:
+    'You are a helpful test agent for platform integration testing. You help validate platform functionality and test real AI integration with ElizaOS runtime.',
   bio: [
     'I am a test agent used to validate platform functionality',
     'I help test real AI integration with ElizaOS runtime',
-    'I provide accurate responses for testing scenarios'
+    'I provide accurate responses for testing scenarios',
   ],
   messageExamples: [
     [
       {
         name: '{{user1}}',
-        content: { text: 'Hello' }
+        content: { text: 'Hello' },
       },
       {
         name: 'platform_test',
-        content: { text: 'Hello! How can I help you test the platform today?' }
-      }
-    ]
+        content: { text: 'Hello! How can I help you test the platform today?' },
+      },
+    ],
   ],
   postExamples: [],
   topics: [
     'testing',
-    'platform validation', 
+    'platform validation',
     'AI integration',
-    'workflow generation'
+    'workflow generation',
   ],
   style: {
     all: [
       'Be helpful and clear in testing scenarios',
       'Provide accurate responses for testing',
-      'Acknowledge when functionality is being tested'
+      'Acknowledge when functionality is being tested',
     ],
     chat: [
       'Be conversational but precise',
-      'Explain what is being tested when appropriate'
+      'Explain what is being tested when appropriate',
     ],
     post: [
       'Keep responses concise for testing',
-      'Focus on the specific functionality being validated'
-    ]
+      'Focus on the specific functionality being validated',
+    ],
   },
   knowledge: [],
-  plugins: []
+  plugins: [],
 };
 
 describe('Platform Runtime Integration Tests', () => {
@@ -70,17 +85,17 @@ describe('Platform Runtime Integration Tests', () => {
 
   beforeAll(async () => {
     // Initialize database
-    const database = getDatabase();
+    const database = await getDatabase();
     initializeDbProxy(database);
-    
+
     try {
       // Create real ElizaOS runtime instance using test harness
       const result = await createTestRuntime({
         character: testCharacter,
         plugins: [],
         apiKeys: {
-          OPENAI_API_KEY: process.env.OPENAI_API_KEY || 'test-token'
-        }
+          OPENAI_API_KEY: process.env.OPENAI_API_KEY || 'test-token',
+        },
       });
 
       runtime = result.runtime;
@@ -93,7 +108,10 @@ describe('Platform Runtime Integration Tests', () => {
 
       console.log('✅ Real ElizaOS runtime initialized for platform testing');
     } catch (error) {
-      console.warn('ElizaOS runtime creation failed, some tests will be skipped:', (error as Error).message);
+      console.warn(
+        'ElizaOS runtime creation failed, some tests will be skipped:',
+        (error as Error).message,
+      );
       // Set runtime to null so tests can check and skip appropriately
       runtime = null as any;
       harness = null as any;
@@ -118,16 +136,16 @@ describe('Platform Runtime Integration Tests', () => {
         workflowType: null,
         requirements: {},
         generatedAssets: [],
-        customizations: []
+        customizations: [],
       } as WorkflowProgress,
       userPreferences: {
         theme: 'system' as const,
         language: 'en',
-        notifications: true
+        notifications: true,
       },
       generatedContent: [],
       ipAddress: '127.0.0.1',
-      userAgent: 'Platform-Test/1.0'
+      userAgent: 'Platform-Test/1.0',
     };
 
     testSessionId = await anonymousSessionRepo.createSession(sessionData);
@@ -150,7 +168,7 @@ describe('Platform Runtime Integration Tests', () => {
   describe('Anonymous Session Management', () => {
     it('should create and retrieve anonymous sessions with real database', async () => {
       const session = await anonymousSessionRepo.getSession(testSessionId);
-      
+
       expect(session).toBeDefined();
       expect(session?.sessionId).toBe(testSessionId);
       expect(session?.chatHistory).toEqual([]);
@@ -164,15 +182,20 @@ describe('Platform Runtime Integration Tests', () => {
         role: 'user',
         content: 'Hello, I want to create an n8n workflow',
         timestamp: new Date(),
-        metadata: {}
+        metadata: {},
       };
 
-      const success = await anonymousSessionRepo.addMessage(testSessionId, testMessage);
+      const success = await anonymousSessionRepo.addMessage(
+        testSessionId,
+        testMessage,
+      );
       expect(success).toBe(true);
 
       const session = await anonymousSessionRepo.getSession(testSessionId);
       expect(session?.chatHistory).toHaveLength(1);
-      expect(session?.chatHistory[0].content).toBe('Hello, I want to create an n8n workflow');
+      expect(session?.chatHistory[0].content).toBe(
+        'Hello, I want to create an n8n workflow',
+      );
       expect(session?.chatHistory[0].role).toBe('user');
     });
 
@@ -180,39 +203,45 @@ describe('Platform Runtime Integration Tests', () => {
       const updatedProgress = {
         currentStep: 'requirements',
         workflowType: 'n8n_workflow',
-        requirements: { 
+        requirements: {
           connectors: ['Google Sheets', 'Slack'],
           trigger: 'Form submission',
-          actions: ['Send notification', 'Update database']
+          actions: ['Send notification', 'Update database'],
         },
         generatedAssets: [],
-        customizations: []
+        customizations: [],
       };
 
       const success = await anonymousSessionRepo.updateSession(testSessionId, {
-        workflowProgress: updatedProgress
+        workflowProgress: updatedProgress,
       });
       expect(success).toBe(true);
 
       const session = await anonymousSessionRepo.getSession(testSessionId);
       expect(session?.workflowProgress.workflowType).toBe('n8n_workflow');
-      expect(session?.workflowProgress.requirements.connectors).toContain('Google Sheets');
+      expect(session?.workflowProgress.requirements.connectors).toContain(
+        'Google Sheets',
+      );
     });
   });
 
   describe('AI Chat Service Integration', () => {
     it('should generate real AI responses using OpenAI', async () => {
-      const testMessage = 'I want to create a workflow that connects Google Sheets to Slack';
+      const testMessage =
+        'I want to create a workflow that connects Google Sheets to Slack';
       const chatContext = {
         currentStep: 'discovery',
         userContext: {
-          interestedIn: 'n8n_workflow'
+          interestedIn: 'n8n_workflow',
         },
         chatHistory: [],
-        sessionId: testSessionId
+        sessionId: testSessionId,
       };
 
-      const response = await chatService.generateChatResponse(testMessage, chatContext);
+      const response = await chatService.generateChatResponse(
+        testMessage,
+        chatContext,
+      );
 
       expect(response).toBeDefined();
       expect(response.content).toBeDefined();
@@ -220,52 +249,65 @@ describe('Platform Runtime Integration Tests', () => {
       expect(response.content.length).toBeGreaterThan(10); // Real AI should provide substantial response
       expect(response.suggestions).toBeDefined();
       expect(Array.isArray(response.suggestions)).toBe(true);
-      
+
       // Verify response is contextually relevant
       const lowerContent = response.content.toLowerCase();
       expect(
-        lowerContent.includes('google sheets') || 
-        lowerContent.includes('slack') || 
-        lowerContent.includes('workflow') ||
-        lowerContent.includes('automation')
+        lowerContent.includes('google sheets') ||
+          lowerContent.includes('slack') ||
+          lowerContent.includes('workflow') ||
+          lowerContent.includes('automation'),
       ).toBe(true);
 
-      console.log('✅ Real AI response generated:', response.content.substring(0, 100) + '...');
+      console.log(
+        '✅ Real AI response generated:',
+        response.content.substring(0, 100) + '...',
+      );
     });
 
     it('should progress through workflow steps based on AI context', async () => {
       // Test discovery -> requirements progression
-      const discoveryMessage = 'I need an n8n workflow for my e-commerce business';
+      const discoveryMessage =
+        'I need an n8n workflow for my e-commerce business';
       const discoveryContext = {
         currentStep: 'discovery',
         userContext: {},
         chatHistory: [],
-        sessionId: testSessionId
+        sessionId: testSessionId,
       };
 
-      const discoveryResponse = await chatService.generateChatResponse(discoveryMessage, discoveryContext);
+      const discoveryResponse = await chatService.generateChatResponse(
+        discoveryMessage,
+        discoveryContext,
+      );
       expect(discoveryResponse.nextStep).toBeDefined();
 
       // Test requirements step
-      const requirementsMessage = 'I want to sync orders from Shopify to our CRM and send email notifications';
+      const requirementsMessage =
+        'I want to sync orders from Shopify to our CRM and send email notifications';
       const requirementsContext = {
         currentStep: 'requirements',
         userContext: {
           workflowType: 'n8n_workflow',
-          domain: 'e-commerce'
+          domain: 'e-commerce',
         },
         chatHistory: [
           { role: 'user' as const, content: discoveryMessage },
-          { role: 'assistant' as const, content: discoveryResponse.content }
+          { role: 'assistant' as const, content: discoveryResponse.content },
         ],
-        sessionId: testSessionId
+        sessionId: testSessionId,
       };
 
-      const requirementsResponse = await chatService.generateChatResponse(requirementsMessage, requirementsContext);
+      const requirementsResponse = await chatService.generateChatResponse(
+        requirementsMessage,
+        requirementsContext,
+      );
       expect(requirementsResponse).toBeDefined();
       expect(requirementsResponse.content).toBeDefined();
 
-      console.log('✅ Workflow progression tested through AI context management');
+      console.log(
+        '✅ Workflow progression tested through AI context management',
+      );
     });
 
     it('should handle AI service failures gracefully', async () => {
@@ -274,13 +316,16 @@ describe('Platform Runtime Integration Tests', () => {
         currentStep: 'discovery',
         userContext: {},
         chatHistory: [],
-        sessionId: testSessionId
+        sessionId: testSessionId,
       };
 
       // Create a context that might challenge the AI service
       const complexMessage = 'X'.repeat(10000); // Very long message that might cause issues
 
-      const response = await chatService.generateChatResponse(complexMessage, chatContext);
+      const response = await chatService.generateChatResponse(
+        complexMessage,
+        chatContext,
+      );
 
       // Should still return a valid response (either AI or fallback)
       expect(response).toBeDefined();
@@ -301,12 +346,12 @@ describe('Platform Runtime Integration Tests', () => {
           source: 'HubSpot CRM',
           destination: 'Mailchimp',
           trigger: 'New contact created',
-          frequency: 'Real-time'
+          frequency: 'Real-time',
         },
         userContext: {
           domain: 'marketing',
-          tools: ['HubSpot', 'Mailchimp']
-        }
+          tools: ['HubSpot', 'Mailchimp'],
+        },
       };
 
       const asset = await chatService.generateAsset(requirements);
@@ -338,13 +383,17 @@ describe('Platform Runtime Integration Tests', () => {
         description: 'Database operations server for customer management',
         requirements: {
           database: 'PostgreSQL',
-          operations: ['Create customer', 'Update customer', 'Search customers'],
-          authentication: 'API key'
+          operations: [
+            'Create customer',
+            'Update customer',
+            'Search customers',
+          ],
+          authentication: 'API key',
         },
         userContext: {
           domain: 'customer_service',
-          database: 'PostgreSQL'
-        }
+          database: 'PostgreSQL',
+        },
       };
 
       const asset = await chatService.generateAsset(requirements);
@@ -365,16 +414,21 @@ describe('Platform Runtime Integration Tests', () => {
     it('should generate functional agent config using real AI', async () => {
       const requirements = {
         type: 'agent_config' as const,
-        description: 'Customer support agent with order management capabilities',
+        description:
+          'Customer support agent with order management capabilities',
         requirements: {
-          capabilities: ['Answer questions', 'Check order status', 'Process returns'],
+          capabilities: [
+            'Answer questions',
+            'Check order status',
+            'Process returns',
+          ],
           personality: 'Helpful and professional',
-          integrations: ['Order system', 'Knowledge base']
+          integrations: ['Order system', 'Knowledge base'],
         },
         userContext: {
           domain: 'customer_service',
-          businessType: 'e-commerce'
-        }
+          businessType: 'e-commerce',
+        },
       };
 
       const asset = await chatService.generateAsset(requirements);
@@ -396,10 +450,13 @@ describe('Platform Runtime Integration Tests', () => {
         data: { nodes: [], connections: {} },
         preview: '{}',
         downloadUrl: undefined,
-        createdAt: new Date()
+        createdAt: new Date(),
       };
 
-      const success = await anonymousSessionRepo.addGeneratedContent(testSessionId, generatedContent);
+      const success = await anonymousSessionRepo.addGeneratedContent(
+        testSessionId,
+        generatedContent,
+      );
       expect(success).toBe(true);
 
       const session = await anonymousSessionRepo.getSession(testSessionId);
@@ -423,11 +480,11 @@ describe('Platform Runtime Integration Tests', () => {
           metadata: {
             sessionId: testSessionId,
             workflowType: 'n8n_workflow',
-            userRequirements: ['Shopify integration', 'Email notifications']
-          }
+            userRequirements: ['Shopify integration', 'Email notifications'],
+          },
         },
         roomId: roomId,
-        embedding: undefined // Will be generated by runtime
+        embedding: undefined, // Will be generated by runtime
       };
 
       await runtime.createMemory(testMemory, 'memories');
@@ -436,18 +493,20 @@ describe('Platform Runtime Integration Tests', () => {
       const memories = await runtime.getMemories({
         roomId: roomId,
         count: 10,
-        tableName: 'messages'
+        tableName: 'messages',
       });
 
       expect(memories).toBeDefined();
       expect(Array.isArray(memories)).toBe(true);
-      
+
       // Find our test memory
-      const testMemoryFound = memories.find(m => 
-        m.content.text?.includes('n8n workflow for e-commerce automation')
+      const testMemoryFound = memories.find((m) =>
+        m.content.text?.includes('n8n workflow for e-commerce automation'),
       );
       expect(testMemoryFound).toBeDefined();
-      expect((testMemoryFound?.content as any)?.metadata?.sessionId).toBe(testSessionId);
+      expect((testMemoryFound?.content as any)?.metadata?.sessionId).toBe(
+        testSessionId,
+      );
 
       console.log('✅ Memory created in ElizaOS runtime from platform data');
     });
@@ -459,9 +518,9 @@ describe('Platform Runtime Integration Tests', () => {
         entityId: userId,
         content: {
           text: 'Customer wants automated email marketing workflow with Mailchimp integration',
-          source: 'platform_requirements'
+          source: 'platform_requirements',
         },
-        roomId: roomId
+        roomId: roomId,
       };
 
       await runtime.createMemory(memory, 'memories');
@@ -469,7 +528,7 @@ describe('Platform Runtime Integration Tests', () => {
       // Generate embedding for search query
       const searchQuery = 'email marketing automation';
       const searchEmbedding = await runtime.useModel('TEXT_EMBEDDING', {
-        text: searchQuery
+        text: searchQuery,
       });
 
       // Perform semantic search
@@ -478,13 +537,15 @@ describe('Platform Runtime Integration Tests', () => {
         match_threshold: 0.1,
         count: 5,
         tableName: 'messages',
-        roomId: roomId
+        roomId: roomId,
       });
 
       expect(searchResults).toBeDefined();
       expect(Array.isArray(searchResults)).toBe(true);
 
-      console.log(`✅ Semantic search performed, found ${searchResults.length} relevant memories`);
+      console.log(
+        `✅ Semantic search performed, found ${searchResults.length} relevant memories`,
+      );
     });
   });
 
@@ -496,10 +557,13 @@ describe('Platform Runtime Integration Tests', () => {
         currentStep: 'discovery',
         userContext: {},
         chatHistory: [],
-        sessionId: testSessionId
+        sessionId: testSessionId,
       };
 
-      const chatResponse = await chatService.generateChatResponse(userMessage, chatContext);
+      const chatResponse = await chatService.generateChatResponse(
+        userMessage,
+        chatContext,
+      );
       expect(chatResponse).toBeDefined();
 
       // Step 2: Save chat to session
@@ -508,7 +572,7 @@ describe('Platform Runtime Integration Tests', () => {
         role: 'user',
         content: userMessage,
         timestamp: new Date(),
-        metadata: {}
+        metadata: {},
       };
 
       await anonymousSessionRepo.addMessage(testSessionId, userChatMessage);
@@ -520,11 +584,14 @@ describe('Platform Runtime Integration Tests', () => {
         timestamp: new Date(),
         metadata: {
           suggestions: chatResponse.suggestions,
-          workflowStep: chatResponse.workflowStep
-        }
+          workflowStep: chatResponse.workflowStep,
+        },
       };
 
-      await anonymousSessionRepo.addMessage(testSessionId, assistantChatMessage);
+      await anonymousSessionRepo.addMessage(
+        testSessionId,
+        assistantChatMessage,
+      );
 
       // Step 3: Generate asset
       const assetRequirements = {
@@ -533,27 +600,30 @@ describe('Platform Runtime Integration Tests', () => {
         requirements: {
           platform: 'Slack',
           triggers: ['Webhook', 'Schedule'],
-          actions: ['Send message', 'Create channel']
+          actions: ['Send message', 'Create channel'],
         },
         userContext: {
           domain: 'team_collaboration',
-          platform: 'Slack'
-        }
+          platform: 'Slack',
+        },
       };
 
       const generatedAsset = await chatService.generateAsset(assetRequirements);
       expect(generatedAsset).toBeDefined();
 
       // Step 4: Save generated asset to session
-      const success = await anonymousSessionRepo.addGeneratedContent(testSessionId, {
-        type: generatedAsset.type,
-        name: generatedAsset.name,
-        description: generatedAsset.description,
-        data: generatedAsset.data,
-        preview: generatedAsset.preview,
-        downloadUrl: generatedAsset.downloadUrl,
-        createdAt: new Date()
-      });
+      const success = await anonymousSessionRepo.addGeneratedContent(
+        testSessionId,
+        {
+          type: generatedAsset.type,
+          name: generatedAsset.name,
+          description: generatedAsset.description,
+          data: generatedAsset.data,
+          preview: generatedAsset.preview,
+          downloadUrl: generatedAsset.downloadUrl,
+          createdAt: new Date(),
+        },
+      );
       expect(success).toBe(true);
 
       // Step 5: Verify complete session state

@@ -1,7 +1,4 @@
-import {
-  type IAgentRuntime,
-  logger,
-} from '@elizaos/core';
+import { type IAgentRuntime, logger } from '@elizaos/core';
 import { type Route } from '@elizaos/core';
 import { sql } from 'drizzle-orm';
 

@@ -534,10 +534,18 @@ async function createComprehensiveAnalysis(results: IndividualAnalysis[]) {
       });
 
       // Count specific issue types
-      if (analysis.unicode_issues) {unicodeIssuesCount++;}
-      if (analysis.newline_issues) {newlineIssuesCount++;}
-      if (analysis.formatting_issues) {formattingIssuesCount++;}
-      if (analysis.logical_errors) {logicalErrorsCount++;}
+      if (analysis.unicode_issues) {
+        unicodeIssuesCount++;
+      }
+      if (analysis.newline_issues) {
+        newlineIssuesCount++;
+      }
+      if (analysis.formatting_issues) {
+        formattingIssuesCount++;
+      }
+      if (analysis.logical_errors) {
+        logicalErrorsCount++;
+      }
 
       // Count research quality
       researchQuality[analysis.research_quality]++;
@@ -613,7 +621,8 @@ async function createDetailedMarkdownReport(
 ): Promise<string> {
   let markdown = '# SWE-bench Individual Instance Analysis Report\n\n';
   markdown += `**Generated**: ${new Date().toISOString()}\n`;
-  markdown += '**Anti-Cheating Measures**: ✅ Enabled (Claude Code SDK disabled, research filtering)\n\n';
+  markdown +=
+    '**Anti-Cheating Measures**: ✅ Enabled (Claude Code SDK disabled, research filtering)\n\n';
 
   markdown += '## Executive Summary\n\n';
   markdown += `- **Total Instances**: ${analysis.summary.total_instances}\n`;
@@ -670,7 +679,8 @@ async function createDetailedMarkdownReport(
   });
 
   markdown += '\n## Key Recommendations\n\n';
-  markdown += 'Based on the failure analysis, here are the top recommendations to improve our SWE-bench performance:\n\n';
+  markdown +=
+    'Based on the failure analysis, here are the top recommendations to improve our SWE-bench performance:\n\n';
 
   // Generate recommendations based on most common issues
   const topRecommendations = new Map<string, number>();
@@ -688,9 +698,11 @@ async function createDetailedMarkdownReport(
     });
 
   markdown += '\n## Anti-Cheating Verification\n\n';
-  markdown += '✅ **Claude Code SDK Disabled**: Prevents access to external code generation tools\n';
+  markdown +=
+    '✅ **Claude Code SDK Disabled**: Prevents access to external code generation tools\n';
   markdown += '✅ **Research Filtering**: Monitors for SWE-bench specific references in research\n';
-  markdown += '✅ **Enhanced Generator Only**: Uses custom prompts without benchmark-specific knowledge\n\n';
+  markdown +=
+    '✅ **Enhanced Generator Only**: Uses custom prompts without benchmark-specific knowledge\n\n';
 
   return markdown;
 }

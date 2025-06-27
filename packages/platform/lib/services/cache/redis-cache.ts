@@ -17,7 +17,7 @@ export class RedisCacheService implements ICacheService {
       retryDelayOnFailover?: number;
       enableReadyCheck?: boolean;
       maxRetriesPerRequest?: number;
-    } = {}
+    } = {},
   ) {
     try {
       this.client = new Redis(url, {
@@ -30,7 +30,10 @@ export class RedisCacheService implements ICacheService {
 
       this.setupEventHandlers();
     } catch (error) {
-      throw new CacheConnectionError('Failed to initialize Redis cache', error as Error);
+      throw new CacheConnectionError(
+        'Failed to initialize Redis cache',
+        error as Error,
+      );
     }
   }
 
@@ -88,7 +91,10 @@ export class RedisCacheService implements ICacheService {
       const result = await this.client.exists(key);
       return result === 1;
     } catch (error) {
-      throw new CacheError(`Failed to check existence of key ${key}`, error as Error);
+      throw new CacheError(
+        `Failed to check existence of key ${key}`,
+        error as Error,
+      );
     }
   }
 
@@ -100,11 +106,11 @@ export class RedisCacheService implements ICacheService {
         multi.expire(key, ttlSeconds);
       }
       const results = await multi.exec();
-      
+
       if (!results || results[0][1] === null) {
         throw new Error('Failed to increment');
       }
-      
+
       return results[0][1] as number;
     } catch (error) {
       throw new CacheError(`Failed to increment key ${key}`, error as Error);
@@ -119,11 +125,11 @@ export class RedisCacheService implements ICacheService {
         multi.expire(key, ttlSeconds);
       }
       const results = await multi.exec();
-      
+
       if (!results || results[0][1] === null) {
         throw new Error('Failed to decrement');
       }
-      
+
       return Math.max(0, results[0][1] as number);
     } catch (error) {
       throw new CacheError(`Failed to decrement key ${key}`, error as Error);
@@ -139,12 +145,14 @@ export class RedisCacheService implements ICacheService {
     }
   }
 
-  async mset(entries: Array<{ key: string; value: string; ttl?: number }>): Promise<void> {
+  async mset(
+    entries: Array<{ key: string; value: string; ttl?: number }>,
+  ): Promise<void> {
     try {
       if (entries.length === 0) return;
 
       const multi = this.client.multi();
-      
+
       for (const entry of entries) {
         if (entry.ttl) {
           multi.setex(entry.key, entry.ttl, entry.value);
@@ -152,7 +160,7 @@ export class RedisCacheService implements ICacheService {
           multi.set(entry.key, entry.value);
         }
       }
-      
+
       await multi.exec();
     } catch (error) {
       throw new CacheError('Failed to mset entries', error as Error);
@@ -167,7 +175,12 @@ export class RedisCacheService implements ICacheService {
     }
   }
 
-  async hset(hash: string, field: string, value: string, ttlSeconds?: number): Promise<void> {
+  async hset(
+    hash: string,
+    field: string,
+    value: string,
+    ttlSeconds?: number,
+  ): Promise<void> {
     try {
       const multi = this.client.multi();
       multi.hset(hash, field, value);
@@ -208,7 +221,10 @@ export class RedisCacheService implements ICacheService {
     try {
       return await this.client.llen(list);
     } catch (error) {
-      throw new CacheError(`Failed to get length of list ${list}`, error as Error);
+      throw new CacheError(
+        `Failed to get length of list ${list}`,
+        error as Error,
+      );
     }
   }
 
@@ -216,7 +232,10 @@ export class RedisCacheService implements ICacheService {
     try {
       await this.client.expire(key, seconds);
     } catch (error) {
-      throw new CacheError(`Failed to set expiration for key ${key}`, error as Error);
+      throw new CacheError(
+        `Failed to set expiration for key ${key}`,
+        error as Error,
+      );
     }
   }
 
@@ -232,11 +251,18 @@ export class RedisCacheService implements ICacheService {
     try {
       return await this.client.keys(pattern);
     } catch (error) {
-      throw new CacheError(`Failed to get keys with pattern ${pattern}`, error as Error);
+      throw new CacheError(
+        `Failed to get keys with pattern ${pattern}`,
+        error as Error,
+      );
     }
   }
 
-  async scan(cursor: string, pattern?: string, count?: number): Promise<{ cursor: string; keys: string[] }> {
+  async scan(
+    cursor: string,
+    pattern?: string,
+    count?: number,
+  ): Promise<{ cursor: string; keys: string[] }> {
     try {
       const options: any = {};
       if (pattern) {
@@ -252,7 +278,10 @@ export class RedisCacheService implements ICacheService {
         keys: result[1],
       };
     } catch (error) {
-      throw new CacheError(`Failed to scan with cursor ${cursor}`, error as Error);
+      throw new CacheError(
+        `Failed to scan with cursor ${cursor}`,
+        error as Error,
+      );
     }
   }
 
@@ -266,7 +295,9 @@ export class RedisCacheService implements ICacheService {
 
   async cleanup(): Promise<void> {
     // Redis handles expiration automatically, no manual cleanup needed
-    console.log('[RedisCache] Cleanup not needed - Redis handles expiration automatically');
+    console.log(
+      '[RedisCache] Cleanup not needed - Redis handles expiration automatically',
+    );
   }
 
   async ping(): Promise<boolean> {
@@ -278,14 +309,19 @@ export class RedisCacheService implements ICacheService {
     }
   }
 
-  async info(): Promise<{ type: string; connected: boolean; memory?: string; version?: string }> {
+  async info(): Promise<{
+    type: string;
+    connected: boolean;
+    memory?: string;
+    version?: string;
+  }> {
     try {
       const info = await this.client.info();
       const lines = info.split('\r\n');
-      
+
       let version = '';
       let memory = '';
-      
+
       for (const line of lines) {
         if (line.startsWith('redis_version:')) {
           version = line.split(':')[1];
@@ -294,7 +330,7 @@ export class RedisCacheService implements ICacheService {
           memory = line.split(':')[1];
         }
       }
-      
+
       return {
         type: 'redis',
         connected: this.isConnected,
@@ -313,7 +349,10 @@ export class RedisCacheService implements ICacheService {
     try {
       await this.client.connect();
     } catch (error) {
-      throw new CacheConnectionError('Failed to connect to Redis', error as Error);
+      throw new CacheConnectionError(
+        'Failed to connect to Redis',
+        error as Error,
+      );
     }
   }
 

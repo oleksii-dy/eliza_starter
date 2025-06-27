@@ -1359,7 +1359,9 @@ export class PluginManagerService extends Service implements PluginRegistry {
   // from CapabilityAnalysisService
   public async analyzeCurrentCapabilities(): Promise<CapabilityProfile> {
     const cached = this._getCapabilityCache();
-    if (cached) {return cached;}
+    if (cached) {
+      return cached;
+    }
 
     // Only log in non-test environments
     if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
@@ -1416,7 +1418,9 @@ export class PluginManagerService extends Service implements PluginRegistry {
       userQuery,
     });
     const cached = this._getFromModelCache(cacheKey);
-    if (cached) {return cached;}
+    if (cached) {
+      return cached;
+    }
 
     const prompt = this._buildEvaluationPrompt(plugins, context, userQuery);
     const response = (await this.runtime.useModel(ModelType.TEXT_LARGE, {

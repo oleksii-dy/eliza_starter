@@ -1,6 +1,7 @@
 import { describe, it, expect, mock, beforeEach } from 'bun:test';
 import { createGoalAction } from '../actions/createGoal';
 import { completeGoalAction } from '../actions/completeGoal';
+import { createMockRuntime } from '@elizaos/core/test-utils';
 import type { IAgentRuntime, Memory, State, HandlerCallback } from '@elizaos/core';
 
 describe('Goal Action Handlers', () => {
@@ -12,16 +13,16 @@ describe('Goal Action Handlers', () => {
   beforeEach(() => {
     mock.restore();
 
-    mockRuntime = {
-      agentId: 'test-agent-id' as any,
-      useModel: mock(),
-      composeState: mock().mockResolvedValue({
-        data: { messages: [], entities: [] },
-        values: {},
-        text: '',
-      }),
-      db: null, // No database in unit tests
-    } as any;
+    mockRuntime = createMockRuntime() as unknown as IAgentRuntime;
+
+    // Override specific methods for testing
+    mockRuntime.useModel = mock();
+    mockRuntime.composeState = mock().mockResolvedValue({
+      data: { messages: [], entities: [] },
+      values: {},
+      text: '',
+    });
+    (mockRuntime as any).db = null; // No database in unit tests
 
     mockMessage = {
       id: 'test-message-id' as any,

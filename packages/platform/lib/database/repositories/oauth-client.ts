@@ -22,9 +22,12 @@ export class OAuthClientRepository {
   /**
    * Create a new OAuth client
    */
-  async create(data: Omit<NewOAuthClient, 'clientId' | 'clientSecret'>): Promise<OAuthClient> {
+  async create(
+    data: Omit<NewOAuthClient, 'clientId' | 'clientSecret'>,
+  ): Promise<OAuthClient> {
     const clientId = this.generateClientId();
-    const clientSecret = data.clientType === 'confidential' ? this.generateClientSecret() : null;
+    const clientSecret =
+      data.clientType === 'confidential' ? this.generateClientSecret() : null;
 
     const [client] = await this.db
       .insert(oauthClients)
@@ -54,7 +57,10 @@ export class OAuthClientRepository {
   /**
    * Validate client ID and check if active
    */
-  async validateClient(clientId: string, grantType?: string): Promise<ClientValidationResult> {
+  async validateClient(
+    clientId: string,
+    grantType?: string,
+  ): Promise<ClientValidationResult> {
     const client = await this.getByClientId(clientId);
 
     if (!client) {
@@ -91,9 +97,12 @@ export class OAuthClientRepository {
   /**
    * Validate client secret for confidential clients
    */
-  async validateClientSecret(clientId: string, clientSecret: string): Promise<boolean> {
+  async validateClientSecret(
+    clientId: string,
+    clientSecret: string,
+  ): Promise<boolean> {
     const client = await this.getByClientId(clientId);
-    
+
     if (!client || client.clientType !== 'confidential') {
       return false;
     }
@@ -104,7 +113,10 @@ export class OAuthClientRepository {
   /**
    * Check if client supports a specific scope
    */
-  async validateScope(clientId: string, requestedScopes: string[]): Promise<ClientValidationResult> {
+  async validateScope(
+    clientId: string,
+    requestedScopes: string[],
+  ): Promise<ClientValidationResult> {
     const client = await this.getByClientId(clientId);
 
     if (!client) {
@@ -115,8 +127,10 @@ export class OAuthClientRepository {
     }
 
     // Check if all requested scopes are allowed
-    const invalidScopes = requestedScopes.filter(scope => !client.scopes.includes(scope));
-    
+    const invalidScopes = requestedScopes.filter(
+      (scope) => !client.scopes.includes(scope),
+    );
+
     if (invalidScopes.length > 0) {
       return {
         isValid: false,
@@ -133,7 +147,10 @@ export class OAuthClientRepository {
   /**
    * Update client configuration
    */
-  async update(clientId: string, updates: Partial<Omit<OAuthClient, 'id' | 'clientId' | 'createdAt'>>): Promise<OAuthClient | null> {
+  async update(
+    clientId: string,
+    updates: Partial<Omit<OAuthClient, 'id' | 'clientId' | 'createdAt'>>,
+  ): Promise<OAuthClient | null> {
     const [updated] = await this.db
       .update(oauthClients)
       .set({
@@ -220,10 +237,15 @@ export class OAuthClientRepository {
    */
   private generateClientSecret(): string {
     // Use crypto API available in both Node.js and browser
-    if (typeof globalThis.crypto !== 'undefined' && globalThis.crypto.getRandomValues) {
+    if (
+      typeof globalThis.crypto !== 'undefined' &&
+      globalThis.crypto.getRandomValues
+    ) {
       const array = new Uint8Array(32);
       globalThis.crypto.getRandomValues(array);
-      return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+      return Array.from(array, (byte) =>
+        byte.toString(16).padStart(2, '0'),
+      ).join('');
     } else {
       // Fallback to nanoid for environments without crypto API
       return nanoid(64);
@@ -236,7 +258,7 @@ export class OAuthClientRepository {
   async seedDefaultClients(): Promise<void> {
     // Check if CLI client already exists
     const existingCli = await this.getByClientId('elizaos-cli');
-    
+
     if (!existingCli) {
       await this.db.insert(oauthClients).values({
         clientId: 'elizaos-cli',
@@ -256,7 +278,7 @@ export class OAuthClientRepository {
 
     // Check if web client already exists
     const existingWeb = await this.getByClientId('elizaos-web');
-    
+
     if (!existingWeb) {
       await this.db.insert(oauthClients).values({
         clientId: 'elizaos-web',

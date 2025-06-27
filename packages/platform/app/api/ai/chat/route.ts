@@ -10,10 +10,12 @@ import OpenAI from 'openai';
 import { z } from 'zod';
 
 const chatSchema = z.object({
-  messages: z.array(z.object({
-    role: z.enum(['user', 'assistant', 'system']),
-    content: z.string(),
-  })),
+  messages: z.array(
+    z.object({
+      role: z.enum(['user', 'assistant', 'system']),
+      content: z.string(),
+    }),
+  ),
   model: z.string().default('gpt-3.5-turbo'),
   temperature: z.number().min(0).max(2).default(0.7),
   max_tokens: z.number().min(1).max(4096).default(1000),
@@ -25,15 +27,18 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-export async function POST(request: NextRequest) {
+export async function handlePOST(request: NextRequest) {
   try {
     // Get current user session
     const user = await authService.getCurrentUser();
     if (!user) {
-      return NextResponse.json({
-        success: false,
-        error: 'Unauthorized'
-      }, { status: 401 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Unauthorized',
+        },
+        { status: 401 },
+      );
     }
 
     // Parse and validate request body
@@ -48,7 +53,7 @@ export async function POST(request: NextRequest) {
         modelName: validatedData.model,
         operation: 'chat',
       },
-      () => handleChatRequest(validatedData, user.organizationId)
+      () => handleChatRequest(validatedData, user.organizationId),
     );
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -56,9 +61,9 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           error: 'Invalid request data',
-          details: error.errors
+          details: error.errors,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -66,16 +71,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to process chat request'
+        error: 'Failed to process chat request',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
 async function handleChatRequest(
   validatedData: z.infer<typeof chatSchema>,
-  organizationId: string
+  organizationId: string,
 ): Promise<NextResponse> {
   try {
     // Validate OpenAI API key is configured
@@ -84,16 +89,17 @@ async function handleChatRequest(
       return NextResponse.json(
         {
           success: false,
-          error: 'AI service not configured'
+          error: 'AI service not configured',
         },
-        { status: 503 }
+        { status: 503 },
       );
     }
 
     // Call real OpenAI API
     const completion = await openai.chat.completions.create({
       model: validatedData.model,
-      messages: validatedData.messages as OpenAI.Chat.Completions.ChatCompletionMessageParam[],
+      messages:
+        validatedData.messages as OpenAI.Chat.Completions.ChatCompletionMessageParam[],
       temperature: validatedData.temperature,
       max_tokens: validatedData.max_tokens,
       stream: validatedData.stream,
@@ -102,7 +108,7 @@ async function handleChatRequest(
     // Return the real OpenAI response
     return NextResponse.json({
       success: true,
-      data: completion
+      data: completion,
     });
   } catch (error) {
     console.error('OpenAI API call failed:', error);
@@ -127,18 +133,18 @@ async function handleChatRequest(
         {
           success: false,
           error: errorMessage,
-          details: error.message
+          details: error.message,
         },
-        { status: statusCode }
+        { status: statusCode },
       );
     }
 
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to process AI request'
+        error: 'Failed to process AI request',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

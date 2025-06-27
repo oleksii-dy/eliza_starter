@@ -1,4 +1,31 @@
-import { mock, spyOn } from 'bun:test';
+// Try to import from core test-utils, fall back to local implementation
+let mock: any;
+try {
+  ({ mock } = require('@elizaos/core/test-utils'));
+} catch {
+  // Local mock implementation until core test-utils build issue is resolved
+  mock = () => {
+    const calls: any[][] = [];
+    const fn = (...args: any[]) => {
+      calls.push(args);
+      if (typeof fn._implementation === 'function') {
+        return fn._implementation(...args);
+      }
+      return fn._returnValue;
+    };
+    fn.calls = calls;
+    fn._returnValue = undefined;
+    fn._implementation = null;
+    fn.mockReturnValue = (value: any) => { fn._returnValue = value; fn._implementation = null; return fn; };
+    fn.mockResolvedValue = (value: any) => { fn._returnValue = Promise.resolve(value); fn._implementation = null; return fn; };
+    fn.mockRejectedValue = (error: any) => { fn._returnValue = Promise.reject(error); fn._implementation = null; return fn; };
+    fn.mockImplementation = (impl: any) => { fn._implementation = impl; fn._returnValue = undefined; return fn; };
+    fn.mock = { calls, results: [] };
+    return fn;
+  };
+}
+
+import { spyOn } from 'bun:test';
 import {
   Content,
   IAgentRuntime,
@@ -153,13 +180,25 @@ export interface MockRuntime {
 
 // Add spy on logger for common usage in tests
 export function setupLoggerSpies() {
-  spyOn(logger, 'info').mockImplementation(() => {});
-  spyOn(logger, 'error').mockImplementation(() => {});
-  spyOn(logger, 'warn').mockImplementation(() => {});
-  spyOn(logger, 'debug').mockImplementation(() => {});
+  const originalConsole = {
+    info: console.info,
+    error: console.error,
+    warn: console.warn,
+    debug: console.debug,
+  };
+
+  console.info = mock();
+  console.error = mock();
+  console.warn = mock();
+  console.debug = mock();
 
   // allow tests to restore originals
-  return () => mock.restore();
+  return () => {
+    console.info = originalConsole.info;
+    console.error = originalConsole.error;
+    console.warn = originalConsole.warn;
+    console.debug = originalConsole.debug;
+  };
 }
 
 /**
@@ -206,7 +245,7 @@ export async function createTestRuntime(): Promise<IAgentRuntime> {
         return 'https://rpc.testnet.midnight.network';
       }
       if (key === 'MIDNIGHT_WALLET_MNEMONIC') {
-        return 'test mnemonic for testing purposes only';
+        return 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about';
       }
       return null;
     },

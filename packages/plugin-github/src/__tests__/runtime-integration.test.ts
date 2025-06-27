@@ -81,7 +81,7 @@ describe('Runtime Integration: GitHub Plugin with runtime.getSetting', () => {
     mockRuntime.getSetting.mockReturnValue(null);
 
     // Should not throw in test mode
-    await expect(githubPlugin.init!({}, mockRuntime)).resolves.not.toThrow();
+    await expect(githubPlugin.init!({}, mockRuntime)).resolves.toBeUndefined();
 
     // Verify that the plugin initialized without throwing
     expect(mockRuntime.character.settings).toBeDefined();

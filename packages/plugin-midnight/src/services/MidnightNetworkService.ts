@@ -244,13 +244,13 @@ export class MidnightNetworkService extends Service {
               resolve();
               return;
             }
-          } catch (error) {
+          } catch (_error) {
             // Wallet still syncing
           }
 
           // Retry after delay
           setTimeout(checkSync, 2000);
-        } catch (error) {
+        } catch (_error) {
           // Wallet still syncing, retry
           setTimeout(checkSync, 2000);
         }

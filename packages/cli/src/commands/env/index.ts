@@ -91,3 +91,6 @@ export * from './types';
 export * from './utils/directory-operations';
 export * from './utils/file-operations';
 export * from './utils/validation';
+
+// Export default for compatibility
+export default env;

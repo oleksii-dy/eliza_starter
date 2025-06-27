@@ -131,45 +131,50 @@ npx eliza --character characters/research-assistant.json
 ### Available Actions
 
 #### 1. **START_RESEARCH**
+
 Initiates a comprehensive research project.
 
 ```typescript
 // Example usage in conversation
-User: "Research the latest advancements in quantum error correction"
-Agent: "I'll start researching the latest advancements in quantum error correction."
+User: 'Research the latest advancements in quantum error correction';
+Agent: "I'll start researching the latest advancements in quantum error correction.";
 // Agent automatically triggers START_RESEARCH action
 ```
 
 #### 2. **PAUSE_RESEARCH**
+
 Pauses an active research project.
 
 ```typescript
-User: "Pause the current research"
-Agent: "I'll pause the ongoing research project."
+User: 'Pause the current research';
+Agent: "I'll pause the ongoing research project.";
 ```
 
 #### 3. **RESUME_RESEARCH**
+
 Resumes a paused research project.
 
 ```typescript
-User: "Resume the research"
-Agent: "I'll resume the paused research project."
+User: 'Resume the research';
+Agent: "I'll resume the paused research project.";
 ```
 
 #### 4. **CANCEL_RESEARCH**
+
 Cancels an active research project.
 
 ```typescript
-User: "Cancel the research"
-Agent: "I'll cancel the current research project."
+User: 'Cancel the research';
+Agent: "I'll cancel the current research project.";
 ```
 
 #### 5. **EVALUATE_RESEARCH**
+
 Evaluates completed research using RACE/FACT frameworks.
 
 ```typescript
-User: "Evaluate the research quality"
-Agent: "I'll evaluate the completed research report."
+User: 'Evaluate the research quality';
+Agent: "I'll evaluate the completed research report.";
 ```
 
 ## Programmatic Usage
@@ -190,7 +195,7 @@ const project = await researchService.createResearchProject(
     domain: 'engineering',
     maxSearchResults: 30,
     searchProviders: ['web', 'academic'],
-    evaluationEnabled: true
+    evaluationEnabled: true,
   }
 );
 
@@ -198,7 +203,7 @@ const project = await researchService.createResearchProject(
 const checkProgress = async () => {
   const updated = await researchService.getProject(project.id);
   console.log(`Status: ${updated.status}, Phase: ${updated.phase}`);
-  
+
   if (updated.status === 'completed') {
     console.log('Research completed!');
     console.log('Report:', updated.report);
@@ -221,7 +226,10 @@ const json = await researchService.exportProject(project.id, 'json');
 await fs.writeFile('research-data.json', json);
 
 // Export for DeepResearch Bench
-const benchFormat = await researchService.exportProject(project.id, 'deepresearch');
+const benchFormat = await researchService.exportProject(
+  project.id,
+  'deepresearch'
+);
 await fs.writeFile('benchmark-submission.json', benchFormat);
 ```
 
@@ -233,13 +241,13 @@ The research plugin can be used with ElizaOS's autocoder capabilities for automa
 
 ```typescript
 // Research and implement a specific algorithm
-User: "Research and implement the A* pathfinding algorithm in TypeScript"
+User: 'Research and implement the A* pathfinding algorithm in TypeScript';
 
 // Research best practices and generate code
-User: "Research React performance optimization techniques and create a guide"
+User: 'Research React performance optimization techniques and create a guide';
 
 // Analyze existing codebases
-User: "Research how authentication is implemented in popular Node.js frameworks"
+User: 'Research how authentication is implemented in popular Node.js frameworks';
 ```
 
 ### 2. DeFi Code Research
@@ -248,13 +256,13 @@ The plugin includes specialized DeFi research actions:
 
 ```typescript
 // Security analysis
-User: "Analyze the security of Uniswap V3's smart contracts"
+User: "Analyze the security of Uniswap V3's smart contracts";
 
 // Gas optimization research
-User: "Research gas optimization techniques for Solidity smart contracts"
+User: 'Research gas optimization techniques for Solidity smart contracts';
 
 // MEV research
-User: "Research MEV protection strategies for DeFi protocols"
+User: 'Research MEV protection strategies for DeFi protocols';
 ```
 
 ### 3. Automated Implementation Workflow
@@ -273,7 +281,7 @@ const implementation = await autocoderService.generateImplementation({
   research: research.report,
   language: 'typescript',
   framework: 'express',
-  includeTests: true
+  includeTests: true,
 });
 ```
 
@@ -287,7 +295,7 @@ const project = await researchService.createResearchProject(query, {
   researchDepth: 'phd-level', // Maximum depth
   searchProviders: ['web', 'academic', 'github'],
   evaluationEnabled: true,
-  cacheEnabled: true
+  cacheEnabled: true,
 });
 ```
 
@@ -300,14 +308,14 @@ const config = {
     approach: 'iterative-refinement',
     maxIterations: 5,
     qualityThreshold: 0.8,
-    diversityRequirement: true
+    diversityRequirement: true,
   },
   contentExtraction: {
     preferredExtractor: 'firecrawl',
     fallbackExtractor: 'playwright',
     extractImages: true,
-    extractTables: true
-  }
+    extractTables: true,
+  },
 };
 ```
 

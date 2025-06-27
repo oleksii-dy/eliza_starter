@@ -1,9 +1,68 @@
-import { describe, expect, it, mock, spyOn, beforeEach, afterEach } from 'bun:test';
+import { describe, expect, it, spyOn, beforeEach, afterEach } from 'bun:test';
+
 import { processAttachments } from '../events';
 import { IAgentRuntime, Media, ModelType, ContentType, logger } from '@elizaos/core';
-import { createMockRuntime, MockRuntime } from './test-utils';
+import { createMockRuntime, MockRuntime, mock } from './test-utils';
+
+// Simplified TestSuite implementation for local use
+class TestSuite {
+  constructor(private name: string, private config: any) {}
+  
+  addTest(test: any) {
+    it(test.name, async () => {
+      const context = this.config.beforeEach ? this.config.beforeEach() : {};
+      await test.fn(context);
+    });
+  }
+  
+  run() {
+    // No-op, bun:test handles execution
+  }
+}
+
+const createUnitTest = (config: { name: string; fn: (context: any) => Promise<void> | void }) => config;
 
 describe('processAttachments', () => {
+  const processAttachmentsSuite = new TestSuite('processAttachments', {
+    beforeEach: () => {
+      const mockRuntime = createMockRuntime({
+        useModel: mock().mockResolvedValue(''),
+      }) as unknown as IAgentRuntime;
+      mock.restore();
+
+      // Spy on logger methods
+      spyOn(logger, 'debug').mockImplementation(() => {});
+      spyOn(logger, 'warn').mockImplementation(() => {});
+      spyOn(logger, 'error').mockImplementation(() => {});
+      spyOn(logger, 'info').mockImplementation(() => {});
+      
+      return { mockRuntime };
+    },
+  });
+
+  processAttachmentsSuite.addTest(
+    createUnitTest({
+      name: 'should return empty array for no attachments',
+      fn: async ({ mockRuntime }) => {
+        const result = await processAttachments([], mockRuntime);
+        expect(result).toEqual([]);
+      },
+    })
+  );
+
+  processAttachmentsSuite.addTest(
+    createUnitTest({
+      name: 'should return empty array for null/undefined attachments',
+      fn: async ({ mockRuntime }) => {
+        const result = await processAttachments(null as any, mockRuntime);
+        expect(result).toEqual([]);
+      },
+    })
+  );
+
+  processAttachmentsSuite.run();
+
+  // TODO: Continue migration of remaining tests to unified structure
   let mockRuntime: IAgentRuntime;
 
   beforeEach(() => {
@@ -21,16 +80,6 @@ describe('processAttachments', () => {
 
   afterEach(() => {
     mock.restore();
-  });
-
-  it('should return empty array for no attachments', async () => {
-    const result = await processAttachments([], mockRuntime);
-    expect(result).toEqual([]);
-  });
-
-  it('should return empty array for null/undefined attachments', async () => {
-    const result = await processAttachments(null as any, mockRuntime);
-    expect(result).toEqual([]);
   });
 
   it('should process image attachments and generate descriptions', async () => {

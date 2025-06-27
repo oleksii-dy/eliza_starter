@@ -1,9 +1,8 @@
 import type { Scenario } from './types.js';
-import { asUUID } from '@elizaos/core';
-import { v4 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 export const codingChallengeScenario: Scenario = {
-  id: 'coding-challenge',
+  id: uuidv4() as any,
   name: 'Basic Coding Challenge',
   description: "Test the agent's ability to understand, write, and explain code solutions",
   category: 'coding',
@@ -11,12 +10,12 @@ export const codingChallengeScenario: Scenario = {
 
   actors: [
     {
-      id: asUUID(v4()),
+      id: uuidv4() as any,
       name: 'Coding Agent',
       role: 'subject',
     },
     {
-      id: asUUID(v4()),
+      id: uuidv4() as any,
       name: 'Technical Interviewer',
       role: 'assistant',
       script: {

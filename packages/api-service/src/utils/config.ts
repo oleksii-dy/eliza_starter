@@ -88,7 +88,10 @@ export function validateAPIServiceConfig(config: APIServiceConfig): void {
   }
 
   // Validate database URL
-  if (!config.database.url.startsWith('postgres://') && !config.database.url.startsWith('postgresql://')) {
+  if (
+    !config.database.url.startsWith('postgres://') &&
+    !config.database.url.startsWith('postgresql://')
+  ) {
     throw new Error('Database URL must be a valid PostgreSQL connection string');
   }
 
@@ -98,7 +101,7 @@ export function validateAPIServiceConfig(config: APIServiceConfig): void {
   }
 
   // Check that at least one provider is enabled
-  const enabledProviders = Object.values(config.providers).filter(p => p.enabled);
+  const enabledProviders = Object.values(config.providers).filter((p) => p.enabled);
   if (enabledProviders.length === 0) {
     throw new Error('At least one AI provider must be enabled');
   }

@@ -4,6 +4,24 @@ import { v4 as uuidv4 } from 'uuid';
 import type { UUID } from '@elizaos/core';
 import type { Document } from '../../types';
 
+// Simplified TestSuite implementation for local use
+class TestSuite {
+  constructor(private name: string, private config: any) {}
+  
+  addTest(test: any) {
+    it(test.name, async () => {
+      const context = this.config.beforeEach();
+      await test.fn(context);
+    });
+  }
+  
+  run() {
+    // No-op, bun:test handles execution
+  }
+}
+
+const createUnitTest = (config: { name: string; fn: (context: any) => Promise<void> }) => config;
+
 describe('DocumentRepository', () => {
   let mockDb: any;
   let repository: DocumentRepository;

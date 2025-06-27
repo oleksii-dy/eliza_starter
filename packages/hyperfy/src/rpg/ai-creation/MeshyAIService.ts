@@ -34,6 +34,15 @@ export interface RiggingRequest {
   enableAnimation?: boolean
 }
 
+export interface TextToTextureRequest {
+  modelUrl: string
+  prompt: string
+  artStyle?: 'realistic' | 'cartoon' | 'stylized' | 'pbr'
+  negativePrompt?: string
+  seed?: number
+  resolution?: 1024 | 2048 | 4096
+}
+
 export interface MeshyTaskResponse {
   result: string
   id: string
@@ -194,6 +203,96 @@ export class MeshyAIService {
   }
 
   /**
+   * Generate texture for existing 3D model using Meshy text-to-texture API
+   */
+  async textToTexture(request: TextToTextureRequest): Promise<string> {
+    console.log(`🎨 Generating texture for model: ${request.modelUrl}\nPrompt: "${request.prompt}"`)
+
+    try {
+      const response = await fetch(`${this.baseUrl}/v1/text-to-texture`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.config.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model_url: request.modelUrl,
+          prompt: request.prompt,
+          art_style: request.artStyle || 'realistic',
+          negative_prompt: request.negativePrompt || 'low quality, blurry, distorted, ugly',
+          seed: request.seed,
+          resolution: request.resolution || 1024,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(`Meshy text-to-texture API error: ${response.status} ${response.statusText} - ${errorText}`)
+      }
+
+      const result = await response.json()
+      console.log(`✅ Text-to-texture task created: ${result.result}`)
+
+      return result.result // Task ID
+    } catch (error) {
+      console.error('❌ Text-to-texture generation failed:', error)
+      throw new Error(`Failed to generate texture: ${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
+
+  /**
+   * Get text-to-texture task status
+   */
+  async getTextureTaskStatus(taskId: string): Promise<MeshyTaskResponse> {
+    try {
+      const response = await fetch(`${this.baseUrl}/v1/text-to-texture/${taskId}`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${this.config.apiKey}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error(`Meshy API error: ${response.status} ${response.statusText}`)
+      }
+
+      const result = await response.json()
+      return result
+    } catch (error) {
+      console.error('❌ Failed to get texture task status:', error)
+      throw new Error(`Failed to get texture task status: ${error instanceof Error ? error.message : String(error)}`)
+    }
+  }
+
+  /**
+   * Wait for texture task completion with polling
+   */
+  async waitForTextureCompletion(taskId: string, maxWaitTime: number = 300000): Promise<MeshyTaskResponse> {
+    console.log(`⏳ Waiting for texture task completion: ${taskId}`)
+
+    const startTime = Date.now()
+    const pollInterval = 5000 // 5 seconds
+
+    while (Date.now() - startTime < maxWaitTime) {
+      const status = await this.getTextureTaskStatus(taskId)
+
+      if (status.status === 'SUCCEEDED') {
+        console.log(`✅ Texture task completed successfully: ${taskId}`)
+        return status
+      }
+
+      if (status.status === 'FAILED') {
+        throw new Error(`Texture task failed: ${status.task_error?.message || 'Unknown error'}`)
+      }
+
+      console.log(`⏳ Texture task ${taskId} status: ${status.status}, waiting...`)
+      await new Promise(resolve => setTimeout(resolve, pollInterval))
+    }
+
+    throw new Error(`Texture task ${taskId} timed out after ${maxWaitTime}ms`)
+  }
+
+  /**
    * Get task status and results
    */
   async getTaskStatus(taskId: string): Promise<MeshyTaskResponse> {
@@ -332,7 +431,7 @@ export class MeshyAIService {
 
     const metadata: CreationMetadata = {
       itemType: 'building',
-      scale: { x: 1, y: 1, z: 1 },
+      scale: { x: 2, y: 2, z: 2 }, // Buildings are scaled up
     }
 
     const taskId = await this.textTo3D(

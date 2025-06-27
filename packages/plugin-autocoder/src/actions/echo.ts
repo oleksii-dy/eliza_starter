@@ -1,4 +1,13 @@
-import type { Action, ActionExample, ActionResult, HandlerCallback, IAgentRuntime, Memory, State, Content } from '@elizaos/core';
+import type {
+  Action,
+  ActionExample,
+  ActionResult,
+  HandlerCallback,
+  IAgentRuntime,
+  Memory,
+  State,
+  Content,
+} from '@elizaos/core';
 import { logger } from '@elizaos/core';
 
 /**
@@ -17,7 +26,8 @@ export interface EchoConfig {
 export const echoAction: Action = {
   name: 'ECHO_MESSAGE',
   similes: ['ECHO', 'REPEAT', 'SAY_BACK'],
-  description: "Echoes back the user's input with optional formatting. Returns formatted text and configuration data for action chaining.",
+  description:
+    "Echoes back the user's input with optional formatting. Returns formatted text and configuration data for action chaining.",
 
   /**
    * Validates if the action should be triggered
@@ -60,7 +70,11 @@ export const echoAction: Action = {
       logger.info('Executing ECHO_MESSAGE action');
 
       // Get configuration from character settings
-      const config = (runtime.character?.settings?.echo as EchoConfig) || { /* empty */ };
+      const config =
+        (runtime.character?.settings?.echo as EchoConfig) ||
+        {
+          /* empty */
+        };
 
       // Extract the text to echo (remove trigger words)
       const originalText = message.content.text || '';
@@ -194,7 +208,8 @@ export const echoAction: Action = {
         name: '{{agent}}',
         content: {
           text: 'what I just said',
-          thought: 'User wants me to echo their message and also log the action for later reference.',
+          thought:
+            'User wants me to echo their message and also log the action for later reference.',
           actions: ['ECHO_MESSAGE', 'LOG_ACTION'],
         },
       },

@@ -1,33 +1,9 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "@elizaos/core/configs/typescript/tsconfig.plugin.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "lib": ["ESNext", "DOM"],
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "strict": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "allowImportingTsExtensions": true,
-    "emitDeclarationOnly": true,
-    "declaration": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "allowJs": true,
-    "checkJs": false,
-    "noEmitOnError": false,
-    "moduleDetection": "force",
-    "allowArbitraryExtensions": true,
-    "baseUrl": ".",
-    "paths": {
-      "@elizaos/core": ["../core/src/index.ts"],
-      "@elizaos/core/*": ["../core/src/*"]
-    },
-    "typeRoots": ["../../@types", "../../node_modules/@types", "./node_modules/@types"],
-    "types": ["node"]
+    "baseUrl": "./src"
   },
-  "include": ["src/actions/**/*.ts", "src/benchmarks/**/*.ts", "src/bridge/**/*.ts", "src/e2e/**/*.ts", "src/managers/**/*.ts", "src/orchestration/**/*.ts", "src/plugin/**/*.ts", "src/providers/**/*.ts", "src/research/**/*.ts", "src/resources/**/*.ts", "src/review/**/*.ts", "src/services/**/*.ts", "src/types/**/*.ts", "src/utils/**/*.ts", "src/index.ts", "__tests__/**/*.ts"],
-  "exclude": ["node_modules", "dist", "src/__tests__/test-data/**/*", "src/__tests__/temp-verify-fixes/**/*", "src/__tests__/test-scenarios/**/*", "src/core/**/*", "src/rpg/**/*", "src/server/**/*", "src/types/global.d.ts"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "__tests__/**/*.ts", "cypress.d.ts"],
+  "exclude": ["node_modules", "dist"]
 }

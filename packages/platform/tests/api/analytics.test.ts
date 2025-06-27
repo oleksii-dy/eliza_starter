@@ -5,79 +5,88 @@
 
 import { NextRequest } from 'next/server';
 import { GET as getAnalyticsOverview } from '@/app/api/analytics/overview/route';
-import { GET as getAnalyticsConfig, POST as updateAnalyticsConfig } from '@/app/api/analytics/config/route';
+import {
+  GET as getAnalyticsConfig,
+  POST as updateAnalyticsConfig,
+} from '@/app/api/analytics/config/route';
 import { GET as exportAnalyticsData } from '@/app/api/analytics/export/route';
 
 // Mock session service
 jest.mock('@/lib/auth/session', () => ({
   sessionService: {
-    getSessionFromCookies: jest.fn(() => Promise.resolve({
-      organizationId: 'test-org-123',
-      user: { id: 'test-user', email: 'test@example.com' }
-    }))
-  }
+    getSessionFromCookies: jest.fn(() =>
+      Promise.resolve({
+        organizationId: 'test-org-123',
+        user: { id: 'test-user', email: 'test@example.com' },
+      }),
+    ),
+  },
 }));
 
 // Mock inference analytics service
 jest.mock('@/lib/services/inference-analytics', () => ({
   inferenceAnalytics: {
-    getAnalytics: jest.fn(() => Promise.resolve({
-      totalRequests: 500,
-      totalCost: 28.67,
-      totalTokens: 95000,
-      totalBaseCost: 23.89,
-      totalMarkup: 4.78,
-      successRate: 98.7,
-      averageLatency: 845,
-      byProvider: [
-        {
-          provider: 'OpenAI',
-          requests: 270,
-          cost: 15.47,
-          tokens: 55000,
-          percentage: 54.0
+    getAnalytics: jest.fn(() =>
+      Promise.resolve({
+        totalRequests: 500,
+        totalCost: 28.67,
+        totalTokens: 95000,
+        totalBaseCost: 23.89,
+        totalMarkup: 4.78,
+        successRate: 98.7,
+        averageLatency: 845,
+        byProvider: [
+          {
+            provider: 'OpenAI',
+            requests: 270,
+            cost: 15.47,
+            tokens: 55000,
+            percentage: 54.0,
+          },
+          {
+            provider: 'Anthropic',
+            requests: 135,
+            cost: 8.33,
+            tokens: 29000,
+            percentage: 27.0,
+          },
+        ],
+        byDay: [
+          {
+            date: '2025-01-25',
+            requests: 500,
+            cost: 28.67,
+            tokens: 95000,
+            averageLatency: 845,
+          },
+        ],
+        byModel: [
+          {
+            provider: 'OpenAI',
+            model: 'gpt-4o-mini',
+            requests: 270,
+            cost: 15.47,
+            tokens: 55000,
+          },
+        ],
+        trends: {
+          requestsChange: 12.5,
+          spentChange: 8.7,
+          tokensChange: 15.2,
         },
-        {
-          provider: 'Anthropic',
-          requests: 135,
-          cost: 8.33,
-          tokens: 29000,
-          percentage: 27.0
-        }
-      ],
-      byDay: [
-        {
-          date: '2025-01-25',
-          requests: 500,
-          cost: 28.67,
-          tokens: 95000,
-          averageLatency: 845
-        }
-      ],
-      byModel: [
-        {
-          provider: 'OpenAI',
-          model: 'gpt-4o-mini',
-          requests: 270,
-          cost: 15.47,
-          tokens: 55000
-        }
-      ],
-      trends: {
-        requestsChange: 12.5,
-        spentChange: 8.7,
-        tokensChange: 15.2
-      }
-    })),
+      }),
+    ),
     getMarkupPercentage: jest.fn(() => Promise.resolve(20.0)),
-    setMarkupPercentage: jest.fn(() => Promise.resolve())
-  }
+    setMarkupPercentage: jest.fn(() => Promise.resolve()),
+  },
 }));
 
 describe('Analytics API Endpoints', () => {
   describe('GET /api/analytics/overview', () => {
     it('should return analytics overview with correct structure', async () => {
-      const request = new NextRequest('http://localhost:3333/api/analytics/overview?timeRange=daily');
+      const request = new NextRequest(
+        'http://localhost:3333/api/analytics/overview?timeRange=daily',
+      );
       const response = await getAnalyticsOverview(request);
       const data = await response.json();
 
@@ -97,7 +106,9 @@ describe('Analytics API Endpoints', () => {
     });
 
     it('should handle time range parameters correctly', async () => {
-      const request = new NextRequest('http://localhost:3333/api/analytics/overview?timeRange=weekly&provider=OpenAI');
+      const request = new NextRequest(
+        'http://localhost:3333/api/analytics/overview?timeRange=weekly&provider=OpenAI',
+      );
       const response = await getAnalyticsOverview(request);
       const data = await response.json();
 
@@ -106,7 +117,9 @@ describe('Analytics API Endpoints', () => {
     });
 
     it('should calculate averageRequestCost correctly', async () => {
-      const request = new NextRequest('http://localhost:3333/api/analytics/overview');
+      const request = new NextRequest(
+        'http://localhost:3333/api/analytics/overview',
+      );
       const response = await getAnalyticsOverview(request);
       const data = await response.json();
 
@@ -117,7 +130,9 @@ describe('Analytics API Endpoints', () => {
 
   describe('GET /api/analytics/config', () => {
     it('should return current markup configuration', async () => {
-      const request = new NextRequest('http://localhost:3333/api/analytics/config');
+      const request = new NextRequest(
+        'http://localhost:3333/api/analytics/config',
+      );
       const response = await getAnalyticsConfig(request);
       const data = await response.json();
 
@@ -130,10 +145,13 @@ describe('Analytics API Endpoints', () => {
 
   describe('POST /api/analytics/config', () => {
     it('should update markup percentage successfully', async () => {
-      const request = new NextRequest('http://localhost:3333/api/analytics/config', {
-        method: 'POST',
-        body: JSON.stringify({ markupPercentage: 25.0 })
-      });
+      const request = new NextRequest(
+        'http://localhost:3333/api/analytics/config',
+        {
+          method: 'POST',
+          body: JSON.stringify({ markupPercentage: 25.0 }),
+        },
+      );
 
       const response = await updateAnalyticsConfig(request);
       const data = await response.json();
@@ -144,10 +162,13 @@ describe('Analytics API Endpoints', () => {
     });
 
     it('should validate markup percentage range', async () => {
-      const request = new NextRequest('http://localhost:3333/api/analytics/config', {
-        method: 'POST',
-        body: JSON.stringify({ markupPercentage: 150 })
-      });
+      const request = new NextRequest(
+        'http://localhost:3333/api/analytics/config',
+        {
+          method: 'POST',
+          body: JSON.stringify({ markupPercentage: 150 }),
+        },
+      );
 
       const response = await updateAnalyticsConfig(request);
       const data = await response.json();
@@ -158,10 +179,13 @@ describe('Analytics API Endpoints', () => {
     });
 
     it('should validate negative markup percentage', async () => {
-      const request = new NextRequest('http://localhost:3333/api/analytics/config', {
-        method: 'POST',
-        body: JSON.stringify({ markupPercentage: -5 })
-      });
+      const request = new NextRequest(
+        'http://localhost:3333/api/analytics/config',
+        {
+          method: 'POST',
+          body: JSON.stringify({ markupPercentage: -5 }),
+        },
+      );
 
       const response = await updateAnalyticsConfig(request);
       const data = await response.json();
@@ -174,13 +198,19 @@ describe('Analytics API Endpoints', () => {
 
   describe('GET /api/analytics/export', () => {
     it('should export CSV data with correct headers', async () => {
-      const request = new NextRequest('http://localhost:3333/api/analytics/export?format=csv&timeRange=daily');
+      const request = new NextRequest(
+        'http://localhost:3333/api/analytics/export?format=csv&timeRange=daily',
+      );
       const response = await exportAnalyticsData(request);
 
       expect(response.status).toBe(200);
       expect(response.headers.get('content-type')).toBe('text/csv');
-      expect(response.headers.get('content-disposition')).toContain('attachment');
-      expect(response.headers.get('content-disposition')).toContain('analytics-daily');
+      expect(response.headers.get('content-disposition')).toContain(
+        'attachment',
+      );
+      expect(response.headers.get('content-disposition')).toContain(
+        'analytics-daily',
+      );
 
       const csvContent = await response.text();
       expect(csvContent).toContain('date,requests,spent,tokens');
@@ -188,12 +218,16 @@ describe('Analytics API Endpoints', () => {
     });
 
     it('should export JSON data with correct structure', async () => {
-      const request = new NextRequest('http://localhost:3333/api/analytics/export?format=json&timeRange=weekly');
+      const request = new NextRequest(
+        'http://localhost:3333/api/analytics/export?format=json&timeRange=weekly',
+      );
       const response = await exportAnalyticsData(request);
 
       expect(response.status).toBe(200);
       expect(response.headers.get('content-type')).toBe('application/json');
-      expect(response.headers.get('content-disposition')).toContain('attachment');
+      expect(response.headers.get('content-disposition')).toContain(
+        'attachment',
+      );
 
       const jsonContent = await response.text();
       const data = JSON.parse(jsonContent);
@@ -205,7 +239,9 @@ describe('Analytics API Endpoints', () => {
     });
 
     it('should handle unsupported export format', async () => {
-      const request = new NextRequest('http://localhost:3333/api/analytics/export?format=xml');
+      const request = new NextRequest(
+        'http://localhost:3333/api/analytics/export?format=xml',
+      );
       const response = await exportAnalyticsData(request);
       const data = await response.json();
 
@@ -217,28 +253,42 @@ describe('Analytics API Endpoints', () => {
 
   describe('Analytics Data Validation', () => {
     it('should validate cost calculations', async () => {
-      const request = new NextRequest('http://localhost:3333/api/analytics/overview');
+      const request = new NextRequest(
+        'http://localhost:3333/api/analytics/overview',
+      );
       const response = await getAnalyticsOverview(request);
       const data = await response.json();
 
       // Verify total cost = base cost + markup
-      expect(data.data.totalSpent).toBe(data.data.totalBaseCost + data.data.totalMarkup);
-      
+      expect(data.data.totalSpent).toBe(
+        data.data.totalBaseCost + data.data.totalMarkup,
+      );
+
       // Verify markup calculation (20% of base cost)
-      expect(data.data.totalMarkup).toBeCloseTo(data.data.totalBaseCost * 0.2, 2);
+      expect(data.data.totalMarkup).toBeCloseTo(
+        data.data.totalBaseCost * 0.2,
+        2,
+      );
     });
 
     it('should validate provider percentages', async () => {
-      const request = new NextRequest('http://localhost:3333/api/analytics/overview');
+      const request = new NextRequest(
+        'http://localhost:3333/api/analytics/overview',
+      );
       const response = await getAnalyticsOverview(request);
       const data = await response.json();
 
-      const totalPercentage = data.data.topProviders.reduce((sum: number, provider: any) => sum + provider.percentage, 0);
+      const totalPercentage = data.data.topProviders.reduce(
+        (sum: number, provider: any) => sum + provider.percentage,
+        0,
+      );
       expect(totalPercentage).toBeCloseTo(81.0, 1); // OpenAI (54%) + Anthropic (27%) = 81%
     });
 
     it('should validate model naming convention', async () => {
-      const request = new NextRequest('http://localhost:3333/api/analytics/overview');
+      const request = new NextRequest(
+        'http://localhost:3333/api/analytics/overview',
+      );
       const response = await getAnalyticsOverview(request);
       const data = await response.json();
 

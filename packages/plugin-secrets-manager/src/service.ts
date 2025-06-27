@@ -402,7 +402,7 @@ export class EnvManagerService extends Service {
    * Static method to stop the service
    */
   static async stop(runtime: IAgentRuntime): Promise<void> {
-    const service = runtime.getService<EnvManagerService>('ENV_MANAGER');
+    const service = runtime.getService<EnvManagerService>('SECRETS');
     if (service) {
       await void service.stop();
     }

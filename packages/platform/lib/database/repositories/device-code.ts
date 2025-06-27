@@ -5,7 +5,12 @@
 
 import { eq, and, lt, gte } from 'drizzle-orm';
 import { getDatabase } from '../index';
-import { deviceCodes, users, type DeviceCode, type NewDeviceCode } from '../schema';
+import {
+  deviceCodes,
+  users,
+  type DeviceCode,
+  type NewDeviceCode,
+} from '../schema';
 
 export class DeviceCodeRepository {
   private async getDb() {
@@ -16,10 +21,8 @@ export class DeviceCodeRepository {
    * Create a new device authorization request
    */
   async create(data: NewDeviceCode): Promise<DeviceCode> {
-    const [deviceCode] = await this.getDb()
-      .insert(deviceCodes)
-      .values(data)
-      .returning();
+    const db = await this.getDb();
+    const [deviceCode] = await db.insert(deviceCodes).values(data).returning();
 
     return deviceCode;
   }
@@ -28,7 +31,8 @@ export class DeviceCodeRepository {
    * Get device code by device_code
    */
   async getByDeviceCode(deviceCode: string): Promise<DeviceCode | null> {
-    const [result] = await this.getDb()
+    const db = await this.getDb();
+    const [result] = await db
       .select()
       .from(deviceCodes)
       .where(eq(deviceCodes.deviceCode, deviceCode))
@@ -41,7 +45,8 @@ export class DeviceCodeRepository {
    * Get device code by user_code
    */
   async getByUserCode(userCode: string): Promise<DeviceCode | null> {
-    const [result] = await this.getDb()
+    const db = await this.getDb();
+    const [result] = await db
       .select()
       .from(deviceCodes)
       .where(eq(deviceCodes.userCode, userCode))
@@ -53,8 +58,13 @@ export class DeviceCodeRepository {
   /**
    * Authorize a device code
    */
-  async authorize(deviceCode: string, userId: string, accessToken: string): Promise<boolean> {
-    const result = await this.getDb()
+  async authorize(
+    deviceCode: string,
+    userId: string,
+    accessToken: string,
+  ): Promise<boolean> {
+    const db = await this.getDb();
+    const result = await db
       .update(deviceCodes)
       .set({
         isAuthorized: true,
@@ -67,8 +77,8 @@ export class DeviceCodeRepository {
         and(
           eq(deviceCodes.deviceCode, deviceCode),
           eq(deviceCodes.isAuthorized, false),
-          gte(deviceCodes.expiresAt, new Date()) // Still valid
-        )
+          gte(deviceCodes.expiresAt, new Date()), // Still valid
+        ),
       )
       .returning();
 
@@ -79,7 +89,8 @@ export class DeviceCodeRepository {
    * Delete a device code (after token exchange or expiration)
    */
   async delete(deviceCode: string): Promise<boolean> {
-    const result = await this.getDb()
+    const db = await this.getDb();
+    const result = await db
       .delete(deviceCodes)
       .where(eq(deviceCodes.deviceCode, deviceCode))
       .returning();
@@ -91,7 +102,8 @@ export class DeviceCodeRepository {
    * Clean up expired device codes
    */
   async cleanupExpired(): Promise<number> {
-    const result = await this.getDb()
+    const db = await this.getDb();
+    const result = await db
       .delete(deviceCodes)
       .where(lt(deviceCodes.expiresAt, new Date()))
       .returning();
@@ -102,8 +114,11 @@ export class DeviceCodeRepository {
   /**
    * Get device code with user information (for authorization display)
    */
-  async getByUserCodeWithUser(userCode: string): Promise<DeviceCode & { user?: any } | null> {
-    const [result] = await this.getDb()
+  async getByUserCodeWithUser(
+    userCode: string,
+  ): Promise<(DeviceCode & { user?: any }) | null> {
+    const db = await this.getDb();
+    const [result] = await db
       .select({
         deviceCode: deviceCodes,
         user: users,
@@ -124,8 +139,11 @@ export class DeviceCodeRepository {
   /**
    * Get device code with user information by device code
    */
-  async getByDeviceCodeWithUser(deviceCode: string): Promise<DeviceCode & { user?: any } | null> {
-    const [result] = await this.getDb()
+  async getByDeviceCodeWithUser(
+    deviceCode: string,
+  ): Promise<(DeviceCode & { user?: any }) | null> {
+    const db = await this.getDb();
+    const [result] = await db
       .select({
         deviceCode: deviceCodes,
         user: users,
@@ -147,15 +165,16 @@ export class DeviceCodeRepository {
    * Check if a user code is valid and not expired
    */
   async isUserCodeValid(userCode: string): Promise<boolean> {
-    const [result] = await this.getDb()
+    const db = await this.getDb();
+    const [result] = await db
       .select({ id: deviceCodes.id })
       .from(deviceCodes)
       .where(
         and(
           eq(deviceCodes.userCode, userCode),
           gte(deviceCodes.expiresAt, new Date()),
-          eq(deviceCodes.isAuthorized, false)
-        )
+          eq(deviceCodes.isAuthorized, false),
+        ),
       )
       .limit(1);
 
@@ -172,8 +191,9 @@ export class DeviceCodeRepository {
     expired: number;
   }> {
     const now = new Date();
-    
-    const [stats] = await this.getDb()
+
+    const db = await this.getDb();
+    const [stats] = await db
       .select({
         total: deviceCodes.id,
         active: deviceCodes.isAuthorized,
@@ -184,21 +204,21 @@ export class DeviceCodeRepository {
 
     // This is a simplified version - in reality you'd use proper aggregation
     // For now, we'll do individual queries for accuracy
-    const [totalResult] = await this.getDb().select().from(deviceCodes);
-    const [activeResult] = await this.getDb()
+    const [totalResult] = await db.select().from(deviceCodes);
+    const [activeResult] = await db
       .select()
       .from(deviceCodes)
       .where(
         and(
           gte(deviceCodes.expiresAt, now),
-          eq(deviceCodes.isAuthorized, false)
-        )
+          eq(deviceCodes.isAuthorized, false),
+        ),
       );
-    const [authorizedResult] = await this.getDb()
+    const [authorizedResult] = await db
       .select()
       .from(deviceCodes)
       .where(eq(deviceCodes.isAuthorized, true));
-    const [expiredResult] = await this.getDb()
+    const [expiredResult] = await db
       .select()
       .from(deviceCodes)
       .where(lt(deviceCodes.expiresAt, now));

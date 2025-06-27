@@ -34,4 +34,4 @@ const runner = new BenchmarkRunner(config);
 const results = await runner.runBenchmarks();
 `);
 
-console.log('\n✅ Benchmark runner is available in the planning plugin.'); 
+console.log('\n✅ Benchmark runner is available in the planning plugin.');

@@ -108,7 +108,8 @@ function parseFileOperation(
 export class ShellService extends Service {
   static override serviceType: ServiceTypeName = ShellServiceType.SHELL;
   static readonly serviceName = 'SHELL';
-  override capabilityDescription = 'Provides shell access to execute commands on the host system.';
+  override capabilityDescription =
+    'Provides shell access to execute commands on the host system.';
 
   private history: ShellHistoryEntry[] = [];
   private fileOperationHistory: FileOperationEntry[] = []; // Added
@@ -134,7 +135,9 @@ export class ShellService extends Service {
     exitCode: number | null;
     cwd: string;
   }> {
-    logger.info(`[ShellService] Executing command: ${command} in ${this.currentWorkingDirectory}`);
+    logger.info(
+      `[ShellService] Executing command: ${command} in ${this.currentWorkingDirectory}`
+    );
     let output = '';
     let errorOutput = '';
     let exitCode: number | null = 0;
@@ -149,7 +152,10 @@ export class ShellService extends Service {
       // Handle 'cd' command separately to update CWD
       if (command.trim().startsWith('cd ')) {
         const newDir = command.trim().substring(3).trim();
-        const resolvedNewDir = path.resolve(this.currentWorkingDirectory, newDir);
+        const resolvedNewDir = path.resolve(
+          this.currentWorkingDirectory,
+          newDir
+        );
         try {
           // Attempt to change directory
           // process.chdir will throw if path is invalid
@@ -157,11 +163,15 @@ export class ShellService extends Service {
           execSync('pwd', { ...options, cwd: resolvedNewDir }); // Test command
           this.currentWorkingDirectory = resolvedNewDir;
           output = `Changed directory to ${this.currentWorkingDirectory}`;
-          logger.debug(`[ShellService] Changed CWD to ${this.currentWorkingDirectory}`);
+          logger.debug(
+            `[ShellService] Changed CWD to ${this.currentWorkingDirectory}`
+          );
         } catch (e: any) {
           errorOutput = `Error changing directory to ${newDir}: ${e.message}`;
           exitCode = e.status || 1;
-          logger.error(`[ShellService] Error changing directory: ${errorOutput}`);
+          logger.error(
+            `[ShellService] Error changing directory: ${errorOutput}`
+          );
         }
       } else {
         output = execSync(command, options) as string;
@@ -200,7 +210,9 @@ export class ShellService extends Service {
         cwd: this.currentWorkingDirectory,
       };
       this.fileOperationHistory.push(fileOperationEntry);
-      if (this.fileOperationHistory.length > this.maxFileOperationHistoryLength) {
+      if (
+        this.fileOperationHistory.length > this.maxFileOperationHistoryLength
+      ) {
         this.fileOperationHistory.shift();
       }
       logger.debug(
@@ -227,7 +239,9 @@ export class ShellService extends Service {
 
   // New method to get file operation history
   getFileOperationHistory(count = 10): FileOperationEntry[] {
-    return this.fileOperationHistory.slice(-Math.min(count, this.maxFileOperationHistoryLength));
+    return this.fileOperationHistory.slice(
+      -Math.min(count, this.maxFileOperationHistoryLength)
+    );
   }
 
   getCurrentWorkingDirectory(): string {

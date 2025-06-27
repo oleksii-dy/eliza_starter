@@ -1,16 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getCreditBalance, getCreditTransactions, getUsageStatistics } from '@/lib/server/services/billing-service';
+import {
+  getCreditBalance,
+  getCreditTransactions,
+  getUsageStatistics,
+} from '@/lib/server/services/billing-service';
 import { authenticateUser } from '@/lib/server/auth/session';
 
 const getCreditsQuerySchema = z.object({
-  limit: z.string().optional().transform(val => val ? parseInt(val) : 50),
-  offset: z.string().optional().transform(val => val ? parseInt(val) : 0),
+  limit: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val) : 50)),
+  offset: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val) : 0)),
   type: z.string().optional(),
   period: z.enum(['day', 'week', 'month', 'year']).optional().default('month'),
 });
 
-export async function GET(request: NextRequest) {
+export async function handleGET(request: NextRequest) {
   try {
     const authResult = await authenticateUser(request);
     if (!authResult.user || !authResult.organization) {
@@ -38,7 +48,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       data: {
         balance,
-        transactions: transactions.map(tx => ({
+        transactions: transactions.map((tx) => ({
           id: tx.id,
           type: tx.type,
           amount: parseFloat(tx.amount),
@@ -49,17 +59,23 @@ export async function GET(request: NextRequest) {
           createdAt: tx.createdAt,
         })),
         statistics: stats,
-      }
+      },
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({
-        error: 'Validation error',
-        details: error.errors
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Validation error',
+          details: error.errors,
+        },
+        { status: 400 },
+      );
     }
 
     console.error('Failed to fetch credit information:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 },
+    );
   }
 }

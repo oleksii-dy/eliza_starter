@@ -270,8 +270,8 @@ export const formatMessages = ({
       const attachmentString =
         attachments && attachments.length > 0
           ? ` (Attachments: ${attachments
-              .map((media) => `[${media.id} - ${media.title} (${media.url})]`)
-              .join(', ')})`
+            .map((media) => `[${media.id} - ${media.title} (${media.url})]`)
+            .join(', ')})`
           : null;
 
       const messageTime = new Date(message.createdAt ?? Date.now());
@@ -292,8 +292,8 @@ export const formatMessages = ({
       const actionString =
         messageActions && messageActions.length > 0
           ? `${
-              textString ? '' : timestampString
-            } (${formattedName}'s actions: ${messageActions.join(', ')})`
+            textString ? '' : timestampString
+          } (${formattedName}'s actions: ${messageActions.join(', ')})`
           : null;
 
       // for each thought, action, text or attachment, add a new line, with text first, then thought, then action, then attachment

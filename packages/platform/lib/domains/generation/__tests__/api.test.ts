@@ -5,7 +5,11 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { NextRequest } from 'next/server';
-import { generateHandler, getGenerationHandler, cancelGenerationHandler } from '../api/handlers/generate';
+import {
+  generateHandler,
+  getGenerationHandler,
+  cancelGenerationHandler,
+} from '../api/handlers/generate';
 import { batchGenerateHandler } from '../api/handlers/batch';
 import { listHandler } from '../api/handlers/list';
 import { analyticsHandler } from '../api/handlers/analytics';
@@ -14,23 +18,23 @@ import { GenerationType, GenerationProvider } from '../types';
 
 // Mock external dependencies
 vi.mock('@/lib/database', () => ({
-  getDatabaseClient: vi.fn(() => mockDatabase)
+  getDatabaseClient: vi.fn(() => mockDatabase),
 }));
 
 vi.mock('@/lib/services/storage', () => ({
-  getStorageManager: vi.fn(() => mockStorage)
+  getStorageManager: vi.fn(() => mockStorage),
 }));
 
 vi.mock('@/lib/billing', () => ({
-  getBillingService: vi.fn(() => mockBilling)
+  getBillingService: vi.fn(() => mockBilling),
 }));
 
 vi.mock('@/lib/utils', () => ({
   logger: {
     info: vi.fn(),
     error: vi.fn(),
-    warn: vi.fn()
-  }
+    warn: vi.fn(),
+  },
 }));
 
 const mockDatabase = {
@@ -39,27 +43,27 @@ const mockDatabase = {
     findById: vi.fn(),
     update: vi.fn(),
     list: vi.fn(),
-    getAnalytics: vi.fn()
+    getAnalytics: vi.fn(),
   },
   batchGenerations: {
-    create: vi.fn()
-  }
+    create: vi.fn(),
+  },
 };
 
 const mockStorage = {
-  uploadFromUrl: vi.fn()
+  uploadFromUrl: vi.fn(),
 };
 
 const mockBilling = {
   checkGenerationLimits: vi.fn(),
   reserveCredits: vi.fn(),
   chargeCredits: vi.fn(),
-  releaseReservedCredits: vi.fn()
+  releaseReservedCredits: vi.fn(),
 };
 
 describe('Generation API Endpoints', () => {
   let mockContext: MiddlewareContext;
-  
+
   beforeEach(() => {
     mockContext = {
       userId: 'user-123',
@@ -70,8 +74,8 @@ describe('Generation API Endpoints', () => {
       billingStatus: {
         hasActiveSubscription: true,
         creditsRemaining: 1000,
-        canGenerate: true
-      }
+        canGenerate: true,
+      },
     };
 
     // Reset all mocks
@@ -80,7 +84,7 @@ describe('Generation API Endpoints', () => {
     // Default mock implementations
     mockBilling.checkGenerationLimits.mockResolvedValue({
       allowed: true,
-      reason: null
+      reason: null,
     });
   });
 
@@ -93,10 +97,10 @@ describe('Generation API Endpoints', () => {
       // Arrange
       const requestBody = {
         type: GenerationType.TEXT,
-          priority: 'normal',
+        priority: 'normal',
         prompt: 'Write a short story about a robot',
         temperature: 0.7,
-        max_tokens: 1000
+        max_tokens: 1000,
       };
 
       const mockGeneration = {
@@ -106,7 +110,7 @@ describe('Generation API Endpoints', () => {
         userId: 'user-123',
         provider: GenerationProvider.OPENAI,
         status: 'queued',
-        createdAt: new Date()
+        createdAt: new Date(),
       };
 
       mockDatabase.generations.create.mockResolvedValue(mockGeneration);
@@ -117,8 +121,8 @@ describe('Generation API Endpoints', () => {
         headers: {
           'content-type': 'application/json',
           'x-user-id': 'user-123',
-          'x-organization-id': 'org-123'
-        }
+          'x-organization-id': 'org-123',
+        },
       });
 
       // Act
@@ -131,8 +135,8 @@ describe('Generation API Endpoints', () => {
       expect(result.data).toMatchObject({
         id: 'gen-123',
         type: GenerationType.TEXT,
-          priority: 'normal',
-        prompt: 'Write a short story about a robot'
+        priority: 'normal',
+        prompt: 'Write a short story about a robot',
       });
     });
 
@@ -140,7 +144,7 @@ describe('Generation API Endpoints', () => {
       // Arrange
       const requestBody = {
         type: 'invalid-type',
-        prompt: '' // Empty prompt should fail validation
+        prompt: '', // Empty prompt should fail validation
       };
 
       const request = new NextRequest('http://localhost/api/v1/generation', {
@@ -149,8 +153,8 @@ describe('Generation API Endpoints', () => {
         headers: {
           'content-type': 'application/json',
           'x-user-id': 'user-123',
-          'x-organization-id': 'org-123'
-        }
+          'x-organization-id': 'org-123',
+        },
       });
 
       // Act
@@ -168,17 +172,17 @@ describe('Generation API Endpoints', () => {
       // Arrange
       const requestBody = {
         type: GenerationType.TEXT,
-          priority: 'normal',
-        prompt: 'Test prompt'
+        priority: 'normal',
+        prompt: 'Test prompt',
       };
 
       const request = new NextRequest('http://localhost/api/v1/generation', {
         method: 'POST',
         body: JSON.stringify(requestBody),
         headers: {
-          'content-type': 'application/json'
+          'content-type': 'application/json',
           // Missing auth headers
-        }
+        },
       });
 
       // Act
@@ -195,17 +199,17 @@ describe('Generation API Endpoints', () => {
       // Arrange
       mockBilling.checkGenerationLimits.mockResolvedValue({
         allowed: false,
-        reason: 'Insufficient credits'
+        reason: 'Insufficient credits',
       });
 
       const requestBody = {
         type: GenerationType.TEXT,
-          priority: 'normal',
-        prompt: 'Test prompt'
+        priority: 'normal',
+        prompt: 'Test prompt',
       };
 
       mockDatabase.generations.create.mockRejectedValue(
-        new Error('Insufficient credits')
+        new Error('Insufficient credits'),
       );
 
       const request = new NextRequest('http://localhost/api/v1/generation', {
@@ -214,8 +218,8 @@ describe('Generation API Endpoints', () => {
         headers: {
           'content-type': 'application/json',
           'x-user-id': 'user-123',
-          'x-organization-id': 'org-123'
-        }
+          'x-organization-id': 'org-123',
+        },
       });
 
       // Act
@@ -235,25 +239,30 @@ describe('Generation API Endpoints', () => {
       const mockGeneration = {
         id: 'gen-123',
         type: GenerationType.TEXT,
-          priority: 'normal',
+        priority: 'normal',
         prompt: 'Test prompt',
         organizationId: 'org-123',
         userId: 'user-123',
-        status: 'completed'
+        status: 'completed',
       };
 
       mockDatabase.generations.findById.mockResolvedValue(mockGeneration);
 
-      const request = new NextRequest('http://localhost/api/v1/generation/gen-123', {
-        method: 'GET',
-        headers: {
-          'x-user-id': 'user-123',
-          'x-organization-id': 'org-123'
-        }
-      });
+      const request = new NextRequest(
+        'http://localhost/api/v1/generation/gen-123',
+        {
+          method: 'GET',
+          headers: {
+            'x-user-id': 'user-123',
+            'x-organization-id': 'org-123',
+          },
+        },
+      );
 
       // Act
-      const response = await getGenerationHandler(request, { params: { id: 'gen-123' } });
+      const response = await getGenerationHandler(request, {
+        params: { id: 'gen-123' },
+      });
       const result = await response.json();
 
       // Assert
@@ -266,16 +275,21 @@ describe('Generation API Endpoints', () => {
       // Arrange
       mockDatabase.generations.findById.mockResolvedValue(null);
 
-      const request = new NextRequest('http://localhost/api/v1/generation/gen-999', {
-        method: 'GET',
-        headers: {
-          'x-user-id': 'user-123',
-          'x-organization-id': 'org-123'
-        }
-      });
+      const request = new NextRequest(
+        'http://localhost/api/v1/generation/gen-999',
+        {
+          method: 'GET',
+          headers: {
+            'x-user-id': 'user-123',
+            'x-organization-id': 'org-123',
+          },
+        },
+      );
 
       // Act
-      const response = await getGenerationHandler(request, { params: { id: 'gen-999' } });
+      const response = await getGenerationHandler(request, {
+        params: { id: 'gen-999' },
+      });
       const result = await response.json();
 
       // Assert
@@ -284,26 +298,31 @@ describe('Generation API Endpoints', () => {
       expect(result.code).toBe('NOT_FOUND');
     });
 
-    it('should return 403 when accessing other organization\'s generation', async () => {
+    it("should return 403 when accessing other organization's generation", async () => {
       // Arrange
       const mockGeneration = {
         id: 'gen-123',
         organizationId: 'other-org', // Different organization
-        userId: 'other-user'
+        userId: 'other-user',
       };
 
       mockDatabase.generations.findById.mockResolvedValue(mockGeneration);
 
-      const request = new NextRequest('http://localhost/api/v1/generation/gen-123', {
-        method: 'GET',
-        headers: {
-          'x-user-id': 'user-123',
-          'x-organization-id': 'org-123'
-        }
-      });
+      const request = new NextRequest(
+        'http://localhost/api/v1/generation/gen-123',
+        {
+          method: 'GET',
+          headers: {
+            'x-user-id': 'user-123',
+            'x-organization-id': 'org-123',
+          },
+        },
+      );
 
       // Act
-      const response = await getGenerationHandler(request, { params: { id: 'gen-123' } });
+      const response = await getGenerationHandler(request, {
+        params: { id: 'gen-123' },
+      });
       const result = await response.json();
 
       // Assert
@@ -319,22 +338,27 @@ describe('Generation API Endpoints', () => {
       const mockGeneration = {
         id: 'gen-123',
         organizationId: 'org-123',
-        status: 'queued'
+        status: 'queued',
       };
 
       mockDatabase.generations.findById.mockResolvedValue(mockGeneration);
       mockDatabase.generations.update.mockResolvedValue(undefined);
 
-      const request = new NextRequest('http://localhost/api/v1/generation/gen-123', {
-        method: 'DELETE',
-        headers: {
-          'x-user-id': 'user-123',
-          'x-organization-id': 'org-123'
-        }
-      });
+      const request = new NextRequest(
+        'http://localhost/api/v1/generation/gen-123',
+        {
+          method: 'DELETE',
+          headers: {
+            'x-user-id': 'user-123',
+            'x-organization-id': 'org-123',
+          },
+        },
+      );
 
       // Act
-      const response = await cancelGenerationHandler(request, { params: { id: 'gen-123' } });
+      const response = await cancelGenerationHandler(request, {
+        params: { id: 'gen-123' },
+      });
       const result = await response.json();
 
       // Assert
@@ -347,32 +371,37 @@ describe('Generation API Endpoints', () => {
       const mockGeneration = {
         id: 'gen-123',
         organizationId: 'org-123',
-        status: 'completed'
+        status: 'completed',
       };
 
       mockDatabase.generations.findById.mockResolvedValue(mockGeneration);
 
-      const request = new NextRequest('http://localhost/api/v1/generation/gen-123', {
-        method: 'DELETE',
-        headers: {
-          'x-user-id': 'user-123',
-          'x-organization-id': 'org-123'
-        }
-      });
+      const request = new NextRequest(
+        'http://localhost/api/v1/generation/gen-123',
+        {
+          method: 'DELETE',
+          headers: {
+            'x-user-id': 'user-123',
+            'x-organization-id': 'org-123',
+          },
+        },
+      );
 
       // Mock the service response
       const mockGenerationService = {
-        getGeneration: vi.fn().mockResolvedValue({ success: true, data: mockGeneration }),
-        cancelGeneration: vi.fn().mockResolvedValue({ 
-          success: false, 
+        getGeneration: vi
+          .fn()
+          .mockResolvedValue({ success: true, data: mockGeneration }),
+        cancelGeneration: vi.fn().mockResolvedValue({
+          success: false,
           code: 'INVALID_STATUS',
-          error: 'Cannot cancel completed generation'
-        })
+          error: 'Cannot cancel completed generation',
+        }),
       };
 
       // This would require dependency injection in the actual implementation
       // For now, we'll test the expected behavior
-      
+
       // Act & Assert
       expect(mockGeneration.status).toBe('completed');
     });
@@ -385,15 +414,15 @@ describe('Generation API Endpoints', () => {
         generations: [
           {
             type: GenerationType.TEXT,
-          priority: 'normal',
-            prompt: 'First prompt'
+            priority: 'normal',
+            prompt: 'First prompt',
           },
           {
             type: GenerationType.IMAGE,
-            prompt: 'Second prompt'
-          }
+            prompt: 'Second prompt',
+          },
         ],
-        batch_name: 'Test Batch'
+        batch_name: 'Test Batch',
       };
 
       const mockBatch = {
@@ -407,7 +436,7 @@ describe('Generation API Endpoints', () => {
         failed_generations: 0,
         generations: [],
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       // Mock individual generation creation
@@ -417,15 +446,18 @@ describe('Generation API Endpoints', () => {
 
       mockDatabase.batchGenerations.create.mockResolvedValue(mockBatch);
 
-      const request = new NextRequest('http://localhost/api/v1/generation/batch', {
-        method: 'POST',
-        body: JSON.stringify(requestBody),
-        headers: {
-          'content-type': 'application/json',
-          'x-user-id': 'user-123',
-          'x-organization-id': 'org-123'
-        }
-      });
+      const request = new NextRequest(
+        'http://localhost/api/v1/generation/batch',
+        {
+          method: 'POST',
+          body: JSON.stringify(requestBody),
+          headers: {
+            'content-type': 'application/json',
+            'x-user-id': 'user-123',
+            'x-organization-id': 'org-123',
+          },
+        },
+      );
 
       // Act
       const response = await batchGenerateHandler(request, mockContext);
@@ -436,25 +468,28 @@ describe('Generation API Endpoints', () => {
       expect(result.success).toBe(true);
       expect(result.data).toMatchObject({
         id: 'batch-123',
-        total_generations: 2
+        total_generations: 2,
       });
     });
 
     it('should validate batch request with empty generations array', async () => {
       // Arrange
       const requestBody = {
-        generations: [] // Empty array should fail validation
+        generations: [], // Empty array should fail validation
       };
 
-      const request = new NextRequest('http://localhost/api/v1/generation/batch', {
-        method: 'POST',
-        body: JSON.stringify(requestBody),
-        headers: {
-          'content-type': 'application/json',
-          'x-user-id': 'user-123',
-          'x-organization-id': 'org-123'
-        }
-      });
+      const request = new NextRequest(
+        'http://localhost/api/v1/generation/batch',
+        {
+          method: 'POST',
+          body: JSON.stringify(requestBody),
+          headers: {
+            'content-type': 'application/json',
+            'x-user-id': 'user-123',
+            'x-organization-id': 'org-123',
+          },
+        },
+      );
 
       // Act
       const response = await batchGenerateHandler(request, mockContext);
@@ -472,21 +507,21 @@ describe('Generation API Endpoints', () => {
       // Arrange
       const mockGenerations = [
         { id: 'gen-1', type: GenerationType.TEXT },
-        { id: 'gen-2', type: GenerationType.IMAGE }
+        { id: 'gen-2', type: GenerationType.IMAGE },
       ];
 
       mockDatabase.generations.list.mockResolvedValue({
         data: mockGenerations,
         total: 2,
-        hasMore: false
+        hasMore: false,
       });
 
       const request = new NextRequest('http://localhost/api/v1/generation', {
         method: 'GET',
         headers: {
           'x-user-id': 'user-123',
-          'x-organization-id': 'org-123'
-        }
+          'x-organization-id': 'org-123',
+        },
       });
 
       // Act
@@ -502,20 +537,18 @@ describe('Generation API Endpoints', () => {
         page: 1,
         limit: 20,
         hasMore: false,
-        totalPages: 1
+        totalPages: 1,
       });
     });
 
     it('should filter generations by type', async () => {
       // Arrange
-      const mockGenerations = [
-        { id: 'gen-1', type: GenerationType.TEXT }
-      ];
+      const mockGenerations = [{ id: 'gen-1', type: GenerationType.TEXT }];
 
       mockDatabase.generations.list.mockResolvedValue({
         data: mockGenerations,
         total: 1,
-        hasMore: false
+        hasMore: false,
       });
 
       const request = new NextRequest(
@@ -524,9 +557,9 @@ describe('Generation API Endpoints', () => {
           method: 'GET',
           headers: {
             'x-user-id': 'user-123',
-            'x-organization-id': 'org-123'
-          }
-        }
+            'x-organization-id': 'org-123',
+          },
+        },
       );
 
       // Act
@@ -542,8 +575,8 @@ describe('Generation API Endpoints', () => {
           priority: 'normal',
           page: 1,
           limit: 10,
-          organizationId: 'org-123'
-        })
+          organizationId: 'org-123',
+        }),
       );
     });
   });
@@ -560,11 +593,11 @@ describe('Generation API Endpoints', () => {
           total_generations: 150,
           generations_by_type: {
             [GenerationType.TEXT]: 80,
-            [GenerationType.IMAGE]: 70
+            [GenerationType.IMAGE]: 70,
           },
           total_cost: 45.67,
-          success_rate: 95.5
-        }
+          success_rate: 95.5,
+        },
       };
 
       mockDatabase.generations.getAnalytics.mockResolvedValue(mockAnalytics);
@@ -575,9 +608,9 @@ describe('Generation API Endpoints', () => {
           method: 'GET',
           headers: {
             'x-user-id': 'user-123',
-            'x-organization-id': 'org-123'
-          }
-        }
+            'x-organization-id': 'org-123',
+          },
+        },
       );
 
       // Act
@@ -598,9 +631,9 @@ describe('Generation API Endpoints', () => {
           method: 'GET',
           headers: {
             'x-user-id': 'user-123',
-            'x-organization-id': 'org-123'
-          }
-        }
+            'x-organization-id': 'org-123',
+          },
+        },
       );
 
       // Act
@@ -618,13 +651,13 @@ describe('Generation API Endpoints', () => {
     it('should handle internal server errors gracefully', async () => {
       // Arrange
       mockDatabase.generations.create.mockRejectedValue(
-        new Error('Database connection failed')
+        new Error('Database connection failed'),
       );
 
       const requestBody = {
         type: GenerationType.TEXT,
-          priority: 'normal',
-        prompt: 'Test prompt'
+        priority: 'normal',
+        prompt: 'Test prompt',
       };
 
       const request = new NextRequest('http://localhost/api/v1/generation', {
@@ -633,8 +666,8 @@ describe('Generation API Endpoints', () => {
         headers: {
           'content-type': 'application/json',
           'x-user-id': 'user-123',
-          'x-organization-id': 'org-123'
-        }
+          'x-organization-id': 'org-123',
+        },
       });
 
       // Act

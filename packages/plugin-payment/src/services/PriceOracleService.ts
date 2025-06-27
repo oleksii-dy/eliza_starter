@@ -88,7 +88,10 @@ export class PriceOracleService extends Service implements IPriceOracleService {
 
       if (!price && network === 'solana' && this.solanaOracleService) {
         price = await this.getSolanaPriceFromOracle(address);
-      } else if (!price && ['ethereum', 'polygon', 'arbitrum', 'optimism', 'base'].includes(network)) {
+      } else if (
+        !price &&
+        ['ethereum', 'polygon', 'arbitrum', 'optimism', 'base'].includes(network)
+      ) {
         price = await this.getEVMPriceFromOracle(address, network);
       }
 
@@ -411,7 +414,9 @@ export class PriceOracleService extends Service implements IPriceOracleService {
 
       if (address === 'native') {
         coinId = nativeTokenIds[`native-${network}`];
-        if (!coinId) {return null;}
+        if (!coinId) {
+          return null;
+        }
         apiUrl = `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=usd&include_market_cap=true&include_24hr_vol=true&include_24hr_change=true`;
       } else {
         // Token contract address
@@ -420,11 +425,13 @@ export class PriceOracleService extends Service implements IPriceOracleService {
 
       const response = await fetch(apiUrl, {
         headers: {
-          'Accept': 'application/json',
+          Accept: 'application/json',
           // Add API key if available
-          ...(this.runtime.getSetting('COINGECKO_API_KEY') ? {
-            'x-cg-pro-api-key': this.runtime.getSetting('COINGECKO_API_KEY'),
-          } : {}),
+          ...(this.runtime.getSetting('COINGECKO_API_KEY')
+            ? {
+              'x-cg-pro-api-key': this.runtime.getSetting('COINGECKO_API_KEY'),
+            }
+            : {}),
         },
       });
 
@@ -432,7 +439,10 @@ export class PriceOracleService extends Service implements IPriceOracleService {
         throw new Error(`CoinGecko API error: ${response.status}`);
       }
 
-      const data = await response.json() as Record<string, { usd: number; usd_24h_change?: number; usd_24h_vol?: number; usd_market_cap?: number }>;
+      const data = (await response.json()) as Record<
+        string,
+        { usd: number; usd_24h_change?: number; usd_24h_vol?: number; usd_market_cap?: number }
+      >;
 
       // Extract price data
       let priceData: any;
@@ -458,16 +468,18 @@ export class PriceOracleService extends Service implements IPriceOracleService {
             `https://api.coingecko.com/api/v3/coins/${platform}/contract/${address}`,
             {
               headers: {
-                'Accept': 'application/json',
-                ...(this.runtime.getSetting('COINGECKO_API_KEY') ? {
-                  'x-cg-pro-api-key': this.runtime.getSetting('COINGECKO_API_KEY'),
-                } : {}),
+                Accept: 'application/json',
+                ...(this.runtime.getSetting('COINGECKO_API_KEY')
+                  ? {
+                    'x-cg-pro-api-key': this.runtime.getSetting('COINGECKO_API_KEY'),
+                  }
+                  : {}),
               },
             }
           );
 
           if (infoResponse.ok) {
-            const infoData = await infoResponse.json() as { symbol?: string };
+            const infoData = (await infoResponse.json()) as { symbol?: string };
             symbol = infoData.symbol?.toUpperCase() || symbol;
           }
         } catch {
@@ -487,7 +499,11 @@ export class PriceOracleService extends Service implements IPriceOracleService {
         timestamp: new Date(),
       };
     } catch (error) {
-      logger.error('[PriceOracleService] Error fetching real-time price', { error, address, network });
+      logger.error('[PriceOracleService] Error fetching real-time price', {
+        error,
+        address,
+        network,
+      });
       return null;
     }
   }
@@ -524,7 +540,7 @@ export class PriceOracleService extends Service implements IPriceOracleService {
         throw new Error(`CoinGecko API error: ${response.status}`);
       }
 
-      const data = await response.json() as Record<string, { usd: number }>;
+      const data = (await response.json()) as Record<string, { usd: number }>;
 
       // Update cache with fresh prices
       const now = new Date();

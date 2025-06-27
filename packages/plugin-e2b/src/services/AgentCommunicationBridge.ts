@@ -6,7 +6,13 @@ export interface AgentMessage {
   timestamp: number;
   fromAgentId: UUID;
   toAgentId: UUID;
-  messageType: 'task_assignment' | 'status_update' | 'result_report' | 'error_report' | 'coordination' | 'feedback';
+  messageType:
+    | 'task_assignment'
+    | 'status_update'
+    | 'result_report'
+    | 'error_report'
+    | 'coordination'
+    | 'feedback';
   content: {
     text?: string;
     data?: any;
@@ -69,7 +75,7 @@ export class AgentCommunicationBridge extends Service {
     // Register this agent in the bridge
     await this.registerAgent(this.runtime.agentId, this.runtime, {
       role: 'orchestrator',
-      capabilities: ['coordination', 'workflow_management', 'github_integration']
+      capabilities: ['coordination', 'workflow_management', 'github_integration'],
     });
 
     elizaLogger.info('Agent Communication Bridge initialized successfully');
@@ -87,9 +93,9 @@ export class AgentCommunicationBridge extends Service {
           messageType: 'coordination',
           content: {
             text: 'Communication bridge shutting down',
-            data: { event: 'bridge_shutdown' }
+            data: { event: 'bridge_shutdown' },
           },
-          priority: 'high'
+          priority: 'high',
         });
       } catch (error) {
         elizaLogger.warn('Failed to notify agent of shutdown', { agentId, error: error.message });
@@ -117,7 +123,7 @@ export class AgentCommunicationBridge extends Service {
       elizaLogger.debug('Message received on bridge', {
         from: message.fromAgentId,
         to: message.toAgentId,
-        type: message.messageType
+        type: message.messageType,
       });
     });
 
@@ -138,7 +144,10 @@ export class AgentCommunicationBridge extends Service {
       sandboxId?: string;
     }
   ): Promise<void> {
-    elizaLogger.info('Registering agent with communication bridge', { agentId, role: options.role });
+    elizaLogger.info('Registering agent with communication bridge', {
+      agentId,
+      role: options.role,
+    });
 
     const connection: AgentConnection = {
       agentId,
@@ -147,7 +156,7 @@ export class AgentCommunicationBridge extends Service {
       role: options.role,
       status: 'connected',
       capabilities: options.capabilities,
-      lastSeen: new Date()
+      lastSeen: new Date(),
     };
 
     this.connections.set(agentId, connection);
@@ -170,10 +179,10 @@ export class AgentCommunicationBridge extends Service {
           data: {
             event: 'agent_registered',
             bridgeCapabilities: ['message_routing', 'workflow_coordination', 'status_tracking'],
-            connectedAgents: Array.from(this.connections.keys()).length
-          }
+            connectedAgents: Array.from(this.connections.keys()).length,
+          },
         },
-        priority: 'medium'
+        priority: 'medium',
       });
     }
   }
@@ -185,14 +194,14 @@ export class AgentCommunicationBridge extends Service {
     const message: AgentMessage = {
       id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       timestamp: Date.now(),
-      ...messageData
+      ...messageData,
     };
 
     elizaLogger.debug('Sending message through bridge', {
       messageId: message.id,
       from: message.fromAgentId,
       to: message.toAgentId,
-      type: message.messageType
+      type: message.messageType,
     });
 
     // Check if target agent is connected
@@ -200,7 +209,7 @@ export class AgentCommunicationBridge extends Service {
     if (!targetConnection) {
       elizaLogger.warn('Target agent not connected, queuing message', {
         targetAgentId: message.toAgentId,
-        messageId: message.id
+        messageId: message.id,
       });
 
       // Queue message for when agent connects
@@ -220,11 +229,10 @@ export class AgentCommunicationBridge extends Service {
 
       this.eventEmitter.emit('message_received', message);
       return message.id;
-
     } catch (error) {
       elizaLogger.error('Failed to send message', {
         messageId: message.id,
-        error: error.message
+        error: error.message,
       });
       throw error;
     }
@@ -233,7 +241,10 @@ export class AgentCommunicationBridge extends Service {
   /**
    * Process a message for the target agent
    */
-  private async processMessage(message: AgentMessage, targetConnection: AgentConnection): Promise<void> {
+  private async processMessage(
+    message: AgentMessage,
+    targetConnection: AgentConnection
+  ): Promise<void> {
     // Create a memory object for the target agent
     const memory: Memory = {
       id: message.id as UUID,
@@ -246,11 +257,11 @@ export class AgentCommunicationBridge extends Service {
           messageType: message.messageType,
           priority: message.priority,
           workflowId: message.workflowId,
-          bridgeData: message.content.data
-        }
+          bridgeData: message.content.data,
+        },
       },
       roomId: targetConnection.agentId, // Use agent ID as room ID for direct messages
-      createdAt: message.timestamp
+      createdAt: message.timestamp,
     };
 
     // Store the message in the target agent's memory
@@ -268,13 +279,13 @@ export class AgentCommunicationBridge extends Service {
             fromAgentId: message.fromAgentId,
             workflowId: message.workflowId,
             priority: message.priority,
-            originalMessage: message
-          }
+            originalMessage: message,
+          },
         });
       } catch (error) {
         elizaLogger.warn('Failed to create task for message', {
           messageId: message.id,
-          error: error.message
+          error: error.message,
         });
       }
     }
@@ -289,7 +300,7 @@ export class AgentCommunicationBridge extends Service {
         elizaLogger.error('Message handler failed', {
           handlerKey,
           messageId: message.id,
-          error: error.message
+          error: error.message,
         });
       }
     }
@@ -298,23 +309,27 @@ export class AgentCommunicationBridge extends Service {
   /**
    * Broadcast a message to all connected agents
    */
-  async broadcastMessage(messageData: Omit<AgentMessage, 'id' | 'timestamp' | 'toAgentId'>): Promise<string[]> {
+  async broadcastMessage(
+    messageData: Omit<AgentMessage, 'id' | 'timestamp' | 'toAgentId'>
+  ): Promise<string[]> {
     const messageIds: string[] = [];
 
     for (const [agentId, _connection] of this.connections) {
       // Don't send to self
-      if (agentId === messageData.fromAgentId) {continue;}
+      if (agentId === messageData.fromAgentId) {
+        continue;
+      }
 
       try {
         const messageId = await this.sendMessage({
           ...messageData,
-          toAgentId: agentId
+          toAgentId: agentId,
         });
         messageIds.push(messageId);
       } catch (error) {
         elizaLogger.error('Failed to broadcast to agent', {
           targetAgentId: agentId,
-          error: error.message
+          error: error.message,
         });
       }
     }
@@ -334,7 +349,7 @@ export class AgentCommunicationBridge extends Service {
     elizaLogger.info('Creating workflow coordination', {
       workflowId,
       orchestratorId,
-      participantCount: participantIds.length
+      participantCount: participantIds.length,
     });
 
     const workflow: WorkflowCoordination = {
@@ -345,7 +360,7 @@ export class AgentCommunicationBridge extends Service {
       status: 'initializing',
       metadata,
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
     };
 
     this.workflows.set(workflowId, workflow);
@@ -363,17 +378,17 @@ export class AgentCommunicationBridge extends Service {
               event: 'workflow_created',
               workflowId,
               role: 'participant',
-              metadata
-            }
+              metadata,
+            },
           },
           workflowId,
-          priority: 'high'
+          priority: 'high',
         });
       } catch (error) {
         elizaLogger.error('Failed to notify participant of workflow', {
           workflowId,
           participantId,
-          error: error.message
+          error: error.message,
         });
       }
     }
@@ -399,8 +414,12 @@ export class AgentCommunicationBridge extends Service {
     elizaLogger.info('Updating workflow status', { workflowId, status, phase });
 
     workflow.status = status;
-    if (phase) {workflow.currentPhase = phase;}
-    if (metadata) {workflow.metadata = { ...workflow.metadata, ...metadata };}
+    if (phase) {
+      workflow.currentPhase = phase;
+    }
+    if (metadata) {
+      workflow.metadata = { ...workflow.metadata, ...metadata };
+    }
     workflow.updatedAt = new Date();
 
     // Notify all participants of status change
@@ -419,17 +438,17 @@ export class AgentCommunicationBridge extends Service {
               workflowId,
               status,
               phase: workflow.currentPhase,
-              metadata: workflow.metadata
-            }
+              metadata: workflow.metadata,
+            },
           },
           workflowId,
-          priority: 'medium'
+          priority: 'medium',
         });
       } catch (error) {
         elizaLogger.error('Failed to notify participant of status update', {
           workflowId,
           participantId,
-          error: error.message
+          error: error.message,
         });
       }
     }
@@ -451,7 +470,7 @@ export class AgentCommunicationBridge extends Service {
     elizaLogger.debug('Registered message handler', {
       messageType,
       agentId,
-      handlerKey
+      handlerKey,
     });
   }
 
@@ -467,15 +486,15 @@ export class AgentCommunicationBridge extends Service {
 
     if (filter) {
       if (filter.role) {
-        agents = agents.filter(agent => agent.role === filter.role);
+        agents = agents.filter((agent) => agent.role === filter.role);
       }
       if (filter.capabilities) {
-        agents = agents.filter(agent =>
-          filter.capabilities!.some(cap => agent.capabilities.includes(cap))
+        agents = agents.filter((agent) =>
+          filter.capabilities!.some((cap) => agent.capabilities.includes(cap))
         );
       }
       if (filter.status) {
-        agents = agents.filter(agent => agent.status === filter.status);
+        agents = agents.filter((agent) => agent.status === filter.status);
       }
     }
 
@@ -494,7 +513,7 @@ export class AgentCommunicationBridge extends Service {
    */
   getActiveWorkflows(): WorkflowCoordination[] {
     return Array.from(this.workflows.values()).filter(
-      workflow => workflow.status === 'active' || workflow.status === 'initializing'
+      (workflow) => workflow.status === 'active' || workflow.status === 'initializing'
     );
   }
 
@@ -503,7 +522,9 @@ export class AgentCommunicationBridge extends Service {
    */
   async disconnectAgent(agentId: UUID): Promise<void> {
     const connection = this.connections.get(agentId);
-    if (!connection) {return;}
+    if (!connection) {
+      return;
+    }
 
     elizaLogger.info('Disconnecting agent from bridge', { agentId });
 
@@ -518,10 +539,10 @@ export class AgentCommunicationBridge extends Service {
         text: 'Agent disconnected',
         data: {
           event: 'agent_disconnected',
-          disconnectedAgentId: agentId
-        }
+          disconnectedAgentId: agentId,
+        },
       },
-      priority: 'low'
+      priority: 'low',
     });
 
     // Remove from connections
@@ -538,15 +559,17 @@ export class AgentCommunicationBridge extends Service {
     activeWorkflows: number;
     queuedMessages: number;
     totalMessagesSent: number;
-    } {
-    const queuedMessages = Array.from(this.messageQueue.values())
-      .reduce((total, queue) => total + queue.length, 0);
+  } {
+    const queuedMessages = Array.from(this.messageQueue.values()).reduce(
+      (total, queue) => total + queue.length,
+      0
+    );
 
     return {
       connectedAgents: this.connections.size,
       activeWorkflows: this.getActiveWorkflows().length,
       queuedMessages,
-      totalMessagesSent: 0 // Would need to track this separately
+      totalMessagesSent: 0, // Would need to track this separately
     };
   }
 }

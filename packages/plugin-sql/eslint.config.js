@@ -1,27 +1,23 @@
-import js from '@eslint/js';
-import tseslint from 'typescript-eslint';
+import pluginConfig from '../core/configs/eslint/eslint.config.plugin.js';
 
-export default tseslint.config(
+/**
+ * ESLint configuration for @elizaos/plugin-sql
+ * Uses the standardized plugin configuration from core/configs
+ * 
+ * This is a database plugin with complex PostgreSQL integration.
+ */
+export default [
+  ...pluginConfig,
   {
-    ignores: ['dist/**', 'node_modules/**', '.turbo/**', 'coverage/**'],
-  },
-  js.configs.recommended,
-  ...tseslint.configs.recommended,
-  {
+    // SQL plugin specific overrides
     files: ['**/*.{js,mjs,cjs,ts}'],
     rules: {
+      // Database plugins need flexibility with types
       '@typescript-eslint/no-unused-vars': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
+      'no-console': 'off', // Allow console logging for database operations
+      'no-control-regex': 'off', // Database strings may have control regex
       'prefer-const': 'error',
-      'no-console': 'off',
-      'no-control-regex': 'off',
     },
   },
-  {
-    files: ['**/__tests__/**/*.{js,ts}', '**/*.test.{js,ts}'],
-    rules: {
-      'no-console': 'off',
-      '@typescript-eslint/no-explicit-any': 'off',
-    },
-  }
-);
+];

@@ -86,7 +86,7 @@ export class DeepResearchBenchmark {
         await execAsync(
           `cd "${this.benchmarkPath}" && ${this.pythonPath} -c "import tqdm, openai, requests"`
         );
-      } catch (error) {
+      } catch (_error) {
         return {
           success: false,
           error: `Python dependencies not installed. Run: cd ${this.benchmarkPath} && pip install -r requirements.txt`,
@@ -98,10 +98,10 @@ export class DeepResearchBenchmark {
         pythonVersion: pythonVersion.trim(),
         benchmarkPath: this.benchmarkPath,
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         success: false,
-        error: `Setup check failed: ${error instanceof Error ? error.message : String(error)}`,
+        error: `Setup check failed: ${_error instanceof Error ? _error.message : String(_error)}`,
       };
     }
   }
@@ -125,8 +125,8 @@ export class DeepResearchBenchmark {
 
       logger.info('Dependencies installed successfully');
       return true;
-    } catch (error) {
-      logger.error('Failed to install dependencies:', error);
+    } catch (_error) {
+      logger.error('Failed to install dependencies:', _error);
       return false;
     }
   }
@@ -251,9 +251,9 @@ export class DeepResearchBenchmark {
 
       logger.info('Benchmark results:', results);
       return results;
-    } catch (error) {
-      logger.error('Benchmark evaluation failed:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Benchmark evaluation failed:', _error);
+      throw _error;
     }
   }
 
@@ -313,10 +313,10 @@ export class DeepResearchBenchmark {
       }
 
       return results as BenchmarkResult;
-    } catch (error) {
-      logger.error('Failed to parse benchmark results:', error);
+    } catch (_error) {
+      logger.error('Failed to parse benchmark results:', _error);
       throw new Error(
-        `Failed to parse benchmark results: ${error instanceof Error ? error.message : String(error)}`
+        `Failed to parse benchmark results: ${_error instanceof Error ? _error.message : String(_error)}`
       );
     }
   }
@@ -339,8 +339,8 @@ export class DeepResearchBenchmark {
       try {
         const result = await this.evaluateProject(project, `${modelName}-${i}`);
         results.push(result);
-      } catch (error) {
-        logger.error(`Failed to evaluate project ${i + 1}:`, error);
+      } catch (_error) {
+        logger.error(`Failed to evaluate project ${i + 1}:`, _error);
         // Continue with other projects
       }
     }
@@ -397,9 +397,9 @@ export class DeepResearchBenchmark {
         totalEvaluations: scores.length,
         scoreBreakdown: avgScores,
       };
-    } catch (error) {
-      logger.error('Failed to get benchmark stats:', error);
-      throw error;
+    } catch (_error) {
+      logger.error('Failed to get benchmark stats:', _error);
+      throw _error;
     }
   }
 }

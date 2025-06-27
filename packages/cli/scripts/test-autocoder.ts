@@ -50,41 +50,43 @@ DO NOT engage in conversational planning - EXECUTE ACTIONS IMMEDIATELY.`,
       plugins: ['@elizaos/plugin-autocoder'],
       settings: {
         voice: {
-          model: 'en_US-ryan-medium'
-        }
-      }
-    }
+          model: 'en_US-ryan-medium',
+        },
+      },
+    },
   ],
   script: {
     steps: [
       {
         type: 'message',
         from: 'user',
-        content: 'Can you create a simple calculator plugin for me? It should have basic math operations like add, subtract, multiply, and divide. Please use the CREATE_PLUGIN action now.'
+        content:
+          'Can you create a simple calculator plugin for me? It should have basic math operations like add, subtract, multiply, and divide. Please use the CREATE_PLUGIN action now.',
       },
       {
         type: 'wait',
-        duration: 15000 // Wait 15 seconds for plugin creation to start
+        duration: 15000, // Wait 15 seconds for plugin creation to start
       },
       {
         type: 'message',
         from: 'user',
-        content: 'Great! Can you check the status of the plugin creation job and show me the progress?'
+        content:
+          'Great! Can you check the status of the plugin creation job and show me the progress?',
       },
       {
         type: 'wait',
-        duration: 20000 // Wait 20 seconds for more progress
+        duration: 20000, // Wait 20 seconds for more progress
       },
       {
         type: 'message',
         from: 'user',
-        content: 'Perfect! Can you show me all the jobs and their current status?'
+        content: 'Perfect! Can you show me all the jobs and their current status?',
       },
       {
         type: 'wait',
-        duration: 5000
-      }
-    ]
+        duration: 5000,
+      },
+    ],
   },
   verification: {
     rules: [
@@ -106,7 +108,7 @@ FAIL CRITERIA: The response contains:
 - Generic descriptions without technical specifics
 - No job IDs or service response details
 
-Look for ACTUAL ACTION EXECUTION, not conversational responses.`
+Look for ACTUAL ACTION EXECUTION, not conversational responses.`,
       },
       {
         id: 'job-monitoring-execution',
@@ -126,7 +128,7 @@ FAIL CRITERIA: The response contains:
 - No specific job IDs or status codes
 - Conversational updates instead of service data
 
-Verify REAL status monitoring, not simulated responses.`
+Verify REAL status monitoring, not simulated responses.`,
       },
       {
         id: 'technical-specificity-check',
@@ -146,7 +148,7 @@ FAIL CRITERIA: Look for:
 - Conversations about plugins vs actual plugin creation
 - Missing evidence of real autocoder service usage
 
-The agent must demonstrate ACTUAL service integration.`
+The agent must demonstrate ACTUAL service integration.`,
       },
       {
         id: 'autocoder-functionality-proof',
@@ -166,10 +168,10 @@ FAIL CRITERIA: The agent showed:
 - Generic descriptions without technical proof
 - No evidence of real autocoder service usage
 
-This is the ultimate test - did the agent actually use the autocoder plugin?`
-      }
-    ]
-  }
+This is the ultimate test - did the agent actually use the autocoder plugin?`,
+      },
+    ],
+  },
 };
 
 async function main() {
@@ -177,7 +179,7 @@ async function main() {
 
   // Check if required environment variables are set
   const requiredEnvVars = ['ANTHROPIC_API_KEY'];
-  const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+  const missingVars = requiredEnvVars.filter((varName) => !process.env[varName]);
 
   if (missingVars.length > 0) {
     console.log('⚠️  Missing required environment variables:', missingVars.join(', '));
@@ -191,7 +193,7 @@ async function main() {
     const result = await executeRealScenario(autocoderPluginScenario, {
       verbose: true,
       timeout: 180000, // 3 minutes max
-      maxSteps: 10
+      maxSteps: 10,
     });
 
     console.log(`\\n${'='.repeat(60)}`);
@@ -216,21 +218,23 @@ async function main() {
 
     if (result.errors.length > 0) {
       console.log('\\n**Errors**:');
-      result.errors.forEach(error => console.log(`  - ${error}`));
+      result.errors.forEach((error) => console.log(`  - ${error}`));
     }
 
     // Check if we have evidence of actual autocoder usage
-    const autocoderEvidence = result.transcript.filter(t =>
-      t.type === 'agent_response' &&
-      t.content && (
-        t.content.includes('CREATE_PLUGIN') ||
-        t.content.includes('GET_JOB_STATUS') ||
-        t.content.includes('plugin creation') ||
-        t.content.includes('job')
-      )
+    const autocoderEvidence = result.transcript.filter(
+      (t) =>
+        t.type === 'agent_response' &&
+        t.content &&
+        (t.content.includes('CREATE_PLUGIN') ||
+          t.content.includes('GET_JOB_STATUS') ||
+          t.content.includes('plugin creation') ||
+          t.content.includes('job'))
     );
 
-    console.log(`\\n**Autocoder Usage Evidence**: ${autocoderEvidence.length} responses showing autocoder interaction`);
+    console.log(
+      `\\n**Autocoder Usage Evidence**: ${autocoderEvidence.length} responses showing autocoder interaction`
+    );
 
     if (result.passed && result.score >= 0.8) {
       console.log('\\n🎉 SUCCESS: Autocoder Plugin Creation is working!');
@@ -243,14 +247,13 @@ async function main() {
       console.log('   Review the verification details above for specific issues');
       process.exit(1);
     }
-
   } catch (error) {
     console.error('💥 Test execution failed:', error);
     process.exit(1);
   }
 }
 
-main().catch(error => {
+main().catch((error) => {
   console.error('💥 Error:', error);
   process.exit(1);
 });

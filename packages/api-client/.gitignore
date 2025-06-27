@@ -6,3 +6,7 @@ coverage
 .env
 .env.local
 tsconfig.tsbuildinfo
+AGENTS.md
+.cursor/rules/elizaos
+CLAUDE.md
+.cursorignore

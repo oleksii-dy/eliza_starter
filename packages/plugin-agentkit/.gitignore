@@ -4,3 +4,7 @@ coverage/
 .cursor
 .eliza
 .elizadb*
+AGENTS.md
+.cursor/rules/elizaos
+CLAUDE.md
+.cursorignore

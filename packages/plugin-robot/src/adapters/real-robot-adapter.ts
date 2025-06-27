@@ -665,10 +665,10 @@ export class RealRobotAdapter extends BaseRobotInterface {
             magnetometer:
               imuRaw.magX !== undefined
                 ? {
-                  x: imuRaw.magX,
-                  y: imuRaw.magY || 0,
-                  z: imuRaw.magZ || 0,
-                }
+                    x: imuRaw.magX,
+                    y: imuRaw.magY || 0,
+                    z: imuRaw.magZ || 0,
+                  }
                 : undefined,
             orientation: this.computeOrientationFromIMU(imuRaw),
           };

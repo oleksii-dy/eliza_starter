@@ -72,6 +72,7 @@ async function main() {
     { name: 'create', path: './commands/create/index.js' },
     { name: 'plugins', path: './commands/plugins/index.js' },
     { name: 'agent', path: './commands/agent/index.js' },
+    { name: 'auth', path: './commands/auth/index.js' },
     { name: 'start', path: './commands/start/index.js' },
     { name: 'update', path: './commands/update/index.js' },
     { name: 'test', path: './commands/test/index.js' },

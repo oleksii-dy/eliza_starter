@@ -1,7 +1,11 @@
 import { describe, it, expect, beforeEach, mock } from 'bun:test';
 import { MetricsCollector, BenchmarkAnalyzer } from '../../../src/scenario-runner/metrics.js';
 import { displayScenarioResults, saveResults } from '../../../src/commands/scenario/display.js';
-import type { ScenarioContext, ScenarioResult, ScenarioMetrics } from '../../../src/scenario-runner/types.js';
+import type {
+  ScenarioContext,
+  ScenarioResult,
+  ScenarioMetrics,
+} from '../../../src/scenario-runner/types.js';
 import * as path from 'path';
 
 // Mock fs/promises module
@@ -357,10 +361,12 @@ describe('Display Functions', () => {
     it('should save results as JSON', async () => {
       await saveResults(mockResults, '/tmp/results.json', 'json');
 
-      expect(mockMkdir).toHaveBeenCalledWith(path.dirname('/tmp/results.json'), { recursive: true });
+      expect(mockMkdir).toHaveBeenCalledWith(path.dirname('/tmp/results.json'), {
+        recursive: true,
+      });
       expect(mockWriteFile).toHaveBeenCalledWith(
         '/tmp/results.json',
-        expect.stringContaining('"timestamp"'),
+        expect.stringContaining('"timestamp"')
       );
     });
 
@@ -369,7 +375,7 @@ describe('Display Functions', () => {
 
       expect(mockWriteFile).toHaveBeenCalledWith(
         '/tmp/results.txt',
-        expect.stringContaining('Scenario Test Results'),
+        expect.stringContaining('Scenario Test Results')
       );
     });
 
@@ -378,7 +384,7 @@ describe('Display Functions', () => {
 
       expect(mockWriteFile).toHaveBeenCalledWith(
         '/tmp/results.html',
-        expect.stringContaining('<!DOCTYPE html>'),
+        expect.stringContaining('<!DOCTYPE html>')
       );
     });
   });

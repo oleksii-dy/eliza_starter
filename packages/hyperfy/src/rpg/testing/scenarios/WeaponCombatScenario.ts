@@ -1,10 +1,24 @@
-import type { World } from '../../../types';
-import { Vector3, RPGEntity, NPCType, NPCBehavior, NPCState, SkillType, AttackType, WeaponType, EquipmentSlot, InventoryComponent, StatsComponent, CombatComponent, MovementComponent } from '../../types/index';
-import { BaseTestScenario } from './BaseTestScenario';
+import type { World } from '../../../types'
+import {
+  Vector3,
+  RPGEntity,
+  NPCType,
+  NPCBehavior,
+  NPCState,
+  SkillType,
+  AttackType,
+  WeaponType,
+  EquipmentSlot,
+  InventoryComponent,
+  StatsComponent,
+  CombatComponent,
+  MovementComponent,
+} from '../../types/index'
+import { BaseTestScenario } from './BaseTestScenario'
 
 /**
  * Weapon Pickup and Combat Scenario
- * 
+ *
  * Complete workflow:
  * 1. Player finds and picks up a weapon
  * 2. Player equips the weapon
@@ -13,37 +27,37 @@ import { BaseTestScenario } from './BaseTestScenario';
  * 5. Player validates weapon bonuses and experience gains
  */
 export class WeaponCombatScenario extends BaseTestScenario {
-  private player: RPGEntity | null = null;
-  private weapon: RPGEntity | null = null;
-  private targetMob: RPGEntity | null = null;
-  private weaponItemId = 1205; // Bronze dagger
-  private initialAttackXp = 0;
-  private initialStrengthXp = 0;
+  private player: RPGEntity | null = null
+  private weapon: RPGEntity | null = null
+  private targetMob: RPGEntity | null = null
+  private weaponItemId = 1205 // Bronze dagger
+  private initialAttackXp = 0
+  private initialStrengthXp = 0
 
   constructor(world: World) {
-    super(world, 'Weapon Combat Scenario', '#FFA500'); // Orange color
+    super(world, 'Weapon Combat Scenario', '#FFA500') // Orange color
   }
 
   async setup(): Promise<boolean> {
     try {
-      console.log('[WeaponCombatScenario] Setting up weapon combat scenario...');
+      console.log('[WeaponCombatScenario] Setting up weapon combat scenario...')
 
       // 1. Spawn Player
-      this.player = this.spawnTestEntity('player', 'player', { x: 0, y: 0, z: 0 }, '#00FF00');
-      if (!this.player) throw new Error('Failed to spawn player');
+      this.player = this.spawnTestEntity('player', 'player', { x: 0, y: 0, z: 0 }, '#00FF00')
+      if (!this.player) throw new Error('Failed to spawn player')
 
-      this.setupPlayerComponents(this.player);
+      this.setupPlayerComponents(this.player)
 
       // Store initial experience for validation
-      const playerStats = this.player.getComponent<StatsComponent>('stats');
+      const playerStats = this.player.getComponent<StatsComponent>('stats')
       if (playerStats) {
-        this.initialAttackXp = playerStats.attack.xp;
-        this.initialStrengthXp = playerStats.strength.xp;
+        this.initialAttackXp = playerStats.attack.xp
+        this.initialStrengthXp = playerStats.strength.xp
       }
 
       // 2. Spawn Weapon (Bronze Dagger)
-      this.weapon = this.spawnTestEntity('weapon', 'item', { x: 5, y: 0, z: 0 }, '#C0C0C0');
-      if (!this.weapon) throw new Error('Failed to spawn weapon');
+      this.weapon = this.spawnTestEntity('weapon', 'item', { x: 5, y: 0, z: 0 }, '#C0C0C0')
+      if (!this.weapon) throw new Error('Failed to spawn weapon')
 
       this.weapon.addComponent('item', {
         type: 'item',
@@ -80,43 +94,42 @@ export class WeaponCombatScenario extends BaseTestScenario {
               meleeStrength: 4,
               rangedStrength: 0,
               magicDamage: 0,
-              prayerBonus: 0
-            }
-          }
-        }
-      });
+              prayerBonus: 0,
+            },
+          },
+        },
+      })
 
       // 3. Spawn Target Mob (Rat - weak enemy)
-      this.targetMob = this.spawnTestEntity('target_mob', 'npc', { x: 15, y: 0, z: 0 }, '#8B4513');
-      if (!this.targetMob) throw new Error('Failed to spawn target mob');
+      this.targetMob = this.spawnTestEntity('target_mob', 'npc', { x: 15, y: 0, z: 0 }, '#8B4513')
+      if (!this.targetMob) throw new Error('Failed to spawn target mob')
 
-      this.setupTargetMobComponents(this.targetMob);
+      this.setupTargetMobComponents(this.targetMob)
 
-      this.logProgress('✅ Weapon combat scenario setup complete');
-      return true;
-
+      this.logProgress('✅ Weapon combat scenario setup complete')
+      return true
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logProgress(`❌ Setup failed: ${errorMessage}`);
-      return false;
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      this.logProgress(`❌ Setup failed: ${errorMessage}`)
+      return false
     }
   }
 
   async execute(): Promise<boolean> {
     try {
-      console.log('[WeaponCombatScenario] Executing weapon combat scenario...');
-      
-      // Step 1: Player moves to weapon location
-      this.logProgress('🚶 Step 1: Player approaches weapon...');
-      await this.movePlayerTo(this.player!, { x: 5, y: 0, z: 1 });
-      
-      // Step 2: Player picks up weapon
-      this.logProgress('✋ Step 2: Player picks up bronze dagger...');
-      const inventory = this.player!.getComponent<InventoryComponent>('inventory');
-      if (!inventory) throw new Error('Player missing inventory component');
+      console.log('[WeaponCombatScenario] Executing weapon combat scenario...')
 
-      const firstEmptySlot = inventory.items.findIndex(slot => slot === null);
-      if (firstEmptySlot === -1) throw new Error('Player inventory full');
+      // Step 1: Player moves to weapon location
+      this.logProgress('🚶 Step 1: Player approaches weapon...')
+      await this.movePlayerTo(this.player!, { x: 5, y: 0, z: 1 })
+
+      // Step 2: Player picks up weapon
+      this.logProgress('✋ Step 2: Player picks up bronze dagger...')
+      const inventory = this.player!.getComponent<InventoryComponent>('inventory')
+      if (!inventory) throw new Error('Player missing inventory component')
+
+      const firstEmptySlot = inventory.items.findIndex(slot => slot === null)
+      if (firstEmptySlot === -1) throw new Error('Player inventory full')
 
       // Add weapon to inventory
       inventory.items[firstEmptySlot] = {
@@ -132,21 +145,32 @@ export class WeaponCombatScenario extends BaseTestScenario {
             attackSpeed: 4,
             twoHanded: false,
             bonuses: {
-              attackStab: 6, attackSlash: -2, attackCrush: -2, attackMagic: 0, attackRanged: 0,
-              defenseStab: 0, defenseSlash: 0, defenseCrush: 0, defenseMagic: 0, defenseRanged: 0,
-              meleeStrength: 4, rangedStrength: 0, magicDamage: 0, prayerBonus: 0
-            }
-          }
-        }
-      };
+              attackStab: 6,
+              attackSlash: -2,
+              attackCrush: -2,
+              attackMagic: 0,
+              attackRanged: 0,
+              defenseStab: 0,
+              defenseSlash: 0,
+              defenseCrush: 0,
+              defenseMagic: 0,
+              defenseRanged: 0,
+              meleeStrength: 4,
+              rangedStrength: 0,
+              magicDamage: 0,
+              prayerBonus: 0,
+            },
+          },
+        },
+      }
 
-      this.logProgress('📦 Bronze dagger added to inventory');
+      this.logProgress('📦 Bronze dagger added to inventory')
 
       // Step 3: Player equips weapon
-      this.logProgress('⚔️ Step 3: Player equips bronze dagger...');
-      
+      this.logProgress('⚔️ Step 3: Player equips bronze dagger...')
+
       // Move weapon from inventory to equipment slot
-      const weaponItem = inventory.items[firstEmptySlot];
+      const weaponItem = inventory.items[firstEmptySlot]
       if (weaponItem) {
         inventory.equipment[EquipmentSlot.WEAPON] = {
           id: this.weaponItemId,
@@ -165,142 +189,151 @@ export class WeaponCombatScenario extends BaseTestScenario {
             twoHanded: false,
             requirements: { attack: { level: 1, xp: 0 } },
             bonuses: {
-              attackStab: 6, attackSlash: -2, attackCrush: -2, attackMagic: 0, attackRanged: 0,
-              defenseStab: 0, defenseSlash: 0, defenseCrush: 0, defenseMagic: 0, defenseRanged: 0,
-              meleeStrength: 4, rangedStrength: 0, magicDamage: 0, prayerBonus: 0
-            }
+              attackStab: 6,
+              attackSlash: -2,
+              attackCrush: -2,
+              attackMagic: 0,
+              attackRanged: 0,
+              defenseStab: 0,
+              defenseSlash: 0,
+              defenseCrush: 0,
+              defenseMagic: 0,
+              defenseRanged: 0,
+              meleeStrength: 4,
+              rangedStrength: 0,
+              magicDamage: 0,
+              prayerBonus: 0,
+            },
           },
           model: 'bronze_dagger.glb',
-          icon: 'bronze_dagger.png'
-        };
+          icon: 'bronze_dagger.png',
+        }
 
         // Update equipment bonuses
-        inventory.equipmentBonuses.attackStab += 6;
-        inventory.equipmentBonuses.attackSlash -= 2;
-        inventory.equipmentBonuses.attackCrush -= 2;
-        inventory.equipmentBonuses.meleeStrength += 4;
+        inventory.equipmentBonuses.attackStab += 6
+        inventory.equipmentBonuses.attackSlash -= 2
+        inventory.equipmentBonuses.attackCrush -= 2
+        inventory.equipmentBonuses.meleeStrength += 4
 
         // Remove from inventory slot
-        inventory.items[firstEmptySlot] = null;
+        inventory.items[firstEmptySlot] = null
       }
 
-      this.logProgress('🗡️ Bronze dagger equipped successfully');
+      this.logProgress('🗡️ Bronze dagger equipped successfully')
 
       // Step 4: Player moves to target mob
-      this.logProgress('🏃 Step 4: Player approaches target mob...');
-      await this.movePlayerTo(this.player!, { x: 14, y: 0, z: 0 });
+      this.logProgress('🏃 Step 4: Player approaches target mob...')
+      await this.movePlayerTo(this.player!, { x: 14, y: 0, z: 0 })
 
       // Step 5: Combat with target mob
-      this.logProgress('⚔️ Step 5: Player engages in combat with weapon...');
-      
-      const combatSuccess = await this.performWeaponCombat();
+      this.logProgress('⚔️ Step 5: Player engages in combat with weapon...')
+
+      const combatSuccess = await this.performWeaponCombat()
       if (!combatSuccess) {
-        throw new Error('Combat with weapon failed');
+        throw new Error('Combat with weapon failed')
       }
 
       // Step 6: Validate experience gains
-      this.logProgress('📈 Step 6: Calculating experience gains...');
-      
-      const playerStats = this.player!.getComponent<StatsComponent>('stats');
+      this.logProgress('📈 Step 6: Calculating experience gains...')
+
+      const playerStats = this.player!.getComponent<StatsComponent>('stats')
       if (playerStats) {
-        const attackXpGained = playerStats.attack.xp - this.initialAttackXp;
-        const strengthXpGained = playerStats.strength.xp - this.initialStrengthXp;
-        
-        this.logProgress(`💪 Attack XP gained: ${attackXpGained}`);
-        this.logProgress(`💪 Strength XP gained: ${strengthXpGained}`);
+        const attackXpGained = playerStats.attack.xp - this.initialAttackXp
+        const strengthXpGained = playerStats.strength.xp - this.initialStrengthXp
+
+        this.logProgress(`💪 Attack XP gained: ${attackXpGained}`)
+        this.logProgress(`💪 Strength XP gained: ${strengthXpGained}`)
       }
 
-      this.logProgress('✅ Weapon combat scenario completed successfully!');
-      return true;
-
+      this.logProgress('✅ Weapon combat scenario completed successfully!')
+      return true
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logProgress(`❌ Execution failed: ${errorMessage}`);
-      return false;
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      this.logProgress(`❌ Execution failed: ${errorMessage}`)
+      return false
     }
   }
 
   async validate(): Promise<boolean> {
     try {
-      console.log('[WeaponCombatScenario] Validating weapon combat scenario...');
+      console.log('[WeaponCombatScenario] Validating weapon combat scenario...')
 
-      const inventory = this.player?.getComponent<InventoryComponent>('inventory');
+      const inventory = this.player?.getComponent<InventoryComponent>('inventory')
       if (!inventory) {
-        this.logProgress('❌ Validation failed: Player missing inventory component');
-        return false;
+        this.logProgress('❌ Validation failed: Player missing inventory component')
+        return false
       }
 
       // Verify weapon is equipped
-      const equippedWeapon = inventory.equipment[EquipmentSlot.WEAPON];
+      const equippedWeapon = inventory.equipment[EquipmentSlot.WEAPON]
       if (!equippedWeapon || equippedWeapon.id !== this.weaponItemId) {
-        this.logProgress('❌ Validation failed: Weapon not equipped');
-        return false;
+        this.logProgress('❌ Validation failed: Weapon not equipped')
+        return false
       }
 
       // Verify equipment bonuses applied
       if (inventory.equipmentBonuses.attackStab < 6 || inventory.equipmentBonuses.meleeStrength < 4) {
-        this.logProgress('❌ Validation failed: Equipment bonuses not applied');
-        return false;
+        this.logProgress('❌ Validation failed: Equipment bonuses not applied')
+        return false
       }
 
       // Verify target mob is dead
-      const mobStats = this.targetMob?.getComponent<StatsComponent>('stats');
+      const mobStats = this.targetMob?.getComponent<StatsComponent>('stats')
       if (!mobStats || mobStats.hitpoints.current > 0) {
-        this.logProgress('❌ Validation failed: Target mob not killed');
-        return false;
+        this.logProgress('❌ Validation failed: Target mob not killed')
+        return false
       }
 
       // Verify experience gained
-      const playerStats = this.player?.getComponent<StatsComponent>('stats');
+      const playerStats = this.player?.getComponent<StatsComponent>('stats')
       if (!playerStats) {
-        this.logProgress('❌ Validation failed: Player missing stats component');
-        return false;
+        this.logProgress('❌ Validation failed: Player missing stats component')
+        return false
       }
 
-      const attackXpGained = playerStats.attack.xp - this.initialAttackXp;
-      const strengthXpGained = playerStats.strength.xp - this.initialStrengthXp;
+      const attackXpGained = playerStats.attack.xp - this.initialAttackXp
+      const strengthXpGained = playerStats.strength.xp - this.initialStrengthXp
 
       if (attackXpGained <= 0) {
-        this.logProgress('❌ Validation failed: No attack experience gained');
-        return false;
+        this.logProgress('❌ Validation failed: No attack experience gained')
+        return false
       }
 
       if (strengthXpGained <= 0) {
-        this.logProgress('❌ Validation failed: No strength experience gained');
-        return false;
+        this.logProgress('❌ Validation failed: No strength experience gained')
+        return false
       }
 
       // Verify weapon is no longer on ground
-      const weaponStillExists = this.testEntities.has('weapon');
+      const weaponStillExists = this.testEntities.has('weapon')
       if (weaponStillExists) {
-        this.logProgress('❌ Validation failed: Weapon still exists on ground');
-        return false;
+        this.logProgress('❌ Validation failed: Weapon still exists on ground')
+        return false
       }
 
-      this.logProgress('✅ Weapon combat validation successful');
-      return true;
-
+      this.logProgress('✅ Weapon combat validation successful')
+      return true
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logProgress(`❌ Validation failed: ${errorMessage}`);
-      return false;
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      this.logProgress(`❌ Validation failed: ${errorMessage}`)
+      return false
     }
   }
 
   async cleanup(): Promise<void> {
-    console.log('[WeaponCombatScenario] Cleaning up weapon combat scenario...');
-    
+    console.log('[WeaponCombatScenario] Cleaning up weapon combat scenario...')
+
     // Remove spawned entities
-    this.removeTestEntity('player');
-    this.removeTestEntity('weapon');
-    this.removeTestEntity('target_mob');
-    
+    this.removeTestEntity('player')
+    this.removeTestEntity('weapon')
+    this.removeTestEntity('target_mob')
+
     // Clear references
-    this.player = null;
-    this.weapon = null;
-    this.targetMob = null;
-    
-    console.log('[WeaponCombatScenario] Cleanup complete');
+    this.player = null
+    this.weapon = null
+    this.targetMob = null
+
+    console.log('[WeaponCombatScenario] Cleanup complete')
   }
 
   private setupPlayerComponents(player: RPGEntity): void {
@@ -310,16 +343,36 @@ export class WeaponCombatScenario extends BaseTestScenario {
       items: new Array(28).fill(null),
       maxSlots: 28,
       equipment: {
-        head: null, cape: null, amulet: null, weapon: null, body: null,
-        shield: null, legs: null, gloves: null, boots: null, ring: null, ammo: null
+        head: null,
+        cape: null,
+        amulet: null,
+        weapon: null,
+        body: null,
+        shield: null,
+        legs: null,
+        gloves: null,
+        boots: null,
+        ring: null,
+        ammo: null,
       },
       totalWeight: 0,
       equipmentBonuses: {
-        attackStab: 0, attackSlash: 0, attackCrush: 0, attackMagic: 0, attackRanged: 0,
-        defenseStab: 0, defenseSlash: 0, defenseCrush: 0, defenseMagic: 0, defenseRanged: 0,
-        meleeStrength: 0, rangedStrength: 0, magicDamage: 0, prayerBonus: 0
-      }
-    });
+        attackStab: 0,
+        attackSlash: 0,
+        attackCrush: 0,
+        attackMagic: 0,
+        attackRanged: 0,
+        defenseStab: 0,
+        defenseSlash: 0,
+        defenseCrush: 0,
+        defenseMagic: 0,
+        defenseRanged: 0,
+        meleeStrength: 0,
+        rangedStrength: 0,
+        magicDamage: 0,
+        prayerBonus: 0,
+      },
+    })
 
     // Add stats component (low level player)
     player.addComponent('stats', {
@@ -332,13 +385,24 @@ export class WeaponCombatScenario extends BaseTestScenario {
       magic: { level: 1, xp: 0 },
       prayer: { level: 1, xp: 0, points: 0, maxPoints: 0 },
       combatBonuses: {
-        attackStab: 0, attackSlash: 0, attackCrush: 0, attackMagic: 0, attackRanged: 0,
-        defenseStab: 0, defenseSlash: 0, defenseCrush: 0, defenseMagic: 0, defenseRanged: 0,
-        meleeStrength: 0, rangedStrength: 0, magicDamage: 0, prayerBonus: 0
+        attackStab: 0,
+        attackSlash: 0,
+        attackCrush: 0,
+        attackMagic: 0,
+        attackRanged: 0,
+        defenseStab: 0,
+        defenseSlash: 0,
+        defenseCrush: 0,
+        defenseMagic: 0,
+        defenseRanged: 0,
+        meleeStrength: 0,
+        rangedStrength: 0,
+        magicDamage: 0,
+        prayerBonus: 0,
       },
       combatLevel: 7,
-      totalLevel: 28
-    });
+      totalLevel: 28,
+    })
 
     // Add combat component
     player.addComponent('combat', {
@@ -353,8 +417,8 @@ export class WeaponCombatScenario extends BaseTestScenario {
       animationQueue: [],
       specialAttackEnergy: 100,
       specialAttackActive: false,
-      protectionPrayers: { melee: false, ranged: false, magic: false }
-    });
+      protectionPrayers: { melee: false, ranged: false, magic: false },
+    })
 
     // Add movement component
     player.addComponent('movement', {
@@ -376,8 +440,8 @@ export class WeaponCombatScenario extends BaseTestScenario {
       lastMoveTime: 0,
       teleportDestination: null,
       teleportTime: 0,
-      teleportAnimation: ''
-    });
+      teleportAnimation: '',
+    })
   }
 
   private setupTargetMobComponents(mob: RPGEntity): void {
@@ -412,8 +476,8 @@ export class WeaponCombatScenario extends BaseTestScenario {
       shopkeeper: false,
       shopType: undefined,
       currentTarget: null,
-      lastInteraction: 0
-    });
+      lastInteraction: 0,
+    })
 
     mob.addComponent('stats', {
       type: 'stats',
@@ -425,13 +489,24 @@ export class WeaponCombatScenario extends BaseTestScenario {
       magic: { level: 1, xp: 0 },
       prayer: { level: 1, xp: 0, points: 0, maxPoints: 0 },
       combatBonuses: {
-        attackStab: 0, attackSlash: 0, attackCrush: 0, attackMagic: 0, attackRanged: 0,
-        defenseStab: 1, defenseSlash: 1, defenseCrush: 1, defenseMagic: 0, defenseRanged: 0,
-        meleeStrength: 0, rangedStrength: 0, magicDamage: 0, prayerBonus: 0
+        attackStab: 0,
+        attackSlash: 0,
+        attackCrush: 0,
+        attackMagic: 0,
+        attackRanged: 0,
+        defenseStab: 1,
+        defenseSlash: 1,
+        defenseCrush: 1,
+        defenseMagic: 0,
+        defenseRanged: 0,
+        meleeStrength: 0,
+        rangedStrength: 0,
+        magicDamage: 0,
+        prayerBonus: 0,
       },
       combatLevel: 3,
-      totalLevel: 12
-    });
+      totalLevel: 12,
+    })
 
     mob.addComponent('combat', {
       type: 'combat',
@@ -445,68 +520,70 @@ export class WeaponCombatScenario extends BaseTestScenario {
       animationQueue: [],
       specialAttackEnergy: 0,
       specialAttackActive: false,
-      protectionPrayers: { melee: false, ranged: false, magic: false }
-    });
+      protectionPrayers: { melee: false, ranged: false, magic: false },
+    })
   }
 
   private async performWeaponCombat(): Promise<boolean> {
-    const playerCombat = this.player!.getComponent<CombatComponent>('combat');
-    const playerStats = this.player!.getComponent<StatsComponent>('stats');
-    const mobCombat = this.targetMob!.getComponent<CombatComponent>('combat');
-    const mobStats = this.targetMob!.getComponent<StatsComponent>('stats');
-    
+    const playerCombat = this.player!.getComponent<CombatComponent>('combat')
+    const playerStats = this.player!.getComponent<StatsComponent>('stats')
+    const mobCombat = this.targetMob!.getComponent<CombatComponent>('combat')
+    const mobStats = this.targetMob!.getComponent<StatsComponent>('stats')
+
     if (!playerCombat || !playerStats || !mobCombat || !mobStats) {
-      return false;
+      return false
     }
 
     // Start combat
-    playerCombat.inCombat = true;
-    playerCombat.target = this.targetMob!.id;
-    mobCombat.inCombat = true;
-    mobCombat.target = this.player!.id;
+    playerCombat.inCombat = true
+    playerCombat.target = this.targetMob!.id
+    mobCombat.inCombat = true
+    mobCombat.target = this.player!.id
 
     // Simulate combat with weapon bonuses
-    let combatRounds = 0;
-    const inventory = this.player!.getComponent<InventoryComponent>('inventory');
-    const weaponBonus = inventory?.equipmentBonuses.meleeStrength || 0;
-    
+    let combatRounds = 0
+    const inventory = this.player!.getComponent<InventoryComponent>('inventory')
+    const weaponBonus = inventory?.equipmentBonuses.meleeStrength || 0
+
     while (mobStats.hitpoints.current > 0 && combatRounds < 15) {
       // Calculate damage with weapon bonus
-      const baseDamage = Math.floor(Math.random() * 3) + 1; // 1-3 base damage
-      const weaponDamage = Math.floor(weaponBonus / 2); // Weapon adds bonus damage
-      const totalDamage = baseDamage + weaponDamage;
-      
-      mobStats.hitpoints.current = Math.max(0, mobStats.hitpoints.current - totalDamage);
-      combatRounds++;
-      
-      this.logProgress(`💥 Combat round ${combatRounds}: ${totalDamage} damage (${baseDamage} + ${weaponDamage} weapon)`);
-      
+      const baseDamage = Math.floor(Math.random() * 3) + 1 // 1-3 base damage
+      const weaponDamage = Math.floor(weaponBonus / 2) // Weapon adds bonus damage
+      const totalDamage = baseDamage + weaponDamage
+
+      mobStats.hitpoints.current = Math.max(0, mobStats.hitpoints.current - totalDamage)
+      combatRounds++
+
+      this.logProgress(
+        `💥 Combat round ${combatRounds}: ${totalDamage} damage (${baseDamage} + ${weaponDamage} weapon)`
+      )
+
       // Award experience for each hit (realistic combat experience)
-      const hitExperience = totalDamage * 4; // 4 XP per damage point
-      playerStats.attack.xp += hitExperience;
-      playerStats.strength.xp += hitExperience;
-      
-      await this.wait(100);
+      const hitExperience = totalDamage * 4 // 4 XP per damage point
+      playerStats.attack.xp += hitExperience
+      playerStats.strength.xp += hitExperience
+
+      await this.wait(100)
     }
 
     // End combat
-    playerCombat.inCombat = false;
-    playerCombat.target = null;
+    playerCombat.inCombat = false
+    playerCombat.target = null
 
-    return mobStats.hitpoints.current <= 0;
+    return mobStats.hitpoints.current <= 0
   }
 
   private async movePlayerTo(player: RPGEntity, destination: Vector3): Promise<void> {
-    const movement = player.getComponent<MovementComponent>('movement');
+    const movement = player.getComponent<MovementComponent>('movement')
     if (movement) {
-      movement.destination = destination;
-      movement.isMoving = true;
+      movement.destination = destination
+      movement.isMoving = true
       // Simulate movement completion
-      await this.wait(400);
-      movement.position = destination;
-      player.position = destination;
-      movement.isMoving = false;
-      movement.destination = null;
+      await this.wait(400)
+      movement.position = destination
+      player.position = destination
+      movement.isMoving = false
+      movement.destination = null
     }
   }
 }

@@ -1,25 +1,23 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../core/configs/typescript/tsconfig.frontend.json",
   "compilerOptions": {
-    "isolatedModules": false,
     "baseUrl": ".",
-    "module": "ESNext",
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
-    "target": "ESNext",
     "paths": {
       "@/src/*": ["./src/*"]
     },
-    "rootDir": ".",
-    "moduleResolution": "bundler",
-    "outDir": "./dist",
     "jsx": "react",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "skipLibCheck": true,
-    "strict": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true
+    "noUnusedParameters": true,
+    "isolatedModules": false
   },
   "include": ["src/**/*", "tests/**/*"],
-  "exclude": ["node_modules", "dist", "scenarios", "templates", "src/commands/auth/services/auth-service.ts"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "scenarios",
+    "templates",
+    "src/commands/auth/services/auth-service.ts"
+  ]
 }

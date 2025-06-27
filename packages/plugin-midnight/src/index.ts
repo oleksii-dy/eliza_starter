@@ -149,7 +149,7 @@ export const midnightPlugin: Plugin = {
             timestamp: new Date().toISOString(),
           };
           res.json(status);
-        } catch (error) {
+        } catch (_error) {
           res.status(500).json({ error: 'Failed to get network status' });
         }
       },
@@ -166,7 +166,7 @@ export const midnightPlugin: Plugin = {
             networkId: process.env.MIDNIGHT_NETWORK_ID,
           };
           res.json(walletInfo);
-        } catch (error) {
+        } catch (_error) {
           res.status(500).json({ error: 'Failed to get wallet info' });
         }
       },

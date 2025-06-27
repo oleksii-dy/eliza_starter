@@ -1,4 +1,4 @@
-import { defineConfig } from 'cypress';
+import { defineConfig } from 'cypress'
 
 export default defineConfig({
   e2e: {
@@ -18,33 +18,33 @@ export default defineConfig({
     pageLoadTimeout: 30000,
     retries: {
       runMode: 2,
-      openMode: 0
+      openMode: 0,
     },
     env: {
       coverage: false,
       codeCoverage: {
-        exclude: ['cypress/**/*.*']
-      }
+        exclude: ['cypress/**/*.*'],
+      },
     },
     setupNodeEvents(on, config) {
       // Custom event handlers for 3D world testing
       on('task', {
         log(message) {
-          console.log(message);
-          return null;
+          console.log(message)
+          return null
         },
         table(message) {
-          console.table(message);
-          return null;
-        }
-      });
+          console.table(message)
+          return null
+        },
+      })
 
       // Code coverage - commented out for now
       // if (config.env.coverage) {
       //   require('@cypress/code-coverage/task')(on, config);
       // }
 
-      return config;
+      return config
     },
     experimentalStudio: true,
     experimentalWebKitSupport: true,
@@ -57,5 +57,5 @@ export default defineConfig({
     specPattern: 'src/**/*.cy.{js,jsx,ts,tsx}',
     supportFile: 'cypress/support/component.ts',
   },
-  projectId: 'hyperfy-ui'
-}); 
+  projectId: 'hyperfy-ui',
+})

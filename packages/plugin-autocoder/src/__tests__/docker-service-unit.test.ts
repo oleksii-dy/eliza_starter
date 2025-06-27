@@ -14,7 +14,9 @@ describe('DockerService - Real Docker Unit Tests', () => {
     // Mock minimal runtime for settings
     (dockerService as any).runtime = {
       getSetting: (key: string) => {
-        if (key === 'DOCKER_HOST') {return process.env.DOCKER_HOST || undefined;}
+        if (key === 'DOCKER_HOST') {
+          return process.env.DOCKER_HOST || undefined;
+        }
         return undefined;
       },
     };
@@ -374,7 +376,9 @@ describe('DockerService - Real Docker Unit Tests', () => {
             capabilities: [],
             communicationPort: 9999,
             healthPort: 9998,
-            environment: { /* empty */ },
+            environment: {
+              /* empty */
+            },
           },
         });
 

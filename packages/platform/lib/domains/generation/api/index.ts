@@ -13,7 +13,7 @@ export {
   generationRequestSchema,
   batchGenerationSchema,
   validateGenerationRequest,
-  validateBatchRequest
+  validateBatchRequest,
 } from './validation';
 
 // Export middleware
@@ -21,5 +21,5 @@ export {
   authMiddleware,
   rateLimitMiddleware,
   billingMiddleware,
-  validationMiddleware
+  validationMiddleware,
 } from './middleware';
