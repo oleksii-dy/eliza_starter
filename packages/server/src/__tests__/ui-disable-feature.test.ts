@@ -1,6 +1,5 @@
 /**
  * Tests for ELIZA_UI_ENABLE feature
- * Integration tests for the UI disable functionality
  */
 
 import { describe, it, expect, beforeEach, afterEach, mock, jest } from 'bun:test';
@@ -149,6 +148,7 @@ describe('UI Disable Feature Integration', () => {
     });
   });
 
+<<<<<<< HEAD
   describe('Startup Message Generation', () => {
     it('should generate correct console messages for different states', () => {
       const generateStartupMessage = (uiEnabled: boolean, port: number, nodeEnv: string) => {
@@ -170,6 +170,43 @@ describe('UI Disable Feature Integration', () => {
       const prodEnabled = generateStartupMessage(true, 3000, 'production');
       expect(prodEnabled?.type).toBe('dashboard');
       expect(prodEnabled?.message).toContain('http://localhost:3000');
+=======
+        it('should return standard HTTP 403 when UI disabled', () => {
+            const mockSendStatus = jest.fn();
+            const mockResponse = {
+                sendStatus: mockSendStatus,
+            };
+
+            const handleUIDisabledRequest = (res: any, uiEnabled: boolean) => {
+                if (!uiEnabled) {
+                    res.sendStatus(403); // Standard HTTP 403 Forbidden
+                }
+            };
+
+            // Test UI disabled response
+            handleUIDisabledRequest(mockResponse, false);
+            expect(mockSendStatus).toHaveBeenCalledWith(403);
+
+            // Test UI enabled (no response)
+            mockSendStatus.mockClear();
+            handleUIDisabledRequest(mockResponse, true);
+            expect(mockSendStatus).not.toHaveBeenCalled();
+        });
+
+        it('should affect SPA fallback route registration', () => {
+            const mockExpressUse = jest.fn();
+            const mockApp = {
+                use: mockExpressUse,
+            };
+
+            const configureSPAFallback = (app: any, uiEnabled: boolean) => {
+                if (uiEnabled) {
+                    app.use('spa-fallback-middleware');
+                } else {
+                    app.use('403-forbidden-for-non-api-routes');
+                }
+            };
+>>>>>>> d5ee449d08 (improve: Change UI disabled response from JSON 404 to standard HTTP 403 Forbidden)
 
       // Test production with UI disabled
       const prodDisabled = generateStartupMessage(false, 3000, 'production');
@@ -177,6 +214,7 @@ describe('UI Disable Feature Integration', () => {
       expect(prodDisabled?.message).toContain('Web UI disabled.');
       expect(prodDisabled?.message).toContain('API endpoints available at:');
 
+<<<<<<< HEAD
       // Test development (no message)
       const devResult = generateStartupMessage(true, 3000, 'development');
       expect(devResult).toBeNull();
@@ -204,6 +242,13 @@ describe('UI Disable Feature Integration', () => {
       expect(disabledBenefits).toHaveLength(5);
       expect(disabledBenefits).toContain('Eliminates web UI attack surface');
       expect(enabledBenefits).toHaveLength(1);
+=======
+            // Reset and test UI disabled  
+            mockExpressUse.mockClear();
+            configureSPAFallback(mockApp, false);
+            expect(mockExpressUse).toHaveBeenCalledWith('403-forbidden-for-non-api-routes');
+        });
+>>>>>>> d5ee449d08 (improve: Change UI disabled response from JSON 404 to standard HTTP 403 Forbidden)
     });
 
     it('should ensure API functionality remains intact when UI disabled', () => {
