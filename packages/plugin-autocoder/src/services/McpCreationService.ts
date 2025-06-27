@@ -4,7 +4,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { getExportNameFromFileName } from '../utils/naming-utils';
+import { getExportNameFromFileName } from '../utils/naming-utils.ts';
 
 const execAsync = promisify(exec);
 
@@ -1085,7 +1085,7 @@ coverage/
 
           // Add missing type imports
           if (stderr.includes('Cannot find name') && !content.includes('import type')) {
-            content = `import type { McpContext, McpToolResult } from '../types';\n${content}`;
+            content = `import type { McpContext, McpToolResult } from '../types.ts';\n${content}`;
             modified = true;
           }
 

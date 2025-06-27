@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
-import autocoderPlugin from '../index.js';
+import autocoderPlugin from '../index.ts';
 import type { IAgentRuntime } from '@elizaos/core';
 import { mkdtemp, rm } from 'fs/promises';
 import { tmpdir } from 'os';

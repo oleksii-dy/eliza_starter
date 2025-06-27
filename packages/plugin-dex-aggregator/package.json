@@ -1,0 +1,56 @@
+{
+  "name": "@elizaos/plugin-dex-aggregator",
+  "version": "0.1.0",
+  "description": "DEX aggregation plugin for optimal trading across multiple decentralized exchanges (1inch, Jupiter, Paraswap, 0x, CowSwap)",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "bun run build.ts",
+    "test": "bun test"
+  },
+  "keywords": [
+    "elizaos",
+    "plugin",
+    "dex",
+    "aggregator",
+    "swap",
+    "trading",
+    "defi",
+    "1inch",
+    "jupiter",
+    "paraswap",
+    "0x",
+    "cowswap"
+  ],
+  "dependencies": {
+    "@elizaos/core": "workspace:*",
+    "viem": "^2.21.54",
+    "ethers": "^6.13.4",
+    "zod": "^3.24.1",
+    "bignumber.js": "^9.1.2",
+    "axios": "^1.7.9",
+    "@1inch/fusion-sdk": "^2.0.0",
+    "@paraswap/sdk": "^6.9.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "@elizaos/core": "workspace:*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elizaOS/eliza.git",
+    "directory": "packages/plugin-dex-aggregator"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

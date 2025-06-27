@@ -16,41 +16,68 @@ export async function loadAllScenarios(): Promise<Scenario[]> {
     // Create an empty array to collect scenarios
     const allScenarios: Scenario[] = [];
 
-    // Load individual scenario modules to avoid circular dependency
+    // Load plugin scenarios
     try {
-      const { default: truthVsLie } = await import('./truth-vs-lie.js');
-      if (truthVsLie) {
-        allScenarios.push(truthVsLie);
+      const { default: researchKnowledge } = await import('./plugin-scenarios/01-research-knowledge-integration.js');
+      if (researchKnowledge) {
+        allScenarios.push(researchKnowledge);
       }
     } catch (error) {
-      console.warn('Could not load truth-vs-lie scenario:', error);
+      console.warn('Could not load research-knowledge scenario:', error);
     }
 
     try {
-      const { default: researchTask } = await import('./research-task.js');
-      if (researchTask) {
-        allScenarios.push(researchTask);
+      const { default: githubTodo } = await import('./plugin-scenarios/02-github-todo-workflow.js');
+      if (githubTodo) {
+        allScenarios.push(githubTodo);
       }
     } catch (error) {
-      console.warn('Could not load research-task scenario:', error);
+      console.warn('Could not load github-todo scenario:', error);
     }
 
     try {
-      const { default: codingChallenge } = await import('./coding-challenge.js');
-      if (codingChallenge) {
-        allScenarios.push(codingChallenge);
+      const { default: planningExecution } = await import('./plugin-scenarios/03-planning-execution.js');
+      if (planningExecution) {
+        allScenarios.push(planningExecution);
       }
     } catch (error) {
-      console.warn('Could not load coding-challenge scenario:', error);
+      console.warn('Could not load planning-execution scenario:', error);
     }
 
     try {
-      const { default: workflowPlanning } = await import('./workflow-planning.js');
-      if (workflowPlanning) {
-        allScenarios.push(workflowPlanning);
+      const { default: secretsIntegration } = await import('./plugin-scenarios/05-secrets-integration-workflow.js');
+      if (secretsIntegration) {
+        allScenarios.push(secretsIntegration);
       }
     } catch (error) {
-      console.warn('Could not load workflow-planning scenario:', error);
+      console.warn('Could not load secrets-integration scenario:', error);
+    }
+
+    try {
+      const { default: blockchainDefi } = await import('./plugin-scenarios/06-blockchain-defi-workflow.js');
+      if (blockchainDefi) {
+        allScenarios.push(blockchainDefi);
+      }
+    } catch (error) {
+      console.warn('Could not load blockchain-defi scenario:', error);
+    }
+
+    try {
+      const { default: pluginManager } = await import('./plugin-scenarios/07-plugin-manager-system.js');
+      if (pluginManager) {
+        allScenarios.push(pluginManager);
+      }
+    } catch (error) {
+      console.warn('Could not load plugin-manager scenario:', error);
+    }
+
+    try {
+      const { default: paymentBasic } = await import('./plugin-scenarios/60-payment-basic-flow.js');
+      if (paymentBasic) {
+        allScenarios.push(paymentBasic);
+      }
+    } catch (error) {
+      console.warn('Could not load payment-basic scenario:', error);
     }
 
     // Load plugin test scenarios
@@ -77,6 +104,16 @@ export async function loadAllScenarios(): Promise<Scenario[]> {
       allScenarios.push(...rolodexScenarios);
     } catch (error) {
       console.warn('Could not load rolodex scenarios:', error);
+    }
+
+    // Load wallet scenarios
+    try {
+      const { walletScenarios } = await import('./wallet-scenarios/index.js');
+      if (walletScenarios && Array.isArray(walletScenarios)) {
+        allScenarios.push(...walletScenarios);
+      }
+    } catch (error) {
+      console.warn('Could not load wallet scenarios:', error);
     }
 
     console.log(`📦 Successfully loaded ${allScenarios.length} scenarios`);
@@ -167,6 +204,18 @@ export async function loadScenariosByCategory(category: string): Promise<Scenari
         }
         break;
 
+      case 'wallet':
+      case 'defi':
+        try {
+          const { walletScenarios } = await import('./wallet-scenarios/index.js');
+          if (walletScenarios && Array.isArray(walletScenarios)) {
+            scenarios.push(...walletScenarios);
+          }
+        } catch (error) {
+          console.warn('Could not load wallet scenarios:', error);
+        }
+        break;
+
       default:
         console.warn(`Unknown scenario category: ${category}`);
         return await loadAllScenarios();
@@ -195,5 +244,5 @@ export async function loadScenarioById(id: string): Promise<Scenario | null> {
  * Get available scenario categories without loading all scenarios
  */
 export function getAvailableCategories(): string[] {
-  return ['reasoning', 'research', 'coding', 'planning', 'integration', 'rolodex'];
+  return ['reasoning', 'research', 'coding', 'planning', 'integration', 'rolodex', 'wallet', 'defi'];
 }

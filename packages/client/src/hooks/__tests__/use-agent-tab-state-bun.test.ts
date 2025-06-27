@@ -29,10 +29,7 @@ describe('useAgentTabState', () => {
     const agentId = 'agent-123' as UUID;
 
     // Pre-populate localStorage with saved tab state
-    localStorage.setItem(
-      'eliza-agent-tab-states',
-      JSON.stringify({ [agentId]: 'actions' })
-    );
+    localStorage.setItem('eliza-agent-tab-states', JSON.stringify({ [agentId]: 'actions' }));
 
     const { result } = renderHook(() => useAgentTabState(agentId));
 
@@ -95,14 +92,13 @@ describe('useAgentTabState', () => {
       'eliza-agent-tab-states',
       JSON.stringify({
         [agentId1]: 'actions',
-        [agentId2]: 'logs'
+        [agentId2]: 'logs',
       })
     );
 
-    const { result, rerender } = renderHook(
-      ({ agentId }) => useAgentTabState(agentId),
-      { initialProps: { agentId: agentId1 } }
-    );
+    const { result, rerender } = renderHook(({ agentId }) => useAgentTabState(agentId), {
+      initialProps: { agentId: agentId1 },
+    });
 
     // Initially should load agent1's tab state
     await waitFor(() => {
@@ -120,10 +116,9 @@ describe('useAgentTabState', () => {
   test('should reset to default when agentId becomes undefined', async () => {
     const agentId = 'agent-123' as UUID;
 
-    const { result, rerender } = renderHook(
-      ({ agentId }) => useAgentTabState(agentId),
-      { initialProps: { agentId } }
-    );
+    const { result, rerender } = renderHook(({ agentId }) => useAgentTabState(agentId), {
+      initialProps: { agentId },
+    });
 
     // Set a custom tab
     act(() => {
@@ -210,10 +205,7 @@ describe('useAgentTabState', () => {
     const agentId2 = 'agent-456' as UUID;
 
     // Set up initial state for agent1
-    localStorage.setItem(
-      'eliza-agent-tab-states',
-      JSON.stringify({ [agentId1]: 'actions' })
-    );
+    localStorage.setItem('eliza-agent-tab-states', JSON.stringify({ [agentId1]: 'actions' }));
 
     // Hook for agent2
     const { result } = renderHook(() => useAgentTabState(agentId2));

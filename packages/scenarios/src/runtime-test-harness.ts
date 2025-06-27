@@ -1,5 +1,4 @@
 import { IAgentRuntime, Character, Plugin, UUID, logger } from '@elizaos/core';
-import { TestDatabaseManager } from '@elizaos/core/test-utils';
 import chalk from 'chalk';
 import { randomBytes } from 'crypto';
 
@@ -11,11 +10,9 @@ export class RuntimeTestHarness {
   private testId: string;
   private activeRuntimes: Map<string, IAgentRuntime> = new Map();
   private cleanupFunctions: Map<string, () => Promise<void>> = new Map();
-  private dbManager: TestDatabaseManager;
 
   constructor(testId: string) {
     this.testId = testId;
-    this.dbManager = new TestDatabaseManager();
     this.setupEnvironment();
   }
 
@@ -56,24 +53,10 @@ export class RuntimeTestHarness {
     try {
       console.log(chalk.cyan(`Creating real test runtime for ${this.testId}`));
 
-      // Create an isolated database for this test
-      const testDbId = `${this.testId}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-      const dbAdapter = await this.dbManager.createIsolatedDatabase(testDbId);
-      
-      // Get SQL plugin if available
-      let sqlPlugin: Plugin | undefined;
-      try {
-        const sqlPluginModule = await import('@elizaos/plugin-sql');
-        sqlPlugin = sqlPluginModule.default || sqlPluginModule.plugin;
-        console.log(chalk.yellow('   SQL plugin loaded'));
-      } catch (error) {
-        console.log(chalk.yellow('   SQL plugin not available - using mock database'));
-      }
-
       // Create the runtime using direct AgentRuntime constructor
       const { AgentRuntime } = await import('@elizaos/core');
       
-      // Ensure character has required settings
+      // Ensure character has required settings and SQL plugin
       const enhancedCharacter: Character = {
         ...config.character,
         settings: {
@@ -83,26 +66,27 @@ export class RuntimeTestHarness {
           POSTGRES_URL: process.env.POSTGRES_URL,
           SECRET_SALT: process.env.SECRET_SALT,
         },
-        plugins: config.character.plugins || [],
+        plugins: [
+          // Always include SQL plugin for database functionality
+          '@elizaos/plugin-sql',
+          ...(config.character.plugins || []),
+        ],
       };
 
-      // Create runtime - AgentRuntime doesn't accept databaseAdapter in constructor
+      // Create runtime without manually specifying adapter - let SQL plugin handle it
       const runtime = new AgentRuntime({
         character: enhancedCharacter,
-        evaluators: [],
-        providers: [],
       });
 
-      // Set the database adapter and db property for plugins that access it directly
-      (runtime as any).databaseAdapter = dbAdapter;
-      (runtime as any).db = dbAdapter;
-
-      // Initialize the runtime
+      // Initialize the runtime - this will trigger SQL plugin initialization
+      console.log(chalk.cyan('   Initializing runtime...'));
       await runtime.initialize();
 
-      // Load plugins
-      console.log(chalk.cyan('   Loading plugins...'));
-      for (const pluginName of config.plugins) {
+      // Load additional plugins (SQL plugin is already loaded during initialize)
+      console.log(chalk.cyan('   Loading additional plugins...'));
+      const additionalPlugins = config.plugins.filter(p => p !== '@elizaos/plugin-sql');
+      
+      for (const pluginName of additionalPlugins) {
         try {
           console.log(chalk.cyan(`   Attempting to load plugin: ${pluginName}`));
           
@@ -144,8 +128,7 @@ export class RuntimeTestHarness {
           }
         }
         
-        // Close the database
-        await dbAdapter.close();
+        // Database cleanup is handled by the SQL plugin
       });
 
       console.log(chalk.green(`✅ Runtime created for ${enhancedCharacter.name} with database support`));
@@ -168,14 +151,10 @@ export class RuntimeTestHarness {
     try {
       console.log(chalk.cyan(`Creating real runtime for benchmark`));
 
-      // Create an isolated database for this test
-      const testDbId = `${this.testId}-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-      const dbAdapter = await this.dbManager.createIsolatedDatabase(testDbId);
-
       // Create the runtime using direct AgentRuntime constructor
       const { AgentRuntime } = await import('@elizaos/core');
       
-      // Ensure character has required settings
+      // Ensure character has required settings and SQL plugin
       const enhancedCharacter: Character = {
         ...config.character,
         settings: {
@@ -185,26 +164,27 @@ export class RuntimeTestHarness {
           POSTGRES_URL: process.env.POSTGRES_URL,
           SECRET_SALT: process.env.SECRET_SALT,
         },
-        plugins: config.character.plugins || [],
+        plugins: [
+          // Always include SQL plugin for database functionality
+          '@elizaos/plugin-sql',
+          ...(config.character.plugins || []),
+        ],
       };
 
-      // Create runtime - AgentRuntime doesn't accept databaseAdapter in constructor
+      // Create runtime without manually specifying adapter - let SQL plugin handle it
       const runtime = new AgentRuntime({
         character: enhancedCharacter,
-        evaluators: [],
-        providers: [],
       });
 
-      // Set the database adapter and db property for plugins that access it directly
-      (runtime as any).databaseAdapter = dbAdapter;
-      (runtime as any).db = dbAdapter;
-
-      // Initialize the runtime
+      // Initialize the runtime - this will trigger SQL plugin initialization
+      console.log(chalk.cyan('   Initializing runtime...'));
       await runtime.initialize();
 
-      // Load plugins
-      console.log(chalk.cyan('   Loading plugins...'));
-      for (const pluginName of config.plugins) {
+      // Load additional plugins (SQL plugin is already loaded during initialize)
+      console.log(chalk.cyan('   Loading additional plugins...'));
+      const additionalPlugins = config.plugins.filter(p => p !== '@elizaos/plugin-sql');
+      
+      for (const pluginName of additionalPlugins) {
         try {
           console.log(chalk.cyan(`   Attempting to load plugin: ${pluginName}`));
           
@@ -246,8 +226,7 @@ export class RuntimeTestHarness {
           }
         }
         
-        // Close the database
-        await dbAdapter.close();
+        // Database cleanup is handled by the SQL plugin
       });
 
       console.log(chalk.green(`✅ Runtime created for ${enhancedCharacter.name} with database support`));
@@ -277,9 +256,6 @@ export class RuntimeTestHarness {
     this.activeRuntimes.clear();
     this.cleanupFunctions.clear();
     
-    // Clean up all test databases
-    await this.dbManager.cleanup();
-
     console.log(chalk.green('✅ Test harness cleanup complete'));
   }
 }

@@ -13,7 +13,7 @@ import type {
   NetworkConfig,
   ContainerEvent,
   PortStatus,
-} from '../types/container.js';
+} from '../types/container.ts';
 
 export class DockerService extends Service implements IDockerService {
   static _serviceName = 'docker';

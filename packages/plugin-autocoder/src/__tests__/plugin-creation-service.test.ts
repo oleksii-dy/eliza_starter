@@ -51,11 +51,11 @@ mock.module('../utils/plugin-templates', () => ({
 import fs from 'fs-extra';
 import { spawn } from 'child_process';
 import { Anthropic } from '@anthropic-ai/sdk';
-import * as pluginTemplates from '../utils/plugin-templates';
+import * as pluginTemplates from '../utils/plugin-templates.ts';
 
 // Import the service after mocks are set up
-import { PluginCreationService } from '../services/PluginCreationService.js';
-import { createMockRuntime } from './test-utils.js';
+import { PluginCreationService } from '../services/PluginCreationService.ts';
+import { createMockRuntime } from './test-utils.ts';
 
 describe('PluginCreationService', () => {
   let service: any;

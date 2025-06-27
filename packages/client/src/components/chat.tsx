@@ -317,10 +317,10 @@ export default function Chat({
     () =>
       agentDataResponse?.data
         ? ({
-          ...agentDataResponse.data,
-          createdAt: agentDataResponse.data.createdAt || Date.now(),
-          updatedAt: agentDataResponse.data.updatedAt || Date.now(),
-        } as Agent)
+            ...agentDataResponse.data,
+            createdAt: agentDataResponse.data.createdAt || Date.now(),
+            updatedAt: agentDataResponse.data.updatedAt || Date.now(),
+          } as Agent)
         : undefined,
     [agentDataResponse?.data]
   );

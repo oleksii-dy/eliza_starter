@@ -40,10 +40,10 @@ mock.module('child_process', () => ({
 }));
 
 // Import after mocks
-import { PluginCreationService, type PluginSpecification } from '../services/PluginCreationService';
-import { createMockRuntime } from './test-utils';
+import { PluginCreationService, type PluginSpecification } from '../services/PluginCreationService.ts';
+import { createMockRuntime } from './test-utils.ts';
 import * as fs from 'fs-extra';
-import * as utils from '../utils/plugin-templates';
+import * as utils from '../utils/plugin-templates.ts';
 import { spawn } from 'child_process';
 
 describe('Plugin Generation Integration', () => {
@@ -167,10 +167,10 @@ describe('Plugin Generation Integration', () => {
       const indexCode = indexCall[1] as string;
 
       // Check imports
-      expect(indexCode).toContain("import { testActionAction } from './actions/testAction.js';");
-      expect(indexCode).toContain("import { dataProvider } from './providers/dataProvider.js';");
+      expect(indexCode).toContain("import { testActionAction } from './actions/testAction.ts';");
+      expect(indexCode).toContain("import { dataProvider } from './providers/dataProvider.ts';");
       expect(indexCode).toContain(
-        "import { configProvider } from './providers/configProvider.js';"
+        "import { configProvider } from './providers/configProvider.ts';"
       );
 
       // Check plugin definition
@@ -237,8 +237,8 @@ describe('Plugin Generation Integration', () => {
     expect(indexCall).toBeDefined();
     if (indexCall) {
       const indexCode = indexCall[1] as string;
-      expect(indexCode).toContain("import { timeProvider } from './providers/timeProvider.js';");
-      expect(indexCode).toContain("import { dataProvider } from './providers/data.js';");
+      expect(indexCode).toContain("import { timeProvider } from './providers/timeProvider.ts';");
+      expect(indexCode).toContain("import { dataProvider } from './providers/data.ts';");
       expect(indexCode).toContain('providers: [\n    timeProvider,\n    dataProvider\n  ]');
     }
   });

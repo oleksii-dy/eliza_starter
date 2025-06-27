@@ -63,7 +63,7 @@ mock.module('@elizaos/core', async () => {
 // Import modules after mocks
 import * as fs from 'fs/promises';
 import { elizaLogger } from '@elizaos/core';
-import { MCPCreationService } from '../../services/McpCreationService.js';
+import { MCPCreationService } from '../../services/McpCreationService.ts';
 
 describe('MCPCreationService', () => {
   let service: MCPCreationService;

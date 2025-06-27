@@ -1,5 +1,6 @@
-import { Service, type IAgentRuntime } from '@elizaos/core';
+import { Service, type IAgentRuntime, elizaLogger } from '@elizaos/core';
 import { Anthropic } from '@anthropic-ai/sdk';
+import { ConfigurationService } from './ConfigurationService.ts';
 // import EnhancedSecretManager from '@elizaos/plugin-secrets-manager';
 import * as fs from 'fs-extra';
 import path from 'path';
@@ -12,12 +13,12 @@ type SecretContext = {
 };
 import { spawn } from 'child_process';
 import { v4 as uuidv4 } from 'uuid';
-import * as utils from '../utils/plugin-templates';
+import * as utils from '../utils/plugin-templates.ts';
 
-export enum ClaudeModel {
-  OPUS_3 = 'claude-3-opus-20240229',
-  SONNET_3_5 = 'claude-3-5-sonnet-20241022',
-}
+export const ClaudeModel = {
+  OPUS_3: 'claude-3-opus-20240229',
+  SONNET_3_5: 'claude-3-5-sonnet-20241022',
+} as const;
 
 export interface PluginSpecification {
   name: string;
@@ -81,15 +82,11 @@ export class PluginCreationService extends Service {
 
   private anthropic?: Anthropic;
   private jobs: Map<string, PluginJob> = new Map();
-  private selectedModel: ClaudeModel = ClaudeModel.SONNET_3_5;
+  private selectedModel: string = ClaudeModel.SONNET_3_5;
   private jobTimeouts: Map<string, NodeJS.Timeout> = new Map();
-  private readonly MAX_CONCURRENT_JOBS = 5;
-  private readonly JOB_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
-  private readonly MAX_OUTPUT_SIZE = 1024 * 1024; // 1MB
-  private readonly RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
-  private readonly MAX_JOBS_PER_WINDOW = 10;
   private jobCreationTimes: number[] = [];
   private secretsManager: any | null = null;
+  private configService: ConfigurationService | null = null;
   declare protected _runtime: IAgentRuntime;
 
   constructor(_runtime: IAgentRuntime) {
@@ -99,19 +96,40 @@ export class PluginCreationService extends Service {
   }
 
   async initialize(runtime: IAgentRuntime): Promise<void> {
+    // Initialize configuration service
+    this.configService = runtime.getService('autocoder-config') as ConfigurationService;
+    if (!this.configService) {
+      throw new Error('Configuration service not available - cannot initialize plugin creation');
+    }
+
+    // Get plugin creation configuration
+    const pluginConfig = this.configService.getPluginCreationConfig();
+    const aiConfig = this.configService.getAIConfig();
+
     // Initialize secrets manager
     this.secretsManager = runtime.getService('SECRETS');
     if (!this.secretsManager) {
-      console.warn('Secrets Manager service not available - using fallback to runtime.getSetting');
+      elizaLogger.warn('Secrets Manager service not available - using fallback to runtime.getSetting');
     }
 
-    // Get API key through secrets manager
-    const apiKey = await this.getAnthropicApiKey();
+    // Set selected model from configuration
+    this.selectedModel = pluginConfig.defaultModel;
+
+    // Get API key through configuration service
+    const apiKey = aiConfig.anthropicApiKey || await this.getAnthropicApiKey();
     if (apiKey) {
       this.anthropic = new Anthropic({ apiKey });
+      elizaLogger.info('Plugin creation service initialized with AI generation enabled', {
+        model: this.selectedModel,
+        maxConcurrentJobs: pluginConfig.maxConcurrentJobs,
+        jobTimeoutMs: pluginConfig.jobTimeoutMs,
+      });
     } else {
-      console.warn(
-        'ANTHROPIC_API_KEY not configured - plugin creation functionality will be limited'
+      elizaLogger.warn(
+        'ANTHROPIC_API_KEY not configured - plugin creation will use templates only',
+        {
+          enableTemplatesFallback: pluginConfig.enableTemplatesFallback,
+        }
       );
     }
   }
@@ -176,11 +194,17 @@ export class PluginCreationService extends Service {
     this.jobTimeouts.clear();
   }
 
-  setModel(model: ClaudeModel): void {
+  setModel(model: string): void {
     this.selectedModel = model;
   }
 
   async createPlugin(specification: PluginSpecification, apiKeyOverride?: string): Promise<string> {
+    if (!this.configService) {
+      throw new Error('Configuration service not available');
+    }
+
+    const pluginConfig = this.configService.getPluginCreationConfig();
+
     // Validate specification
     if (!specification.name || !specification.description) {
       throw new Error('Plugin name and description are required');
@@ -196,13 +220,13 @@ export class PluginCreationService extends Service {
       (job) => job.status === 'running' || job.status === 'pending'
     ).length;
 
-    if (activeJobs >= this.MAX_CONCURRENT_JOBS) {
-      throw new Error('Too many concurrent jobs. Please wait for existing jobs to complete.');
+    if (activeJobs >= pluginConfig.maxConcurrentJobs) {
+      throw new Error(`Too many concurrent jobs (${activeJobs}/${pluginConfig.maxConcurrentJobs}). Please wait for existing jobs to complete.`);
     }
 
     // Rate limiting
     this.cleanupOldJobTimes();
-    if (this.jobCreationTimes.length >= this.MAX_JOBS_PER_WINDOW) {
+    if (this.jobCreationTimes.length >= pluginConfig.rateLimit.maxJobsPerWindow) {
       throw new Error('Rate limit exceeded. Please try again later.');
     }
 
@@ -355,7 +379,13 @@ export class PluginCreationService extends Service {
   }
 
   private shouldUseAI(specification: PluginSpecification): boolean {
-    // Use AI for complex plugins
+    // Always use AI if Anthropic is configured - AI generation is much better than templates
+    if (this.anthropic) {
+      elizaLogger.info(`Using AI generation for plugin: ${specification.name}`);
+      return true;
+    }
+
+    // Fall back to template-based logic only if AI is not available
     const hasComplexActions = specification.actions?.some(
       (action) => action.parameters && Object.keys(action.parameters).length > 3
     );
@@ -366,9 +396,13 @@ export class PluginCreationService extends Service {
         (specification.providers?.length || 0) +
         (specification.services?.length || 0) +
         (specification.evaluators?.length || 0) >
-      3;
+      1; // Lowered threshold from 3 to 1
 
-    return hasComplexActions || hasServices || hasMultipleComponents;
+    const shouldUseAI = hasComplexActions || hasServices || hasMultipleComponents;
+    
+    elizaLogger.info(`AI generation decision for ${specification.name}: ${shouldUseAI ? 'AI' : 'Templates'} (hasComplexActions: ${hasComplexActions}, hasServices: ${hasServices}, hasMultipleComponents: ${hasMultipleComponents})`);
+    
+    return shouldUseAI;
   }
 
   private async generatePluginWithAI(job: PluginJob, apiKeyOverride?: string): Promise<void> {
@@ -378,22 +412,50 @@ export class PluginCreationService extends Service {
       throw new Error('Anthropic API key is required for AI generation');
     }
 
+    elizaLogger.info(`Starting AI generation for plugin: ${job.specification.name}`);
+    job.logs.push('Starting AI generation with Claude...');
+
     const prompt = this.buildAIPrompt(job.specification);
 
     try {
+      elizaLogger.debug(`Sending prompt to Claude (${this.selectedModel}):`, prompt.substring(0, 200) + '...');
+      
       const response = await anthropic.messages.create({
         model: this.selectedModel,
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 8000,
+        temperature: 0.3, // More deterministic for code generation
       });
+
+      elizaLogger.info(`Received response from Claude for plugin: ${job.specification.name}`);
+      job.logs.push(`Claude API call successful (${this.selectedModel})`);
 
       const content = response.content[0];
       if (content.type === 'text') {
+        elizaLogger.debug(`Parsing AI response (${content.text.length} characters)`);
+        job.logs.push(`Parsing AI response (${content.text.length} characters)...`);
+        
         await this.parseAndWriteAIResponse(job, content.text);
+        
+        elizaLogger.info(`AI generation completed successfully for plugin: ${job.specification.name}`);
+        job.logs.push('✅ AI generation completed successfully');
+      } else {
+        throw new Error('Unexpected response format from Claude API');
       }
-    } catch (_error) {
-      job.logs.push('AI generation failed, falling back to templates');
-      await this.generatePluginWithTemplates(job);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      elizaLogger.error(`AI generation failed for plugin ${job.specification.name}:`, error);
+      job.logs.push(`❌ AI generation failed: ${errorMessage}`);
+      job.logs.push('📝 Falling back to template generation...');
+      
+      // Fall back to templates but don't lose the original error
+      try {
+        await this.generatePluginWithTemplates(job);
+        job.logs.push('✅ Template generation completed as fallback');
+      } catch (templateError) {
+        elizaLogger.error(`Both AI and template generation failed for plugin ${job.specification.name}:`, templateError);
+        throw new Error(`AI generation failed (${errorMessage}) and template fallback also failed (${templateError instanceof Error ? templateError.message : String(templateError)})`);
+      }
     }
   }
 
@@ -741,25 +803,142 @@ Include all necessary files including the main index.ts file that exports the pl
   }
 
   private async parseAndWriteAIResponse(job: PluginJob, response: string): Promise<void> {
-    const fileRegex = /File:\s*([^\n]+)\n```(?:typescript|javascript|ts|js)?\n([\s\S]*?)```/g;
-    let match;
+    elizaLogger.debug(`Parsing AI response for plugin: ${job.specification.name}`);
+    
+    // Multiple regex patterns to handle different response formats
+    const filePatterns = [
+      // Standard format: File: path\n```typescript\ncontent\n```
+      /File:\s*([^\n]+)\n```(?:typescript|javascript|ts|js)?\n([\s\S]*?)```/gi,
+      // Alternative format: **File: path**\n```typescript\ncontent\n```
+      /\*\*File:\s*([^\n*]+)\*\*\n```(?:typescript|javascript|ts|js)?\n([\s\S]*?)```/gi,
+      // Markdown format: ### path\n```typescript\ncontent\n```
+      /###\s*([^\n]+)\n```(?:typescript|javascript|ts|js)?\n([\s\S]*?)```/gi,
+      // Simple format: path:\n```typescript\ncontent\n```
+      /([^\n:]+):\n```(?:typescript|javascript|ts|js)?\n([\s\S]*?)```/gi,
+    ];
 
-    while ((match = fileRegex.exec(response)) !== null) {
-      const filePath = match[1].trim();
-      const fileContent = match[2].trim();
+    let filesCreated = 0;
+    
+    for (const pattern of filePatterns) {
+      pattern.lastIndex = 0; // Reset regex
+      let match;
+      
+      while ((match = pattern.exec(response)) !== null) {
+        const filePath = match[1].trim().replace(/[\\]/g, '/'); // Normalize path separators
+        const fileContent = match[2].trim();
 
-      const fullPath = path.join(job.outputPath!, filePath);
-      await fs.ensureDir(path.dirname(fullPath));
-      await fs.writeFile(fullPath, fileContent);
+        // Validate file path
+        if (!this.isValidFilePath(filePath)) {
+          elizaLogger.warn(`Skipping invalid file path: ${filePath}`);
+          job.logs.push(`⚠️ Skipped invalid file path: ${filePath}`);
+          continue;
+        }
 
-      job.logs.push(`Created file: ${filePath}`);
+        // Ensure TypeScript files have proper extension
+        const normalizedPath = this.normalizeFilePath(filePath);
+        const fullPath = path.join(job.outputPath!, normalizedPath);
+        
+        try {
+          await fs.ensureDir(path.dirname(fullPath));
+          await fs.writeFile(fullPath, fileContent);
+          
+          elizaLogger.debug(`Created file: ${normalizedPath} (${fileContent.length} chars)`);
+          job.logs.push(`📄 Created file: ${normalizedPath} (${fileContent.length} chars)`);
+          filesCreated++;
+        } catch (error) {
+          elizaLogger.error(`Failed to write file ${normalizedPath}:`, error);
+          job.logs.push(`❌ Failed to write file ${normalizedPath}: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }
+      
+      // If we found files with this pattern, don't try others
+      if (filesCreated > 0) {
+        break;
+      }
     }
 
-    // If no files were parsed, fall back to templates
-    if (!fileRegex.test(response)) {
-      job.logs.push('Could not parse AI response, falling back to templates');
+    if (filesCreated === 0) {
+      elizaLogger.warn(`No files parsed from AI response for plugin: ${job.specification.name}`);
+      job.logs.push('⚠️ Could not parse any files from AI response');
+      job.logs.push('📝 Falling back to template generation...');
       await this.generatePluginWithTemplates(job);
+    } else {
+      elizaLogger.info(`Successfully parsed ${filesCreated} files from AI response`);
+      job.logs.push(`✅ Successfully created ${filesCreated} files from AI response`);
+      
+      // Ensure we have an index.ts file
+      const indexPath = path.join(job.outputPath!, 'src', 'index.ts');
+      const indexExists = await fs.pathExists(indexPath);
+      
+      if (!indexExists) {
+        elizaLogger.warn(`No index.ts found, creating basic index file for plugin: ${job.specification.name}`);
+        job.logs.push('📄 Creating missing index.ts file...');
+        
+        // Generate a basic index file
+        const indexContent = this.generateBasicIndexFile(job.specification);
+        await fs.ensureDir(path.dirname(indexPath));
+        await fs.writeFile(indexPath, indexContent);
+        
+        job.logs.push('✅ Created basic index.ts file');
+      }
     }
+  }
+
+  private isValidFilePath(filePath: string): boolean {
+    // Prevent directory traversal
+    if (filePath.includes('..') || filePath.includes('\\..') || filePath.startsWith('/')) {
+      return false;
+    }
+    
+    // Must be a reasonable file path
+    const allowedExtensions = ['.ts', '.js', '.json', '.md', '.txt'];
+    const hasValidExtension = allowedExtensions.some(ext => filePath.endsWith(ext));
+    
+    return hasValidExtension && filePath.length > 0 && filePath.length < 200;
+  }
+
+  private normalizeFilePath(filePath: string): string {
+    // Ensure TypeScript files have .ts extension
+    if (filePath.endsWith('.js')) {
+      filePath = filePath.replace(/\.js$/, '.ts');
+    }
+    
+    // Ensure src/ prefix for source files if not already present
+    if (!filePath.startsWith('src/') && !filePath.startsWith('package.json') && !filePath.startsWith('tsconfig') && !filePath.endsWith('.md')) {
+      filePath = `src/${filePath}`;
+    }
+    
+    return filePath;
+  }
+
+  private generateBasicIndexFile(specification: PluginSpecification): string {
+    return `import type { Plugin } from '@elizaos/core';
+
+export const ${this.toCamelCase(specification.name)}Plugin: Plugin = {
+  name: '${specification.name}',
+  description: '${specification.description}',
+  actions: [
+    // Actions will be imported and added here
+  ],
+  providers: [
+    // Providers will be imported and added here
+  ],
+  evaluators: [
+    // Evaluators will be imported and added here
+  ],
+  services: [
+    // Services will be imported and added here
+  ],
+};
+
+export default ${this.toCamelCase(specification.name)}Plugin;
+`;
+  }
+
+  private toCamelCase(str: string): string {
+    return str
+      .replace(/[@\-_\s]+(.)?/g, (_, char) => (char ? char.toUpperCase() : ''))
+      .replace(/^./, char => char.toLowerCase());
   }
 
   private isValidPluginName(name: string): boolean {

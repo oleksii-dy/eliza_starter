@@ -17,5 +17,5 @@
     "TypeScript",
     "software architecture"
   ],
-  "plugins": ["@elizaos/plugin-autocoder"]
+  "plugins": ["@elizaos/plugin-sql", "@elizaos/plugin-autocoder"]
 }

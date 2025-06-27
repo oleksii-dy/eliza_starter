@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'bun:test';
-import { autocoderPlugin } from '../index.js';
+import { autocoderPlugin } from '../index.ts';
 
 describe('Basic Platform Integration', () => {
   it('should have platform workflow actions available', () => {

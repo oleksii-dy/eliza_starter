@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import autocoderPlugin from '../index.js';
+import autocoderPlugin from '../index.ts';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 
 // Real plugin integration tests - testing actual plugin structure and validation

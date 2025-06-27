@@ -18,20 +18,20 @@ const createMockAgent = (overrides: Partial<Agent> = {}): Agent => ({
   style: {
     all: ['style rule 1'],
     chat: ['chat style rule'],
-    post: ['post style rule']
+    post: ['post style rule'],
   },
   plugins: ['plugin1', 'plugin2'],
   settings: {
     avatar: 'https://example.com/avatar.png',
     voice: {
-      model: 'test-model'
+      model: 'test-model',
     },
     secrets: {
       API_KEY: 'test-key',
-      SECRET_TOKEN: 'test-token'
-    }
+      SECRET_TOKEN: 'test-token',
+    },
   },
-  ...overrides
+  ...overrides,
 });
 
 describe('useAgentUpdate', () => {
@@ -244,8 +244,8 @@ describe('useAgentUpdate', () => {
       topics: ['template-topic'],
       settings: {
         avatar: 'template-avatar.png',
-        voice: { model: 'template-model' }
-      }
+        voice: { model: 'template-model' },
+      },
     });
 
     act(() => {
@@ -292,7 +292,7 @@ describe('useAgentUpdate', () => {
     const newSettings = {
       avatar: 'new-avatar.png',
       voice: { model: 'new-model' },
-      secrets: { NEW_SECRET: 'new-value' }
+      secrets: { NEW_SECRET: 'new-value' },
     };
 
     act(() => {

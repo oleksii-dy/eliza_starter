@@ -22,7 +22,7 @@ import {
 import type {
   PluginCreationService,
   PluginSpecification,
-} from '../services/PluginCreationService.js';
+} from '../services/PluginCreationService.ts';
 // AutoCodeService removed - using existing services
 
 export interface PlatformWorkflowRequest {

@@ -16,9 +16,12 @@ function extractCodeBlocks(text: string): Array<{ language: string; content: str
   let match;
 
   while ((match = codeBlockRegex.exec(text)) !== null) {
-    const language = match[1] || 'python';
+    let language = match[1] || '';
     const content = match[2].trim();
+    
     if (content) {
+      // Normalize language names
+      language = normalizeLanguage(language);
       blocks.push({ language, content });
     }
   }
@@ -30,12 +33,61 @@ function extractCodeBlocks(text: string): Array<{ language: string; content: str
       const content = match[1].trim();
       if (content && content.length > 10) {
         // Only consider longer inline code
-        blocks.push({ language: 'python', content });
+        const detectedLanguage = detectLanguageFromCode(content);
+        blocks.push({ language: detectedLanguage, content });
       }
     }
   }
 
   return blocks;
+}
+
+// Helper function to normalize language names
+function normalizeLanguage(language: string): string {
+  if (!language) return 'python'; // Default
+  
+  const lang = language.toLowerCase();
+  
+  // JavaScript variants
+  if (['js', 'javascript', 'node', 'nodejs'].includes(lang)) {
+    return 'javascript';
+  }
+  
+  // Python variants
+  if (['py', 'python', 'python3'].includes(lang)) {
+    return 'python';
+  }
+  
+  // Return normalized language or default to python
+  return ['javascript', 'python'].includes(lang) ? lang : 'python';
+}
+
+// Helper function to detect language from code content
+function detectLanguageFromCode(code: string): string {
+  const jsIndicators = [
+    'console.log', 'const ', 'let ', 'var ', '=>', 'function(',
+    'document.', 'window.', '.getElementById', '.querySelector',
+    'require(', 'import ', 'export ', 'async function', 'await '
+  ];
+  
+  const pyIndicators = [
+    'print(', 'import ', 'def ', 'if __name__', 'elif ', 'from ',
+    '.append(', '.extend(', '.keys()', '.values()', '.items()',
+    'range(', 'len(', 'str(', 'int(', 'float('
+  ];
+  
+  let jsScore = 0;
+  let pyScore = 0;
+  
+  for (const indicator of jsIndicators) {
+    if (code.includes(indicator)) jsScore++;
+  }
+  
+  for (const indicator of pyIndicators) {
+    if (code.includes(indicator)) pyScore++;
+  }
+  
+  return jsScore > pyScore ? 'javascript' : 'python';
 }
 
 // Helper function to format execution results
@@ -76,7 +128,7 @@ function formatExecutionResults(results: any[]): string {
 export const executeCodeAction: Action = {
   name: 'EXECUTE_CODE',
   description:
-    'Execute code in a secure E2B sandbox environment. Supports Python and other languages.',
+    'Execute code in a secure E2B sandbox environment. Supports Python, JavaScript, and other languages with automatic language detection.',
 
   validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
     try {
@@ -96,12 +148,18 @@ export const executeCodeAction: Action = {
         'run',
         'code',
         'python',
+        'javascript',
         'calculate',
         'import',
         'def ',
         'for ',
         'if ',
         'print(',
+        'console.log',
+        'const ',
+        'let ',
+        'var ',
+        'function',
       ];
       const hasCodeKeywords = codeKeywords.some((keyword) => text.toLowerCase().includes(keyword));
 
@@ -301,6 +359,22 @@ export const executeCodeAction: Action = {
       {
         name: '{{agentName}}',
         content: { text: 'I will execute that NumPy code for you!' },
+      },
+    ],
+    [
+      {
+        name: '{{user1}}',
+        content: { text: '```javascript\nconst numbers = [1, 2, 3, 4, 5];\nconst sum = numbers.reduce((a, b) => a + b, 0);\nconsole.log(`Sum: ${sum}`);\n```' },
+      },
+      {
+        name: '{{agentName}}',
+        content: {
+          text: 'I will execute that JavaScript code:\n\n```javascript\nconst numbers = [1, 2, 3, 4, 5];\nconst sum = numbers.reduce((a, b) => a + b, 0);\nconsole.log(`Sum: ${sum}`);\n```',
+        },
+      },
+      {
+        name: '{{agentName}}',
+        content: { text: '✅ **Result:** `15`\n**Output:**\n```\nSum: 15\n```' },
       },
     ],
   ],

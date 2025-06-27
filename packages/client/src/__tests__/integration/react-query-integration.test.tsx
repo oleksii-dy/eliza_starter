@@ -22,8 +22,10 @@ const createMockApiClient = (overrides: Partial<ApiClient> = {}): ApiClient => {
     ],
     createAgent: async (agent) => ({ ...agent, id: 'new-id', createdAt: Date.now() }),
     updateAgent: async (id, updates) => ({ id, ...updates, updatedAt: Date.now() }),
-    deleteAgent: async (id) => { /* mock deletion */ },
-    ...overrides
+    deleteAgent: async (id) => {
+      /* mock deletion */
+    },
+    ...overrides,
   };
 };
 
@@ -64,7 +66,7 @@ const useUpdateAgent = (apiClient: ApiClient, queryClient: QueryClient) => {
 
       // Optimistically update
       queryClient.setQueryData(['agents'], (old: any[] = []) =>
-        old.map(agent => agent.id === id ? { ...agent, ...updates } : agent)
+        old.map((agent) => (agent.id === id ? { ...agent, ...updates } : agent))
       );
 
       return { previousAgents };
@@ -88,9 +90,7 @@ const createWrapper = (apiClient: ApiClient, queryClient: QueryClient) => {
 
   return ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>
-      <ApiClientProvider.Provider value={apiClient}>
-        {children}
-      </ApiClientProvider.Provider>
+      <ApiClientProvider.Provider value={apiClient}>{children}</ApiClientProvider.Provider>
     </QueryClientProvider>
   );
 };
@@ -140,7 +140,7 @@ describe('React Query Integration Tests', () => {
     const errorApiClient = createMockApiClient({
       getAgents: async () => {
         throw new Error('API Error');
-      }
+      },
     });
 
     const wrapper = createWrapper(errorApiClient, queryClient);
@@ -166,7 +166,9 @@ describe('React Query Integration Tests', () => {
     });
 
     // Then test mutation
-    const { result: mutationResult } = renderHook(() => useCreateAgent(apiClient, queryClient), { wrapper });
+    const { result: mutationResult } = renderHook(() => useCreateAgent(apiClient, queryClient), {
+      wrapper,
+    });
 
     const newAgent = { name: 'New Agent', status: 'inactive' };
 
@@ -191,7 +193,7 @@ describe('React Query Integration Tests', () => {
     const errorApiClient = createMockApiClient({
       createAgent: async () => {
         throw new Error('Creation failed');
-      }
+      },
     });
 
     const wrapper = createWrapper(errorApiClient, queryClient);
@@ -206,7 +208,10 @@ describe('React Query Integration Tests', () => {
     const originalCount = agentsResult.current.data?.length || 0;
 
     // Test mutation with error
-    const { result: mutationResult } = renderHook(() => useCreateAgent(errorApiClient, queryClient), { wrapper });
+    const { result: mutationResult } = renderHook(
+      () => useCreateAgent(errorApiClient, queryClient),
+      { wrapper }
+    );
 
     const newAgent = { name: 'Failing Agent', status: 'inactive' };
 
@@ -231,7 +236,7 @@ describe('React Query Integration Tests', () => {
           throw new Error('Update failed');
         }
         return { id, ...updates, updatedAt: Date.now() };
-      }
+      },
     });
 
     const wrapper = createWrapper(failingApiClient, queryClient);
@@ -247,12 +252,15 @@ describe('React Query Integration Tests', () => {
     const originalFirstAgent = originalData?.[0];
 
     // Test update mutation
-    const { result: mutationResult } = renderHook(() => useUpdateAgent(failingApiClient, queryClient), { wrapper });
+    const { result: mutationResult } = renderHook(
+      () => useUpdateAgent(failingApiClient, queryClient),
+      { wrapper }
+    );
 
     act(() => {
       mutationResult.current.mutate({
         id: '1',
-        updates: { name: 'Failing Update', status: 'updated' }
+        updates: { name: 'Failing Update', status: 'updated' },
       });
     });
 
@@ -316,7 +324,7 @@ describe('React Query Integration Tests', () => {
     const initialData = result.current.data;
 
     // Wait for data to become stale
-    await new Promise(resolve => setTimeout(resolve, 150));
+    await new Promise((resolve) => setTimeout(resolve, 150));
 
     // Should still have data but might refetch in background
     expect(result.current.data).toEqual(initialData);
@@ -336,8 +344,12 @@ describe('React Query Integration Tests', () => {
     });
 
     // Test multiple concurrent mutations
-    const { result: createResult } = renderHook(() => useCreateAgent(apiClient, queryClient), { wrapper });
-    const { result: updateResult } = renderHook(() => useUpdateAgent(apiClient, queryClient), { wrapper });
+    const { result: createResult } = renderHook(() => useCreateAgent(apiClient, queryClient), {
+      wrapper,
+    });
+    const { result: updateResult } = renderHook(() => useUpdateAgent(apiClient, queryClient), {
+      wrapper,
+    });
 
     // Trigger concurrent mutations
     act(() => {

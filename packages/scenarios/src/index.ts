@@ -25,6 +25,22 @@ import {
 // Import sandbox scenarios
 import { sandboxScenarios } from './sandbox/index.js';
 
+// Import real-world scenarios
+import { realWorldScenarios } from './real-world-scenarios/index.js';
+
+// Import autocoder scenarios
+import {
+  autocoderBasicTestSuite,
+  autocoderComprehensiveBenchmarks,
+  autocoderSwarmCoordinationSuite,
+  autocoderArtifactManagementSuite,
+  autocoderGitHubIntegrationSuite,
+} from './autocoder-scenarios/index.js';
+
+// Export default test character and project
+export { defaultTestCharacter } from './default-agent.js';
+export { scenariosProject } from './project.js';
+
 export {
   entityIntroductionScenario,
   relationshipBuildingScenario,
@@ -34,6 +50,31 @@ export {
 } from './rolodex/index.js';
 
 export { sandboxScenarios } from './sandbox/index.js';
+
+// Export autocoder scenarios
+export {
+  autocoderBasicTestSuite,
+  autocoderComprehensiveBenchmarks,
+  autocoderSwarmCoordinationSuite,
+  autocoderArtifactManagementSuite,
+  autocoderGitHubIntegrationSuite,
+} from './autocoder-scenarios/index.js';
+
+// Export real-world scenarios
+export { 
+  realWorldScenarios,
+  realWorldScenarioCategories,
+  realWorldScenarioMetadata,
+  proctorAgentScenario,
+  aiProductDevelopmentFactoryScenario,
+  intelligentTaskAutomationHubScenario,
+  distributedDevelopmentTeamSimulationScenario,
+  getRealWorldScenarioByCategory,
+  getRealWorldScenarioById,
+  getAllRealWorldScenarios,
+  getRealWorldScenarioMetadata,
+  validateRealWorldScenarioRequirements,
+} from './real-world-scenarios/index.js';
 
 // Export individual example scenarios
 export const exampleScenarios = [
@@ -52,12 +93,31 @@ export const rolodexScenarios = [
   followUpManagementScenario,
 ];
 
-// Export all scenarios including plugin tests
+// AutoCoder scenario suites (flattened for easier access)
+export const autocoderScenarios = [
+  ...autocoderBasicTestSuite.scenarios,
+  ...autocoderComprehensiveBenchmarks.scenarios,
+  ...autocoderSwarmCoordinationSuite.scenarios,
+  ...autocoderArtifactManagementSuite.scenarios,
+  ...autocoderGitHubIntegrationSuite.scenarios,
+];
+
+export const autocoderScenarioSuites = [
+  autocoderBasicTestSuite,
+  autocoderComprehensiveBenchmarks,
+  autocoderSwarmCoordinationSuite,
+  autocoderArtifactManagementSuite,
+  autocoderGitHubIntegrationSuite,
+];
+
+// Export all scenarios including plugin tests and real-world scenarios
 export const allScenarios = [
   ...exampleScenarios,
   ...pluginTestScenarios,
   ...rolodexScenarios,
   ...sandboxScenarios,
+  ...realWorldScenarios,
+  ...autocoderScenarios,
 ];
 
 // Default export includes all scenarios
@@ -90,6 +150,13 @@ export const scenarioCategories = {
   integration: pluginTestScenarios,
   rolodex: rolodexScenarios,
   sandbox: sandboxScenarios,
+  'real-world': realWorldScenarios,
+  autocoder: autocoderScenarios,
+  'autocoder-basic': autocoderBasicTestSuite.scenarios,
+  'autocoder-advanced': autocoderComprehensiveBenchmarks.scenarios,
+  'autocoder-swarm': autocoderSwarmCoordinationSuite.scenarios,
+  'autocoder-artifacts': autocoderArtifactManagementSuite.scenarios,
+  'autocoder-github': autocoderGitHubIntegrationSuite.scenarios,
 };
 
 // Get scenarios by category

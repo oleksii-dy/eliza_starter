@@ -13,6 +13,15 @@ export const codingChallengeScenario: Scenario = {
       id: uuidv4() as any,
       name: 'Coding Agent',
       role: 'subject',
+      script: {
+        steps: [
+          {
+            type: 'message',
+            content: 'I\'m ready to tackle this coding challenge. Let me analyze the problem and provide a well-structured solution.',
+            description: 'Initial response showing readiness to solve coding problems',
+          },
+        ],
+      },
     },
     {
       id: uuidv4() as any,

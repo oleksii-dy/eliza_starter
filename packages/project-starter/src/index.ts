@@ -16,7 +16,7 @@ const project: Project = {
 };
 
 // Export test suites for the test runner
-export { testSuites } from './__tests__/e2e';
+export { testSuites } from './__tests__/e2e/index.ts';
 
 // Export character for tests
 export { character };

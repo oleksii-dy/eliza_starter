@@ -1,10 +1,11 @@
 // Test-safe logger that prevents initialization issues
 
 // Check if we're in a test environment
-const isTestEnv = typeof process !== 'undefined' &&
+const isTestEnv =
+  typeof process !== 'undefined' &&
   (process.env.NODE_ENV === 'test' ||
-   typeof (globalThis as any).Bun?.jest !== 'undefined' ||
-   typeof window !== 'undefined' && (window as any).__TESTING__);
+    typeof (globalThis as any).Bun?.jest !== 'undefined' ||
+    (typeof window !== 'undefined' && (window as any).__TESTING__));
 
 // Create mock logger for tests
 const mockLogger = {
@@ -25,7 +26,6 @@ if (isTestEnv) {
 } else {
   // Use real logger in production - import synchronously
   try {
-
     const { elizaLogger } = require('@elizaos/core');
     clientLogger = {
       info: (msg: string, ...args: unknown[]) => {
@@ -41,7 +41,9 @@ if (isTestEnv) {
         elizaLogger.debug({ source: 'client' }, msg, ...args);
       },
       setLevel: (level: string) => {
-        if (elizaLogger.setLevel) {elizaLogger.setLevel(level);}
+        if (elizaLogger.setLevel) {
+          elizaLogger.setLevel(level);
+        }
       },
       getLevel: () => elizaLogger.getLevel?.() || 'info',
       child: () => clientLogger,

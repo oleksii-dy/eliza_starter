@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, mock } from 'bun:test';
-import { createMCPAction } from '../../actions/mcp-creation-action';
+import { createMCPAction } from '../../actions/mcp-creation-action.ts';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 
 // Mock the MCP creation service

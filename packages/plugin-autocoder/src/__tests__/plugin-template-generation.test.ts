@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'bun:test';
-import * as utils from '../utils/plugin-templates';
-import type { PluginSpecification } from '../services/PluginCreationService';
+import * as utils from '../utils/plugin-templates.ts';
+import type { PluginSpecification } from '../services/PluginCreationService.ts';
 
 describe('Plugin Template Generation', () => {
   describe('Provider Generation', () => {
@@ -72,8 +72,8 @@ describe('Plugin Template Generation', () => {
       const indexCode = utils.generatePluginIndex(_spec.name, _spec);
 
       // Check imports
-      expect(indexCode).toContain("import { timeProvider } from './providers/timeProvider.js';");
-      expect(indexCode).toContain("import { dataProvider } from './providers/dataProvider.js';");
+      expect(indexCode).toContain("import { timeProvider } from './providers/timeProvider.ts';");
+      expect(indexCode).toContain("import { dataProvider } from './providers/dataProvider.ts';");
 
       // Check plugin class name
       expect(indexCode).toContain('export const PlugintimePlugin: Plugin = {');
@@ -120,10 +120,10 @@ describe('Plugin Template Generation', () => {
       const indexCode = utils.generatePluginIndex(_spec.name, _spec);
 
       // Check all imports
-      expect(indexCode).toContain("import { doSomethingAction } from './actions/doSomething.js';");
-      expect(indexCode).toContain("import { infoProvider } from './providers/infoProvider.js';");
-      expect(indexCode).toContain("import { DataService } from './services/DataService.js';");
-      expect(indexCode).toContain("import { qualityEvaluator } from './evaluators/quality.js';");
+      expect(indexCode).toContain("import { doSomethingAction } from './actions/doSomething.ts';");
+      expect(indexCode).toContain("import { infoProvider } from './providers/infoProvider.ts';");
+      expect(indexCode).toContain("import { DataService } from './services/DataService.ts';");
+      expect(indexCode).toContain("import { qualityEvaluator } from './evaluators/quality.ts';");
 
       // Check arrays
       expect(indexCode).toContain('actions: [\n    doSomethingAction\n  ]');
@@ -292,7 +292,7 @@ describe('Plugin Template Generation', () => {
 
       const indexCode = utils.generatePluginIndex(_spec.name, _spec);
       // Should not double the Provider suffix
-      expect(indexCode).toContain("import { dataProvider } from './providers/dataProvider.js';");
+      expect(indexCode).toContain("import { dataProvider } from './providers/dataProvider.ts';");
       expect(indexCode).not.toContain('dataProviderProvider');
     });
   });

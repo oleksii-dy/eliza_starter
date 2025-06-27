@@ -36,36 +36,36 @@ export default function AgentRoute() {
 
   const agentFromHook: Agent | undefined = agentDataResponse?.data
     ? ({
-      ...(agentDataResponse.data as AgentWithStatus),
-      status:
+        ...(agentDataResponse.data as AgentWithStatus),
+        status:
           agentDataResponse.data.status === 'active'
             ? CoreAgentStatusEnum.ACTIVE
             : agentDataResponse.data.status === 'inactive'
               ? CoreAgentStatusEnum.INACTIVE
               : CoreAgentStatusEnum.INACTIVE,
-      username: agentDataResponse.data.username || agentDataResponse.data.name || 'Unknown',
-      bio: agentDataResponse.data.bio || '',
-      messageExamples: agentDataResponse.data.messageExamples || [],
-      postExamples: agentDataResponse.data.postExamples || [],
-      topics: agentDataResponse.data.topics || [],
-      knowledge: agentDataResponse.data.knowledge || [],
-      plugins: agentDataResponse.data.plugins || [],
-      settings: agentDataResponse.data.settings || {},
-      secrets: (agentDataResponse.data as { secrets?: Record<string, unknown> }).secrets || {},
-      style: agentDataResponse.data.style || {},
-      enabled:
+        username: agentDataResponse.data.username || agentDataResponse.data.name || 'Unknown',
+        bio: agentDataResponse.data.bio || '',
+        messageExamples: agentDataResponse.data.messageExamples || [],
+        postExamples: agentDataResponse.data.postExamples || [],
+        topics: agentDataResponse.data.topics || [],
+        knowledge: agentDataResponse.data.knowledge || [],
+        plugins: agentDataResponse.data.plugins || [],
+        settings: agentDataResponse.data.settings || {},
+        secrets: (agentDataResponse.data as { secrets?: Record<string, unknown> }).secrets || {},
+        style: agentDataResponse.data.style || {},
+        enabled:
           typeof agentDataResponse.data.enabled === 'boolean'
             ? agentDataResponse.data.enabled
             : true,
-      createdAt:
+        createdAt:
           typeof agentDataResponse.data.createdAt === 'number'
             ? agentDataResponse.data.createdAt
             : Date.now(),
-      updatedAt:
+        updatedAt:
           typeof agentDataResponse.data.updatedAt === 'number'
             ? agentDataResponse.data.updatedAt
             : Date.now(),
-    } as Agent)
+      } as Agent)
     : undefined;
 
   if (!agentId) {

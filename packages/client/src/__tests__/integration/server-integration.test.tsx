@@ -113,7 +113,7 @@ describe('Real Server Integration Tests', () => {
       dataDir: './test-data',
       // In real implementation:
       // database: new PGLiteAdapter(':memory:'),
-      middlewares: []
+      middlewares: [],
     });
 
     const port = await testServer.start(0); // Random port
@@ -133,16 +133,14 @@ describe('Real Server Integration Tests', () => {
     queryClient = new QueryClient({
       defaultOptions: {
         queries: { retry: false, staleTime: 0 },
-        mutations: { retry: false }
-      }
+        mutations: { retry: false },
+      },
     });
   });
 
   test('should connect to server and fetch agents', async () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
 
     const { result } = renderHook(() => useServerAgents(apiClient), { wrapper });
@@ -162,9 +160,7 @@ describe('Real Server Integration Tests', () => {
 
   test('should check server health', async () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
 
     const { result } = renderHook(() => useServerHealth(apiClient), { wrapper });
@@ -182,7 +178,7 @@ describe('Real Server Integration Tests', () => {
       name: 'Test Created Agent',
       username: 'testcreated',
       system: 'Test system prompt',
-      enabled: true
+      enabled: true,
     };
 
     const createdAgent = await apiClient.createAgent(newAgent);
@@ -215,9 +211,7 @@ describe('Real Server Integration Tests', () => {
 
   test('should handle concurrent requests', async () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
 
     // Start multiple queries simultaneously
@@ -236,9 +230,7 @@ describe('Real Server Integration Tests', () => {
 
   test('should maintain data consistency across queries', async () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
 
     // Get initial agent count
@@ -272,9 +264,7 @@ describe('Real Server Integration Tests', () => {
 
   test('should handle query invalidation after mutations', async () => {
     const wrapper = ({ children }: { children: React.ReactNode }) => (
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
 
     const { result } = renderHook(() => useServerAgents(apiClient), { wrapper });
@@ -326,7 +316,7 @@ describe('Real Server Integration Tests', () => {
 
     const newAgent = await apiClient.createAgent({
       name: 'Integration Test Agent',
-      system: 'Integration test system prompt'
+      system: 'Integration test system prompt',
     });
     expect(newAgent.id).toBeDefined();
 

@@ -12,8 +12,8 @@ const mockApiClient = {
   getCentralServers: async () => ({ data: [] }),
   defaults: {
     baseURL: '',
-    headers: { common: {} }
-  }
+    headers: { common: {} },
+  },
 };
 
 // Mock modules that cause issues in tests
@@ -32,7 +32,7 @@ if (originalRequire) {
   // Mock the API client
   const Module_cache = Module._cache || {};
   Module_cache['@/lib/api-mock'] = {
-    exports: { apiClient: mockApiClient }
+    exports: { apiClient: mockApiClient },
   };
   Module._cache = Module_cache;
 }

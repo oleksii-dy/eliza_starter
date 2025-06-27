@@ -1,10 +1,10 @@
-import { getComponentExportName as _getComponentExportName } from './naming-utils';
+import { getComponentExportName as _getComponentExportName } from './naming-utils.ts';
 // Commented out unused imports to fix lint warnings
 // import {
 //   kebabToCamelCase,
 //   sanitizeFileName,
 //   toSafeVariableName
-// } from './naming-utils';
+// } from './naming-utils.ts';
 
 export const generateActionCode = (
   name: string,
@@ -501,7 +501,7 @@ export const generatePluginIndex = (pluginName: string, specification: any): str
   if (specification.actions?.length) {
     specification.actions.forEach((action: any) => {
       const camelCaseName = action.name.charAt(0).toLowerCase() + action.name.slice(1);
-      imports.push(`import { ${camelCaseName}Action } from './actions/${action.name}.js';`);
+      imports.push(`import { ${camelCaseName}Action } from './actions/${action.name}.ts';`);
       exports.push(`${camelCaseName}Action`);
     });
   }
@@ -513,14 +513,14 @@ export const generatePluginIndex = (pluginName: string, specification: any): str
       const exportName = provider.name.endsWith('Provider')
         ? camelCaseName
         : `${camelCaseName}Provider`;
-      imports.push(`import { ${exportName} } from './providers/${provider.name}.js';`);
+      imports.push(`import { ${exportName} } from './providers/${provider.name}.ts';`);
       exports.push(exportName);
     });
   }
 
   if (specification.services?.length) {
     specification.services.forEach((service: any) => {
-      imports.push(`import { ${service.name} } from './services/${service.name}.js';`);
+      imports.push(`import { ${service.name} } from './services/${service.name}.ts';`);
       exports.push(`${service.name}`);
     });
   }
@@ -529,7 +529,7 @@ export const generatePluginIndex = (pluginName: string, specification: any): str
     specification.evaluators.forEach((evaluator: any) => {
       const camelCaseName = evaluator.name.charAt(0).toLowerCase() + evaluator.name.slice(1);
       imports.push(
-        `import { ${camelCaseName}Evaluator } from './evaluators/${evaluator.name}.js';`
+        `import { ${camelCaseName}Evaluator } from './evaluators/${evaluator.name}.ts';`
       );
       exports.push(`${camelCaseName}Evaluator`);
     });
@@ -730,7 +730,7 @@ export const generateTestCode = (componentName: string, componentType: string): 
   const typeLower = componentType.toLowerCase();
 
   return `import { describe, it, expect, beforeEach, mock } from 'bun:test';
-import { ${camelCaseName}${componentType} } from '../${typeLower}s/${componentName}';
+import { ${camelCaseName}${componentType} } from '../${typeLower}s/${componentName}.ts';
 import { IAgentRuntime, Memory, State } from '@elizaos/core';
 
 // Mock runtime

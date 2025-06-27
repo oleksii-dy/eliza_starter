@@ -3,8 +3,8 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { MCPCreationService } from '../../services/McpCreationService';
-import { createMCPAction } from '../../actions/mcp-creation-action';
+import { MCPCreationService } from '../../services/McpCreationService.ts';
+import { createMCPAction } from '../../actions/mcp-creation-action.ts';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 
 const execAsync = promisify(exec);
@@ -193,10 +193,10 @@ describe.skipIf(!process.env.RUN_E2E_TESTS)('MCP Creation E2E Scenarios', () => 
         path.join(result.projectPath!, 'src/mcp-server/index.ts'),
         'utf-8'
       );
-      expect(serverContent).toContain("import { readFileTool } from './tools/read-file-tool.js'");
-      expect(serverContent).toContain("import { writeFileTool } from './tools/write-file-tool.js'");
+      expect(serverContent).toContain("import { readFileTool } from './tools/read-file-tool.ts'");
+      expect(serverContent).toContain("import { writeFileTool } from './tools/write-file-tool.ts'");
       expect(serverContent).toContain(
-        "import { listDirectoryTool } from './tools/list-directory-tool.js'"
+        "import { listDirectoryTool } from './tools/list-directory-tool.ts'"
       );
     });
   });

@@ -14,7 +14,15 @@ export const workflowPlanningScenario: Scenario = {
       id: uuidv4() as any,
       name: 'Planning Agent',
       role: 'subject',
-      // Uses the main agent being tested
+      script: {
+        steps: [
+          {
+            type: 'message',
+            content: 'I\'ll help you create a comprehensive launch plan for your mobile app. Let me break this down into actionable phases and deliverables.',
+            description: 'Initial response showing readiness to plan',
+          },
+        ],
+      },
     },
     {
       id: uuidv4() as any,

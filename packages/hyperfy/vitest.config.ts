@@ -1,19 +1,20 @@
-import { defineConfig } from 'vitest/config'
-import path from 'path'
+import { defineConfig } from 'vitest/config';
+import path from 'path';
 
 export default defineConfig({
   test: {
-    globals: true,
+    include: ['src/__tests__/**/*.test.ts'],
+    exclude: ['node_modules/**', 'build/**', 'dist/**'],
     environment: 'node',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    setupFiles: ['./src/__tests__/setup.ts'],
-    testTimeout: 30000, // 30 second timeout
-    hookTimeout: 30000,
+    testTimeout: 10000,
+    hookTimeout: 10000,
+    teardownTimeout: 5000,
+    globals: true,
+    isolate: true,
     pool: 'forks',
     poolOptions: {
       forks: {
-        maxForks: 2, // Limit parallel forks
-        minForks: 1,
+        singleFork: true,
       },
     },
   },
@@ -22,4 +23,4 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-})
+});

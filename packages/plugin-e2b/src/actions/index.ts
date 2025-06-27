@@ -1,4 +1,5 @@
 export { executeCodeAction } from './executeCode.js';
+export { executeTemplateAction } from './executeTemplate.js';
 export { manageSandboxAction } from './manageSandbox.js';
 export { sandboxFirstAction } from './sandboxFirst.js';
 export { githubIssueOrchestratorAction } from './githubIssueOrchestrator.js';

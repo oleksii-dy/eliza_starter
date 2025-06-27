@@ -39,9 +39,9 @@ const ChatBubble = React.forwardRef<HTMLDivElement, ChatBubbleProps>(
         typeof child.type !== 'string' &&
         child.type !== React.Fragment
           ? React.cloneElement(child, {
-            variant,
-            layout,
-          } as React.ComponentProps<typeof child.type>)
+              variant,
+              layout,
+            } as React.ComponentProps<typeof child.type>)
           : child
       )}
     </div>

@@ -14,6 +14,15 @@ export const researchTaskScenario: Scenario = {
       id: uuidv4() as any,
       name: 'Research Agent',
       role: 'subject',
+      script: {
+        steps: [
+          {
+            type: 'message',
+            content: 'I\'m ready to help you with your research on renewable energy adoption in the United States. Let me gather comprehensive information for you.',
+            description: 'Initial response showing readiness to research',
+          },
+        ],
+      },
     },
     {
       id: uuidv4() as any,

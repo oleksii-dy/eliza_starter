@@ -88,10 +88,18 @@ export function validateUuid(value: string): boolean {
 }
 
 export function getContentTypeFromMimeType(mimeType: string): ContentType {
-  if (mimeType.startsWith('image/')) {return ContentType.IMAGE;}
-  if (mimeType.startsWith('video/')) {return ContentType.VIDEO;}
-  if (mimeType.startsWith('audio/')) {return ContentType.AUDIO;}
-  if (mimeType.startsWith('text/')) {return ContentType.TEXT;}
+  if (mimeType.startsWith('image/')) {
+    return ContentType.IMAGE;
+  }
+  if (mimeType.startsWith('video/')) {
+    return ContentType.VIDEO;
+  }
+  if (mimeType.startsWith('audio/')) {
+    return ContentType.AUDIO;
+  }
+  if (mimeType.startsWith('text/')) {
+    return ContentType.TEXT;
+  }
   return ContentType.FILE;
 }
 

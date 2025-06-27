@@ -1,6 +1,6 @@
-import { Action, IAgentRuntime, Memory, State, HandlerCallback, ActionResult } from '@elizaos/core';
-import { N8nWorkflowService } from '../services/N8nWorkflowService';
-import { validatePrompt } from '../utils/validation';
+import type { Action, IAgentRuntime, Memory, State, HandlerCallback, ActionResult } from '@elizaos/core';
+import { N8nWorkflowService } from '../services/N8nWorkflowService.ts';
+import { validatePrompt } from '../utils/validation.ts';
 import { z } from 'zod';
 
 // Schema for n8n workflow specification

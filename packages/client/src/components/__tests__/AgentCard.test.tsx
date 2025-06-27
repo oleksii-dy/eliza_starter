@@ -40,7 +40,9 @@ const createMockNavigate = () => {
       navigateHistory.push(path);
     },
     getHistory: () => [...navigateHistory],
-    clearHistory: () => { navigateHistory.length = 0; }
+    clearHistory: () => {
+      navigateHistory.length = 0;
+    },
   };
 };
 
@@ -56,7 +58,7 @@ const createMockAgent = (overrides: Partial<AgentWithStatus> = {}): AgentWithSta
   knowledge: [],
   plugins: [],
   settings: {
-    avatar: 'https://example.com/avatar.png'
+    avatar: 'https://example.com/avatar.png',
   },
   secrets: {},
   style: {},
@@ -65,14 +67,14 @@ const createMockAgent = (overrides: Partial<AgentWithStatus> = {}): AgentWithSta
   status: AgentStatus.ACTIVE,
   createdAt: Date.now(),
   updatedAt: Date.now(),
-  ...overrides
+  ...overrides,
 });
 
 // Wrapper component with providers and mocks
 const TestWrapper = ({
   children,
   agentManagement = createMockUseAgentManagement(),
-  navigate = createMockNavigate()
+  navigate = createMockNavigate(),
 }: {
   children: React.ReactNode;
   agentManagement?: ReturnType<typeof createMockUseAgentManagement>;
@@ -81,8 +83,8 @@ const TestWrapper = ({
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false, staleTime: 0 },
-      mutations: { retry: false }
-    }
+      mutations: { retry: false },
+    },
   });
 
   // Mock the hooks by providing them through React context or direct injection
@@ -93,7 +95,7 @@ const TestWrapper = ({
           {React.cloneElement(children as React.ReactElement, {
             // Pass mock functions as props or use context
             __mockAgentManagement: agentManagement,
-            __mockNavigate: navigate
+            __mockNavigate: navigate,
           })}
         </BrowserRouter>
       </TooltipProvider>
@@ -133,7 +135,7 @@ describe('AgentCard Component', () => {
   test('should render inactive agent with different styling', () => {
     const agent = createMockAgent({
       status: AgentStatus.INACTIVE,
-      name: 'Inactive Agent'
+      name: 'Inactive Agent',
     });
     const onChat = () => {};
 
@@ -164,7 +166,7 @@ describe('AgentCard Component', () => {
 
   test('should display avatar when available', () => {
     const agent = createMockAgent({
-      settings: { avatar: 'https://example.com/test-avatar.png' }
+      settings: { avatar: 'https://example.com/test-avatar.png' },
     });
     const onChat = () => {};
 
@@ -175,8 +177,8 @@ describe('AgentCard Component', () => {
     );
 
     const avatarImages = container.querySelectorAll('img');
-    const hasAvatarImage = Array.from(avatarImages).some(img =>
-      img.src === 'https://example.com/test-avatar.png'
+    const hasAvatarImage = Array.from(avatarImages).some(
+      (img) => img.src === 'https://example.com/test-avatar.png'
     );
     expect(hasAvatarImage).toBe(true);
   });
@@ -184,7 +186,7 @@ describe('AgentCard Component', () => {
   test('should display fallback when no avatar available', () => {
     const agent = createMockAgent({
       name: 'No Avatar Agent',
-      settings: {}
+      settings: {},
     });
     const onChat = () => {};
 
@@ -211,8 +213,8 @@ describe('AgentCard Component', () => {
 
     // Should have chat button (MessageSquare icon) for active agent
     const chatButtons = activeContainer.querySelectorAll('button');
-    const hasChatButton = Array.from(chatButtons).some(btn =>
-      btn.querySelector('svg') // MessageSquare icon
+    const hasChatButton = Array.from(chatButtons).some(
+      (btn) => btn.querySelector('svg') // MessageSquare icon
     );
     expect(hasChatButton).toBe(true);
 
@@ -273,7 +275,7 @@ describe('AgentCard Component', () => {
     );
 
     // Find start button
-    const startButton = Array.from(container.querySelectorAll('button')).find(btn =>
+    const startButton = Array.from(container.querySelectorAll('button')).find((btn) =>
       btn.textContent?.includes('Start')
     );
 
@@ -284,9 +286,12 @@ describe('AgentCard Component', () => {
       fireEvent.click(startButton);
 
       // Should show starting state
-      await waitFor(() => {
-        expect(container.textContent).toContain('Starting');
-      }, { timeout: 50 });
+      await waitFor(
+        () => {
+          expect(container.textContent).toContain('Starting');
+        },
+        { timeout: 50 }
+      );
     }
   });
 
@@ -294,7 +299,7 @@ describe('AgentCard Component', () => {
     const minimalAgent = createMockAgent({
       name: undefined,
       settings: {},
-      status: undefined
+      status: undefined,
     });
     const onChat = () => {};
 
@@ -323,8 +328,8 @@ describe('AgentCard Component', () => {
 
     // Should have settings button (with Settings icon)
     const buttons = container.querySelectorAll('button');
-    const hasSettingsButton = Array.from(buttons).some(btn =>
-      btn.querySelector('svg') // Settings icon
+    const hasSettingsButton = Array.from(buttons).some(
+      (btn) => btn.querySelector('svg') // Settings icon
     );
     expect(hasSettingsButton).toBe(true);
   });

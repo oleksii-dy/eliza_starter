@@ -1,6 +1,6 @@
 import { describe, it, expect, mock, beforeEach } from 'bun:test';
-import { DockerService } from '../../services/DockerService.js';
-import { createMockRuntime } from '../test-utils.js';
+import { DockerService } from '../../services/DockerService.ts';
+import { createMockRuntime } from '../test-utils.ts';
 
 // Mock dockerode
 const mockContainer = {

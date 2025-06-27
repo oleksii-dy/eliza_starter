@@ -1,6 +1,6 @@
 import { describe, it, expect, mock, beforeEach } from 'bun:test';
-import { n8nWorkflowAction, checkN8nWorkflowStatusAction } from '../../actions/n8n-workflow-action';
-import { N8nWorkflowService } from '../../services/N8nWorkflowService';
+import { n8nWorkflowAction, checkN8nWorkflowStatusAction } from '../../actions/n8n-workflow-action.ts';
+import { N8nWorkflowService } from '../../services/N8nWorkflowService.ts';
 import type { IAgentRuntime, Memory, State } from '@elizaos/core';
 
 // Mock the N8nWorkflowService

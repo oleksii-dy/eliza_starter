@@ -3,7 +3,7 @@ import {
   PluginCreationService,
   type PluginSpecification,
   ClaudeModel,
-} from '../services/PluginCreationService';
+} from '../services/PluginCreationService.ts';
 import type { IAgentRuntime } from '@elizaos/core';
 import fs from 'fs-extra';
 import path from 'path';

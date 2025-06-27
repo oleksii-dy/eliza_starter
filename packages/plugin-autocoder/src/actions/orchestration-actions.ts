@@ -3,7 +3,7 @@ import { elizaLogger } from '@elizaos/core';
 import type {
   PluginCreationService,
   PluginSpecification,
-} from '../services/PluginCreationService.js';
+} from '../services/PluginCreationService.ts';
 import { z } from 'zod';
 
 const CreatePluginProjectSchema = z.object({
@@ -35,18 +35,73 @@ export const createPluginProjectAction: Action = {
     ],
   ],
   validate: async (_runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
-    const text = message.content.text?.toLowerCase() || '';
-    const service = _runtime.getService<PluginCreationService>('plugin_creation');
-    return !!service && text.includes('create') && text.includes('plugin');
+    try {
+      // Check if plugin creation service is available
+      const service = _runtime.getService<PluginCreationService>('plugin_creation');
+      if (!service) {
+        elizaLogger.warn('Plugin creation service not available for orchestration validation');
+        return false;
+      }
+
+      // Validate message content
+      if (!message.content?.text) {
+        elizaLogger.debug('No text content provided for plugin project validation');
+        return false;
+      }
+
+      const text = message.content.text.toLowerCase();
+      
+      // Check for minimum content requirements
+      if (text.length < 5) {
+        elizaLogger.debug('Message too short for plugin project creation');
+        return false;
+      }
+
+      // Check for plugin project creation keywords
+      const hasCreateKeyword = /\b(create|make|build|start|begin)\b/.test(text);
+      const hasPluginKeyword = /\b(plugin|project)\b/.test(text);
+      
+      if (!hasCreateKeyword || !hasPluginKeyword) {
+        elizaLogger.debug('Message does not contain plugin project creation keywords');
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      elizaLogger.error('Error during plugin project validation', error);
+      return false;
+    }
   },
   handler: async (runtime: IAgentRuntime, message: Memory, _state?: State) => {
     try {
+      elizaLogger.info('Starting plugin project creation', { 
+        messageId: message.id,
+        roomId: message.roomId 
+      });
+
+      // Validate service availability
       const service = runtime.getService<PluginCreationService>('plugin_creation');
       if (!service) {
-        return { text: 'Plugin creation service is not available.' };
+        throw new Error('Plugin creation service is not available');
       }
 
-      const text = message.content.text || '';
+      // Enhanced input validation
+      if (!message.content?.text) {
+        throw new Error('No message content provided');
+      }
+
+      const text = message.content.text;
+      
+      // Validate text length
+      if (text.length < 5) {
+        throw new Error('Message too short - please provide more details about the plugin project');
+      }
+
+      if (text.length > 1000) {
+        throw new Error('Message too long - please provide a more concise description');
+      }
+
+      // Enhanced name and description extraction
       const nameMatch = text.match(/named ["']([^"']+)["']/);
       const description = text.includes('that')
         ? text.substring(text.indexOf('that') + 5).trim()
@@ -54,11 +109,13 @@ export const createPluginProjectAction: Action = {
 
       const name = nameMatch ? nameMatch[1] : `plugin-${Date.now()}`;
 
+      elizaLogger.debug('Extracted plugin details', { name, description });
+
+      // Validate using schema
       const validation = CreatePluginProjectSchema.safeParse({ name, description });
       if (!validation.success) {
-        return {
-          text: `Invalid project details: ${validation.error.errors.map((e) => e.message).join(', ')}`,
-        };
+        const errorMessage = validation.error.errors.map((e) => e.message).join(', ');
+        throw new Error(`Invalid project details: ${errorMessage}`);
       }
 
       // Create plugin specification
@@ -69,18 +126,51 @@ export const createPluginProjectAction: Action = {
       };
 
       const jobId = await service.createPlugin(specification);
-      elizaLogger.info(`[ORCHESTRATION] Started plugin creation job: ${jobId}`);
+      
+      if (!jobId) {
+        throw new Error('Failed to create plugin job - no job ID returned');
+      }
+
+      elizaLogger.info('Plugin project creation job started successfully', { 
+        jobId, 
+        pluginName: name 
+      });
 
       return {
-        text: `✅ Started creating ${name} plugin! Job ID: ${jobId}. Use GET_JOB_STATUS to monitor progress.`,
+        text: `✅ **Started Creating ${name} Plugin!**\n\n` +
+              `🆔 **Job ID:** ${jobId}\n` +
+              `📝 **Description:** ${description}\n\n` +
+              `Use GET_JOB_STATUS to monitor progress.`,
         success: true,
-        values: { jobId, pluginName: name },
+        data: {
+          actionName: 'CREATE_PLUGIN_PROJECT',
+          jobId,
+          pluginName: name,
+          specification,
+        },
+        values: { 
+          jobId, 
+          pluginName: name,
+          projectCreated: true,
+        },
       };
     } catch (error) {
-      elizaLogger.error('[ORCHESTRATION] Plugin creation failed:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      elizaLogger.error('Plugin project creation failed', error);
+
       return {
-        text: `Failed to create plugin: ${error instanceof Error ? error.message : String(error)}`,
+        text: `❌ **Plugin Project Creation Failed**\n\n` +
+              `**Error:** ${errorMessage}\n\n` +
+              `Please check your request and try again.`,
         success: false,
+        data: {
+          actionName: 'CREATE_PLUGIN_PROJECT',
+          error: errorMessage,
+        },
+        values: {
+          projectCreated: false,
+          error: errorMessage,
+        },
       };
     }
   },
@@ -105,53 +195,162 @@ export const checkProjectStatusAction: Action = {
     ],
   ],
   validate: async (_runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
-    const text = message.content.text?.toLowerCase() || '';
-    const service = _runtime.getService<PluginCreationService>('plugin_creation');
-    return !!service && (text.includes('status') || text.includes('progress'));
+    try {
+      // Check if plugin creation service is available
+      const service = _runtime.getService<PluginCreationService>('plugin_creation');
+      if (!service) {
+        elizaLogger.warn('Plugin creation service not available for project status validation');
+        return false;
+      }
+
+      // Validate message content
+      if (!message.content?.text) {
+        elizaLogger.debug('No text content provided for project status validation');
+        return false;
+      }
+
+      const text = message.content.text.toLowerCase();
+      
+      // Check for minimum content requirements
+      if (text.length < 3) {
+        elizaLogger.debug('Message too short for project status check');
+        return false;
+      }
+
+      // Check for status keywords
+      const hasStatusKeyword = /\b(status|progress|check|monitor|show)\b/.test(text);
+      
+      if (!hasStatusKeyword) {
+        elizaLogger.debug('Message does not contain project status keywords');
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      elizaLogger.error('Error during project status validation', error);
+      return false;
+    }
   },
   handler: async (runtime: IAgentRuntime, message: Memory, _state?: State) => {
     try {
+      elizaLogger.info('Checking project status', { 
+        messageId: message.id,
+        roomId: message.roomId 
+      });
+
+      // Validate service availability
       const service = runtime.getService<PluginCreationService>('plugin_creation');
       if (!service) {
-        return { text: 'Plugin creation service is not available.' };
+        throw new Error('Plugin creation service is not available');
       }
 
-      const text = message.content.text || '';
+      // Enhanced input validation
+      if (!message.content?.text) {
+        throw new Error('No message content provided');
+      }
+
+      const text = message.content.text;
+      
+      // Validate text length
+      if (text.length < 3) {
+        throw new Error('Message too short - please specify a job ID or ask for status');
+      }
+
+      // Enhanced job ID extraction with validation
       const jobIdMatch = text.match(/job[- ]?([a-zA-Z0-9-]+)/);
       const jobId = jobIdMatch ? jobIdMatch[1] : null;
 
       if (jobId) {
+        elizaLogger.debug('Checking specific job status', { jobId });
+        
+        // Validate job ID format
+        if (!/^[a-zA-Z0-9-]{8,}$/i.test(jobId)) {
+          throw new Error('Invalid job ID format');
+        }
+
         const job = service.getJobStatus(jobId);
         if (!job) {
-          return { text: `Job with ID ${jobId} not found.` };
+          throw new Error(`Job with ID ${jobId} not found`);
         }
+
         return {
-          text: `Job ${jobId} status: ${job.status}`,
+          text: `📊 **Job ${jobId} Status**\n\n` +
+                `**Plugin:** ${job.specification.name}\n` +
+                `**Status:** ${job.status.toUpperCase()}\n` +
+                `**Created:** ${job.createdAt.toLocaleString()}`,
           success: true,
-          values: { jobId, status: job.status },
+          data: {
+            actionName: 'CHECK_PROJECT_STATUS',
+            jobId,
+            status: job.status,
+            pluginName: job.specification.name,
+          },
+          values: { 
+            jobId, 
+            status: job.status,
+            statusChecked: true,
+          },
         };
       }
 
-      // Show all active jobs
+      // Show all active jobs with enhanced formatting
+      elizaLogger.debug('Showing all jobs status');
       const allJobs = service.getAllJobs();
+      
       if (allJobs.length === 0) {
-        return { text: 'No active plugin creation jobs.' };
+        return {
+          text: '📋 **No Active Plugin Creation Jobs**\n\nCreate a plugin project first to see jobs here!',
+          success: true,
+          data: {
+            actionName: 'CHECK_PROJECT_STATUS',
+            totalJobs: 0,
+          },
+          values: { 
+            totalJobs: 0,
+            statusChecked: true,
+          },
+        };
       }
 
       const jobsList = allJobs
-        .map((job) => `- ${job.id}: ${job.specification.name} (${job.status})`)
-        .join('\n');
+        .map((job) => {
+          const statusIcon = job.status === 'completed' ? '✅' : 
+                            job.status === 'failed' ? '❌' : 
+                            job.status === 'running' ? '🔄' : '⏳';
+          return `${statusIcon} **${job.specification.name}**\n   🆔 ${job.id}\n   📊 ${job.status.toUpperCase()}`;
+        })
+        .join('\n\n');
 
       return {
-        text: `Active plugin creation jobs:\n${jobsList}`,
+        text: `📋 **Active Plugin Creation Jobs (${allJobs.length} total)**\n\n${jobsList}`,
         success: true,
-        values: { totalJobs: allJobs.length },
+        data: {
+          actionName: 'CHECK_PROJECT_STATUS',
+          totalJobs: allJobs.length,
+          jobs: allJobs.map(j => ({ id: j.id, name: j.specification.name, status: j.status })),
+        },
+        values: { 
+          totalJobs: allJobs.length,
+          statusChecked: true,
+        },
       };
     } catch (error) {
-      elizaLogger.error('[ORCHESTRATION] Status check failed:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      elizaLogger.error('Project status check failed', error);
+
       return {
-        text: `Failed to check status: ${error instanceof Error ? error.message : String(error)}`,
+        text: `❌ **Project Status Check Failed**\n\n` +
+              `**Error:** ${errorMessage}\n\n` +
+              `Please try again or check the plugin creation service.`,
         success: false,
+        data: {
+          actionName: 'CHECK_PROJECT_STATUS',
+          error: errorMessage,
+        },
+        values: {
+          statusChecked: false,
+          error: errorMessage,
+        },
       };
     }
   },
@@ -176,24 +375,73 @@ export const listJobsAction: Action = {
     ],
   ],
   validate: async (_runtime: IAgentRuntime, message: Memory, _state?: State): Promise<boolean> => {
-    const text = message.content.text?.toLowerCase() || '';
-    const service = _runtime.getService<PluginCreationService>('plugin_creation');
-    return (
-      !!service &&
-      (text.includes('list') || text.includes('show') || text.includes('all')) &&
-      text.includes('job')
-    );
-  },
-  handler: async (runtime: IAgentRuntime, _message: Memory, _state?: State) => {
     try {
+      // Check if plugin creation service is available
+      const service = _runtime.getService<PluginCreationService>('plugin_creation');
+      if (!service) {
+        elizaLogger.warn('Plugin creation service not available for orchestration job listing validation');
+        return false;
+      }
+
+      // Validate message content
+      if (!message.content?.text) {
+        elizaLogger.debug('No text content provided for orchestration job listing validation');
+        return false;
+      }
+
+      const text = message.content.text.toLowerCase();
+      
+      // Check for minimum content requirements
+      if (text.length < 3) {
+        elizaLogger.debug('Message too short for orchestration job listing');
+        return false;
+      }
+
+      // Check for job listing keywords
+      const hasListKeyword = /\b(list|show|all|display)\b/.test(text);
+      const hasJobKeyword = /\b(job|jobs|plugin|plugins|project|projects)\b/.test(text);
+      
+      if (!hasListKeyword || !hasJobKeyword) {
+        elizaLogger.debug('Message does not contain orchestration job listing keywords');
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      elizaLogger.error('Error during orchestration job listing validation', error);
+      return false;
+    }
+  },
+  handler: async (runtime: IAgentRuntime, message: Memory, _state?: State) => {
+    try {
+      elizaLogger.info('Listing orchestration jobs', { 
+        messageId: message.id,
+        roomId: message.roomId 
+      });
+
+      // Validate service availability
       const service = runtime.getService<PluginCreationService>('plugin_creation');
       if (!service) {
-        return { text: 'Plugin creation service is not available.' };
+        throw new Error('Plugin creation service is not available');
       }
 
       const allJobs = service.getAllJobs();
+      
+      elizaLogger.debug('Retrieved all orchestration jobs', { jobCount: allJobs.length });
+
       if (allJobs.length === 0) {
-        return { text: 'No plugin creation jobs found.' };
+        return {
+          text: '📋 **No Plugin Creation Jobs Found**\n\nCreate a plugin project first to see jobs listed here!',
+          success: true,
+          data: {
+            actionName: 'LIST_JOBS',
+            totalJobs: 0,
+          },
+          values: {
+            totalJobs: 0,
+            jobsListed: true,
+          },
+        };
       }
 
       const jobsList = allJobs
@@ -206,23 +454,41 @@ export const listJobsAction: Action = {
                 : job.status === 'running'
                   ? '🔄'
                   : '⏳';
-          return `${statusIcon} ${job.id}: ${job.specification.name} (${job.status})`;
+          return `${statusIcon} **${job.specification.name}**\n   🆔 ${job.id}\n   📊 ${job.status.toUpperCase()}`;
         })
-        .join('\n');
+        .join('\n\n');
 
       return {
-        text: `Plugin Creation Jobs (${allJobs.length} total):\n${jobsList}`,
+        text: `📋 **Plugin Creation Jobs (${allJobs.length} total)**\n\n${jobsList}`,
         success: true,
+        data: {
+          actionName: 'LIST_JOBS',
+          totalJobs: allJobs.length,
+          jobs: allJobs.map((j) => ({ id: j.id, name: j.specification.name, status: j.status })),
+        },
         values: {
           totalJobs: allJobs.length,
+          jobsListed: true,
           jobs: allJobs.map((j) => ({ id: j.id, name: j.specification.name, status: j.status })),
         },
       };
     } catch (error) {
-      elizaLogger.error('[ORCHESTRATION] Job listing failed:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      elizaLogger.error('Orchestration job listing failed', error);
+
       return {
-        text: `Failed to list jobs: ${error instanceof Error ? error.message : String(error)}`,
+        text: `❌ **Job Listing Failed**\n\n` +
+              `**Error:** ${errorMessage}\n\n` +
+              `Please try again or check the plugin creation service.`,
         success: false,
+        data: {
+          actionName: 'LIST_JOBS',
+          error: errorMessage,
+        },
+        values: {
+          jobsListed: false,
+          error: errorMessage,
+        },
       };
     }
   },

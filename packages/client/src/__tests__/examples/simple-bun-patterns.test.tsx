@@ -1,6 +1,6 @@
 /**
  * Simple Bun Testing Patterns that Actually Work
- * 
+ *
  * This demonstrates working patterns for Bun test without complex DOM issues
  */
 // Import test setup for browser environment
@@ -12,7 +12,13 @@ import React from 'react';
 
 // ===== PATTERN 1: SIMPLE COMPONENT TESTING =====
 
-const SimpleButton = ({ onClick, children }: { onClick?: () => void; children: React.ReactNode }) => (
+const SimpleButton = ({
+  onClick,
+  children,
+}: {
+  onClick?: () => void;
+  children: React.ReactNode;
+}) => (
   <button data-testid="simple-button" onClick={onClick}>
     {children}
   </button>
@@ -20,14 +26,11 @@ const SimpleButton = ({ onClick, children }: { onClick?: () => void; children: R
 
 const SimpleCounter = () => {
   const [count, setCount] = React.useState(0);
-  
+
   return (
     <div data-testid="counter">
       <span data-testid="count-display">Count: {count}</span>
-      <button 
-        data-testid="increment-btn" 
-        onClick={() => setCount(c => c + 1)}
-      >
+      <button data-testid="increment-btn" onClick={() => setCount((c) => c + 1)}>
         Increment
       </button>
     </div>
@@ -41,29 +44,27 @@ interface SimpleService {
 }
 
 const ServiceComponent = ({ service }: { service: SimpleService }) => (
-  <div data-testid="service-component">
-    Value: {service.getValue()}
-  </div>
+  <div data-testid="service-component">Value: {service.getValue()}</div>
 );
 
 const createMockService = (value = 'mock-value'): SimpleService => ({
-  getValue: () => value
+  getValue: () => value,
 });
 
 // ===== PATTERN 3: ASYNC BEHAVIOR =====
 
 const AsyncComponent = () => {
   const [data, setData] = React.useState<string>('loading');
-  
+
   React.useEffect(() => {
     // Simulate async operation
     const timer = setTimeout(() => {
       setData('loaded');
     }, 10);
-    
+
     return () => clearTimeout(timer);
   }, []);
-  
+
   return <div data-testid="async-component">{data}</div>;
 };
 
@@ -73,7 +74,7 @@ describe('Simple Bun Testing Patterns', () => {
   describe('Pattern 1: Basic Component Rendering', () => {
     test('should render simple button', () => {
       const { container } = render(<SimpleButton>Click me</SimpleButton>);
-      
+
       const button = container.querySelector('[data-testid="simple-button"]');
       expect(button).toBeInTheDocument();
       expect(button?.textContent).toBe('Click me');
@@ -81,25 +82,25 @@ describe('Simple Bun Testing Patterns', () => {
 
     test('should render counter with initial state', () => {
       const { container } = render(<SimpleCounter />);
-      
+
       const counter = container.querySelector('[data-testid="counter"]');
       const display = container.querySelector('[data-testid="count-display"]');
-      
+
       expect(counter).toBeInTheDocument();
       expect(display?.textContent).toBe('Count: 0');
     });
 
     test('should handle button click events', () => {
       const { container } = render(<SimpleCounter />);
-      
+
       const button = container.querySelector('[data-testid="increment-btn"]') as HTMLButtonElement;
       const display = container.querySelector('[data-testid="count-display"]');
-      
+
       expect(display?.textContent).toBe('Count: 0');
-      
+
       // Simulate click
       button?.click();
-      
+
       // Note: This won't work in this simple test because React's state updates
       // are asynchronous. For real testing, you'd need act() wrapper
       // For now, just verify the button exists and is clickable
@@ -112,7 +113,7 @@ describe('Simple Bun Testing Patterns', () => {
     test('should render with injected service', () => {
       const mockService = createMockService('test-value');
       const { container } = render(<ServiceComponent service={mockService} />);
-      
+
       const component = container.querySelector('[data-testid="service-component"]');
       expect(component?.textContent).toBe('Value: test-value');
     });
@@ -120,7 +121,7 @@ describe('Simple Bun Testing Patterns', () => {
     test('should work with different service implementations', () => {
       const customService = createMockService('custom-value');
       const { container } = render(<ServiceComponent service={customService} />);
-      
+
       const component = container.querySelector('[data-testid="service-component"]');
       expect(component?.textContent).toBe('Value: custom-value');
     });
@@ -141,11 +142,11 @@ describe('Simple Bun Testing Patterns', () => {
   describe('Pattern 4: Basic Async Testing', () => {
     test('should render async component with initial state', () => {
       const { container } = render(<AsyncComponent />);
-      
+
       const component = container.querySelector('[data-testid="async-component"]');
       expect(component?.textContent).toBe('loading');
     });
-    
+
     // Note: For real async testing with state changes, you'd need:
     // 1. act() wrapper
     // 2. waitFor() utility
@@ -157,16 +158,16 @@ describe('Simple Bun Testing Patterns', () => {
     test('should test pure functions', () => {
       const add = (a: number, b: number) => a + b;
       const multiply = (a: number, b: number) => a * b;
-      
+
       expect(add(2, 3)).toBe(5);
       expect(multiply(4, 5)).toBe(20);
     });
 
     test('should test array operations', () => {
       const numbers = [1, 2, 3, 4, 5];
-      const doubled = numbers.map(n => n * 2);
+      const doubled = numbers.map((n) => n * 2);
       const sum = numbers.reduce((acc, n) => acc + n, 0);
-      
+
       expect(doubled).toEqual([2, 4, 6, 8, 10]);
       expect(sum).toBe(15);
     });
@@ -174,7 +175,7 @@ describe('Simple Bun Testing Patterns', () => {
     test('should test object operations', () => {
       const user = { id: 1, name: 'John', email: 'john@example.com' };
       const updatedUser = { ...user, name: 'Jane' };
-      
+
       expect(updatedUser.name).toBe('Jane');
       expect(updatedUser.id).toBe(user.id);
       expect(updatedUser.email).toBe(user.email);
@@ -184,10 +185,10 @@ describe('Simple Bun Testing Patterns', () => {
   describe('Pattern 6: Promise Testing', () => {
     test('should test resolved promises', async () => {
       const asyncFunction = async (value: string) => {
-        await new Promise(resolve => setTimeout(resolve, 1));
+        await new Promise((resolve) => setTimeout(resolve, 1));
         return `processed: ${value}`;
       };
-      
+
       const result = await asyncFunction('test');
       expect(result).toBe('processed: test');
     });
@@ -196,7 +197,7 @@ describe('Simple Bun Testing Patterns', () => {
       const failingFunction = async () => {
         throw new Error('Something went wrong');
       };
-      
+
       try {
         await failingFunction();
         expect(true).toBe(false); // Should not reach here

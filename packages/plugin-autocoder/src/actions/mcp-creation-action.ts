@@ -7,8 +7,8 @@ import type {
   ActionExample,
 } from '@elizaos/core';
 import { elizaLogger } from '@elizaos/core';
-import { MCPCreationService } from '../services/McpCreationService';
-import { getPluginDataPath } from '../utils/path-manager';
+import { MCPCreationService } from '../services/McpCreationService.ts';
+import { getPluginDataPath } from '../utils/path-manager.ts';
 import _path from 'path'; // Path utilities
 
 /**

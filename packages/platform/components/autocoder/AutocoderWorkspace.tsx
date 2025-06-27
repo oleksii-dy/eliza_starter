@@ -7,6 +7,8 @@ import { JobQueue } from './JobQueue';
 import { PluginPreview } from './PluginPreview';
 import { RegistryManager } from './RegistryManager';
 import { useAutocoderWebSocket } from '@/lib/hooks/useAutocoderWebSocket';
+import { SecretsFormModal } from '../SecretsFormModal';
+import { useSecretsFormInjection } from '../../hooks/useSecretsFormInjection';
 
 export interface Project {
   id: string;
@@ -85,6 +87,15 @@ export function AutocoderWorkspace({ userId }: AutocoderWorkspaceProps) {
     subscribe,
     unsubscribe,
   } = useAutocoderWebSocket(userId);
+
+  // Secrets form injection for autocoder workflow
+  const {
+    isFormVisible,
+    formRequest,
+    handleFormSubmit,
+    handleFormCancel,
+    connectionStatus,
+  } = useSecretsFormInjection(activeProject?.id, true);
 
   useEffect(() => {
     // Load user's projects
@@ -295,15 +306,28 @@ export function AutocoderWorkspace({ userId }: AutocoderWorkspaceProps) {
 
         {/* Connection Status */}
         <div className="border-t border-gray-200 p-4">
-          <div className="flex items-center space-x-2">
-            <div
-              className={`h-2 w-2 rounded-full ${
-                isConnected ? 'bg-green-500' : 'bg-red-500'
-              }`}
-            />
-            <span className="text-xs text-gray-600">
-              {isConnected ? 'Connected' : 'Disconnected'}
-            </span>
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <div
+                className={`h-2 w-2 rounded-full ${
+                  isConnected ? 'bg-green-500' : 'bg-red-500'
+                }`}
+              />
+              <span className="text-xs text-gray-600">
+                {isConnected ? 'Connected' : 'Disconnected'}
+              </span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div
+                className={`h-2 w-2 rounded-full ${
+                  connectionStatus === 'connected' ? 'bg-green-500' : 
+                  connectionStatus === 'connecting' ? 'bg-yellow-500' : 'bg-red-500'
+                }`}
+              />
+              <span className="text-xs text-gray-500">
+                Forms: {connectionStatus}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -415,6 +439,16 @@ export function AutocoderWorkspace({ userId }: AutocoderWorkspaceProps) {
           )}
         </div>
       </div>
+
+      {/* Secrets Form Modal - Injected dynamically */}
+      {isFormVisible && formRequest && (
+        <SecretsFormModal
+          isOpen={isFormVisible}
+          formRequest={formRequest}
+          onSubmit={handleFormSubmit}
+          onCancel={handleFormCancel}
+        />
+      )}
     </div>
   );
 }

@@ -3,19 +3,6 @@ import plugin from '../plugin';
 import { z } from 'zod';
 import { createMockRuntime } from './utils/core-test-utils';
 
-// Mock logger
-mock.module('@elizaos/core', async () => {
-  const actual = await import('@elizaos/core');
-  return {
-    ...actual,
-    logger: {
-      info: mock(),
-      error: mock(),
-      warn: mock(),
-    },
-  };
-});
-
 // Access the plugin's init function
 const initPlugin = plugin.init;
 
@@ -24,7 +11,6 @@ describe('Plugin Configuration Schema', () => {
   const originalEnv = { ...process.env };
 
   beforeEach(() => {
-    mock.restore();
     // Reset environment variables before each test
     process.env = { ...originalEnv };
   });

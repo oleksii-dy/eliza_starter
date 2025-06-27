@@ -1,5 +1,5 @@
 import { elizaLogger as logger } from '@elizaos/core';
-import type { PluginProject, DevelopmentPhase } from '../types/plugin-project';
+import type { PluginProject, DevelopmentPhase } from '../types/plugin-project.ts';
 
 /**
  * Manages workflow state transitions and validation

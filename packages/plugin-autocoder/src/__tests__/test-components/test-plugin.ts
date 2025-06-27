@@ -1,6 +1,6 @@
 import { type Plugin } from '@elizaos/core';
-import { TEST_ACTION } from './test-action';
-import { testProvider } from './test-provider';
+import { TEST_ACTION } from './test-action.ts';
+import { testProvider } from './test-provider.ts';
 
 export const testPlugin: Plugin = {
   name: 'test-plugin',

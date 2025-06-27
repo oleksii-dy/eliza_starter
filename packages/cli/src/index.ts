@@ -77,12 +77,8 @@ async function main() {
     { name: 'update', path: './commands/update/index.js' },
     { name: 'test', path: './commands/test/index.js' },
     { name: 'scenario', path: './commands/scenario/index.js' },
-    { name: 'benchmark', path: './commands/benchmark.js' },
-    { name: 'test-production-verification', path: './commands/test-production-verification.js' },
-    { name: 'stress-test-verification', path: './commands/stress-test-verification.js' },
-    { name: 'env', path: './commands/env/index.js' },
     { name: 'cleanup', path: './commands/cleanup/index.js' },
-    { name: 'publish', path: './commands/publish.js' },
+    { name: 'code', path: './commands/code/index.js' },
   ];
 
   // For test environments (scenario, test commands, or NODE_ENV=test), set database type early

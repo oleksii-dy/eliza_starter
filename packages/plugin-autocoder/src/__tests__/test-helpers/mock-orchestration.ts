@@ -73,7 +73,7 @@ export const plugin = {
 File: src/__tests__/index.test.ts
 \`\`\`typescript
 import { describe, it, expect  } from 'bun:test';
-import { plugin } from '../index';
+import { plugin } from '../index.ts';
 
 describe('Plugin', () => {
   it('should be defined', () => {

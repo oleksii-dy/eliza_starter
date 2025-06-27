@@ -18,6 +18,7 @@ import envPlugin from '../index';
 const TEST_SETTINGS = {
   ENCRYPTION_KEY: 'test-encryption-key-32-chars-long!!',
   ENCRYPTION_SALT: 'test-salt-12345',
+  SECRET_SALT: 'test-secret-salt-32-chars-long-for-security',
 };
 
 /**
@@ -29,6 +30,10 @@ export async function createTestRuntime(options?: {
   plugins?: Plugin[];
   includeEnvPlugin?: boolean;
 }): Promise<IAgentRuntime> {
+  // Set required environment variables for testing
+  if (typeof process !== 'undefined') {
+    Object.assign(process.env, TEST_SETTINGS);
+  }
   // Create test character
   const character: Character = {
     id: '00000000-0000-0000-0000-000000000001' as UUID,

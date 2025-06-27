@@ -71,8 +71,8 @@ mock.module('fs/promises', () => ({
 }));
 
 import * as fs from 'fs/promises';
-import { createMCPAction } from '../../actions/mcp-creation-action';
-import { MCPCreationService } from '../../services/McpCreationService';
+import { createMCPAction } from '../../actions/mcp-creation-action.ts';
+import { MCPCreationService } from '../../services/McpCreationService.ts';
 
 /**
  * Comprehensive E2E test scenarios to validate MCP creation works in all cases

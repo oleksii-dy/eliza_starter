@@ -20,6 +20,7 @@ export interface ScenarioActor {
   system?: string;
   systemPrompt?: string;
   plugins?: string[];
+  character?: any;
 }
 
 export interface ScenarioScript {
@@ -98,6 +99,7 @@ export interface VerificationRule {
     | 'fact-checking'
     | 'llm-evaluation'
     | 'storage-verification'
+    | 'action'
     | 'code';
   description: string;
   config: VerificationConfig;
@@ -118,6 +120,8 @@ export interface VerificationConfig {
   requiredKeywords?: string[];
   forbiddenKeywords?: string[];
   llmEnhancement?: boolean;
+  expectedAction?: string;
+  actionName?: string;
   [key: string]: any; // Allow arbitrary properties for LLM-determined configurations
 }
 
@@ -271,7 +275,13 @@ export interface ScenarioContext {
   startTime: number;
   transcript: ScenarioMessage[];
   metrics: Partial<ScenarioMetrics>;
-  state: Record<string, any>;
+  state: Record<string, any> & {
+    realExecution?: boolean;
+    mockExecution?: boolean;
+    testHarness?: any;
+    actionResults?: ActionResult[];
+    actionErrors?: ActionError[];
+  };
 }
 
 export interface BenchmarkReport {
@@ -445,4 +455,18 @@ export interface EnvironmentValidationStatus {
   valid: boolean;
   value?: string;
   errors?: string[];
+}
+
+export interface ActionResult {
+  actionName: string;
+  actorId: string;
+  result: any;
+  timestamp: number;
+}
+
+export interface ActionError {
+  actionName: string;
+  actorId: string;
+  error: string;
+  timestamp: number;
 }

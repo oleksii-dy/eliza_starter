@@ -9,7 +9,7 @@ import type {
   ContainerEvent,
   NetworkConfig,
   SecurityConfig,
-} from '../types/container.js';
+} from '../types/container.ts';
 
 interface OrchestrationRequest {
   taskId: UUID;

@@ -880,7 +880,12 @@ export default function CharacterForm({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button type="submit" disabled={isSubmitting} className="agent-form-submit w-full" data-cy="create-agent-btn">
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="agent-form-submit w-full"
+                  data-cy="create-agent-btn"
+                >
                   {isSubmitting ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />

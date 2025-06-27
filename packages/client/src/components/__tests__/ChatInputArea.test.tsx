@@ -25,7 +25,7 @@ const createMockUploadingFile = (overrides: Partial<UploadingFile> = {}): Upload
   blobUrl: 'blob:test-url',
   isUploading: false,
   error: null,
-  ...overrides
+  ...overrides,
 });
 
 // Mock agent
@@ -47,7 +47,7 @@ const createMockAgent = (overrides: Partial<Agent> = {}): Agent => ({
   status: AgentStatus.ACTIVE,
   createdAt: Date.now(),
   updatedAt: Date.now(),
-  ...overrides
+  ...overrides,
 });
 
 describe('ChatInputArea Component', () => {
@@ -57,8 +57,8 @@ describe('ChatInputArea Component', () => {
     queryClient = new QueryClient({
       defaultOptions: {
         queries: { retry: false, staleTime: 0 },
-        mutations: { retry: false }
-      }
+        mutations: { retry: false },
+      },
     });
   });
 
@@ -177,7 +177,9 @@ describe('ChatInputArea Component', () => {
     const handleSendMock = { called: false };
     const props = {
       ...defaultProps,
-      handleSendMessage: () => { handleSendMock.called = true; },
+      handleSendMessage: () => {
+        handleSendMock.called = true;
+      },
     };
 
     const { container } = renderChatInput(props);
@@ -195,11 +197,11 @@ describe('ChatInputArea Component', () => {
     const mockFiles: UploadingFile[] = [
       createMockUploadingFile({
         id: 'file-1',
-        file: createMockFile('image.jpg', 'image/jpeg')
+        file: createMockFile('image.jpg', 'image/jpeg'),
       }),
       createMockUploadingFile({
         id: 'file-2',
-        file: createMockFile('document.pdf', 'application/pdf')
+        file: createMockFile('document.pdf', 'application/pdf'),
       }),
     ];
 
@@ -216,8 +218,8 @@ describe('ChatInputArea Component', () => {
 
     // Should show remove buttons for each file
     const removeButtons = container.querySelectorAll('button');
-    const hasRemoveButtons = Array.from(removeButtons).some(btn =>
-      btn.querySelector('svg') // X icon
+    const hasRemoveButtons = Array.from(removeButtons).some(
+      (btn) => btn.querySelector('svg') // X icon
     );
     expect(hasRemoveButtons).toBe(true);
   });
@@ -236,8 +238,8 @@ describe('ChatInputArea Component', () => {
 
     // Find remove button (X icon)
     const removeButtons = container.querySelectorAll('button');
-    const removeButton = Array.from(removeButtons).find(btn =>
-      btn.querySelector('svg') // X icon for remove
+    const removeButton = Array.from(removeButtons).find(
+      (btn) => btn.querySelector('svg') // X icon for remove
     );
 
     expect(removeButton).toBeInTheDocument();
@@ -252,7 +254,7 @@ describe('ChatInputArea Component', () => {
     const uploadingFile = createMockUploadingFile({
       id: 'uploading-file',
       isUploading: true,
-      file: createMockFile('uploading.jpg', 'image/jpeg')
+      file: createMockFile('uploading.jpg', 'image/jpeg'),
     });
 
     const props = {
@@ -271,7 +273,7 @@ describe('ChatInputArea Component', () => {
     const errorFile = createMockUploadingFile({
       id: 'error-file',
       error: 'Upload failed',
-      file: createMockFile('error.jpg', 'image/jpeg')
+      file: createMockFile('error.jpg', 'image/jpeg'),
     });
 
     const props = {
@@ -290,8 +292,8 @@ describe('ChatInputArea Component', () => {
       current: {
         click: () => {
           // Mock function to simulate file input click
-        }
-      }
+        },
+      },
     };
 
     const props = {
@@ -323,7 +325,7 @@ describe('ChatInputArea Component', () => {
       handleKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
         handleKeyDownMock.calls.push({
           key: e.key,
-          shiftKey: e.shiftKey
+          shiftKey: e.shiftKey,
         });
       },
     };
@@ -338,7 +340,7 @@ describe('ChatInputArea Component', () => {
       key: 'Enter',
       shiftKey: false,
       preventDefault: () => {},
-      stopPropagation: () => {}
+      stopPropagation: () => {},
     } as React.KeyboardEvent<HTMLTextAreaElement>;
 
     props.handleKeyDown(mockEvent);
@@ -379,7 +381,9 @@ describe('ChatInputArea Component', () => {
     };
 
     const { container: groupContainer } = renderChatInput(groupProps);
-    const groupInput = groupContainer.querySelector('[data-testid="chat-input"]') as HTMLTextAreaElement;
+    const groupInput = groupContainer.querySelector(
+      '[data-testid="chat-input"]'
+    ) as HTMLTextAreaElement;
     expect(groupInput.placeholder).toContain('Message group');
   });
 
@@ -416,15 +420,15 @@ describe('ChatInputArea Component', () => {
     const files: UploadingFile[] = [
       createMockUploadingFile({
         id: 'image-file',
-        file: createMockFile('test.jpg', 'image/jpeg')
+        file: createMockFile('test.jpg', 'image/jpeg'),
       }),
       createMockUploadingFile({
         id: 'video-file',
-        file: createMockFile('test.mp4', 'video/mp4')
+        file: createMockFile('test.mp4', 'video/mp4'),
       }),
       createMockUploadingFile({
         id: 'document-file',
-        file: createMockFile('test.pdf', 'application/pdf')
+        file: createMockFile('test.pdf', 'application/pdf'),
       }),
     ];
 

@@ -17,7 +17,7 @@ mock.module('child_process', () => ({
   }),
 }));
 
-import { MCPCreationService } from '../../services/McpCreationService.js';
+import { MCPCreationService } from '../../services/McpCreationService.ts';
 
 describe('MCP Creation Integration Tests', () => {
   let tempDir: string;
