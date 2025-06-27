@@ -1,5 +1,6 @@
 /**
  * Tests for ELIZA_UI_ENABLE feature
+ * Integration tests for the UI disable functionality
  */
 
 import { describe, it, expect, beforeEach, afterEach, mock, jest } from 'bun:test';
