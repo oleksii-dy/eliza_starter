@@ -1,6 +1,6 @@
 import net from 'node:net';
 import { logger } from '@elizaos/core';
-// import { captureError } from "@realityspiral/sentry";
+// import { captureError } from "@elizaos/sentry";
 import axios from 'axios';
 import { ethers } from 'ethers';
 import type { GenerateKeyPayload, GenerateKeyResponse } from '../types.ts';

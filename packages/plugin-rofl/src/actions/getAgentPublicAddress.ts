@@ -11,7 +11,7 @@ import {
   ModelType,
   parseJSONObjectFromText,
 } from '@elizaos/core';
-// import { captureError } from "@realityspiral/sentry";
+// import { captureError } from "@elizaos/sentry";
 import { RoflService } from '../services/rofl.ts';
 import { getAgentPublicAddressTemplate } from '../templates.ts';
 

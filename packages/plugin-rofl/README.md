@@ -50,9 +50,9 @@ The plugin includes comprehensive error handling:
 - All communication with the ROFL service is done through a Unix domain socket
 - Keys are generated securely by the ROFL service
 
-## Testing with RealitySpiral Agent UI
+## Testing with Eliza Agent UI
 
-This section guides you through testing the RealitySpiral Agent UI with a deployed ROFL application.
+This section guides you through testing the Eliza Agent UI with a deployed ROFL application.
 
 ### Prerequisites
 

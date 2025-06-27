@@ -143,11 +143,23 @@ echo -n "sk-proj-XXXX" | oasis rofl secret set OPENAI_API_KEY -
 # ROFL Plugin Configuration
 echo -n "true" | oasis rofl secret set ROFL_PLUGIN_ENABLED -
 
-# Other plugins
-echo -n "true" | oasis rofl secret set ACCUMULATED_FINANCE_DISABLED -
-echo -n "true" | oasis rofl secret set BITPROTOCOL_DISABLED -
-echo -n "true" | oasis rofl secret set NEBY_DISABLED -
-echo -n "true" | oasis rofl secret set THORN_DISABLED -
+# Alethea Configuration
+echo -n "https://placeholder.xyz" | oasis rofl secret set ALETHEA_RPC_URL -
+echo -n "placeholder" | oasis rofl secret set PRIVATE_KEY -
+echo -n "placeholder" | oasis rofl secret set ALETHEA_API_KEY -
+echo -n "0x0123456789abcdef0123456789abcdef01234567" | oasis rofl secret set POD_NFT_CONTRACT_ADDRESS -
+
+# Required secrets for polygon plugins
+echo -n "true" | oasis rofl secret set POLYGON_PLUGINS_ENABLED -
+echo -n "https://polygon-bor.publicnode.com" | oasis rofl secret set POLYGON_RPC_URL -
+echo -n "https://ethereum-rpc.publicnode.com" | oasis rofl secret set ETHEREUM_RPC_URL -
+
+echo -n "YourPolygonScanApiKeyToken" | oasis rofl secret set POLYGONSCAN_KEY -
+
+echo -n "placeholder" | oasis rofl secret set ALCHEMY_API_KEY -
+echo -n "https://polygonzkevm-mainnet.g.alchemy.com/v2/" | oasis rofl secret set ZKEVM_RPC_URL -
+
+echo -n "https://heimdall-api.polygon.technology" | oasis rofl secret set HEIMDALL_RPC_URL -
 ```
 
 ## Tutorial
@@ -197,7 +209,7 @@ To set up your environment for TEE development:
    services:
      eliza:
        restart: always
-       image: ghcr.io/sifchain/realityspiral:staging
+       image: ghcr.io/elizaos/eliza:staging
        build:
          context: .
          dockerfile: Dockerfile
