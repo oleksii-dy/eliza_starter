@@ -1,4 +1,4 @@
-name: Native App
+THIS SHOULD BE A LINTER ERRORname: Native App
 
 env:
   GH_TOKEN: ${{ secrets.GH_TOKEN }}

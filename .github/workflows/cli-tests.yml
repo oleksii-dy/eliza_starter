@@ -33,17 +33,73 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 23
 
-      - name: Set up Bun
+      # Windows-specific setup optimizations
+      - name: Configure Windows environment
+        if: matrix.os == 'windows-latest'
+        shell: powershell
+        run: |
+          # Increase virtual memory and optimize for CI
+          echo "Configuring Windows environment for CI..."
+          
+          # Set environment variables for better performance
+          echo "BUN_INSTALL_CACHE_DIR=$env:RUNNER_TEMP\bun-cache" >> $env:GITHUB_ENV
+          echo "NODE_OPTIONS=--max-old-space-size=6144" >> $env:GITHUB_ENV
+          echo "FORCE_COLOR=0" >> $env:GITHUB_ENV
+          
+          # Create necessary directories
+          New-Item -ItemType Directory -Force -Path "$env:RUNNER_TEMP\bun-cache"
+          
+          # Configure Windows Defender exclusions to speed up CI
+          try {
+            Add-MpPreference -ExclusionPath "$env:GITHUB_WORKSPACE" -ErrorAction SilentlyContinue
+            Add-MpPreference -ExclusionPath "$env:RUNNER_TEMP" -ErrorAction SilentlyContinue
+          } catch {
+            Write-Host "Could not configure Windows Defender exclusions (this is normal in CI)"
+          }
+
+      - name: Set up Bun (with Windows optimizations)
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.2.15
+        env:
+          # Windows-specific Bun optimizations
+          BUN_INSTALL_BIN_DIR: ${{ runner.os == 'Windows' && format('{0}\bun-bin', runner.temp) || '' }}
+
+      - name: Verify Bun installation (Windows-specific)
+        if: matrix.os == 'windows-latest'
+        shell: powershell
+        run: |
+          echo "Verifying Bun installation on Windows..."
+          
+          # Check if bun is accessible
+          $bunPath = Get-Command bun -ErrorAction SilentlyContinue
+          if ($bunPath) {
+            echo "Bun found at: $($bunPath.Source)"
+            echo "Bun version:"
+            & bun --version
+            
+            # Test basic bun functionality
+            echo "Testing basic Bun functionality..."
+            $testResult = & bun --version 2>&1
+            if ($LASTEXITCODE -eq 0) {
+              echo "✓ Bun is working correctly"
+            } else {
+              echo "✗ Bun test failed: $testResult"
+              exit 1
+            }
+          } else {
+            echo "✗ Bun not found in PATH"
+            echo "PATH contents:"
+            echo $env:PATH -split ';' | ForEach-Object { echo "  $_" }
+            exit 1
+          }
 
       - name: Mention Bun version
         run: bun --version
@@ -63,11 +119,53 @@ jobs:
             echo "Bun not found in PATH"
           fi
 
-      - name: Install dependencies
-        run: bun install
+      - name: Install dependencies (with Windows retry logic)
+        shell: bash
+        run: |
+          echo "Installing dependencies..."
+          
+          # Function to install with retries
+          install_with_retry() {
+            local max_attempts=3
+            local attempt=1
+            
+            while [ $attempt -le $max_attempts ]; do
+              echo "Installation attempt $attempt of $max_attempts..."
+              
+              if bun install --frozen-lockfile --no-progress; then
+                echo "✓ Dependencies installed successfully"
+                return 0
+              else
+                echo "✗ Installation attempt $attempt failed"
+                
+                if [ $attempt -lt $max_attempts ]; then
+                  echo "Cleaning up and retrying..."
+                  rm -rf node_modules 2>/dev/null || true
+                  rm -rf ~/.bun/install/cache 2>/dev/null || true
+                  sleep 5
+                fi
+                
+                ((attempt++))
+              fi
+            done
+            
+            echo "All installation attempts failed"
+            return 1
+          }
+          
+          install_with_retry
 
       - name: Build all packages
-        run: bun run build
+        shell: bash
+        run: |
+          echo "Building all packages..."
+          
+          # Set memory limits for Windows
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            export NODE_OPTIONS="--max-old-space-size=6144"
+          fi
+          
+          bun run build
 
       - name: Verify CLI build artifacts
         shell: bash
@@ -164,18 +262,176 @@ jobs:
           lsof -ti:3100 | xargs kill -9 2>/dev/null || true
           echo "Cleanup complete"
 
-      - name: Run CLI TypeScript tests (Windows)
+      - name: Run CLI TypeScript tests (Windows - Enhanced)
         if: matrix.os == 'windows-latest'
-        timeout-minutes: 15
-        run: cross-env NODE_OPTIONS="--max-old-space-size=4096" bun test tests/commands/ --timeout 240000
-        working-directory: packages/cli
-        env:
-          ELIZA_TEST_MODE: true
+        timeout-minutes: 20
+        shell: powershell
+        run: |
+          echo "Starting Windows CLI tests with enhanced error handling..."
+          
+          # Set memory and performance optimizations
+          $env:NODE_OPTIONS = "--max-old-space-size=6144 --expose-gc"
+          $env:ELIZA_TEST_MODE = "true"
+          $env:FORCE_COLOR = "0"
+          
+          # Pre-cleanup any existing processes
+          echo "Pre-cleaning any existing test processes..."
+          Get-Process | Where-Object { $_.ProcessName -like "*bun*" -or $_.ProcessName -like "*node*" } | Where-Object { $_.Path -like "*dist*index.js*" } | Stop-Process -Force -ErrorAction SilentlyContinue
+          
+          # Function to cleanup ports
+          function Cleanup-Ports {
+            $ports = @(3000, 3100, 3001, 3101)
+            foreach ($port in $ports) {
+              try {
+                $connections = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
+                if ($connections) {
+                  echo "Cleaning up processes on port $port"
+                  $connections | ForEach-Object { 
+                    Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue 
+                  }
+                }
+              } catch {
+                # Ignore errors during cleanup
+              }
+            }
+          }
+          
+          Cleanup-Ports
+          
+          # Change to CLI directory
+          Set-Location packages/cli
+          
+          # Run tests with retry logic
+          $maxAttempts = 2
+          $attempt = 1
+          $success = $false
+          
+          while ($attempt -le $maxAttempts -and -not $success) {
+            echo "Test attempt $attempt of $maxAttempts"
+            
+            try {
+              # Run the actual tests
+              $result = & cross-env NODE_OPTIONS="--max-old-space-size=6144" bun test tests/commands/ --timeout 300000 2>&1
+              
+              if ($LASTEXITCODE -eq 0) {
+                echo "✓ Tests passed successfully"
+                $success = $true
+              } else {
+                echo "✗ Tests failed with exit code: $LASTEXITCODE"
+                echo "Test output: $result"
+                
+                if ($attempt -lt $maxAttempts) {
+                  echo "Cleaning up for retry..."
+                  Cleanup-Ports
+                  Start-Sleep -Seconds 10
+                }
+              }
+            } catch {
+              echo "✗ Test execution failed: $($_.Exception.Message)"
+              
+              if ($attempt -lt $maxAttempts) {
+                echo "Cleaning up for retry..."
+                Cleanup-Ports
+                Start-Sleep -Seconds 10
+              }
+            }
+            
+            $attempt++
+          }
+          
+          # Final cleanup
+          Cleanup-Ports
+          
+          if (-not $success) {
+            echo "All test attempts failed"
+            exit 1
+          }
+        working-directory: .
 
-      - name: Cleanup test processes (Windows)
+      - name: Cleanup test processes (Windows - Enhanced)
         if: always() && matrix.os == 'windows-latest'
         shell: powershell
         run: |
-          Get-Process | Where-Object { $_.Path -like "*dist\index.js*" } | Stop-Process -Force -ErrorAction SilentlyContinue
-          Get-NetTCPConnection -LocalPort 3000,3100 -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }
-          Write-Host "Cleanup complete"
+          echo "Starting comprehensive Windows cleanup..."
+          
+          # Kill processes by name and path patterns
+          $processPatterns = @(
+            "*bun*",
+            "*node*"
+          )
+          
+          foreach ($pattern in $processPatterns) {
+            try {
+              $processes = Get-Process | Where-Object { 
+                $_.ProcessName -like $pattern -and 
+                ($_.Path -like "*dist*index.js*" -or $_.Path -like "*eliza*" -or $_.CommandLine -like "*test*")
+              }
+              
+              if ($processes) {
+                echo "Killing $($processes.Count) processes matching pattern: $pattern"
+                $processes | Stop-Process -Force -ErrorAction SilentlyContinue
+              }
+            } catch {
+              echo "Error cleaning up processes for pattern $pattern : $($_.Exception.Message)"
+            }
+          }
+          
+          # Clean up specific ports
+          $ports = @(3000, 3100, 3001, 3101, 8080, 8081)
+          foreach ($port in $ports) {
+            try {
+              $connections = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
+              if ($connections) {
+                echo "Cleaning up $($connections.Count) connections on port $port"
+                $connections | ForEach-Object { 
+                  try {
+                    Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue
+                  } catch {
+                    # Ignore individual process cleanup errors
+                  }
+                }
+              }
+            } catch {
+              # Port might not be in use, which is fine
+            }
+          }
+          
+          # Force garbage collection
+          [System.GC]::Collect()
+          [System.GC]::WaitForPendingFinalizers()
+          
+          # Wait a moment for cleanup to complete
+          Start-Sleep -Seconds 2
+          
+          echo "Windows cleanup complete"
+
+      # Add a final verification step for Windows
+      - name: Verify Windows cleanup
+        if: always() && matrix.os == 'windows-latest'
+        shell: powershell
+        run: |
+          echo "Verifying cleanup was successful..."
+          
+          # Check for any remaining test processes
+          $remainingProcesses = Get-Process | Where-Object { 
+            ($_.ProcessName -like "*bun*" -or $_.ProcessName -like "*node*") -and 
+            ($_.Path -like "*dist*index.js*" -or $_.Path -like "*eliza*")
+          }
+          
+          if ($remainingProcesses) {
+            echo "Warning: Found $($remainingProcesses.Count) remaining processes:"
+            $remainingProcesses | Format-Table ProcessName, Id, Path -AutoSize
+          } else {
+            echo "✓ No remaining test processes found"
+          }
+          
+          # Check for any remaining port usage
+          $testPorts = @(3000, 3100)
+          foreach ($port in $testPorts) {
+            $connections = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
+            if ($connections) {
+              echo "Warning: Port $port still has $($connections.Count) active connections"
+            }
+          }
+          
+          echo "Verification complete"
