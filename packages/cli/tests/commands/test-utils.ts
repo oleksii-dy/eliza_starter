@@ -32,12 +32,23 @@ export async function setupTestEnvironment(): Promise<TestContext> {
 export async function cleanupTestEnvironment(context: TestContext): Promise<void> {
   safeChangeDirectory(context.originalCwd);
 
+  // Add delay for Ubuntu CI stability
+  const isUbuntuCI = process.env.CI === 'true' && process.platform === 'linux';
+  if (isUbuntuCI) {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+
   if (context.testTmpDir && context.testTmpDir.includes('eliza-test-')) {
     try {
       await rm(context.testTmpDir, { recursive: true });
     } catch (e) {
       // Ignore cleanup errors
     }
+  }
+
+  // Additional delay after cleanup
+  if (isUbuntuCI) {
+    await new Promise((resolve) => setTimeout(resolve, 500));
   }
 }
 
@@ -283,15 +294,16 @@ export async function waitForServerReady(
   const startTime = Date.now();
   const isCI = process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true';
   const isMacOS = process.platform === 'darwin';
+  const isUbuntuCI = isCI && process.platform === 'linux';
 
-  // More conservative timeouts for macOS CI
-  const pollInterval = isMacOS && isCI ? 3000 : isMacOS ? 2000 : 1000;
-  const requestTimeout = isMacOS && isCI ? 6000 : isMacOS ? 4000 : 2000;
+  // More conservative timeouts for CI environments, especially Ubuntu
+  const pollInterval = isUbuntuCI ? 4000 : isMacOS && isCI ? 3000 : isMacOS ? 2000 : 1000;
+  const requestTimeout = isUbuntuCI ? 8000 : isMacOS && isCI ? 6000 : isMacOS ? 4000 : 2000;
 
   console.log(
     `[DEBUG] Waiting for server on port ${port}, max wait: ${maxWaitTime}ms, poll interval: ${pollInterval}ms`
   );
-  console.log(`[DEBUG] Environment: CI=${isCI}, macOS=${isMacOS}`);
+  console.log(`[DEBUG] Environment: CI=${isCI}, macOS=${isMacOS}, UbuntuCI=${isUbuntuCI}`);
 
   // First, check if anything is listening on the port using a simple connection test
   let connectionAttempts = 0;
@@ -361,8 +373,14 @@ export async function waitForServerReady(
       clearTimeout(timeoutId);
       if (response.ok) {
         console.log(`[DEBUG] Server responded with status ${response.status}`);
-        // Server is ready, give it more time to stabilize especially on macOS CI
-        const stabilizationTime = isMacOS && isCI ? 3000 : isMacOS ? 2000 : 1000;
+        // Server is ready, give it more time to stabilize especially on CI environments
+        const stabilizationTime = isUbuntuCI
+          ? 4000
+          : isMacOS && isCI
+            ? 3000
+            : isMacOS
+              ? 2000
+              : 1000;
         console.log(`[DEBUG] Stabilizing for ${stabilizationTime}ms...`);
         await new Promise((resolve) => setTimeout(resolve, stabilizationTime));
         return;

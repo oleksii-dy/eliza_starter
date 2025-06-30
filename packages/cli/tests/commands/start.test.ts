@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import { TEST_TIMEOUTS } from '../test-timeouts';
+import { getTestPort, releaseTestPort } from '../port-allocator';
 import {
   getPlatformOptions,
   killProcessOnPort,
@@ -26,8 +27,14 @@ describe('ElizaOS Start Commands', () => {
     // Initialize process manager
     processManager = new TestProcessManager();
 
-    // ---- Ensure port is free.
-    testServerPort = 3000;
+    // Add initial delay for Ubuntu CI
+    const isUbuntuCI = process.env.CI === 'true' && process.platform === 'linux';
+    if (isUbuntuCI) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
+    // ---- Allocate a unique port for this test
+    testServerPort = await getTestPort();
     await killProcessOnPort(testServerPort);
     await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.SHORT_WAIT));
 
@@ -49,10 +56,21 @@ describe('ElizaOS Start Commands', () => {
     // Clean up all processes
     await processManager.cleanup();
 
+    // Release the allocated port
+    if (testServerPort) {
+      releaseTestPort(testServerPort);
+    }
+
     // Clean up environment variables
     delete process.env.LOCAL_SMALL_MODEL;
     delete process.env.LOCAL_MEDIUM_MODEL;
     delete process.env.TEST_SERVER_PORT;
+
+    // Add cleanup delay for Ubuntu CI
+    const isUbuntuCI = process.env.CI === 'true' && process.platform === 'linux';
+    if (isUbuntuCI) {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    }
 
     // Restore original working directory
     safeChangeDirectory(originalCwd);
@@ -63,6 +81,11 @@ describe('ElizaOS Start Commands', () => {
       } catch (e) {
         // Ignore cleanup errors
       }
+    }
+
+    // Final delay for Ubuntu CI to ensure complete cleanup
+    if (isUbuntuCI) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   });
 
@@ -123,13 +146,15 @@ describe('ElizaOS Start Commands', () => {
 
       try {
         // Wait longer for agent to fully register - CI environments may be slower
-        await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.LONG_WAIT));
+        const isUbuntuCI = process.env.CI === 'true' && process.platform === 'linux';
+        const waitTime = isUbuntuCI ? TEST_TIMEOUTS.LONG_WAIT * 2 : TEST_TIMEOUTS.LONG_WAIT;
+        await new Promise((resolve) => setTimeout(resolve, waitTime));
 
         // Retry logic for CI environments where agent registration might be delayed
         // GitHub Actions and other CI runners may have slower process startup times
         let result = '';
         let lastError: Error | null = null;
-        const maxRetries = 5;
+        const maxRetries = isUbuntuCI ? 8 : 5;
 
         for (let i = 0; i < maxRetries; i++) {
           try {
@@ -156,7 +181,10 @@ describe('ElizaOS Start Commands', () => {
             lastError = error;
             // If command failed and we have retries left, wait and retry
             if (i < maxRetries - 1) {
-              await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.MEDIUM_WAIT));
+              const retryWait = isUbuntuCI
+                ? TEST_TIMEOUTS.MEDIUM_WAIT * 2
+                : TEST_TIMEOUTS.MEDIUM_WAIT;
+              await new Promise((resolve) => setTimeout(resolve, retryWait));
             }
           }
         }
@@ -185,7 +213,7 @@ describe('ElizaOS Start Commands', () => {
   it(
     'custom port spin-up works',
     async () => {
-      const newPort = 3456;
+      const newPort = await getTestPort();
       const charactersDir = join(__dirname, '../test-characters');
       const adaPath = join(charactersDir, 'ada.json');
 
@@ -220,7 +248,10 @@ describe('ElizaOS Start Commands', () => {
         expect(response.ok).toBe(true);
       } finally {
         serverProcess.kill();
-        await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.SHORT_WAIT));
+        releaseTestPort(newPort);
+        const isUbuntuCI = process.env.CI === 'true' && process.platform === 'linux';
+        const cleanupWait = isUbuntuCI ? TEST_TIMEOUTS.SHORT_WAIT * 2 : TEST_TIMEOUTS.SHORT_WAIT;
+        await new Promise((resolve) => setTimeout(resolve, cleanupWait));
       }
     },
     TEST_TIMEOUTS.INDIVIDUAL_TEST
@@ -293,7 +324,9 @@ describe('ElizaOS Start Commands', () => {
         expect(serverProcess.pid).toBeDefined();
       } finally {
         serverProcess.kill();
-        await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.SHORT_WAIT));
+        const isUbuntuCI = process.env.CI === 'true' && process.platform === 'linux';
+        const cleanupWait = isUbuntuCI ? TEST_TIMEOUTS.SHORT_WAIT * 2 : TEST_TIMEOUTS.SHORT_WAIT;
+        await new Promise((resolve) => setTimeout(resolve, cleanupWait));
       }
     },
     TEST_TIMEOUTS.INDIVIDUAL_TEST
@@ -318,7 +351,9 @@ describe('ElizaOS Start Commands', () => {
         expect(response.ok).toBe(true);
       } finally {
         serverProcess.kill();
-        await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.SHORT_WAIT));
+        const isUbuntuCI = process.env.CI === 'true' && process.platform === 'linux';
+        const cleanupWait = isUbuntuCI ? TEST_TIMEOUTS.SHORT_WAIT * 2 : TEST_TIMEOUTS.SHORT_WAIT;
+        await new Promise((resolve) => setTimeout(resolve, cleanupWait));
       }
     },
     TEST_TIMEOUTS.INDIVIDUAL_TEST

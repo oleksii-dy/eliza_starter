@@ -6,6 +6,10 @@ timeout = 60000
 # Coverage configuration
 coverage = true
 
+# Test execution configuration
+# Force sequential execution on Ubuntu CI to prevent port conflicts
+concurrent = false
+
 [install]
 # Optimize installation for CI
 cache = true

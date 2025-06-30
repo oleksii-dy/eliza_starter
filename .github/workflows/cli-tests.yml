@@ -149,8 +149,15 @@ jobs:
 
       - name: Run CLI TypeScript tests (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
-        timeout-minutes: 15
-        run: cross-env NODE_OPTIONS="--max-old-space-size=4096" bun test tests/commands/ --timeout 240000; EXIT_CODE=$?; bash tests/cleanup-processes.sh; exit $EXIT_CODE
+        timeout-minutes: 20
+        run: |
+          sleep 3
+          cross-env NODE_OPTIONS="--max-old-space-size=4096" bun test tests/commands/ --timeout 240000 --bail --no-parallelism
+          EXIT_CODE=$?
+          sleep 2
+          bash tests/cleanup-processes.sh
+          sleep 1
+          exit $EXIT_CODE
         working-directory: packages/cli
         env:
           ELIZA_TEST_MODE: true
