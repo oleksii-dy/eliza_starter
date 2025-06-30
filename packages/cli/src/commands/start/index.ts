@@ -10,6 +10,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { loadEnvConfig } from './utils/config-utils';
 import { detectDirectoryType } from '@/src/utils/directory-detection';
+import { suggestMissingPlugins } from '../create/utils/plugin-detection';
 
 export const start = new Command()
   .name('start')
@@ -24,6 +25,10 @@ export const start = new Command()
     try {
       // Load env config first before any character loading
       await loadEnvConfig();
+
+      // Check for missing AI model plugins based on environment variables
+      const cwd = process.cwd();
+      await suggestMissingPlugins(cwd);
 
       let characters: Character[] = [];
       let projectAgents: ProjectAgent[] = [];

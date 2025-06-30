@@ -12,6 +12,9 @@ import {
   runBunCommand,
   setupPgLite,
 } from '@/src/utils';
+import { getRequiredPlugins } from '../utils/plugin-mapping';
+import { executeInstallation } from '@/src/utils/package-manager';
+import colors from 'yoctocolors';
 
 /**
  * Creates necessary project directories.
@@ -363,5 +366,39 @@ export async function setupProjectEnvironment(
   // Set up embedding model configuration if needed
   if (embeddingModel) {
     await setupEmbeddingModelConfig(embeddingModel, envFilePath, isNonInteractive);
+  }
+}
+
+/**
+ * Installs AI model plugins based on the selected models.
+ */
+export async function installAIModelPlugins(
+  targetDir: string,
+  aiModel: string,
+  embeddingModel?: string
+): Promise<void> {
+  const plugins = getRequiredPlugins(aiModel, embeddingModel);
+  
+  if (plugins.length === 0) {
+    return;
+  }
+
+  console.info('\nInstalling AI model plugins...');
+  
+  for (const plugin of plugins) {
+    try {
+      console.info(`Installing ${plugin}...`);
+      const result = await executeInstallation(plugin, '', targetDir);
+      
+      if (result.success) {
+        console.info(`${colors.green('✓')} ${plugin} installed successfully`);
+      } else {
+        console.warn(`${colors.yellow('⚠')} Failed to install ${plugin}. You may need to install it manually with: bun add ${plugin}`);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.warn(`${colors.yellow('⚠')} Error installing ${plugin}: ${errorMessage}`);
+      console.info(`You can install it manually later with: bun add ${plugin}`);
+    }
   }
 }

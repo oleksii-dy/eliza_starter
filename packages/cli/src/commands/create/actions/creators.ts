@@ -5,7 +5,7 @@ import fs from 'node:fs/promises';
 import * as clack from '@clack/prompts';
 import colors from 'yoctocolors';
 import { processPluginName, validateTargetDirectory } from '../utils';
-import { installDependencies, setupProjectEnvironment } from './setup';
+import { installDependencies, setupProjectEnvironment, installAIModelPlugins } from './setup';
 
 /**
  * Creates a new plugin with the specified name and configuration.
@@ -146,6 +146,9 @@ export async function createTEEProject(
   // Set up project environment
   await setupProjectEnvironment(teeTargetDir, database, aiModel, embeddingModel, isNonInteractive);
 
+  // Install AI model plugins
+  await installAIModelPlugins(teeTargetDir, aiModel, embeddingModel);
+
   // Install dependencies
   await installDependencies(teeTargetDir);
 
@@ -200,6 +203,9 @@ export async function createProject(
     embeddingModel,
     isNonInteractive
   );
+
+  // Install AI model plugins
+  await installAIModelPlugins(projectTargetDir, aiModel, embeddingModel);
 
   // Install dependencies
   await installDependencies(projectTargetDir);
