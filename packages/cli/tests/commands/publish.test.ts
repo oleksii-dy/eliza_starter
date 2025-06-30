@@ -62,7 +62,9 @@ describe('ElizaOS Publish Commands', () => {
     // Mock npm and git commands to avoid actual operations
     const mockBinDir = join(testTmpDir, 'mock-bin');
     await mkdir(mockBinDir, { recursive: true });
-    process.env.PATH = `${mockBinDir}:${originalPath}`;
+    // Use the correct path separator for the current OS when injecting the mock bin directory.
+    const pathSeparator = process.platform === 'win32' ? ';' : ':';
+    process.env.PATH = `${mockBinDir}${pathSeparator}${originalPath}`;
 
     // Create comprehensive npm mock
     await writeFile(
