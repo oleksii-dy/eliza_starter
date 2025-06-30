@@ -582,31 +582,31 @@ export class TestProcessManager {
   /**
    * Gracefully terminate a single process with platform-specific handling
    */
-  async terminateProcess(process: ChildProcessLite): Promise<void> {
-    if (!process || process.exitCode !== null || process.killed) {
+  async terminateProcess(child: ChildProcessLite): Promise<void> {
+    if (!child || child.exitCode !== null || child.killed) {
       return;
     }
 
     try {
       // Create exit promise
       const exitPromise = new Promise<void>((resolve) => {
-        if (process.exitCode !== null) {
+        if (child.exitCode !== null) {
           resolve();
           return;
         }
 
         const cleanup = () => {
-          process.removeAllListeners();
+          child.removeAllListeners();
           resolve();
         };
 
-        process.once('exit', cleanup);
-        process.once('error', cleanup);
+        child.once('exit', cleanup);
+        child.once('error', cleanup);
       });
 
       if (process.platform === 'win32') {
         // Windows: Try graceful termination first
-        process.kill('SIGTERM');
+        child.kill('SIGTERM');
 
         // Wait briefly for graceful shutdown
         const gracefulTimeout = new Promise<boolean>((resolve) => {
@@ -616,16 +616,16 @@ export class TestProcessManager {
         const wasGraceful = await Promise.race([exitPromise.then(() => true), gracefulTimeout]);
 
         // Force kill if still running
-        if (!wasGraceful && process.exitCode === null) {
+        if (!wasGraceful && child.exitCode === null) {
           try {
-            process.kill('SIGKILL');
+            child.kill('SIGKILL');
           } catch (e) {
             // Process might already be dead
           }
         }
       } else {
         // Unix: SIGTERM should be sufficient
-        process.kill('SIGTERM');
+        child.kill('SIGTERM');
       }
 
       // Wait for process to exit with timeout
@@ -637,7 +637,7 @@ export class TestProcessManager {
     } catch (error) {
       // Ignore termination errors
     } finally {
-      this.processes.delete(process);
+      this.processes.delete(child);
     }
   }
 
