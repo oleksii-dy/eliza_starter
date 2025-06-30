@@ -528,50 +528,36 @@ export const crossPlatform = {
   killProcessOnPort: killProcessOnPort,
 };
 
-/**
- * Get platform-specific options for execSync calls
- */
-export function getPlatformOptions(baseOptions: any = {}): any {
-  const platformOptions = { ...baseOptions };
-
-  if (process.platform === 'win32') {
-    // Only scale the timeout if one was explicitly provided
-    if (platformOptions.timeout !== undefined) {
-      platformOptions.timeout = platformOptions.timeout * 1.5;
-    }
-    platformOptions.killSignal = 'SIGKILL' as NodeJS.Signals;
-    platformOptions.windowsHide = true;
-  } else if (process.platform === 'darwin') {
-    // macOS specific options
-    // Only scale the timeout if one was explicitly provided
-    if (platformOptions.timeout !== undefined) {
-      platformOptions.timeout = platformOptions.timeout * 1.25;
-    }
-    platformOptions.killSignal = 'SIGTERM' as NodeJS.Signals;
-    // Merge environment variables instead of overwriting
-    platformOptions.env = {
-      ...process.env,
-      ...baseOptions.env, // Preserve any custom env vars from baseOptions
-      PATH: `/usr/local/bin:/opt/homebrew/bin:${process.env.PATH}`,
-      LANG: 'en_US.UTF-8',
-      LC_ALL: 'en_US.UTF-8',
-    };
-  }
-
-  return platformOptions;
+type KillSignal = 'SIGTERM' | 'SIGKILL' | string;
+interface ExecOptionsLite {
+  timeout?: number;
+  killSignal?: KillSignal;
+  windowsHide?: boolean;
+  env?: Record<string, string | undefined>;
+  encoding?: string | null;
+  stdio?: any;
 }
+
+interface SpawnOptionsLite {
+  stdio?: any;
+  windowsHide?: boolean;
+  env?: Record<string, string | undefined>;
+}
+
+// We rely on the structural shape of ChildProcess only for a handful of properties/methods.
+type ChildProcessLite = ReturnType<typeof import('child_process').spawn>;
 
 /**
  * Cross-platform test process manager
  * Handles proper process lifecycle management for CLI tests
  */
 export class TestProcessManager {
-  private processes: Set<any> = new Set();
+  private processes: Set<ChildProcessLite> = new Set();
 
   /**
    * Spawn a process with proper error handling and cleanup
    */
-  spawn(command: string, args: string[], options: any = {}): any {
+  spawn(command: string, args: string[], options: SpawnOptionsLite = {}): ChildProcessLite {
     const { spawn } = require('child_process');
 
     // Force stdio to 'ignore' to prevent hanging streams on Windows
@@ -580,7 +566,7 @@ export class TestProcessManager {
       stdio: ['ignore', 'ignore', 'ignore'], // Ignore all stdio to prevent hanging
     };
 
-    const childProcess = spawn(command, args, processOptions);
+    const childProcess: ChildProcessLite = spawn(command, args, processOptions);
 
     // Track the process for cleanup
     this.processes.add(childProcess);
@@ -596,7 +582,7 @@ export class TestProcessManager {
   /**
    * Gracefully terminate a single process with platform-specific handling
    */
-  async terminateProcess(process: any): Promise<void> {
+  async terminateProcess(process: ChildProcessLite): Promise<void> {
     if (!process || process.exitCode !== null || process.killed) {
       return;
     }
@@ -671,4 +657,39 @@ export class TestProcessManager {
   getActiveCount(): number {
     return this.processes.size;
   }
+}
+
+/**
+ * Get platform-specific options for execSync calls
+ */
+export function getPlatformOptions<T extends ExecOptionsLite = ExecOptionsLite>(
+  baseOptions: T = {} as T
+): T {
+  const platformOptions = { ...baseOptions };
+
+  if (process.platform === 'win32') {
+    // Only scale the timeout if one was explicitly provided
+    if (platformOptions.timeout !== undefined) {
+      platformOptions.timeout = platformOptions.timeout * 1.5;
+    }
+    platformOptions.killSignal = 'SIGKILL';
+    platformOptions.windowsHide = true;
+  } else if (process.platform === 'darwin') {
+    // macOS specific options
+    // Only scale the timeout if one was explicitly provided
+    if (platformOptions.timeout !== undefined) {
+      platformOptions.timeout = platformOptions.timeout * 1.25;
+    }
+    platformOptions.killSignal = 'SIGTERM';
+    // Merge environment variables instead of overwriting
+    platformOptions.env = {
+      ...process.env,
+      ...baseOptions.env, // Preserve any custom env vars from baseOptions
+      PATH: `/usr/local/bin:/opt/homebrew/bin:${process.env.PATH}`,
+      LANG: 'en_US.UTF-8',
+      LC_ALL: 'en_US.UTF-8',
+    };
+  }
+
+  return platformOptions as T;
 }
