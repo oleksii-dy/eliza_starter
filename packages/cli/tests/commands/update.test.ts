@@ -3,8 +3,8 @@ import { execSync } from 'node:child_process';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { safeChangeDirectory, runCliCommandSilently } from './test-utils';
-import { TEST_TIMEOUTS } from '../test-timeouts';
+import { safeChangeDirectory, runCliCommandSilently } from './test-utils.js';
+import { TEST_TIMEOUTS } from '../test-timeouts.js';
 
 describe('ElizaOS Update Commands', () => {
   let testTmpDir: string;
