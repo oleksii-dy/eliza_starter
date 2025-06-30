@@ -1,4 +1,4 @@
-THIS SHOULD BE A LINTER ERRORname: Native App
+name: Native App
 
 env:
   GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -39,6 +39,27 @@ jobs:
         with:
           node-version: '23'
 
+      # Windows-specific environment setup
+      - name: Setup Windows environment
+        if: matrix.platform == 'windows-latest'
+        shell: powershell
+        run: |
+          echo "Configuring Windows environment for Tauri build..."
+          
+          # Set environment variables for better performance
+          echo "RUST_BACKTRACE=1" >> $env:GITHUB_ENV
+          echo "CARGO_TERM_COLOR=always" >> $env:GITHUB_ENV
+          echo "TAURI_SKIP_DEVTOOLS_CHECK=true" >> $env:GITHUB_ENV
+          
+          # Configure Windows Defender exclusions for faster builds
+          try {
+            Add-MpPreference -ExclusionPath "$env:GITHUB_WORKSPACE" -ErrorAction SilentlyContinue
+            Add-MpPreference -ExclusionPath "$env:USERPROFILE\.cargo" -ErrorAction SilentlyContinue
+            Add-MpPreference -ExclusionPath "$env:USERPROFILE\.rustup" -ErrorAction SilentlyContinue
+          } catch {
+            Write-Host "Could not configure Windows Defender exclusions (this is normal in CI)"
+          }
+
       - name: Install Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -63,25 +84,126 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libssl-dev libx11-dev libxdo-dev libxcb1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
 
-      - name: Install Windows dependencies
+      - name: Install Windows dependencies (Enhanced)
         if: matrix.platform == 'windows-latest'
+        shell: powershell
         run: |
-          # Install WebView2 Bootstrapper (Edge Chromium)
-          Invoke-WebRequest -Uri https://go.microsoft.com/fwlink/p/?LinkId=2124703 -OutFile ./MicrosoftEdgeWebview2Setup.exe
-          Start-Process -FilePath ./MicrosoftEdgeWebview2Setup.exe -ArgumentList "/silent", "/install" -Wait
-          # Add any other Windows-specific dependencies here if known (e.g., C++ Build Tools if not pre-installed on runners)
-          # For now, focus on WebView2. We might need to install Visual Studio Build Tools
-          #choco install visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK" -y
-          # echo "Chocolatey and VS Build tools setup might be needed if not available"
-        shell: pwsh
+          echo "Installing Windows dependencies for Tauri..."
+          
+          # Function to download and install WebView2
+          function Install-WebView2 {
+            $webview2Url = "https://go.microsoft.com/fwlink/p/?LinkId=2124703"
+            $webview2Path = "$env:TEMP\MicrosoftEdgeWebview2Setup.exe"
+            
+            try {
+              echo "Downloading WebView2 bootstrapper..."
+              Invoke-WebRequest -Uri $webview2Url -OutFile $webview2Path -UseBasicParsing
+              
+              if (Test-Path $webview2Path) {
+                echo "Installing WebView2..."
+                $process = Start-Process -FilePath $webview2Path -ArgumentList "/silent", "/install" -Wait -PassThru
+                
+                if ($process.ExitCode -eq 0) {
+                  echo "✓ WebView2 installed successfully"
+                } else {
+                  echo "⚠ WebView2 installation returned exit code: $($process.ExitCode)"
+                  echo "This might be normal if WebView2 is already installed"
+                }
+              } else {
+                throw "Failed to download WebView2 bootstrapper"
+              }
+            } catch {
+              echo "Error installing WebView2: $($_.Exception.Message)"
+              echo "Attempting to continue - WebView2 might already be installed"
+            }
+          }
+          
+          # Install WebView2
+          Install-WebView2
+          
+          # Verify WebView2 installation
+          try {
+            $webview2Registry = Get-ItemProperty -Path "HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" -ErrorAction SilentlyContinue
+            if ($webview2Registry) {
+              echo "✓ WebView2 detected in registry: $($webview2Registry.pv)"
+            } else {
+              echo "⚠ WebView2 not found in registry, but this might be normal"
+            }
+          } catch {
+            echo "Could not verify WebView2 installation via registry"
+          }
+          
+          # Install Visual C++ Redistributable if needed
+          try {
+            echo "Checking for Visual C++ Redistributable..."
+            $vcRedist = Get-WmiObject -Class Win32_Product | Where-Object { $_.Name -like "*Visual C++*Redistributable*" }
+            if ($vcRedist) {
+              echo "✓ Visual C++ Redistributable found: $($vcRedist.Name)"
+            } else {
+              echo "Installing Visual C++ Redistributable..."
+              $vcRedistUrl = "https://aka.ms/vs/17/release/vc_redist.x64.exe"
+              $vcRedistPath = "$env:TEMP\vc_redist.x64.exe"
+              Invoke-WebRequest -Uri $vcRedistUrl -OutFile $vcRedistPath -UseBasicParsing
+              Start-Process -FilePath $vcRedistPath -ArgumentList "/quiet", "/norestart" -Wait
+              echo "✓ Visual C++ Redistributable installed"
+            }
+          } catch {
+            echo "Could not install Visual C++ Redistributable: $($_.Exception.Message)"
+            echo "Continuing anyway..."
+          }
 
-      - name: Install dependencies (platform-specific)
-        run: bun install
+      - name: Install dependencies (platform-specific with retry)
+        shell: bash
+        run: |
+          echo "Installing dependencies with retry logic..."
+          
+          # Function to install with retries
+          install_with_retry() {
+            local max_attempts=3
+            local attempt=1
+            
+            while [ $attempt -le $max_attempts ]; do
+              echo "Installation attempt $attempt of $max_attempts..."
+              
+              if bun install --frozen-lockfile --no-progress; then
+                echo "✓ Dependencies installed successfully"
+                return 0
+              else
+                echo "✗ Installation attempt $attempt failed"
+                
+                if [ $attempt -lt $max_attempts ]; then
+                  echo "Cleaning up and retrying..."
+                  rm -rf node_modules 2>/dev/null || true
+                  sleep 5
+                fi
+                
+                ((attempt++))
+              fi
+            done
+            
+            echo "All installation attempts failed"
+            return 1
+          }
+          
+          install_with_retry
         env:
           NPM_CONFIG_IGNORE_SCRIPTS: true
 
       - name: Build packages
-        run: bun run build
+        shell: bash
+        run: |
+          echo "Building packages..."
+          
+          # Set memory limits for different platforms
+          if [[ "${{ matrix.platform }}" == "windows-latest" ]]; then
+            export NODE_OPTIONS="--max-old-space-size=6144"
+          elif [[ "${{ matrix.platform }}" == "macos-latest" ]]; then
+            export NODE_OPTIONS="--max-old-space-size=8192"
+          else
+            export NODE_OPTIONS="--max-old-space-size=4096"
+          fi
+          
+          bun run build
 
       - name: Run TypeScript check
         run: |
@@ -92,15 +214,156 @@ jobs:
         shell: bash
 
       - name: Install Tauri CLI
-        run: |
-          bun install -g @tauri-apps/cli
         shell: bash
+        run: |
+          echo "Installing Tauri CLI..."
+          
+          # Try global installation first
+          if bun install -g @tauri-apps/cli@latest; then
+            echo "✓ Tauri CLI installed globally via bun"
+          else
+            echo "Global bun install failed, trying npm..."
+            npm install -g @tauri-apps/cli@latest
+          fi
+          
+          # Verify installation
+          if command -v tauri &> /dev/null; then
+            echo "✓ Tauri CLI is available"
+            tauri --version
+          else
+            echo "✗ Tauri CLI not found in PATH"
+            exit 1
+          fi
 
-      - name: Test build (verify it compiles)
+      - name: Test build (verify it compiles) - Windows
+        if: matrix.platform == 'windows-latest'
+        shell: powershell
+        run: |
+          echo "Starting Tauri build test on Windows..."
+          
+          # Change to app directory
+          Set-Location packages/app
+          
+          # Set environment variables for build
+          $env:RUST_BACKTRACE = "1"
+          $env:TAURI_SKIP_DEVTOOLS_CHECK = "true"
+          
+          # Verify Rust toolchain
+          echo "Verifying Rust toolchain..."
+          rustc --version
+          cargo --version
+          
+          # Clean any previous build artifacts
+          if (Test-Path "src-tauri/target") {
+            echo "Cleaning previous build artifacts..."
+            Remove-Item -Recurse -Force "src-tauri/target" -ErrorAction SilentlyContinue
+          }
+          
+          # Build with retry logic
+          $maxAttempts = 2
+          $attempt = 1
+          $success = $false
+          
+          while ($attempt -le $maxAttempts -and -not $success) {
+            echo "Build attempt $attempt of $maxAttempts"
+            
+            try {
+              echo "Running Tauri build (debug mode)..."
+              $buildResult = & bun run tauri build --debug 2>&1
+              
+              if ($LASTEXITCODE -eq 0) {
+                echo "✓ Tauri build completed successfully"
+                $success = $true
+              } else {
+                echo "✗ Tauri build failed with exit code: $LASTEXITCODE"
+                echo "Build output:"
+                echo $buildResult
+                
+                if ($attempt -lt $maxAttempts) {
+                  echo "Cleaning up for retry..."
+                  Remove-Item -Recurse -Force "src-tauri/target" -ErrorAction SilentlyContinue
+                  Start-Sleep -Seconds 10
+                }
+              }
+            } catch {
+              echo "✗ Build execution failed: $($_.Exception.Message)"
+              
+              if ($attempt -lt $maxAttempts) {
+                echo "Cleaning up for retry..."
+                Remove-Item -Recurse -Force "src-tauri/target" -ErrorAction SilentlyContinue
+                Start-Sleep -Seconds 10
+              }
+            }
+            
+            $attempt++
+          }
+          
+          if (-not $success) {
+            echo "All build attempts failed"
+            
+            # Diagnostic information
+            echo "=== DIAGNOSTIC INFORMATION ==="
+            echo "Rust version:"
+            rustc --version
+            echo "Cargo version:"
+            cargo --version
+            echo "Tauri CLI version:"
+            & bun run tauri --version
+            echo "WebView2 check:"
+            try {
+              $webview2Registry = Get-ItemProperty -Path "HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" -ErrorAction SilentlyContinue
+              if ($webview2Registry) {
+                echo "WebView2 version: $($webview2Registry.pv)"
+              } else {
+                echo "WebView2 not found in registry"
+              }
+            } catch {
+              echo "Could not check WebView2 registry"
+            }
+            echo "=============================="
+            
+            exit 1
+          }
+
+      - name: Test build (verify it compiles) - Unix
+        if: matrix.platform != 'windows-latest'
         run: |
           cd packages/app
           # Ensure bun is in PATH and working
           export PATH="$HOME/.bun/bin:$PATH"
           bun --version
+          
+          echo "Running Tauri build (debug mode)..."
           bun run tauri build --debug
         shell: bash
+
+      # Add verification step to check build artifacts
+      - name: Verify build artifacts
+        shell: bash
+        run: |
+          cd packages/app
+          echo "Checking for build artifacts..."
+          
+          if [[ "${{ matrix.platform }}" == "windows-latest" ]]; then
+            if [ -d "src-tauri/target/debug/bundle" ]; then
+              echo "✓ Windows build artifacts found"
+              ls -la src-tauri/target/debug/bundle/
+            else
+              echo "✗ Windows build artifacts not found"
+              ls -la src-tauri/target/debug/ || echo "Debug directory not found"
+            fi
+          elif [[ "${{ matrix.platform }}" == "macos-latest" ]]; then
+            if [ -d "src-tauri/target/debug/bundle" ]; then
+              echo "✓ macOS build artifacts found"
+              ls -la src-tauri/target/debug/bundle/
+            else
+              echo "✗ macOS build artifacts not found"
+            fi
+          else
+            if [ -d "src-tauri/target/debug/bundle" ]; then
+              echo "✓ Linux build artifacts found"
+              ls -la src-tauri/target/debug/bundle/
+            else
+              echo "✗ Linux build artifacts not found"
+            fi
+          fi

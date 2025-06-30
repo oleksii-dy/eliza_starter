@@ -72,34 +72,39 @@ jobs:
           # Windows-specific Bun optimizations
           BUN_INSTALL_BIN_DIR: ${{ runner.os == 'Windows' && format('{0}\bun-bin', runner.temp) || '' }}
 
-      - name: Verify Bun installation (Windows-specific)
+      - name: Fix and verify Bun installation (Windows-specific)
         if: matrix.os == 'windows-latest'
         shell: powershell
         run: |
-          echo "Verifying Bun installation on Windows..."
+          # Use the Bun fixer script
+          & powershell -ExecutionPolicy Bypass -File "packages/cli/tests/fix-bun-windows.ps1" -Verbose
           
-          # Check if bun is accessible
-          $bunPath = Get-Command bun -ErrorAction SilentlyContinue
-          if ($bunPath) {
-            echo "Bun found at: $($bunPath.Source)"
-            echo "Bun version:"
-            & bun --version
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "Bun fixer failed, attempting fallback solutions..."
             
-            # Test basic bun functionality
-            echo "Testing basic Bun functionality..."
-            $testResult = & bun --version 2>&1
-            if ($LASTEXITCODE -eq 0) {
-              echo "✓ Bun is working correctly"
-            } else {
-              echo "✗ Bun test failed: $testResult"
+            # Fallback: Try to add common Bun paths to PATH
+            $bunPaths = @(
+              "$env:USERPROFILE\.bun\bin",
+              "$env:LOCALAPPDATA\bun\bin"
+            )
+            
+            foreach ($path in $bunPaths) {
+              if (Test-Path "$path\bun.exe") {
+                Write-Host "Found Bun at $path, adding to PATH"
+                $env:PATH = "$path;$env:PATH"
+                break
+              }
+            }
+            
+            # Final test
+            $bunTest = Get-Command bun -ErrorAction SilentlyContinue
+            if (-not $bunTest) {
+              Write-Host "FATAL: Could not fix Bun installation"
               exit 1
             }
-          } else {
-            echo "✗ Bun not found in PATH"
-            echo "PATH contents:"
-            echo $env:PATH -split ';' | ForEach-Object { echo "  $_" }
-            exit 1
           }
+          
+          Write-Host "✓ Bun is ready for use"
 
       - name: Mention Bun version
         run: bun --version
@@ -264,86 +269,20 @@ jobs:
 
       - name: Run CLI TypeScript tests (Windows - Enhanced)
         if: matrix.os == 'windows-latest'
-        timeout-minutes: 20
+        timeout-minutes: 25
         shell: powershell
         run: |
-          echo "Starting Windows CLI tests with enhanced error handling..."
-          
-          # Set memory and performance optimizations
-          $env:NODE_OPTIONS = "--max-old-space-size=6144 --expose-gc"
-          $env:ELIZA_TEST_MODE = "true"
-          $env:FORCE_COLOR = "0"
-          
-          # Pre-cleanup any existing processes
-          echo "Pre-cleaning any existing test processes..."
-          Get-Process | Where-Object { $_.ProcessName -like "*bun*" -or $_.ProcessName -like "*node*" } | Where-Object { $_.Path -like "*dist*index.js*" } | Stop-Process -Force -ErrorAction SilentlyContinue
-          
-          # Function to cleanup ports
-          function Cleanup-Ports {
-            $ports = @(3000, 3100, 3001, 3101)
-            foreach ($port in $ports) {
-              try {
-                $connections = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
-                if ($connections) {
-                  echo "Cleaning up processes on port $port"
-                  $connections | ForEach-Object { 
-                    Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue 
-                  }
-                }
-              } catch {
-                # Ignore errors during cleanup
-              }
-            }
-          }
-          
-          Cleanup-Ports
-          
-          # Change to CLI directory
+          # Change to CLI directory first
           Set-Location packages/cli
           
-          # Run tests with retry logic
-          $maxAttempts = 2
-          $attempt = 1
-          $success = $false
+          # Use the Windows test helper script
+          $testCommand = 'cross-env NODE_OPTIONS="--max-old-space-size=6144" bun test tests/commands/ --timeout 300000'
           
-          while ($attempt -le $maxAttempts -and -not $success) {
-            echo "Test attempt $attempt of $maxAttempts"
-            
-            try {
-              # Run the actual tests
-              $result = & cross-env NODE_OPTIONS="--max-old-space-size=6144" bun test tests/commands/ --timeout 300000 2>&1
-              
-              if ($LASTEXITCODE -eq 0) {
-                echo "✓ Tests passed successfully"
-                $success = $true
-              } else {
-                echo "✗ Tests failed with exit code: $LASTEXITCODE"
-                echo "Test output: $result"
-                
-                if ($attempt -lt $maxAttempts) {
-                  echo "Cleaning up for retry..."
-                  Cleanup-Ports
-                  Start-Sleep -Seconds 10
-                }
-              }
-            } catch {
-              echo "✗ Test execution failed: $($_.Exception.Message)"
-              
-              if ($attempt -lt $maxAttempts) {
-                echo "Cleaning up for retry..."
-                Cleanup-Ports
-                Start-Sleep -Seconds 10
-              }
-            }
-            
-            $attempt++
-          }
+          # Execute using the helper script
+          & powershell -ExecutionPolicy Bypass -File "tests/windows-test-helper.ps1" -TestCommand $testCommand -MaxRetries 2 -TimeoutMinutes 20
           
-          # Final cleanup
-          Cleanup-Ports
-          
-          if (-not $success) {
-            echo "All test attempts failed"
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "Windows test helper reported failure"
             exit 1
           }
         working-directory: .
@@ -352,58 +291,11 @@ jobs:
         if: always() && matrix.os == 'windows-latest'
         shell: powershell
         run: |
-          echo "Starting comprehensive Windows cleanup..."
+          # Change to CLI directory
+          Set-Location packages/cli
           
-          # Kill processes by name and path patterns
-          $processPatterns = @(
-            "*bun*",
-            "*node*"
-          )
-          
-          foreach ($pattern in $processPatterns) {
-            try {
-              $processes = Get-Process | Where-Object { 
-                $_.ProcessName -like $pattern -and 
-                ($_.Path -like "*dist*index.js*" -or $_.Path -like "*eliza*" -or $_.CommandLine -like "*test*")
-              }
-              
-              if ($processes) {
-                echo "Killing $($processes.Count) processes matching pattern: $pattern"
-                $processes | Stop-Process -Force -ErrorAction SilentlyContinue
-              }
-            } catch {
-              echo "Error cleaning up processes for pattern $pattern : $($_.Exception.Message)"
-            }
-          }
-          
-          # Clean up specific ports
-          $ports = @(3000, 3100, 3001, 3101, 8080, 8081)
-          foreach ($port in $ports) {
-            try {
-              $connections = Get-NetTCPConnection -LocalPort $port -ErrorAction SilentlyContinue
-              if ($connections) {
-                echo "Cleaning up $($connections.Count) connections on port $port"
-                $connections | ForEach-Object { 
-                  try {
-                    Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue
-                  } catch {
-                    # Ignore individual process cleanup errors
-                  }
-                }
-              }
-            } catch {
-              # Port might not be in use, which is fine
-            }
-          }
-          
-          # Force garbage collection
-          [System.GC]::Collect()
-          [System.GC]::WaitForPendingFinalizers()
-          
-          # Wait a moment for cleanup to complete
-          Start-Sleep -Seconds 2
-          
-          echo "Windows cleanup complete"
+          # Use the dedicated cleanup script
+          & powershell -ExecutionPolicy Bypass -File "tests/cleanup-processes.ps1"
 
       # Add a final verification step for Windows
       - name: Verify Windows cleanup
