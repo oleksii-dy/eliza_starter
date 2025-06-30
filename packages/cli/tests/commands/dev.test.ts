@@ -4,8 +4,8 @@ import { existsSync } from 'node:fs';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { TEST_TIMEOUTS } from '../test-timeouts';
-import { getBunExecutable, killProcessOnPort, safeChangeDirectory } from './test-utils';
+import { getBunExecutable, killProcessOnPort, safeChangeDirectory } from './test-utils.js';
+import { TEST_TIMEOUTS } from '../test-timeouts.js';
 
 describe('ElizaOS Dev Commands', () => {
   let testTmpDir: string;
@@ -75,7 +75,7 @@ describe('ElizaOS Dev Commands', () => {
 
       try {
         // For Bun.spawn processes, use the exited promise
-        const exitPromise = proc.exited ? proc.exited.catch(() => {}) : Promise.resolve();
+        const exitPromise = proc.exited ? proc.exited.catch(() => { }) : Promise.resolve();
 
         // First attempt graceful shutdown
         proc.kill('SIGTERM');

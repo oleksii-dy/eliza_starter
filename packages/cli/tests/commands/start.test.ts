@@ -3,14 +3,19 @@ import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
-import { TEST_TIMEOUTS } from '../test-timeouts';
+import { TEST_TIMEOUTS } from '../test-timeouts.js';
 import {
+  assertions,
+  createTestProject,
+  expectCliCommandToFail,
   getPlatformOptions,
-  killProcessOnPort,
+  runCliCommand,
+  runCliCommandSilently,
   safeChangeDirectory,
-  TestProcessManager,
   waitForServerReady,
-} from './test-utils';
+  killProcessOnPort,
+} from './test-utils.js';
+import { TestProcessManager } from './test-utils.js';
 
 describe('ElizaOS Start Commands', () => {
   let testTmpDir: string;

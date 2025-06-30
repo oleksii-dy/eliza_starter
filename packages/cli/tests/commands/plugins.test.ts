@@ -3,8 +3,8 @@ import { execSync } from 'node:child_process';
 import { mkdtemp, rm, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { safeChangeDirectory, getPlatformOptions } from './test-utils';
-import { TEST_TIMEOUTS } from '../test-timeouts';
+import { safeChangeDirectory, getPlatformOptions } from './test-utils.js';
+import { TEST_TIMEOUTS } from '../test-timeouts.js';
 
 describe('ElizaOS Plugin Commands', () => {
   let testTmpDir: string;
