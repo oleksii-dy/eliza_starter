@@ -19,7 +19,7 @@
       ]
     },
     "rootDir": ".",
-    "moduleResolution": "node16",
+    "moduleResolution": "NodeNext",
     "outDir": "./dist",
     "jsx": "react",
     "lib": [
