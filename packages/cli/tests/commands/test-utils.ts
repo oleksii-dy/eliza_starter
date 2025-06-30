@@ -3,7 +3,7 @@ import { mkdtemp, rm, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { existsSync } from 'node:fs';
-import { TEST_TIMEOUTS } from '../test-timeouts';
+import { TEST_TIMEOUTS } from '../test-timeouts.js';
 
 export interface TestContext {
   testTmpDir: string;
