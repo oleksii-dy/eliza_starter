@@ -3,7 +3,7 @@ import { execSync } from 'node:child_process';
 import { mkdtemp, rm, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { safeChangeDirectory } from './test-utils';
+import { safeChangeDirectory } from './test-utils.js';
 
 describe('ElizaOS Publish Commands', () => {
   let testTmpDir: string;

@@ -1,5 +1,5 @@
 declare module 'node:child_process' {
-    import type { execSync, spawn, ExecSyncOptions, SpawnOptions } from 'child_process';
+    import { execSync, spawn, ExecSyncOptions, SpawnOptions } from 'child_process';
     export { execSync, spawn };
     export type { ExecSyncOptions, SpawnOptions };
     export * from 'child_process';
