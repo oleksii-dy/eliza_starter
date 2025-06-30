@@ -38,7 +38,7 @@
     "format": "prettier --write ./src",
     "format:check": "prettier --check ./src",
     "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo",
-    "test": "bun run test:all",
+    "test": "bash ./run-all-tests.sh",
     "test:all": "./run-all-tests.sh",
     "test:unit": "bun test --timeout 30000",
     "test:unit:watch": "bun test --watch --timeout 30000",

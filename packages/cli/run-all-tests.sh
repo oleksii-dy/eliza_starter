@@ -16,6 +16,22 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+# -------------------------------------
+# Ensure Bun is available (Ubuntu CI fix)
+# -------------------------------------
+if ! command -v bun >/dev/null 2>&1; then
+  echo -e "${YELLOW}⚠ Bun not detected – installing Bun for test run...${NC}"
+  # Install Bun non-interactively. The install script adds Bun to ~/.bun and
+  # appends an export to the user shell config. We also update PATH for the
+  # current script so subsequent commands (build/tests) can use it immediately.
+  curl -fsSL https://bun.sh/install | bash -s -- --yes > /dev/null 2>&1
+  # Add Bun to PATH for this session (installation location is ~/.bun/bin)
+  if [ -d "$HOME/.bun/bin" ]; then
+    export PATH="$HOME/.bun/bin:$PATH"
+  fi
+  echo -e "${GREEN}✓ Bun installed successfully${NC}"
+fi
+
 # Test results
 TOTAL_TESTS=0
 PASSED_TESTS=0
