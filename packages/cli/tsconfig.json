@@ -5,6 +5,7 @@
     "baseUrl": ".",
     "module": "NodeNext",
     "allowSyntheticDefaultImports": true,
+    "allowImportingTsExtensions": true,
     "esModuleInterop": true,
     "target": "ESNext",
     "paths": {
@@ -39,7 +40,8 @@
     "skipLibCheck": true,
     "strict": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true
+    "noUnusedParameters": true,
+    "noEmit": true
   },
   "include": [
     "src/**/*",
