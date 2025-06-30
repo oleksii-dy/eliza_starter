@@ -4,7 +4,6 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test';
 import { TEST_TIMEOUTS } from '../test-timeouts';
-import { getTestPort, releaseTestPort } from '../port-allocator';
 import {
   getPlatformOptions,
   killProcessOnPort,
@@ -33,8 +32,8 @@ describe('ElizaOS Start Commands', () => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
-    // ---- Allocate a unique port for this test
-    testServerPort = await getTestPort();
+    // ---- Use a deterministic port based on process ID to avoid conflicts
+    testServerPort = 3000 + (process.pid % 1000);
     await killProcessOnPort(testServerPort);
     await new Promise((resolve) => setTimeout(resolve, TEST_TIMEOUTS.SHORT_WAIT));
 
@@ -55,11 +54,6 @@ describe('ElizaOS Start Commands', () => {
   afterEach(async () => {
     // Clean up all processes
     await processManager.cleanup();
-
-    // Release the allocated port
-    if (testServerPort) {
-      releaseTestPort(testServerPort);
-    }
 
     // Clean up environment variables
     delete process.env.LOCAL_SMALL_MODEL;
@@ -213,7 +207,7 @@ describe('ElizaOS Start Commands', () => {
   it(
     'custom port spin-up works',
     async () => {
-      const newPort = await getTestPort();
+      const newPort = 3456 + (process.pid % 100);
       const charactersDir = join(__dirname, '../test-characters');
       const adaPath = join(charactersDir, 'ada.json');
 
@@ -248,7 +242,6 @@ describe('ElizaOS Start Commands', () => {
         expect(response.ok).toBe(true);
       } finally {
         serverProcess.kill();
-        releaseTestPort(newPort);
         const isUbuntuCI = process.env.CI === 'true' && process.platform === 'linux';
         const cleanupWait = isUbuntuCI ? TEST_TIMEOUTS.SHORT_WAIT * 2 : TEST_TIMEOUTS.SHORT_WAIT;
         await new Promise((resolve) => setTimeout(resolve, cleanupWait));

@@ -149,14 +149,21 @@ jobs:
 
       - name: Run CLI TypeScript tests (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
-        timeout-minutes: 20
+        timeout-minutes: 25
         run: |
           sleep 3
-          cross-env NODE_OPTIONS="--max-old-space-size=4096" bun test tests/commands/ --timeout 240000 --bail --no-parallelism
-          EXIT_CODE=$?
-          sleep 2
-          bash tests/cleanup-processes.sh
-          sleep 1
+          EXIT_CODE=0
+          for test_file in tests/commands/*.test.ts; do
+            echo "Running test file: $test_file"
+            cross-env NODE_OPTIONS="--max-old-space-size=4096" bun test "$test_file" --timeout 240000 || EXIT_CODE=$?
+            sleep 2
+            bash tests/cleanup-processes.sh
+            sleep 2
+            if [ $EXIT_CODE -ne 0 ]; then
+              echo "Test failed: $test_file"
+              break
+            fi
+          done
           exit $EXIT_CODE
         working-directory: packages/cli
         env:
