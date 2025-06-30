@@ -3,7 +3,7 @@
   "compilerOptions": {
     "isolatedModules": false,
     "baseUrl": ".",
-    "module": "ESNext",
+    "module": "NodeNext",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "target": "ESNext",
@@ -19,7 +19,7 @@
       ]
     },
     "rootDir": ".",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node16",
     "outDir": "./dist",
     "jsx": "react",
     "lib": [

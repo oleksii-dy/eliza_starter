@@ -1,24 +1,19 @@
 declare module 'node:child_process' {
-    import * as cp from 'child_process';
-    export = cp;
+    export * from 'child_process';
 }
 
 declare module 'node:fs/promises' {
-    import * as fsPromises from 'fs/promises';
-    export = fsPromises;
+    export * from 'fs/promises';
 }
 
 declare module 'node:path' {
-    import * as path from 'path';
-    export = path;
+    export * from 'path';
 }
 
 declare module 'node:os' {
-    import * as os from 'os';
-    export = os;
+    export * from 'os';
 }
 
 declare module 'node:fs' {
-    import * as fs from 'fs';
-    export = fs;
+    export * from 'fs';
 }
