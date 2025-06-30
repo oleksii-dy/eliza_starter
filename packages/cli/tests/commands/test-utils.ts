@@ -1,8 +1,8 @@
-import { execSync } from 'child_process';
-import { mkdtemp, rm, writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
-import { tmpdir } from 'os';
-import { existsSync } from 'fs';
+import { execSync } from 'node:child_process';
+import { mkdtemp, rm, writeFile, mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { existsSync } from 'node:fs';
 import { TEST_TIMEOUTS } from '../test-timeouts';
 
 export interface TestContext {
@@ -545,7 +545,7 @@ interface SpawnOptionsLite {
 }
 
 // We rely on the structural shape of ChildProcess only for a handful of properties/methods.
-type ChildProcessLite = ReturnType<typeof import('child_process').spawn>;
+type ChildProcessLite = ReturnType<typeof import('node:child_process').spawn>;
 
 /**
  * Cross-platform test process manager
@@ -558,7 +558,7 @@ export class TestProcessManager {
    * Spawn a process with proper error handling and cleanup
    */
   spawn(command: string, args: string[], options: SpawnOptionsLite = {}): ChildProcessLite {
-    const { spawn } = require('child_process');
+    const { spawn } = require('node:child_process');
 
     // Force stdio to 'ignore' to prevent hanging streams on Windows
     const processOptions = {

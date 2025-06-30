@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 
-import { readdir, readFile, writeFile, stat, mkdir } from 'fs/promises';
-import { join, relative, dirname, basename } from 'path';
-import { existsSync } from 'fs';
+import { readdir, readFile, writeFile, stat, mkdir } from 'node:fs/promises';
+import { join, relative, dirname, basename } from 'node:path';
+import { existsSync } from 'node:fs';
 
 interface FileToTest {
   sourcePath: string;

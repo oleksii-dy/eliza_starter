@@ -28,7 +28,13 @@
       "DOM.Iterable"
     ],
     "types": [
-      "node"
+      "node",
+      "bun"
+    ],
+    "typeRoots": [
+      "./tests/types",
+      "../../node_modules/@types",
+      "./node_modules/@types"
     ],
     "skipLibCheck": true,
     "strict": true,

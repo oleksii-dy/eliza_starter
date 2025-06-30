@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
-import { readdir, readFile, stat } from 'fs/promises';
-import { join, relative } from 'path';
+import { readdir, readFile, stat } from 'node:fs/promises';
+import { join, relative } from 'node:path';
 
 interface CoverageReport {
   totalFiles: number;
