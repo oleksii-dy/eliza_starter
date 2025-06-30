@@ -7,8 +7,8 @@ import {
   expectCliCommandToFail,
   expectHelpOutput,
   type TestContext,
-} from './test-utils';
-import { TEST_TIMEOUTS } from '../test-timeouts';
+} from './test-utils.js';
+import { TEST_TIMEOUTS } from '../test-timeouts.js';
 
 describe('ElizaOS Monorepo Commands', () => {
   let context: TestContext;

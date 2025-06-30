@@ -10,8 +10,8 @@ import {
   expectCliCommandToFail,
   crossPlatform,
   getPlatformOptions,
-} from './test-utils';
-import { TEST_TIMEOUTS } from '../test-timeouts';
+} from './test-utils.js';
+import { TEST_TIMEOUTS } from '../test-timeouts.js';
 import { getAvailableAIModels } from '../../src/commands/create/utils/selection';
 import { isValidOllamaEndpoint } from '../../src/utils/get-config';
 
