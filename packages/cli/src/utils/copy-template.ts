@@ -286,8 +286,7 @@ export async function copyClientDist() {
 
   if (!existsSync(indexSrc)) {
     logger.error(`index.html not found at ${indexSrc} after ${maxRetries} attempts`);
-    logger.error('Client package must be built before CLI package. Run: bun run build:client');
-    throw new Error('Client dist files not found - build the client package first');
+    return;
   }
 
   // Copy everything
@@ -296,10 +295,8 @@ export async function copyClientDist() {
   // Verify it made it into CLI dist
   if (!existsSync(indexDest)) {
     logger.error(`index.html missing in CLI dist at ${indexDest}`);
-    throw new Error('Failed to copy client files to CLI dist directory');
+    return;
   }
-
-  logger.info('✅ Client files successfully copied to CLI package');
 
   logger.success('Client dist files copied successfully');
 }

@@ -8,7 +8,7 @@ import {
   UserEnvironment,
 } from '@/src/utils';
 import { type DirectoryInfo } from '@/src/utils/directory-detection';
-import { logger, type IAgentRuntime, type ProjectAgent, Project } from '@elizaos/core';
+import { logger, type IAgentRuntime, type ProjectAgent } from '@elizaos/core';
 import * as dotenv from 'dotenv';
 import * as fs from 'node:fs';
 import path from 'node:path';
@@ -16,7 +16,6 @@ import { getElizaCharacter } from '@/src/characters/eliza';
 import { startAgent } from '@/src/commands/start';
 import { E2ETestOptions, TestResult } from '../types';
 import { processFilterName } from '../utils/project-utils';
-import { cwd } from 'node:process';
 
 /**
  * Function that runs the end-to-end tests.
@@ -131,21 +130,26 @@ export async function runE2eTests(
       throw initError;
     }
 
-    let project: Project | undefined;
+    let project;
     try {
       logger.info('Attempting to load project or plugin...');
-      // Resolve path - use monorepo root if available, otherwise use cwd
+      // Resolve path from monorepo root, not cwd (using centralized detection)
       const monorepoRoot = UserEnvironment.getInstance().findMonorepoRoot(process.cwd());
-      const baseDir = monorepoRoot ?? process.cwd();
-      const targetPath = testPath ? path.resolve(baseDir, testPath) : process.cwd();
-
+      if (!monorepoRoot) {
+        throw new Error(
+          'Could not find monorepo root. Make sure to run tests from within the Eliza project.'
+        );
+      }
+      const targetPath = testPath ? path.resolve(monorepoRoot, testPath) : process.cwd();
       project = await loadProject(targetPath);
 
       if (!project || !project.agents || project.agents.length === 0) {
         throw new Error('No agents found in project configuration');
       }
 
-      logger.info(`Found ${project.agents.length} agents`);
+      logger.info(
+        `Found ${project.agents.length} agents in ${project.isPlugin ? 'plugin' : 'project'} configuration`
+      );
 
       // Set up server properties
       logger.info('Setting up server properties...');

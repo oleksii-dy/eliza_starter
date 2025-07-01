@@ -19,23 +19,12 @@ const avatar = fs.existsSync(imagePath)
 export const mrTeeCharacter: Character = {
   name: 'Mr. TEE',
   plugins: [
-    // Core plugins first
     '@elizaos/plugin-sql',
-    '@elizaos/plugin-bootstrap',
-
-    // LLM provider
-    '@elizaos/plugin-redpill',
-
-    // Voice Provider
-    '@elizaos/plugin-elevenlabs',
-
-    // Embedding-capable plugins after other AI plugins
     '@elizaos/plugin-openai',
-
-    // Specialized Plugins
+    '@elizaos/plugin-redpill',
+    '@elizaos/plugin-bootstrap',
+    '@elizaos/plugin-elevenlabs',
     '@elizaos/plugin-tee',
-
-    // Platform Plugins
     '@elizaos/plugin-discord',
   ],
   settings: {

@@ -1,0 +1,30 @@
+{
+  "name": "@elizaos/plugin-grok",
+  "version": "0.1.0",
+  "description": "ElizaOS plugin for Grok (xAI) language models via its OpenAI-compatible API.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "prettier --write ./src",
+    "format": "prettier --write ./src",
+    "format:check": "prettier --check ./src",
+    "clean": "rm -rf dist .turbo node_modules tsconfig.tsbuildinfo"
+  },
+  "dependencies": {
+    "@elizaos/core": "workspace:*",
+    "openai": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "prettier": "^3.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
