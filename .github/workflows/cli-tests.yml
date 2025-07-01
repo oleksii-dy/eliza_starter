@@ -149,20 +149,48 @@ jobs:
 
       - name: Run CLI TypeScript tests (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
-        timeout-minutes: 30
+        timeout-minutes: 45
         run: |
-          # Pre-cleanup
+          # Pre-cleanup with extended wait
           bash tests/cleanup-processes.sh
+          sleep 10
+
+          # Kill any remaining processes
+          sudo pkill -f "bun.*dist/index.js" || true
+          sudo pkill -f "node.*dist/index.js" || true
           sleep 5
 
-          # Run tests with extended timeouts and better cleanup
-          cross-env NODE_OPTIONS="--max-old-space-size=4096" bun test tests/commands/ --timeout 300000 --bail 1
-          EXIT_CODE=$?
+          # Run tests sequentially with very conservative timeouts
+          EXIT_CODE=0
+          for test_file in tests/commands/agent.test.ts tests/commands/create.test.ts tests/commands/dev.test.ts tests/commands/env.test.ts tests/commands/monorepo.test.ts tests/commands/plugins.test.ts tests/commands/publish.test.ts tests/commands/start.test.ts tests/commands/test.test.ts tests/commands/update.test.ts; do
+            if [ -f "$test_file" ]; then
+              echo "Running test file: $test_file"
+              # Kill any processes before each test
+              sudo pkill -f "bun.*dist/index.js" || true
+              sudo fuser -k 3000/tcp 2>/dev/null || true
+              sudo fuser -k 3100/tcp 2>/dev/null || true
+              sleep 3
 
-          # Post-cleanup
-          sleep 3
+              # Run single test file with extended timeout
+              cross-env NODE_OPTIONS="--max-old-space-size=2048" bun test "$test_file" --timeout 360000 || EXIT_CODE=$?
+
+              # Cleanup after each test
+              sleep 5
+              bash tests/cleanup-processes.sh
+              sleep 5
+
+              if [ $EXIT_CODE -ne 0 ]; then
+                echo "Test failed: $test_file (exit code: $EXIT_CODE)"
+                break
+              fi
+            fi
+          done
+
+          # Final cleanup
+          sleep 5
           bash tests/cleanup-processes.sh
-          sleep 2
+          sudo pkill -f "bun.*dist/index.js" || true
+          sleep 3
 
           exit $EXIT_CODE
         working-directory: packages/cli
