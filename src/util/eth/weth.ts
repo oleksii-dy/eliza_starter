@@ -1,0 +1,101 @@
+import { IAgentRuntime } from "@elizaos/core";
+import { CalldataWithDescription } from "src/types/tx";
+import { getToken } from "../db";
+import { encodeFunctionData, formatUnits } from "viem";
+import { isHex } from "viem";
+import { oasisTestnet } from "viem/chains";
+
+interface WETHParams {
+  chainId: number;
+  tokenIn?: `0x${string}`;
+  tokenOut?: `0x${string}`;
+}
+
+const abi = [
+  {
+    constant: false,
+    inputs: [{ name: "wad", type: "uint256" }],
+    name: "withdraw",
+    outputs: [],
+    payable: false,
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    constant: false,
+    inputs: [],
+    name: "deposit",
+    outputs: [],
+    payable: true,
+    stateMutability: "payable",
+    type: "function",
+  },
+] as const;
+
+type IsNative = "in" | "out" | undefined;
+
+interface WethHelper {
+  side: IsNative;
+  address: `0x${string}`;
+  getCall: (amount: bigint) => CalldataWithDescription;
+}
+
+export async function wethHelper(runtime: IAgentRuntime, params: WETHParams): Promise<WethHelper | undefined> {
+  const { chainId, tokenIn, tokenOut } = params;
+
+  let isNative: IsNative = undefined;
+
+  if (!tokenIn) {
+    isNative = "in";
+  }
+
+  if (!tokenOut) {
+    if (isNative) {
+      throw new Error("Both tokens cannot be native");
+    }
+
+    isNative = "out";
+  }
+
+  if (!isNative) {
+    return undefined;
+  }
+
+  const [token] = await getToken(runtime, { chainId, symbol: "WETH" });
+
+  if (!isHex(token?.address)) {
+    throw new Error(`WETH token on chain ${chainId} not found`);
+  }
+
+  if (isNative === "in") {
+    // wrap eth
+    const getCall = (amount: bigint): CalldataWithDescription => ({
+      to: token.address as `0x${string}`,
+      data: encodeFunctionData({
+        abi,
+        functionName: "deposit",
+        args: [],
+      }),
+      value: amount.toString(),
+      title: `Wrap ${formatUnits(amount, token.decimals)} ETH`,
+      description: `Wrap ${formatUnits(amount, token.decimals)} ETH to WETH`,
+    });
+
+    return { side: isNative, getCall, address: token.address };
+  } else {
+    // unwrap weth
+    const getCall = (amount: bigint): CalldataWithDescription => ({
+      to: token.address as `0x${string}`,
+      data: encodeFunctionData({
+        abi,
+        functionName: "withdraw",
+        args: [amount],
+      }),
+      title: `Unwrap ${formatUnits(amount, token.decimals)} WETH`,
+      description: `Unwrap ${formatUnits(amount, token.decimals)} WETH to ETH`,
+      optional: true,
+    });
+
+    return { side: isNative, getCall, address: token.address };
+  }
+}

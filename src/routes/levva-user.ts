@@ -1,38 +1,27 @@
-import { eq } from "drizzle-orm";
 import { type Request, type Response } from "express";
 import { createUniqueUuid, findWorldsForOwner, IAgentRuntime, Route, UUID } from "@elizaos/core";
-import { levvaUserTable } from "../schema/levva-user";
-import { getDb, getLogger } from "../util";
-import { lower } from "src/schema/util";
-import { getAddress, isHex } from "viem";
+import { createLevvaUser, getLevvaUser, getLogger } from "../util";
+import { isHex } from "viem";
 
 const DEFAULT_SERVER_ID: UUID = '00000000-0000-0000-0000-000000000000';
 
 async function handler(req: Request, res: Response, runtime: IAgentRuntime) {
-  const { address: _address } = req.query;
+  const { address } = req.query;
   const logger = getLogger(runtime);
 
   try {
-    if (!isHex(_address)) {
+    if (!isHex(address)) {
       throw new Error("Invalid address");
     }
 
-    const address = getAddress(_address);
-    const db = getDb(runtime);
-    const result = await db
-      .select()
-      .from(levvaUserTable)
-      .where(eq(lower(levvaUserTable.address), address.toLowerCase()));
+    const result = await getLevvaUser(runtime, { address });
 
     let id: string;
 
     if (!result.length) {
       logger.info(`User ${address} not found, creating...`);
-      const result = await db
-        .insert(levvaUserTable)
-        .values({ address })
-        .returning();
-      id = result[0].id;
+      const result = await createLevvaUser(runtime, { address });
+      id = result.id;
     } else {
       logger.info(`User ${address} found, id: ${result[0].id}`);
       id = result[0].id;

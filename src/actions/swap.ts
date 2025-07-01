@@ -1,33 +1,27 @@
 import {
   type Action,
   type Content,
+  IAgentRuntime,
   logger,
   ModelType,
   UUID,
 } from "@elizaos/core";
-import { and, eq } from "drizzle-orm";
-import {
-  encodeFunctionData,
-  erc20Abi,
-  getAddress,
-  isHex,
-  parseUnits,
-} from "viem";
-import { estimationTemplate, formatEstimation, getSwapRouteV1, postSwapRouteV1 } from "../api/kyber";
+import { Chain, erc20Abi, isHex, parseUnits } from "viem";
 import { LEVVA_ACTIONS } from "../constants";
-import { erc20Table } from "../schema/erc20";
-import { levvaUserTable } from "../schema/levva-user";
-import { lower } from "../schema/util";
-import { swapTemplate } from "../templates";
-import type { TokenData } from "../types";
+import { estimationTemplate, swapTemplate } from "../templates";
+import type { TokenData, TokenDataWithInfo } from "../types/token";
 import {
   extractTokenData,
   getChain,
   getClient,
-  getDb,
+  getLevvaUser,
+  getToken,
   getTokenData,
+  upsertToken,
 } from "../util";
-import { rephrase } from "../util/gen";
+import { rephrase } from "../util/generate";
+import { formatEstimation, selectSwapRouter } from "src/util/eth/swap";
+import { parseTokenInfo } from "src/util/eth/token";
 
 interface RawMessage {
   senderId: UUID;
@@ -41,12 +35,35 @@ interface RawMessage {
   metadata: Record<string, unknown>;
 }
 
-interface CalldataWithDescription {
-  to: `0x${string}`;
-  data: `0x${string}`;
-  value?: string;
-  title: string;
-  description: string;
+async function getTokenDataWithInfo(
+  runtime: IAgentRuntime,
+  chain: Chain,
+  symbolOrAddress?: string
+) {
+  let tokenData: TokenDataWithInfo | undefined;
+
+  if (!isHex(symbolOrAddress)) {
+    const symbol = symbolOrAddress;
+
+    if (symbol.toLowerCase() === chain.nativeCurrency.symbol.toLowerCase()) {
+      logger.info("Using native currency as token in");
+      tokenData = extractTokenData(chain.nativeCurrency);
+    } else {
+      const token = (await getToken(runtime, { chainId: chain.id, symbol }))[0];
+      tokenData = extractTokenData(token);
+      tokenData.info = parseTokenInfo(token.info);
+    }
+  } else {
+    tokenData = await getTokenData(chain.id, symbolOrAddress);
+    logger.info(`Saving ${symbolOrAddress} as ${tokenData.symbol}`);
+
+    await upsertToken(runtime, {
+      ...(tokenData as Required<TokenData>),
+      chainId: chain.id,
+    });
+  }
+
+  return tokenData;
 }
 
 export const swapTokens: Action = {
@@ -55,15 +72,12 @@ export const swapTokens: Action = {
     "Replies with all necessary info to swap two tokens, in case on insufficient info from the user, ask the user for it. This action should ignore the REPLY rule in IMPORTANT ACTION ORDERING RULES section.",
   similes: ["SWAP_TOKENS", "EXCHANGE_TOKENS", "swap tokens", "exchange tokens"],
 
-  validate: async (_runtime, message) => {
+  validate: async () => {
     return true;
   },
 
   handler: async (runtime, message, state, options, callback) => {
-    // const [tokenIn, tokenOut] = message.content.text?.match(addressRegex) ?? [];
-
     try {
-      const db = getDb(runtime);
       logger.info("SWAP_TOKENS action called");
       // fixme types
       const raw = (message.metadata as unknown as { raw: RawMessage }).raw;
@@ -79,22 +93,14 @@ export const swapTokens: Action = {
       }
 
       const chain = getChain(chainId);
+      const userResult = await getLevvaUser(runtime, { id: userAddressId });
+      const address = userResult[0]?.address;
 
-      const userResult = await db
-        .select()
-        .from(levvaUserTable)
-        .where(eq(levvaUserTable.id, userAddressId));
-
-      const _address = userResult[0]?.address;
-
-      if (!isHex(_address)) {
+      if (!isHex(address)) {
         throw new Error("User not found");
       }
 
-      const address = getAddress(_address);
-      const modelSmall = runtime.getModel(ModelType.OBJECT_SMALL);
-
-      const gen = await modelSmall(runtime, {
+      const gen = await runtime.useModel(ModelType.OBJECT_SMALL, {
         prompt: swapTemplate.replace(
           "{{recentMessages}}",
           state.values.recentMessages
@@ -111,7 +117,8 @@ export const swapTokens: Action = {
         logger.info("Could not find from token, need to ask user");
 
         const responseContent: Content = {
-          thought: "User didn't provide source token, I should ask the user for it.",
+          thought:
+            "User didn't provide source token, I should ask the user for it.",
           text: "Which token do you want to swap?",
           actions: ["SWAP_TOKENS"],
           source: message.content.source,
@@ -124,7 +131,8 @@ export const swapTokens: Action = {
         logger.info("Could not find to token, need to ask user");
 
         const responseContent: Content = {
-          thought: "User didn't provide destination token, I should ask the user for it.",
+          thought:
+            "User didn't provide destination token, I should ask the user for it.",
           text: "Which token do you want to swap to?",
           actions: ["SWAP_TOKENS"],
           source: message.content.source,
@@ -148,106 +156,44 @@ export const swapTokens: Action = {
         );
       }
 
-      let tokenIn: TokenData | undefined;
-      let tokenOut: TokenData | undefined;
+      const tokenIn = await getTokenDataWithInfo(runtime, chain, fromToken);
 
-      if (!isHex(fromToken)) {
-        const symbol = fromToken;
+      if (!tokenIn) {
+        logger.info(
+          "Could not find token in db, need to ask user for its address"
+        );
 
-        if (
-          symbol.toLowerCase() === chain.nativeCurrency.symbol.toLowerCase()
-        ) {
-          logger.info("Using native currency as token in");
-          tokenIn = extractTokenData(chain.nativeCurrency);
-        } else {
-          const tokenResult = await db
-            .select()
-            .from(erc20Table)
-            .where(
-              and(
-                eq(lower(erc20Table.symbol), symbol.toLowerCase()),
-                eq(erc20Table.chainId, chainId)
-              )
-            );
+        const responseContent: Content = {
+          thought:
+            "User didn't provide token in address, I should ask the user for it.",
+          text: `I couldn't find the token ${fromToken} on ${chain.name}, maybe you know it's address?`,
+          actions: ["SWAP_TOKENS"],
+          source: message.content.source,
+        };
 
-          tokenIn = extractTokenData(tokenResult[0]);
-        }
-
-        if (!tokenIn) {
-          logger.info(
-            "Could not find token in db, need to ask user for its address"
-          );
-
-          const responseContent: Content = {
-            thought:
-              "User didn't provide token in address, I should ask the user for it.",
-            text: `I couldn't find the token ${fromToken} on ${chain.name}, maybe you know it's address?`,
-            actions: ["SWAP_TOKENS"],
-            source: message.content.source,
-          };
-
-          return await callback(
-            await rephrase({ runtime, content: responseContent, state })
-          );
-        }
-      } else {
-        tokenIn = await getTokenData(chainId, fromToken);
-        logger.info(`Saving ${fromToken} as ${tokenIn.symbol}`);
-
-        await db.insert(erc20Table).values({
-          ...(tokenIn as Required<TokenData>),
-          chainId,
-        });
+        return await callback(
+          await rephrase({ runtime, content: responseContent, state })
+        );
       }
 
-      // fixme: add helper function
-      if (!isHex(toToken)) {
-        const symbol = toToken;
+      const tokenOut = await getTokenDataWithInfo(runtime, chain, toToken);
 
-        if (
-          symbol.toLowerCase() === chain.nativeCurrency.symbol.toLowerCase()
-        ) {
-          logger.info("Using native currency as token out");
-          tokenOut = extractTokenData(chain.nativeCurrency);
-        } else {
-          const tokenResult = await db
-            .select()
-            .from(erc20Table)
-            .where(
-              and(
-                eq(lower(erc20Table.symbol), symbol.toLowerCase()),
-                eq(erc20Table.chainId, chainId)
-              )
-            );
+      if (!tokenOut) {
+        logger.info(
+          "Could not find token out, need to ask user for its address"
+        );
 
-          tokenOut = extractTokenData(tokenResult[0]);
-        }
+        const responseContent: Content = {
+          thought:
+            "User didn't provide token out address, I should ask the user for it.",
+          text: `I couldn't find the token ${toToken} on ${chain.name}, maybe you know it's address?`,
+          actions: ["SWAP_TOKENS"],
+          source: message.content.source,
+        };
 
-        if (!tokenOut) {
-          logger.info(
-            "Could not find token out, need to ask user for its address"
-          );
-
-          const responseContent: Content = {
-            thought:
-              "User didn't provide token out address, I should ask the user for it.",
-            text: `I couldn't find the token ${toToken} on ${chain.name}, maybe you know it's address?`,
-            actions: ["SWAP_TOKENS"],
-            source: message.content.source,
-          };
-
-          return await callback(
-            await rephrase({ runtime, content: responseContent, state })
-          );
-        }
-      } else {
-        tokenOut = await getTokenData(chainId, toToken);
-        logger.info(`Saving ${toToken} as ${tokenOut.symbol}`);
-
-        await db.insert(erc20Table).values({
-          ...(tokenOut as Required<TokenData>),
-          chainId,
-        });
+        return await callback(
+          await rephrase({ runtime, content: responseContent, state })
+        );
       }
 
       const client = getClient(chain);
@@ -279,71 +225,14 @@ export const swapTokens: Action = {
         );
       }
 
-      const calls: CalldataWithDescription[] = [];
-      const clientId = runtime.getSetting("KYBER_CLIENT_ID");
+      const swap = selectSwapRouter(tokenIn, tokenOut);
 
-      const route = await getSwapRouteV1({
-        chainId,
-        tokenIn: tokenIn.address,
-        tokenOut: tokenOut.address,
-        amountIn: amountUnits.toString() as `${number}`,
-        clientId,
-      });
-
-      const routeSummary = route?.data.routeSummary;
-      const routerAddress = route?.data.routerAddress;
-
-      if (!isHex(routerAddress) || !routeSummary) {
-        throw new Error(
-          `Failed to get swap route, received: ${JSON.stringify(route)}`
-        );
-      }
-
-      const build = await postSwapRouteV1({
+      const { calls, estimation } = await swap(runtime, {
         address,
-        route,
-        clientId,
-        chainId,
+        amountIn: amountUnits,
+        chain,
+        decimals: tokenIn.decimals,
       });
-
-      if (!build.data) {
-        throw new Error(
-          `Failed to build swap route, received: ${JSON.stringify(build)}`
-        );
-      }
-
-      if (tokenIn.address) {
-        // check allowance
-        const allowance = await client.readContract({
-          address: tokenIn.address,
-          abi: erc20Abi,
-          functionName: "allowance",
-          args: [address, routerAddress],
-        });
-
-        if (allowance < amountUnits) {
-          calls.push({
-            to: tokenIn.address,
-            data: encodeFunctionData({
-              abi: erc20Abi,
-              functionName: "approve",
-              args: [routerAddress, amountUnits],
-            }),
-            title: `Approve ${amount} ${tokenIn.symbol}`,
-            description: `Approve spending ${amount} ${tokenIn.symbol} to ${routerAddress}`,
-          });
-        }
-      }
-
-      calls.push({
-        to: routerAddress,
-        data: build.data.data as `0x${string}`,
-        value: build.data.transactionValue,
-        title: `Swap ${amount} ${tokenIn.symbol} to ${tokenOut.symbol}`,
-        description: `Swap ${amount} ${tokenIn.symbol} to ${tokenOut.symbol}`,
-      });
-
-      console.log("swap route", route);
 
       const json = {
         id: "calls.json",
@@ -353,7 +242,7 @@ export const swapTokens: Action = {
       const responseContent: Content = {
         thought: `Swapping ${amount} ${tokenIn.symbol} to ${tokenOut.symbol}...`,
         text: `Swapping ${amount} ${tokenIn.symbol} to ${tokenOut.symbol}...
-${formatEstimation({ summary: routeSummary, decimals: tokenOut.decimals, symbol: tokenOut.symbol })}
+${formatEstimation(estimation)}
 Please approve transactions in your wallet.`,
         actions: ["SWAP_TOKENS"],
         source: message.content.source,
@@ -363,6 +252,7 @@ Please approve transactions in your wallet.`,
       await callback(
         await rephrase({ runtime, content: responseContent, state })
       );
+
       return true;
     } catch (error) {
       logger.error("Error in SWAP_TOKENS action:", error);
@@ -431,7 +321,7 @@ Please approve transactions in your wallet.`,
       {
         name: "{{agentName}}",
         content: {
-          text: `Swapping {{amount}} {{token1}} to {{token2}}...\n${estimationTemplate}\nPlease approve transactions in your wallet.`,
+          text: `Swapping {{amount}} {{token1}} to {{token2}}...\n${estimationTemplate(true)}\nPlease approve transactions in your wallet.`,
           action: "SWAP_TOKENS",
           attachments: [
             {
