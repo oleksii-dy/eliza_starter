@@ -27,11 +27,11 @@
     "dist"
   ],
   "dependencies": {
-    "@elizaos/cli": "1.0.9",
-    "@elizaos/core": "^1.0.9",
-    "@elizaos/plugin-bootstrap": "^1.0.9",
-    "@elizaos/plugin-openai": "^1.0.4",
-    "@elizaos/plugin-sql": "^1.0.9",
+    "@elizaos/cli": "^1.0.15",
+    "@elizaos/core": "^1.0.15",
+    "@elizaos/plugin-bootstrap": "^1.0.15",
+    "@elizaos/plugin-openai": "1.0.6",
+    "@elizaos/plugin-sql": "^1.0.15",
     "@elizaos/plugin-zerion": "^0.25.6-alpha.1",
     "viem": "^2.30.6",
     "zod": "3.24.2"
@@ -45,7 +45,7 @@
   "scripts": {
     "preinstall": "npx only-allow bun",
     "start": "elizaos start",
-    "dev": "elizaos dev",
+    "dev": "LOG_LEVEL=debug elizaos dev",
     "build": "tsup",
     "lint": "prettier --write ./src",
     "test:component": "vitest run",
@@ -59,8 +59,5 @@
   "publishConfig": {
     "access": "public"
   },
-  "gitHead": "b165ad83e5f7a21bc1edbd83374ca087e3cd6b33",
-  "patchedDependencies": {
-    "@elizaos/plugin-openai@1.0.4": "patches/@elizaos%2Fplugin-openai@1.0.4.patch"
-  }
+  "gitHead": "b165ad83e5f7a21bc1edbd83374ca087e3cd6b33"
 }

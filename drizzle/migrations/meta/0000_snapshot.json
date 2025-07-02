@@ -1,5 +1,5 @@
 {
-  "id": "8fb10522-de10-4d23-abb6-4f3d6ee53a30",
+  "id": "eace8b23-fb8f-4d8f-93ff-593743dcceb2",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -8,16 +8,9 @@
       "name": "erc20",
       "schema": "",
       "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
         "address": {
           "name": "address",
-          "type": "text",
+          "type": "varchar(42)",
           "primaryKey": false,
           "notNull": true
         },
@@ -44,6 +37,12 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true
+        },
+        "info": {
+          "name": "info",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -79,7 +78,15 @@
         }
       },
       "foreignKeys": {},
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "erc20_address_chain_id_pk": {
+          "name": "erc20_address_chain_id_pk",
+          "columns": [
+            "address",
+            "chain_id"
+          ]
+        }
+      },
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},

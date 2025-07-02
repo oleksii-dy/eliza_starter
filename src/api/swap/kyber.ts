@@ -1,5 +1,5 @@
-import { formatUnits } from "viem";
 import z from "zod";
+import { ETH_ADDRESS } from "./constants";
 export const AggregatorDomain = `https://aggregator-api.kyberswap.com`;
 
 const KyberGetSwapRouteV1ResponseSchema = z.object({
@@ -65,8 +65,6 @@ export enum ChainName {
   SCROLL = `scroll`,
 }
 
-const NATIVE = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
-
 export const CHAIN_ID_MAP: Record<`${number}`, ChainName> = {
   "1": ChainName.MAINNET,
   "8453": ChainName.BASE,
@@ -74,8 +72,8 @@ export const CHAIN_ID_MAP: Record<`${number}`, ChainName> = {
 };
 
 export async function getSwapRouteV1({
-  tokenIn = NATIVE,
-  tokenOut = NATIVE,
+  tokenIn = ETH_ADDRESS,
+  tokenOut = ETH_ADDRESS,
   amountIn,
   chainId,
   clientId,
@@ -177,29 +175,3 @@ export async function postSwapRouteV1({
 
   return parsed.data;
 }
-
-export const estimationTemplate =
-  "Estimated to receive {{amountOut}} {{symbol}} (${{amountOutUsd}}), gas fee {{gas}} (${{gasUsd}})";
-
-export const formatEstimation = ({
-  summary,
-  decimals,
-  symbol,
-}: {
-  summary: RouteSummary;
-  decimals: number;
-  symbol: string;
-}) => {
-  const gas = formatUnits(
-    BigInt(summary.gas ?? "0") * BigInt(summary.gasPrice ?? "0"),
-    18
-  );
-  const amountOut = formatUnits(BigInt(summary.amountOut ?? "0"), decimals);
-
-  return estimationTemplate
-    .replace("{{amountOut}}", amountOut)
-    .replace("{{symbol}}", symbol)
-    .replace("{{amountOutUsd}}", summary.amountOutUsd)
-    .replace("{{gas}}", gas)
-    .replace("{{gasUsd}}", summary.gasUsd);
-};
