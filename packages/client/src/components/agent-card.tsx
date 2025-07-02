@@ -8,10 +8,11 @@ import { Separator } from '@/components/ui/separator';
 import { formatAgentName, cn } from '@/lib/utils';
 import type { Agent } from '@elizaos/core';
 import { AgentStatus as CoreAgentStatus } from '@elizaos/core';
-import { MessageSquare, Settings, Loader2 } from 'lucide-react';
+import { MessageSquare, Settings, Loader2, MoreVertical, Pause, Play } from 'lucide-react';
 import { useAgentManagement } from '@/hooks/use-agent-management';
 import type { AgentWithStatus } from '@/types';
 import clientLogger from '@/lib/logger';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 
 interface AgentCardProps {
   agent: Partial<AgentWithStatus>;
@@ -93,28 +94,48 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, onChat }) => {
         'w-full transition-all hover:shadow-lg hover:bg-muted/30 cursor-pointer bg-card border border-border/50',
         isActive ? '' : 'opacity-75'
       )}
-      onClick={handleNewChat}
+      // onClick={handleNewChat}
       data-testid="agent-card"
     >
       <CardContent className="p-4 relative">
         {/* Toggle Switch - positioned absolutely in top-right */}
         <div className="absolute top-3 right-3">
-          <Switch
-            checked={isActive}
-            onCheckedChange={(checked) => {
-              if (checked !== isActive) {
-                handleToggle();
-              }
-            }}
-            onClick={(e) => e.stopPropagation()}
-            aria-label={`Toggle ${agentName}`}
-            disabled={isStarting || isStopping}
-            className={cn(
-              isActive
-                ? 'data-[state=checked]:!bg-green-500'
-                : 'data-[state=unchecked]:!bg-gray-500/80'
-            )}
-          />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" side="bottom">
+              <DropdownMenuItem onClick={handleNewChat}>
+                <MessageSquare className="h-4 w-4 mr-2" />
+                New Chat
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={isActive ? handleStop : handleStart}
+                disabled={isStarting || isStopping}
+              >
+                {isStarting || isStopping ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : isActive ? (
+                  <Pause className="h-4 w-4 mr-2" />
+                ) : (
+                  <Play className="h-4 w-4 mr-2" />
+                )}
+                {isStarting || isStopping
+                  ? isActive
+                    ? 'Stopping...'
+                    : 'Starting...'
+                  : isActive
+                  ? 'Pause Agent'
+                  : 'Start Agent'}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSettings}>
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <div className="flex items-start gap-4 pr-10">
@@ -135,36 +156,6 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, onChat }) => {
               {description}
             </p>
           </div>
-        </div>
-
-        <Separator className="my-3" />
-
-        <div className="flex items-center justify-between">
-          {/* Settings button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleSettings();
-            }}
-            className="h-8 w-8 p-0 hover:bg-muted/50"
-          >
-            <Settings className="h-4 w-4 text-muted-foreground" />
-          </Button>
-
-          {/* New Chat button - ghost variant */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNewChat();
-            }}
-            className="h-8 px-4 rounded-sm bg-background border-muted-foreground/20 hover:bg-muted/30"
-          >
-            New Chat
-          </Button>
         </div>
       </CardContent>
     </Card>
