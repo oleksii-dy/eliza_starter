@@ -94,13 +94,14 @@ export default function Home() {
             <TabsContent value="agents" className="flex-1 mt-0 bg-background">
               <div className="flex flex-col gap-6 w-full md:max-w-4xl mx-auto px-6 py-8">
                 <div className="flex items-center justify-between gap-2">
-                  <h2 className="text-xl font-semibold">Your Agents</h2>
+                  <h2 className="text-xl font-semibold">Agents</h2>
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     onClick={() => navigate('/create')}
                     className="create-agent-button"
                   >
                     <Plus className="w-4 h-4" />
+                    <p>Create New Agent</p>
                   </Button>
                 </div>
 
@@ -122,7 +123,6 @@ export default function Home() {
 
                 {!isLoading && !isError && (
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-3 agents-section">
-                    <AddAgentCard />
                     {agents
                       .sort((a, b) => {
                         // Sort by status - ACTIVE agents first
@@ -147,13 +147,14 @@ export default function Home() {
             <TabsContent value="groups" className="flex-1 mt-0 bg-background">
               <div className="flex flex-col gap-6 w-full md:max-w-4xl mx-auto px-6 py-8">
                 <div className="flex items-center justify-between gap-2">
-                  <h2 className="text-xl font-semibold">Your Groups</h2>
+                  <h2 className="text-xl font-semibold">Groups</h2>
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     onClick={handleCreateGroup}
                     className="groups-create-button"
                   >
                     <Plus className="w-4 h-4" />
+                    <p>Create New Group</p>
                   </Button>
                 </div>
 
