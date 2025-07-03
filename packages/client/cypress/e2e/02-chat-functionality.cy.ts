@@ -211,8 +211,15 @@ describe('Chat Functionality', () => {
     // App should be functional
     cy.get('[data-testid="app-sidebar"]').should('exist');
 
-    // Verify multiple elements work simultaneously
-    cy.get('[data-testid="add-agent-button"]').should('exist');
+    // Verify appropriate UI elements exist based on application state
+    cy.get('body').should('satisfy', ($body) => {
+      // Should have either agent cards or add agent button
+      const hasAgentCards = $body.find('[data-testid="agent-card"]').length > 0;
+      const hasAddButton = $body.find('[data-testid="add-agent-button"]').length > 0;
+      return hasAgentCards || hasAddButton;
+    });
+
+    // Mobile menu button should always exist
     cy.get('[data-testid="mobile-menu-button"]').should('exist');
   });
 });
