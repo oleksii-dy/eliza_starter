@@ -61,7 +61,7 @@ export class TestSetup {
 
     // Test that CLI can run
     try {
-      const result = await execa('node', [this.cliPath, '--version'], {
+      const result = await execa('bun', [this.cliPath, '--version'], {
         cwd: this.projectRoot,
         timeout: 10000,
       });
