@@ -30,22 +30,13 @@ export function createAgentCrudRouter(
       const allAgents = await db.getAgents();
       const runtimes = Array.from(agents.keys());
 
-      // Helper function to extract bio text from string or array format
-      const getBioText = (bio: string | string[] | undefined): string => {
-        if (!bio) return '';
-        if (Array.isArray(bio)) {
-          return bio.filter(Boolean).join(' ').trim();
-        }
-        return bio.trim();
-      };
-
       // Return only minimal agent data
       const response = allAgents
         .map((agent: Partial<Agent>) => ({
           id: agent.id,
           name: agent.name || '',
           characterName: agent.name || '', // Since Agent extends Character, agent.name is the character name
-          bio: getBioText(agent.bio),
+          bio: Array.isArray(agent.bio) ? (agent.bio[0] ?? '') : (agent.bio ?? ''),
           status: agent.id && runtimes.includes(agent.id) ? 'active' : 'inactive',
         }))
         .filter((agent) => agent.id) // Filter out agents without IDs
