@@ -41,11 +41,7 @@ describe('CLI Integration Tests', () => {
   });
 
   describe('Project Creation', () => {
-    it('should create a new project with valid configuration', async () => {
-      if (!testSetup.isBuilt()) {
-        expect().skip();
-        return;
-      }
+    it.skipIf(!testSetup.isBuilt())('should create a new project with valid configuration', async () => {
 
       const projectName = 'test-project';
       const result = await cliRunner.runCommand({
@@ -59,11 +55,7 @@ describe('CLI Integration Tests', () => {
       expect(result.stdout).toContain('created successfully');
     });
 
-    it('should handle project creation with custom template', async () => {
-      if (!testSetup.isBuilt()) {
-        expect().skip();
-        return;
-      }
+    it.skipIf(!testSetup.isBuilt())('should handle project creation with custom template', async () => {
 
       const projectName = 'test-project-custom';
       const result = await cliRunner.runCommand({
@@ -78,11 +70,7 @@ describe('CLI Integration Tests', () => {
   });
 
   describe('Plugin Management', () => {
-    it('should list available plugins', async () => {
-      if (!testSetup.isBuilt()) {
-        expect().skip();
-        return;
-      }
+    it.skipIf(!testSetup.isBuilt())('should list available plugins', async () => {
 
       const result = await cliRunner.runCommand({
         command: 'plugins list',
@@ -94,11 +82,7 @@ describe('CLI Integration Tests', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should show plugin information', async () => {
-      if (!testSetup.isBuilt()) {
-        expect().skip();
-        return;
-      }
+    it.skipIf(!testSetup.isBuilt())('should show plugin information', async () => {
 
       const result = await cliRunner.runCommand({
         command: 'plugins info bootstrap',
@@ -112,11 +96,7 @@ describe('CLI Integration Tests', () => {
   });
 
   describe('Testing Commands', () => {
-    it('should run component tests', async () => {
-      if (!testSetup.isBuilt()) {
-        expect().skip();
-        return;
-      }
+    it.skipIf(!testSetup.isBuilt())('should run component tests', async () => {
 
       const result = await cliRunner.runCommand({
         command: 'test --type component',
@@ -128,11 +108,7 @@ describe('CLI Integration Tests', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should handle test filtering', async () => {
-      if (!testSetup.isBuilt()) {
-        expect().skip();
-        return;
-      }
+    it.skipIf(!testSetup.isBuilt())('should handle test filtering', async () => {
 
       const result = await cliRunner.runCommand({
         command: 'test --name "basic"',
@@ -146,11 +122,7 @@ describe('CLI Integration Tests', () => {
   });
 
   describe('Agent Runtime', () => {
-    it('should validate agent configuration', async () => {
-      if (!testSetup.isBuilt()) {
-        expect().skip();
-        return;
-      }
+    it.skipIf(!testSetup.isBuilt())('should validate agent configuration', async () => {
 
       const result = await cliRunner.runCommand({
         command: 'start --validate-only',
@@ -161,11 +133,7 @@ describe('CLI Integration Tests', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should handle missing configuration gracefully', async () => {
-      if (!testSetup.isBuilt()) {
-        expect().skip();
-        return;
-      }
+    it.skipIf(!testSetup.isBuilt())('should handle missing configuration gracefully', async () => {
 
       const result = await cliRunner.runCommand({
         command: 'start --config nonexistent.json',
@@ -180,11 +148,7 @@ describe('CLI Integration Tests', () => {
   });
 
   describe('Environment Management', () => {
-    it('should handle environment variable validation', async () => {
-      if (!testSetup.isBuilt()) {
-        expect().skip();
-        return;
-      }
+    it.skipIf(!testSetup.isBuilt())('should handle environment variable validation', async () => {
 
       const result = await cliRunner.runCommand({
         command: 'start --check-env',
@@ -197,11 +161,7 @@ describe('CLI Integration Tests', () => {
   });
 
   describe('Error Scenarios', () => {
-    it('should handle insufficient permissions gracefully', async () => {
-      if (!testSetup.isBuilt()) {
-        expect().skip();
-        return;
-      }
+    it.skipIf(!testSetup.isBuilt())('should handle insufficient permissions gracefully', async () => {
 
       const result = await cliRunner.runCommand({
         command: 'create /root/test-project --no-interactive',
@@ -213,11 +173,7 @@ describe('CLI Integration Tests', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should handle network errors gracefully', async () => {
-      if (!testSetup.isBuilt()) {
-        expect().skip();
-        return;
-      }
+    it.skipIf(!testSetup.isBuilt())('should handle network errors gracefully', async () => {
 
       const result = await cliRunner.runCommand({
         command: 'plugins update --registry https://nonexistent.registry.com',
@@ -229,11 +185,7 @@ describe('CLI Integration Tests', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should handle corrupted project files gracefully', async () => {
-      if (!testSetup.isBuilt()) {
-        expect().skip();
-        return;
-      }
+    it.skipIf(!testSetup.isBuilt())('should handle corrupted project files gracefully', async () => {
 
       const result = await cliRunner.runCommand({
         command: 'start --config package.json',
@@ -247,11 +199,7 @@ describe('CLI Integration Tests', () => {
   });
 
   describe('Performance', () => {
-    it('should complete basic operations within reasonable time', async () => {
-      if (!testSetup.isBuilt()) {
-        expect().skip();
-        return;
-      }
+    it.skipIf(!testSetup.isBuilt())('should complete basic operations within reasonable time', async () => {
 
       const commands = [
         { command: '--version', maxTime: 2000 },
@@ -287,11 +235,7 @@ describe('CLI Integration Tests', () => {
       }
     });
 
-    it('should have consistent help text across commands', async () => {
-      if (!testSetup.isBuilt()) {
-        expect().skip();
-        return;
-      }
+    it.skipIf(!testSetup.isBuilt())('should have consistent help text across commands', async () => {
 
       const commands = ['create', 'test', 'start', 'plugins'];
       const helpTexts = [];
