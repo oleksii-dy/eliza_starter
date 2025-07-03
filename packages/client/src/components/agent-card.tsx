@@ -33,9 +33,17 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, onChat }) => {
   const agentIdForNav = agent.id;
   const agentName = agent.name || 'Unnamed Agent';
   const avatarUrl = typeof agent.settings?.avatar === 'string' ? agent.settings.avatar : undefined;
-  const description = (
-      Array.isArray(agent.bio) && agent.bio.filter(Boolean).join(' ').trim()
-  ) || 'Engages with all types of questions and conversations';
+
+  // Helper function to extract bio text from string or array format
+  const getBioText = (bio: string | string[] | undefined): string => {
+    if (!bio) return '';
+    if (Array.isArray(bio)) {
+      return bio.filter(Boolean).join(' ').trim();
+    }
+    return bio.trim();
+  };
+
+  const description = getBioText(agent.bio) || 'Engages with all types of questions and conversations';
   const isActive = agent.status === CoreAgentStatus.ACTIVE;
   const isStarting = isAgentStarting(agent.id);
   const isStopping = isAgentStopping(agent.id);
