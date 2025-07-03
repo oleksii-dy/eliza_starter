@@ -691,8 +691,8 @@ export class AgentServer {
 
           // For all other routes, serve the SPA's index.html
           // Client files are built into the CLI package's dist directory
-          const cliDistPath = path.resolve(__dirname, '../../../cli/dist');
-          const indexPath = path.join(cliDistPath, 'index.html');
+          const clientDistPath = path.resolve(__dirname, '../../../cli/dist');
+          const indexPath = path.join(clientDistPath, 'index.html');
           
           if (!fs.existsSync(indexPath)) {
             logger.error(`[STATIC] index.html not found at: ${indexPath}`);
