@@ -606,7 +606,16 @@ export class AgentServer {
       // Conditionally serve static assets from the client dist path
       // Client files are built into the CLI package's dist directory
       if (this.isWebUIEnabled) {
-        const clientPath = path.resolve(__dirname, '../../cli/dist');
+        // In production, use path.resolve to find the CLI dist folder from server's perspective
+        // From packages/server/dist to packages/cli/dist requires going up one more level
+        const clientPath = path.resolve(__dirname, '../../../cli/dist');
+        logger.debug(`[STATIC] Serving client files from: ${clientPath}`);
+        
+        // Check if the directory exists
+        if (!fs.existsSync(clientPath)) {
+          logger.error(`[STATIC] Client dist directory not found at: ${clientPath}`);
+        }
+        
         this.app.use(express.static(clientPath, staticOptions));
       }
 
@@ -682,8 +691,15 @@ export class AgentServer {
 
           // For all other routes, serve the SPA's index.html
           // Client files are built into the CLI package's dist directory
-          const cliDistPath = path.resolve(__dirname, '../../cli/dist');
-          res.sendFile(path.join(cliDistPath, 'index.html'));
+          const cliDistPath = path.resolve(__dirname, '../../../cli/dist');
+          const indexPath = path.join(cliDistPath, 'index.html');
+          
+          if (!fs.existsSync(indexPath)) {
+            logger.error(`[STATIC] index.html not found at: ${indexPath}`);
+            return res.status(404).send('Client UI not found');
+          }
+          
+          res.sendFile(indexPath);
         });
       } else {
         // Return 403 Forbidden for non-API routes when UI is disabled
