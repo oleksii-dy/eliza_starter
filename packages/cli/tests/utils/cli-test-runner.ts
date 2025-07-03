@@ -40,6 +40,45 @@ export class CliTestRunner {
     this.config = config;
   }
 
+  /**
+   * Parse command string into arguments, handling quoted strings
+   */
+  private parseCommandArgs(command: string): string[] {
+    const args: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    let quoteChar = '';
+    
+    for (let i = 0; i < command.length; i++) {
+      const char = command[i];
+      
+      if ((char === '"' || char === "'") && (i === 0 || command[i - 1] !== '\\')) {
+        if (!inQuotes) {
+          inQuotes = true;
+          quoteChar = char;
+        } else if (char === quoteChar) {
+          inQuotes = false;
+          quoteChar = '';
+        } else {
+          current += char;
+        }
+      } else if (char === ' ' && !inQuotes) {
+        if (current.length > 0) {
+          args.push(current);
+          current = '';
+        }
+      } else {
+        current += char;
+      }
+    }
+    
+    if (current.length > 0) {
+      args.push(current);
+    }
+    
+    return args;
+  }
+
   async runCommand(spec: CommandSpec): Promise<CliTestResult> {
     const startTime = Date.now();
     const fullCommand = `${this.config.cliPath} ${spec.command}`;
@@ -49,7 +88,7 @@ export class CliTestRunner {
       
       const result = await execa(
         this.config.cliPath,
-        spec.command.split(' ').filter(arg => arg.length > 0),
+        this.parseCommandArgs(spec.command),
         {
           timeout: spec.timeout || this.config.timeout,
           cwd: spec.workingDirectory || this.config.workingDirectory,

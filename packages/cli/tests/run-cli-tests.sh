@@ -71,7 +71,7 @@ fi
 
 # Run the custom CLI test runner
 print_status "Running custom CLI test runner..."
-bun run tests/cli-test-runner.ts --timeout 60000
+bun run tests/cli-test-runner.ts -- --timeout 60000
 CUSTOM_TEST_EXIT_CODE=$?
 
 # Summary
