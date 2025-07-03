@@ -1,5 +1,9 @@
 import { getCliInstallTag, installPlugin, loadPluginModule } from '@/src/utils';
 import { detectPluginContext, provideLocalPluginGuidance } from '@/src/utils/plugin-context';
+import {
+  installPluginDependencies,
+  validatePluginDependencies,
+} from '@/src/utils/plugin-dependency-manager';
 import { logger, type Plugin } from '@elizaos/core';
 import { PluginValidation } from '../types';
 
@@ -24,6 +28,7 @@ export function isValidPluginShape(obj: any): obj is Plugin {
  * Load and prepare a plugin for use
  *
  * Handles both local development plugins and published plugins, with automatic installation if needed.
+ * Also ensures all plugin dependencies are installed before loading.
  */
 export async function loadAndPreparePlugin(pluginName: string): Promise<Plugin | null> {
   const version = getCliInstallTag();
@@ -32,6 +37,15 @@ export async function loadAndPreparePlugin(pluginName: string): Promise<Plugin |
 
   if (context.isLocalDevelopment) {
     try {
+      // For local development, validate dependencies but don't auto-install
+      const dependencyValidation = await validatePluginDependencies(pluginName);
+      if (!dependencyValidation.isValid) {
+        logger.warn(
+          `Local plugin ${pluginName} has missing dependencies: ${dependencyValidation.missingDependencies.join(', ')}`
+        );
+        logger.info('Please install missing dependencies manually for local development plugins');
+      }
+
       pluginModule = await loadPluginModule(pluginName);
       if (!pluginModule) {
         logger.error(`Failed to load local plugin ${pluginName}.`);
@@ -50,6 +64,17 @@ export async function loadAndPreparePlugin(pluginName: string): Promise<Plugin |
         logger.info(`Plugin ${pluginName} not available, installing...`);
         await installPlugin(pluginName, process.cwd(), version);
         pluginModule = await loadPluginModule(pluginName);
+      }
+
+      // After plugin is available, check and install its dependencies
+      if (pluginModule) {
+        logger.debug(`Checking dependencies for plugin ${pluginName}...`);
+        const dependenciesInstalled = await installPluginDependencies(pluginName);
+
+        if (!dependenciesInstalled) {
+          logger.error(`Failed to install dependencies for plugin ${pluginName}`);
+          return null;
+        }
       }
     } catch (error) {
       logger.error(`Failed to process plugin ${pluginName}: ${error}`);
