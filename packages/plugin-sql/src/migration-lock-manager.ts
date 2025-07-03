@@ -26,8 +26,8 @@ export class MigrationLockManager {
    */
   private generateLockId(key: string): number {
     const hash = createHash('sha256').update(key).digest();
-    // Use first 8 bytes of hash as a bigint
-    return parseInt(hash.toString('hex').substring(0, 15), 16);
+    // Use first 6.5 bytes (13 hex chars = 52 bits) to stay within JavaScript safe integer range
+    return parseInt(hash.toString('hex').substring(0, 13), 16);
   }
 
   /**

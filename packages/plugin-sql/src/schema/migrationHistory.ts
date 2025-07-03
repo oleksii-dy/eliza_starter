@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, timestamp, boolean, index, unique } from 'drizzle-orm/pg-core';
+import { pgTable, serial, integer, varchar, timestamp, boolean, index, unique } from 'drizzle-orm/pg-core';
 
 /**
  * Migration history table to track completed migrations and prevent concurrent execution
@@ -30,7 +30,7 @@ export const migrationHistoryTable = pgTable(
     checksum: varchar('checksum', { length: 64 }),
     
     // Duration of the migration in milliseconds
-    durationMs: serial('duration_ms'),
+    durationMs: integer('duration_ms'),
   },
   (table) => ({
     // Index for quick lookups by plugin
@@ -60,7 +60,7 @@ export const migrationLockTable = pgTable(
     lockedAt: timestamp('locked_at').defaultNow().notNull(),
     
     // Process ID for cleanup
-    pid: serial('pid'),
+    pid: integer('pid'),
     
     // Host information
     hostname: varchar('hostname', { length: 255 }),
