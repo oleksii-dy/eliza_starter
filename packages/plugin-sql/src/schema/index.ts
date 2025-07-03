@@ -17,3 +17,6 @@ export { channelTable } from './channel';
 export { messageTable } from './message';
 export { channelParticipantsTable } from './channelParticipant';
 export { serverAgentsTable } from './serverAgent';
+
+// Migration management tables
+export { migrationHistoryTable, migrationLockTable } from './migrationHistory';
