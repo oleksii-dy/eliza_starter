@@ -18,7 +18,6 @@ export function handleError(error: unknown) {
     const field = firstError.path.join('.');
     console.error(`error: ${field ? `Invalid ${field}: ` : ''}${firstError.message}`);
     process.exit(1);
-    return;
   }
 
   // Check for ENOSPC / "no space left on device" and print in red
