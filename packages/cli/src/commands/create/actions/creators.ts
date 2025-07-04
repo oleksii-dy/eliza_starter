@@ -96,6 +96,12 @@ export async function createPlugin(
   const pluginDirName = processedName.startsWith('plugin-')
     ? processedName
     : `plugin-${processedName}`;
+  
+  // Show warning if the final name differs from what the user entered
+  if (pluginDirName !== pluginName) {
+    console.info(`\n${colors.yellow(`warn: changing "${pluginName}" to "${pluginDirName}" to conform to plugin naming conventions\n`)}`);
+  }
+  
   const pluginTargetDir = join(targetDir, pluginDirName);
 
   // Validate target directory
