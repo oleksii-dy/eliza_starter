@@ -50,9 +50,13 @@ export const create = new Command('create')
       projectType = options.type;
       let projectName = name;
 
+      // Check if type was explicitly provided in the original opts
+      const typeWasProvided = opts && 'type' in opts;
+
       // If no name provided, prompt for type first then name
       if (!projectName) {
-        if (!isNonInteractive) {
+        // Only prompt for type if it wasn't explicitly provided
+        if (!isNonInteractive && !typeWasProvided) {
           const selectedType = await clack.select({
             message: 'What would you like to create?',
             options: [
