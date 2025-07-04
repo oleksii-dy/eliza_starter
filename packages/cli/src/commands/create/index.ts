@@ -221,6 +221,5 @@ export const create = new Command('create')
         clack.cancel(`Failed to create ${errorType}.`);
       }
       handleError(error);
-      process.exit(1);
     }
   });
