@@ -50,8 +50,8 @@ export const create = new Command('create')
       projectType = options.type;
       let projectName = name;
 
-      // Check if type was explicitly provided in the original opts
-      const typeWasProvided = opts && 'type' in opts;
+      // Check if type was explicitly provided in command line arguments
+      const typeWasProvided = process.argv.some(arg => arg === '--type' || arg.startsWith('--type='));
 
       // If no name provided, prompt for type first then name
       if (!projectName) {
