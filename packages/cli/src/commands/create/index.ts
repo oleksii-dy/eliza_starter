@@ -2,7 +2,6 @@ import { displayBanner, handleError } from '@/src/utils';
 import { Command } from 'commander';
 import * as clack from '@clack/prompts';
 import colors from 'yoctocolors';
-import { logger } from '@elizaos/core';
 
 import { validateCreateOptions, validateProjectName } from './utils';
 import { selectDatabase, selectAIModel, selectEmbeddingModel } from './utils';
@@ -217,7 +216,6 @@ export const create = new Command('create')
         const errorType = formatProjectType(projectType || 'project');
         clack.cancel(`Failed to create ${errorType}.`);
       }
-      logger.error('Create command failed:', error);
       handleError(error);
       process.exit(1);
     }
