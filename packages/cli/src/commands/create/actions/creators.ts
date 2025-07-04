@@ -99,7 +99,8 @@ export async function createPlugin(
   
   // Show warning if the final name differs from what the user entered
   if (pluginDirName !== pluginName) {
-    console.info(`\n${colors.yellow(`warn: changing "${pluginName}" to "${pluginDirName}" to conform to plugin naming conventions\n`)}`);
+    console.info(colors.yellow(`\nwarn: changing "${pluginName}" to "${pluginDirName}" to conform to plugin naming conventions`));
+    console.info('');
   }
   
   const pluginTargetDir = join(targetDir, pluginDirName);
