@@ -1,7 +1,7 @@
 import { handleError, withCleanupOnInterrupt } from '@/src/utils';
 import { Command } from 'commander';
 import { cloneMonorepo } from './actions/clone';
-import { CloneInfo } from './types';
+import { CloneInfo, MonorepoOptions } from './types';
 import { displayNextSteps } from './utils/setup-instructions';
 import { validateMonorepoOptions } from './utils/validation';
 import path from 'node:path';
@@ -15,7 +15,7 @@ export const monorepo = new Command()
   .description('Clone ElizaOS monorepo from a specific branch, defaults to develop')
   .option('-b, --branch <branch>', 'Branch to install', 'develop')
   .option('-d, --dir <directory>', 'Destination directory', './eliza')
-  .action(async (opts: any) => {
+  .action(async (opts: Partial<MonorepoOptions>) => {
     try {
       // Validate options
       const options = validateMonorepoOptions(opts);
