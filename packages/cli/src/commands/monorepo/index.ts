@@ -1,8 +1,9 @@
 import { handleError, withCleanupOnInterrupt } from '@/src/utils';
 import { Command } from 'commander';
 import { cloneMonorepo } from './actions/clone';
-import { MonorepoOptions, CloneInfo } from './types';
+import { CloneInfo } from './types';
 import { displayNextSteps } from './utils/setup-instructions';
+import { validateMonorepoOptions } from './utils/validation';
 import path from 'node:path';
 import { existsSync, readdirSync } from 'node:fs';
 
@@ -14,11 +15,14 @@ export const monorepo = new Command()
   .description('Clone ElizaOS monorepo from a specific branch, defaults to develop')
   .option('-b, --branch <branch>', 'Branch to install', 'develop')
   .option('-d, --dir <directory>', 'Destination directory', './eliza')
-  .action(async (options: MonorepoOptions) => {
+  .action(async (opts: any) => {
     try {
+      // Validate options
+      const options = validateMonorepoOptions(opts);
+      
       const repo = 'elizaOS/eliza';
-      const branch = options.branch || 'develop';
-      const dir = options.dir || './eliza';
+      const branch = options.branch!; // We know this has a value after validation
+      const dir = options.dir!; // We know this has a value after validation
 
       // Get the absolute path for the directory
       const destinationDir = path.resolve(process.cwd(), dir);
