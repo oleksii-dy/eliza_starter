@@ -31,7 +31,9 @@ export const monorepo = new Command()
       if (existsSync(destinationDir)) {
         const files = readdirSync(destinationDir);
         if (files.length > 0) {
-          throw new Error(`Destination directory ${destinationDir} already exists and is not empty`);
+          const error = new Error(`Destination directory ${destinationDir} already exists and is not empty`);
+          error.name = 'ValidationError';
+          throw error;
         }
       }
 
