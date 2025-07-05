@@ -1,8 +1,10 @@
-import { handleError } from '@/src/utils';
+import { handleError, withCleanupOnInterrupt } from '@/src/utils';
 import { Command } from 'commander';
-import { cloneMonorepo, prepareDestination } from './actions/clone';
+import { cloneMonorepo } from './actions/clone';
 import { MonorepoOptions, CloneInfo } from './types';
 import { displayNextSteps } from './utils/setup-instructions';
+import path from 'node:path';
+import { existsSync, readdirSync } from 'node:fs';
 
 /**
  * Create the monorepo command that clones ElizaOS from a specific branch
@@ -18,18 +20,28 @@ export const monorepo = new Command()
       const branch = options.branch || 'develop';
       const dir = options.dir || './eliza';
 
-      // Prepare destination directory
-      const destinationDir = prepareDestination(dir);
+      // Get the absolute path for the directory
+      const destinationDir = path.resolve(process.cwd(), dir);
 
-      // Create clone information
-      const cloneInfo: CloneInfo = {
-        repo,
-        branch,
-        destination: dir,
-      };
+      // Check if directory exists and is not empty (do this before cleanup wrapper)
+      if (existsSync(destinationDir)) {
+        const files = readdirSync(destinationDir);
+        if (files.length > 0) {
+          throw new Error(`Destination directory ${destinationDir} already exists and is not empty`);
+        }
+      }
 
-      // Clone the repository
-      await cloneMonorepo(cloneInfo);
+      // Clone the repository with cleanup on interrupt
+      await withCleanupOnInterrupt(destinationDir, 'monorepo', async () => {
+        // Create clone information with the absolute path
+        const cloneInfo: CloneInfo = {
+          repo,
+          branch,
+          destination: destinationDir,
+        };
+        
+        await cloneMonorepo(cloneInfo);
+      });
 
       // Display instructions for next steps
       displayNextSteps(destinationDir);

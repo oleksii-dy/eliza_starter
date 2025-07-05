@@ -72,11 +72,8 @@ export function prepareDestination(dir: string): string {
 export async function cloneMonorepo(cloneInfo: CloneInfo): Promise<void> {
   const { repo, branch, destination } = cloneInfo;
 
-  // Prepare the destination directory
-  const destinationDir = prepareDestination(destination);
-
   // Clone the repository
-  await cloneRepository(repo, branch, destinationDir);
+  await cloneRepository(repo, branch, destination);
 
   return;
 }
