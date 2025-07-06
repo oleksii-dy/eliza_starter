@@ -25,7 +25,7 @@ You can install the plugin using your preferred package manager:
 
 ```bash
 # npm
-npm install @elizaos/plugin-para
+bun install @elizaos/plugin-para
 
 # bun
 bun add @elizaos/plugin-para

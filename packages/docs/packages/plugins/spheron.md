@@ -10,7 +10,7 @@ This plugin integrates the Spheron Protocol SDK into the Eliza ecosystem, provid
 ## Installation
 
 ```bash
-npm install @elizaos/plugin-spheron
+bun install @elizaos/plugin-spheron
 ```
 
 ## Configuration
@@ -126,19 +126,19 @@ await runtime.executeAction('DEPLOYMENT_OPERATION', {
 1. Install dependencies:
 
 ```bash
-npm install
+bun install
 ```
 
 2. Build the plugin:
 
 ```bash
-npm run build
+bun run build
 ```
 
 3. Run tests:
 
 ```bash
-npm test
+bun test
 ```
 
 ## License

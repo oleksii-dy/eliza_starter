@@ -19,27 +19,24 @@ Run tests for Eliza agent projects and plugins.
 ## Usage
 
 ```bash
-elizaos test [options] [command]
+elizaos test [path] [options]
 ```
 
-## Subcommands
+## Arguments
 
-| Subcommand  | Description                                |
-| ----------- | ------------------------------------------ |
-| `component` | Run component tests (via Vitest)           |
-| `e2e`       | Run end-to-end runtime tests               |
-| `all`       | Run both component and e2e tests (default) |
+| Argument | Description                                                   |
+| -------- | ------------------------------------------------------------- |
+| `[path]` | Optional path to the project or plugin to test (default: `.`) |
 
 ## Options
 
-| Option              | Description                                                   |
-| ------------------- | ------------------------------------------------------------- |
-| `-p, --port <port>` | Server port for e2e tests                                     |
-| `-n, --name <n>`    | Filter tests by name (matches file names or test suite names) |
-| `--skip-build`      | Skip building before running tests                            |
-| `--skip-type-check` | Skip TypeScript type checking for faster test runs            |
-| `--watch`           | Enable watch mode to re-run tests on file changes             |
-| `--coverage`        | Generate a test coverage report                               |
+| Option              | Description                                                        |
+| ------------------- | ------------------------------------------------------------------ |
+| `-t, --type <type>` | Type of test to run: 'component', 'e2e', or 'all' (default: 'all') |
+| `--port <port>`     | Server port for e2e tests                                          |
+| `--name <name>`     | Filter tests by name (matches file names or test suite names)      |
+| `--skip-build`      | Skip building before running tests                                 |
+| `--skip-type-check` | Skip TypeScript type checking before running tests                 |
 
 </TabItem>
 <TabItem value="examples" label="Examples & Guides">
@@ -52,24 +49,24 @@ elizaos test [options] [command]
 # Run all tests (component and e2e) - default behavior
 elizaos test
 
-# Explicitly run all tests
-elizaos test all
-
 # Run only component tests
-elizaos test component
+elizaos test -t component
 
 # Run only end-to-end tests
-elizaos test e2e
+elizaos test -t e2e
+
+# Run tests for a specific path
+elizaos test ./packages/plugin-example
 ```
 
 ### Test Filtering
 
 ```bash
 # Filter component tests by name
-elizaos test component --name auth
+elizaos test -t component --name auth
 
 # Filter e2e tests by name
-elizaos test e2e --name database
+elizaos test -t e2e --name database
 
 # Filter all tests by name
 elizaos test --name plugin
@@ -79,19 +76,16 @@ elizaos test --name plugin
 
 ```bash
 # Run tests on custom port for e2e
-elizaos test e2e --port 4000
+elizaos test -t e2e --port 4000
 
 # Skip building before running tests
 elizaos test --skip-build
 
-# Generate a test coverage report
-elizaos test --coverage
-
-# Run tests in watch mode for continuous development
-elizaos test --watch
+# Skip type checking for faster test runs
+elizaos test --skip-type-check
 
 # Combine options
-elizaos test e2e --port 3001 --name integration --skip-build
+elizaos test -t e2e --port 3001 --name integration --skip-build
 ```
 
 ## Test Types

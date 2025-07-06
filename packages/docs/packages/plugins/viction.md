@@ -16,7 +16,7 @@ The Viction plugin serves as a foundational component of Eliza OS, bridging Vict
 ## Installation
 
 ```bash
-npm install @elizaos/plugin-viction
+bun install @elizaos/plugin-viction
 ```
 
 ## Configuration

@@ -13,7 +13,7 @@ The Node plugin serves as a foundational component of Eliza OS, providing AWS S3
 ## Installation
 
 ```bash
-npm install @elizaos/plugin-node
+bun install @elizaos/plugin-node
 ```
 
 ## Configuration

@@ -166,6 +166,18 @@ This creates a continuous cycle of interaction, reflection, and improvement that
 
 ---
 
+### System Infrastructure
+
+| [![Event System](/img/events.jpg)](/docs/core/events)                                  | [![State Management](/img/state.jpg)](/docs/core/state)                                        | [![Model System](/img/models.jpg)](/docs/core/models)                                  |
+| -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| **[🔔 Event System](/docs/core/events)** — Handles runtime events and lifecycle hooks. | **[🎯 State Management](/docs/core/state)** — Manages conversational context and agent memory. | **[🤖 Model System](/docs/core/models)** — Unified interface for AI model integration. |
+
+| [![Character System](/img/character-system.jpg)](/docs/core/character-system)                 | [![Character Files](/img/characters.jpg)](/docs/core/characters)                               | [![Testing](/img/testing.jpg)](/docs/core/testing)                            |
+| --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| **[🎭 Character System](/docs/core/character-system)** — Comprehensive personality framework. | **[📄 Character Files](/docs/core/characters)** — Configuration files for agent personalities. | **[🧪 Testing](/docs/core/testing)** — Tools and patterns for testing agents. |
+
+---
+
 ## Key Concepts
 
 ### Action-Provider-Evaluator Cycle

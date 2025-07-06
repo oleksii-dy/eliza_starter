@@ -24,7 +24,6 @@ An Action consists of:
 - `validate`: Function to check if action is appropriate
 - `handler`: Core implementation logic
 - `examples`: Sample usage patterns
-- `suppressInitialMessage`: Optional flag to suppress initial response
 
 2. Agent Decision Flow:
 
@@ -136,57 +135,65 @@ Here is a complete and up-to-date template for creating a custom action.
 ```typescript
 import { Action, IAgentRuntime, Memory, State, HandlerCallback, Content } from '@elizaos/core';
 
-const customAction: Action = {
-  name: 'CUSTOM_ACTION',
-  description: 'Detailed description of when and how to use this action.',
+// Real example from the Bootstrap plugin - IGNORE action
+export const ignoreAction: Action = {
+  name: 'IGNORE',
+  description:
+    'Call this action if ignoring the user. If the user is aggressive, creepy or is finished with the conversation, use this action. Or, if both you and the user have already said goodbye, use this action instead of saying bye again. Use IGNORE any time the conversation has naturally ended.',
 
-  // Optional fields for better agent performance
-  similes: ['ALTERNATE_NAME', 'OTHER_TRIGGER'],
+  // Alternative names that can trigger this action
+  similes: ['STOP_TALKING', 'STOP_CHATTING', 'STOP_CONVERSATION'],
+
+  // The validation function - in this case, always returns true
+  validate: async (_runtime: IAgentRuntime, _message: Memory) => {
+    return true;
+  },
+
+  // The handler function - manages the ignore behavior
+  handler: async (
+    _runtime: IAgentRuntime,
+    _message: Memory,
+    _state: State,
+    _options: any,
+    callback: HandlerCallback,
+    responses?: Memory[]
+  ) => {
+    // If a callback and the agent's response content are available, call the callback
+    if (callback && responses?.[0]?.content) {
+      // Pass the agent's original response content (thought, IGNORE action, etc.)
+      await callback(responses[0].content);
+    }
+    // Return true to indicate the action handler succeeded
+    return true;
+  },
+
+  // Example scenarios demonstrating when to use IGNORE
   examples: [
     [
       {
-        name: '{{name1}}', // A variable representing the user's name
-        content: { text: 'A message that would trigger this action.' },
+        name: '{{name1}}',
+        content: { text: 'Go screw yourself' },
       },
       {
-        name: '{{name2}}', // A variable representing the agent's name
-        content: {
-          text: 'An example of the text response from the agent.',
-          thought: 'An example of the internal thought process of the agent.',
-          actions: ['CUSTOM_ACTION'], // The action being performed
-        },
+        name: '{{name2}}',
+        content: { text: '', actions: ['IGNORE'] },
       },
     ],
-  ],
-
-  // The validation function, runs quickly to check if the action is relevant
-  validate: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<boolean> => {
-    // Add logic here to determine if this action applies to the current message.
-    // For example, check for keywords in message.content.text
-    return message.content.text.toLowerCase().includes('custom keyword');
-  },
-
-  // The handler function, contains the core logic of the action
-  handler: async (
-    runtime: IAgentRuntime,
-    message: Memory,
-    state?: State,
-    options?: { [key: string]: unknown },
-    callback?: HandlerCallback
-  ): Promise<unknown> => {
-    // This is where the main logic for your action goes.
-    // You can interact with services, APIs, or the database here.
-
-    const responseContent: Content = {
-      thought: "The user mentioned 'custom keyword', so I am executing CUSTOM_ACTION.",
-      text: 'I have successfully executed the custom action.',
-      actions: ['CUSTOM_ACTION'],
-    };
-
-    // Use the callback to send the response to the user
-    if (callback) {
-      await callback(responseContent);
-    }
+    [
+      {
+        name: '{{name1}}',
+        content: { text: 'bye' },
+      },
+      {
+        name: '{{name2}}',
+        content: { text: 'cya' },
+      },
+      {
+        name: '{{name1}}',
+        content: { text: '', actions: ['IGNORE'] },
+      },
+    ],
+  ]
 
     // You can also return data that might be used by other parts of the system.
     return { success: true };

@@ -14,7 +14,7 @@ This plugin provides functionality to:
 ## Installation
 
 ```bash
-npm install @elizaos/plugin-news
+bun install @elizaos/plugin-news
 ```
 
 ## Configuration
@@ -68,19 +68,19 @@ The action returns up to 5 recent articles, including:
 ### Building
 
 ```bash
-npm run build
+bun run build
 ```
 
 ### Development Mode
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 ### Linting
 
 ```bash
-npm run lint
+bun run lint
 ```
 
 ### Project Structure

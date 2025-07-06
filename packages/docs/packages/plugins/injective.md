@@ -171,7 +171,7 @@ export * from './new-module';
 ## Installation
 
 ```bash
-npm install @elizaos/plugin-injective
+bun install @elizaos/plugin-injective
 ```
 
 ## Usage

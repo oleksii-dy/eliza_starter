@@ -35,13 +35,10 @@ elizaos env [command] [options]
 
 ### List Command Options
 
-| Option            | Description                                             |
-| ----------------- | ------------------------------------------------------- |
-| `--system`        | List only system information                            |
-| `--local`         | List only local environment variables                   |
-| `--show-values`   | Display the actual values of secrets (use with caution) |
-| `--filter <text>` | Filter variables by a text pattern                      |
-| `--output <file>` | Export the environment variables to a file              |
+| Option     | Description                           |
+| ---------- | ------------------------------------- |
+| `--system` | List only system information          |
+| `--local`  | List only local environment variables |
 
 ### General Options
 
@@ -63,15 +60,6 @@ elizaos env list --system
 
 # Show only local environment variables
 elizaos env list --local
-
-# Filter for variables containing 'API'
-elizaos env list --filter API
-
-# Show the actual values of variables (not masked)
-elizaos env list --show-values
-
-# Export all environment variables to a file
-elizaos env list --output env.json
 ```
 
 ### Managing Local Environment Variables

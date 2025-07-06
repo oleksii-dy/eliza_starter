@@ -15,7 +15,7 @@ This plugin provides functionality to:
 ## Installation
 
 ```bash
-npm install @elizaos/plugin-trustdb
+bun install @elizaos/plugin-trustdb
 ```
 
 ## Configuration
@@ -103,19 +103,19 @@ const tokenMetrics = trustDB.getTokenPerformance('token-address');
 ### Building
 
 ```bash
-npm run build
+bun run build
 ```
 
 ### Testing
 
 ```bash
-npm run test
+bun run test
 ```
 
 ### Linting
 
 ```bash
-npm run lint
+bun run lint
 ```
 
 ## Dependencies

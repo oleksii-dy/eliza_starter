@@ -11,7 +11,7 @@ For more information on all the available REST endpoints, see the [API Reference
 ## Installation
 
 ```bash
-npm install
+bun install
 ```
 
 ---
@@ -21,7 +21,7 @@ npm install
 To build the project, run the following command:
 
 ```bash
-npm run build
+bun run build
 ```
 
 _Note: To avoid potential issues, do not forget to build your project again after making any changes to it._

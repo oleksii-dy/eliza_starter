@@ -15,7 +15,7 @@ Setting up a development environment can sometimes be tricky, especially if you'
 Our setup script automates the installation of essential tools:
 
 - **Homebrew**: The missing package manager for macOS.
-- **Node.js (Version 23)**: The JavaScript runtime environment needed for ElizaOS.
+- **Node.js (LTS Version)**: The JavaScript runtime environment needed for ElizaOS.
 - **Bun**: A fast JavaScript all-in-one toolkit used by ElizaOS.
 
 ## The Magic Command
@@ -32,7 +32,7 @@ The script will:
 
 1.  **Check your system**: It first ensures you're running on macOS.
 2.  **Install Homebrew**: If you don't have Homebrew, it will install it. Homebrew is used to install other development tools.
-3.  **Install Node.js v23**: It installs Node.js version 23, which is required for ElizaOS.
+3.  **Install Node.js LTS**: It installs the latest LTS (Long Term Support) version of Node.js, which is recommended for stability and compatibility.
 4.  **Install Bun**: It installs Bun, our preferred JavaScript toolkit.
 5.  **Configure your PATH**: It automatically updates your shell profile (`.zprofile`, `.bash_profile`, or `.profile`) so that your system can find the installed tools.
 6.  **Show a summary**: Once finished, the script will display a summary of what was installed and their versions.
@@ -58,7 +58,7 @@ npm --version
 bun --version
 ```
 
-You should see Node.js v23.x.x, a version of npm (which comes with Node.js), and the latest version of Bun.
+You should see Node.js LTS version (e.g., v20.x.x or v22.x.x), a version of npm (which comes with Node.js), and the latest version of Bun.
 
 ## Troubleshooting
 

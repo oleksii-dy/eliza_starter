@@ -44,7 +44,7 @@ The ATTPs plugin bridges agent-based logic with the Eliza ecosystem. It handles 
 ## Installation
 
 ```bash
-npm install @elizaos/plugin-attps
+bun install @elizaos/plugin-attps
 ```
 
 ## Configuration

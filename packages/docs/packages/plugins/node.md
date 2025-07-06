@@ -29,7 +29,7 @@ The Node plugin serves as a foundational component of Eliza OS, bridging core No
 ## Installation
 
 ```bash
-npm install @elizaos/plugin-node
+bun install @elizaos/plugin-node
 ```
 
 ## Configuration

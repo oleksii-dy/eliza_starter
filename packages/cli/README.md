@@ -4,6 +4,13 @@ The ElizaOS CLI provides a comprehensive set of commands to manage your ElizaOS 
 
 ## Installation
 
+### Prerequisites
+
+- Node.js LTS (v20 or v22 recommended - use `nvm install --lts` for easy installation)
+- Bun v1.2.15 or higher (will auto-install if missing)
+- At least 4GB RAM
+- 2GB free disk space
+
 ```bash
 bun install -g @elizaos/cli
 ```
@@ -276,18 +283,18 @@ If any character files fail to load, ElizaOS will:
 
 ### Testing
 
-#### `elizaos test`
+#### `elizaos test [path]`
 
 Run tests for Eliza agent plugins and projects.
 
-- **Subcommands:**
-  - `component`: Run component tests (via Vitest)
-  - `e2e`: Run end-to-end runtime tests
-  - `all`: Run both component and e2e tests (default)
+- **Arguments:**
+  - `[path]`: Optional path to the project or plugin to test
 - **Options:**
-  - `-p, --port <port>`: Port to listen on for e2e tests
-  - `-n, --name <n>`: Filter tests by name (matches file names or test suite names)
+  - `-t, --type <type>`: Type of test to run: 'component', 'e2e', or 'all' (default: 'all')
+  - `--port <port>`: Port to listen on for e2e tests
+  - `--name <name>`: Filter tests by name (matches file names or test suite names)
   - `--skip-build`: Skip building before running tests
+  - `--skip-type-check`: Skip TypeScript type checking before running tests
 
 ### Trusted Execution Environment (TEE) Management
 
@@ -533,7 +540,7 @@ To stop all running ElizaOS agents locally, use:
 elizaos agent stop --all
 ```
 
-This command uses `pkill` to terminate all ElizaOS processes. For stopping individual agents, see the [Agent Management](#elizaos-agent-subcommand) section.
+This command uses `pgrep` and `kill` to terminate all ElizaOS processes. For stopping individual agents, see the [Agent Management](#elizaos-agent-subcommand) section.
 
 ## Development Guide
 
@@ -641,14 +648,12 @@ Plugins extend the functionality of ElizaOS agents by providing additional capab
    ```bash
    # Run tests during development
    elizaos test
-   # Or with the CLI directly:
-   elizaos test
 
    # Test specific components
-   elizaos test component
+   elizaos test -t component
 
    # Test end-to-end functionality
-   elizaos test e2e
+   elizaos test -t e2e
    ```
 
 6. **Publish your plugin**:
@@ -757,10 +762,10 @@ Projects contain agent configurations and code for building agent-based applicat
    elizaos test
 
    # Run component tests only
-   elizaos test component
+   elizaos test -t component
 
    # Run e2e tests only
-   elizaos test e2e
+   elizaos test -t e2e
 
    # Test with specific options
    elizaos test --port 4000 --name specific-test

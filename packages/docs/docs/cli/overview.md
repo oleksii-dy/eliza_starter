@@ -12,6 +12,13 @@ The ElizaOS Command Line Interface (CLI) provides a comprehensive set of tools t
 
 ## Installation
 
+### Prerequisites
+
+- Node.js LTS (v20 or v22 recommended - use nvm for easy version management)
+- Bun v1.2.15 or higher
+- At least 4GB RAM
+- 2GB free disk space
+
 Install the ElizaOS CLI globally using Bun:
 
 ```bash
@@ -135,11 +142,14 @@ elizaos create
 elizaos create my-agent-project
 ```
 
-### Starting a project
+### Building and starting a project
 
 ```bash
 # Navigate to your project directory
 cd my-agent-project
+
+# Build the project (required before first start)
+bun run build
 
 # Start the project
 elizaos start

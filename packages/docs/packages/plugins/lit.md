@@ -14,7 +14,7 @@ A plugin that integrates Lit Protocol functionality into the elizaOS runtime env
 ## Installation
 
 ```bash
-npm install @elizaos/plugin-lit
+bun install @elizaos/plugin-lit
 ```
 
 ## Setup

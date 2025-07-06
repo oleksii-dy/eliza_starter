@@ -29,30 +29,45 @@ For a detailed comparison, see our [V2 announcement blog post](/blog/v1-v2).
 
 ### What are the system requirements for running Eliza?
 
-- Node.js version 23+
-- At least 4GB RAM
+**Hardware Requirements:**
+
+- At least 4GB RAM (8GB recommended for multiple agents)
+- 2GB free disk space for installation
+- Additional space for model storage if using local models
+
+**Software Requirements:**
+
+- Node.js LTS version (v20 or v22 recommended for stability)
+- Bun v1.2.15 or higher
+- Git for version control
 - For Windows users: WSL2 (Windows Subsystem for Linux)
+
+**Network Requirements:**
+
+- Port 3000 available (or configure alternative with --port flag)
+- Internet connection for API-based models
+- Firewall exceptions may be needed for agent communication
 
 ### How do I fix common installation issues?
 
 If you encounter build failures or dependency errors:
 
-1.  **Check Your Node.js Version**: Ensure you are using Node.js v23 or higher.
+1.  **Check Your Node.js Version**: Ensure you are using a Node.js LTS version.
 
     ```bash
     node --version
     ```
 
-    If you have a different version, we recommend using [nvm](https://github.com/nvm-sh/nvm) (Node Version Manager) to switch to the correct version:
+    If you have a different version, you must use [nvm](https://github.com/nvm-sh/nvm) (Node Version Manager) to install the LTS version:
 
     ```bash
-    nvm install 23
-    nvm use 23
+    nvm install --lts
+    nvm use --lts
     ```
 
 2.  **Clean your environment**: `bun clean`
 3.  **Install dependencies**: `bun install --no-frozen-lockfile`
-4.  **Rebuild**: `bun build`
+4.  **Rebuild**: `bun run build`
 5.  If issues persist, try checking out the latest release:
     ```bash
     git checkout $(git describe --tags --abbrev=0)
@@ -454,6 +469,7 @@ The bootstrap plugin provides critical event handlers that enable your agent to:
 - **Handle platform events** - World joins, entity management, and lifecycle events
 
 **When you can skip it:**
+
 - You're building a completely custom event handling system
 - You're creating specialized agents that don't need standard communication
 - You're implementing your own message processing pipeline from scratch

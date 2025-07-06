@@ -14,7 +14,7 @@ This plugin provides functionality to:
 ## Installation
 
 ```bash
-npm install @elizaos/plugin-sui
+bun install @elizaos/plugin-sui
 ```
 
 ## Configuration
@@ -79,13 +79,13 @@ Assistant: 'Your wallet contains 10.5 SUI ($42.00 USD)...';
 ### Building
 
 ```bash
-npm run build
+bun run build
 ```
 
 ### Testing
 
 ```bash
-npm run test
+bun run test
 ```
 
 ## Dependencies

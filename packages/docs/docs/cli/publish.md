@@ -95,7 +95,7 @@ When you run the `publish` command, ElizaOS performs the following steps:
 2. **Validate plugin structure** and `package.json` requirements.
 3. **Update `package.json`** with actual values, replacing placeholders.
 4. **Get authentication credentials** for npm and GitHub.
-5. **Build the package** by running `npm run build`.
+5. **Build the package** by running `bun run build`.
 6. **Publish to npm** via `npm publish --ignore-scripts`.
 7. **Create GitHub repository** (unless `--npm` flag is used).
 8. **Submit to registry** (unless `--npm` or `--skip-registry` flags are used).
@@ -222,7 +222,7 @@ elizaos publish --test
 
 ```bash
 # Check build process
-npm run build
+bun run build
 
 # Install missing dependencies
 bun install

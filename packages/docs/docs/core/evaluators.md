@@ -60,7 +60,7 @@ The Fact Evaluator serves as the agent's "episodic memory formation" system - si
 
 ```typescript
 validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
-  const messageCount = await runtime.messageManager.countMemories(message.roomId);
+  const messageCount = await runtime.countMemories(message.roomId);
   const reflectionCount = Math.ceil(runtime.getConversationLength() / 2);
   return messageCount % reflectionCount === 0;
 };

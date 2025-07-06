@@ -1,7 +1,7 @@
 ---
 id: upload-agent-media
 title: 'Upload media for agent'
-description: 'Upload image or video media for an agent'
+description: 'Upload image or video media files for an agent'
 sidebar_label: 'Upload media for agent'
 hide_title: true
 hide_table_of_contents: true
@@ -23,11 +23,11 @@ import Heading from '@theme/Heading';
 
 <MethodEndpoint
   method={'post'}
-  path={'/api/media/{agentId}/upload-media'}
+  path={'/api/media/agents/{agentId}/upload'}
   context={'endpoint'}
 ></MethodEndpoint>
 
-Upload image or video media for an agent
+Upload image, video, audio, document or other media files for an agent. Files are stored in agent-specific directories and accessible via unique URLs.
 
 <Heading
   id={'request'}
@@ -76,11 +76,34 @@ Upload image or video media for an agent
           schema: {
             type: 'object',
             properties: {
-              id: { type: 'string', format: 'uuid' },
-              url: { type: 'string', description: 'URL of the uploaded media' },
-              type: { type: 'string', enum: ['image', 'video'] },
-              mimeType: { type: 'string' },
-              size: { type: 'integer' },
+              success: { type: 'boolean', example: true },
+              data: {
+                type: 'object',
+                properties: {
+                  url: {
+                    type: 'string',
+                    description: 'Relative URL of the uploaded media file',
+                    example:
+                      '/media/uploads/agents/123e4567-e89b-12d3-a456-426614174000/1234567890-123456789.jpg',
+                  },
+                  type: {
+                    type: 'string',
+                    description: 'Detected media type',
+                    enum: ['image', 'video', 'audio', 'document', 'text'],
+                  },
+                  filename: {
+                    type: 'string',
+                    description: 'Generated filename',
+                    example: '1234567890-123456789.jpg',
+                  },
+                  originalName: {
+                    type: 'string',
+                    description: 'Original filename',
+                    example: 'profile-photo.jpg',
+                  },
+                  size: { type: 'integer', description: 'File size in bytes', example: 245678 },
+                },
+              },
             },
           },
         },
@@ -95,12 +118,15 @@ Upload image or video media for an agent
             properties: {
               success: { type: 'boolean', example: false },
               error: {
-                type: 'object',
-                properties: {
-                  code: { type: 'string', description: 'Error code' },
-                  message: { type: 'string', description: 'Error message' },
-                  details: { type: 'string', description: 'Detailed error information' },
-                },
+                type: 'string',
+                enum: ['INVALID_ID', 'INVALID_REQUEST', 'UNSUPPORTED_MEDIA_TYPE', 'UPLOAD_ERROR'],
+                description: 'Error code',
+              },
+              message: { type: 'string', description: 'Error message' },
+              details: {
+                type: 'string',
+                description: 'Detailed error information',
+                nullable: true,
               },
             },
             title: 'Error',
@@ -117,12 +143,15 @@ Upload image or video media for an agent
             properties: {
               success: { type: 'boolean', example: false },
               error: {
-                type: 'object',
-                properties: {
-                  code: { type: 'string', description: 'Error code' },
-                  message: { type: 'string', description: 'Error message' },
-                  details: { type: 'string', description: 'Detailed error information' },
-                },
+                type: 'string',
+                enum: ['INVALID_ID', 'INVALID_REQUEST', 'UNSUPPORTED_MEDIA_TYPE', 'UPLOAD_ERROR'],
+                description: 'Error code',
+              },
+              message: { type: 'string', description: 'Error message' },
+              details: {
+                type: 'string',
+                description: 'Detailed error information',
+                nullable: true,
               },
             },
             title: 'Error',
@@ -139,12 +168,15 @@ Upload image or video media for an agent
             properties: {
               success: { type: 'boolean', example: false },
               error: {
-                type: 'object',
-                properties: {
-                  code: { type: 'string', description: 'Error code' },
-                  message: { type: 'string', description: 'Error message' },
-                  details: { type: 'string', description: 'Detailed error information' },
-                },
+                type: 'string',
+                enum: ['INVALID_ID', 'INVALID_REQUEST', 'UNSUPPORTED_MEDIA_TYPE', 'UPLOAD_ERROR'],
+                description: 'Error code',
+              },
+              message: { type: 'string', description: 'Error message' },
+              details: {
+                type: 'string',
+                description: 'Detailed error information',
+                nullable: true,
               },
             },
             title: 'Error',
@@ -161,12 +193,15 @@ Upload image or video media for an agent
             properties: {
               success: { type: 'boolean', example: false },
               error: {
-                type: 'object',
-                properties: {
-                  code: { type: 'string', description: 'Error code' },
-                  message: { type: 'string', description: 'Error message' },
-                  details: { type: 'string', description: 'Detailed error information' },
-                },
+                type: 'string',
+                enum: ['INVALID_ID', 'INVALID_REQUEST', 'UNSUPPORTED_MEDIA_TYPE', 'UPLOAD_ERROR'],
+                description: 'Error code',
+              },
+              message: { type: 'string', description: 'Error message' },
+              details: {
+                type: 'string',
+                description: 'Detailed error information',
+                nullable: true,
               },
             },
             title: 'Error',
@@ -183,12 +218,15 @@ Upload image or video media for an agent
             properties: {
               success: { type: 'boolean', example: false },
               error: {
-                type: 'object',
-                properties: {
-                  code: { type: 'string', description: 'Error code' },
-                  message: { type: 'string', description: 'Error message' },
-                  details: { type: 'string', description: 'Detailed error information' },
-                },
+                type: 'string',
+                enum: ['INVALID_ID', 'INVALID_REQUEST', 'UNSUPPORTED_MEDIA_TYPE', 'UPLOAD_ERROR'],
+                description: 'Error code',
+              },
+              message: { type: 'string', description: 'Error message' },
+              details: {
+                type: 'string',
+                description: 'Detailed error information',
+                nullable: true,
               },
             },
             title: 'Error',

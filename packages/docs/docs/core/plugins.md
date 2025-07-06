@@ -152,7 +152,7 @@ First, make sure your plugin is built and ready for distribution:
 cd my-eliza-plugin
 
 # Build your plugin
-npm run build
+bun run build
 ```
 
 <Tabs>
@@ -186,7 +186,7 @@ npm run build
     This allows users to install your plugin using standard npm commands:
 
     ```bash
-    npm install @your-scope/plugin-name
+    bun install @your-scope/plugin-name
     ```
 
     npm publishing is useful when you want to:
@@ -310,39 +310,54 @@ interface Plugin {
 
 ### Service Implementation
 
-Services are the core integration points for external platforms. A properly implemented service:
+Services are the core integration points for external platforms. Here's a real example from the Bootstrap plugin's TaskService:
 
 ```typescript
-import { Service, IAgentRuntime } from '@elizaos/core';
+import { Service, ServiceType, type IAgentRuntime } from '@elizaos/core';
 
-export class ExampleService extends Service {
+export class TaskService extends Service {
   // Required: Define the service type (used for runtime registration)
-  static serviceType = 'example';
+  static serviceType = ServiceType.TASK;
 
   // Required: Describe what this service enables the agent to do
-  capabilityDescription = 'Enables the agent to interact with the Example platform';
+  capabilityDescription = 'The agent is able to schedule and execute tasks';
 
-  // Store runtime for service operations
-  constructor(protected runtime: IAgentRuntime) {
-    super();
-    // Initialize connections, setup event handlers, etc.
-  }
+  private timer: NodeJS.Timeout | null = null;
+  private readonly TICK_INTERVAL = 1000; // Check every second
 
   // Required: Static method to create and initialize service instance
-  static async start(runtime: IAgentRuntime): Promise<ExampleService> {
-    const service = new ExampleService(runtime);
-    // Additional initialization if needed
+  static async start(runtime: IAgentRuntime): Promise<Service> {
+    const service = new TaskService(runtime);
+    await service.startTimer();
     return service;
   }
 
   // Required: Clean up resources when service is stopped
   async stop(): Promise<void> {
-    // Close connections, release resources
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
   }
 
-  // Optional: Custom methods for your service functionality
-  async sendMessage(content: string, channelId: string): Promise<void> {
-    // Implementation
+  // Service-specific implementation
+  private startTimer() {
+    if (this.timer) {
+      clearInterval(this.timer);
+    }
+
+    this.timer = setInterval(async () => {
+      try {
+        await this.checkTasks();
+      } catch (error) {
+        logger.error('[Bootstrap] Error checking tasks:', error);
+      }
+    }, this.TICK_INTERVAL) as unknown as NodeJS.Timeout;
+  }
+
+  private async checkTasks() {
+    const tasks = await this.runtime.getTasks({ tags: ['queue'] });
+    // Process tasks based on their configuration
   }
 }
 ```
@@ -371,31 +386,50 @@ plugin-name/
 
 ### Plugin Entry Point
 
-Your plugin's `index.ts` should export a Plugin object:
+Your plugin's `index.ts` should export a Plugin object. Here's a simplified version of the Bootstrap plugin structure:
 
 ```typescript
-// Example plugin implementation
 import { type Plugin } from '@elizaos/core';
-import { ExampleService } from './service';
-import { searchAction } from './actions/search';
-import { statusProvider } from './providers/status';
+import { TaskService } from './services/task';
+import { replyAction, sendMessageAction, ignoreAction } from './actions';
+import { characterProvider, recentMessagesProvider, timeProvider } from './providers';
+import { reflectionEvaluator } from './evaluators/reflection';
 
-const examplePlugin: Plugin = {
-  name: 'example',
-  description: 'Example platform integration for ElizaOS',
-  services: [ExampleService],
-  actions: [searchAction],
-  providers: [statusProvider],
-  init: async (config, runtime) => {
-    // Perform any necessary initialization
-    const apiKey = runtime.getSetting('EXAMPLE_API_KEY');
-    if (!apiKey) {
-      console.warn('EXAMPLE_API_KEY not provided');
-    }
+export const bootstrapPlugin: Plugin = {
+  name: 'bootstrap',
+  description: 'Agent bootstrap with basic actions and evaluators',
+
+  // Services provide platform connections and functionality
+  services: [TaskService],
+
+  // Actions define what the agent can do
+  actions: [
+    replyAction,
+    sendMessageAction,
+    ignoreAction,
+    // ... more actions
+  ],
+
+  // Providers supply contextual information
+  providers: [
+    characterProvider,
+    recentMessagesProvider,
+    timeProvider,
+    // ... more providers
+  ],
+
+  // Evaluators analyze conversations
+  evaluators: [reflectionEvaluator],
+
+  // Event handlers for message processing
+  events: {
+    MESSAGE_RECEIVED: [messageReceivedHandler],
+    REACTION_RECEIVED: [reactionReceivedHandler],
+    // ... more event handlers
   },
 };
 
-export default examplePlugin;
+export default bootstrapPlugin;
 ```
 
 ### Plugin Configuration
@@ -458,6 +492,7 @@ const debugMode = runtime.getSetting('EXAMPLE_DEBUG_MODE'); // Returns boolean f
 The Bootstrap Plugin is a foundational component of ElizaOS that **provides essential communication capabilities and is mandatory for basic agent functionality**. It's automatically loaded as part of the initialization process, establishing the minimum viable capabilities that all agents need.
 
 **Without the Bootstrap Plugin, your agent will be unable to:**
+
 - Process incoming messages from Discord, Telegram, or other platforms
 - Respond to user interactions
 - Handle communication events

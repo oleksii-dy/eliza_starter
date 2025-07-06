@@ -1431,8 +1431,8 @@ describe('OpenAI Plugin', () => {
 
    ```bash
    npm uninstall @elizaos/core@0.x
-   npm install @elizaos/core@1.x
-   npm install -D vitest prettier eslint
+   bun install @elizaos/core@1.x
+   bun install -D vitest prettier eslint
    npm uninstall @biomejs/biome jest
    ```
 

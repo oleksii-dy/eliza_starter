@@ -13,7 +13,7 @@ A plugin for ElizaOS that enables interaction with the OmniFlix Network blockcha
 ## Installation
 
 ```bash
-npm install @elizaos/plugin-omniflix
+bun install @elizaos/plugin-omniflix
 ```
 
 ## Configuration

@@ -15,7 +15,7 @@ This plugin provides functionality to:
 ## Installation
 
 ```bash
-npm install @elizaos/plugin-video-generation
+bun install @elizaos/plugin-video-generation
 ```
 
 ## Configuration
@@ -77,19 +77,19 @@ if (result.success) {
 ### Building
 
 ```bash
-npm run build
+bun run build
 ```
 
 ### Testing
 
 ```bash
-npm run test
+bun run test
 ```
 
 ### Development Mode
 
 ```bash
-npm run dev
+bun run dev
 ```
 
 ## Dependencies

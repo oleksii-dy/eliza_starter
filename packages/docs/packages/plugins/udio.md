@@ -12,7 +12,7 @@ The Udio plugin integrates Udio AI's powerful music generation capabilities into
 
 INSTALLATION
 
-    npm install @elizaos/plugin-udio
+    bun install @elizaos/plugin-udio
 
 QUICK START
 

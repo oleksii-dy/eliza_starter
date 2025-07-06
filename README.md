@@ -26,8 +26,11 @@ A framework for multi-agent development and deployment
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) (v23 or higher recommended)
-- [bun](https://bun.sh/docs/installation)
+- [Node.js](https://nodejs.org/) (LTS version recommended - v20 or v22 for stability)
+- [bun](https://bun.sh/docs/installation) v1.2.15 or higher
+- At least 4GB RAM (8GB recommended for multiple agents)
+- 2GB free disk space (plus additional for model storage if using local models)
+- Port 3000 available (or use --port flag for alternative)
 
 > **Note for Windows Users:** [WSL 2](https://learn.microsoft.com/en-us/windows/wsl/install-manual) is required.
 
@@ -57,6 +60,13 @@ elizaos create my-agent
 # Or create with specific options (skips prompts)
 elizaos create my-agent --yes --type project
 ```
+
+**Important:** When creating a project, make sure to select the recommended plugin order:
+
+1. `@elizaos/plugin-sql` (always first - provides database)
+2. Your LLM provider plugin (e.g., `@elizaos/plugin-openai`, `@elizaos/plugin-anthropic`)
+3. `@elizaos/plugin-bootstrap` (required for message handling)
+4. Any additional plugins
 
 **Recommended Options for Beginners:**
 
@@ -90,10 +100,13 @@ DISCORD_APPLICATION_ID=your_discord_app_id
 DISCORD_API_TOKEN=your_discord_bot_token
 ```
 
-#### 4. Start Your Agent
+#### 4. Build and Start Your Agent
 
 ```bash
-# Build and start your agent
+# IMPORTANT: Build the project first (this step is required!)
+bun run build
+
+# Then start your agent
 elizaos start
 
 # Or start with debug logging for development
@@ -193,8 +206,8 @@ elizaos <command> --help    # e.g., elizaos create --help, elizaos agent --help
 
 #### Prerequisites
 
-- **Node.js** (v18+ recommended)
-- **bun** (for CLI and dependencies)
+- **Node.js** (LTS version recommended - v20 or v22 for stability)
+- **bun** v1.2.15 or higher (for CLI and dependencies)
 - **git** (for project/plugin tests)
 
 #### Checkout the latest release

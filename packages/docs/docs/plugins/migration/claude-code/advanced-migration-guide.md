@@ -79,7 +79,7 @@ export abstract class Service {
 
 // v1: Service is now a class with static properties
 export class Service {
-  static serviceType: ServiceTypeName;
+  static serviceType: ServiceType;
 
   async initialize(runtime: IAgentRuntime): Promise<void> {
     // Implementation
@@ -106,7 +106,7 @@ class MyService extends Service {
 
 // v1: Direct instantiation
 class MyService extends Service {
-  static serviceType = ServiceTypeName.MY_SERVICE;
+  static serviceType = ServiceType.MY_SERVICE;
   // No getInstance needed
 }
 ```
@@ -131,8 +131,8 @@ export enum ServiceType {
   // ...
 }
 
-// v1: ServiceTypeName (similar but may have new values)
-export enum ServiceTypeName {
+// v1: ServiceType (similar but may have new values)
+export enum ServiceType {
   IMAGE_DESCRIPTION = 'image_description',
   TRANSCRIPTION = 'transcription',
   // Check for any renamed or new service types
@@ -388,7 +388,7 @@ export type Client = {
 // v1: Client integrated with services
 // Clients are now typically implemented as services
 class MyClient extends Service {
-  static serviceType = ServiceTypeName.MY_CLIENT;
+  static serviceType = ServiceType.MY_CLIENT;
 
   async initialize(runtime: IAgentRuntime): Promise<void> {
     // Start client operations

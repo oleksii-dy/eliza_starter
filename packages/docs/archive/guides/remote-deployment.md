@@ -117,7 +117,7 @@ Install bun globally and verify the installation:
 
 ```bash
 # Install bun
-npm install -g bun
+bun install -g bun
 bun setup
 source ~/.bashrc
 

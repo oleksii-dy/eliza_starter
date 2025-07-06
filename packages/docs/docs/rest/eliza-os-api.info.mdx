@@ -26,6 +26,18 @@ API documentation for Eliza OS v1.0.10 - A flexible and scalable AI agent framew
 This API is designed to be used with a locally running Eliza instance. Endpoints allow for creating,
 managing, and interacting with AI agents through a REST interface.
 
+## Security
+
+For comprehensive security documentation, see the [REST API Security Guide](/docs/rest-api):
+
+- **[Authentication](/docs/rest-api/authentication)**: API key setup and usage
+- **[Rate Limiting](/docs/rest-api/rate-limiting)**: Request throttling and limits
+- **[CORS Configuration](/docs/rest-api/cors)**: Cross-origin request handling
+- **[Security Headers](/docs/rest-api/security-headers)**: HTTP security headers
+- **[Best Practices](/docs/rest-api/security-best-practices)**: Production security guide
+
+## API Domains
+
 The API is organized into the following domains:
 
 - **System**: System-wide operations and environment management
@@ -36,6 +48,18 @@ The API is organized into the following domains:
 - **Media**: File upload and media management
 - **TEE**: Trusted Execution Environment operations
 - **WebSocket**: Real-time communication via Socket.IO
+
+## Error Handling
+
+All API endpoints follow a [standardized error response format](/rest-api/error-responses) for consistent error handling. Common HTTP status codes include:
+
+- **400**: Bad Request - Invalid parameters or request format
+- **404**: Not Found - Resource doesn't exist
+- **408**: Request Timeout - Operation took too long
+- **409**: Conflict - Operation conflicts with current state
+- **429**: Too Many Requests - Rate limit exceeded
+- **500**: Internal Server Error - Server-side error
+- **503**: Service Unavailable - Service temporarily down (e.g., no agents running)
 
 <div
   style={{

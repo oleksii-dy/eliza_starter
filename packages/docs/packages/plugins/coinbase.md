@@ -14,7 +14,7 @@ A comprehensive Coinbase integration plugin for ElizaOS that provides access to 
 ## Installation
 
 ```bash
-npm install @elizaos/plugin-coinbase
+bun install @elizaos/plugin-coinbase
 ```
 
 ## Configuration

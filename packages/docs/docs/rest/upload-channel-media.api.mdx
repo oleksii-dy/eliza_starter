@@ -23,11 +23,11 @@ import Heading from '@theme/Heading';
 
 <MethodEndpoint
   method={'post'}
-  path={'/api/media/channels/{channelId}/upload'}
+  path={'/api/media/channels/{channelId}/upload-media'}
   context={'endpoint'}
 ></MethodEndpoint>
 
-Upload media file to a specific channel
+Upload image, video, audio, document or other media files to a specific channel. Files are stored in channel-specific directories and accessible via unique URLs. This endpoint includes rate limiting (100 requests per 15 minutes per IP).
 
 <Heading
   id={'request'}

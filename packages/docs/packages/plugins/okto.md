@@ -51,7 +51,7 @@ For comprehensive documentation, please visit the [Okto Eliza Plugin Documentati
 ## Installation
 
 ```bash
-npm install @okto_web3/eliza-plugin
+bun install @okto_web3/eliza-plugin
 ```
 
 ## Configuration

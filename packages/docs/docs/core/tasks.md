@@ -44,6 +44,7 @@ The Task Service (provided by `@elizaos/plugin-bootstrap`) automatically manages
 ```typescript
 export class TaskService extends Service {
   static serviceType = ServiceType.TASK;
+  capabilityDescription = 'The agent is able to schedule and execute tasks';
   private readonly TICK_INTERVAL = 1000; // Checks every second
 
   // Automatically processes tasks with 'queue' tag

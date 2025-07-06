@@ -17,7 +17,7 @@ The LLaMA plugin serves as a foundational component of Eliza OS, providing local
 ## Installation
 
 ```bash
-npm install @elizaos/plugin-llama
+bun install @elizaos/plugin-llama
 ```
 
 ## Configuration

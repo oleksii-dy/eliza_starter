@@ -1720,7 +1720,7 @@ Complete changelog:
 * feat: readme and linting by @ponderingdemocritus in https://github.com/ai16z/eliza/pull/449
 * fix: postgres embedding issues by @tarrencev in https://github.com/ai16z/eliza/pull/425
 * fix: X dry run by @laser-riot in https://github.com/ai16z/eliza/pull/452
-* Add npm install instructions to homepage header by @null-hax in https://github.com/ai16z/eliza/pull/459
+* Add bun install instructions to homepage header by @null-hax in https://github.com/ai16z/eliza/pull/459
 * docs: Fix my name in stream notes by @odilitime in https://github.com/ai16z/eliza/pull/442
 * feat: create-eliza-app by @coffeeorgreentea in https://github.com/ai16z/eliza/pull/462
 * fix: Add missing fuzzystrmatch extension for levenshtein() method to postgresql schema.sql definition by @martincik in https://github.com/ai16z/eliza/pull/460

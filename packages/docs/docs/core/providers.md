@@ -220,17 +220,21 @@ ElizaOS providers typically fall into these categories, with examples from the e
 
 Visit the [ElizaOS Plugin Registry](https://github.com/elizaos-plugins/registry) for a complete list of available plugins and providers.
 
-### Time Provider Example
+### Real Provider Example - Time Provider from Bootstrap Plugin
 
 ```typescript
-import { Provider, IAgentRuntime, Memory } from '@elizaos/core';
+import type { IAgentRuntime, Memory, Provider } from '@elizaos/core';
 
-const timeProvider: Provider = {
-  name: 'time',
-  description: 'Provides the current date and time',
-  position: -10, // Run early to ensure time is available for other providers
+/**
+ * Time provider from the Bootstrap plugin - provides current date and time
+ * in UTC for use in time-based operations or responses.
+ */
+export const timeProvider: Provider = {
+  name: 'TIME',
   get: async (_runtime: IAgentRuntime, _message: Memory) => {
     const currentDate = new Date();
+
+    // Get UTC time since bots will be communicating with users around the globe
     const options = {
       timeZone: 'UTC',
       dateStyle: 'full' as const,
@@ -239,57 +243,51 @@ const timeProvider: Provider = {
     const humanReadable = new Intl.DateTimeFormat('en-US', options).format(currentDate);
 
     return {
-      text: `The current date and time is ${humanReadable}. Please use this as your reference for any time-based operations or responses.`,
-      values: {
-        currentDate: currentDate.toISOString(),
-        humanReadableDate: humanReadable,
+      // Raw data for programmatic use
+      data: {
+        time: currentDate,
       },
+      // Values that can be referenced in templates
+      values: {
+        time: humanReadable,
+      },
+      // Text that gets injected into the agent's context
+      text: `The current date and time is ${humanReadable}. Please use this as your reference for any time-based operations or responses.`,
     };
   },
 };
 ```
 
-### Dynamic Provider Example
+### Dynamic Provider Example - Capabilities Provider
 
 ```typescript
-import { Provider, IAgentRuntime, Memory, State } from '@elizaos/core';
+import type { IAgentRuntime, Memory, Provider } from '@elizaos/core';
 
-const weatherProvider: Provider = {
-  name: 'weather',
-  description: 'Provides weather information for a location',
+/**
+ * Capabilities provider from Bootstrap plugin - dynamically provides information
+ * about available services and capabilities when explicitly requested.
+ */
+export const capabilitiesProvider: Provider = {
+  name: 'CAPABILITIES',
   dynamic: true, // Only used when explicitly requested
-  get: async (runtime: IAgentRuntime, message: Memory, state: State) => {
-    // Extract location from state if available
-    const location = state?.values?.location || 'San Francisco';
+  get: async (runtime: IAgentRuntime, _message: Memory) => {
+    const services = Array.from(runtime.getAllServices().keys());
+    const capabilityDescriptions = services.map((service) => {
+      const serviceInstance = runtime.getService(service);
+      return serviceInstance?.capabilityDescription || `${service} service`;
+    });
 
-    try {
-      // Fetch weather data from an API
-      const weatherData = await fetchWeatherData(location);
-
-      return {
-        text: `The current weather in ${location} is ${weatherData.description} with a temperature of ${weatherData.temperature}°C.`,
-        values: {
-          weather: {
-            location,
-            temperature: weatherData.temperature,
-            description: weatherData.description,
-            humidity: weatherData.humidity,
-          },
-        },
-        data: {
-          // Additional detailed data that doesn't go into the context
-          weatherDetails: weatherData,
-        },
-      };
-    } catch (error) {
-      // Handle errors gracefully
-      return {
-        text: `I couldn't retrieve weather information for ${location} at this time.`,
-        values: {
-          weather: { error: true },
-        },
-      };
-    }
+    return {
+      text: `The agent has the following capabilities:\n${capabilityDescriptions.join('\n')}`,
+      values: {
+        capabilities: services,
+        capabilityDescriptions,
+      },
+      data: {
+        // Additional service details that don't go into context
+        serviceDetails: services.map((s) => ({ name: s, instance: runtime.getService(s) })),
+      },
+    };
   },
 };
 ```

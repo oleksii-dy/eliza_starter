@@ -108,7 +108,7 @@ my-plugin/
 ## Runtime Behavior
 
 - Services are registered during plugin initialization
-- The runtime maintains a `Map<ServiceTypeName, Service>` of all registered services
+- The runtime maintains a `Map<ServiceType, Service>` of all registered services
 - `runtime.getService()` provides type-safe access to any registered service
 - Services can be accessed by any part of the runtime (actions, evaluators, providers, etc.)
 

@@ -12,28 +12,44 @@ Services are core components in Eliza that enable AI agents to interact with ext
 
 ---
 
-## Supported Services
+## Core Service Types
 
-| Service                                                                            | Type          | Key Features                                                                           | Use Cases                                                            |
-| ---------------------------------------------------------------------------------- | ------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| [Discord](https://github.com/elizaos-plugins/plugin-discord)                       | Communication | • Voice channels • Server management • Moderation tools • Channel management           | • Community management • Gaming servers • Event coordination         |
-| [Twitter](https://github.com/elizaos-plugins/plugin-twitter)                       | Social Media  | • Post scheduling • Timeline monitoring • Engagement analytics • Content automation    | • Brand management • Content creation • Social engagement            |
-| [Telegram](https://github.com/elizaos-plugins/plugin-telegram)                     | Messaging     | • Bot API • Group chat • Media handling • Command system                               | • Customer support • Community engagement • Broadcast messaging      |
-| [Direct](https://github.com/elizaOS/eliza/tree/develop/packages/plugin-direct/src) | API           | • REST endpoints • Web integration • Custom applications • Real-time communication     | • Backend integration • Web apps • Custom interfaces                 |
-| [GitHub](https://github.com/elizaos-plugins/plugin-github)                         | Development   | • Repository management • Issue tracking • Pull requests • Code review                 | • Development workflow • Project management • Team collaboration     |
-| [Slack](https://github.com/elizaos-plugins/plugin-slack)                           | Enterprise    | • Channel management • Conversation analysis • Workspace tools • Integration hooks     | • Team collaboration • Process automation • Internal tools           |
-| [Lens](https://github.com/elizaos-plugins/plugin-lens)                             | Web3          | • Decentralized networking • Content publishing • Memory management • Web3 integration | • Web3 social networking • Content distribution • Decentralized apps |
-| [Farcaster](https://github.com/elizaos-plugins/plugin-farcaster)                   | Web3          | • Decentralized social • Content publishing • Community engagement                     | • Web3 communities • Content creation • Social networking            |
-| [Auto](https://github.com/elizaos-plugins/plugin-auto)                             | Automation    | • Workload management • Task scheduling • Process automation                           | • Background jobs • Automated tasks • System maintenance             |
+The ElizaOS core package defines the following service types in the `ServiceTypeRegistry`:
 
-**\*Additional services**:
+| Service Type                | Constant                  | Description                            |
+| --------------------------- | ------------------------- | -------------------------------------- |
+| **TRANSCRIPTION**           | `transcription`           | Audio-to-text transcription services   |
+| **VIDEO**                   | `video`                   | Video processing and analysis          |
+| **BROWSER**                 | `browser`                 | Web browser automation and interaction |
+| **PDF**                     | `pdf`                     | PDF document processing and extraction |
+| **REMOTE_FILES**            | `aws_s3`                  | Remote file storage (e.g., AWS S3)     |
+| **WEB_SEARCH**              | `web_search`              | Web search capabilities                |
+| **EMAIL**                   | `email`                   | Email integration and management       |
+| **TEE**                     | `tee`                     | Trusted Execution Environment services |
+| **TASK**                    | `task`                    | Task management and scheduling         |
+| **WALLET**                  | `wallet`                  | Cryptocurrency wallet interactions     |
+| **LP_POOL**                 | `lp_pool`                 | Liquidity pool management              |
+| **TOKEN_DATA**              | `token_data`              | Token information and analytics        |
+| **DATABASE_MIGRATION**      | `database_migration`      | Database migration management          |
+| **PLUGIN_MANAGER**          | `PLUGIN_MANAGER`          | Plugin lifecycle management            |
+| **PLUGIN_CONFIGURATION**    | `PLUGIN_CONFIGURATION`    | Plugin configuration services          |
+| **PLUGIN_USER_INTERACTION** | `PLUGIN_USER_INTERACTION` | Plugin user interaction handling       |
 
-- Instagram: Social media content and engagement
-- XMTP: Web3 messaging and communications
-- Alexa: Voice interface and smart device control
-- Home Assistant: Home automation OS
-- Devai.me: AI first social service
-- Simsai: Jeeter / Social media platform for AI
+## Communication Services (via Plugins)
+
+Communication with external platforms is provided through plugins, not core services:
+
+| Plugin    | Repository                                                                            | Features                                         |
+| --------- | ------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| Discord   | [plugin-discord](https://github.com/elizaos-plugins/plugin-discord)                   | Voice channels, server management, moderation    |
+| Twitter   | [plugin-twitter](https://github.com/elizaos-plugins/plugin-twitter)                   | Post scheduling, timeline monitoring, engagement |
+| Telegram  | [plugin-telegram](https://github.com/elizaos-plugins/plugin-telegram)                 | Bot API, group chat, media handling              |
+| Direct    | [plugin-direct](https://github.com/elizaOS/eliza/tree/develop/packages/plugin-direct) | REST endpoints, web integration                  |
+| GitHub    | [plugin-github](https://github.com/elizaos-plugins/plugin-github)                     | Repository management, issues, PRs               |
+| Slack     | [plugin-slack](https://github.com/elizaos-plugins/plugin-slack)                       | Channel management, workspace tools              |
+| Lens      | [plugin-lens](https://github.com/elizaos-plugins/plugin-lens)                         | Web3 social networking                           |
+| Farcaster | [plugin-farcaster](https://github.com/elizaos-plugins/plugin-farcaster)               | Decentralized social platform                    |
+| Auto      | [plugin-auto](https://github.com/elizaos-plugins/plugin-auto)                         | Task automation and scheduling                   |
 
 ---
 
@@ -63,47 +79,41 @@ Services serve as bridges between Eliza agents and various platforms, providing 
 
 ## Service Configuration
 
-Services are configured through the [`Character`](/api/type-aliases/Character) configuration's `settings` property:
+Services can be configured through the service's `config` property, which extends the `Metadata` type:
 
 ```typescript
-export type Character = {
-  // ... other properties ...
-  settings?: {
-    discord?: {
-      shouldIgnoreBotMessages?: boolean;
-      shouldIgnoreDirectMessages?: boolean;
-      shouldRespondOnlyToMentions?: boolean;
-      messageSimilarityThreshold?: number;
-      isPartOfTeam?: boolean;
-      teamAgentIds?: string[];
-      teamLeaderId?: string;
-      teamMemberInterestKeywords?: string[];
-      allowedChannelIds?: string[];
-      autoPost?: {
-        enabled?: boolean;
-        monitorTime?: number;
-        inactivityThreshold?: number;
-        mainChannelId?: string;
-        announcementChannelIds?: string[];
-        minTimeBetweenPosts?: number;
-      };
-    };
-    telegram?: {
-      shouldIgnoreBotMessages?: boolean;
-      shouldIgnoreDirectMessages?: boolean;
-      shouldRespondOnlyToMentions?: boolean;
-      shouldOnlyJoinInAllowedGroups?: boolean;
-      allowedGroupIds?: string[];
-      messageSimilarityThreshold?: number;
-      // ... other telegram-specific settings
-    };
-    slack?: {
-      shouldIgnoreBotMessages?: boolean;
-      shouldIgnoreDirectMessages?: boolean;
-    };
-    // ... other service configs
-  };
-};
+import { Service, Metadata, IAgentRuntime } from '@elizaos/core';
+
+interface MyServiceConfig extends Metadata {
+  apiKey: string;
+  endpoint?: string;
+  timeout?: number;
+}
+
+export class MyService extends Service {
+  config?: MyServiceConfig;
+
+  constructor(runtime: IAgentRuntime, config: MyServiceConfig) {
+    super(runtime);
+    this.config = config;
+  }
+}
+```
+
+### Extending the ServiceTypeRegistry
+
+Plugins can extend the core service types through module augmentation:
+
+```typescript
+// In your plugin
+declare module '@elizaos/core' {
+  interface ServiceTypeRegistry {
+    MY_CUSTOM_SERVICE: 'my_custom_service';
+  }
+}
+
+// Now you can use your custom service type
+const myService = runtime.getService('my_custom_service');
 ```
 
 ## Service Implementation
@@ -120,17 +130,15 @@ Each service manages its own:
 Example of a basic service implementation:
 
 ```typescript
-import { Service, IAgentRuntime } from '@elizaos/core';
+import { Service, IAgentRuntime, ServiceType } from '@elizaos/core';
 
 export class CustomService extends Service {
-  static serviceType = 'custom';
-  capabilityDescription = 'The agent is able to interact with the custom platform';
+  static serviceType = ServiceType.TRANSCRIPTION; // Use core service type
+  capabilityDescription = 'The agent is able to transcribe audio to text';
 
   constructor(protected runtime: IAgentRuntime) {
     super();
-    // Initialize platform connection
-    // Set up event handlers
-    // Configure message processing
+    // Initialize service
   }
 
   static async start(runtime: IAgentRuntime): Promise<CustomService> {
@@ -141,9 +149,50 @@ export class CustomService extends Service {
 
   async stop(): Promise<void> {
     // Cleanup resources
-    // Close connections
   }
 }
+```
+
+### Using the ServiceBuilder Pattern
+
+The core package provides a `ServiceBuilder` for type-safe service creation:
+
+```typescript
+import {
+  ServiceBuilder,
+  createService,
+  defineService,
+  IAgentRuntime,
+  ServiceType,
+} from '@elizaos/core';
+
+// Method 1: Using ServiceBuilder directly
+const MyService = new ServiceBuilder(ServiceType.WEB_SEARCH)
+  .withDescription('Custom web search service')
+  .withStart(async (runtime: IAgentRuntime) => {
+    // Initialize and return service instance
+    return new MySearchService(runtime);
+  })
+  .withStop(async () => {
+    // Cleanup logic
+  })
+  .build();
+
+// Method 2: Using createService helper
+const MyService2 = createService(ServiceType.PDF)
+  .withDescription('PDF processing service')
+  .withStart(async (runtime) => new MyPdfService(runtime))
+  .build();
+
+// Method 3: Using defineService for complete type safety
+const MyService3 = defineService({
+  serviceType: ServiceType.EMAIL,
+  description: 'Email integration service',
+  start: async (runtime) => new MyEmailService(runtime),
+  stop: async () => {
+    // Optional cleanup
+  },
+});
 ```
 
 ### Runtime Integration
@@ -157,28 +206,29 @@ Services interact with the agent runtime through the [`IAgentRuntime`](api/inter
 
 ### Memory System Integration
 
-Services use the runtime's memory managers to persist conversation data (source: [`memory.ts`](/api/interfaces/Memory)).
+Services use the runtime's database methods to persist conversation data (source: [`memory.ts`](/api/interfaces/Memory)).
 
-- `messageManager` Chat messages
-- `documentsManager` File attachments
-- `descriptionManager` Media descriptions
+- Chat messages stored via `createMemory()`
+- File attachments stored as memories with attachment metadata
+- Media descriptions stored as part of memory content
 
 <details>
 <summary>See example</summary>
 ```typescript
 // Store a new message
-await runtime.messageManager.createMemory({
+await runtime.createMemory({
     id: messageId,
     content: { text: message.content },
     userId: userId,
     roomId: roomId,
     agentId: runtime.agentId
-});
+}, 'messages');
 
 // Retrieve recent messages
-const recentMessages = await runtime.messageManager.getMemories({
+const recentMessages = await runtime.getMemories({
 roomId: roomId,
-count: 10
+count: 10,
+tableName: 'messages'
 });
 
 ```

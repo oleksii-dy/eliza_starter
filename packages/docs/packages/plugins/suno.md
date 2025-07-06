@@ -14,7 +14,7 @@ Original Plugin: https://github.com/gcui-art/suno-api?tab=readme-ov-file
 
 INSTALLATION
 
-    npm install @elizaos/plugin-suno
+    bun install @elizaos/plugin-suno
 
 QUICK START
 

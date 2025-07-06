@@ -17,7 +17,7 @@ This plugin provides functionality to:
 ## Installation
 
 ```bash
-npm install @elizaos/plugin-mina
+bun install @elizaos/plugin-mina
 ```
 
 ## Configuration
@@ -94,13 +94,13 @@ Assistant: "I'll send you some faucet tokens...";
 ### Building
 
 ```bash
-npm run build
+bun run build
 ```
 
 ### Testing
 
 ```bash
-npm run test
+bun run test
 ```
 
 ## Dependencies

@@ -29,14 +29,14 @@ export OPENAI_API_KEY=""
 # from https://t.me/toncenter to get your testnet apikey
 export TON_RPC_API_KEY=""
 
-# nvm use 23 && npm install -g bun
+# nvm use 23 && bun install -g bun
 bash ./packages/plugin-ton/scripts/debug.sh
 ```
 
 ## Installation
 
 ```bash
-npm install @elizaos/plugin-ton
+bun install @elizaos/plugin-ton
 ```
 
 ## Configuration
@@ -182,13 +182,13 @@ result = await auctionAction.getAuctionData(auctionAddress);
 ### Building
 
 ```bash
-npm run build
+bun run build
 ```
 
 ### Testing
 
 ```bash
-npm run test
+bun run test
 ```
 
 ## Dependencies

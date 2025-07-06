@@ -15,6 +15,12 @@ The `@elizaos/core` package provides a robust foundation for building AI agents 
 
 ## Installation
 
+### Prerequisites
+
+- Node.js LTS (v20 or v22 recommended for stability)
+- Bun v1.2.15 or higher
+- At least 4GB RAM
+
 1.  Add `@elizaos/core` to your `agent/package.json` dependencies:
 
     ```json

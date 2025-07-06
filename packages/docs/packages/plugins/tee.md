@@ -15,7 +15,7 @@ This plugin provides functionality to:
 ## Installation
 
 ```bash
-npm install @elizaos/plugin-tee
+bun install @elizaos/plugin-tee
 ```
 
 ## Configuration

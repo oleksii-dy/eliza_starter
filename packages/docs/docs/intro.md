@@ -59,7 +59,16 @@ For detailed instructions on each path, including configuration options and exte
 
 ### Prerequisites
 
-- [Node.js 23+](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
+#### System Requirements
+
+- **Hardware**: At least 4GB RAM (8GB recommended for multiple agents)
+- **Storage**: 2GB free disk space for installation (plus additional for local models)
+- **Network**: Port 3000 available (or configure alternative with --port flag)
+
+#### Software Requirements
+
+- [Node.js LTS](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) (v20 or v22 recommended for stability)
+- [Bun](https://bun.sh) v1.2.15 or higher
 - Git for version control
 - For Windows Users: [WSL 2](https://learn.microsoft.com/en-us/windows/wsl/install-manual) is required
 
@@ -67,14 +76,14 @@ You can verify your Node.js version with the following command:
 
 ```bash
 node --version
-# Expected output: v23.0.0 or higher
+# Expected output: v20.x.x or v22.x.x (LTS versions)
 ```
 
-If you have a different version, we recommend using [nvm](https://github.com/nvm-sh/nvm) (Node Version Manager) to switch to the correct version:
+If you have a different version, we recommend using [nvm](https://github.com/nvm-sh/nvm) (Node Version Manager) to install the LTS version:
 
 ```bash
-nvm install 23
-nvm use 23
+nvm install --lts
+nvm use --lts
 ```
 
 Eliza offers different paths depending on your goals:
@@ -92,7 +101,7 @@ While you can use `npm`, we strongly recommend using `bun` for performance and c
 bun install -g @elizaos/cli
 
 # Alternative: Install via npm
-npm install -g @elizaos/cli
+bun install -g @elizaos/cli
 
 # From a folder to install a project
 elizaos create
@@ -111,6 +120,9 @@ elizaos create
 
 # Navigate to your project directory
 cd my-project-name
+
+# Build the project (required before starting)
+bun run build
 
 # Start your project
 elizaos start

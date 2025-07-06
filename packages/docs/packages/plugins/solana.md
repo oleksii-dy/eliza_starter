@@ -55,7 +55,7 @@ The Solana plugin serves as a foundational component of Eliza OS, bridging Solan
 ## Installation
 
 ```bash
-npm install @elizaos/plugin-solana
+bun install @elizaos/plugin-solana
 ```
 
 ## Configuration

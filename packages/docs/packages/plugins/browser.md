@@ -19,7 +19,7 @@ The Browser plugin serves as a powerful component of Eliza OS, providing browser
 ## Installation
 
 ```bash
-npm install @elizaos/plugin-browser
+bun install @elizaos/plugin-browser
 ```
 
 ## Configuration

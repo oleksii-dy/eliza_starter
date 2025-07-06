@@ -31,7 +31,7 @@ In this first session of the AI Agent Dev School, we dive into the fundamentals 
 ### The Power of npm (Node Package Manager)
 
 - npm is a vast ecosystem of pre-built JavaScript packages that facilitate rapid development and code reuse.
-- With millions of packages available, developers can easily incorporate external libraries into their projects using the `npm install` command.
+- With millions of packages available, developers can easily incorporate external libraries into their projects using the `bun install` command.
 - The open-source nature of the npm ecosystem allows developers to leverage the collective efforts of the community and build upon existing code.
 
 ### Monorepos in Eliza Development

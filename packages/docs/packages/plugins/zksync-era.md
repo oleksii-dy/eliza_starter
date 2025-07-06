@@ -15,7 +15,7 @@ This plugin provides functionality to:
 ## Installation
 
 ```bash
-npm install @elizaos/plugin-zksync-era
+bun install @elizaos/plugin-zksync-era
 ```
 
 ## Configuration
@@ -143,13 +143,13 @@ interface ZKsyncConfig {
 ### Building
 
 ```bash
-npm run build
+bun run build
 ```
 
 ### Testing
 
 ```bash
-npm run test
+bun run test
 ```
 
 ## Security Best Practices

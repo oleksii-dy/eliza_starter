@@ -1,0 +1,339 @@
+---
+id: get-media-uploads
+title: 'Serve uploaded media files'
+description: 'Retrieve uploaded media files for agents and channels'
+sidebar_label: 'Get uploaded media'
+hide_title: true
+hide_table_of_contents: true
+api: eJztVkuP2zgM/isET5uBxpnZ7mVvntkpUGBnigmwPWx8YCzGVluLciU5k9RQ/72g5Dz8mLaHYk/xxZRI8vvIjxQ3skKVpGUpK1QYcjqVCoNy1ESyKzL5ttEOlFBpL1xUyg6FJDDzNdQCrAEJLcpCppqJBazOMpnJLtFe8PtzEVnIDjw0GNC1xrWU0KDMZGKflZlklNhCLGQmPX7uyKOSZfQ9lNKrCuuQpazctm2alJiWlSxkJS8ulGWnW7/R/aEBs/fCLUWscYsJfpeFYxJnHq7qUOG2qsoKYmqTMpOpQ3ZioP7pGpSPJxBqJkkOkTHwKe42Bj5DvSIDfi8f4L6MfyedKjqGnWL0RIf70MWqyYYs40/RkP+OwUvTUw/Q/QxDqnbGsKqde6+t8alklPGXwLJfrGvpn4pK580x+hZZevF+a9cOdW7ovmIYH4tA2lWcuSpTmQpR0iBfyVmYFzySVr8PlWzJQn+Qb5tTNhwGJIasYUxO/6F8KmLLg/m6j1fDbZrRmhJYEoaxXRCJQNdGWmYxjrO8H+u9pXP20gINXsIU/Uq7FWEBVdxsudq6psL6Bb6yzR/m8CqbrJwRUIi7RJMvxgdSX/LNhYhsJKi7xqswC3n6XHQiKqOJTqwMmFOJBl8I3gRCiG7UyeVaGIcvGXz8n7OQFSluO1vT3OPZdRRZSkQJBWmuWGD8WJNUfb8j0oUkItVQ0zUo4CJvJCBsIDGU6zEbGHzBUL3MuYOdN5SQwUCOgVy3ZcWpcsJHoHdAJe4p1sJHct1shJe14fxNjcmKCJbhRZha3VjUQ8DHGGer5FRMSDrPwQJ7FKJi2EO5xqnx8YTEkRc/xsaHTKgJ+rBJRzqcbEf6iJKzLCvzgvxQWtIKSTFSPmKFXiRFhLQW7Gyu3KJWCqRfU1xJQn3MEgZo4r2j6IJ3Zn0kNJGP8Ul7xH7EJUUOGYHlKEfY18ItJm4x1yQF+7S5RTPJ2j4WRSiKROuNIGRu9uxT6bRlzw6R6kYBnYPdNv2z/KKRvg+H3mykb6J3g9GjDXXdOJfwgaZB6YtAJSkdC1w1PKuJJJJIIhZr1LbRCEfRJQxhojKFtUJL4RTH7jMSmqYE6C7H6yoFSoM92zLhGKfAiHHjVE7Oz88vQvgKYcRtJXq8NNxWTcnO72lJbWKRdJIYpyfG0nY4/vrvP2bjw8tDJU6vH7d1pNwFdBuQ+A7bKwG8d5wqO5ccSy65Ha5z4u3w+sm19b29cyJCJQIKQmOgzKLiAWaBYgtIxB15aeAj2SmWwvfWeAGnx2RFBEtwUUyl7l2yMAjQxr2lwLHaJcudJbiOJhj26XmrfbJaZiWJW8d7xXdpehdbELF2risp5/n0bJpJm6BwgFXqgSCdYKlLJmEuk6K7v5jRPQdl6/Oa5Z/G4/J8NakOXnx3HJW8b/Fx8iOiGumDJEBKsj6Z2ghxAotizEJEnAIsIDdcC21RtbqihPfsOzIzxCU2z62XFJuJxybuXHMiT5lQBqoCt2SJz4yLiKrJp2I0hQzJEUSnyYdUUsQLUTvHhYB9kUtbXJGNgItYa9PVzpW2oJZKlzsHebao1QKH4ObVKRN3fef5t5ncDZhO5W627rqnNnAXLi6deh8is14gmFFI1c9Jcm7BNRGxiPSPyMNJRD6k3p8vkyAmyTvHaub3S/xBmud5OvOaoeyyQ1Gsu8Wpcs0YxK7+X3yx4xrQgN2VeJxNhofTKHXOsQYq8PdYrv/jhNzUs1hfYtkZIDveAMIJ+NqN9DKH6J5NMlOHdVsIrjdMQGwWEPCjN13Pr7806Oe8vLnN5BI88adMNjdJAC9Kz/b9f2DQb1fD2vzbvfqJeP4XK4aPYNmuXo7p6aUs5Fdc31t2fh7OE7AO+k0iLCvSvTrPxO0yxxr0HJ3tUTxdqAlbMJwBqc7jX7o36j99vJpJJqf1B+HRkWzZJrneR3l5czsM/wJPAv8L
+sidebar_class_name: 'get api-method'
+info_path: docs/rest/eliza-os-api
+custom_edit_url: null
+---
+
+import MethodEndpoint from '@theme/ApiExplorer/MethodEndpoint';
+import ParamsDetails from '@theme/ParamsDetails';
+import StatusCodes from '@theme/StatusCodes';
+import OperationTabs from '@theme/OperationTabs';
+import TabItem from '@theme/TabItem';
+import Heading from '@theme/Heading';
+
+<Heading as={'h1'} className={'openapi__heading'} children={'Serve uploaded media files'}></Heading>
+
+ElizaOS provides three endpoints for serving uploaded media files. All endpoints validate UUID formats and protect against path traversal attacks.
+
+## Agent Media Files
+
+<MethodEndpoint
+  method={'get'}
+  path={'/api/media/uploads/agents/{agentId}/{filename}'}
+  context={'endpoint'}
+></MethodEndpoint>
+
+Retrieve media files uploaded for a specific agent.
+
+<ParamsDetails
+  parameters={[
+    {
+      name: 'agentId',
+      in: 'path',
+      required: true,
+      schema: { type: 'string', format: 'uuid' },
+      description: "The agent's unique identifier",
+    },
+    {
+      name: 'filename',
+      in: 'path',
+      required: true,
+      schema: { type: 'string' },
+      description: 'The filename returned from the upload endpoint',
+    },
+  ]}
+></ParamsDetails>
+
+<StatusCodes
+  responses={{
+    '200': {
+      description: 'File retrieved successfully',
+      headers: {
+        'Content-Type': {
+          description: 'The MIME type of the file',
+          schema: { type: 'string' },
+        },
+      },
+      content: {
+        '*/*': {
+          schema: {
+            type: 'string',
+            format: 'binary',
+          },
+        },
+      },
+    },
+    '400': {
+      description: 'Invalid agent ID format',
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              error: { type: 'string', example: 'Invalid agent ID format' },
+            },
+          },
+        },
+      },
+    },
+    '403': {
+      description: 'Access denied - path traversal detected',
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              error: { type: 'string', example: 'Access denied' },
+            },
+          },
+        },
+      },
+    },
+    '404': {
+      description: 'File not found',
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              error: { type: 'string', example: 'File does not exist!!!!!!!' },
+            },
+          },
+        },
+      },
+    },
+  }}
+></StatusCodes>
+
+---
+
+## Channel Media Files
+
+<MethodEndpoint
+  method={'get'}
+  path={'/api/media/uploads/channels/{channelId}/{filename}'}
+  context={'endpoint'}
+></MethodEndpoint>
+
+Retrieve media files uploaded to a specific channel.
+
+<ParamsDetails
+  parameters={[
+    {
+      name: 'channelId',
+      in: 'path',
+      required: true,
+      schema: { type: 'string', format: 'uuid' },
+      description: "The channel's unique identifier",
+    },
+    {
+      name: 'filename',
+      in: 'path',
+      required: true,
+      schema: { type: 'string' },
+      description: 'The filename returned from the upload endpoint',
+    },
+  ]}
+></ParamsDetails>
+
+<StatusCodes
+  responses={{
+    '200': {
+      description: 'File retrieved successfully',
+      headers: {
+        'Content-Type': {
+          description: 'The MIME type of the file',
+          schema: { type: 'string' },
+        },
+      },
+      content: {
+        '*/*': {
+          schema: {
+            type: 'string',
+            format: 'binary',
+          },
+        },
+      },
+    },
+    '400': {
+      description: 'Invalid channel ID format',
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              error: { type: 'string', example: 'Invalid channel ID format' },
+            },
+          },
+        },
+      },
+    },
+    '403': {
+      description: 'Access denied - path traversal detected',
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              error: { type: 'string', example: 'Access denied' },
+            },
+          },
+        },
+      },
+    },
+    '404': {
+      description: 'File not found',
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              error: { type: 'string', example: 'File not found' },
+            },
+          },
+        },
+      },
+    },
+  }}
+></StatusCodes>
+
+---
+
+## Generated Media Files
+
+<MethodEndpoint
+  method={'get'}
+  path={'/api/media/generated/{agentId}/{filename}'}
+  context={'endpoint'}
+></MethodEndpoint>
+
+Retrieve AI-generated media files (e.g., from image generation plugins).
+
+<ParamsDetails
+  parameters={[
+    {
+      name: 'agentId',
+      in: 'path',
+      required: true,
+      schema: { type: 'string', format: 'uuid' },
+      description: "The agent's unique identifier",
+    },
+    {
+      name: 'filename',
+      in: 'path',
+      required: true,
+      schema: { type: 'string' },
+      description: 'The generated filename',
+    },
+  ]}
+></ParamsDetails>
+
+<StatusCodes
+  responses={{
+    '200': {
+      description: 'File retrieved successfully',
+      headers: {
+        'Content-Type': {
+          description: 'The MIME type of the file',
+          schema: { type: 'string' },
+        },
+      },
+      content: {
+        '*/*': {
+          schema: {
+            type: 'string',
+            format: 'binary',
+          },
+        },
+      },
+    },
+    '400': {
+      description: 'Invalid agent ID format',
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              error: { type: 'string', example: 'Invalid agent ID format' },
+            },
+          },
+        },
+      },
+    },
+    '403': {
+      description: 'Access denied - path traversal detected',
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              error: { type: 'string', example: 'Access denied' },
+            },
+          },
+        },
+      },
+    },
+    '404': {
+      description: 'File not found',
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            properties: {
+              error: { type: 'string', example: 'File not found' },
+            },
+          },
+        },
+      },
+    },
+  }}
+></StatusCodes>
+
+## Usage Examples
+
+### Retrieving an Agent's Uploaded Media
+
+```javascript
+// After uploading a file and receiving the URL
+const uploadResponse = {
+  url: '/media/uploads/agents/123e4567-e89b-12d3-a456-426614174000/1234567890-123456789.jpg',
+};
+
+// To retrieve the file
+const fileUrl = `${window.location.origin}${uploadResponse.url}`;
+
+// Display in an image tag
+<img src={fileUrl} alt="Agent media" />;
+
+// Or fetch directly
+const response = await fetch(fileUrl);
+const blob = await response.blob();
+```
+
+### Building Full URLs
+
+The upload endpoints return relative URLs. To use them in your application:
+
+```javascript
+function getFullMediaUrl(relativeUrl) {
+  // In browser
+  return `${window.location.origin}${relativeUrl}`;
+
+  // Or with a known server URL
+  return `https://your-server.com${relativeUrl}`;
+}
+```
+
+## Security Notes
+
+1. **UUID Validation**: All endpoints validate that the provided IDs are valid UUIDs to prevent directory traversal
+2. **Filename Sanitization**: Filenames are sanitized using `path.basename()` to prevent path traversal
+3. **Directory Validation**: The server verifies that resolved file paths remain within expected directories
+4. **Authentication**: If `ELIZA_SERVER_AUTH_TOKEN` is set, authentication is required via the `X-API-KEY` header
