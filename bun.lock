@@ -20,7 +20,7 @@
     },
     "packages/api-client": {
       "name": "@elizaos/api-client",
-      "version": "1.0.16",
+      "version": "1.0.17",
       "dependencies": {
         "@elizaos/core": "workspace:*",
       },
@@ -34,9 +34,9 @@
     },
     "packages/app": {
       "name": "@elizaos/app",
-      "version": "1.0.16",
+      "version": "1.0.17",
       "dependencies": {
-        "@elizaos/api-client": "^1.0.16",
+        "@elizaos/api-client": "^1.0.17",
         "@elizaos/cli": "^1.0.6",
         "@tauri-apps/api": "^2.3.0",
         "@tauri-apps/plugin-opener": "^2",
@@ -56,7 +56,7 @@
     },
     "packages/autodoc": {
       "name": "@elizaos/autodoc",
-      "version": "1.0.16",
+      "version": "1.0.17",
       "dependencies": {
         "@langchain/openai": "^0.3.16",
         "@octokit/rest": "^21.0.2",
@@ -82,7 +82,7 @@
     },
     "packages/cli": {
       "name": "@elizaos/cli",
-      "version": "1.0.16",
+      "version": "1.0.17",
       "bin": {
         "elizaos": "./dist/index.js",
       },
@@ -133,7 +133,7 @@
     },
     "packages/client": {
       "name": "@elizaos/client",
-      "version": "1.0.16",
+      "version": "1.0.17",
       "dependencies": {
         "@elizaos/api-client": "workspace:*",
         "@elizaos/core": "workspace:*",
@@ -260,7 +260,7 @@
     },
     "packages/core": {
       "name": "@elizaos/core",
-      "version": "1.0.16",
+      "version": "1.0.17",
       "dependencies": {
         "@sentry/browser": "^9.22.0",
         "buffer": "^6.0.3",
@@ -289,7 +289,7 @@
     },
     "packages/create-eliza": {
       "name": "create-eliza",
-      "version": "1.0.16",
+      "version": "1.0.17",
       "bin": {
         "create-eliza": "index.mjs",
       },
@@ -302,7 +302,7 @@
     },
     "packages/docs": {
       "name": "@elizaos/docs",
-      "version": "1.0.16",
+      "version": "1.0.17",
       "dependencies": {
         "@docusaurus/core": "3.8.1",
         "@docusaurus/plugin-content-blog": "3.8.1",
@@ -334,7 +334,7 @@
     },
     "packages/plugin-bootstrap": {
       "name": "@elizaos/plugin-bootstrap",
-      "version": "1.0.16",
+      "version": "1.0.17",
       "dependencies": {
         "@elizaos/core": "workspace:*",
         "@elizaos/plugin-sql": "workspace:*",
@@ -352,7 +352,7 @@
     },
     "packages/plugin-dummy-services": {
       "name": "@elizaos/plugin-dummy-services",
-      "version": "1.0.16",
+      "version": "1.0.17",
       "dependencies": {
         "@elizaos/core": "workspace:*",
         "uuid": "^9.0.0",
@@ -368,7 +368,7 @@
     },
     "packages/plugin-sql": {
       "name": "@elizaos/plugin-sql",
-      "version": "1.0.16",
+      "version": "1.0.17",
       "dependencies": {
         "@electric-sql/pglite": "^0.3.3",
         "@elizaos/core": "workspace:*",
@@ -389,7 +389,7 @@
     },
     "packages/plugin-starter": {
       "name": "@elizaos/plugin-starter",
-      "version": "1.0.16",
+      "version": "1.0.17",
       "dependencies": {
         "@elizaos/core": "^1.0.0",
         "@tanstack/react-query": "^5.80.7",
@@ -412,7 +412,7 @@
     },
     "packages/project-starter": {
       "name": "@elizaos/project-starter",
-      "version": "1.0.16",
+      "version": "1.0.17",
       "dependencies": {
         "@elizaos/cli": "workspace:*",
         "@elizaos/core": "workspace:*",
@@ -438,7 +438,7 @@
     },
     "packages/project-tee-starter": {
       "name": "@elizaos/project-tee-starter",
-      "version": "1.0.16",
+      "version": "1.0.17",
       "dependencies": {
         "@elizaos/cli": "workspace:*",
         "@elizaos/core": "workspace:*",
@@ -456,7 +456,7 @@
     },
     "packages/server": {
       "name": "@elizaos/server",
-      "version": "1.0.16",
+      "version": "1.0.17",
       "dependencies": {
         "@elizaos/core": "workspace:*",
         "@elizaos/plugin-sql": "workspace:*",
