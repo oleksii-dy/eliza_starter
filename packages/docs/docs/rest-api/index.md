@@ -1,5 +1,5 @@
 ---
-id: rest-api-security
+id: index
 title: REST API Security Overview
 sidebar_label: Security Overview
 sidebar_position: 0
