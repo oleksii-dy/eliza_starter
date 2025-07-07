@@ -1,0 +1,10 @@
+{
+  "title": "Templates",
+  "pages": [
+    "quick-start",
+    "discord-agent",
+    "telegram-agent",
+    "twitter-agent",
+    "multi-platform-agent"
+  ]
+}

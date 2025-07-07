@@ -1,0 +1,149 @@
+---
+title: Technical Track - Developer Documentation
+description: Complete developer guide for building custom AI agents with ElizaOS
+---
+
+Welcome to the ElizaOS technical documentation. This track is designed for **developers**, **engineers**, and **technical users** who want to build custom AI agents and extend the framework.
+
+## Quick Links
+
+<Cards>
+  <Card title="Architecture Overview" href="/docs/technical/architecture">
+    Understand the core components and design principles
+  </Card>
+  <Card title="API Reference" href="/docs/technical/api">
+    Complete API documentation for all packages
+  </Card>
+  <Card title="Plugin Development" href="/docs/technical/plugins">
+    Build custom plugins to extend agent capabilities
+  </Card>
+  <Card title="Advanced Configuration" href="/docs/technical/configuration">
+    Deep dive into configuration options and optimization
+  </Card>
+</Cards>
+
+## Core Concepts
+
+### Agent Runtime
+The heart of ElizaOS - a flexible runtime that manages agent lifecycle, memory, and interactions.
+
+```typescript
+import { AgentRuntime } from '@elizaos/core';
+
+const runtime = new AgentRuntime({
+  character: myCharacter,
+  modelProvider: 'openai',
+  plugins: [discordPlugin, twitterPlugin]
+});
+```
+
+### Plugin System
+Extend your agents with modular plugins that add new capabilities:
+
+- **Actions**: Define what agents can do
+- **Providers**: Supply contextual information
+- **Evaluators**: Process and learn from interactions
+- **Services**: Integrate with external platforms
+
+### Memory Architecture
+Advanced memory system with:
+- Short-term conversational memory
+- Long-term knowledge storage
+- Relationship tracking
+- Contextual embeddings
+
+## Development Workflow
+
+### 1. Install ElizaOS
+```bash
+bun install @elizaos/core @elizaos/cli
+```
+
+### 2. Create Your Agent
+```typescript
+import { Character } from '@elizaos/core';
+
+export const myAgent: Character = {
+  name: "TechBot",
+  description: "A helpful technical assistant",
+  modelProvider: "openai",
+  plugins: [],
+  settings: {
+    voice: { model: "en-US-Neural2-F" },
+    model: "gpt-4"
+  }
+};
+```
+
+### 3. Run Your Agent
+```bash
+bunx elizaos start --character ./myAgent.ts
+```
+
+## Package Overview
+
+| Package | Description | Documentation |
+|---------|-------------|---------------|
+| `@elizaos/core` | Core runtime and types | [View Docs](/docs/technical/packages/core) |
+| `@elizaos/cli` | Command-line interface | [View Docs](/docs/technical/packages/cli) |
+| `@elizaos/plugin-discord` | Discord integration | [View Docs](/docs/technical/packages/discord) |
+| `@elizaos/plugin-twitter` | Twitter integration | [View Docs](/docs/technical/packages/twitter) |
+| `@elizaos/plugin-sql` | Database adapters | [View Docs](/docs/technical/packages/sql) |
+
+## Advanced Topics
+
+### Performance Optimization
+- Memory management strategies
+- Response caching techniques
+- Parallel processing patterns
+
+### Security Best Practices
+- API key management
+- Rate limiting implementation
+- Data privacy considerations
+
+### Deployment Strategies
+- Docker containerization
+- Kubernetes orchestration
+- Serverless deployment options
+
+## Contributing
+
+We welcome contributions! Check out our:
+- [Contribution Guide](https://github.com/elizaOS/eliza/blob/main/CONTRIBUTING.md)
+- [Development Setup](/docs/technical/development-setup)
+- [Code Style Guide](/docs/technical/code-style)
+
+## Getting Help
+
+- 💬 [Discord Developer Channel](https://discord.gg/elizaos-dev)
+- 🐛 [GitHub Issues](https://github.com/elizaOS/eliza/issues)
+- 📖 [API Reference](/docs/technical/api)
+- 🎥 [Video Tutorials](/docs/technical/tutorials)
+
+## Ready to Build?
+
+<div style={{ marginTop: '2rem', display: 'flex', gap: '1rem' }}>
+  <a href="/docs/technical/quickstart" style={{
+    display: 'inline-block',
+    padding: '0.75rem 2rem',
+    background: '#764ba2',
+    color: 'white',
+    borderRadius: '0.5rem',
+    textDecoration: 'none',
+    fontWeight: 'bold'
+  }}>
+    Developer Quick Start →
+  </a>
+  <a href="/docs/technical/api" style={{
+    display: 'inline-block',
+    padding: '0.75rem 2rem',
+    border: '2px solid #764ba2',
+    color: '#764ba2',
+    borderRadius: '0.5rem',
+    textDecoration: 'none',
+    fontWeight: 'bold'
+  }}>
+    Browse API Docs
+  </a>
+</div>

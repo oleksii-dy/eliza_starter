@@ -1,0 +1,15 @@
+{
+  "title": "ElizaOS Documentation",
+  "pages": [
+    "index",
+    "quickstart",
+    "---",
+    "simple",
+    "technical",
+    "---",
+    "faq",
+    "changelog",
+    "awesome-eliza",
+    "contributing"
+  ]
+}

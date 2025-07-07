@@ -1,0 +1,9 @@
+{
+  "title": "Guides",
+  "pages": [
+    "character-creation",
+    "plugin-requirements",
+    "deployment-railway",
+    "deployment-render"
+  ]
+}

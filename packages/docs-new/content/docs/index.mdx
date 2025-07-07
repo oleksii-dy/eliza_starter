@@ -1,0 +1,234 @@
+---
+title: ElizaOS Documentation Home
+description: Two distinct paths to master ElizaOS - from beginner to expert, we've got you covered
+---
+
+import Link from 'next/link';
+import { Cards, Card } from 'fumadocs-ui/components/card';
+
+# Welcome to ElizaOS Documentation
+
+<img
+  src="/img/eliza_banner.jpg"
+  alt="ElizaOS Banner"
+  style={{
+    maxWidth: '100%',
+    borderRadius: '12px',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+    marginBottom: '2rem',
+  }}
+/>
+
+ElizaOS is a powerful framework for creating and deploying AI agents. Choose your learning path based on your experience and goals:
+
+<div className="grid md:grid-cols-2 gap-4 my-8">
+  <div className="text-center">
+    <h3 className="mb-4">CLI</h3>
+    <img
+      src="/img/cli.jpg"
+      alt="ElizaOS CLI Interface"
+      className="w-full rounded-lg shadow-lg"
+    />
+  </div>
+  <div className="text-center">
+    <h3 className="mb-4">Native GUI</h3>
+    <img
+      src="/img/gui.jpg"
+      alt="ElizaOS Native GUI"
+      className="w-full rounded-lg shadow-lg"
+    />
+  </div>
+</div>
+
+<div className="grid md:grid-cols-2 gap-6 my-8">
+  <div className="rounded-xl p-6 text-white" style={{
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  }}>
+    <h2 className="text-white mb-2">🚀 Quick Start</h2>
+    <p className="text-white/90 mb-4">
+      Get up and running in 5 minutes
+    </p>
+    <p className="text-white/95 mb-4">
+      Perfect for creators, business users, and anyone who wants results immediately.
+    </p>
+    <ul className="text-white/90 mb-6">
+      <li>✨ One-click deployment</li>
+      <li>🎯 Ready-to-use templates</li>
+      <li>📱 Multi-platform setup</li>
+      <li>⚡ No coding required</li>
+    </ul>
+    <Link
+      href="/docs/simple/getting-started/quick-start"
+      className="block w-full p-3 text-center rounded-lg text-white hover:opacity-90 transition-opacity"
+      style={{
+        background: 'rgba(255,255,255,0.2)',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255,255,255,0.3)',
+      }}
+    >
+      Start Here →
+    </Link>
+  </div>
+
+  <div className="rounded-xl p-6 text-white" style={{
+    background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+  }}>
+    <h2 className="text-white mb-2">⚡ Developer</h2>
+    <p className="text-white/90 mb-4">
+      Build the next generation
+    </p>
+    <p className="text-white/95 mb-4">
+      For developers building custom plugins, integrations, and contributing to ElizaOS.
+    </p>
+    <ul className="text-white/90 mb-6">
+      <li>🏗️ System architecture</li>
+      <li>💻 Plugin development</li>
+      <li>🔍 Complete API reference</li>
+      <li>🚀 Advanced patterns</li>
+    </ul>
+    <Link
+      href="/docs/technical/architecture/overview"
+      className="block w-full p-3 text-center rounded-lg text-white hover:opacity-90 transition-opacity"
+      style={{
+        background: 'rgba(255,255,255,0.2)',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(255,255,255,0.3)',
+      }}
+    >
+      Dive Into Code →
+    </Link>
+  </div>
+</div>
+
+## 🧭 Which Path Is Right for You?
+
+<div className="rounded-xl p-6 my-8" style={{
+  background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+  backdropFilter: 'blur(10px)',
+  border: '1px solid rgba(255,255,255,0.1)',
+}}>
+  <div className="grid md:grid-cols-2 gap-6">
+    <div>
+      <h4>🚀 Choose Quick Start if you:</h4>
+      <ul>
+        <li>Want an AI agent running today</li>
+        <li>Prefer guided, visual instructions</li>
+        <li>Focus on content over code</li>
+        <li>Need proven, working examples</li>
+      </ul>
+    </div>
+    <div>
+      <h4>⚡ Choose Developer if you:</h4>
+      <ul>
+        <li>Have programming experience</li>
+        <li>Want to build custom plugins</li>
+        <li>Need system integrations</li>
+        <li>Want to contribute code</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+## 🌟 Popular Starting Points
+
+<Cards>
+  <Card 
+    title="5-Minute Setup" 
+    description="Get your first agent running with zero configuration"
+    href="/docs/simple/getting-started/quick-start"
+  />
+  <Card 
+    title="Character Gallery" 
+    description="Ready-to-use personalities that work out of the box"
+    href="/docs/simple/templates/gallery"
+  />
+  <Card 
+    title="Core Concepts" 
+    description="Understand ElizaOS architecture and patterns"
+    href="/docs/technical/architecture/core-concepts"
+  />
+</Cards>
+
+## 🎯 Learning Progression
+
+<div className="my-8">
+  <div className="h-1 rounded-full mb-5" style={{
+    background: 'linear-gradient(90deg, #667eea 0%, #4facfe 100%)',
+  }}></div>
+  <div className="grid md:grid-cols-2 gap-6 text-center">
+    <div>
+      <h4>🚀 Start Simple</h4>
+      <p>Get your first agent running and understand the basics</p>
+    </div>
+    <div>
+      <h4>⚡ Then Build</h4>
+      <p>Create plugins, contribute code, and push boundaries</p>
+    </div>
+  </div>
+</div>
+
+## What is ElizaOS?
+
+ElizaOS is a powerful multi-agent simulation framework designed to create, deploy, and manage autonomous AI agents. Built with TypeScript, it provides a flexible and extensible platform for developing intelligent agents that can interact across multiple platforms while maintaining consistent personalities and knowledge.
+
+<div className="text-center my-8">
+  <img
+    src="/img/eliza-architecture.jpg"
+    alt="ElizaOS Architecture"
+    className="max-w-full rounded-xl shadow-lg"
+  />
+  <p className="text-sm text-gray-600 mt-2 italic">
+    ElizaOS Multi-Agent Architecture
+  </p>
+</div>
+
+### Key Features
+
+- **Platform Integration**: Clients for Discord, Telegram, Farcaster, and many others
+- **Flexible Model Support**: Deepseek, Ollama, Groq, OpenAI, Anthropic, Gemini, Llama, xAI (Grok), etc.
+- **Character System**: Create diverse agents using [character files](https://github.com/elizaOS/characterfile)
+- **Multi-Agent Architecture**: Manage multiple unique AI personalities simultaneously
+- **Memory Management**: Easily ingest and interact with documents using RAG
+- **Media Processing**: PDF, URLs, Audio transcription, Video processing, Image analysis, Conversation summarization
+- **Technical Foundation**:
+  - 100% TypeScript implementation
+  - Modular architecture
+  - Highly extensible action and plugin system
+  - Custom client support
+  - Comprehensive API
+
+<div className="text-center my-8">
+  <img
+    src="/img/montage-plugins.jpg"
+    alt="ElizaOS Plugin Ecosystem"
+    className="max-w-full rounded-xl shadow-lg"
+  />
+  <p className="text-sm text-gray-600 mt-2 italic">
+    Extensive Plugin Ecosystem
+  </p>
+</div>
+
+## 🌍 Community & Support
+
+<Cards>
+  <Card 
+    title="Discord Community" 
+    description="Get instant help and share your creations"
+    href="https://discord.gg/elizaos"
+  />
+  <Card 
+    title="GitHub Repository" 
+    description="Source code, issues, and contributions"
+    href="https://github.com/elizaOS/eliza"
+  />
+  <Card 
+    title="Template Gallery" 
+    description="Discover and share character templates"
+    href="/docs/simple/templates/gallery"
+  />
+  <Card 
+    title="Video Tutorials" 
+    description="Learn with step-by-step video guides"
+    href="https://youtube.com/@elizaos"
+  />
+</Cards>

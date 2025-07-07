@@ -1,0 +1,13 @@
+{
+  "title": "Architecture",
+  "pages": [
+    "overview",
+    "core-concepts",
+    "plugin-system",
+    "service-layer",
+    "memory-system",
+    "room-world-abstraction",
+    "state-management",
+    "socket-communication"
+  ]
+}
