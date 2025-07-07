@@ -5,6 +5,13 @@ const withMDX = createMDX();
 /** @type {import('next').NextConfig} */
 const config = {
   reactStrictMode: true,
+  output: 'export',
+  distDir: 'build',
+  trailingSlash: true,
+  images: {
+    unoptimized: true,
+  },
 };
 
 export default withMDX(config);
+EOF < /dev/null
