@@ -22,6 +22,8 @@ const dailySummaryTemplate = `# Conversation Messages (last 24 hours)
 # Instructions
 You are creating a professional daily summary for Discord. Your goal is to summarize conversations clearly and concisely while properly attributing statements to specific users.
 
+**CRITICAL: DO NOT ADD ANY HEADER OR TITLE TO YOUR RESPONSE. Start directly with the content sections below.**
+
 **FORMATTING RULES:**
 - NEVER use emojis anywhere in your response
 - NEVER use brackets [ ] around links or anywhere else
@@ -37,7 +39,7 @@ You are creating a professional daily summary for Discord. Your goal is to summa
 - Be concise - don't repeat usernames unnecessarily
 - If multiple people agree on something, list them once (e.g., "The team including Laura, Jimmy, and EddyDevRel agreed...")
 
-**CONTENT STRUCTURE:**
+**CONTENT STRUCTURE (START YOUR RESPONSE DIRECTLY WITH THESE SECTIONS):**
 
 **Key Topics Discussed:**
 • Main topic with natural attribution of who raised it
@@ -59,8 +61,9 @@ You are creating a professional daily summary for Discord. Your goal is to summa
 4. Professional tone throughout
 5. Focus only on the most important 20% of activity
 6. Always attribute messages and actions to specific users, but keep it natural and readable
+7. DO NOT add any header, title, or "Daily Summary Report" text - start directly with "**Key Topics Discussed:**"
 
-Remember: Clean, professional, concise. Natural user attribution without cluttering the format.`;
+Remember: Clean, professional, concise. Natural user attribution without cluttering the format. Start immediately with the content sections.`;
 
 /**
  * Converts Discord messages to Memory format
