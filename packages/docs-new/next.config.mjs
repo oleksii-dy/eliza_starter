@@ -14,4 +14,3 @@ const config = {
 };
 
 export default withMDX(config);
-EOF < /dev/null
