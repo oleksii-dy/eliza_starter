@@ -4,36 +4,25 @@ import {
   IAgentRuntime,
   logger,
   ModelType,
-  UUID,
 } from "@elizaos/core";
 import { Chain, erc20Abi, isHex, parseUnits } from "viem";
-import { LEVVA_ACTIONS } from "../constants";
+import { LEVVA_ACTIONS, LEVVA_SERVICE } from "../constants/enum";
+import { IGNORE_REPLY_MODIFIER } from "../constants/prompt";
 import { estimationTemplate, swapTemplate } from "../templates";
 import type { TokenData, TokenDataWithInfo } from "../types/token";
 import {
   extractTokenData,
   getChain,
   getClient,
-  getLevvaUser,
   getToken,
   getTokenData,
   upsertToken,
 } from "../util";
 import { rephrase } from "../util/generate";
-import { formatEstimation, selectSwapRouter } from "src/util/eth/swap";
-import { parseTokenInfo } from "src/util/eth/token";
-
-interface RawMessage {
-  senderId: UUID;
-  senderName: string;
-  message: string;
-  channelId: UUID;
-  roomId: string;
-  serverId: UUID;
-  messageId: UUID;
-  source: string;
-  metadata: Record<string, unknown>;
-}
+import { formatEstimation, selectSwapRouter } from "../util/eth/swap";
+import { parseTokenInfo } from "../util/eth/token";
+import { selectLevvaState } from "src/providers";
+import { ILevvaService } from "src/types/service";
 
 async function getTokenDataWithInfo(
   runtime: IAgentRuntime,
@@ -50,6 +39,11 @@ async function getTokenDataWithInfo(
       tokenData = extractTokenData(chain.nativeCurrency);
     } else {
       const token = (await getToken(runtime, { chainId: chain.id, symbol }))[0];
+
+      if (!token) {
+        return;
+      }
+
       tokenData = extractTokenData(token);
       tokenData.info = parseTokenInfo(token.info);
     }
@@ -66,10 +60,16 @@ async function getTokenDataWithInfo(
   return tokenData;
 }
 
+const description = [
+  "Help user to exchange tokens.",
+  "If user did not provide either tokens or amount this action should ask for this info.",
+  "If all the info is provided, this action should respond with swap details and transaction calldata.",
+  IGNORE_REPLY_MODIFIER,
+].join(" ");
+
 export const swapTokens: Action = {
   name: LEVVA_ACTIONS.SWAP_TOKENS,
-  description:
-    "Replies with all necessary info to swap two tokens, in case on insufficient info from the user, ask the user for it. This action should ignore the REPLY rule in IMPORTANT ACTION ORDERING RULES section.",
+  description,
   similes: ["SWAP_TOKENS", "EXCHANGE_TOKENS", "swap tokens", "exchange tokens"],
 
   validate: async () => {
@@ -79,33 +79,32 @@ export const swapTokens: Action = {
   handler: async (runtime, message, state, options, callback) => {
     try {
       logger.info("SWAP_TOKENS action called");
-      // fixme types
-      const raw = (message.metadata as unknown as { raw: RawMessage }).raw;
-      const chainId = raw.metadata.chainId as number | undefined;
-      const userAddressId = raw.metadata.userAddressId as UUID | undefined;
+      const service = runtime.getService<ILevvaService>(LEVVA_SERVICE.LEVVA_COMMON);
+      const levvaState = selectLevvaState(state);
 
-      if (!userAddressId) {
+      if (!levvaState?.user) {
         throw new Error("User address ID is required");
       }
 
-      if (!chainId) {
-        throw new Error("Unknown chain");
-      }
-
+      const { chainId, user } = levvaState;
+      // todo maybe move chains to db?
       const chain = getChain(chainId);
-      const userResult = await getLevvaUser(runtime, { id: userAddressId });
-      const address = userResult[0]?.address;
+      const { address } = user;
 
       if (!isHex(address)) {
         throw new Error("User not found");
       }
 
-      const gen = await runtime.useModel(ModelType.OBJECT_SMALL, {
-        prompt: swapTemplate.replace(
-          "{{recentMessages}}",
-          state.values.recentMessages
-        ),
-      });
+      const gen = await runtime.useModel(
+        // fixme use ModelType.OBJECT_SMALL with grok
+        ModelType.OBJECT_LARGE,
+        {
+          prompt: swapTemplate.replace(
+            "{{recentMessages}}",
+            state.values.recentMessages
+          ),
+        }
+      );
 
       if (typeof gen !== "object") {
         throw new Error("Failed to generate params object");
@@ -234,9 +233,11 @@ export const swapTokens: Action = {
         decimals: tokenIn.decimals,
       });
 
+      const hash = await service.createCalldata(calls);
+
       const json = {
         id: "calls.json",
-        url: `data:application/json;base64,${Buffer.from(JSON.stringify(calls)).toString("base64")}`,
+        url: `/api/calldata?hash=${hash}`,
       };
 
       const responseContent: Content = {
@@ -283,16 +284,10 @@ Please approve transactions in your wallet.`,
         },
       },
       {
-        name: "{{agentName}}",
+        name: "{{name2}}",
         content: {
           text: "Please confirm swap for {{amount}} {{token1}} for {{token2}}",
           action: "SWAP_TOKENS",
-          attachments: [
-            {
-              id: "calls.json",
-              url: "data:application/json;base64,{{calls}}",
-            },
-          ],
         },
       },
     ],
@@ -304,9 +299,24 @@ Please approve transactions in your wallet.`,
         },
       },
       {
-        name: "{{agentName}}",
+        name: "{{name2}}",
         content: {
           text: "Which token do you want to swap?",
+          action: "SWAP_TOKENS",
+        },
+      },
+    ],
+    [
+      {
+        name: "{{name1}}",
+        content: {
+          text: "I want to swap {{token1}} to {{token2}}",
+        },
+      },
+      {
+        name: "{{name2}}",
+        content: {
+          text: "Excuse me, I couldn't find the token {{token1}}, if you know could you provide me with it's address?",
           action: "SWAP_TOKENS",
         },
       },
@@ -319,7 +329,7 @@ Please approve transactions in your wallet.`,
         },
       },
       {
-        name: "{{agentName}}",
+        name: "{{name2}}",
         content: {
           text: `Swapping {{amount}} {{token1}} to {{token2}}...\n${estimationTemplate(true)}\nPlease approve transactions in your wallet.`,
           action: "SWAP_TOKENS",
@@ -334,29 +344,16 @@ Please approve transactions in your wallet.`,
     ],
     [
       {
-        name: "{{agentName}}",
-        content: {
-          text: "I couldn't find the token {{token}} on {{chain}}, maybe you know it's address?",
-          actions: ["SWAP_TOKENS"],
-        },
-      },
-      {
         name: "{{user1}}",
         content: {
-          text: "It is {{address}}",
+          text: "Token address is {{address}}",
         },
       },
       {
-        name: "{{agentName}}",
+        name: "{{name2}}",
         content: {
           text: "Swapping {{amount}} {{token1}} to {{token2}}...\nPlease approve transactions in your wallet.",
           actions: ["SWAP_TOKENS"],
-          attachments: [
-            {
-              id: "calls.json",
-              url: "data:application/json;base64,{{calls}}",
-            },
-          ],
         },
       },
     ],
@@ -369,7 +366,7 @@ Please approve transactions in your wallet.`,
         },
       },
       {
-        name: "{{agentName}}",
+        name: "{{name2}}",
         content: {
           text: "Your transaction request has been cancelled.",
           actions: ["SWAP_TOKENS"],

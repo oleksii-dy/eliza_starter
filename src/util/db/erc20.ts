@@ -39,6 +39,11 @@ export const getToken = async (
           eq(lower(erc20Table.symbol), params.symbol.toLowerCase())
         )
       );
+  } else {
+    return await db
+      .select()
+      .from(erc20Table)
+      .where(and(eq(erc20Table.chainId, params.chainId)));
   }
 
   throw new Error("No address or symbol provided");
@@ -49,19 +54,25 @@ export const upsertToken = async (
   params: Required<TokenData> & { chainId: number; info?: TokenInfo }
 ) => {
   const db = getDb(runtime);
-  const { address: _address, ...rest } = params;
+  const { address: _address, info, ...rest } = params;
   const address = getAddress(_address);
 
-  const result = await db
+  const action = db
     .insert(erc20Table)
-    .values({ ...rest, address })
-    .onConflictDoUpdate({
-      target: [erc20Table.chainId, erc20Table.address],
-      set: {
-        info: params.info,
-      },
-    })
-    .returning();
+    .values({ ...rest, address, info: info ?? {} });
 
-  return result[0];
+  if (!params.info) {
+    return (await action.onConflictDoNothing().returning())?.[0];
+  }
+
+  return (
+    await action
+      .onConflictDoUpdate({
+        target: [erc20Table.chainId, erc20Table.address],
+        set: {
+          info: params.info,
+        },
+      })
+      .returning()
+  )?.[0];
 };
