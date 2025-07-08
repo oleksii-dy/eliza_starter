@@ -1,5 +1,5 @@
 import { getElizaCharacter } from '@/src/characters/eliza';
-import { copyTemplate as copyTemplateUtil } from '@/src/utils';
+import { copyTemplate as copyTemplateUtil, copyElizaAvatarToProject } from '@/src/utils';
 import { join } from 'path';
 import fs from 'node:fs/promises';
 import * as clack from '@clack/prompts';
@@ -329,6 +329,9 @@ export async function createProject(
     await runTasks([
       createTask('Copying project template', () =>
         copyTemplateUtil('project-starter', projectTargetDir)
+      ),
+      createTask('Copying Eliza avatar image', () =>
+        copyElizaAvatarToProject(projectTargetDir)
       ),
       createTask('Setting up project environment', () =>
         setupProjectEnvironment(projectTargetDir, database, aiModel, embeddingModel, true)

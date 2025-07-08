@@ -23,3 +23,4 @@ export * from './spinner-utils';
 export * from './run-bun';
 export * from './test-runner';
 export * from './user-environment';
+export * from './copy-avatar';
