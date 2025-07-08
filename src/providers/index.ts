@@ -58,19 +58,19 @@ export const levvaProvider: Provider = {
       chainId,
     });
 
-    const formattedTokens = tokens.map((token) => service.formatToken(token));
+    const tokenSymbols = tokens.map((token) => token.symbol);
     const addressText = `Found levva user with address ${user.address}.`;
 
     return {
       text: `${addressText} ${prompts}
-${formattedTokens.join("\n")}`,
+Known token symbols: ${tokenSymbols.join(", ")}.`,
       data: {
         chainId,
         user,
         tokens
       },
       values: {
-        tokens: formattedTokens,
+        tokens: tokenSymbols,
       },
     };
   },

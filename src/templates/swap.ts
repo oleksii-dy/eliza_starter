@@ -7,8 +7,12 @@ Find parameters for new transaction from recent messages.
 <recentMessages>
 {{recentMessages}}
 </recentMessages>
+<tokenSymbols>
+{{tokens}}
+</tokenSymbols>
 <instructions>
 Ignore messages for transactions that are either canceled or confirmed.
+Choose token symbol from known token symbols if ambiguous.
 Extract the following information for new transaction:
   - Token symbol or address to swap from
   - Token symbol or address to swap to

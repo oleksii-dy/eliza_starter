@@ -3,7 +3,7 @@ import { IBrowserService as IBrowserServiceV1 } from "@elizaos/core/v1";
 import { CalldataWithDescription } from "./tx";
 
 export interface ILevvaService extends Service {
-  formatToken(token: { symbol: string, name: string, address?: string, decimals: number, info?: Record<string, any> }): string;
+  formatToken(token: { symbol: string, name: string, address?: string, decimals: number, info?: Record<string, any> }, compact?: boolean): string;
   getWalletAssets(params: {
     address: `0x${string}`;
     chainId: number;

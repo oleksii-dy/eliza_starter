@@ -12,7 +12,6 @@ import { blockexplorers } from "../util";
 import { CacheEntry } from "src/types/core.ts";
 import { CalldataWithDescription } from "src/types/tx.ts";
 import { sha256, toHex } from "viem";
-import { i } from "node_modules/@elizaos/core/dist/index-BHW44X0A";
 
 const REQUIRED_PLUGINS = ["levva"];
 

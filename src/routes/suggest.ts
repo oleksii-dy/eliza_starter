@@ -96,6 +96,8 @@ async function handler(req: Request, res: Response, runtime: IAgentRuntime) {
       chainId = 1; // use mainnet as fallback
     }
 
+    const chain = getChain(chainId);
+
     const conversation = recentMessages
       .map((item) => {
         return `${item.isAgent ? "Agent: " : "User: "} ${item.text ?? item.message}`;
@@ -137,6 +139,15 @@ async function handler(req: Request, res: Response, runtime: IAgentRuntime) {
 
       const available = await getToken(runtime, { chainId });
 
+      available.push({
+        symbol: chain.nativeCurrency.symbol,
+        name: chain.nativeCurrency.name,
+        decimals: chain.nativeCurrency.decimals,
+        address: undefined,
+        info: undefined,
+        chainId,
+      });
+
       result = await runtime.useModel(ModelType.OBJECT_SMALL, {
         prompt: `<task>
 Generate suggestions for exchange pairs, given user's portfolio and available tokens
@@ -153,10 +164,11 @@ ${service.formatWalletAssets(assets)}
 </portfolio>
 <availableTokens>
 Tokens known to agent:
-${available.map((token) => `${token.symbol}(${token.name}) - Deployed as ${token.address}. Decimals: ${token.decimals}.${token.info ? ` Additional Info: ${token.info}` : ""}`).join("\n")}
+${available.map((token) => token.symbol).join(", ")}
 </availableTokens>
 <instructions>
 Generate 5 suggestions for exchange pairs
+Please include exact token symbol for suggestion text.
 </instructions>
 <keys>
 - "suggestions" should be an array of objects with the following keys:
@@ -191,7 +203,17 @@ Your response should include the valid JSON block and nothing else.
         chainId,
       });
 
+      // todo move it to service
       const available = await getToken(runtime, { chainId });
+
+      available.push({
+        symbol: chain.nativeCurrency.symbol,
+        name: chain.nativeCurrency.name,
+        decimals: chain.nativeCurrency.decimals,
+        address: undefined,
+        info: undefined,
+        chainId,
+      });
 
       result = await runtime.useModel(ModelType.OBJECT_LARGE, {
         prompt: `<task>Generate suggestions for exchange amount or alternative swap pairs, given user's portfolio and previous conversation
@@ -205,7 +227,7 @@ ${service.formatWalletAssets(assets)}
 </portfolio>
 <availableTokens>
 Tokens known to agent:
-${available.map((token) => `${token.symbol}(${token.name}) - Deployed as ${token.address}. Decimals: ${token.decimals}.${token.info ? ` Additional Info: ${token.info}` : ""}`).join("\n")}
+${available.map((token) => token.symbol).join(", ")}
 </availableTokens>
 <conversation>
 ${conversation}
