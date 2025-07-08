@@ -6,7 +6,7 @@ import { dirname, resolve } from 'node:path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const imagePath = resolve(__dirname, './frontend/assets/avatars/elizaos-avatar.png');
+const imagePath = resolve(__dirname, '../dist/frontend/assets/avatars/elizaos-avatar.png');
 const avatar = existsSync(imagePath)
   ? `data:image/png;base64,${readFileSync(imagePath).toString('base64')}`
   : '';
