@@ -20,7 +20,7 @@ RUN ln -s /usr/bin/python3 /usr/bin/python
 COPY bun.lock drizzle.config.ts package.json tsconfig.build.json tsconfig.json tsup.config.ts vitest.config.ts ./
 # COPY patches ./patches
 RUN bun install --no-cache
-RUN npx patchright install chromium
+
 COPY drizzle ./drizzle
 COPY src ./src
 RUN bun run build
@@ -40,6 +40,8 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 RUN npm install -g bun@1.2.5 turbo@2.3.3
+RUN npx patchright install chromium
+
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
