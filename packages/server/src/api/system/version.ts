@@ -11,7 +11,17 @@ interface VersionInfo {
 }
 
 /**
- * Gets version information using CLI-compatible logic
+ * Gets version information using the package.json version
+ * This is embedded at build time, so it works in all environments:
+ * - Development (reading actual package.json)
+ * - Production (bundled into dist)
+ * - NPM installs (version is part of the published package)
+ *
+ * When the release workflow runs:
+ * 1. Lerna updates all package.json files to the new version
+ * 2. The packages are built with the new version embedded
+ * 3. The new packages are published to npm
+ * 4. Users get the correct version whether running from source or npm
  */
 function getVersionInfo(): VersionInfo {
   const timestamp = new Date().toISOString();

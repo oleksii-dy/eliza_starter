@@ -41,20 +41,27 @@ jobs:
       - name: Run lint
         run: bun run lint
 
-      - name: Build packages
-        run: bun run build && bun run build:docs
-
-      - name: Publish Packages
-        id: publish
+      - name: Update Package Versions
+        id: version
         run: |
           # Get version from the release tag that triggered the workflow
           LATEST_TAG=${{ github.ref_name }}
           VERSION=${LATEST_TAG#v}
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-          echo "Publishing version: $VERSION"
-          # Lerna will update versions in package.json files but not commit or tag
-          npx lerna publish $VERSION --exact --yes --dist-tag latest --no-private --force-publish --no-git-tag-version --no-push
+          echo "Updating versions to: $VERSION"
+          # Update versions in package.json files without publishing
+          npx lerna version $VERSION --exact --yes --no-git-tag-version --no-push
+
+      - name: Build packages
+        run: bun run build && bun run build:docs
+
+      - name: Publish Packages
+        id: publish
+        run: |
+          echo "Publishing version: ${{ env.VERSION }}"
+          # Publish packages that have already been versioned
+          npx lerna publish from-package --yes --dist-tag latest --no-private
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
