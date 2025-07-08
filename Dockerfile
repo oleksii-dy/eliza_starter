@@ -46,7 +46,6 @@ RUN apt-get update && \
     libxdamage1 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
-    apt-get install 
     
 RUN npm install -g bun@1.2.5 turbo@2.3.3
 
