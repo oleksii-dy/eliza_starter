@@ -35,19 +35,27 @@ RUN apt-get update && \
     ffmpeg \
     git \
     python3 \
-    unzip && \
+    unzip \
+    libnss3 \                         
+    libnspr4 \                                    
+    libatk1.0-0 \                                 
+    libatk-bridge2.0-0 \                          
+    libcups2 \                                    
+    libatspi2.0-0 \                               
+    libxcomposite1 \                              
+    libxdamage1 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
-
+    apt-get install 
+    
 RUN npm install -g bun@1.2.5 turbo@2.3.3
-RUN npx patchright install chromium
-
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/bun.lock ./bun.lock
 COPY --from=builder /app/drizzle ./drizzle
+RUN npx patchright install chromium
 
 ENV NODE_ENV=production
 
