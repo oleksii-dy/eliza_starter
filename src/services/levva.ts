@@ -12,7 +12,6 @@ import { blockexplorers } from "../util";
 import { CacheEntry } from "src/types/core.ts";
 import { CalldataWithDescription } from "src/types/tx.ts";
 import { sha256, toHex } from "viem";
-import { i } from "node_modules/@elizaos/core/dist/index-BHW44X0A";
 
 const REQUIRED_PLUGINS = ["levva"];
 
@@ -49,6 +48,10 @@ export class LevvaService extends Service implements ILevvaService {
 
   async stop() {
     logger.info("*** Stopping levva service instance ***");
+  }
+
+  formatToken(token: { symbol: string; name: string; address?: string; decimals: number; info?: Record<string, any>; }) {
+    return `${token.symbol}(${token.name}) - ${token.address ? `Deployed as ${token.address}` : "Native token"}. Decimals: ${token.decimals}.${token.info ? ` Additional Info: ${JSON.stringify(token.info)}` : ""}`;
   }
 
   // -- Wallet assets --

@@ -102,7 +102,7 @@ export const swapTokens: Action = {
           prompt: swapTemplate.replace(
             "{{recentMessages}}",
             state.values.recentMessages
-          ),
+          ).replace("{{tokens}}", state.values.tokens.join(", ")),
         }
       );
 

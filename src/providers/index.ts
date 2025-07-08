@@ -1,14 +1,21 @@
-import { State, UUID, type Provider } from "@elizaos/core";
+import { ServiceType, State, UUID, type Provider } from "@elizaos/core";
 import { RawMessage } from "../types/core";
-import { getLevvaUser } from "src/util";
+import { getChain, getLevvaUser, getToken } from "../util";
+import { ILevvaService } from "src/types/service";
+import { LEVVA_SERVICE } from "src/constants/enum";
 
 export interface LevvaProviderState {
   chainId: number;
   user?: { id: UUID; address: `0x${string}` };
+  tokens: { symbol: string, name: string, decimals: number, address?: string, info?: Record<string, any> }[];
 }
 
-export const selectLevvaState = (state: State): LevvaProviderState | undefined =>
-  'levva' in state.data.providers ? (state.data.providers.levva as { data: LevvaProviderState }).data : undefined;
+export const selectLevvaState = (
+  state: State
+): LevvaProviderState | undefined =>
+  "levva" in state.data.providers
+    ? (state.data.providers.levva as { data: LevvaProviderState }).data
+    : undefined;
 
 // provider text gets inserted after system prompt, so add levva-specific prompts
 const prompts = [
@@ -36,11 +43,34 @@ export const levvaProvider: Provider = {
       };
     }
 
+    const service = runtime.getService<ILevvaService>(
+      LEVVA_SERVICE.LEVVA_COMMON
+    );
+    const chain = getChain(chainId);
+    const tokens = await getToken(runtime, { chainId });
+
+    tokens.push({
+      symbol: chain.nativeCurrency.symbol,
+      name: chain.nativeCurrency.name,
+      decimals: chain.nativeCurrency.decimals,
+      address: undefined,
+      info: undefined,
+      chainId,
+    });
+
+    const tokenSymbols = tokens.map((token) => token.symbol);
+    const addressText = `Found levva user with address ${user.address}.`;
+
     return {
-      text: `Found levva user with address ${user.address}. ${prompts}`,
+      text: `${addressText} ${prompts}
+Known token symbols: ${tokenSymbols.join(", ")}.`,
       data: {
         chainId,
         user,
+        tokens
+      },
+      values: {
+        tokens: tokenSymbols,
       },
     };
   },
