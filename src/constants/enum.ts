@@ -1,0 +1,8 @@
+export enum LEVVA_ACTIONS {
+  ANALYZE_WALLET = "ANALYZE_WALLET",
+  SWAP_TOKENS = "SWAP_TOKENS",
+}
+
+export enum LEVVA_SERVICE {
+  LEVVA_COMMON = "levva-common",
+}

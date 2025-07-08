@@ -2,9 +2,13 @@ import type { Plugin } from "@elizaos/core";
 import { EventType, logger } from "@elizaos/core";
 import { z } from "zod";
 import { swapTokens } from "./actions/swap";
-import levvaUserRoute from "./routes/levva-user";
-import { LevvaService } from "./service";
+import { analyzeWallet } from "./actions/wallet";
 import { levvaProvider } from "./providers";
+import calldataRoute from "./routes/calldata";
+import levvaUserRoute from "./routes/levva-user";
+import suggestRoute from "./routes/suggest";
+import { BrowserService } from "./services/browser";
+import { LevvaService } from "./services/levva";
 
 /**
  * Define the configuration schema for the plugin with the following properties:
@@ -52,7 +56,7 @@ const plugin: Plugin = {
       throw error;
     }
   },
-  routes: [levvaUserRoute],
+  routes: [calldataRoute, levvaUserRoute, suggestRoute],
   events: {
     [EventType.MESSAGE_RECEIVED]: [
       async ({ runtime, message, callback }) => {
@@ -93,8 +97,8 @@ const plugin: Plugin = {
       },
     ],
   },
-  services: [LevvaService],
-  actions: [swapTokens],
+  services: [BrowserService, LevvaService],
+  actions: [swapTokens, analyzeWallet],
   providers: [levvaProvider],
 };
 

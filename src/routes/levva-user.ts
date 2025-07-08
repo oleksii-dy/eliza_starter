@@ -1,7 +1,7 @@
 import { type Request, type Response } from "express";
+import { isHex } from "viem";
 import { createUniqueUuid, findWorldsForOwner, IAgentRuntime, Route, UUID } from "@elizaos/core";
 import { createLevvaUser, getLevvaUser, getLogger } from "../util";
-import { isHex } from "viem";
 
 const DEFAULT_SERVER_ID: UUID = '00000000-0000-0000-0000-000000000000';
 
