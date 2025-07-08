@@ -1,5 +1,15 @@
 import { type Character } from '@elizaos/core';
+import { existsSync, readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const imagePath = resolve(__dirname, './frontend/assets/avatars/elizaos-avatar.png');
+const avatar = existsSync(imagePath)
+  ? `data:image/png;base64,${readFileSync(imagePath).toString('base64')}`
+  : '';
 /**
  * Represents the default character (Eliza) with her specific attributes and behaviors.
  * Eliza responds to a wide range of messages, is helpful and conversational.
@@ -41,6 +51,7 @@ export const character: Character = {
   ],
   settings: {
     secrets: {},
+    avatar
   },
   system:
     'Respond to all messages in a helpful, conversational manner. Provide assistance on a wide range of topics, using knowledge when needed. Be concise but thorough, friendly but professional. Use humor when appropriate and be empathetic to user needs. Provide valuable information and insights when questions are asked.',
