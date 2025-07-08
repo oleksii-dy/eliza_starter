@@ -211,14 +211,14 @@ export function getElizaCharacter(): Character {
       : []),
 
     // Platform plugins
-    ...(process.env.DISCORD_API_TOKEN ? ['@elizaos/plugin-discord'] : []),
-    ...(process.env.TWITTER_API_KEY &&
-    process.env.TWITTER_API_SECRET_KEY &&
-    process.env.TWITTER_ACCESS_TOKEN &&
-    process.env.TWITTER_ACCESS_TOKEN_SECRET
+    ...(!!process.env.DISCORD_API_TOKEN ? ['@elizaos/plugin-discord'] : []),
+    ...(!!process.env.TWITTER_API_KEY &&
+    !!process.env.TWITTER_API_SECRET_KEY &&
+    !!process.env.TWITTER_ACCESS_TOKEN &&
+    !!process.env.TWITTER_ACCESS_TOKEN_SECRET
       ? ['@elizaos/plugin-twitter']
       : []),
-    ...(process.env.TELEGRAM_BOT_TOKEN ? ['@elizaos/plugin-telegram'] : []),
+    ...(!!process.env.TELEGRAM_BOT_TOKEN ? ['@elizaos/plugin-telegram'] : []),
 
     // Bootstrap plugin
     ...(!process.env.IGNORE_BOOTSTRAP ? ['@elizaos/plugin-bootstrap'] : []),
