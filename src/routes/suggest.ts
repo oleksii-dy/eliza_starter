@@ -96,8 +96,6 @@ async function handler(req: Request, res: Response, runtime: IAgentRuntime) {
       chainId = 1; // use mainnet as fallback
     }
 
-    const chain = getChain(chainId);
-
     const conversation = recentMessages
       .map((item) => {
         return `${item.isAgent ? "Agent: " : "User: "} ${item.text ?? item.message}`;
@@ -143,6 +141,9 @@ async function handler(req: Request, res: Response, runtime: IAgentRuntime) {
         prompt: `<task>
 Generate suggestions for exchange pairs, given user's portfolio and available tokens
 </task>
+<decision>
+${JSON.stringify(gen)}
+</decision>
 <conversation>
 ${conversation}
 </conversation>
@@ -190,13 +191,22 @@ Your response should include the valid JSON block and nothing else.
         chainId,
       });
 
+      const available = await getToken(runtime, { chainId });
+
       result = await runtime.useModel(ModelType.OBJECT_LARGE, {
         prompt: `<task>Generate suggestions for exchange amount or alternative swap pairs, given user's portfolio and previous conversation
 </task>
+<decision>
+${JSON.stringify(gen)}
+</decision>
 <portfolio>
 User has following tokens available in portfolio:
 ${service.formatWalletAssets(assets)}
 </portfolio>
+<availableTokens>
+Tokens known to agent:
+${available.map((token) => `${token.symbol}(${token.name}) - Deployed as ${token.address}. Decimals: ${token.decimals}.${token.info ? ` Additional Info: ${token.info}` : ""}`).join("\n")}
+</availableTokens>
 <conversation>
 ${conversation}
 </conversation>
@@ -210,7 +220,7 @@ User can either have the input token available or not, so consider cases:
   - Text should NOT include amount, eg. "I want to swap {{availableToken}} to {{tokenOut}}" is CORRECT, but "I want to swap 0.123456789987654321 {{availableToken}} to {{tokenOut}}" is WRONG.
 
 2. When input token IS in portfolio:
-  - Generate 4 suggestions for exchange amount, that corresponds to 100%(or 95% instead for native token), 50%, 25%, 10% of the input token balance.
+  - Generate 4 suggestions for exchange amount, that corresponds to 100%(or 95% instead for native token or deduced value if present), 50%, 25%, 10% of the input token balance.
   - User should be able to see trimmed swap amount in suggestion label, but not the percentage, eg. NOT "100% {{tokenIn}}", but "0.12 {{tokenIn}}".
   - Trim amount in label to 6 decimal places if the value is less than 1. Use 2 decimal places otherwise, eg. "0.12 {{tokenIn}}".
   - Do not trim amount in text, eg. "I want to swap 0.123456789987654321 {{tokenIn}}".
@@ -238,6 +248,9 @@ Your response should include the valid JSON block and nothing else.
         prompt: `<task>
 Generate suggestions for user based on the conversation leading to the following action types
 </task>
+<decision>
+${JSON.stringify(gen)}
+</decision>
 <conversation>
 ${conversation}
 </conversation>

@@ -37,11 +37,11 @@ export const suggestTypes = [
   },
   {
     name: "exchange-amount",
-    description: "if user wants to swap tokens, and the agent knows what token to swap but the amount is not specified, suggest how much to swap based on user's portfolio, eg: known includes 'tokenIn' and 'tokenOut' and unknown includes 'amount'",
+    description: "if user wants to swap tokens, and the agent knows what token to swap but the amount is not specified, suggest how much to swap based on user's portfolio, eg: known includes 'tokenIn' and 'tokenOut' and unknown includes 'amountIn'",
   },
   {
     name: "exchange-pairs",
-    description: "if the user wants to swap tokens, and the agent does not know which ones, suggest preferred exchange pairs, eg. unknown includes 'tokenIn' and 'tokenOut'",
+    description: "if the user wants to swap tokens, and the agent does not know which ones, suggest preferred exchange pairs, eg. unknown includes 'tokenIn' and 'tokenOut'; also choose this suggestion if an agent does not recognize the token",
   },
 ] as const;
 

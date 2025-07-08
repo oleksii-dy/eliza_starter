@@ -51,6 +51,10 @@ export class LevvaService extends Service implements ILevvaService {
     logger.info("*** Stopping levva service instance ***");
   }
 
+  formatToken(token: { symbol: string; name: string; address?: string; decimals: number; info?: Record<string, any>; }) {
+    return `${token.symbol}(${token.name}) - ${token.address ? `Deployed as ${token.address}` : "Native token"}. Decimals: ${token.decimals}.${token.info ? ` Additional Info: ${JSON.stringify(token.info)}` : ""}`;
+  }
+
   // -- Wallet assets --
   // todo implement other balance sources, now simulating browser visit to blockexplorer
   async getWalletAssets(params: { address: `0x${string}`; chainId: number }) {
