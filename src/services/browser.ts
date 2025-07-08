@@ -206,9 +206,11 @@ export class BrowserService extends Service {
     return await this.fetchPageContent(url, runtime);
   }
 
+  // needs to be cached externally
   async processPageContent(
     url: string,
-    getPrompt: (html: string) => Promise<string>
+    getPrompt: (content: string) => Promise<string>,
+    type: "html" | "text" = "html"
   ) {
     await this.initializeBrowser();
 
@@ -236,13 +238,17 @@ export class BrowserService extends Service {
         throw new Error("Failed to load the page");
       }
 
-      // @ts-expect-error accesses dom
-      const html = await page.evaluate(() => document.body.innerHTML);
-      const prompt = await getPrompt(html);
+      const content =
+        type === "html"
+          ? // @ts-expect-error accesses dom
+            await page.evaluate(() => document.body.innerHTML)
+          : // @ts-expect-error accesses dom
+            await page.evaluate(() => document.body.innerText);
+
+      const prompt = await getPrompt(content);
       return this.runtime.useModel(ModelType.OBJECT_SMALL, {
         prompt,
       });
-
     } catch (error) {
       logger.error("Error:", error);
       return;

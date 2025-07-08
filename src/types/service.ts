@@ -8,6 +8,8 @@ export interface ILevvaService extends Service {
     chainId: number;
   }): Promise<{ symbol: string, balance: string, value: string, address?: string }[]>;
   formatWalletAssets(assets: { symbol: string, balance: string, value: string, address?: string }[]): string;
+  /** @deprecated needs different sources, proper typing */
+  getCryptoNews(): Promise<{}[]>; 
   createCalldata(calls: CalldataWithDescription[]): Promise<`0x${string}`>;
   getCalldata(hash: `0x${string}`): Promise<CalldataWithDescription[]>;
 }

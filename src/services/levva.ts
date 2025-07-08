@@ -12,6 +12,7 @@ import { blockexplorers } from "../util";
 import { CacheEntry } from "src/types/core.ts";
 import { CalldataWithDescription } from "src/types/tx.ts";
 import { sha256, toHex } from "viem";
+import { i } from "node_modules/@elizaos/core/dist/index-BHW44X0A";
 
 const REQUIRED_PLUGINS = ["levva"];
 
@@ -50,6 +51,8 @@ export class LevvaService extends Service implements ILevvaService {
     logger.info("*** Stopping levva service instance ***");
   }
 
+  // -- Wallet assets --
+  // todo implement other balance sources, now simulating browser visit to blockexplorer
   async getWalletAssets(params: { address: `0x${string}`; chainId: number }) {
     const browser = await this.runtime.getService<BrowserService>(
       ServiceType.BROWSER
@@ -64,6 +67,7 @@ export class LevvaService extends Service implements ILevvaService {
 
     const url = `${explorer}/address/${params.address}`;
     const cacheKey = `portfolio:${params.address}:${params.chainId}`;
+    // timed cache, todo make util function
     const cacheTime = 3600000;
     const timestamp = Date.now();
 
@@ -133,9 +137,77 @@ export class LevvaService extends Service implements ILevvaService {
     return assets;
   }
 
-  formatWalletAssets(assets: { symbol: string, balance: string, value: string, address?: string }[]): string {
-    return assets.map((asset) => `${asset.symbol} - ${asset.address ? `Token deployed as ${asset.address}` : "Native token"}. Balance: ${asset.balance}. Value: ${asset.value} USD.`).join("\n");
+  formatWalletAssets(
+    assets: {
+      symbol: string;
+      balance: string;
+      value: string;
+      address?: string;
+    }[]
+  ): string {
+    return assets
+      .map(
+        (asset) =>
+          `${asset.symbol} - ${asset.address ? `Token deployed as ${asset.address}` : "Native token"}. Balance: ${asset.balance}. Value: ${asset.value} USD.`
+      )
+      .join("\n");
   }
+
+  // -- End of Wallet Assets --
+  // -- Crypto news --
+  // todo fetch from cryptopanic rss feed
+  async getCryptoNews() {
+    const browser = await this.runtime.getService<BrowserService>(
+      ServiceType.BROWSER
+    );
+
+    const url = "https://cryptopanic.com/news/rss/";
+    const cacheKey = `feed:crypto-panic`;
+    // timed cache, todo make util function
+    const cacheTime = 1800000;
+    const timestamp = Date.now();
+
+    const cached = await this.runtime.getCache<CacheEntry<{}[]>>(cacheKey);
+
+    if (cached?.timestamp && timestamp - cached.timestamp < cacheTime) {
+      return cached.value;
+    }
+
+    const feed = await browser.processPageContent(
+      url,
+      async (text) => {
+        console.log(text);
+        return `<task>Please generate a summary for every entry in the news feed in given text</task>
+<text>
+${text}
+</text>
+<keys>
+- topics - array of objects with the following keys:
+  - "title" - title of the news entry
+  - "summary" - summary of the news entry
+  - "source" - url of the news source
+</keys>
+<output>
+Respond using JSON format like this:
+{
+  "topics": <array>
+}
+Your response should include the valid JSON block and nothing else.
+</output>
+`;
+      },
+      "text"
+    );
+
+    // todo type check
+    await this.runtime.setCache(cacheKey, {
+      timestamp,
+      value: feed?.topics ?? [],
+    });
+
+    return feed?.topics ?? [];
+  }
+  // -- End of Crypto news --
 
   async createCalldata(
     calls: CalldataWithDescription[]
