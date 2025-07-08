@@ -3,8 +3,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from './ui/input';
 import { Check, Eye, EyeOff, MoreVertical, Settings, X } from 'lucide-react';
 import { Button } from './ui/button';
-import { apiClient } from '@/lib/api';
+import { createElizaClient } from '@/lib/api-client-config';
 import { ApiKeyDialog } from './api-key-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 export default function EnvSettings() {
   const [name, setName] = useState('');
@@ -17,6 +18,7 @@ export default function EnvSettings() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isApiKeyDialogOpen, setIsApiKeyDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -36,8 +38,9 @@ export default function EnvSettings() {
   }, []);
 
   const fetchLocalEnvs = async () => {
-    const data = await apiClient.getLocalEnvs();
-    setLocalEnvs(data.data);
+    const elizaClient = createElizaClient();
+    const data = await elizaClient.system.getEnvironment();
+    setLocalEnvs(data);
   };
 
   const handleReset = async () => {
@@ -99,8 +102,8 @@ export default function EnvSettings() {
 
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Envs settings</h1>
-          <p className="text-muted-foreground mt-1">Envs settings</p>
+          <h1 className="text-3xl font-bold">Env settings</h1>
+          <p className="text-muted-foreground mt-1">Env settings</p>
         </div>
         <Button onClick={() => setIsApiKeyDialogOpen(true)} aria-label="Manage API Key">
           <Settings className="h-5 w-5" />
@@ -227,7 +230,29 @@ export default function EnvSettings() {
         <Button variant="outline" onClick={handleReset}>
           Reset
         </Button>
-        <Button variant="outline" disabled={isUpdating}>
+        <Button
+          type="submit"
+          disabled={isUpdating}
+          onClick={async () => {
+            setIsUpdating(true);
+            try {
+              const elizaClient = createElizaClient();
+              await elizaClient.system.updateLocalEnvironment(localEnvs);
+              toast({
+                title: 'Success',
+                description: 'Environment variables updated successfully!',
+              });
+            } catch (error) {
+              toast({
+                title: 'Error',
+                description: 'Failed to update environment variables.',
+                variant: 'destructive',
+              });
+            } finally {
+              setIsUpdating(false);
+            }
+          }}
+        >
           Save Changes
         </Button>
       </div>

@@ -1,6 +1,5 @@
 import { defineConfig } from 'tsup';
 import { copy } from 'esbuild-plugin-copy';
-import path from 'path';
 
 export default defineConfig({
   clean: true,
@@ -18,11 +17,8 @@ export default defineConfig({
   format: ['esm'],
   dts: true,
   sourcemap: false,
-  // Ensure that all external dependencies are properly handled.
-  // The regex explicitly includes dependencies that should not be externalized.
-  noExternal: [
-    /^(?!(@electric-sql\/pglite|zod|@elizaos\/core|chokidar|semver|octokit|execa|@noble\/curves)).*/,
-  ],
+  // Externalize problematic fs-related dependencies
+  external: ['fs-extra'],
   platform: 'node',
   minify: false,
   target: 'esnext',
@@ -35,8 +31,9 @@ const require = createRequire(import.meta.url);
 `,
   },
   esbuildOptions(options) {
-    options.alias = {
-      '@/src': './src',
+    // Use a transform to replace @/src imports
+    options.define = {
+      ...options.define,
     };
   },
   esbuildPlugins: [
@@ -45,20 +42,20 @@ const require = createRequire(import.meta.url);
       resolveFrom: 'cwd',
       assets: [
         {
-          from: './node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs',
-          to: './dist',
+          from: './templates/**/*',
+          to: './dist/templates',
         },
         {
-          from: './node_modules/@electric-sql/pglite/dist/pglite.data',
-          to: './dist',
+          from: './templates/**/.*',
+          to: './dist/templates',
         },
         {
-          from: './node_modules/@electric-sql/pglite/dist/pglite.wasm',
-          to: './dist',
+          from: '../docs/docs/plugins/migration/claude-code/**/*',
+          to: './dist/migration-guides',
         },
       ],
       // Setting this to true will output a list of copied files
       verbose: true,
-    }),
+    }) as any,
   ],
 });

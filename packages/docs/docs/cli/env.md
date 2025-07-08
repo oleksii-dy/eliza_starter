@@ -6,9 +6,15 @@ keywords: [environment, configuration, API keys, secrets, settings, .env]
 image: /img/cli.jpg
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Environment Command
 
 Manage environment variables and secrets.
+
+<Tabs>
+<TabItem value="overview" label="Overview & Options" default>
 
 ## Usage
 
@@ -29,10 +35,13 @@ elizaos env [command] [options]
 
 ### List Command Options
 
-| Option     | Description                           |
-| ---------- | ------------------------------------- |
-| `--system` | List only system information          |
-| `--local`  | List only local environment variables |
+| Option            | Description                                             |
+| ----------------- | ------------------------------------------------------- |
+| `--system`        | List only system information                            |
+| `--local`         | List only local environment variables                   |
+| `--show-values`   | Display the actual values of secrets (use with caution) |
+| `--filter <text>` | Filter variables by a text pattern                      |
+| `--output <file>` | Export the environment variables to a file              |
 
 ### General Options
 
@@ -40,7 +49,8 @@ elizaos env [command] [options]
 | ----------- | ----------------------------- |
 | `-y, --yes` | Automatically confirm prompts |
 
-## Examples
+</TabItem>
+<TabItem value="examples" label="Examples">
 
 ### Viewing Environment Variables
 
@@ -53,23 +63,15 @@ elizaos env list --system
 
 # Show only local environment variables
 elizaos env list --local
-```
 
-Example output:
+# Filter for variables containing 'API'
+elizaos env list --filter API
 
-```
-System Information:
-  Platform: darwin (24.3.0)
-  Architecture: arm64
-  CLI Version: 1.0.0
-  Package Manager: bun v1.2.5
+# Show the actual values of variables (not masked)
+elizaos env list --show-values
 
-Local Environment Variables:
-Path: /current/directory/.env
-  OPENAI_API_KEY: sk-1234...5678
-  MODEL_PROVIDER: openai
-  PORT: 8080
-  LOG_LEVEL: debug
+# Export all environment variables to a file
+elizaos env list --output env.json
 ```
 
 ### Managing Local Environment Variables
@@ -82,29 +84,12 @@ elizaos env edit-local
 elizaos env edit-local --yes
 ```
 
-The edit-local command allows you to:
-
-- View existing local variables
-- Add new variables
-- Edit existing variables
-- Delete variables
-
-**Note**: The `--yes` flag displays current variables and exits without interactive editing, since variable modification requires user input.
-
 ### Interactive Management
 
 ```bash
 # Start interactive environment manager
 elizaos env interactive
 ```
-
-Interactive mode provides a menu with options to:
-
-- List environment variables
-- Edit local environment variables
-- Reset environment variables
-
-**Note**: The `--yes` flag is ignored in interactive mode since it requires user input by design.
 
 ### Resetting Environment and Data
 
@@ -115,6 +100,49 @@ elizaos env reset
 # Automatic reset with default selections
 elizaos env reset --yes
 ```
+
+</TabItem>
+<TabItem value="guides" label="Guides & Concepts">
+
+### Example `list` output:
+
+```
+System Information:
+  Platform: darwin (24.3.0)
+  Architecture: arm64
+  CLI Version: 1.0.0
+  Package Manager: bun v1.2.5
+
+Local Environment Variables:
+Path: /current/directory/.env
+  OPENAI_API_KEY: your-key...5678
+  MODEL_PROVIDER: openai
+  PORT: 8080
+  LOG_LEVEL: debug
+```
+
+### `edit-local` Details
+
+The `edit-local` command allows you to:
+
+- View existing local variables
+- Add new variables
+- Edit existing variables
+- Delete variables
+
+**Note**: The `--yes` flag displays current variables and exits without interactive editing, since variable modification requires user input.
+
+### `interactive` Details
+
+Interactive mode provides a menu with options to:
+
+- List environment variables
+- Edit local environment variables
+- Reset environment variables
+
+**Note**: The `--yes` flag is ignored in interactive mode since it requires user input by design.
+
+### `reset` Details
 
 The reset command allows you to selectively reset:
 
@@ -148,6 +176,7 @@ If no local `.env` file exists:
 | `SQLITE_DATA_DIR`    | Directory for PGLite database files          |
 | `MODEL_PROVIDER`     | Default model provider to use                |
 | `LOG_LEVEL`          | Logging verbosity (debug, info, warn, error) |
+| `LOG_TIMESTAMPS`     | Show timestamps in logs (default: true)      |
 | `PORT`               | HTTP API port number                         |
 
 ## Database Configuration Detection
@@ -163,6 +192,9 @@ The reset command intelligently detects your database configuration:
 - **Value masking** - Sensitive values (API keys, tokens) are automatically masked in output
 - **Local-only storage** - Environment variables are stored locally in your project
 - **No global secrets** - Prevents accidental exposure across projects
+
+</TabItem>
+<TabItem value="troubleshooting" label="Troubleshooting">
 
 ## Troubleshooting
 
@@ -218,3 +250,6 @@ elizaos env list --local
 - [`dev`](./dev.md): Run in development mode with the configured environment
 - [`test`](./test.md): Run tests with environment configuration
 - [`create`](./create.md): Create a new project with initial environment setup
+
+</TabItem>
+</Tabs>

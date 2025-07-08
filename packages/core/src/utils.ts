@@ -7,7 +7,7 @@ import { z } from 'zod';
 
 import logger from './logger';
 import type { Content, Entity, IAgentRuntime, Memory, State, TemplateType } from './types';
-import { ModelType, UUID } from './types';
+import { ModelType, UUID, ContentType } from './types';
 
 // Text Utils
 
@@ -267,8 +267,16 @@ export const formatMessages = ({
       const attachmentString =
         attachments && attachments.length > 0
           ? ` (Attachments: ${attachments
-              .map((media) => `[${media.id} - ${media.title} (${media.url})]`)
-              .join(', ')})`
+              .map((media) => {
+                const lines = [`[${media.id} - ${media.title} (${media.url})]`];
+                if (media.text) lines.push(`Text: ${media.text}`);
+                if (media.description) lines.push(`Description: ${media.description}`);
+                return lines.join('\n');
+              })
+              .join(
+                // Use comma separator only if all attachments are single-line (no text/description)
+                attachments.every((media) => !media.text && !media.description) ? ', ' : '\n'
+              )})`
           : null;
 
       const messageTime = new Date(message.createdAt);
@@ -564,7 +572,7 @@ export async function trimTokens(prompt: string, maxTokens: number, runtime: IAg
 
 export function safeReplacer() {
   const seen = new WeakSet();
-  return function (key: string, value: any) {
+  return function (_key: string, value: any) {
     if (typeof value === 'object' && value !== null) {
       if (seen.has(value)) {
         return '[Circular]';
@@ -662,4 +670,19 @@ export function stringToUuid(target: string | number): UUID {
   }
 
   return `${_uint8ArrayToHex(hashBuffer.slice(0, 4))}-${_uint8ArrayToHex(hashBuffer.slice(4, 6))}-${_uint8ToHex(hashBuffer[6] & 0x0f)}${_uint8ToHex(hashBuffer[7])}-${_uint8ToHex((hashBuffer[8] & 0x3f) | 0x80)}${_uint8ToHex(hashBuffer[9])}-${_uint8ArrayToHex(hashBuffer.slice(10, 16))}` as UUID;
+}
+
+export const getContentTypeFromMimeType = (mimeType: string): ContentType | undefined => {
+  if (mimeType.startsWith('image/')) return ContentType.IMAGE;
+  if (mimeType.startsWith('video/')) return ContentType.VIDEO;
+  if (mimeType.startsWith('audio/')) return ContentType.AUDIO;
+  if (mimeType.includes('pdf') || mimeType.includes('document') || mimeType.startsWith('text/')) {
+    return ContentType.DOCUMENT;
+  }
+  return undefined;
+};
+
+export function getLocalServerUrl(path: string): string {
+  const port = process.env.SERVER_PORT || '3000';
+  return `http://localhost:${port}${path}`;
 }

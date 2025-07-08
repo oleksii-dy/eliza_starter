@@ -6,9 +6,15 @@ keywords: [create, project, plugin, setup, scaffolding, initialization, configur
 image: /img/cli.jpg
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 # Create Command
 
 Initialize a new project, plugin, or agent.
+
+<Tabs>
+<TabItem value="overview" label="Overview & Options" default>
 
 ## Usage
 
@@ -31,9 +37,11 @@ elizaos create --help
 
 | Option              | Description                                                      |
 | ------------------- | ---------------------------------------------------------------- |
-| `-d, --dir <dir>`   | Installation directory (default: `.`)                            |
 | `-y, --yes`         | Skip confirmation and use defaults (default: `false`)            |
 | `-t, --type <type>` | Type of template to use (`project`, `plugin`, `agent`, or `tee`) |
+| `--template <name>` | Use a specific template by name (e.g., `default`, `minimal`)     |
+| `--no-install`      | Skip automatic dependency installation after creation            |
+| `--no-git`          | Skip `git init` for the new project                              |
 | `[name]`            | Name for the project, plugin, or agent (optional)                |
 
 ## Interactive Process
@@ -53,7 +61,8 @@ When using the `-y` flag to skip prompts:
 - **Default type**: `project`
 - **Default database**: `sqlite`
 
-## Examples
+</TabItem>
+<TabItem value="examples" label="Examples">
 
 ### Interactive Creation (Recommended)
 
@@ -100,15 +109,35 @@ elizaos create -t agent my-character-name
 elizaos create -t tee my-tee-project
 ```
 
-### Custom Directory
+### Advanced Creation
 
 ```bash
-# Create in specific directory
-elizaos create -d ./my-projects/new-agent
+# Create a project from a specific template
+elizaos create my-special-project --template minimal
 
-# Create plugin in specific directory
-elizaos create -t plugin -d ./plugins/my-plugin
+# Create a project without installing dependencies automatically
+elizaos create my-lean-project --no-install
+
+# Create a project without initializing a git repository
+elizaos create my-repo-less-project --no-git
 ```
+
+### Creating in a Specific Directory
+
+To create a project in a specific directory, navigate to that directory first:
+
+```bash
+# Navigate to your desired directory
+cd ./my-projects
+elizaos create new-agent
+
+# For plugins
+cd ./plugins
+elizaos create -t plugin my-plugin
+```
+
+</TabItem>
+<TabItem value="guides" label="Guides">
 
 ## Project Types
 
@@ -216,6 +245,9 @@ The CLI will automatically:
 - Prompts for connection details during setup
 - Better for production deployments
 
+</TabItem>
+<TabItem value="troubleshooting" label="Troubleshooting">
+
 ## Troubleshooting
 
 ### Creation Failures
@@ -300,3 +332,6 @@ elizaos create -t invalid    # Invalid template type
 - [`start`](./start.md): Start your created project
 - [`dev`](./dev.md): Run your project in development mode
 - [`env`](./env.md): Configure environment variables
+
+</TabItem>
+</Tabs>

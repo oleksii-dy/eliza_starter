@@ -1,6 +1,6 @@
 {
   "name": "@elizaos/app",
-  "version": "1.0.6",
+  "version": "1.0.19",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,6 +9,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
+    "test": "bun test src/__tests__",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
     "typecheck": "tsc --noEmit",
@@ -17,6 +18,7 @@
     "lint": "prettier --write ./src"
   },
   "dependencies": {
+    "@elizaos/api-client": "^1.0.19",
     "@elizaos/cli": "^1.0.6",
     "@tauri-apps/api": "^2.3.0",
     "@tauri-apps/plugin-opener": "^2",

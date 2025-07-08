@@ -13,22 +13,8 @@ export function getProjectType(testPath?: string): DirectoryInfo {
   return detectDirectoryType(targetPath);
 }
 
-/**
- * Find the monorepo root by looking for lerna.json
- */
-export function findMonorepoRoot(startDir: string): string {
-  let currentDir = startDir;
-  while (currentDir !== path.parse(currentDir).root) {
-    if (fs.existsSync(path.join(currentDir, 'lerna.json'))) {
-      return currentDir;
-    }
-    currentDir = path.dirname(currentDir);
-  }
-
-  throw new Error(
-    'Could not find monorepo root. Make sure to run tests from within the Eliza project.'
-  );
-}
+// Note: findMonorepoRoot() has been removed - use UserEnvironment.getInstance().findMonorepoRoot() instead
+// This centralized version looks for packages/core directory instead of lerna.json for better reliability
 
 /**
  * Process filter name to remove extensions consistently
@@ -69,7 +55,11 @@ export async function installPluginDependencies(projectInfo: DirectoryInfo): Pro
   }
 
   const project = await loadProject(process.cwd());
-  if (project.isPlugin && project.pluginModule?.dependencies?.length > 0) {
+  if (
+    project.isPlugin &&
+    project.pluginModule?.dependencies &&
+    project.pluginModule.dependencies.length > 0
+  ) {
     const pluginsDir = path.join(process.cwd(), '.eliza', 'plugins');
     if (!fs.existsSync(pluginsDir)) {
       await fs.promises.mkdir(pluginsDir, { recursive: true });

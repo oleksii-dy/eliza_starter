@@ -7,6 +7,29 @@ import { AddPluginOptions } from '../types';
 import { extractPackageName, findPluginPackageName } from '../utils/naming';
 import { promptForPluginEnvVars } from '../utils/env-vars';
 import { getDependenciesFromDirectory } from '../utils/directory';
+import * as clack from '@clack/prompts';
+import colors from 'yoctocolors';
+// Character updater imports removed - reverting to project-scoped plugins
+
+/**
+ * Show consolidated success message with next steps
+ */
+function showInstallationSuccess(pluginName: string): void {
+  const message =
+    `${colors.green('✓')} Plugin installed successfully!\n\n` +
+    `${colors.bold('Next steps:')}\n` +
+    `1. Add ${colors.cyan(`"${pluginName}"`)} to your character file's plugins array:\n\n` +
+    `   ${colors.gray('{')}${colors.dim('\n')}` +
+    `     ${colors.green('"name"')}: ${colors.yellow('"YourAgent"')},${colors.dim('\n')}` +
+    `     ${colors.green('"plugins"')}: [${colors.cyan(`"${pluginName}"`)}],${colors.dim('\n')}` +
+    `     ${colors.gray('...')}${colors.dim('\n')}` +
+    `   ${colors.gray('}')}\n\n` +
+    `2. Restart your application to load the plugin\n` +
+    `3. Configure any required environment variables\n` +
+    `4. Check the plugin documentation for additional setup`;
+
+  clack.outro(message);
+}
 
 /**
  * Install a plugin from GitHub repository
@@ -32,19 +55,27 @@ export async function installPluginFromGitHub(
   if (success) {
     logger.info(`Successfully installed ${pluginNameForPostInstall} from ${githubSpecifier}.`);
 
+    const packageName = extractPackageName(plugin);
+
     // Prompt for environment variables if not skipped
     if (!opts.skipEnvPrompt) {
-      const packageName = extractPackageName(plugin);
+      // Brief pause to ensure installation logs are complete
+      await new Promise((resolve) => setTimeout(resolve, 500));
       console.log(`\n🔧 Checking environment variables for ${packageName}...`);
       try {
         await promptForPluginEnvVars(packageName, cwd);
       } catch (error) {
-        logger.warn(`Warning: Could not prompt for environment variables: ${error.message}`);
+        logger.warn(
+          `Warning: Could not prompt for environment variables: ${error instanceof Error ? error.message : String(error)}`
+        );
         // Don't fail the installation if env prompting fails
       }
     } else {
       console.log(`\n⏭️  Skipping environment variable prompts due to --skip-env-prompt flag`);
     }
+
+    // Show consolidated next steps
+    showInstallationSuccess(packageName);
 
     process.exit(0);
   } else {
@@ -82,23 +113,31 @@ export async function installPluginFromRegistry(
   if (registryInstallResult) {
     console.log(`Successfully installed ${targetName}`);
 
+    // Refresh dependencies after installation to find the actual installed package name
+    const updatedDependencies = getDependenciesFromDirectory(cwd);
+    const actualPackageName =
+      findPluginPackageName(targetName, updatedDependencies || {}) || targetName;
+
     // Prompt for environment variables if not skipped
     if (!opts.skipEnvPrompt) {
-      // Refresh dependencies after installation to find the actual installed package name
-      const updatedDependencies = getDependenciesFromDirectory(cwd);
-      const actualPackageName =
-        findPluginPackageName(targetName, updatedDependencies || {}) || targetName;
+      // Brief pause to ensure installation logs are complete
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       console.log(`\n🔧 Checking environment variables for ${actualPackageName}...`);
       try {
         await promptForPluginEnvVars(actualPackageName, cwd);
       } catch (error) {
-        logger.warn(`Warning: Could not prompt for environment variables: ${error.message}`);
+        logger.warn(
+          `Warning: Could not prompt for environment variables: ${error instanceof Error ? error.message : String(error)}`
+        );
         // Don't fail the installation if env prompting fails
       }
     } else {
       console.log(`\n⏭️  Skipping environment variable prompts due to --skip-env-prompt flag`);
     }
+
+    // Show consolidated next steps
+    showInstallationSuccess(actualPackageName);
 
     process.exit(0);
   }

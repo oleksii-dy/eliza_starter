@@ -1,22 +1,29 @@
 import { displayBanner, handleError } from '@/src/utils';
 import { Command } from 'commander';
-import path from 'node:path';
 import * as clack from '@clack/prompts';
 import colors from 'yoctocolors';
 import { logger } from '@elizaos/core';
 
 import { validateCreateOptions, validateProjectName } from './utils';
-import { selectDatabase, selectAIModel } from './utils';
+import { selectDatabase, selectAIModel, selectEmbeddingModel } from './utils';
 import { createProject, createPlugin, createAgent, createTEEProject } from './actions';
 import type { CreateOptions } from './types';
+
+/**
+ * Formats the project type for display in messages
+ */
+function formatProjectType(type: string): string {
+  return type === 'tee' ? 'TEE Project' : type.charAt(0).toUpperCase() + type.slice(1);
+}
 
 export const create = new Command('create')
   .description('Create a new ElizaOS project, plugin, agent, or TEE project')
   .argument('[name]', 'name of the project/plugin/agent to create')
-  .option('--dir <dir>', 'directory to create the project in', '.')
   .option('--yes, -y', 'skip prompts and use defaults')
   .option('--type <type>', 'type of project to create (project, plugin, agent, tee)', 'project')
   .action(async (name?: string, opts?: any) => {
+    let projectType: string | undefined; // Declare outside try block for catch access
+
     try {
       // Set non-interactive mode if environment variable is set or if -y/--yes flag is present in process.argv
       if (
@@ -38,10 +45,9 @@ export const create = new Command('create')
 
       if (!isNonInteractive) {
         await displayBanner();
-        clack.intro(colors.inverse(' Creating ElizaOS Project '));
       }
 
-      let projectType = options.type;
+      projectType = options.type;
       let projectName = name;
 
       // If no name provided, prompt for type first then name
@@ -82,6 +88,12 @@ export const create = new Command('create')
           projectType = selectedType as 'project' | 'plugin' | 'agent' | 'tee';
         }
 
+        // Show intro message after type is determined
+        if (!isNonInteractive) {
+          const introType = formatProjectType(projectType);
+          clack.intro(colors.inverse(` Creating ElizaOS ${introType} `));
+        }
+
         // Prompt for name
         if (!isNonInteractive) {
           const nameInput = await clack.text({
@@ -119,29 +131,46 @@ export const create = new Command('create')
         }
       }
 
-      const targetDir = options.dir;
+      // Show intro message now that we have both type and name
+      if (!isNonInteractive && name) {
+        const introType = formatProjectType(projectType);
+        clack.intro(colors.inverse(` Creating ElizaOS ${introType} `));
+      }
 
       // Handle different project types
       switch (projectType) {
         case 'plugin':
-          await createPlugin(projectName!, targetDir, isNonInteractive);
+          await createPlugin(projectName!, process.cwd(), isNonInteractive);
           break;
 
         case 'agent':
-          await createAgent(projectName!, targetDir, isNonInteractive);
+          await createAgent(projectName!, process.cwd(), isNonInteractive);
           break;
 
         case 'tee': {
           // TEE projects need database and AI model selection
           let database = 'pglite';
           let aiModel = 'local';
+          let embeddingModel: string | undefined;
 
           if (!isNonInteractive) {
             database = await selectDatabase();
             aiModel = await selectAIModel();
+
+            // Check if selected AI model needs embedding model fallback
+            if (aiModel === 'claude' || aiModel === 'openrouter') {
+              embeddingModel = await selectEmbeddingModel();
+            }
           }
 
-          await createTEEProject(projectName!, targetDir, database, aiModel, isNonInteractive);
+          await createTEEProject(
+            projectName!,
+            process.cwd(),
+            database,
+            aiModel,
+            embeddingModel,
+            isNonInteractive
+          );
           break;
         }
 
@@ -150,23 +179,40 @@ export const create = new Command('create')
           // Regular projects need database and AI model selection
           let database = 'pglite';
           let aiModel = 'local';
+          let embeddingModel: string | undefined;
 
           if (!isNonInteractive) {
             database = await selectDatabase();
             aiModel = await selectAIModel();
+
+            // Check if selected AI model needs embedding model fallback
+            if (aiModel === 'claude' || aiModel === 'openrouter') {
+              embeddingModel = await selectEmbeddingModel();
+            }
           }
 
-          await createProject(projectName!, targetDir, database, aiModel, isNonInteractive);
+          await createProject(
+            projectName!,
+            process.cwd(),
+            database,
+            aiModel,
+            embeddingModel,
+            isNonInteractive
+          );
           break;
         }
       }
 
       if (!isNonInteractive) {
-        clack.outro(colors.green('Project created successfully! 🎉'));
+        // Dynamic outro message based on project type
+        const typeLabel = formatProjectType(projectType);
+        clack.outro(colors.green(`${typeLabel} created successfully! 🎉`));
       }
     } catch (error) {
       if (!opts?.yes) {
-        clack.cancel('Failed to create project.');
+        // Dynamic error message based on project type
+        const errorType = formatProjectType(projectType || 'project');
+        clack.cancel(`Failed to create ${errorType}.`);
       }
       logger.error('Create command failed:', error);
       handleError(error);

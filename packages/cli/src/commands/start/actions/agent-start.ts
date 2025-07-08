@@ -1,4 +1,3 @@
-import { AgentServer } from '@/src/server/index';
 import {
   AgentRuntime,
   encryptedCharacter,
@@ -9,10 +8,15 @@ import {
   type Plugin,
 } from '@elizaos/core';
 import { plugin as sqlPlugin } from '@elizaos/plugin-sql';
-import { AgentStartConfig, AgentStartOptions } from '../types';
+import { AgentServer } from '@elizaos/server';
+import { AgentStartOptions } from '../types';
+import {
+  loadEnvConfig,
+  hasCharacterSecrets,
+  setDefaultSecretsFromEnv,
+} from '../utils/config-utils';
 import { resolvePluginDependencies } from '../utils/dependency-resolver';
 import { isValidPluginShape, loadAndPreparePlugin } from '../utils/plugin-utils';
-import { loadEnvConfig } from '../utils/config-utils';
 
 /**
  * Start an agent with the given configuration
@@ -28,8 +32,14 @@ export async function startAgent(
 ): Promise<IAgentRuntime> {
   character.id ??= stringToUuid(character.name);
 
+  // Handle secrets for character configuration
+  if (!hasCharacterSecrets(character)) {
+    await setDefaultSecretsFromEnv(character);
+  }
+
   const loadedPlugins = new Map<string, Plugin>();
-  loadedPlugins.set(sqlPlugin.name, sqlPlugin); // Always include sqlPlugin
+  // Type-cast to ensure compatibility with local types
+  loadedPlugins.set(sqlPlugin.name, sqlPlugin as unknown as Plugin); // Always include sqlPlugin
 
   const pluginsToLoad = new Set<string>(character.plugins || []);
   for (const p of plugins) {

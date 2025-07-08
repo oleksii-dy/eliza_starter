@@ -15,7 +15,7 @@ import { ConnectionProvider, useConnection } from './context/ConnectionContext';
 import { STALE_TIMES } from './hooks/use-query-hooks';
 import useVersion from './hooks/use-version';
 import './index.css';
-import { apiClient } from './lib/api';
+import { createElizaClient } from './lib/api-client-config';
 import Chat from './routes/chat';
 import AgentCreatorRoute from './routes/createAgent';
 import Home from './routes/home';
@@ -25,6 +25,7 @@ import { Menu } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from './components/ui/sheet';
 import { Button } from './components/ui/button';
 import CreateGroupPage from './routes/group-new';
+import AgentSettingsRoute from './routes/agent-settings';
 import clientLogger from '@/lib/logger';
 
 // Create a query client with optimized settings
@@ -57,7 +58,11 @@ const prefetchInitialData = async () => {
     // Prefetch agents (real-time data so shorter stale time)
     await queryClient.prefetchQuery({
       queryKey: ['agents'],
-      queryFn: () => apiClient.getAgents(),
+      queryFn: async () => {
+        const elizaClient = createElizaClient();
+        const result = await elizaClient.agents.listAgents();
+        return { data: result };
+      },
       staleTime: STALE_TIMES.FREQUENT,
     });
   } catch (error) {
@@ -102,7 +107,7 @@ function AppContent() {
           <div className="md:hidden absolute top-4 left-4 z-50">
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" data-testid="mobile-menu-button">
                   <Menu className="h-5 w-5" />
                   <span className="sr-only">Toggle menu</span>
                 </Button>
@@ -136,12 +141,13 @@ function AppContent() {
                   </div>
                 }
               />
+              <Route path="settings/:agentId" element={<AgentSettingsRoute />} />
               <Route path="group/new" element={<CreateGroupPage />} />
               <Route path="agents/new" element={<AgentCreatorRoute />} />
               <Route
                 path="/create"
                 element={
-                  <div className="flex w-full justify-center px-4 sm:px-6">
+                  <div className="flex w-full justify-center px-4 sm:px-6 overflow-y-auto">
                     <div className="w-full md:max-w-4xl">
                       <AgentCreator />
                     </div>
@@ -172,7 +178,7 @@ function AppContent() {
               <Route
                 path="settings/"
                 element={
-                  <div className="flex w-full justify-center">
+                  <div className="flex w-full justify-center overflow-y-auto">
                     <div className="w-full md:max-w-4xl">
                       <EnvSettings />
                     </div>

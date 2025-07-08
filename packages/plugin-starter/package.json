@@ -1,7 +1,7 @@
 {
-  "name": "@npm-username/plugin-name",
+  "name": "@elizaos/plugin-starter",
   "description": "${PLUGINDESCRIPTION}",
-  "version": "1.0.6",
+  "version": "1.0.19",
   "type": "module",
   "private": true,
   "main": "dist/index.js",
@@ -41,25 +41,35 @@
   ],
   "dependencies": {
     "@elizaos/core": "^1.0.0",
+    "@tanstack/react-query": "^5.80.7",
+    "clsx": "^2.1.1",
+    "tailwindcss": "^4.1.10",
+    "tailwind-merge": "^3.3.1",
+    "vite": "^6.3.5",
     "zod": "3.24.2"
   },
   "peerDependencies": {},
   "devDependencies": {
     "@elizaos/cli": "^1.0.0",
+    "@tailwindcss/vite": "^4.1.10",
+    "@vitejs/plugin-react-swc": "^3.10.2",
     "dotenv": "16.4.5",
     "prettier": "3.5.3",
+    "tailwindcss-animate": "^1.0.7",
     "tsup": "8.5.0",
-    "typescript": "5.8.2",
-    "vitest": "3.1.4"
+    "typescript": "5.8.2"
   },
   "scripts": {
     "start": "elizaos start",
     "dev": "elizaos dev",
-    "build": "tsup",
+    "build": "tsc --noEmit && vite build && tsup",
     "lint": "prettier --write ./src",
-    "test:component": "vitest run",
-    "test:e2e": "elizaos test",
-    "test": "npm run test:component && npm run test:e2e",
+    "test:component": "bun run test:install && bun test",
+    "test:e2e": "bun run test:install && bun test",
+    "test:e2e:manual": "bun run test:install && node scripts/test-e2e-manual.js",
+    "test:cypress": "bun run test:install && cypress run --component",
+    "test": "bun run test:install && bun run test:component && bun run test:e2e",
+    "test:install": "node scripts/install-test-deps.js",
     "publish": "elizaos publish",
     "format": "prettier --write ./src",
     "format:check": "prettier --check ./src"

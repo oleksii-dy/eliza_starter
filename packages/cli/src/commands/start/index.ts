@@ -1,6 +1,6 @@
 import { displayBanner, handleError } from '@/src/utils';
 import { validatePort } from '@/src/utils/port-validation';
-import { loadCharacterTryPath } from '@/src/server/loader';
+import { loadCharacterTryPath } from '@elizaos/server';
 import { loadProject } from '@/src/project';
 import { logger, type Character, type ProjectAgent } from '@elizaos/core';
 import { Command } from 'commander';
@@ -9,13 +9,14 @@ import { StartOptions } from './types';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { loadEnvConfig } from './utils/config-utils';
+import { detectDirectoryType } from '@/src/utils/directory-detection';
 
 export const start = new Command()
   .name('start')
   .description('Start the Eliza agent server')
   .option('-c, --configure', 'Reconfigure services and AI models')
   .option('-p, --port <port>', 'Port to listen on', validatePort)
-  .option('-char, --character [paths...]', 'Character file(s) to use')
+  .option('--character <paths...>', 'Character file(s) to use')
   .hook('preAction', async () => {
     await displayBanner();
   })
@@ -27,23 +28,41 @@ export const start = new Command()
       let characters: Character[] = [];
       let projectAgents: ProjectAgent[] = [];
 
-      if (options.character) {
-        // Load characters from provided paths
-        for (const path of options.character) {
+      if (options.character && options.character.length > 0) {
+        // Validate and load characters from provided paths
+        for (const charPath of options.character) {
+          const resolvedPath = path.resolve(charPath);
+
+          if (!fs.existsSync(resolvedPath)) {
+            logger.error(`Character file not found: ${resolvedPath}`);
+            throw new Error(`Character file not found: ${resolvedPath}`);
+          }
+
           try {
-            characters.push(await loadCharacterTryPath(path));
+            const character = await loadCharacterTryPath(resolvedPath);
+            if (character) {
+              characters.push(character);
+              logger.info(`Successfully loaded character: ${character.name}`);
+            } else {
+              logger.error(
+                `Failed to load character from ${resolvedPath}: Invalid or empty character file`
+              );
+              throw new Error(`Invalid character file: ${resolvedPath}`);
+            }
           } catch (e) {
-            logger.error(`Failed to load character from ${path}:`, e);
+            logger.error(`Failed to load character from ${resolvedPath}:`, e);
+            throw new Error(`Invalid character file: ${resolvedPath}`);
           }
         }
       } else {
         // Try to load project agents if no character files specified
         try {
           const cwd = process.cwd();
-          const packageJsonPath = path.join(cwd, 'package.json');
+          const dirInfo = detectDirectoryType(cwd);
 
-          // Check if we're in a project directory
-          if (fs.existsSync(packageJsonPath)) {
+          // Check if we're in a directory that might contain agents - allow any directory with package.json
+          // except those explicitly detected as non-ElizaOS (covers projects, plugins, monorepos, etc.)
+          if (dirInfo.hasPackageJson && dirInfo.type !== 'non-elizaos-dir') {
             logger.info('No character files specified, attempting to load project agents...');
             const project = await loadProject(cwd);
 
@@ -67,6 +86,7 @@ export const start = new Command()
       await startAgents({ ...options, characters, projectAgents });
     } catch (e: any) {
       handleError(e);
+      process.exit(1);
     }
   });
 

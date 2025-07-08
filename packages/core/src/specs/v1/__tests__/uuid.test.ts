@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'bun:test';
 import { asUUID, UUID } from '../uuid';
 
 describe('UUID Module', () => {
@@ -25,7 +25,7 @@ describe('UUID Module', () => {
       validUUIDStrings.forEach((validUUID) => {
         const result = asUUID(validUUID);
         // The function should normalize to lowercase
-        expect(result).toBe(validUUID.toLowerCase());
+        expect(result).toBe(validUUID.toLowerCase() as UUID);
       });
     });
 

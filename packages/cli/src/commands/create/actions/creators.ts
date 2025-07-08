@@ -1,11 +1,87 @@
 import { getElizaCharacter } from '@/src/characters/eliza';
-import { copyTemplate as copyTemplateUtil, buildProject } from '@/src/utils';
+import { copyTemplate as copyTemplateUtil } from '@/src/utils';
 import { join } from 'path';
 import fs from 'node:fs/promises';
 import * as clack from '@clack/prompts';
 import colors from 'yoctocolors';
 import { processPluginName, validateTargetDirectory } from '../utils';
-import { installDependencies, setupProjectEnvironment } from './setup';
+import { setupProjectEnvironment } from './setup';
+import {
+  installDependenciesWithSpinner,
+  buildProjectWithSpinner,
+  createTask,
+  runTasks,
+} from '@/src/utils/spinner-utils';
+import { existsSync, rmSync } from 'node:fs';
+import { getDisplayDirectory } from '@/src/utils/helpers';
+
+/**
+ * wraps the creation process with cleanup handlers that remove the directory
+ * if the user interrupts with ctrl-c during installation
+ */
+async function withCleanupOnInterrupt<T>(
+  targetDir: string,
+  displayName: string,
+  fn: () => Promise<T>
+): Promise<T> {
+  // Check if directory already exists before we start
+  const directoryExistedBefore = existsSync(targetDir);
+
+  const cleanup = () => {
+    // Clean up if the directory didn't exist before and exists now
+    // This handles cases where fn() created the directory but was interrupted
+    // before we could set directoryCreatedByUs flag
+    if (!directoryExistedBefore && existsSync(targetDir)) {
+      console.info(colors.red(`\n\nInterrupted! Cleaning up ${displayName}...`));
+      try {
+        rmSync(targetDir, { recursive: true, force: true });
+        console.info('Cleanup completed.');
+      } catch (error) {
+        console.error(colors.red('Error during cleanup:'), error);
+      }
+    }
+  };
+
+  // store handler references for proper cleanup
+  const sigintHandler = () => {
+    process.exit(130);
+  };
+  const sigtermHandler = () => {
+    process.exit(143);
+  };
+
+  // register cleanup on process exit (handles all termination cases)
+  process.on('exit', cleanup);
+  process.on('SIGINT', sigintHandler);
+  process.on('SIGTERM', sigtermHandler);
+
+  try {
+    const result = await fn();
+
+    // success - remove only our cleanup handlers
+    process.removeListener('exit', cleanup);
+    process.removeListener('SIGINT', sigintHandler);
+    process.removeListener('SIGTERM', sigtermHandler);
+
+    return result;
+  } catch (error) {
+    // remove only our cleanup handlers
+    process.removeListener('exit', cleanup);
+    process.removeListener('SIGINT', sigintHandler);
+    process.removeListener('SIGTERM', sigtermHandler);
+
+    // cleanup on error - if the directory didn't exist before and exists now
+    if (!directoryExistedBefore && existsSync(targetDir)) {
+      try {
+        console.info(colors.red(`\nCleaning up due to error...`));
+        rmSync(targetDir, { recursive: true, force: true });
+      } catch (cleanupError) {
+        // ignore cleanup errors
+      }
+    }
+    throw error;
+  }
+}
 
 /**
  * Creates a new plugin with the specified name and configuration.
@@ -35,8 +111,9 @@ export async function createPlugin(
   }
 
   if (!isNonInteractive) {
+    const displayDir = getDisplayDirectory(targetDir);
     const confirmCreate = await clack.confirm({
-      message: `Create plugin "${pluginDirName}" in ${pluginTargetDir}?`,
+      message: `Create plugin "${pluginDirName}" in ${displayDir}?`,
     });
 
     if (clack.isCancel(confirmCreate) || !confirmCreate) {
@@ -45,17 +122,18 @@ export async function createPlugin(
     }
   }
 
-  // Copy plugin template
-  await copyTemplateUtil('plugin', pluginTargetDir, pluginDirName);
+  await withCleanupOnInterrupt(pluginTargetDir, pluginDirName, async () => {
+    await runTasks([
+      createTask('Copying plugin template', () => copyTemplateUtil('plugin', pluginTargetDir)),
+      createTask('Installing dependencies', () => installDependenciesWithSpinner(pluginTargetDir)),
+    ]);
 
-  // Install dependencies
-  await installDependencies(pluginTargetDir);
-
-  console.info(`\n${colors.green('✓')} Plugin "${pluginDirName}" created successfully!`);
-  console.info(`\nNext steps:`);
-  console.info(`  cd ${pluginDirName}`);
-  console.info(`  bun run build`);
-  console.info(`  bun run test\n`);
+    console.info(`\n${colors.green('✓')} Plugin "${pluginDirName}" created successfully!`);
+    console.info(`\nNext steps:`);
+    console.info(`  cd ${pluginDirName}`);
+    console.info(`  bun run build`);
+    console.info(`  bun run test\n`);
+  });
 }
 
 /**
@@ -80,8 +158,9 @@ export async function createAgent(
   }
 
   if (!isNonInteractive) {
+    const displayDir = getDisplayDirectory(targetDir);
     const confirmCreate = await clack.confirm({
-      message: `Create agent "${agentName}" at ${agentFilePath}?`,
+      message: `Create agent "${agentName}" in ${displayDir}?`,
     });
 
     if (clack.isCancel(confirmCreate) || !confirmCreate) {
@@ -102,9 +181,9 @@ export async function createAgent(
 
   await fs.writeFile(agentFilePath, JSON.stringify(agentCharacter, null, 2));
 
-  if (!isNonInteractive) {
-    console.info(`\n${colors.green('✓')} Agent "${agentName}" created successfully!`);
-  }
+  // Always show success message and usage instructions - this is critical information
+  // that users need regardless of interactive/non-interactive mode
+  console.info(`\n${colors.green('✓')} Agent "${agentName}" created successfully!`);
   console.info(`Agent character created successfully at: ${agentFilePath}`);
   console.info(`\nTo use this agent:`);
   console.info(`  elizaos agent start --path ${agentFilePath}\n`);
@@ -118,6 +197,7 @@ export async function createTEEProject(
   targetDir: string,
   database: string,
   aiModel: string,
+  embeddingModel?: string,
   isNonInteractive = false
 ): Promise<void> {
   const teeTargetDir = join(targetDir, projectName);
@@ -129,8 +209,9 @@ export async function createTEEProject(
   }
 
   if (!isNonInteractive) {
+    const displayDir = getDisplayDirectory(targetDir);
     const confirmCreate = await clack.confirm({
-      message: `Create TEE project "${projectName}" in ${teeTargetDir}?`,
+      message: `Create TEE project "${projectName}" in ${displayDir}?`,
     });
 
     if (clack.isCancel(confirmCreate) || !confirmCreate) {
@@ -139,22 +220,48 @@ export async function createTEEProject(
     }
   }
 
-  // Copy TEE template
-  await copyTemplateUtil('project-tee-starter', teeTargetDir, projectName);
+  await withCleanupOnInterrupt(teeTargetDir, projectName, async () => {
+    // Create project directory first
+    await fs.mkdir(teeTargetDir, { recursive: true });
 
-  // Set up project environment
-  await setupProjectEnvironment(teeTargetDir, database, aiModel, isNonInteractive);
+    // Handle interactive configuration before spinner tasks
+    if (!isNonInteractive) {
+      const { setupAIModelConfig, setupEmbeddingModelConfig } = await import('./setup');
+      const { promptAndStorePostgresUrl } = await import('@/src/utils');
+      const envFilePath = `${teeTargetDir}/.env`;
 
-  // Install dependencies
-  await installDependencies(teeTargetDir);
+      // Handle PostgreSQL configuration
+      if (database === 'postgres') {
+        await promptAndStorePostgresUrl(envFilePath);
+      }
 
-  // Build the project
-  await buildProject(teeTargetDir);
+      // Handle AI model configuration
+      if (aiModel !== 'local' || embeddingModel) {
+        if (aiModel !== 'local') {
+          await setupAIModelConfig(aiModel, envFilePath, false);
+        }
+        if (embeddingModel) {
+          await setupEmbeddingModelConfig(embeddingModel, envFilePath, false);
+        }
+      }
+    }
 
-  console.info(`\n${colors.green('✓')} TEE project "${projectName}" created successfully!`);
-  console.info(`\nNext steps:`);
-  console.info(`  cd ${projectName}`);
-  console.info(`  bun run dev\n`);
+    await runTasks([
+      createTask('Copying TEE template', () =>
+        copyTemplateUtil('project-tee-starter', teeTargetDir)
+      ),
+      createTask('Setting up project environment', () =>
+        setupProjectEnvironment(teeTargetDir, database, aiModel, embeddingModel, true)
+      ),
+      createTask('Installing dependencies', () => installDependenciesWithSpinner(teeTargetDir)),
+      createTask('Building project', () => buildProjectWithSpinner(teeTargetDir, false)),
+    ]);
+
+    console.info(`\n${colors.green('✓')} TEE project "${projectName}" created successfully!`);
+    console.info(`\nNext steps:`);
+    console.info(`  cd ${projectName}`);
+    console.info(`  bun run dev\n`);
+  });
 }
 
 /**
@@ -165,6 +272,7 @@ export async function createProject(
   targetDir: string,
   database: string,
   aiModel: string,
+  embeddingModel?: string,
   isNonInteractive = false
 ): Promise<void> {
   // Handle current directory case
@@ -177,8 +285,10 @@ export async function createProject(
   }
 
   if (!isNonInteractive) {
+    const displayDir = getDisplayDirectory(targetDir);
+    const displayProjectName = projectName === '.' ? 'project' : `project "${projectName}"`;
     const confirmCreate = await clack.confirm({
-      message: `Create project "${projectName}" in ${projectTargetDir}?`,
+      message: `Create ${displayProjectName} in ${displayDir}?`,
     });
 
     if (clack.isCancel(confirmCreate) || !confirmCreate) {
@@ -187,24 +297,58 @@ export async function createProject(
     }
   }
 
-  // Copy project template
-  // For current directory projects, use the directory name as the project name
-  const templateName =
-    projectName === '.' ? targetDir.split('/').pop() || 'eliza-project' : projectName;
-  await copyTemplateUtil('project-starter', projectTargetDir, templateName);
+  // only use cleanup wrapper for new directories, not current directory
+  const createFn = async () => {
+    // Create project directory first if it's not current directory
+    if (projectName !== '.') {
+      await fs.mkdir(projectTargetDir, { recursive: true });
+    }
 
-  // Set up project environment
-  await setupProjectEnvironment(projectTargetDir, database, aiModel, isNonInteractive);
+    // Handle interactive configuration before spinner tasks
+    if (!isNonInteractive) {
+      const { setupAIModelConfig, setupEmbeddingModelConfig } = await import('./setup');
+      const { promptAndStorePostgresUrl } = await import('@/src/utils');
+      const envFilePath = `${projectTargetDir}/.env`;
 
-  // Install dependencies
-  await installDependencies(projectTargetDir);
+      // Handle PostgreSQL configuration
+      if (database === 'postgres') {
+        await promptAndStorePostgresUrl(envFilePath);
+      }
 
-  // Build the project
-  await buildProject(projectTargetDir);
+      // Handle AI model configuration
+      if (aiModel !== 'local' || embeddingModel) {
+        if (aiModel !== 'local') {
+          await setupAIModelConfig(aiModel, envFilePath, false);
+        }
+        if (embeddingModel) {
+          await setupEmbeddingModelConfig(embeddingModel, envFilePath, false);
+        }
+      }
+    }
 
-  const displayName = projectName === '.' ? 'Project' : `Project "${projectName}"`;
-  console.info(`\n${colors.green('✓')} ${displayName} initialized successfully!`);
-  console.info(`\nNext steps:`);
-  console.info(`  cd ${projectName}`);
-  console.info(`  bun run dev\n`);
+    await runTasks([
+      createTask('Copying project template', () =>
+        copyTemplateUtil('project-starter', projectTargetDir)
+      ),
+      createTask('Setting up project environment', () =>
+        setupProjectEnvironment(projectTargetDir, database, aiModel, embeddingModel, true)
+      ),
+      createTask('Installing dependencies', () => installDependenciesWithSpinner(projectTargetDir)),
+      createTask('Building project', () => buildProjectWithSpinner(projectTargetDir, false)),
+    ]);
+
+    const displayName = projectName === '.' ? 'Project' : `Project "${projectName}"`;
+    console.info(`\n${colors.green('✓')} ${displayName} initialized successfully!`);
+    console.info(`\nNext steps:`);
+    console.info(`  cd ${projectName}`);
+    console.info(`  bun run dev\n`);
+  };
+
+  if (projectName === '.') {
+    // for current directory, no cleanup needed
+    await createFn();
+  } else {
+    // for new directory, use cleanup wrapper
+    await withCleanupOnInterrupt(projectTargetDir, projectName, createFn);
+  }
 }

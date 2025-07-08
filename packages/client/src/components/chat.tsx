@@ -1,4 +1,3 @@
-import { Separator } from '@/components/ui/separator';
 import CopyButton from '@/components/copy-button';
 import DeleteButton from '@/components/delete-button';
 import RetryButton from '@/components/retry-button';
@@ -16,7 +15,7 @@ import { AnimatedMarkdown } from '@/components/ui/chat/animated-markdown';
 import { useAutoScroll } from '@/components/ui/chat/hooks/useAutoScroll';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { SplitButton, type SplitButtonAction } from '@/components/ui/split-button';
+import { SplitButton } from '@/components/ui/split-button';
 import { CHAT_SOURCE, GROUP_CHAT_SOURCE, USER_NAME } from '@/constants';
 import { useFileUpload } from '@/hooks/use-file-upload';
 import {
@@ -31,7 +30,7 @@ import {
 } from '@/hooks/use-query-hooks';
 import { useSocketChat } from '@/hooks/use-socket-chat';
 import { useToast } from '@/hooks/use-toast';
-import { apiClient } from '@/lib/api';
+import { createElizaClient } from '@/lib/api-client-config';
 import clientLogger from '@/lib/logger';
 import { parseMediaFromText, removeMediaUrlsFromText, type MediaInfo } from '@/lib/media-utils';
 import {
@@ -49,23 +48,22 @@ import {
   ContentType as CoreContentType,
   validateUuid,
 } from '@elizaos/core';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@radix-ui/react-collapsible';
 import { useQueryClient } from '@tanstack/react-query';
 import {
-  ChevronRight,
+  Trash,
+  StopCircle,
+  ArrowUpFromLine,
   Edit,
   Eraser,
-  History,
-  Info,
+  Clock,
+  ChevronDown,
   Loader2,
-  MessageSquarePlus,
   PanelRight,
   PanelRightClose,
   Plus,
   Trash2,
 } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import AIWriter from 'react-aiwriter';
 import { AgentSidebar } from './agent-sidebar';
 import { ChatInputArea } from './ChatInputArea';
 import { ChatMessageListComponent } from './ChatMessageListComponent';
@@ -84,6 +82,10 @@ import { useSidebarState } from '@/hooks/use-sidebar-state';
 import { usePanelWidthState } from '@/hooks/use-panel-width-state';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import type { MessageChannel } from '@/types';
+import { useLocation } from 'react-router-dom';
+import { useAgentManagement } from '@/hooks/use-agent-management';
+import { useDeleteAgent } from '@/hooks/use-delete-agent';
+import { exportCharacterAsJson } from '@/lib/export-utils';
 moment.extend(relativeTime);
 
 const DEFAULT_SERVER_ID = '00000000-0000-0000-0000-000000000000' as UUID;
@@ -105,6 +107,10 @@ interface ChatUIState {
   currentDmChannelId: UUID | null;
   isCreatingDM: boolean;
   isMobile: boolean; // Add mobile state
+}
+
+export interface ChatLocationState {
+  forceNew?: boolean;
 }
 
 // Message content component - exported for use in ChatMessageListComponent
@@ -140,9 +146,6 @@ export function MessageContent({
   agentAvatarMap?: Record<UUID, string | null>;
   chatType?: ChannelType;
 }) {
-  const agentData =
-    !isUser && getAgentInMessage ? getAgentInMessage(message.senderId) : agentForTts;
-
   return (
     <div className="flex flex-col w-full">
       <ChatBubbleMessage
@@ -150,25 +153,7 @@ export function MessageContent({
         {...(isUser ? { variant: 'sent' } : {})}
         {...(!message.text && !message.attachments?.length ? { className: 'bg-transparent' } : {})}
       >
-        {!isUser && agentData && (
-          <div className="w-full">
-            {message.thought && (
-              <Collapsible className="mb-1">
-                <CollapsibleTrigger className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors group">
-                  <ChevronRight className="h-4 w-4 transition-transform group-data-[state=open]:rotate-90" />
-                  {(agentData as Agent)?.name || 'Agent'}'s Thought Process
-                </CollapsibleTrigger>
-                <CollapsibleContent className="pl-5 pt-1">
-                  <Badge variant="outline" className="text-xs">
-                    {message.thought}
-                  </Badge>
-                </CollapsibleContent>
-              </Collapsible>
-            )}
-          </div>
-        )}
-
-        <div className="py-2">
+        <div>
           {(() => {
             if (!message.text) return null;
 
@@ -223,14 +208,20 @@ export function MessageContent({
               title={attachment.title || 'Attachment'}
             />
           ))}
-
-        {(message.text || message.attachments?.length) && message.createdAt && (
-          <ChatBubbleTimestamp timestamp={moment(message.createdAt).format('LT')} />
-        )}
       </ChatBubbleMessage>
 
-      <div className="flex justify-between items-end w-full">
-        <div className="flex items-center gap-1">
+      <div className="flex items-center justify-between w-full py-1">
+        <div>
+          {!isUser && (message.text || message.attachments?.length) && message.createdAt && (
+            <ChatBubbleTimestamp
+              className="text-muted-foreground"
+              timestamp={moment(message.createdAt).format('LT')}
+            />
+          )}
+        </div>
+        <div
+          className={`flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
+        >
           {!isUser && message.text && !message.isLoading && agentForTts?.id && (
             <>
               <CopyButton text={message.text} />
@@ -238,16 +229,9 @@ export function MessageContent({
             </>
           )}
           {isUser && message.text && !message.isLoading && onRetry && (
-            <RetryButton onClick={() => onRetry(message.text!)} />
+            <RetryButton onClick={() => onRetry(message)} />
           )}
           <DeleteButton onClick={() => onDelete(message.id as string)} />
-        </div>
-        <div>
-          {message.actions && message.actions.length > 0 && (
-            <Badge variant="outline" className="text-sm">
-              {Array.isArray(message.actions) ? message.actions.join(', ') : message.actions}
-            </Badge>
-          )}
         </div>
       </div>
     </div>
@@ -285,11 +269,19 @@ export default function Chat({
     isMobile: false,
   });
 
+  const location = useLocation();
+  const state = location.state as ChatLocationState | null;
+  const forceNew = state?.forceNew || false;
+
+  const [shouldForceNew, setShouldForceNew] = useState(forceNew);
+
   // Determine if we should use floating mode - either from width detection OR mobile
   const isFloatingMode = isFloatingModeFromWidth || chatState.isMobile;
 
   // Confirmation dialogs
   const { confirm, isOpen, onOpenChange, onConfirm, options } = useConfirmation();
+
+  const { stopAgent, isAgentStopping } = useAgentManagement();
 
   // Helper to update chat state
   const updateChatState = useCallback((updates: Partial<ChatUIState>) => {
@@ -301,6 +293,8 @@ export default function Chat({
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const inputDisabledRef = useRef<boolean>(false);
+  const chatTitleRef = useRef<string>('');
 
   // For DM, we need agent data. For GROUP, we need channel data
   const { data: agentDataResponse, isLoading: isLoadingAgent } = useAgent(
@@ -317,10 +311,14 @@ export default function Chat({
       } as Agent)
     : undefined;
 
+  const { handleDelete: handleDeleteAgent, isDeleting: isDeletingAgent } =
+    useDeleteAgent(targetAgentData);
+
   // Use the new hooks for DM channel management
   const { data: agentDmChannels = [], isLoading: isLoadingAgentDmChannels } = useDmChannelsForAgent(
     chatType === ChannelType.DM ? contextId : undefined
   );
+
   const createDmChannelMutation = useCreateDmChannel();
 
   // Group chat specific data
@@ -334,6 +332,30 @@ export default function Chat({
 
   const { data: agentsResponse } = useAgentsWithDetails();
   const allAgents = agentsResponse?.agents || [];
+
+  const latestChannel = agentDmChannels[0]; // adjust sorting if needed
+
+  // Get the final channel ID for hooks
+  const finalChannelIdForHooks: UUID | undefined =
+    chatType === ChannelType.DM
+      ? chatState.currentDmChannelId || undefined
+      : contextId || undefined;
+
+  const finalServerIdForHooks: UUID | undefined = useMemo(() => {
+    return chatType === ChannelType.DM ? DEFAULT_SERVER_ID : serverId || undefined;
+  }, [chatType, serverId]);
+
+  const { data: latestChannelMessages = [], isLoading: isLoadingLatestChannelMessages } =
+    useChannelMessages(latestChannel?.id, finalServerIdForHooks);
+
+  const {
+    data: messages = [],
+    isLoading: isLoadingMessages,
+    addMessage,
+    updateMessage,
+    removeMessage,
+    clearMessages,
+  } = useChannelMessages(finalChannelIdForHooks, finalServerIdForHooks);
 
   // Get agents in the current group
   const groupAgents = useMemo(() => {
@@ -385,6 +407,33 @@ export default function Chat({
   const handleNewDmChannel = useCallback(
     async (agentIdForNewChannel: UUID | undefined) => {
       if (!agentIdForNewChannel || chatType !== 'DM') return;
+
+      if (latestChannel) {
+        try {
+          const elizaClient = createElizaClient();
+          const latestMessages = await elizaClient.messaging.getChannelMessages(latestChannel.id, {
+            limit: 30,
+          });
+
+          const hasAutoName = isAutoGeneratedChatName(latestChannel.name);
+          const isEmpty = (latestMessages?.messages?.length ?? 0) === 0;
+
+          if (hasAutoName && isEmpty) {
+            clientLogger.info(
+              '[Chat] Latest DM channel is empty with auto-generated name or has no messages, reusing instead of creating.'
+            );
+            updateChatState({ currentDmChannelId: latestChannel.id });
+            return;
+          } else {
+            clientLogger.info(
+              '[Chat] Latest DM channel has messages or customized name, proceeding to create a new one.'
+            );
+          }
+        } catch (error) {
+          clientLogger.error('[Chat] Failed to fetch latest DM channel messages:', error);
+        }
+      }
+
       const newChatName = `Chat - ${moment().format('MMM D, HH:mm:ss')}`;
       clientLogger.info(
         `[Chat] Creating new distinct DM channel with agent ${agentIdForNewChannel}, name: "${newChatName}"`
@@ -394,20 +443,21 @@ export default function Chat({
         // Mark as auto-created so the effect doesn't attempt a duplicate.
         autoCreatedDmRef.current = true;
 
-        const newChannel = await createDmChannelMutation.mutateAsync({
+        await createDmChannelMutation.mutateAsync({
           agentId: agentIdForNewChannel,
           channelName: newChatName, // Provide a unique name
         });
-        updateChatState({ currentDmChannelId: newChannel.id, input: '' });
+        updateChatState({ input: '' });
         setTimeout(() => safeScrollToBottom(), 150);
       } catch (error) {
         clientLogger.error('[Chat] Error creating new distinct DM channel:', error);
         // Toast is handled by the mutation hook
+        updateChatState({ currentDmChannelId: null, input: '' });
       } finally {
         updateChatState({ isCreatingDM: false });
       }
     },
-    [chatType, createDmChannelMutation, updateChatState, safeScrollToBottom]
+    [chatType, createDmChannelMutation, updateChatState, safeScrollToBottom, latestChannel]
   );
 
   // Handle DM channel selection
@@ -442,7 +492,8 @@ export default function Chat({
       async () => {
         clientLogger.info(`[Chat] Deleting DM channel ${channelToDelete.id}`);
         try {
-          await apiClient.deleteChannel(channelToDelete.id);
+          const elizaClient = createElizaClient();
+          await elizaClient.messaging.deleteChannel(channelToDelete.id);
 
           // --- Optimistically update the React-Query cache so UI refreshes instantly ---
           queryClient.setQueryData<MessageChannel[] | undefined>(
@@ -500,6 +551,45 @@ export default function Chat({
     currentClientEntityId,
   ]);
 
+  useEffect(() => {
+    if (
+      latestChannel &&
+      !isLoadingLatestChannelMessages &&
+      latestChannelMessages &&
+      targetAgentData?.id &&
+      shouldForceNew
+    ) {
+      handleNewDmChannel(targetAgentData.id);
+      setShouldForceNew(false);
+    }
+  }, [
+    shouldForceNew,
+    setShouldForceNew,
+    handleNewDmChannel,
+    targetAgentData?.id,
+    latestChannel,
+    latestChannelMessages,
+    isLoadingLatestChannelMessages,
+  ]);
+
+  useEffect(() => {
+    inputDisabledRef.current = chatState.inputDisabled;
+  }, [chatState.inputDisabled]);
+
+  useEffect(() => {
+    const currentChannel = agentDmChannels.find((c) => c.id === chatState.currentDmChannelId);
+    if (currentChannel?.name) {
+      chatTitleRef.current = currentChannel.name;
+    }
+  }, [agentDmChannels, chatState.currentDmChannelId]);
+
+  useEffect(() => {
+    if (!isLoadingAgentDmChannels && agentDmChannels.length > 0) {
+      clientLogger.info('[Chat] Selecting first available DM channel:', agentDmChannels[0].id);
+      updateChatState({ currentDmChannelId: agentDmChannels[0].id });
+    }
+  }, [agentDmChannels, isLoadingAgentDmChannels, updateChatState]);
+
   // Effect to handle initial DM channel selection or creation
   useEffect(() => {
     if (chatType === ChannelType.DM && targetAgentData?.id) {
@@ -517,32 +607,18 @@ export default function Chat({
         return; // Exit early, let the effect run again with cleared state
       }
 
-      if (!isLoadingAgentDmChannels) {
-        // If we now have channels, ensure one is selected
-        if (agentDmChannels.length > 0) {
-          const currentValid = agentDmChannels.some((c) => c.id === chatState.currentDmChannelId);
-          if (!currentValid) {
-            clientLogger.info(
-              '[Chat] Selecting first available DM channel:',
-              agentDmChannels[0].id
-            );
-            updateChatState({ currentDmChannelId: agentDmChannels[0].id });
-            autoCreatedDmRef.current = false;
-          }
-        } else {
-          if (
-            agentDmChannels.length === 0 &&
-            !initialDmChannelId &&
-            !autoCreatedDmRef.current &&
-            !chatState.isCreatingDM &&
-            !createDmChannelMutation.isPending
-          ) {
-            // No channels at all and none expected via URL -> create exactly one
-            clientLogger.info('[Chat] No existing DM channels found; auto-creating a fresh one.');
-            autoCreatedDmRef.current = true;
-            handleNewDmChannel(targetAgentData.id);
-          }
-        }
+      if (
+        !isLoadingAgentDmChannels &&
+        agentDmChannels.length === 0 &&
+        !initialDmChannelId &&
+        !autoCreatedDmRef.current &&
+        !chatState.isCreatingDM &&
+        !createDmChannelMutation.isPending
+      ) {
+        // No channels at all and none expected via URL -> create exactly one
+        clientLogger.info('[Chat] No existing DM channels found; auto-creating a fresh one.');
+        autoCreatedDmRef.current = true;
+        handleNewDmChannel(targetAgentData.id);
       }
     } else if (chatType !== ChannelType.DM && chatState.currentDmChannelId !== null) {
       // Only reset if necessary
@@ -598,25 +674,6 @@ export default function Chat({
     setSidebarVisible,
   ]);
 
-  // Get the final channel ID for hooks
-  const finalChannelIdForHooks: UUID | undefined =
-    chatType === ChannelType.DM
-      ? chatState.currentDmChannelId || undefined
-      : contextId || undefined;
-
-  const finalServerIdForHooks: UUID | undefined = useMemo(() => {
-    return chatType === ChannelType.DM ? DEFAULT_SERVER_ID : serverId || undefined;
-  }, [chatType, serverId]);
-
-  const {
-    data: messages = [],
-    isLoading: isLoadingMessages,
-    addMessage,
-    updateMessage,
-    removeMessage,
-    clearMessages,
-  } = useChannelMessages(finalChannelIdForHooks, finalServerIdForHooks);
-
   const { mutate: deleteMessageCentral } = useDeleteChannelMessage();
   const { mutate: clearMessagesCentral } = useClearChannelMessages();
 
@@ -642,6 +699,51 @@ export default function Chat({
     prevMessageCountRef.current = messages.length;
   }, [messages, autoScrollEnabled, safeScrollToBottom, finalChannelIdForHooks]);
 
+  function isAutoGeneratedChatName(name: string | undefined): boolean {
+    return !!name?.match(/^Chat - [A-Z][a-z]{2} \d{1,2}, \d{2}:\d{2}(:\d{2})?$/);
+  }
+
+  const updateChatTitle = async () => {
+    const shouldUpdate: boolean =
+      !!chatTitleRef.current &&
+      isAutoGeneratedChatName(chatTitleRef.current) &&
+      chatType === ChannelType.DM;
+
+    if (!shouldUpdate) {
+      return;
+    }
+
+    const elizaClient = createElizaClient();
+    const data = await elizaClient.messaging.generateChannelTitle(
+      finalChannelIdForHooks,
+      contextId
+    );
+
+    const title = data?.title;
+    const participants = await elizaClient.messaging.getChannelParticipants(
+      chatState.currentDmChannelId
+    );
+    if (title && participants) {
+      // Handle different possible response formats for participants
+      let participantIds = [];
+      if (participants && Array.isArray(participants.participants)) {
+        participantIds = participants.participants.map((p) => p.userId);
+      } else if (participants && Array.isArray(participants)) {
+        participantIds = participants.map((p) => p.userId || p.id || p);
+      }
+
+      await elizaClient.messaging.updateChannel(finalChannelIdForHooks, {
+        name: title,
+        participantCentralUserIds: participantIds,
+      });
+
+      const currentUserId = getEntityId();
+      queryClient.invalidateQueries({
+        queryKey: ['dmChannels', contextId, currentUserId],
+      });
+    }
+  };
+
   const { sendMessage, animatedMessageId } = useSocketChat({
     channelId: finalChannelIdForHooks,
     currentUserId: currentClientEntityId,
@@ -651,6 +753,7 @@ export default function Chat({
     messages,
     onAddMessage: (message: UiMessage) => {
       addMessage(message);
+      updateChatTitle();
       if (message.isAgent) safeScrollToBottom();
     },
     onUpdateMessage: (messageId: string, updates: Partial<UiMessage>) => {
@@ -731,7 +834,7 @@ export default function Chat({
 
     if (
       (!chatState.input.trim() && selectedFiles.length === 0) ||
-      chatState.inputDisabled ||
+      inputDisabledRef.current ||
       !channelIdToUse ||
       !finalServerIdForHooks ||
       !currentClientEntityId ||
@@ -739,11 +842,10 @@ export default function Chat({
     )
       return;
 
-    updateChatState({ inputDisabled: true });
     const tempMessageId = randomUUID() as UUID;
     let messageText = chatState.input.trim();
     const currentInputVal = chatState.input;
-    updateChatState({ input: '' });
+    updateChatState({ input: '', inputDisabled: true });
     const currentSelectedFiles = [...selectedFiles];
     clearFiles();
     formRef.current?.reset();
@@ -821,8 +923,11 @@ export default function Chat({
         isLoading: false,
         text: `${optimisticUiMessage.text || 'Attachment(s)'} (Failed to send)`,
       });
-    } finally {
+      // Re-enable input on error
       updateChatState({ inputDisabled: false });
+    } finally {
+      // Let the server control input state via control messages
+      // Only focus the input, don't re-enable it
       inputRef.current?.focus();
     }
   };
@@ -838,20 +943,55 @@ export default function Chat({
     }
   };
 
-  const handleRetryMessage = (messageText: string) => {
-    if (!messageText.trim() || chatState.inputDisabled) return;
-    // Set the input to the message text and submit it
-    updateChatState({ input: messageText });
-    // Focus the input after a brief delay to ensure state has updated
-    setTimeout(() => {
-      if (inputRef.current) {
-        inputRef.current.focus();
-        // Trigger form submission
-        if (formRef.current) {
-          formRef.current.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
-        }
-      }
-    }, 10);
+  const handleRetryMessage = async (message: UiMessage) => {
+    if (inputDisabledRef.current || (!message.text?.trim() && message.attachments?.length === 0)) {
+      return;
+    }
+    updateChatState({ inputDisabled: true });
+    const retryMessageId = randomUUID() as UUID;
+    const finalTextContent =
+      message.text?.trim() || `Shared ${message.attachments?.length} file(s).`;
+
+    const optimisticUiMessage: UiMessage = {
+      id: retryMessageId,
+      text: message.text,
+      name: USER_NAME,
+      createdAt: Date.now(),
+      senderId: currentClientEntityId,
+      isAgent: false,
+      isLoading: true,
+      channelId: message.channelId,
+      serverId: finalServerIdForHooks,
+      source: chatType === ChannelType.DM ? CHAT_SOURCE : GROUP_CHAT_SOURCE,
+      attachments: message.attachments,
+    };
+
+    addMessage(optimisticUiMessage);
+    safeScrollToBottom();
+
+    try {
+      await sendMessage(
+        finalTextContent,
+        finalServerIdForHooks!,
+        chatType === ChannelType.DM ? CHAT_SOURCE : GROUP_CHAT_SOURCE,
+        message.attachments,
+        retryMessageId,
+        undefined,
+        finalChannelIdForHooks!
+      );
+    } catch (error) {
+      clientLogger.error('Error sending message or uploading files:', error);
+      toast({
+        title: 'Error Sending Message',
+        description: error instanceof Error ? error.message : 'Could not send message.',
+        variant: 'destructive',
+      });
+      updateMessage(retryMessageId, {
+        isLoading: false,
+        text: `${optimisticUiMessage.text || 'Attachment(s)'} (Failed to send)`,
+      });
+      updateChatState({ inputDisabled: false });
+    }
   };
 
   const handleClearChat = () => {
@@ -913,99 +1053,125 @@ export default function Chat({
     );
   }
 
+  const onDeleteAgent = () => {
+    if (isDeletingAgent) return;
+    confirm(
+      {
+        title: 'Delete Agent',
+        description: `Are you sure you want to delete the agent "${targetAgentData.name}"? This action cannot be undone.`,
+        confirmText: 'Delete',
+        variant: 'destructive',
+      },
+      handleDeleteAgent
+    );
+  };
+
   // Chat header
   const renderChatHeader = () => {
     if (chatType === ChannelType.DM && targetAgentData) {
       return (
-        <div className="flex items-center justify-between mb-4 p-3 bg-card rounded-lg border">
+        <div className="flex items-center justify-between mb-4 p-3">
           <div className="flex items-center gap-3 min-w-0 flex-1">
-            <div className="relative flex-shrink-0">
-              <Avatar className="size-4 sm:size-10 border rounded-full">
-                <AvatarImage src={getAgentAvatar(targetAgentData)} />
-              </Avatar>
-              {targetAgentData?.status === AgentStatus.ACTIVE ? (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="absolute bottom-0 right-0 size-2 sm:size-[10px] rounded-full border border-white bg-green-500" />
-                  </TooltipTrigger>
-                  <TooltipContent side="right">
-                    <p>Agent is active</p>
-                  </TooltipContent>
-                </Tooltip>
-              ) : (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="absolute bottom-0 right-0 size-2 sm:size-[10px] rounded-full border border-white bg-muted-foreground" />
-                  </TooltipTrigger>
-                  <TooltipContent side="right">
-                    <p>Agent is inactive</p>
-                  </TooltipContent>
-                </Tooltip>
-              )}
-            </div>
-            <div className="flex flex-col min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <h2 className="font-semibold text-lg truncate max-w-[80px] sm:max-w-none">
-                  {targetAgentData?.name || 'Agent'}
-                </h2>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0 flex-shrink-0"
-                      onClick={() => updateChatState({ showProfileOverlay: true })}
-                    >
-                      <Info className="size-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    <p>View agent profile</p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-              {targetAgentData?.bio && (
-                <p className="text-sm text-muted-foreground line-clamp-1">
-                  <span className="sm:hidden">
-                    {/* Mobile: Show only first 30 characters */}
-                    {((text) => (text.length > 30 ? `${text.substring(0, 30)}...` : text))(
-                      Array.isArray(targetAgentData?.bio)
-                        ? targetAgentData?.bio[0] || ''
-                        : targetAgentData?.bio || ''
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="py-6 px-2 flex-shrink-0">
+                  <div className="relative flex-shrink-0">
+                    <Avatar className="size-4 sm:size-10 border rounded-full">
+                      <AvatarImage src={getAgentAvatar(targetAgentData)} />
+                    </Avatar>
+                    {targetAgentData?.status === AgentStatus.ACTIVE ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="absolute bottom-0 right-0 size-2 sm:size-[10px] rounded-full border border-white bg-green-500" />
+                        </TooltipTrigger>
+                        <TooltipContent side="right">
+                          <p>Agent is active</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="absolute bottom-0 right-0 size-2 sm:size-[10px] rounded-full border border-white bg-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent side="right">
+                          <p>Agent is inactive</p>
+                        </TooltipContent>
+                      </Tooltip>
                     )}
-                  </span>
-                  <span className="hidden sm:inline">
-                    {/* Desktop: Show full first bio entry or full bio */}
-                    {Array.isArray(targetAgentData.bio)
-                      ? targetAgentData.bio[0]
-                      : targetAgentData.bio}
-                  </span>
-                </p>
-              )}
-            </div>
+                  </div>
+                  <div>
+                    <h2 className="font-semibold text-lg truncate max-w-[80px] sm:max-w-none">
+                      {targetAgentData?.name || 'Agent'}
+                    </h2>
+                  </div>
+                  <ChevronDown className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent
+                align="start"
+                side="bottom"
+                className="min-w-36 w-[var(--radix-dropdown-menu-trigger-width)]"
+              >
+                <DropdownMenuItem
+                  onClick={() => {
+                    exportCharacterAsJson(targetAgentData, toast);
+                  }}
+                >
+                  <ArrowUpFromLine className="h-4 w-4 mr-2" />
+                  Export
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem
+                  onClick={() => {
+                    if (targetAgentData && !isAgentStopping(targetAgentData.id)) {
+                      stopAgent(targetAgentData);
+                    }
+                  }}
+                >
+                  <StopCircle className="h-4 w-4 mr-2" />
+                  Stop Agent
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={() => {
+                    if (targetAgentData && !isDeletingAgent) {
+                      onDeleteAgent();
+                    }
+                  }}
+                  className="text-destructive focus:text-destructive hover:bg-red-50 dark:hover:bg-red-950/50"
+                >
+                  <Trash className="h-4 w-4 mr-2" />
+                  Delete Agent
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
+
           <div className="flex gap-1 sm:gap-2 items-center flex-shrink-0">
             {chatType === ChannelType.DM && (
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
                 {agentDmChannels.length > 0 && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
                         variant="outline"
                         size="sm"
-                        className="w-8 sm:max-w-[300px] sm:w-auto"
+                        className="w-8 h-9 sm:max-w-[300px] sm:w-auto rounded-[12px]"
                       >
-                        <History className="size-4 flex-shrink-0" />
-                        <span className="hidden md:inline truncate text-xs sm:text-sm sm:ml-2">
+                        <Clock className="size-4 flex-shrink-0 text-muted-foreground" />
+                        <span className="hidden md:inline truncate text-xs sm:text-sm">
                           {agentDmChannels.find((c) => c.id === chatState.currentDmChannelId)
                             ?.name || 'Select Chat'}
                         </span>
-                        <Badge
-                          variant="secondary"
-                          className="hidden md:inline-flex ml-1 sm:ml-2 text-xs"
+                        <Button
+                          variant="ghost"
+                          size={'icon'}
+                          className="hidden md:inline-flex text-xs text-muted-foreground"
                         >
-                          {agentDmChannels.length}
-                        </Badge>
+                          <ChevronDown />
+                        </Button>
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-[280px] sm:w-[320px]">
@@ -1075,7 +1241,7 @@ export default function Chat({
                   }}
                   actions={[
                     {
-                      label: 'Clear Messages',
+                      label: 'Clear Chat',
                       onClick: handleClearChat,
                       icon: <Eraser className="size-4" />,
                       disabled: !messages || messages.length === 0,
@@ -1090,31 +1256,30 @@ export default function Chat({
                   ]}
                   variant="outline"
                   size="sm"
-                  className="px-2 sm:px-3"
+                  mainButtonClassName="rounded-l-[12px] h-9"
+                  dropdownButtonClassName="rounded-r-[12px] h-9"
                 />
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      className="w-9 h-9 rounded-[12px]"
+                      variant={'outline'}
+                      onClick={toggleSidebar}
+                    >
+                      {showSidebar ? (
+                        <PanelRightClose className="size-4" />
+                      ) : (
+                        <PanelRight className="size-4" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p>{showSidebar ? 'Close SidePanel' : 'Open SidePanel'}</p>
+                  </TooltipContent>
+                </Tooltip>
               </div>
             )}
-
-            <Separator orientation="vertical" className="h-8 hidden sm:block" />
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="px-2 sm:px-3 h-8 w-8 sm:w-auto ml-1 sm:ml-3"
-                  onClick={toggleSidebar}
-                >
-                  {showSidebar ? (
-                    <PanelRightClose className="h-4 w-4" />
-                  ) : (
-                    <PanelRight className="h-4 w-4" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">
-                <p>{showSidebar ? 'Close SidePanel' : 'Open SidePanel'}</p>
-              </TooltipContent>
-            </Tooltip>
           </div>
         </div>
       );
@@ -1162,7 +1327,8 @@ export default function Chat({
                         },
                         async () => {
                           try {
-                            await apiClient.deleteChannel(finalChannelIdForHooks);
+                            const elizaClient = createElizaClient();
+                            await elizaClient.messaging.deleteChannel(finalChannelIdForHooks);
                             toast({
                               title: 'Group Deleted',
                               description: 'The group has been successfully deleted.',
@@ -1262,7 +1428,7 @@ export default function Chat({
                 'flex flex-col transition-all duration-300 w-full flex-1 min-h-0 overflow-hidden p-2 sm:p-4 pt-0'
               )}
             >
-              <div className="flex-1 min-h-0 overflow-hidden">
+              <div className="flex-1 min-h-0 overflow-hidden px-5 py-2">
                 <ChatMessageListComponent
                   messages={messages}
                   isLoadingMessages={isLoadingMessages}
@@ -1330,7 +1496,7 @@ export default function Chat({
                       'flex flex-col transition-all duration-300 w-full flex-1 min-h-0 overflow-hidden p-2 sm:p-4 pt-0'
                     )}
                   >
-                    <div className="flex-1 min-h-0 overflow-hidden">
+                    <div className="flex-1 min-h-0 overflow-hidden px-5 py-2">
                       <ChatMessageListComponent
                         messages={messages}
                         isLoadingMessages={isLoadingMessages}
@@ -1379,18 +1545,22 @@ export default function Chat({
             {(() => {
               let sidebarAgentId: UUID | undefined = undefined;
               let sidebarAgentName: string = 'Agent';
+              let sidebarChannelId: UUID | undefined = undefined;
 
               if (chatType === ChannelType.DM) {
                 sidebarAgentId = contextId; // This is agentId for DM
                 sidebarAgentName = targetAgentData?.name || 'Agent';
+                sidebarChannelId = chatState.currentDmChannelId || undefined;
               } else if (chatType === ChannelType.GROUP && chatState.selectedGroupAgentId) {
                 sidebarAgentId = chatState.selectedGroupAgentId;
                 const selectedAgent = allAgents.find(
                   (a) => a.id === chatState.selectedGroupAgentId
                 );
                 sidebarAgentName = selectedAgent?.name || 'Group Member';
+                sidebarChannelId = contextId; // contextId is the channelId for GROUP
               } else if (chatType === ChannelType.GROUP && !chatState.selectedGroupAgentId) {
                 sidebarAgentName = 'Group';
+                sidebarChannelId = contextId; // contextId is the channelId for GROUP
               }
 
               return (
@@ -1399,7 +1569,11 @@ export default function Chat({
                   <>
                     <ResizableHandle withHandle />
                     <ResizablePanel defaultSize={sidebarPanelSize} minSize={20} maxSize={50}>
-                      <AgentSidebar agentId={sidebarAgentId} agentName={sidebarAgentName} />
+                      <AgentSidebar
+                        agentId={sidebarAgentId}
+                        agentName={sidebarAgentName}
+                        channelId={sidebarChannelId}
+                      />
                     </ResizablePanel>
                   </>
                 )
@@ -1412,16 +1586,20 @@ export default function Chat({
         {(() => {
           let sidebarAgentId: UUID | undefined = undefined;
           let sidebarAgentName: string = 'Agent';
+          let sidebarChannelId: UUID | undefined = undefined;
 
           if (chatType === ChannelType.DM) {
             sidebarAgentId = contextId; // This is agentId for DM
             sidebarAgentName = targetAgentData?.name || 'Agent';
+            sidebarChannelId = chatState.currentDmChannelId || undefined;
           } else if (chatType === ChannelType.GROUP && chatState.selectedGroupAgentId) {
             sidebarAgentId = chatState.selectedGroupAgentId;
             const selectedAgent = allAgents.find((a) => a.id === chatState.selectedGroupAgentId);
             sidebarAgentName = selectedAgent?.name || 'Group Member';
+            sidebarChannelId = contextId; // contextId is the channelId for GROUP
           } else if (chatType === ChannelType.GROUP && !chatState.selectedGroupAgentId) {
             sidebarAgentName = 'Group';
+            sidebarChannelId = contextId; // contextId is the channelId for GROUP
           }
 
           return (
@@ -1443,7 +1621,11 @@ export default function Chat({
                       </Button>
                     </div>
                     <div className="flex-1 overflow-hidden">
-                      <AgentSidebar agentId={sidebarAgentId} agentName={sidebarAgentName} />
+                      <AgentSidebar
+                        agentId={sidebarAgentId}
+                        agentName={sidebarAgentName}
+                        channelId={sidebarChannelId}
+                      />
                     </div>
                   </div>
                 </div>

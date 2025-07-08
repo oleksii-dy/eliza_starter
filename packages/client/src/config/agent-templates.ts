@@ -48,7 +48,12 @@ export const agentTemplates: AgentTemplate[] = [
       ],
       topics: ['Discord server', 'Community assistance', 'Command handling', 'Server information'],
       adjectives: ['Helpful', 'Responsive', 'Friendly', 'Informative', 'Reliable'],
-      plugins: ['@elizaos/plugin-sql', '@elizaos/plugin-openai', '@elizaos/plugin-discord'],
+      plugins: [
+        '@elizaos/plugin-sql',
+        '@elizaos/plugin-openai',
+        '@elizaos/plugin-bootstrap',
+        '@elizaos/plugin-discord',
+      ],
       style: {
         all: [
           'Be friendly and helpful',
@@ -66,10 +71,7 @@ export const agentTemplates: AgentTemplate[] = [
         ],
       },
       settings: {
-        secrets: {
-          DISCORD_APPLICATION_ID: 'process.env.DISCORD_APPLICATION_ID',
-          DISCORD_API_TOKEN: 'process.env.DISCORD_API_TOKEN',
-        },
+        secrets: {},
       },
     },
   },
@@ -95,7 +97,12 @@ export const agentTemplates: AgentTemplate[] = [
         'FAQ responses',
       ],
       adjectives: ['Helpful', 'Responsive', 'Friendly', 'Informative', 'Reliable'],
-      plugins: ['@elizaos/plugin-sql', '@elizaos/plugin-openai', '@elizaos/plugin-telegram'],
+      plugins: [
+        '@elizaos/plugin-sql',
+        '@elizaos/plugin-openai',
+        '@elizaos/plugin-bootstrap',
+        '@elizaos/plugin-telegram',
+      ],
       style: {
         all: [
           'Be concise and clear',
@@ -118,9 +125,7 @@ export const agentTemplates: AgentTemplate[] = [
         allowDirectMessages: true,
         shouldOnlyJoinInAllowedGroups: false,
         messageTrackingLimit: 100,
-        secrets: {
-          key: 'process.env.TELEGRAM_BOT_TOKEN',
-        },
+        secrets: {},
       },
     },
   },
@@ -146,7 +151,12 @@ export const agentTemplates: AgentTemplate[] = [
         'Task management',
       ],
       adjectives: ['Responsive', 'Helpful', 'Organized', 'Team-oriented', 'Professional'],
-      plugins: ['@elizaos/plugin-sql', '@elizaos/plugin-openai', '@elizaos/plugin-slack'],
+      plugins: [
+        '@elizaos/plugin-sql',
+        '@elizaos/plugin-openai',
+        '@elizaos/plugin-bootstrap',
+        '@elizaos/plugin-slack',
+      ],
       style: {
         all: [
           'Be concise and clear',
@@ -165,14 +175,7 @@ export const agentTemplates: AgentTemplate[] = [
         ],
       },
       settings: {
-        secrets: {
-          SLACK_APP_ID: 'process.env.SLACK_APP_ID',
-          SLACK_CLIENT_ID: 'process.env.SLACK_CLIENT_ID',
-          SLACK_CLIENT_SECRET: 'process.env.SLACK_CLIENT_SECRET',
-          SLACK_SIGNING_SECRET: 'process.env.SLACK_SIGNING_SECRET',
-          SLACK_BOT_TOKEN: 'process.env.SLACK_BOT_TOKEN',
-          SLACK_VERIFICATION_TOKEN: 'process.env.SLACK_VERIFICATION_TOKEN',
-        },
+        secrets: {},
       },
     },
   },
@@ -198,7 +201,12 @@ export const agentTemplates: AgentTemplate[] = [
         'Brand voice',
       ],
       adjectives: ['Engaging', 'Concise', 'Strategic', 'Conversational', 'Creative'],
-      plugins: ['@elizaos/plugin-sql', '@elizaos/plugin-openai', '@elizaos/plugin-twitter'],
+      plugins: [
+        '@elizaos/plugin-sql',
+        '@elizaos/plugin-openai',
+        '@elizaos/plugin-bootstrap',
+        '@elizaos/plugin-twitter',
+      ],
       style: {
         all: [
           'Be concise and impactful',
@@ -222,12 +230,7 @@ export const agentTemplates: AgentTemplate[] = [
         TWITTER_ENABLE_POST_GENERATION: true,
         TWITTER_POST_INTERVAL_MIN: 90,
         TWITTER_POST_INTERVAL_MAX: 180,
-        secrets: {
-          TWITTER_API_KEY: 'process.env.TWITTER_API_KEY',
-          TWITTER_API_SECRET_KEY: 'process.env.TWITTER_API_SECRET_KEY',
-          TWITTER_ACCESS_TOKEN: 'process.env.TWITTER_ACCESS_TOKEN',
-          TWITTER_ACCESS_TOKEN_SECRET: 'process.env.TWITTER_ACCESS_TOKEN_SECRET',
-        },
+        secrets: {},
       },
     },
   },
@@ -253,7 +256,12 @@ export const agentTemplates: AgentTemplate[] = [
         'Development workflows',
       ],
       adjectives: ['Technical', 'Precise', 'Helpful', 'Organized', 'Knowledgeable'],
-      plugins: ['@elizaos/plugin-sql', '@elizaos/plugin-openai', '@elizaos/plugin-github'],
+      plugins: [
+        '@elizaos/plugin-sql',
+        '@elizaos/plugin-openai',
+        '@elizaos/plugin-bootstrap',
+        '@elizaos/plugin-github',
+      ],
       style: {
         all: [
           'Use technically precise language',
@@ -272,13 +280,7 @@ export const agentTemplates: AgentTemplate[] = [
         ],
       },
       settings: {
-        secrets: {
-          GITHUB_OWNER: 'process.env.GITHUB_OWNER',
-          GITHUB_REPO: 'process.env.GITHUB_REPO',
-          GITHUB_BRANCH: 'process.env.GITHUB_BRANCH',
-          GITHUB_PATH: 'process.env.GITHUB_PATH',
-          GITHUB_API_TOKEN: 'process.env.GITHUB_API_TOKEN',
-        },
+        secrets: {},
       },
     },
   },
@@ -304,7 +306,12 @@ export const agentTemplates: AgentTemplate[] = [
         'Visual aesthetics',
       ],
       adjectives: ['Creative', 'Visual', 'Engaging', 'Trend-aware', 'Authentic'],
-      plugins: ['@elizaos/plugin-sql', '@elizaos/plugin-openai', '@elizaos/plugin-instagram'],
+      plugins: [
+        '@elizaos/plugin-sql',
+        '@elizaos/plugin-openai',
+        '@elizaos/plugin-bootstrap',
+        '@elizaos/plugin-instagram',
+      ],
       style: {
         all: [
           'Balance visual description with compelling text',
@@ -328,12 +335,7 @@ export const agentTemplates: AgentTemplate[] = [
         ENABLE_ACTION_PROCESSING: true,
         ACTION_INTERVAL: 5,
         MAX_ACTIONS_PROCESSING: 1,
-        secrets: {
-          INSTAGRAM_USERNAME: 'process.env.INSTAGRAM_USERNAME',
-          INSTAGRAM_PASSWORD: 'process.env.INSTAGRAM_PASSWORD',
-          INSTAGRAM_APP_ID: 'process.env.INSTAGRAM_APP_ID',
-          INSTAGRAM_APP_SECRET: 'process.env.INSTAGRAM_APP_SECRET',
-        },
+        secrets: {},
       },
     },
   },

@@ -1,14 +1,35 @@
 // Export function to display banner and version
 
-import fs from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path, { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execa } from 'execa';
-import { yellow } from 'yoctocolors';
+import { UserEnvironment } from './user-environment';
+
+// Helper function to check if running from node_modules
+export function isRunningFromNodeModules(): boolean {
+  const __filename = fileURLToPath(import.meta.url);
+  return __filename.includes('node_modules');
+}
 
 // Function to get the package version
 // --- Utility: Get local CLI version from package.json ---
 export function getVersion(): string {
+  // Check if we're in the monorepo context
+  const userEnv = UserEnvironment.getInstance();
+  const monorepoRoot = userEnv.findMonorepoRoot(process.cwd());
+
+  if (monorepoRoot) {
+    // We're in the monorepo, return 'monorepo' as version
+    return 'monorepo';
+  }
+
+  // Check if running from node_modules (proper installation)
+  if (!isRunningFromNodeModules()) {
+    // Running from local dist or development build, not properly installed
+    return 'monorepo';
+  }
+
   // For ESM modules we need to use import.meta.url instead of __dirname
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = dirname(__filename);
@@ -18,11 +39,11 @@ export function getVersion(): string {
 
   // Add a simple check in case the path is incorrect
   let version = '0.0.0'; // Fallback version
-  if (!fs.existsSync(packageJsonPath)) {
+  if (!existsSync(packageJsonPath)) {
     console.error(`Warning: package.json not found at ${packageJsonPath}`);
   } else {
     try {
-      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+      const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
       version = packageJson.version || '0.0.0';
     } catch (error) {
       console.error(`Error reading or parsing package.json at ${packageJsonPath}:`, error);
@@ -59,6 +80,11 @@ const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
 
 // --- Utility: Get latest CLI version with caching ---
 export async function getLatestCliVersion(currentVersion: string): Promise<string | null> {
+  // Skip version check if we're in monorepo context
+  if (currentVersion === 'monorepo') {
+    return null;
+  }
+
   try {
     // Check cache first
     if (versionCheckCache && Date.now() - versionCheckCache.timestamp < CACHE_DURATION) {
@@ -127,6 +153,11 @@ export function showUpdateNotification(currentVersion: string, latestVersion: st
 
 // --- Utility: Global update check that can be called from anywhere ---
 export async function checkAndShowUpdateNotification(currentVersion: string): Promise<boolean> {
+  // Skip update check if we're in monorepo context
+  if (currentVersion === 'monorepo') {
+    return false;
+  }
+
   try {
     const latestVersion = await getLatestCliVersion(currentVersion);
     if (latestVersion) {
@@ -152,7 +183,6 @@ export async function displayBanner(skipUpdateCheck: boolean = false) {
   const w = '\x1b[38;5;255m';
   const r = '\x1b[0m';
   const orange = '\x1b[38;5;208m';
-  const green = '\x1b[38;5;118m';
   let versionColor = lightblue;
 
   const version = getVersion();

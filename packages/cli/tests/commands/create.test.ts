@@ -1,11 +1,19 @@
-import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
-import { execSync } from 'child_process';
-import { mkdtemp, rm, readFile } from 'fs/promises';
-import { join } from 'path';
-import { tmpdir } from 'os';
-import { existsSync } from 'fs';
-import { safeChangeDirectory, runCliCommandSilently, expectCliCommandToFail } from './test-utils';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
+import { execSync } from 'node:child_process';
+import { mkdtemp, rm, readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { existsSync } from 'node:fs';
+import {
+  safeChangeDirectory,
+  runCliCommandSilently,
+  expectCliCommandToFail,
+  crossPlatform,
+  getPlatformOptions,
+} from './test-utils';
 import { TEST_TIMEOUTS } from '../test-timeouts';
+import { getAvailableAIModels } from '../../src/commands/create/utils/selection';
+import { isValidOllamaEndpoint } from '../../src/utils/get-config';
 
 describe('ElizaOS Create Commands', () => {
   let testTmpDir: string;
@@ -22,8 +30,8 @@ describe('ElizaOS Create Commands', () => {
 
     // Setup CLI commands
     const scriptDir = join(__dirname, '..');
-    elizaosCmd = `bun run "${join(scriptDir, '../dist/index.js')}"`;
-    createElizaCmd = `bun run "${join(scriptDir, '../../create-eliza/index.mjs')}"`;
+    elizaosCmd = `bun "${join(scriptDir, '../dist/index.js')}"`;
+    createElizaCmd = `bun "${join(scriptDir, '../../create-eliza/index.mjs')}"`;
 
     // Change to test directory
     process.chdir(testTmpDir);
@@ -59,26 +67,21 @@ describe('ElizaOS Create Commands', () => {
     expect(agentData.style.all.length).toBeGreaterThan(0);
   };
 
-  test('create --help shows usage', async () => {
-    const result = execSync(`${elizaosCmd} create --help`, { encoding: 'utf8' });
+  it('create --help shows usage', async () => {
+    const result = execSync(
+      `${elizaosCmd} create --help`,
+      getPlatformOptions({ encoding: 'utf8' })
+    );
     expect(result).toContain('Usage: elizaos create');
     expect(result).toMatch(/(project|plugin|agent)/);
     expect(result).not.toContain('frobnicate');
   });
 
-  test(
+  it(
     'create default project succeeds',
     async () => {
       // Use cross-platform directory removal
-      try {
-        if (process.platform === 'win32') {
-          execSync(`if exist my-default-app rmdir /s /q my-default-app`, { stdio: 'ignore' });
-        } else {
-          execSync(`rm -rf my-default-app`, { stdio: 'ignore' });
-        }
-      } catch (e) {
-        // Ignore cleanup errors
-      }
+      crossPlatform.removeDir('my-default-app');
 
       const result = runCliCommandSilently(elizaosCmd, 'create my-default-app --yes', {
         timeout: TEST_TIMEOUTS.PROJECT_CREATION,
@@ -110,21 +113,11 @@ describe('ElizaOS Create Commands', () => {
     TEST_TIMEOUTS.INDIVIDUAL_TEST
   );
 
-  test(
+  it(
     'create plugin project succeeds',
     async () => {
       // Use cross-platform directory removal
-      try {
-        if (process.platform === 'win32') {
-          execSync(`if exist plugin-my-plugin-app rmdir /s /q plugin-my-plugin-app`, {
-            stdio: 'ignore',
-          });
-        } else {
-          execSync(`rm -rf plugin-my-plugin-app`, { stdio: 'ignore' });
-        }
-      } catch (e) {
-        // Ignore cleanup errors
-      }
+      crossPlatform.removeDir('plugin-my-plugin-app');
 
       const result = runCliCommandSilently(elizaosCmd, 'create my-plugin-app --yes --type plugin', {
         timeout: TEST_TIMEOUTS.PROJECT_CREATION,
@@ -156,17 +149,9 @@ describe('ElizaOS Create Commands', () => {
     TEST_TIMEOUTS.INDIVIDUAL_TEST
   );
 
-  test('create agent succeeds', async () => {
+  it('create agent succeeds', async () => {
     // Use cross-platform file removal
-    try {
-      if (process.platform === 'win32') {
-        execSync(`if exist my-test-agent.json del my-test-agent.json`, { stdio: 'ignore' });
-      } else {
-        execSync(`rm -f my-test-agent.json`, { stdio: 'ignore' });
-      }
-    } catch (e) {
-      // Ignore cleanup errors
-    }
+    crossPlatform.removeFile('my-test-agent.json');
 
     const result = runCliCommandSilently(elizaosCmd, 'create my-test-agent --yes --type agent');
 
@@ -175,18 +160,15 @@ describe('ElizaOS Create Commands', () => {
     await validateAgentJson('my-test-agent.json', 'my-test-agent');
   });
 
-  test('rejects creating project in existing directory', async () => {
+  it('rejects creating project in existing directory', async () => {
     // Use cross-platform commands
     try {
+      crossPlatform.removeDir('existing-app');
+      execSync(`mkdir existing-app`, getPlatformOptions({ stdio: 'ignore' }));
       if (process.platform === 'win32') {
-        execSync(`if exist existing-app rmdir /s /q existing-app`, { stdio: 'ignore' });
-        execSync(`mkdir existing-app`, { stdio: 'ignore' });
-        execSync(`echo test > existing-app\\file.txt`, { stdio: 'ignore' });
+        execSync(`echo test > existing-app\\file.txt`, getPlatformOptions({ stdio: 'ignore' }));
       } else {
-        execSync(
-          `rm -rf existing-app && mkdir existing-app && echo "test" > existing-app/file.txt`,
-          { stdio: 'ignore' }
-        );
+        execSync(`echo "test" > existing-app/file.txt`, getPlatformOptions({ stdio: 'ignore' }));
       }
     } catch (e) {
       // Ignore setup errors
@@ -198,17 +180,13 @@ describe('ElizaOS Create Commands', () => {
     expect(result.output).toContain('already exists');
   });
 
-  test(
+  it(
     'create project in current directory',
     async () => {
       // Use cross-platform commands
       try {
-        if (process.platform === 'win32') {
-          execSync(`if exist create-in-place rmdir /s /q create-in-place`, { stdio: 'ignore' });
-          execSync(`mkdir create-in-place`, { stdio: 'ignore' });
-        } else {
-          execSync(`rm -rf create-in-place && mkdir create-in-place`, { stdio: 'ignore' });
-        }
+        crossPlatform.removeDir('create-in-place');
+        execSync(`mkdir create-in-place`, getPlatformOptions({ stdio: 'ignore' }));
       } catch (e) {
         // Ignore setup errors
       }
@@ -224,14 +202,14 @@ describe('ElizaOS Create Commands', () => {
     TEST_TIMEOUTS.INDIVIDUAL_TEST
   );
 
-  test('rejects invalid project name', async () => {
+  it('rejects invalid project name', async () => {
     const result = expectCliCommandToFail(elizaosCmd, 'create "Invalid Name" --yes');
 
     expect(result.status).not.toBe(0);
     expect(result.output).toMatch(/Invalid/i);
   });
 
-  test('rejects invalid project type', async () => {
+  it('rejects invalid project type', async () => {
     const result = expectCliCommandToFail(elizaosCmd, 'create bad-type-proj --yes --type bad-type');
 
     expect(result.status).not.toBe(0);
@@ -239,17 +217,9 @@ describe('ElizaOS Create Commands', () => {
   });
 
   // create-eliza parity tests
-  test('create-eliza default project succeeds', async () => {
+  it('create-eliza default project succeeds', async () => {
     // Use cross-platform directory removal
-    try {
-      if (process.platform === 'win32') {
-        execSync(`if exist my-create-app rmdir /s /q my-create-app`, { stdio: 'ignore' });
-      } else {
-        execSync(`rm -rf my-create-app`, { stdio: 'ignore' });
-      }
-    } catch (e) {
-      // Ignore cleanup errors
-    }
+    crossPlatform.removeDir('my-create-app');
 
     try {
       const result = runCliCommandSilently(createElizaCmd, 'my-create-app --yes');
@@ -264,19 +234,9 @@ describe('ElizaOS Create Commands', () => {
     }
   }, 60000);
 
-  test('create-eliza plugin project succeeds', async () => {
+  it('create-eliza plugin project succeeds', async () => {
     // Use cross-platform directory removal
-    try {
-      if (process.platform === 'win32') {
-        execSync(`if exist plugin-my-create-plugin rmdir /s /q plugin-my-create-plugin`, {
-          stdio: 'ignore',
-        });
-      } else {
-        execSync(`rm -rf plugin-my-create-plugin`, { stdio: 'ignore' });
-      }
-    } catch (e) {
-      // Ignore cleanup errors
-    }
+    crossPlatform.removeDir('plugin-my-create-plugin');
 
     try {
       const result = runCliCommandSilently(createElizaCmd, 'my-create-plugin --yes --type plugin');
@@ -292,17 +252,9 @@ describe('ElizaOS Create Commands', () => {
     }
   }, 60000);
 
-  test('create-eliza agent succeeds', async () => {
+  it('create-eliza agent succeeds', async () => {
     // Use cross-platform file removal
-    try {
-      if (process.platform === 'win32') {
-        execSync(`if exist my-create-agent.json del my-create-agent.json`, { stdio: 'ignore' });
-      } else {
-        execSync(`rm -f my-create-agent.json`, { stdio: 'ignore' });
-      }
-    } catch (e) {
-      // Ignore cleanup errors
-    }
+    crossPlatform.removeFile('my-create-agent.json');
 
     try {
       const result = runCliCommandSilently(createElizaCmd, 'my-create-agent --yes --type agent');
@@ -315,4 +267,225 @@ describe('ElizaOS Create Commands', () => {
       console.warn('Skipping create-eliza agent test - command not available');
     }
   }, 60000);
+
+  describe('AI Model Selection', () => {
+    it('returns a reasonable number of AI model options', () => {
+      const models = getAvailableAIModels();
+
+      // Test for minimum providers instead of exact count
+      expect(models.length).toBeGreaterThanOrEqual(3);
+      expect(models.length).toBeLessThanOrEqual(7); // reasonable upper limit
+    });
+
+    it('maintains core AI model options', () => {
+      const models = getAvailableAIModels();
+      const values = models.map((m) => m.value);
+
+      // Only test for essential/core providers
+      const CORE_PROVIDERS = ['local', 'openai', 'claude', 'openrouter'];
+      CORE_PROVIDERS.forEach((provider) => {
+        expect(values).toContain(provider);
+      });
+    });
+
+    it('all AI models follow the expected contract', () => {
+      const models = getAvailableAIModels();
+
+      models.forEach((model) => {
+        // Test structure
+        expect(model).toHaveProperty('value');
+        expect(model).toHaveProperty('title');
+        expect(model).toHaveProperty('description');
+
+        // Test types
+        expect(typeof model.value).toBe('string');
+        expect(typeof model.title).toBe('string');
+        expect(typeof model.description).toBe('string');
+
+        // Test non-empty values
+        expect(model.value.length).toBeGreaterThan(0);
+        expect(model.title.length).toBeGreaterThan(0);
+        expect(model.description.length).toBeGreaterThan(0);
+
+        // Test naming conventions
+        expect(model.value).toBe(model.value.toLowerCase());
+      });
+    });
+  });
+
+  describe('Ollama Configuration', () => {
+    it('validates valid ollama endpoints', () => {
+      expect(isValidOllamaEndpoint('http://localhost:11434')).toBe(true);
+      expect(isValidOllamaEndpoint('https://ollama.example.com')).toBe(true);
+      expect(isValidOllamaEndpoint('http://192.168.1.100:11434')).toBe(true);
+    });
+
+    it('rejects invalid ollama endpoints', () => {
+      expect(isValidOllamaEndpoint('')).toBe(false);
+      expect(isValidOllamaEndpoint('localhost:11434')).toBe(false);
+      expect(isValidOllamaEndpoint('ftp://localhost:11434')).toBe(false);
+      expect(isValidOllamaEndpoint('not-a-url')).toBe(false);
+      expect(isValidOllamaEndpoint(null as any)).toBe(false);
+      expect(isValidOllamaEndpoint(undefined as any)).toBe(false);
+    });
+  });
+
+  describe('Cleanup on Interruption', () => {
+    it(
+      'cleans up partial plugin creation on process termination',
+      async () => {
+        // this test verifies that when you press ctrl-c during 'bun install'
+        // the partially created directory gets cleaned up automatically
+        // fixing the bug where abandoned directories were left behind
+
+        const pluginName = 'test-cleanup-plugin';
+        const pluginDir = `plugin-${pluginName}`;
+
+        // ensure plugin directory doesn't exist before test
+        crossPlatform.removeDir(pluginDir);
+        expect(existsSync(pluginDir)).toBe(false);
+
+        // start the create command in a subprocess that we can kill
+        const { spawn } = await import('node:child_process');
+        // Extract the script path from elizaosCmd, handling quoted paths
+        // elizaosCmd is like: bun "/path/to/index.js" or bun /path/to/index.js
+        const match = elizaosCmd.match(/^bun\s+(?:"([^"]+)"|(\S+))$/);
+        const scriptPath = match?.[1] || match?.[2] || elizaosCmd.replace('bun ', '');
+        const createProcess = spawn(
+          'bun',
+          [scriptPath, 'create', pluginName, '--type', 'plugin', '--yes'],
+          {
+            stdio: 'ignore',
+            detached: false,
+          }
+        );
+
+        // give process time to start creating the directory
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+
+        // send SIGINT to simulate ctrl-c
+        if (createProcess.pid) {
+          try {
+            process.kill(createProcess.pid, 'SIGINT');
+          } catch (e) {
+            // process might have already exited
+          }
+        }
+
+        // wait for cleanup handlers to complete
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        // verify the directory was cleaned up - no abandoned directories!
+        expect(existsSync(pluginDir)).toBe(false);
+      },
+      TEST_TIMEOUTS.INDIVIDUAL_TEST
+    );
+  });
+
+  describe('--dir Flag Removal (Breaking Change)', () => {
+    it('rejects --dir flag with helpful error message', async () => {
+      const result = expectCliCommandToFail(elizaosCmd, 'create my-project --dir /some/path');
+
+      expect(result.status).not.toBe(0);
+      // Check for various error patterns since the exact message might vary
+      const errorPatterns = [
+        '--dir flag is no longer supported',
+        'Unknown option',
+        'unknown option',
+        'Invalid option',
+        'dir',
+      ];
+
+      const hasError = errorPatterns.some((pattern) =>
+        result.output.toLowerCase().includes(pattern.toLowerCase())
+      );
+      expect(hasError).toBe(true);
+    });
+
+    it('rejects -d shorthand flag', async () => {
+      const result = expectCliCommandToFail(elizaosCmd, 'create my-project -d /some/path');
+
+      expect(result.status).not.toBe(0);
+      const errorPatterns = [
+        '-d flag is no longer supported',
+        'Unknown option',
+        'unknown option',
+        'Invalid option',
+      ];
+
+      const hasError = errorPatterns.some((pattern) =>
+        result.output.toLowerCase().includes(pattern.toLowerCase())
+      );
+      expect(hasError).toBe(true);
+    });
+
+    it(
+      'creates project in current directory without --dir flag',
+      async () => {
+        // Create a test subdirectory and navigate to it
+        const testSubDir = 'test-subdir';
+        crossPlatform.removeDir(testSubDir);
+        execSync(`mkdir ${testSubDir}`, getPlatformOptions({ stdio: 'ignore' }));
+
+        const originalDir = process.cwd();
+        process.chdir(testSubDir);
+
+        try {
+          const result = runCliCommandSilently(elizaosCmd, 'create my-current-dir-project --yes', {
+            timeout: TEST_TIMEOUTS.PROJECT_CREATION,
+          });
+
+          // Check for success patterns
+          const successPatterns = [
+            'Project initialized successfully!',
+            'successfully initialized',
+            'Project created',
+            'created successfully',
+          ];
+
+          const hasSuccess = successPatterns.some((pattern) => result.includes(pattern));
+          expect(hasSuccess || existsSync('my-current-dir-project')).toBe(true);
+
+          // Verify project was created in current directory
+          expect(existsSync('my-current-dir-project')).toBe(true);
+          expect(existsSync('my-current-dir-project/package.json')).toBe(true);
+        } finally {
+          // Restore original directory
+          process.chdir(originalDir);
+        }
+      },
+      TEST_TIMEOUTS.INDIVIDUAL_TEST
+    );
+
+    it(
+      'migration guide: shows how to create in specific directory',
+      async () => {
+        // This test documents the migration path for users
+        // Before: elizaos create my-project --dir /path/to/directory
+        // After: cd /path/to/directory && elizaos create my-project
+
+        const testDir = 'migration-test-dir';
+        crossPlatform.removeDir(testDir);
+        execSync(`mkdir ${testDir}`, getPlatformOptions({ stdio: 'ignore' }));
+
+        const originalDir = process.cwd();
+
+        try {
+          // Navigate to desired directory first (migration approach)
+          process.chdir(testDir);
+
+          // Then create the project
+          const result = runCliCommandSilently(elizaosCmd, 'create migrated-project --yes', {
+            timeout: TEST_TIMEOUTS.PROJECT_CREATION,
+          });
+
+          expect(existsSync('migrated-project')).toBe(true);
+          expect(existsSync('migrated-project/package.json')).toBe(true);
+        } finally {
+          process.chdir(originalDir);
+        }
+      },
+      TEST_TIMEOUTS.INDIVIDUAL_TEST
+    );
+  });
 });

@@ -1,12 +1,11 @@
 // Core utilities
-export * from './audioBuffer';
 export * from './build-project';
 export * from './cli-bun-migration';
 export * from './cli-prompts';
 export * from './config-manager';
 export * from './copy-template';
 export * from './display-banner';
-export * from './env-prompt';
+export { getEnvFilePath, readEnvFile, writeEnvFile } from './env-prompt';
 export * from './get-config';
 export * from './get-package-info';
 export * from './github';
@@ -20,6 +19,7 @@ export * from './port-handling';
 export * from './publisher';
 export * from './resolve-import';
 export * from './resolve-utils';
+export * from './spinner-utils';
 export * from './run-bun';
 export * from './test-runner';
 export * from './user-environment';

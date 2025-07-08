@@ -13,12 +13,13 @@ import { useAgentTabState } from '@/hooks/use-agent-tab-state';
 type AgentSidebarProps = {
   agentId: UUID | undefined;
   agentName: string;
+  channelId?: UUID;
 };
 
 type FixedTabValue = 'details' | 'actions' | 'logs' | 'memories';
 type TabValue = FixedTabValue | string;
 
-export function AgentSidebar({ agentId, agentName }: AgentSidebarProps) {
+export function AgentSidebar({ agentId, agentName, channelId }: AgentSidebarProps) {
   const { currentTab: detailsTab, setTab: setDetailsTab } = useAgentTabState(agentId);
   const { data: panelsResponse, isLoading: isLoadingPanels } = useAgentPanels(agentId!, {
     enabled: !!agentId,
@@ -39,7 +40,7 @@ export function AgentSidebar({ agentId, agentName }: AgentSidebarProps) {
   const allTabs: { value: TabValue; label: string; icon: JSX.Element }[] = useMemo(() => {
     const fixedTabs: { value: FixedTabValue; label: string; icon: JSX.Element }[] = [
       { value: 'details', label: 'Details', icon: <InfoIcon className="h-4 w-4" /> },
-      { value: 'actions', label: 'Actions', icon: <Eye className="h-4 w-4" /> },
+      { value: 'actions', label: 'Model Calls', icon: <Eye className="h-4 w-4" /> },
       { value: 'memories', label: 'Memories', icon: <Database className="h-4 w-4" /> },
       { value: 'logs', label: 'Logs', icon: <Code className="h-4 w-4" /> },
     ];
@@ -98,7 +99,14 @@ export function AgentSidebar({ agentId, agentName }: AgentSidebarProps) {
             )}
             {!isLoadingAgent && !agentError && agent && (
               <div className="w-full max-w-full">
-                <AgentSettings agent={agent} agentId={agentId} />
+                <AgentSettings
+                  agent={agent}
+                  agentId={agentId}
+                  onSaveComplete={() => {
+                    // Stay on the same page after save in sidebar context
+                    // Agent settings saved from sidebar
+                  }}
+                />
               </div>
             )}
             {!isLoadingAgent && !agentError && !agent && !isLoadingPanels && (
@@ -143,7 +151,7 @@ export function AgentSidebar({ agentId, agentName }: AgentSidebarProps) {
       >
         {detailsTab === 'memories' && agentId && (
           <div className="w-full max-w-full">
-            <AgentMemoryViewer agentId={agentId} agentName={agentName} />
+            <AgentMemoryViewer agentId={agentId} agentName={agentName} channelId={channelId} />
           </div>
         )}
         {detailsTab === 'memories' && !agentId && (
@@ -158,7 +166,7 @@ export function AgentSidebar({ agentId, agentName }: AgentSidebarProps) {
         >
           {detailsTab === panel.name && agentId && (
             <iframe
-              src={panel.path}
+              src={panel.url}
               title={panel.name}
               className="w-full h-full border-0 flex-1 max-w-full"
             />

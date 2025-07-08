@@ -1,6 +1,6 @@
 {
   "name": "@elizaos/plugin-dummy-services",
-  "version": "1.0.7",
+  "version": "1.0.19",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -28,13 +28,12 @@
   "devDependencies": {
     "prettier": "3.5.3",
     "tsup": "8.5.0",
-    "typescript": "5.8.2",
-    "vitest": "1.6.1"
+    "typescript": "5.8.2"
   },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "test": "elizaos test",
+    "test": "bun test",
     "lint": "prettier --write ./src",
     "clean": "rm -rf dist .turbo node_modules .turbo-tsconfig.json tsconfig.tsbuildinfo",
     "format": "prettier --write ./src",

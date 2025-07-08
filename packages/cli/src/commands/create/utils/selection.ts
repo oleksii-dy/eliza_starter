@@ -6,12 +6,7 @@ import type { AIModelOption, DatabaseOption } from '../types';
  */
 export async function getLocalAvailableDatabases(): Promise<string[]> {
   // Hard-coded list of available databases to avoid GitHub API calls
-  return [
-    'pglite',
-    'postgres',
-    // "pglite",
-    // "supabase"
-  ];
+  return ['pglite', 'postgres'];
 }
 
 /**
@@ -20,20 +15,34 @@ export async function getLocalAvailableDatabases(): Promise<string[]> {
 export function getAvailableAIModels(): AIModelOption[] {
   return [
     {
-      title: 'Local AI (free to use, no API key required)',
+      title: 'Local AI',
       value: 'local',
-      description:
-        'Use local AI models without external API requirements. Will download model to run locally.',
+      description: 'Local models, no API required',
     },
     {
-      title: 'OpenAI (ChatGPT)',
+      title: 'OpenAI',
       value: 'openai',
-      description: 'Use OpenAI models like GPT-4',
+      description: 'GPT-4 models',
     },
     {
-      title: 'Anthropic (Claude)',
+      title: 'Anthropic',
       value: 'claude',
-      description: 'Use Anthropic Claude models',
+      description: 'Claude models',
+    },
+    {
+      title: 'OpenRouter',
+      value: 'openrouter',
+      description: 'Access multiple AI models',
+    },
+    {
+      title: 'Ollama',
+      value: 'ollama',
+      description: 'Self-hosted models',
+    },
+    {
+      title: 'Google Generative AI',
+      value: 'google',
+      description: 'Gemini models',
     },
   ];
 }
@@ -44,16 +53,14 @@ export function getAvailableAIModels(): AIModelOption[] {
 export function getAvailableDatabases(): DatabaseOption[] {
   return [
     {
-      title: 'Pglite (Pglite) - Recommended for development',
+      title: 'Pglite (Pglite)',
       value: 'pglite',
-      description:
-        'Fast, file-based database. Perfect for development and single-user deployments.',
+      description: 'Local development',
     },
     {
-      title: 'PostgreSQL - Recommended for production',
+      title: 'PostgreSQL',
       value: 'postgres',
-      description:
-        'Full-featured database with vector search. Best for production and multi-user systems.',
+      description: 'Production database',
     },
   ];
 }
@@ -104,4 +111,56 @@ export async function selectAIModel(): Promise<string> {
   }
 
   return aiModel as string;
+}
+
+/**
+ * Gets available embedding models for selection when primary AI model doesn't support embeddings.
+ */
+export function getAvailableEmbeddingModels(): AIModelOption[] {
+  return [
+    {
+      title: 'Local AI',
+      value: 'local',
+      description: 'Local embeddings, no API required',
+    },
+    {
+      title: 'OpenAI',
+      value: 'openai',
+      description: 'OpenAI text-embedding-ada-002',
+    },
+    {
+      title: 'Ollama',
+      value: 'ollama',
+      description: 'Self-hosted embedding models',
+    },
+    {
+      title: 'Google Generative AI',
+      value: 'google',
+      description: 'Google embedding models',
+    },
+  ];
+}
+
+/**
+ * Prompts user to select an embedding model when the primary AI model doesn't support embeddings.
+ */
+export async function selectEmbeddingModel(): Promise<string> {
+  const availableModels = getAvailableEmbeddingModels();
+
+  const embeddingModel = await clack.select({
+    message: "Select an embedding model (required since your AI model doesn't support embeddings):",
+    options: availableModels.map((model) => ({
+      label: model.title,
+      value: model.value,
+      hint: model.description,
+    })),
+    initialValue: 'local',
+  });
+
+  if (clack.isCancel(embeddingModel)) {
+    clack.cancel('Operation cancelled.');
+    process.exit(0);
+  }
+
+  return embeddingModel as string;
 }

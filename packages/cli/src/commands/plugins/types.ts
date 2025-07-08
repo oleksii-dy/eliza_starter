@@ -17,6 +17,10 @@ export interface UpgradePluginOptions {
   apiKey?: string;
   skipTests?: boolean;
   skipValidation?: boolean;
+  quiet?: boolean;
+  verbose?: boolean;
+  debug?: boolean;
+  skipConfirmation?: boolean;
 }
 
 export interface GeneratePluginOptions {
@@ -63,6 +67,9 @@ export interface PluginRegistry {
 export interface EnvVarConfig {
   type: string;
   description: string;
+  required?: boolean;
+  default?: string;
+  sensitive?: boolean;
 }
 
 /**

@@ -2,20 +2,14 @@ import Anthropic from '@anthropic-ai/sdk';
 import { logger } from '@elizaos/core';
 import { execa } from 'execa';
 import * as fs from 'fs-extra';
+import * as clack from '@clack/prompts';
 import ora from 'ora';
 import * as path from 'path';
-import { dirname } from 'path';
 import simpleGit, { SimpleGit } from 'simple-git';
-import { fileURLToPath } from 'url';
 import * as os from 'os';
-import inquirer from 'inquirer';
 import { runBunCommand } from './run-bun';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
 // Configuration
-const MAX_TOKENS = 100000;
 const MAX_BUILD_ITERATIONS = 5;
 const MAX_TEST_ITERATIONS = 5;
 const MAX_REVISION_ITERATIONS = 3;
@@ -54,6 +48,42 @@ export interface CreatorOptions {
 export class PluginCreator {
   private git: SimpleGit;
   private pluginPath: string | null = null;
+
+  private handleCancellation(value: any): void {
+    if (clack.isCancel(value)) {
+      clack.cancel('Operation cancelled.');
+      process.exit(0);
+    }
+  }
+
+  private async getCommaSeparatedInput(
+    message: string,
+    required: boolean = false
+  ): Promise<string[]> {
+    const input = await clack.text({
+      message,
+      validate: required
+        ? (value) => {
+            if (!value || value.trim() === '') {
+              return 'At least one item is required';
+            }
+            return undefined;
+          }
+        : undefined,
+    });
+
+    this.handleCancellation(input);
+
+    // Return empty array if no input provided (for optional fields)
+    if (!input || input.trim() === '') {
+      return [];
+    }
+
+    return input
+      .split(',')
+      .map((item: string) => item.trim())
+      .filter((item: string) => item);
+  }
   private anthropic: Anthropic | null = null;
   private activeClaudeProcess: any = null;
   private options: CreatorOptions;
@@ -180,49 +210,59 @@ export class PluginCreator {
       throw new Error('Plugin specification required when skipping prompts');
     }
 
-    const answers = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'name',
-        message: 'Plugin name (without "plugin-" prefix):',
-        validate: (input) => {
-          if (!input) return 'Plugin name is required';
-          if (!/^[a-z0-9-]+$/.test(input)) {
-            return 'Plugin name must be lowercase with hyphens only';
-          }
-          return true;
-        },
-        filter: (input) => input.toLowerCase().replace(/\s+/g, '-'),
+    // Plugin name input
+    const name = await clack.text({
+      message: 'Plugin name (without "plugin-" prefix):',
+      validate: (input) => {
+        if (!input || input.trim() === '') {
+          return 'Plugin name is required';
+        }
+        return undefined;
       },
-      {
-        type: 'input',
-        name: 'description',
-        message: 'Plugin description:',
-        validate: (input) => input.length > 0 || 'Description is required',
-      },
-      {
-        type: 'input',
-        name: 'features',
-        message: 'Main features (comma-separated):',
-        filter: (input) =>
-          input
-            .split(',')
-            .map((f) => f.trim())
-            .filter((f) => f),
-      },
-      {
-        type: 'checkbox',
-        name: 'components',
-        message: 'Which components will this plugin include?',
-        choices: [
-          { name: 'Actions', value: 'actions' },
-          { name: 'Providers', value: 'providers' },
-          { name: 'Evaluators', value: 'evaluators' },
-          { name: 'Services', value: 'services' },
-        ],
-        default: ['actions', 'providers'],
-      },
-    ]);
+    });
+
+    this.handleCancellation(name);
+
+    const pluginName = (name as string).toLowerCase().replace(/\s+/g, '-');
+
+    // Plugin description input
+    const description = await clack.text({
+      message: 'Plugin description:',
+      validate: (input) => (input.length > 0 ? undefined : 'Description is required'),
+    });
+
+    this.handleCancellation(description);
+
+    const pluginDescription = description as string;
+
+    // Features input
+    const features = await this.getCommaSeparatedInput(
+      'Main features (comma-separated):',
+      true // Required
+    );
+
+    // Component selection
+    const components = await clack.multiselect({
+      message: 'Which components will this plugin include?',
+      options: [
+        { value: 'actions', label: 'Actions' },
+        { value: 'providers', label: 'Providers' },
+        { value: 'evaluators', label: 'Evaluators' },
+        { value: 'services', label: 'Services' },
+      ],
+      initialValues: ['actions', 'providers'],
+    });
+
+    this.handleCancellation(components);
+
+    const selectedComponents = components as string[];
+
+    const answers = {
+      name: pluginName,
+      description: pluginDescription,
+      features,
+      components: selectedComponents,
+    };
 
     // Collect specific component details
     const spec: PluginSpecification = {
@@ -232,67 +272,25 @@ export class PluginCreator {
     };
 
     if (answers.components.includes('actions')) {
-      const actionAnswers = await inquirer.prompt([
-        {
-          type: 'input',
-          name: 'actions',
-          message: 'Action names (comma-separated):',
-          filter: (input) =>
-            input
-              .split(',')
-              .map((a) => a.trim())
-              .filter((a) => a),
-        },
-      ]);
-      spec.actions = actionAnswers.actions;
+      spec.actions = await this.getCommaSeparatedInput('Action names (comma-separated):', false);
     }
 
     if (answers.components.includes('providers')) {
-      const providerAnswers = await inquirer.prompt([
-        {
-          type: 'input',
-          name: 'providers',
-          message: 'Provider names (comma-separated):',
-          filter: (input) =>
-            input
-              .split(',')
-              .map((p) => p.trim())
-              .filter((p) => p),
-        },
-      ]);
-      spec.providers = providerAnswers.providers;
+      spec.providers = await this.getCommaSeparatedInput(
+        'Provider names (comma-separated):',
+        false
+      );
     }
 
     if (answers.components.includes('evaluators')) {
-      const evaluatorAnswers = await inquirer.prompt([
-        {
-          type: 'input',
-          name: 'evaluators',
-          message: 'Evaluator names (comma-separated):',
-          filter: (input) =>
-            input
-              .split(',')
-              .map((e) => e.trim())
-              .filter((e) => e),
-        },
-      ]);
-      spec.evaluators = evaluatorAnswers.evaluators;
+      spec.evaluators = await this.getCommaSeparatedInput(
+        'Evaluator names (comma-separated):',
+        false
+      );
     }
 
     if (answers.components.includes('services')) {
-      const serviceAnswers = await inquirer.prompt([
-        {
-          type: 'input',
-          name: 'services',
-          message: 'Service names (comma-separated):',
-          filter: (input) =>
-            input
-              .split(',')
-              .map((s) => s.trim())
-              .filter((s) => s),
-        },
-      ]);
-      spec.services = serviceAnswers.services;
+      spec.services = await this.getCommaSeparatedInput('Service names (comma-separated):', false);
     }
 
     return spec;
@@ -346,8 +344,8 @@ export class PluginCreator {
       scripts: {
         build: 'tsup',
         dev: 'tsup --watch',
-        test: 'vitest run',
-        'test:watch': 'vitest',
+        test: 'bun test',
+        'test:watch': 'bun test --watch',
       },
       dependencies: {
         '@elizaos/core': '^1.0.0',
@@ -355,7 +353,7 @@ export class PluginCreator {
       devDependencies: {
         tsup: '^8.4.0',
         typescript: '^5.3.0',
-        vitest: '^1.3.1',
+        '@types/bun': '^1.0.0',
         '@types/node': '^20.0.0',
       },
       peerDependencies: {
@@ -394,18 +392,10 @@ export default defineConfig({
 
     await fs.writeFile(path.join(this.pluginPath!, 'tsup.config.ts'), tsupConfig);
 
-    // Create vitest.config.ts
-    const vitestConfig = `import { defineConfig } from 'vitest/config';
+    // Bun test doesn't need a separate config file
+    // Configuration is handled in package.json
 
-export default defineConfig({
-  test: {
-    globals: true,
-    environment: 'node',
-  },
-});
-`;
-
-    await fs.writeFile(path.join(this.pluginPath!, 'vitest.config.ts'), vitestConfig);
+    // No separate config file needed for bun test
 
     // Create .gitignore
     const gitignore = `node_modules/
@@ -414,7 +404,6 @@ dist/
 .env
 .DS_Store
 coverage/
-.vitest/
 `;
 
     await fs.writeFile(path.join(this.pluginPath!, '.gitignore'), gitignore);
@@ -667,7 +656,7 @@ You are now going to implement this plugin following ElizaOS 1.0.0 best practice
 - **All components**: Must be properly exported in index.ts
 
 ### 5. Testing Requirements
-- **Tests must use vitest** and cover all functionality
+- **Tests must use bun test** and cover all functionality
 - **Database compatibility tests**:
   \`\`\`typescript
   describe('Database Compatibility', () => {
@@ -981,7 +970,7 @@ ${allFiles}
 
 ### 4. Testing Coverage
 - ✅ Comprehensive tests exist for all functionality
-- ✅ Tests use vitest framework
+- ✅ Tests use bun test framework
 - ✅ Database compatibility tests included
 - ✅ Tests cover main plugin functionality
 - ✅ Error handling tests included

@@ -1,22 +1,16 @@
 import { loadProject } from '@/src/project';
-import { AgentServer } from '@/src/server/index';
-import { jsonToCharacter, loadCharacterTryPath } from '@/src/server/loader';
-import {
-  buildProject,
-  findNextAvailablePort,
-  promptForEnvVars,
-  TestRunner,
-  UserEnvironment,
-} from '@/src/utils';
+import { AgentServer, jsonToCharacter, loadCharacterTryPath } from '@elizaos/server';
+import { buildProject, findNextAvailablePort, TestRunner, UserEnvironment } from '@/src/utils';
 import { type DirectoryInfo } from '@/src/utils/directory-detection';
-import { logger, type IAgentRuntime, type ProjectAgent } from '@elizaos/core';
+import { logger, type IAgentRuntime, type ProjectAgent, Project } from '@elizaos/core';
 import * as dotenv from 'dotenv';
 import * as fs from 'node:fs';
 import path from 'node:path';
 import { getElizaCharacter } from '@/src/characters/eliza';
 import { startAgent } from '@/src/commands/start';
 import { E2ETestOptions, TestResult } from '../types';
-import { findMonorepoRoot, processFilterName } from '../utils/project-utils';
+import { processFilterName } from '../utils/project-utils';
+import { cwd } from 'node:process';
 
 /**
  * Function that runs the end-to-end tests.
@@ -93,20 +87,7 @@ export async function runE2eTests(
       logger.warn(`Environment file not found: ${envFilePath}`);
     }
 
-    // Always ensure database configuration is set
-    try {
-      logger.info('Configuring database...');
-      await promptForEnvVars('pglite'); // This ensures PGLITE_DATA_DIR is set if not already
-      logger.info('Database configuration completed');
-    } catch (error) {
-      logger.error('Error configuring database:', error);
-      if (error instanceof Error) {
-        logger.error('Error details:', error.message);
-        logger.error('Stack trace:', error.stack);
-      }
-      throw error;
-    }
-
+    // Database directory has been set in environment variables above
     // Look for PostgreSQL URL in environment variables
     const postgresUrl = process.env.POSTGRES_URL;
     logger.info(
@@ -131,27 +112,27 @@ export async function runE2eTests(
       throw initError;
     }
 
-    let project;
+    let project: Project | undefined;
     try {
       logger.info('Attempting to load project or plugin...');
-      // Resolve path from monorepo root, not cwd
-      const monorepoRoot = findMonorepoRoot(process.cwd());
-      const targetPath = testPath ? path.resolve(monorepoRoot, testPath) : process.cwd();
+      // Resolve path - use monorepo root if available, otherwise use cwd
+      const monorepoRoot = UserEnvironment.getInstance().findMonorepoRoot(process.cwd());
+      const baseDir = monorepoRoot ?? process.cwd();
+      const targetPath = testPath ? path.resolve(baseDir, testPath) : process.cwd();
+
       project = await loadProject(targetPath);
 
       if (!project || !project.agents || project.agents.length === 0) {
         throw new Error('No agents found in project configuration');
       }
 
-      logger.info(
-        `Found ${project.agents.length} agents in ${project.isPlugin ? 'plugin' : 'project'} configuration`
-      );
+      logger.info(`Found ${project.agents.length} agents`);
 
       // Set up server properties
       logger.info('Setting up server properties...');
       server.startAgent = async (character) => {
         logger.info(`Starting agent for character ${character.name}`);
-        return startAgent(character, server, undefined, [], { isTestMode: true });
+        return startAgent(character, server!, undefined, [], { isTestMode: true });
       };
       server.loadCharacterTryPath = loadCharacterTryPath;
       server.jsonToCharacter = jsonToCharacter;
@@ -211,9 +192,12 @@ export async function runE2eTests(
 
             server.registerAgent(runtime); // Ensure server knows about the runtime
             runtimes.push(runtime);
+
+            // Pass all loaded plugins to the projectAgent so TestRunner can identify
+            // which one is the plugin under test vs dependencies
             projectAgents.push({
               character: defaultElizaCharacter,
-              plugins: runtime.plugins,
+              plugins: runtime.plugins, // Pass all plugins, not just the one under test
             });
 
             logger.info('Default test agent started successfully');
@@ -297,7 +281,7 @@ export async function runE2eTests(
         }
 
         // Return success (false) if no tests were found, or if tests ran but none failed
-        // This aligns with standard testing tools like vitest/jest behavior
+        // This aligns with standard testing tools behavior
         return { failed: anyTestsFound ? totalFailed > 0 : false };
       } catch (error) {
         logger.error('Error in runE2eTests:', error);
@@ -315,6 +299,11 @@ export async function runE2eTests(
         }
         return { failed: true };
       } finally {
+        // Clean up the ELIZA_TESTING_PLUGIN environment variable
+        if (process.env.ELIZA_TESTING_PLUGIN) {
+          delete process.env.ELIZA_TESTING_PLUGIN;
+        }
+
         // Clean up database directory after tests complete
         try {
           if (fs.existsSync(elizaDbDir)) {

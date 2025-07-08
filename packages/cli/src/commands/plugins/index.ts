@@ -19,9 +19,9 @@ import {
 export const plugins = new Command()
   .name('plugins')
   .description('Manage ElizaOS plugins')
-  .action(function () {
+  .action(() => {
     // Show help automatically if no subcommand is specified
-    this.help({ showGlobals: false });
+    plugins.help();
   });
 
 export const pluginsCommand = plugins
@@ -42,7 +42,7 @@ plugins
   .command('add')
   .alias('install')
   .description('Add a plugin to the project')
-  .argument('<plugin>', 'plugins name (e.g., "abc", "plugin-abc", "elizaos/plugin-abc")')
+  .argument('<plugin>', 'plugin name (e.g., "abc", "plugin-abc", "elizaos/plugin-abc")')
   .option('-s, --skip-env-prompt', 'Skip prompting for environment variables')
   .option('--skip-verification', 'Skip plugin import verification after installation')
   .option('-b, --branch <branchName>', 'Branch to install from when using monorepo source', 'main')
@@ -74,7 +74,7 @@ plugins
 plugins
   .command('remove')
   .aliases(['delete', 'del', 'rm'])
-  .description('Remove a plugins from the project')
+  .description('Remove a plugin from the project')
   .argument('<plugin>', 'plugins name (e.g., "abc", "plugin-abc", "elizaos/plugin-abc")')
   .action(async (plugin: string, _opts) => {
     try {
@@ -87,11 +87,17 @@ plugins
 
 plugins
   .command('upgrade')
-  .description('Upgrade a plugin from version 0.x to 1.x using AI-powered migration')
+  .description(
+    'Upgrade a plugin from version 0.x to 1.x using AI-powered migration (requires Claude Code CLI)'
+  )
   .argument('<path>', 'GitHub repository URL or local folder path')
   .option('--api-key <key>', 'Anthropic API key (or use ANTHROPIC_API_KEY env var)')
   .option('--skip-tests', 'Skip test validation loop')
   .option('--skip-validation', 'Skip production readiness validation')
+  .option('--quiet', 'Suppress progress display')
+  .option('--verbose', 'Show detailed information')
+  .option('--debug', 'Show debug information')
+  .option('--skip-confirmation', 'Skip user confirmation')
   .action(async (pluginPath: string, opts: UpgradePluginOptions) => {
     await upgradePlugin(pluginPath, opts);
   });

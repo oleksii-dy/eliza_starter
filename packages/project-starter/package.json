@@ -1,7 +1,7 @@
 {
   "name": "@elizaos/project-starter",
   "description": "Project starter for elizaOS",
-  "version": "1.0.6",
+  "version": "1.0.19",
   "type": "module",
   "private": true,
   "main": "dist/src/index.js",
@@ -30,28 +30,47 @@
   "dependencies": {
     "@elizaos/cli": "workspace:*",
     "@elizaos/core": "workspace:*",
-    "@elizaos/plugin-sql": "workspace:*",
     "@elizaos/plugin-bootstrap": "workspace:*",
+    "@elizaos/plugin-sql": "workspace:*",
+    "@tanstack/react-query": "^5.29.0",
+    "clsx": "^2.1.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^2.6.0",
+    "tailwindcss": "^4.1.10",
     "zod": "3.24.2"
   },
   "devDependencies": {
-    "tsup": "8.5.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
     "prettier": "3.5.3",
-    "vitest": "3.1.4",
-    "@vitest/coverage-v8": "3.1.4"
+    "tsup": "8.5.0",
+    "typescript": "^5.6.3",
+    "vite": "^6.0.1"
   },
   "scripts": {
     "start": "elizaos start",
     "dev": "elizaos dev",
-    "build": "tsup",
+    "build": "tsc --noEmit && vite build && tsup",
     "lint": "prettier --write ./src",
-    "test:component": "vitest run",
-    "test:e2e": "elizaos test",
-    "test": "npm run test:component && npm run test:e2e",
-    "test:coverage": "vitest run --coverage",
-    "test:watch": "vitest",
+    "type-check": "tsc --noEmit",
+    "type-check:watch": "tsc --noEmit --watch",
+    "test:component": "bun run test:install && bun test",
+    "test:e2e": "bun run test:install && bun test",
+    "test": "bun run test:install && bun run test:component && bun run test:e2e",
+    "test:coverage": "bun run test:install && bun test --coverage",
+    "test:watch": "bun run test:install && bun test --watch",
+    "test:install": "node scripts/install-test-deps.js",
     "format": "prettier --write ./src",
-    "format:check": "prettier --check ./src"
+    "format:check": "prettier --check ./src",
+    "check-all": "bun run type-check && bun run format:check && bun run test",
+    "cy:open": "bun run test:install && cypress open",
+    "cy:run": "bun run test:install && cypress run --component",
+    "cy:test": "bun run test:install && cypress run --component --reporter spec",
+    "cypress:component": "bun run test:install && cypress run --component",
+    "cypress:e2e": "bun run test:install && cypress run --e2e",
+    "cypress:open": "bun run test:install && cypress open"
   },
   "publishConfig": {
     "access": "public"

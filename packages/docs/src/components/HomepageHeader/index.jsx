@@ -20,7 +20,7 @@ function HomepageHeader() {
             </h1>
             <p className={styles.heroSubtitle}>{siteConfig.tagline}</p>
             <div className={styles.buttonGroup}>
-              <Link className="button button--primary button--lg" to="/docs">
+              <Link className="button button--primary button--lg" to="/docs/quickstart">
                 Get Started
               </Link>
               <div className={styles.githubButton}>
@@ -57,7 +57,7 @@ function HomepageHeader() {
                   <code>
                     <span className={styles.comment}># Uses node 23+</span>
                     <br />
-                    <span className={styles.prompt}>$</span> npm install -g @elizaos/cli
+                    <span className={styles.prompt}>$</span> bun install -g @elizaos/cli
                     <br />
                     <span className={styles.prompt}>$</span> elizaos create
                     <br />

@@ -6,7 +6,6 @@ import {
   ChannelType,
   ModelType,
   type Content,
-  type KnowledgeItem,
   type MemoryMetadata,
   type Character,
   type Action,
@@ -42,9 +41,7 @@ import {
 } from './types';
 
 import { BM25 } from './search';
-import { EventType, type MessagePayload } from './types';
 import { stringToUuid } from './utils';
-import { EventEmitter } from 'events';
 
 const environmentSettings: RuntimeSettings = {};
 
@@ -296,88 +293,6 @@ export class AgentRuntime implements IAgentRuntime {
     }
   }
 
-  private async resolvePluginDependencies(characterPlugins: Plugin[]): Promise<Plugin[]> {
-    const resolvedPlugins = new Map<string, Plugin>();
-    const visited = new Set<string>();
-    const recursionStack = new Set<string>();
-    const finalPluginList: Plugin[] = [];
-
-    // First, add all character-specified plugins to resolvedPlugins to prioritize them.
-    for (const plugin of characterPlugins) {
-      if (plugin?.name) {
-        resolvedPlugins.set(plugin.name, plugin);
-      }
-    }
-
-    const resolve = async (pluginName: string) => {
-      if (recursionStack.has(pluginName)) {
-        this.logger.error(
-          `Circular dependency detected: ${Array.from(recursionStack).join(' -> ')} -> ${pluginName}`
-        );
-        throw new Error(`Circular dependency detected involving plugin: ${pluginName}`);
-      }
-      if (visited.has(pluginName)) {
-        return;
-      }
-
-      visited.add(pluginName);
-      recursionStack.add(pluginName);
-
-      let plugin = resolvedPlugins.get(pluginName); // Check if it's a character-specified plugin first
-      if (!plugin) {
-        plugin = this.allAvailablePlugins.get(pluginName); // Fallback to allAvailablePlugins
-      }
-
-      if (!plugin) {
-        this.logger.warn(
-          `Dependency plugin "${pluginName}" not found in allAvailablePlugins. Skipping.`
-        );
-        recursionStack.delete(pluginName);
-        return; // Or throw an error if strict dependency checking is required
-      }
-
-      if (plugin.dependencies) {
-        for (const depName of plugin.dependencies) {
-          await resolve(depName);
-        }
-      }
-
-      recursionStack.delete(pluginName);
-      // Add to final list only if it hasn't been added. This ensures correct order for dependencies.
-      if (!finalPluginList.find((p) => p.name === pluginName)) {
-        finalPluginList.push(plugin);
-        // Ensure the resolvedPlugins map contains the instance we are actually going to use.
-        // This is important if a dependency was loaded from allAvailablePlugins but was also a character plugin.
-        // The character plugin (already in resolvedPlugins) should be the one used.
-        if (!resolvedPlugins.has(pluginName)) {
-          resolvedPlugins.set(pluginName, plugin);
-        }
-      }
-    };
-
-    // Resolve dependencies for all character-specified plugins.
-    for (const plugin of characterPlugins) {
-      if (plugin?.name) {
-        await resolve(plugin.name);
-      }
-    }
-
-    // The finalPluginList is now topologically sorted.
-    // We also need to ensure that any plugin in characterPlugins that was *not* a dependency of another characterPlugin
-    // is also included, maintaining its original instance.
-    const finalSet = new Map<string, Plugin>();
-    finalPluginList.forEach((p) => finalSet.set(p.name, resolvedPlugins.get(p.name)!));
-    characterPlugins.forEach((p) => {
-      if (p?.name && !finalSet.has(p.name)) {
-        // This handles cases where a character plugin has no dependencies and wasn't pulled in as one.
-        // It should be added to the end, or merged based on priority if that's a requirement (not implemented here).
-        finalSet.set(p.name, p);
-      }
-    });
-
-    return Array.from(finalSet.values());
-  }
-
   getAllServices(): Map<ServiceTypeName, Service> {
     return this.services;
   }
@@ -459,7 +374,7 @@ export class AgentRuntime implements IAgentRuntime {
       // Room creation and participant setup
       const room = await this.getRoom(this.agentId);
       if (!room) {
-        const room = await this.createRoom({
+        await this.createRoom({
           id: this.agentId,
           name: this.character.name,
           source: 'elizaos',
@@ -621,11 +536,18 @@ export class AgentRuntime implements IAgentRuntime {
 
         this.logger.debug(`Success: Calling action: ${responseAction}`);
         const normalizedResponseAction = normalizeAction(responseAction);
+        // try exact first
         let action = this.actions.find(
-          (a: { name: string }) =>
-            normalizeAction(a.name).includes(normalizedResponseAction) ||
-            normalizedResponseAction.includes(normalizeAction(a.name))
+          (a: { name: string }) => normalizeAction(a.name) === normalizedResponseAction
         );
+        if (!action) {
+          // try relaxed
+          action = this.actions.find(
+            (a: { name: string }) =>
+              normalizeAction(a.name).includes(normalizedResponseAction) ||
+              normalizedResponseAction.includes(normalizeAction(a.name))
+          );
+        }
         if (action) {
           this.logger.debug(`Success: Found action: ${action?.name}`);
         } else {
@@ -675,7 +597,7 @@ export class AgentRuntime implements IAgentRuntime {
             prompts: [],
           };
 
-          const result = await action.handler(this, message, state, {}, callback, responses);
+          await action.handler(this, message, state, {}, callback, responses);
           this.logger.debug(`Success: Action ${action.name} executed successfully.`);
 
           // log to database with collected prompts
@@ -1106,9 +1028,6 @@ export class AgentRuntime implements IAgentRuntime {
       text: '',
     } as State;
     const cachedState = skipCache ? emptyObj : (await this.stateCache.get(message.id)) || emptyObj;
-    const existingProviderNames = cachedState.data.providers
-      ? Object.keys(cachedState.data.providers)
-      : [];
     const providerNames = new Set<string>();
     if (filterList && filterList.length > 0) {
       filterList.forEach((name) => providerNames.add(name));
@@ -1123,7 +1042,6 @@ export class AgentRuntime implements IAgentRuntime {
     const providersToGet = Array.from(
       new Set(this.providers.filter((p) => providerNames.has(p.name)))
     ).sort((a, b) => (a.position || 0) - (b.position || 0));
-    const providerNamesToGet = providersToGet.map((p) => p.name);
     const providerData = await Promise.all(
       providersToGet.map(async (provider) => {
         const start = Date.now();
@@ -1138,8 +1056,6 @@ export class AgentRuntime implements IAgentRuntime {
           };
         } catch (error: any) {
           console.error('provider error', provider.name, error);
-          const duration = Date.now() - start;
-          const errorMessage = error instanceof Error ? error.message : String(error);
           return { values: {}, text: '', data: {}, providerName: provider.name };
         }
       })
@@ -1183,9 +1099,6 @@ export class AgentRuntime implements IAgentRuntime {
       text: providersText,
     } as State;
     this.stateCache.set(message.id, newState);
-    const finalProviderCount = Object.keys(currentProviderResults).length;
-    const finalProviderNames = Object.keys(currentProviderResults);
-    const finalValueKeys = Object.keys(newState.values);
     return newState;
   }
 
@@ -1423,8 +1336,6 @@ export class AgentRuntime implements IAgentRuntime {
       });
       return response as R;
     } catch (error: any) {
-      const errorTime = performance.now() - startTime;
-      const errorMessage = error instanceof Error ? error.message : String(error);
       throw error;
     }
   }
@@ -1651,6 +1562,26 @@ export class AgentRuntime implements IAgentRuntime {
   }): Promise<Memory[]> {
     return await this.adapter.getMemories(params);
   }
+  async getAllMemories(): Promise<Memory[]> {
+    const tables = ['memories', 'messages', 'facts', 'documents'];
+    const allMemories: Memory[] = [];
+
+    for (const tableName of tables) {
+      try {
+        const memories = await this.adapter.getMemories({
+          agentId: this.agentId,
+          tableName,
+          count: 10000, // Get a large number to fetch all
+        });
+        allMemories.push(...memories);
+      } catch (error) {
+        // Continue with other tables if one fails
+        this.logger.debug(`Failed to get memories from table ${tableName}:`, error);
+      }
+    }
+
+    return allMemories;
+  }
   async getMemoryById(id: UUID): Promise<Memory | null> {
     return await this.adapter.getMemoryById(id);
   }
@@ -1723,6 +1654,22 @@ export class AgentRuntime implements IAgentRuntime {
   }
   async deleteManyMemories(memoryIds: UUID[]): Promise<void> {
     await this.adapter.deleteManyMemories(memoryIds);
+  }
+  async clearAllAgentMemories(): Promise<void> {
+    this.logger.info(`Clearing all memories for agent ${this.character.name} (${this.agentId})`);
+
+    const allMemories = await this.getAllMemories();
+    const memoryIds = allMemories.map((memory) => memory.id);
+
+    if (memoryIds.length === 0) {
+      this.logger.info('No memories found to delete');
+      return;
+    }
+
+    this.logger.info(`Found ${memoryIds.length} memories to delete`);
+    await this.adapter.deleteManyMemories(memoryIds);
+
+    this.logger.info(`Successfully cleared all ${memoryIds.length} memories for agent`);
   }
   async deleteAllMemories(roomId: UUID, tableName: string): Promise<void> {
     await this.adapter.deleteAllMemories(roomId, tableName);
@@ -1939,7 +1886,6 @@ export class AgentRuntime implements IAgentRuntime {
     try {
       await handler(this, target, content);
     } catch (error: any) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
       this.logger.error(`Error executing send handler for source ${target.source}:`, error);
       throw error; // Re-throw error after logging and tracing
     }

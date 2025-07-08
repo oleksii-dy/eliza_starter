@@ -1,4 +1,5 @@
 import { logger } from '@elizaos/core';
+import { isQuietMode } from './spinner-utils';
 import dotenv from 'dotenv';
 import path from 'node:path';
 import { UserEnvironment } from './user-environment';
@@ -28,54 +29,66 @@ const SAMPLE_ENV_TEMPLATE = `### elizaOS Environment Variables ###
 # To get started, copy this file to .env, or make a .env and add the settings you'd like to override
 # Please read the comments for each of the configurations
 
-# The only thing you ABSOLUTELY NEED to get up and running is one of the model provider keys, 
-# i.e. OPENAI_API_KEY or ANTHROPIC_API_KEY, or setup the local-ai plugin
-# Everything else is optional, and most settings and secrets can be configured in your agent or through the GUI
-# For multi-agent, each agent will need keys for the various services it is connected to
-# You can use the .env or environment variables generally for shared keys, such as to model providers, 
-# database, etc, with scoped keys for services such as Telegram, Discord, etc
+## The only thing you ABSOLUTELY NEED to get up and running is one of the model provider keys,
+## i.e. OPENAI_API_KEY or ANTHROPIC_API_KEY, or setup the local-ai or ollama plugin
+## Everything else is optional, and most settings and secrets can be configured in your agent or through the GUI
+## For multi-agent, each agent will need keys for the various services it is connected to
+-------------------------------
+## You can use the .env or environment variables generally for shared keys, such as to model providers,
+## database, etc, with scoped keys for services such as Telegram, Discord, etc
 
-### MODEL PROVIDER KEYS ###
-# Eliza is compatible with a wide array of model providers. Many have OpenAI compatible APIs, 
-# and you can use them by overriding the base URL
+## MODEL PROVIDER KEYS ##
+## Eliza is compatible with a wide array of model providers. Many have OpenAI compatible APIs,
+## and you can use them by overriding the base URL
 
-# NOTE: You will need a provider that provides embeddings. So even if you use Claude, you will 
-# need to get embeddings using another provider, for example openai or our local-ai plugin
+## NOTE: You will need a provider that provides embeddings. So even if you use Claude, you will
+## need to get embeddings using another provider, for example openai or our local-ai plugin
 
 # OpenAI Configuration
 OPENAI_API_KEY=
-# Use this to override the openai endpoint, for example for using together.ai, fireworks or other providers
+## Use this to override the openai endpoint, for example for using together.ai, fireworks or other providers
+## Optional overrides:
+--------------------------------
 # OPENAI_BASE_URL=
+# OPENAI_SMALL_MODEL=gpt-4o-mini
+# OPENAI_LARGE_MODEL=gpt-4o
+# OPENAI_EMBEDDING_MODEL=text-embedding-3-small
+# OPENAI_EMBEDDING_URL=
+# OPENAI_EMBEDDING_DIMENSIONS=1536
+# OPENAI_IMAGE_DESCRIPTION_MODEL=gpt-4o-mini
+# OPENAI_IMAGE_DESCRIPTION_MAX_TOKENS=8192
 
 # Anthropic Configuration
-# By default in most of our starter kits, Anthropic will take precedence over OpenAI in handling requests
-# Anthropic does not handle embeddings, so you may wish to use OpenAI for that, even while Claude is handling text generation
+## By default in most of our starter kits, Anthropic will take precedence over OpenAI in handling requests
+## Anthropic does not handle embeddings, so you may wish to use OpenAI for that, even while Claude is handling text generation
+--------------------------------
 ANTHROPIC_API_KEY=
+# Optional overrides:
+# ANTHROPIC_SMALL_MODEL=claude-3-5-haiku-latest
+# ANTHROPIC_LARGE_MODEL=claude-3-5-sonnet-latest
 
-# Cloudflare AI
-CLOUDFLARE_GW_ENABLED=
-CLOUDFLARE_AI_ACCOUNT_ID=
-CLOUDFLARE_AI_GATEWAY_ID=
-
-### LOCAL AI CONFIGURATION ###
-USE_LOCAL_AI=
-USE_STUDIOLM_TEXT_MODELS=
-USE_OLLAMA_TEXT_MODELS=
 
 # Ollama Configuration
-OLLAMA_API_ENDPOINT=
-OLLAMA_MODEL=
-USE_OLLAMA_EMBEDDING=
-OLLAMA_EMBEDDING_MODEL=
-OLLAMA_SMALL_MODEL=
-OLLAMA_MEDIUM_MODEL=
-OLLAMA_LARGE_MODEL=
+## Highly recommended to use gemma3:latest for text generation
+--------------------------------
+# OLLAMA_API_ENDPOINT=http://localhost:11434/api
+# OLLAMA_SMALL_MODEL=gemma3:latest
+# OLLAMA_MEDIUM_MODEL=gemma3:latest
+# OLLAMA_LARGE_MODEL=gemma3:latest
 
-# StudioLM Configuration
-STUDIOLM_SERVER_URL=
-STUDIOLM_SMALL_MODEL=
-STUDIOLM_MEDIUM_MODEL=
-STUDIOLM_EMBEDDING_MODEL=
+
+# Local AI Configuration
+## REMEMBER A GOOD AMOUNT OF VRAM IS NEEDED FOR THE LARGE LOCAL MODELS
+--------------------------------
+# LOCAL_SMALL_MODEL=DeepHermes-3-Llama-3-3B-Preview-q4.gguf
+# LOCAL_LARGE_MODEL=DeepHermes-3-Llama-3-70B-Preview-q4.gguf
+# LOCAL_EMBEDDING_MODEL=bge-small-en-v1.5.Q4_K_M.gguf
+
+
+
+
+# Highly recommended to use nomic-embed-text for embeddings
+# OLLAMA_EMBEDDING_MODEL=nomic-embed-text
 
 ### DATABASE ###
 # By default, Eliza will use a local pglite instance
@@ -91,6 +104,14 @@ POSTGRES_URL=
 # Logging Configuration (supported: fatal, error, warn, info, debug, trace | default: info)
 LOG_LEVEL=
 
+
+# Sentry Configuration
+--------------------------------
+## DO NOT CHANGE THIS UNLESS YOU KNOW WHAT YOU ARE DOING
+--------------------------------
+# Sentry is a tool for monitoring and logging errors and exceptions
+# It is used to track errors and exceptions in the agent
+--------------------------------
 # Sentry Configuration
 SENTRY_LOGGING=true
 SENTRY_DSN=
@@ -98,119 +119,6 @@ SENTRY_ENVIRONMENT=
 SENTRY_TRACES_SAMPLE_RATE=
 SENTRY_SEND_DEFAULT_PII=
 
-### API KEYS ###
-# Many services require API keys to function
-# Most plugins will indicate what is needed in their README.md and throw helpful errors if they are missing
-BIRDEYE_API_KEY=
-JUPITER_API_KEY=
-HELIUS_API_KEY=
-COINMARKETCAP_API_KEY=
-ZEROEX_API_KEY=
-COINGECKO_API_KEY=
-
-### SINGLE AGENT VARIABLES ###
-# If you are running multiple agents, you will need to configure these variables in the agent secrets 
-# (available in the GUI) OR you can namespace the secrets and connect them up in your character definition
-
-# Example: 
-# settings: {
-#   process.env.COMMUNITY_MANAGER_DISCORD_API_TOKEN
-# }
-
-# Note: See below for multi-agent examples
-
-# Discord Configuration
-DISCORD_APPLICATION_ID=
-DISCORD_API_TOKEN=
-
-# Telegram Configuration
-TELEGRAM_BOT_TOKEN=
-
-# ===============================================================================
-# TWITTER PLUGIN CONFIGURATION
-# ===============================================================================
-
-# Required Twitter API Credentials
-TWITTER_API_KEY=
-TWITTER_API_SECRET_KEY=
-TWITTER_ACCESS_TOKEN=
-TWITTER_ACCESS_TOKEN_SECRET=
-
-# Target Users and Search Configuration
-TWITTER_TARGET_USERS=
-TWITTER_RETRY_LIMIT=5
-TWITTER_POLL_INTERVAL=120
-TWITTER_SEARCH_ENABLE=true
-TWITTER_DRY_RUN=false
-
-# Autonomous Posting Configuration
-TWITTER_POST_ENABLE=false
-TWITTER_POST_INTERVAL_MIN=90
-TWITTER_POST_INTERVAL_MAX=180
-TWITTER_POST_IMMEDIATELY=false
-TWITTER_POST_INTERVAL_VARIANCE=0.2
-
-# Interaction Configuration
-TWITTER_INTERACTION_INTERVAL_MIN=15
-TWITTER_INTERACTION_INTERVAL_MAX=30
-TWITTER_INTERACTION_INTERVAL_VARIANCE=0.3
-
-# Timeline Algorithm Configuration
-TWITTER_TIMELINE_ALGORITHM=weighted
-TWITTER_TIMELINE_USER_BASED_WEIGHT=3
-TWITTER_TIMELINE_TIME_BASED_WEIGHT=2
-TWITTER_TIMELINE_RELEVANCE_WEIGHT=5
-
-# Tweet and Processing Limits
-TWITTER_MAX_TWEET_LENGTH=4000
-TWITTER_MAX_INTERACTIONS_PER_RUN=10
-
-# Response Behavior
-TWITTER_DM_ONLY=false
-TWITTER_ENABLE_ACTION_PROCESSING=false
-TWITTER_ACTION_INTERVAL=240
-TWITTER_AUTO_RESPOND_MENTIONS=true
-TWITTER_AUTO_RESPOND_REPLIES=true
-
-# EVM Configuration
-EVM_PRIVATE_KEY=
-EVM_CHAINS=mainnet,sepolia,base,arbitrum,polygon
-EVM_PROVIDER_URL=
-
-# Solana Configuration
-SOLANA_PUBLIC_KEY=
-SOLANA_PRIVATE_KEY=
-
-### MULTI-AGENT CONFIGURATION ###
-# Settings for The Org
-# The Org is an example of a multi-agent swarm
-# Available here: https://github.com/elizaOS/the-org
-# This is an example of how environment variables can be scoped per-project
-
-# Community Manager
-COMMUNITY_MANAGER_DISCORD_APPLICATION_ID=
-COMMUNITY_MANAGER_DISCORD_API_TOKEN=
-
-# Social Media Manager
-SOCIAL_MEDIA_MANAGER_DISCORD_APPLICATION_ID=
-SOCIAL_MEDIA_MANAGER_DISCORD_API_TOKEN=
-
-# Liaison
-LIAISON_DISCORD_APPLICATION_ID=
-LIAISON_DISCORD_API_TOKEN=
-
-# Project Manager
-PROJECT_MANAGER_DISCORD_APPLICATION_ID=
-PROJECT_MANAGER_DISCORD_API_TOKEN=
-
-# Developer Relations
-DEV_REL_DISCORD_APPLICATION_ID=
-DEV_REL_DISCORD_API_TOKEN=
-DEVREL_IMPORT_KNOWLEDGE=true
-
-# Investment Manager
-INVESTMENT_MANAGER_DISCORD_APPLICATION_ID=
-INVESTMENT_MANAGER_DISCORD_API_TOKEN=
 `;
 
 /**
@@ -226,8 +134,8 @@ export function isValidPostgresUrl(url: string): boolean {
     const parsedUrl = new URL(url);
     return (
       parsedUrl.protocol === 'postgresql:' &&
-      parsedUrl.hostname &&
-      parsedUrl.pathname &&
+      !!parsedUrl.hostname &&
+      !!parsedUrl.pathname &&
       parsedUrl.pathname !== '/'
     );
   } catch {
@@ -289,35 +197,23 @@ export async function setupEnvFile(envFilePath: string): Promise<void> {
     const envExists = existsSync(envFilePath);
 
     if (!envExists) {
-      // Create the file with hybrid merge of process.env and example variables
-      const mergedVars = mergeProcessEnvWithTemplate(SAMPLE_ENV_TEMPLATE);
-      const formattedContent = formatEnvFileWithTemplate(mergedVars, SAMPLE_ENV_TEMPLATE);
-      await fs.writeFile(envFilePath, formattedContent, 'utf8');
+      // Create the file with template variables
+      await fs.writeFile(envFilePath, SAMPLE_ENV_TEMPLATE, 'utf8');
 
-      const processEnvCount = Object.keys(process.env).filter(
-        (key) => process.env[key] && process.env[key]!.trim() !== ''
-      ).length;
-
-      logger.info(
-        `[Config] Created .env file with ${processEnvCount} variables from process.env merged with example variables at: ${envFilePath}`
-      );
+      if (!isQuietMode()) {
+        logger.info(`[Config] Created .env file with template variables at: ${envFilePath}`);
+      }
     } else {
       // File exists, check if it's empty
       const content = await fs.readFile(envFilePath, 'utf8');
       const trimmedContent = content.trim();
 
       if (trimmedContent === '') {
-        // File is empty, write the hybrid merge
-        const mergedVars = mergeProcessEnvWithTemplate(SAMPLE_ENV_TEMPLATE);
-        const formattedContent = formatEnvFileWithTemplate(mergedVars, SAMPLE_ENV_TEMPLATE);
-        await fs.writeFile(envFilePath, formattedContent, 'utf8');
-
-        const processEnvCount = Object.keys(process.env).filter(
-          (key) => process.env[key] && process.env[key]!.trim() !== ''
-        ).length;
+        // File is empty, write the template
+        await fs.writeFile(envFilePath, SAMPLE_ENV_TEMPLATE, 'utf8');
 
         logger.info(
-          `[Config] Populated empty .env file with ${processEnvCount} variables from process.env merged with example variables at: ${envFilePath}`
+          `[Config] Populated empty .env file with template variables at: ${envFilePath}`
         );
       } else {
         logger.debug(`[Config] .env file already exists and has content at: ${envFilePath}`);
@@ -369,7 +265,7 @@ export async function setupPgLite(
   targetProjectDir?: string
 ): Promise<void> {
   const dirs = await ensureElizaDir(targetProjectDir);
-  const { elizaDir, elizaDbDir, envFilePath } = dirs;
+  const { elizaDbDir, envFilePath } = dirs;
 
   // Use provided parameters or defaults from dirs
   const targetDbDir = dbDir || elizaDbDir;
@@ -412,6 +308,10 @@ export async function storePostgresUrl(url: string, envFilePath: string): Promis
   if (!url) return;
 
   try {
+    // Ensure parent directory exists
+    const envDir = path.dirname(envFilePath);
+    await fs.mkdir(envDir, { recursive: true });
+
     // Read existing content first to avoid duplicates
     let content = '';
     if (existsSync(envFilePath)) {
@@ -503,7 +403,7 @@ export async function promptAndStorePostgresUrl(envFilePath: string): Promise<st
     return response;
   } catch (error) {
     spinner.stop('Failed to save configuration');
-    clack.log.error(`Error: ${error.message}`);
+    clack.log.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
     return null;
   }
 }
@@ -533,6 +433,18 @@ export function isValidAnthropicKey(key: string): boolean {
 }
 
 /**
+ * Validates a Google Generative AI API key format
+ * @param key The API key to validate
+ * @returns True if the key appears valid
+ */
+export function isValidGoogleKey(key: string): boolean {
+  if (!key || typeof key !== 'string') return false;
+
+  // Google API keys are typically 39 characters long and contain alphanumeric chars with dashes
+  return key.length === 39 && /^[A-Za-z0-9_-]+$/.test(key);
+}
+
+/**
  * Stores OpenAI API key in the .env file
  * @param key The OpenAI API key to store
  * @param envFilePath Path to the .env file
@@ -557,6 +469,37 @@ export async function storeOpenAIKey(key: string, envFilePath: string): Promise<
     logger.success('OpenAI API key saved to configuration');
   } catch (error) {
     logger.error('Error saving OpenAI API key:', error);
+    throw error;
+  }
+}
+
+/**
+ * Stores Google Generative AI API key in the .env file
+ * @param key The Google API key to store
+ * @param envFilePath Path to the .env file
+ */
+export async function storeGoogleKey(key: string, envFilePath: string): Promise<void> {
+  if (!key) return;
+
+  try {
+    // Read existing content first to avoid duplicates
+    let content = '';
+    if (existsSync(envFilePath)) {
+      content = await fs.readFile(envFilePath, 'utf8');
+    }
+
+    // Remove existing GOOGLE_GENERATIVE_AI_API_KEY line if present
+    const lines = content
+      .split('\n')
+      .filter((line) => !line.startsWith('GOOGLE_GENERATIVE_AI_API_KEY='));
+    lines.push(`GOOGLE_GENERATIVE_AI_API_KEY=${key}`);
+
+    await fs.writeFile(envFilePath, lines.join('\n'), 'utf8');
+    process.env.GOOGLE_GENERATIVE_AI_API_KEY = key;
+
+    logger.success('Google Generative AI API key saved to configuration');
+  } catch (error) {
+    logger.error('Error saving Google API key:', error);
     throw error;
   }
 }
@@ -591,49 +534,113 @@ export async function storeAnthropicKey(key: string, envFilePath: string): Promi
 }
 
 /**
+ * Generic configuration for provider prompts
+ */
+interface ProviderPromptConfig {
+  name: string;
+  icon: string;
+  noteText: string;
+  inputs: Array<{
+    key: string;
+    message: string;
+    placeholder?: string;
+    initialValue?: string;
+    type: 'text' | 'password';
+    validate: (value: string) => string | undefined;
+  }>;
+  storeFunction: (config: any, envFilePath: string) => Promise<void>;
+  successMessage: string;
+}
+
+/**
+ * Generic function to prompt for provider configuration
+ * @param config Provider-specific configuration
+ * @param envFilePath Path to the .env file
+ * @returns The configured values or null if user cancels
+ */
+async function promptAndStoreProviderConfig<T>(
+  config: ProviderPromptConfig,
+  envFilePath: string
+): Promise<T | null> {
+  clack.intro(`${config.icon} ${config.name} Configuration`);
+
+  if (config.noteText) {
+    clack.note(config.noteText, 'API Key Information');
+  }
+
+  const results: any = {};
+
+  // Collect all inputs
+  for (const input of config.inputs) {
+    const promptFn = input.type === 'password' ? clack.password : clack.text;
+    const promptConfig: any = {
+      message: input.message,
+      validate: input.validate,
+    };
+
+    if (input.placeholder) promptConfig.placeholder = input.placeholder;
+    if (input.initialValue) promptConfig.initialValue = input.initialValue;
+
+    const response = await promptFn(promptConfig);
+
+    if (clack.isCancel(response)) {
+      clack.cancel('Operation cancelled.');
+      return null;
+    }
+
+    results[input.key] = input.type === 'text' ? response.trim() : response;
+  }
+
+  // Store the configuration
+  const spinner = clack.spinner();
+  spinner.start(`Saving ${config.name} configuration...`);
+
+  try {
+    await config.storeFunction(results, envFilePath);
+    spinner.stop(`${config.name} configuration saved successfully!`);
+    clack.outro(`✓ ${config.successMessage}`);
+    return results as T;
+  } catch (error) {
+    spinner.stop('Failed to save configuration');
+    clack.log.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+    return null;
+  }
+}
+
+/**
  * Prompts the user for an OpenAI API key, validates it, and stores it
  * @param envFilePath Path to the .env file
  * @returns The configured OpenAI API key or null if user cancels
  */
 export async function promptAndStoreOpenAIKey(envFilePath: string): Promise<string | null> {
-  clack.intro('🤖 OpenAI API Configuration');
-
-  clack.note('Get your API key from: https://platform.openai.com/api-keys', 'API Key Information');
-
-  const response = await clack.password({
-    message: 'Enter your OpenAI API key:',
-    validate: (value) => {
-      if (value.trim() === '') return 'OpenAI API key cannot be empty';
-      return undefined;
+  const config: ProviderPromptConfig = {
+    name: 'OpenAI API',
+    icon: '🤖',
+    noteText: 'Get your API key from: https://platform.openai.com/api-keys',
+    inputs: [
+      {
+        key: 'key',
+        message: 'Enter your OpenAI API key:',
+        type: 'password',
+        validate: (value) => {
+          if (value.trim() === '') return 'OpenAI API key cannot be empty';
+          return undefined;
+        },
+      },
+    ],
+    storeFunction: async (results, envPath) => {
+      const isValid = isValidOpenAIKey(results.key);
+      if (!isValid) {
+        clack.log.warn('Invalid API key format detected. Expected format: sk-...');
+        clack.log.warn('The key has been saved but may not work correctly.');
+      }
+      await storeOpenAIKey(results.key, envPath);
     },
-  });
+    successMessage: 'OpenAI integration configured',
+  };
 
-  if (clack.isCancel(response)) {
-    clack.cancel('Operation cancelled.');
-    return null;
-  }
-
-  // Check if the API key format is valid and warn if not
-  const isValid = isValidOpenAIKey(response);
-  if (!isValid) {
-    clack.log.warn('Invalid API key format detected. Expected format: sk-...');
-    clack.log.warn('The key has been saved but may not work correctly.');
-  }
-
-  // Store the key in the .env file (even if invalid)
-  const spinner = clack.spinner();
-  spinner.start('Saving OpenAI API key...');
-
-  try {
-    await storeOpenAIKey(response, envFilePath);
-    spinner.stop('OpenAI API key saved successfully!');
-    clack.outro('\u2713 OpenAI integration configured');
-    return response;
-  } catch (error) {
-    spinner.stop('Failed to save API key');
-    clack.log.error(`Error: ${error.message}`);
-    return null;
-  }
+  const result = await promptAndStoreProviderConfig<{ key: string }>(config, envFilePath);
+  return result?.key || null;
 }
 
 /**
@@ -642,47 +649,372 @@ export async function promptAndStoreOpenAIKey(envFilePath: string): Promise<stri
  * @returns The configured Anthropic API key or null if user cancels
  */
 export async function promptAndStoreAnthropicKey(envFilePath: string): Promise<string | null> {
-  clack.intro('🤖 Anthropic Claude Configuration');
-
-  clack.note(
-    'Get your API key from: https://console.anthropic.com/settings/keys',
-    'API Key Information'
-  );
-
-  const response = await clack.password({
-    message: 'Enter your Anthropic API key:',
-    validate: (value) => {
-      if (value.trim() === '') return 'Anthropic API key cannot be empty';
-      return undefined;
+  const config: ProviderPromptConfig = {
+    name: 'Anthropic Claude',
+    icon: '🤖',
+    noteText: 'Get your API key from: https://console.anthropic.com/settings/keys',
+    inputs: [
+      {
+        key: 'key',
+        message: 'Enter your Anthropic API key:',
+        type: 'password',
+        validate: (value) => {
+          if (value.trim() === '') return 'Anthropic API key cannot be empty';
+          return undefined;
+        },
+      },
+    ],
+    storeFunction: async (results, envPath) => {
+      const isValid = isValidAnthropicKey(results.key);
+      if (!isValid) {
+        clack.log.warn('Invalid API key format detected. Expected format: sk-ant-...');
+        clack.log.warn('The key has been saved but may not work correctly.');
+      }
+      await storeAnthropicKey(results.key, envPath);
     },
-  });
+    successMessage: 'Claude integration configured',
+  };
 
-  if (clack.isCancel(response)) {
-    clack.cancel('Operation cancelled.');
-    return null;
-  }
+  const result = await promptAndStoreProviderConfig<{ key: string }>(config, envFilePath);
+  return result?.key || null;
+}
 
-  // Check if the API key format is valid and warn if not
-  const isValid = isValidAnthropicKey(response);
-  if (!isValid) {
-    clack.log.warn('Invalid API key format detected. Expected format: sk-ant-...');
-    clack.log.warn('The key has been saved but may not work correctly.');
-  }
-
-  // Store the key in the .env file (even if invalid)
-  const spinner = clack.spinner();
-  spinner.start('Saving Anthropic API key...');
+/**
+ * Validates an Ollama API endpoint format
+ * @param endpoint The endpoint URL to validate
+ * @returns True if the endpoint appears valid
+ */
+export function isValidOllamaEndpoint(endpoint: string): boolean {
+  if (!endpoint || typeof endpoint !== 'string') return false;
 
   try {
-    await storeAnthropicKey(response, envFilePath);
-    spinner.stop('Anthropic API key saved successfully!');
-    clack.outro('\u2713 Claude integration configured');
-    return response;
-  } catch (error) {
-    spinner.stop('Failed to save API key');
-    clack.log.error(`Error: ${error.message}`);
-    return null;
+    const url = new URL(endpoint);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
   }
+}
+
+/**
+ * Stores Ollama configuration in the .env file
+ * @param config The Ollama configuration to store
+ * @param envFilePath Path to the .env file
+ */
+export async function storeOllamaConfig(
+  config: { endpoint: string; model: string },
+  envFilePath: string
+): Promise<void> {
+  if (!config.endpoint || !config.model) return;
+
+  try {
+    // Read existing content first to avoid duplicates
+    let content = '';
+    if (existsSync(envFilePath)) {
+      content = await fs.readFile(envFilePath, 'utf8');
+    }
+
+    // Remove existing Ollama lines if present
+    const lines = content
+      .split('\n')
+      .filter(
+        (line) =>
+          !line.startsWith('OLLAMA_API_ENDPOINT=') &&
+          !line.startsWith('OLLAMA_MODEL=') &&
+          !line.startsWith('USE_OLLAMA_TEXT_MODELS=')
+      );
+
+    // Add new Ollama configuration
+    lines.push(`OLLAMA_API_ENDPOINT=${config.endpoint}`);
+    lines.push(`OLLAMA_MODEL=${config.model}`);
+    lines.push('USE_OLLAMA_TEXT_MODELS=true');
+
+    await fs.writeFile(envFilePath, lines.join('\n'), 'utf8');
+
+    // Update process.env
+    process.env.OLLAMA_API_ENDPOINT = config.endpoint;
+    process.env.OLLAMA_MODEL = config.model;
+    process.env.USE_OLLAMA_TEXT_MODELS = 'true';
+
+    logger.success('Ollama configuration saved to configuration');
+  } catch (error) {
+    logger.error('Error saving Ollama configuration:', error);
+    throw error;
+  }
+}
+
+/**
+ * Prompts the user for Ollama embedding model selection
+ * @param envFilePath Path to the .env file
+ * @returns The configured Ollama embedding settings or null if user cancels
+ */
+export async function promptAndStoreOllamaEmbeddingConfig(
+  envFilePath: string
+): Promise<{ endpoint: string; embeddingModel: string } | null> {
+  // Check if we already have an Ollama endpoint configured
+  let existingEndpoint = process.env.OLLAMA_API_ENDPOINT;
+
+  const config: ProviderPromptConfig = {
+    name: 'Ollama Embeddings',
+    icon: '🦙',
+    noteText:
+      'Select an embedding model for Ollama.\nPopular options: nomic-embed-text, mxbai-embed-large\nMake sure the model is pulled: ollama pull <model-name>',
+    inputs: [
+      {
+        key: 'endpoint',
+        message: 'Enter your Ollama API endpoint:',
+        placeholder: 'http://localhost:11434',
+        initialValue: existingEndpoint || 'http://localhost:11434',
+        type: 'text',
+        validate: (value) => {
+          if (value.trim() === '') return 'Ollama endpoint cannot be empty';
+          if (!isValidOllamaEndpoint(value))
+            return 'Invalid URL format (http:// or https:// required)';
+          return undefined;
+        },
+      },
+      {
+        key: 'embeddingModel',
+        message: 'Enter your Ollama embedding model:',
+        placeholder: 'nomic-embed-text',
+        initialValue: 'nomic-embed-text',
+        type: 'text',
+        validate: (value) => {
+          if (value.trim() === '') return 'Embedding model name cannot be empty';
+          return undefined;
+        },
+      },
+    ],
+    storeFunction: async (results, envPath) => {
+      // Store Ollama embedding configuration
+      try {
+        let content = '';
+        if (existsSync(envPath)) {
+          content = await fs.readFile(envPath, 'utf8');
+        }
+
+        // Only remove embedding-specific lines, preserve general Ollama config
+        const lines = content
+          .split('\n')
+          .filter(
+            (line) =>
+              !line.startsWith('OLLAMA_EMBEDDING_MODEL=') &&
+              !line.startsWith('USE_OLLAMA_EMBEDDINGS=')
+          );
+
+        // Check if we need to update the endpoint
+        const endpointPattern = /^OLLAMA_API_ENDPOINT=(.*)$/m;
+        const existingEndpointMatch = content.match(endpointPattern);
+
+        if (existingEndpointMatch) {
+          // Endpoint exists, only update if different
+          if (results.endpoint !== existingEndpointMatch[1]) {
+            const updatedLines = lines.map((line) => {
+              if (line.startsWith('OLLAMA_API_ENDPOINT=')) {
+                return `OLLAMA_API_ENDPOINT=${results.endpoint}`;
+              }
+              return line;
+            });
+            lines.length = 0;
+            lines.push(...updatedLines);
+          }
+        } else {
+          // No existing endpoint, add it
+          lines.push(`OLLAMA_API_ENDPOINT=${results.endpoint}`);
+        }
+
+        // Add embedding-specific configuration
+        lines.push(`OLLAMA_EMBEDDING_MODEL=${results.embeddingModel}`);
+        lines.push('USE_OLLAMA_EMBEDDINGS=true');
+
+        await fs.writeFile(envPath, lines.join('\n'), 'utf8');
+
+        // Update process.env
+        process.env.OLLAMA_API_ENDPOINT = results.endpoint;
+        process.env.OLLAMA_EMBEDDING_MODEL = results.embeddingModel;
+        process.env.USE_OLLAMA_EMBEDDINGS = 'true';
+
+        logger.success('Ollama embedding configuration saved');
+      } catch (error) {
+        logger.error('Error saving Ollama embedding configuration:', error);
+        throw error;
+      }
+    },
+    successMessage: 'Ollama embedding model configured',
+  };
+
+  return await promptAndStoreProviderConfig<{ endpoint: string; embeddingModel: string }>(
+    config,
+    envFilePath
+  );
+}
+
+/**
+ * Prompts the user for Ollama configuration, validates it, and stores it
+ * @param envFilePath Path to the .env file
+ * @returns The configured Ollama settings or null if user cancels
+ */
+export async function promptAndStoreOllamaConfig(
+  envFilePath: string
+): Promise<{ endpoint: string; model: string } | null> {
+  const config: ProviderPromptConfig = {
+    name: 'Ollama',
+    icon: '🦙',
+    noteText:
+      'Make sure Ollama is installed and running on your system.\nDefault endpoint: http://localhost:11434\nGet started: https://ollama.ai/',
+    inputs: [
+      {
+        key: 'endpoint',
+        message: 'Enter your Ollama API endpoint:',
+        placeholder: 'http://localhost:11434',
+        initialValue: 'http://localhost:11434',
+        type: 'text',
+        validate: (value) => {
+          if (value.trim() === '') return 'Ollama endpoint cannot be empty';
+          if (!isValidOllamaEndpoint(value))
+            return 'Invalid URL format (http:// or https:// required)';
+          return undefined;
+        },
+      },
+      {
+        key: 'model',
+        message: 'Enter your preferred Ollama model:',
+        placeholder: 'llama2',
+        initialValue: 'llama2',
+        type: 'text',
+        validate: (value) => {
+          if (value.trim() === '') return 'Model name cannot be empty';
+          return undefined;
+        },
+      },
+    ],
+    storeFunction: async (results, envPath) => {
+      await storeOllamaConfig({ endpoint: results.endpoint, model: results.model }, envPath);
+    },
+    successMessage: 'Ollama integration configured',
+  };
+
+  return await promptAndStoreProviderConfig<{ endpoint: string; model: string }>(
+    config,
+    envFilePath
+  );
+}
+
+/**
+ * Prompts the user for a Google Generative AI API key, validates it, and stores it
+ * @param envFilePath Path to the .env file
+ * @returns The configured Google API key or null if user cancels
+ */
+export async function promptAndStoreGoogleKey(envFilePath: string): Promise<string | null> {
+  const config: ProviderPromptConfig = {
+    name: 'Google Generative AI',
+    icon: '🤖',
+    noteText: 'Get your API key from: https://aistudio.google.com/apikey',
+    inputs: [
+      {
+        key: 'key',
+        message: 'Enter your Google Generative AI API key:',
+        type: 'password',
+        validate: (value) => {
+          if (value.trim() === '') return 'Google API key cannot be empty';
+          return undefined;
+        },
+      },
+    ],
+    storeFunction: async (results, envPath) => {
+      const isValid = isValidGoogleKey(results.key);
+      if (!isValid) {
+        clack.log.warn(
+          'Invalid API key format detected. Expected format: 39 character alphanumeric key'
+        );
+        clack.log.warn('The key has been saved but may not work correctly.');
+      }
+      await storeGoogleKey(results.key, envPath);
+    },
+    successMessage: 'Google Generative AI integration configured',
+  };
+
+  const result = await promptAndStoreProviderConfig<{ key: string }>(config, envFilePath);
+  return result?.key || null;
+}
+
+/**
+ * Validates an OpenRouter API key format
+ * @param key The API key to validate
+ * @returns True if the key appears to be in valid format
+ */
+export function isValidOpenRouterKey(key: string): boolean {
+  if (!key || typeof key !== 'string') return false;
+  // OpenRouter keys typically start with "sk-or-" followed by alphanumeric characters
+  return key.startsWith('sk-or-') && key.length > 10;
+}
+
+/**
+ * Stores OpenRouter API key in the .env file
+ * @param key The API key to store
+ * @param envFilePath Path to the .env file
+ */
+export async function storeOpenRouterKey(key: string, envFilePath: string): Promise<void> {
+  if (!key) return;
+
+  try {
+    // Read existing content first to avoid duplicates
+    let content = '';
+    if (existsSync(envFilePath)) {
+      content = await fs.readFile(envFilePath, 'utf8');
+    }
+
+    // Remove existing OpenRouter API key line if present
+    const lines = content.split('\n').filter((line) => !line.startsWith('OPENROUTER_API_KEY='));
+
+    // Add new OpenRouter API key
+    lines.push(`OPENROUTER_API_KEY=${key}`);
+
+    await fs.writeFile(envFilePath, lines.join('\n'), 'utf8');
+
+    // Update process.env
+    process.env.OPENROUTER_API_KEY = key;
+
+    logger.success('OpenRouter API key saved to configuration');
+  } catch (error) {
+    logger.error('Error saving OpenRouter API key:', error);
+    throw error;
+  }
+}
+
+/**
+ * Prompts the user for an OpenRouter API key, validates it, and stores it
+ * @param envFilePath Path to the .env file
+ * @returns The configured OpenRouter API key or null if user cancels
+ */
+export async function promptAndStoreOpenRouterKey(envFilePath: string): Promise<string | null> {
+  const config: ProviderPromptConfig = {
+    name: 'OpenRouter',
+    icon: '🔄',
+    noteText: 'Get your API key from: https://openrouter.ai/keys',
+    inputs: [
+      {
+        key: 'key',
+        message: 'Enter your OpenRouter API key:',
+        type: 'password',
+        validate: (value) => {
+          if (value.trim() === '') return 'OpenRouter API key cannot be empty';
+          return undefined;
+        },
+      },
+    ],
+    storeFunction: async (results, envPath) => {
+      const isValid = isValidOpenRouterKey(results.key);
+      if (!isValid) {
+        clack.log.warn('Invalid API key format detected. Expected format: sk-or-...');
+        clack.log.warn('The key has been saved but may not work correctly.');
+      }
+      await storeOpenRouterKey(results.key, envPath);
+    },
+    successMessage: 'OpenRouter integration configured',
+  };
+
+  const result = await promptAndStoreProviderConfig<{ key: string }>(config, envFilePath);
+  return result?.key || null;
 }
 
 /**
@@ -793,103 +1125,4 @@ export async function loadEnvironment(projectDir: string = process.cwd()): Promi
   if (existsSync(envPath)) {
     dotenv.config({ path: envPath });
   }
-}
-
-/**
- * Merges environment variables from process.env with example variables from template.
- * Prioritizes process.env variables that have actual values, and uses example variables as fallback.
- * @param templateContent The template content containing example variables
- * @returns Merged environment variables object
- */
-export function mergeProcessEnvWithTemplate(templateContent: string): Record<string, string> {
-  const result: Record<string, string> = {};
-  const processedKeys = new Set<string>();
-
-  // First, parse the template to get example variables and their structure
-  const templateLines = templateContent.split('\n');
-  const templateVars: Record<string, string> = {};
-
-  for (const line of templateLines) {
-    const trimmedLine = line.trim();
-    if (trimmedLine && !trimmedLine.startsWith('#') && trimmedLine.includes('=')) {
-      const equalIndex = trimmedLine.indexOf('=');
-      const key = trimmedLine.substring(0, equalIndex).trim();
-      const value = trimmedLine.substring(equalIndex + 1).trim();
-      if (key) {
-        templateVars[key] = value;
-      }
-    }
-  }
-
-  // Add all process.env variables that have actual values (prioritized)
-  for (const [key, value] of Object.entries(process.env)) {
-    if (value && value.trim() !== '') {
-      result[key] = value;
-      processedKeys.add(key);
-    }
-  }
-
-  // Add template variables that aren't already set from process.env
-  for (const [key, value] of Object.entries(templateVars)) {
-    if (!processedKeys.has(key)) {
-      result[key] = value;
-      processedKeys.add(key);
-    }
-  }
-
-  return result;
-}
-
-/**
- * Converts environment variables object back to .env file format, preserving comments from template
- * @param envVars Environment variables object
- * @param templateContent Original template content for structure and comments
- * @returns Formatted .env file content
- */
-export function formatEnvFileWithTemplate(
-  envVars: Record<string, string>,
-  templateContent: string
-): string {
-  const lines: string[] = [];
-  const processedKeys = new Set<string>();
-  const templateLines = templateContent.split('\n');
-
-  // First pass: go through template preserving structure and comments
-  for (const line of templateLines) {
-    const trimmedLine = line.trim();
-
-    if (!trimmedLine || trimmedLine.startsWith('#') || !trimmedLine.includes('=')) {
-      // Preserve comments and empty lines
-      lines.push(line);
-    } else {
-      // This is a variable line
-      const equalIndex = trimmedLine.indexOf('=');
-      const key = trimmedLine.substring(0, equalIndex).trim();
-
-      if (key && envVars.hasOwnProperty(key)) {
-        lines.push(`${key}=${envVars[key]}`);
-        processedKeys.add(key);
-      } else {
-        // Variable not found, keep original line
-        lines.push(line);
-      }
-    }
-  }
-
-  // Second pass: add any new variables from process.env that weren't in template
-  const newVars: string[] = [];
-  for (const [key, value] of Object.entries(envVars)) {
-    if (!processedKeys.has(key)) {
-      newVars.push(`${key}=${value}`);
-    }
-  }
-
-  if (newVars.length > 0) {
-    lines.push('');
-    lines.push('### Additional Environment Variables from Runtime ###');
-    lines.push('# Variables found in process.env that were not in the template');
-    lines.push(...newVars);
-  }
-
-  return lines.join('\n');
 }

@@ -1,11 +1,11 @@
 ---
 id: create-server
-title: 'Create messaging server'
-description: 'Creates a new messaging server'
-sidebar_label: 'Create messaging server'
+title: 'Create server'
+description: 'Create a new server'
+sidebar_label: 'Create server'
 hide_title: true
 hide_table_of_contents: true
-api: eJztV01v4zgM/SsCL7sLeJLM7uzFt8xMDwF2MEXbPbU5MBZjaypLHklOmg383xeU7Dpo0ja7GPQ0RoD4g6RIPpJ62kPA0kN+CzV5jyV5yABLMsHDMgNJvnCqCcoayOGajPQCRS8qghVoRJQWaKRwVJDaEIs48o01niAD25BDtrCQkIMnI78kfcigQYc1BXLswh4M1gR5Wn8hIQPFyzYYKsjA0fdWOZKQB9dSBr6oqEbI9xB2Dav54JQpIYO1dTUGyKFtlYTuaRiLz8KuRagouQ7dMhknHz5auWOLT9cqrAksmu8Bm0arIgY0/ebZ4P7YFbv6RkXgAB2HHxT5KEdGkuM8HDv9nI9Jh6Nw1tb
+api: eJztV0tvGzcQ/iuDORprS27THvampipgoGmC2EEPsg8jcqRlzCU3JFeyIui/F8PdlRTJTg0UyKm6iI95fPPk7BYTLSOWM6w5Rloat8SHAjVHFUyTjHdY4tvAlBgIHK8hclhxwAJ9w4GE4kZjiSrT3A6Xgb+0HNNvXm+w3OatCayxTKHlApV3iV2SK2oaa1QWNPocRd8Wo6q4JlmlTcNYop9/ZpV6uZ2gGTqqWcA2QaAkw1E48umBM6YgNu1ObHrmvuZEmtIzanf5J8pj413s9Pw0vpa/bz3V2Q+dMzTEVimOcdFau8H/YPW3FvZSjwjn3lsml6181oIzEV2c/pXO6HNXFbjwoaaEJbat0XiaLZ+c+dIyGM0umYXhAAsfIFU8pM6ueCFIp5L+oprBL054vxvHUxG/H3bnkl6O+KmYidZGlmR7dtjz7oo+9/UkHQkyLvEyl8LeW8alX988564nSKbmmKhuYF2xO4IJa4pDOqHkYDLJ8j7T+tSUizfj8Xk+3rgVWaOhL8cfkYMF8hPVjYBckI28K5BD8K9INuX1K5JiKsIg0+YQStd6NdtAntMokbHxNSkkhKwhmwHGdQGVy87zQ0iyiv7sl+ei0UOXaBq3PHTS/2PyA2LS1Xvl5bFqfK6FhlKFJY6oMaP98zfqwhKxwGFVzrbYBoslVik15WhkvSJb+ZjKn8fj8Rm6P+UaNK/Y+qZml/Y956FAierHw+s4HQIzvFwvmbw/PupaYpTYnh02WGzNV4L3tzD5cHPexz7cgPaqFVDZXbk371lW11fjq+sxXMIEFpafzNwykNMQFVmSzeQGaCkWLQLVvPbh8ere3bu7ykRRCCaC5miWjjUkD3OGNrKGtUkVEGS/2Q2E1jmpgE6xcTGRU3wFU6cbb1yKQNb6dQY3lEtx72pyOURFxiQdNpDKpZTlD9gipCr4dikaP05v7zrKBSnusfIA1YclOfOVszCf2+7Ci2aRqX1NxsXy3l3CxcXtJiauLy5K6FaXa6MZ9jNQzJDYrUzwLoc8g2VZdgImGZoIyCuwZsFqo3oHH6iPZHaM77j2YXNgrPM+cwXv6zNF74ZMFpZuw1CR0za7TlXkHNvYObFP8R5iq43PimQBTfDST8QXmbRhVhXEjUsVR7NHpw0Jzx/GMrSN9aQ7i+TiDNzddCrEd6GNMiBNn1i1OQ+nR6479cDfPL/16pGTsH5kspfyXoLydd26vlvCyhB0VFc377FAMatL+i6p+z5LKh3V2j7z33aykoxph1KP5Wi0NKlq51fK1yMWah+7//waSyOpyR1J7GflfW8/mVb2rf6Fobpve4mf0qixZPJMlwFt+3Y1Q2oMFkfz+qFRPRQoXUmItts5Rf4U7G4nx19aDhssZw8FrigYqWXZ7QqsmLSMgrMtPvJGgHUQL+8EipDbViCdvUy7YuCYKMVN+i7tw1H3/fD+9g4LnPffBnV+YjDQWuZ7WmOJ+esiJ0D+eJCzLVpyyza/K9jJlN8//FByNQ==
 sidebar_class_name: 'post api-method'
 info_path: docs/rest/eliza-os-api
 custom_edit_url: null
@@ -19,7 +19,7 @@ import OperationTabs from '@theme/OperationTabs';
 import TabItem from '@theme/TabItem';
 import Heading from '@theme/Heading';
 
-<Heading as={'h1'} className={'openapi__heading'} children={'Create messaging server'}></Heading>
+<Heading as={'h1'} className={'openapi__heading'} children={'Create server'}></Heading>
 
 <MethodEndpoint
   method={'post'}
@@ -27,7 +27,7 @@ import Heading from '@theme/Heading';
   context={'endpoint'}
 ></MethodEndpoint>
 
-Creates a new messaging server in the system
+Create a new server
 
 <Heading
   id={'request'}
@@ -35,6 +35,8 @@ Creates a new messaging server in the system
   className={'openapi-tabs__heading'}
   children={'Request'}
 ></Heading>
+
+<ParamsDetails parameters={undefined}></ParamsDetails>
 
 <RequestSchema
   title={'Body'}
@@ -44,25 +46,12 @@ Creates a new messaging server in the system
       'application/json': {
         schema: {
           type: 'object',
+          required: ['name'],
           properties: {
-            name: {
-              type: 'string',
-              description: 'Name of the server',
-            },
-            sourceType: {
-              type: 'string',
-              description: 'Source type of the server (e.g., discord, gui)',
-            },
-            sourceId: {
-              type: 'string',
-              description: 'Original server ID from source platform (optional)',
-            },
-            metadata: {
-              type: 'object',
-              description: 'Additional metadata for the server (optional)',
-            },
+            name: { type: 'string' },
+            description: { type: 'string' },
+            metadata: { type: 'object' },
           },
-          required: ['name', 'sourceType'],
         },
       },
     },
@@ -80,7 +69,7 @@ Creates a new messaging server in the system
           schema: {
             type: 'object',
             properties: {
-              success: { type: 'boolean', example: true },
+              success: { type: 'boolean' },
               data: {
                 type: 'object',
                 properties: {
@@ -90,35 +79,18 @@ Creates a new messaging server in the system
                       id: {
                         type: 'string',
                         format: 'uuid',
-                        description: 'ID of the created server',
+                        description: 'Unique identifier for the server',
                       },
-                      name: {
-                        type: 'string',
-                        description: 'Name of the server',
-                      },
-                      sourceType: {
-                        type: 'string',
-                        description: 'Source type of the server',
-                      },
-                      sourceId: {
-                        type: 'string',
-                        description: 'Original server ID from source platform',
-                      },
+                      name: { type: 'string', description: 'Name of the server' },
+                      description: { type: 'string', description: 'Description of the server' },
+                      metadata: { type: 'object', description: 'Additional server metadata' },
                       createdAt: {
-                        type: 'string',
-                        format: 'date-time',
-                        description: 'Timestamp when the server was created',
-                      },
-                      updatedAt: {
-                        type: 'string',
-                        format: 'date-time',
-                        description: 'Timestamp when the server was last updated',
-                      },
-                      metadata: {
-                        type: 'object',
-                        description: 'Additional metadata about the server',
+                        type: 'integer',
+                        format: 'int64',
+                        description: 'Unix timestamp when the server was created',
                       },
                     },
+                    title: 'Server',
                   },
                 },
               },
@@ -128,7 +100,7 @@ Creates a new messaging server in the system
       },
     },
     '400': {
-      description: 'Invalid request parameters',
+      description: 'Invalid request',
       content: {
         'application/json': {
           schema: {
@@ -136,8 +108,12 @@ Creates a new messaging server in the system
             properties: {
               success: { type: 'boolean', example: false },
               error: {
-                type: 'string',
-                description: 'Error message describing what is missing or invalid',
+                type: 'object',
+                properties: {
+                  code: { type: 'string', description: 'Error code' },
+                  message: { type: 'string', description: 'Error message' },
+                  details: { type: 'string', description: 'Detailed error information' },
+                },
               },
             },
             title: 'Error',
@@ -154,8 +130,12 @@ Creates a new messaging server in the system
             properties: {
               success: { type: 'boolean', example: false },
               error: {
-                type: 'string',
-                description: 'Error message',
+                type: 'object',
+                properties: {
+                  code: { type: 'string', description: 'Error code' },
+                  message: { type: 'string', description: 'Error message' },
+                  details: { type: 'string', description: 'Detailed error information' },
+                },
               },
             },
             title: 'Error',

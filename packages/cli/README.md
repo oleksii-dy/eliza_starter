@@ -31,16 +31,6 @@ elizaos --no-auto-install create my-project
 ELIZA_NO_AUTO_INSTALL=true elizaos create my-project
 ```
 
-### Alternative usage with npx
-
-You can also run the CLI directly without installation using npx:
-
-```bash
-npx @elizaos/cli [command]
-```
-
-This is useful for trying out commands without installing the CLI globally.
-
 ## Global Options
 
 The following options are available for all ElizaOS CLI commands:
@@ -71,7 +61,6 @@ Initialize a new project, plugin, or agent.
 - **Arguments:**
   - `[name]`: Name for the project, plugin, or agent (optional)
 - **Options:**
-  - `-d, --dir <dir>`: Installation directory (default: `.`)
   - `-y, --yes`: Skip confirmation and use defaults (default: `false`)
   - `-t, --type <type>`: Type to create: 'project', 'plugin', 'agent', or 'tee' (default: 'project')
 
@@ -89,7 +78,7 @@ Start the project or plugin in development mode with auto-rebuild, detailed logg
 
 - **Options:**
   - `-c, --configure`: Reconfigure services and AI models (skips using saved configuration)
-  - `-char, --character [paths...]`: Character file(s) to use - accepts paths or URLs
+  - `--character [paths...]`: Character file(s) to use - accepts paths or URLs
   - `-b, --build`: Build the project before starting
   - `-p, --port <port>`: Port to listen on
 
@@ -194,6 +183,7 @@ Manage ElizaOS agents.
   - `stop` (alias: `st`): Stop an agent
     - Options:
       - `-n, --name <name>`: Agent id, name, or index number from list
+      - `--all`: Stop all running ElizaOS agents locally
       - `-r, --remote-url <url>`: URL of the remote agent runtime
       - `-p, --port <port>`: Port to listen on
   - `remove` (alias: `rm`): Remove an agent
@@ -220,7 +210,7 @@ Publish a plugin to the registry.
 - **Options:**
   - `-t, --test`: Test publish process without making changes
   - `--npm`: Publish to npm instead of GitHub
-  - `-sr, --skip-registry`: Skip publishing to the registry
+  - `--skip-registry`: Skip publishing to the registry
   - `-d, --dry-run`: Generate registry files locally without publishing
 
 **Default behavior:**
@@ -252,7 +242,7 @@ Start the Eliza agent with configurable plugins and services.
 
 - **Options:**
   - `-c, --configure`: Force reconfiguration of services and AI models (bypasses saved configuration)
-  - `-char, --character [paths...]`: Character file(s) to use - accepts paths or URLs
+  - `--character [paths...]`: Character file(s) to use - accepts paths or URLs
   - `-b, --build`: Build the project before starting
   - `-p, --port <port>`: Port to listen on (default: 3000)
 
@@ -514,7 +504,7 @@ Update ElizaOS CLI and project dependencies to the latest versions.
 
 - **Options:**
   - `-c, --check`: Check for available updates without applying them - shows what packages would be updated
-  - `-sb, --skip-build`: Skip building after updating
+  - `--skip-build`: Skip building after updating
   - `--cli`: Update only the global CLI installation (without updating packages)
   - `--packages`: Update only packages (without updating the CLI)
 
@@ -536,11 +526,13 @@ Manage environment variables and secrets.
 
 ### Process Management
 
-#### `elizaos stop`
+To stop all running ElizaOS agents locally, use:
 
-Stop all running ElizaOS agents running locally.
+```bash
+elizaos agent stop --all
+```
 
-This command uses `pkill` to terminate all ElizaOS processes and does not accept any options.
+This command uses `pkill` to terminate all ElizaOS processes. For stopping individual agents, see the [Agent Management](#elizaos-agent-subcommand) section.
 
 ## Development Guide
 
@@ -661,7 +653,7 @@ Plugins extend the functionality of ElizaOS agents by providing additional capab
 6. **Publish your plugin**:
 
    ```bash
-   # Login to npm first
+   # Login to npm first (still needed for publishing)
    npm login
 
    # Test your plugin thoroughly
@@ -684,8 +676,8 @@ Plugins extend the functionality of ElizaOS agents by providing additional capab
    elizaos test
 
    # Update version and publish updates
-   bun version patch  # or minor/major (or npm version if preferred)
-   npm publish
+   bun version patch  # or minor/major
+   npm publish  # Note: npm publish is still required for registry
    git push origin main && git push --tags
    ```
 
