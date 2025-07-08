@@ -6,8 +6,6 @@ import { logger, type Character, type ProjectAgent } from '@elizaos/core';
 import { Command } from 'commander';
 import { startAgents } from './actions/server-start';
 import { StartOptions } from './types';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
 import { loadEnvConfig } from './utils/config-utils';
 import { detectDirectoryType } from '@/src/utils/directory-detection';
 
@@ -29,29 +27,30 @@ export const start = new Command()
       let projectAgents: ProjectAgent[] = [];
 
       if (options.character && options.character.length > 0) {
-        // Validate and load characters from provided paths
-        for (const charPath of options.character) {
-          const resolvedPath = path.resolve(charPath);
+        // Flatten any comma-separated values in the character array
+        const characterPaths: string[] = [];
+        for (const charArg of options.character) {
+          // Split by comma to handle "bobby,billy" format
+          const paths = charArg.split(',').map(p => p.trim()).filter(p => p);
+          characterPaths.push(...paths);
+        }
 
-          if (!fs.existsSync(resolvedPath)) {
-            logger.error(`Character file not found: ${resolvedPath}`);
-            throw new Error(`Character file not found: ${resolvedPath}`);
-          }
-
+        // Load characters using the server's sophisticated path resolution
+        for (const charPath of characterPaths) {
           try {
-            const character = await loadCharacterTryPath(resolvedPath);
+            const character = await loadCharacterTryPath(charPath);
             if (character) {
               characters.push(character);
               logger.info(`Successfully loaded character: ${character.name}`);
             } else {
               logger.error(
-                `Failed to load character from ${resolvedPath}: Invalid or empty character file`
+                `Failed to load character from ${charPath}: Invalid or empty character file`
               );
-              throw new Error(`Invalid character file: ${resolvedPath}`);
+              throw new Error(`Invalid character file: ${charPath}`);
             }
           } catch (e) {
-            logger.error(`Failed to load character from ${resolvedPath}:`, e);
-            throw new Error(`Invalid character file: ${resolvedPath}`);
+            logger.error(`Failed to load character from ${charPath}:`, e);
+            throw new Error(`Invalid character file: ${charPath}`);
           }
         }
       } else {

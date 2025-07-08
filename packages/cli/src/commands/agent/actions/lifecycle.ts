@@ -75,21 +75,34 @@ export async function startAgent(options: OptionValues): Promise<void> {
       // Handle the path option first
       if (options.path) {
         try {
+          // First try to resolve as a file path
           const filePath = path.resolve(process.cwd(), options.path);
-          if (!existsSync(filePath)) {
-            throw new Error(`File not found at path: ${filePath}`);
+          if (existsSync(filePath)) {
+            // If it exists as a file, read it
+            const fileContent = readFileSync(filePath, 'utf8');
+            payload.characterJson = JSON.parse(fileContent);
+          } else {
+            // Otherwise, pass it as a character path to let the server resolve it
+            // This allows for character names like "bobby" or "bobby.json"
+            payload.characterPath = options.path;
           }
-          const fileContent = readFileSync(filePath, 'utf8');
-          payload.characterJson = JSON.parse(fileContent);
+          
           characterName = await createCharacter(payload);
           if (!characterName) {
-            logger.error('Failed to create character from file. Check server logs for details.');
+            logger.error('Failed to create character. Check server logs for details.');
           }
         } catch (error) {
-          console.error('Error reading or parsing local JSON file:', error);
-          throw new Error(
-            `Failed to read or parse local JSON file: ${error instanceof Error ? error.message : String(error)}`
-          );
+          // If it's a JSON parse error, it means the file exists but isn't valid JSON
+          if (error instanceof SyntaxError) {
+            console.error('Error parsing JSON file:', error);
+            throw new Error(`Failed to parse JSON file: ${error.message}`);
+          }
+          // For other errors, pass the path to the server to resolve
+          payload.characterPath = options.path;
+          characterName = await createCharacter(payload);
+          if (!characterName) {
+            logger.error('Failed to create character. Check server logs for details.');
+          }
         }
       }
 
