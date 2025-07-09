@@ -71,7 +71,12 @@ export function resolveEnvFile(startDir: string = process.cwd(), boundaryDir?: s
 export async function resolvePgliteDir(dir?: string, fallbackDir?: string): Promise<string> {
   const userEnv = UserEnvironment.getInstance();
   const pathsInfo = await userEnv.getPathInfo();
-  const projectRoot = pathsInfo.monorepoRoot || process.cwd(); // Base directory should be monorepo root or cwd
+  
+  // Only use monorepo root if we're actually inside it
+  let projectRoot = process.cwd();
+  if (pathsInfo.monorepoRoot && process.cwd().startsWith(pathsInfo.monorepoRoot)) {
+    projectRoot = pathsInfo.monorepoRoot;
+  }
 
   // Use the envFilePath from UserEnvironment which is already correctly resolved
   if (pathsInfo.envFilePath && existsSync(pathsInfo.envFilePath)) {

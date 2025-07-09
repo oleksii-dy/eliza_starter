@@ -159,14 +159,33 @@ export async function getElizaDirectories(targetProjectDir?: string) {
   const userEnv = UserEnvironment.getInstance();
   const paths = await userEnv.getPathInfo();
 
-  const projectRoot = targetProjectDir || paths.monorepoRoot || process.cwd();
-  const elizaDir = targetProjectDir ? path.resolve(targetProjectDir, '.eliza') : paths.elizaDir;
-  const envFilePath = targetProjectDir ? path.resolve(targetProjectDir, '.env') : paths.envFilePath;
+  // If a specific target directory is provided, use it
+  if (targetProjectDir) {
+    const elizaDir = path.resolve(targetProjectDir, '.eliza');
+    const envFilePath = path.resolve(targetProjectDir, '.env');
+    const defaultElizaDbDir = path.resolve(targetProjectDir, '.eliza', '.elizadb');
+    const elizaDbDir = await resolvePgliteDir(undefined, defaultElizaDbDir);
+    
+    logger.debug('Eliza directories (targetProjectDir provided):', {
+      elizaDir,
+      projectRoot: targetProjectDir,
+      targetProjectDir,
+    });
+
+    return { elizaDir, elizaDbDir, envFilePath };
+  }
+
+  // Otherwise use the paths from UserEnvironment which handles monorepo logic correctly
+  const elizaDir = paths.elizaDir;
+  const envFilePath = paths.envFilePath;
+  const projectRoot = paths.monorepoRoot && process.cwd().startsWith(paths.monorepoRoot) 
+    ? paths.monorepoRoot 
+    : process.cwd();
 
   logger.debug('Eliza directories:', {
     elizaDir,
     projectRoot,
-    targetProjectDir: targetProjectDir || 'none',
+    targetProjectDir: 'none',
   });
 
   const defaultElizaDbDir = path.resolve(projectRoot, '.eliza', '.elizadb');

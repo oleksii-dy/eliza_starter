@@ -276,13 +276,21 @@ export class UserEnvironment {
 
   public async getPathInfo(): Promise<PathInfo> {
     const monorepoRoot = this.findMonorepoRoot(process.cwd());
-    const projectRootForPaths = monorepoRoot || process.cwd();
+    
+    // Only use monorepo root for .eliza if we're actually inside the monorepo
+    let projectRootForPaths = process.cwd();
+    if (monorepoRoot && process.cwd().startsWith(monorepoRoot)) {
+      // We're inside the monorepo, allow hoisting
+      projectRootForPaths = monorepoRoot;
+    }
+    
     const elizaDir = path.join(projectRootForPaths, '.eliza');
 
     // Resolve .env from current working directory up to monorepo root (if any), or only cwd if not in monorepo
     const envFilePath = resolveEnvFile(process.cwd(), monorepoRoot ?? undefined);
 
     logger.debug('[UserEnvironment] Detected monorepo root:', monorepoRoot || 'Not in monorepo');
+    logger.debug('[UserEnvironment] Using project root for paths:', projectRootForPaths);
 
     return {
       elizaDir,
