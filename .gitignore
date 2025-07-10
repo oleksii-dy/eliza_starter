@@ -178,3 +178,6 @@ tasks/
 **/.taskmaster/
 **/.windsurfrules/ 
 .roomodes
+
+gcloud/
+!gcloud/.gitkeep
