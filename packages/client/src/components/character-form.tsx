@@ -8,7 +8,7 @@ import { AVATAR_IMAGE_MAX_SIZE, FIELD_REQUIREMENT_TYPE, FIELD_REQUIREMENTS } fro
 import { useToast } from '@/hooks/use-toast';
 import { exportCharacterAsJson } from '@/lib/export-utils';
 import { compressImage } from '@/lib/utils';
-import type { Agent } from '@elizaos/core';
+import type { Agent, Character } from '@elizaos/core';
 import type React from 'react';
 import {
   type FormEvent,
@@ -63,6 +63,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { SecretPanelRef } from './secret-panel';
 import { MissingSecretsDialog } from './missing-secrets-dialog';
 import { useRequiredSecrets } from '@/hooks/use-plugin-details';
+import { createElizaClient } from '@/lib/api-client-config';
+import { V1Character, useConvertCharacter } from '@/hooks/use-character-convert';
 
 export type InputField = {
   name: string;
@@ -109,7 +111,7 @@ export type CharacterFormProps = {
     addArrayItem?: <T>(path: string, item: T) => void;
     removeArrayItem?: (path: string, index: number) => void;
     updateSetting?: (path: string, value: any) => void;
-    importAgent?: (value: Agent) => void;
+    importAgent?: (value: Character) => void;
     [key: string]: any;
   };
   onTemplateChange?: () => void;
@@ -204,10 +206,29 @@ export default function CharacterForm({
   const [showRightScroll, setShowRightScroll] = useState(false);
   const [showMissingSecretsDialog, setShowMissingSecretsDialog] = useState(false);
   const [pendingSubmit, setPendingSubmit] = useState<Agent | null>(null);
+  const [globalEnvs, setGlobalEnvs] = useState<Record<string, string>>({});
 
   // Get required secrets based on enabled plugins
   const enabledPlugins = useMemo(() => characterValue?.plugins || [], [characterValue?.plugins]);
   const { requiredSecrets } = useRequiredSecrets(enabledPlugins);
+
+  const { convertCharacter } = useConvertCharacter();
+
+  // Fetch global environment variables
+  useEffect(() => {
+    const fetchGlobalEnvs = async () => {
+      try {
+        const elizaClient = createElizaClient();
+        const data = await elizaClient.system.getEnvironment();
+        setGlobalEnvs(data || {});
+      } catch (error) {
+        console.error('Failed to fetch global environment variables:', error);
+        setGlobalEnvs({});
+      }
+    };
+
+    fetchGlobalEnvs();
+  }, []);
 
   // Use the custom hook to detect container width
   const { containerRef, showLabels } = useContainerWidth(640); // Adjust threshold as needed
@@ -517,7 +538,16 @@ export default function CharacterForm({
         missingSecrets = requiredSecrets
           .filter((secret) => {
             const value = currentSecrets[secret.name];
-            return !value || (typeof value === 'string' && value.trim() === '');
+            // Check agent-specific secret
+            if (value && typeof value === 'string' && value.trim() !== '') {
+              return false;
+            }
+            // Check global environment
+            const globalValue = globalEnvs[secret.name];
+            if (globalValue && globalValue.trim() !== '') {
+              return false;
+            }
+            return true;
           })
           .map((secret) => secret.name);
       }
@@ -711,13 +741,25 @@ export default function CharacterForm({
     exportCharacterAsJson(characterValue, toast);
   };
 
+  function isV1Character(char: unknown): char is V1Character {
+    return (
+      typeof char === 'object' &&
+      char !== null &&
+      ('lore' in char || 'clients' in char || 'modelProvider' in char)
+    );
+  }
+
   const handleImportJSON = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     try {
       const text = await file.text();
-      const json: Agent = JSON.parse(text);
+      let json: Character = JSON.parse(text);
+
+      if (isV1Character(json)) {
+        json = convertCharacter(json);
+      }
 
       // Check for required fields using FIELD_REQUIREMENTS
       const missingFields = (
@@ -814,7 +856,7 @@ export default function CharacterForm({
       const template = getTemplateById(templateId);
       if (template && setCharacterValue.importAgent) {
         // Use the importAgent function to set all template values at once
-        setCharacterValue.importAgent(template.template as Agent);
+        setCharacterValue.importAgent(template.template as Character);
         // Notify parent of template change
         onTemplateChange?.();
       }
@@ -1076,7 +1118,16 @@ export default function CharacterForm({
             missingSecretNames = requiredSecrets
               .filter((secret) => {
                 const value = currentSecrets[secret.name];
-                return !value || (typeof value === 'string' && value.trim() === '');
+                // Check agent-specific secret
+                if (value && typeof value === 'string' && value.trim() !== '') {
+                  return false;
+                }
+                // Check global environment
+                const globalValue = globalEnvs[secret.name];
+                if (globalValue && globalValue.trim() !== '') {
+                  return false;
+                }
+                return true;
               })
               .map((secret) => secret.name);
           }
