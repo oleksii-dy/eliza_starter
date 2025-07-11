@@ -40,6 +40,38 @@ print_section() {
     echo -e "${MAGENTA}[CHECKING]${NC} $1"
 }
 
+# -----------------------------------------------------------------------------
+# Cross-platform helper to resolve a path *without* requiring the target to
+# exist.  Falls back gracefully when GNU realpath (with the -m flag) is not
+# present – e.g. on macOS/BSD systems.
+# -----------------------------------------------------------------------------
+resolve_path_portable() {
+    local _path="$1"
+
+    # Prefer python3 because it is available on both macOS and Linux and allows
+    # resolving non-existent paths when strict=False.
+    if command -v python3 >/dev/null 2>&1; then
+        python3 - "${_path}" << 'PY'
+import os, sys, pathlib
+print(pathlib.Path(sys.argv[1]).expanduser().resolve(strict=False))
+PY
+        return
+    fi
+
+    # Fallback: try GNU realpath with -m, then without -m.
+    if command -v realpath >/dev/null 2>&1; then
+        if realpath -m . >/dev/null 2>&1; then
+            realpath -m "${_path}" && return
+        fi
+        # realpath without -m requires the path to exist; still try it.
+        realpath "${_path}" 2>/dev/null && return
+    fi
+
+    # Last resort: prepend current directory and collapse duplicate slashes.
+    # This is not fully canonical but good enough for an existence check.
+    echo "$(pwd)/${_path}" | sed -E 's#(/+)#/#g'
+}
+
 # Create results directory
 mkdir -p "${RESULTS_DIR}"
 
@@ -172,7 +204,7 @@ print_section "Broken Internal Links"
             if [[ ! "$link" =~ ^https?:// ]] && [[ ! "$link" =~ ^mailto: ]]; then
                 # Handle relative links
                 if [[ "$link" =~ ^\.\.?/ ]]; then
-                    target_path=$(cd "$(dirname "$file")" && realpath -m "$link" 2>/dev/null || echo "")
+                    target_path=$(cd "$(dirname "$file")" && resolve_path_portable "$link")
                     if [ -n "$target_path" ] && [ ! -f "$target_path" ] && [ ! -d "$target_path" ]; then
                         echo "- $file: broken link to '$link'"
                     fi
