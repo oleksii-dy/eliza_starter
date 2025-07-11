@@ -1,0 +1,7 @@
+{
+  "extends": "../core/configs/typescript/tsconfig.frontend.json",
+  "compilerOptions": {
+    "types": ["cypress"]
+  },
+  "include": ["**/*.ts"]
+}
