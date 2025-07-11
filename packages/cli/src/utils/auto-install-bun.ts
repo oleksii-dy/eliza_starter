@@ -1,8 +1,84 @@
 import { logger } from '@elizaos/core';
 import { bunExec, bunExecInherit } from './bun-exec';
+import os from 'node:os';
+import path from 'node:path';
+import { existsSync } from 'node:fs';
 
 // Constants
 const INSTALLATION_VERIFICATION_DELAY_MS = 2000; // 2 seconds delay to allow installation to complete
+
+/**
+ * Gets the default Bun installation directory based on platform
+ */
+function getBunInstallDir(): string {
+  const home = os.homedir();
+
+  if (process.platform === 'win32') {
+    // Windows: %LOCALAPPDATA%\bun
+    return path.join(process.env.LOCALAPPDATA || path.join(home, 'AppData', 'Local'), 'bun');
+  } else {
+    // macOS and Linux: ~/.bun
+    return path.join(home, '.bun');
+  }
+}
+
+/**
+ * Updates the current process's PATH to include Bun installation directory
+ */
+function updateProcessPath(): void {
+  const bunDir = getBunInstallDir();
+  const binDir = path.join(bunDir, 'bin');
+
+  // Check if the bin directory exists
+  try {
+    if (!existsSync(binDir)) {
+      logger.debug(`[autoInstallBun] Bun bin directory does not exist: ${binDir}`);
+      return;
+    }
+  } catch (error) {
+    logger.debug(`[autoInstallBun] Could not check Bun bin directory: ${error}`);
+    return;
+  }
+
+  // Add to PATH if not already present
+  const currentPath = process.env.PATH || '';
+  if (!currentPath.includes(binDir)) {
+    // Prepend to PATH so our Bun installation takes precedence
+    process.env.PATH = `${binDir}${process.platform === 'win32' ? ';' : ':'}${currentPath}`;
+    logger.debug(`[autoInstallBun] Updated process PATH to include: ${binDir}`);
+  } else {
+    logger.debug(`[autoInstallBun] Bun bin directory already in PATH: ${binDir}`);
+  }
+}
+
+/**
+ * Attempts to refresh PATH from the shell environment
+ * This is a best-effort approach that may not work in all scenarios
+ */
+async function refreshPathFromShell(): Promise<void> {
+  try {
+    if (process.platform === 'win32') {
+      // On Windows, try to get PATH from PowerShell
+      const result = await bunExec('powershell', ['-c', '$env:PATH'], { stdio: 'ignore' });
+      if (result.success && result.stdout) {
+        process.env.PATH = result.stdout.trim();
+        logger.debug('[autoInstallBun] Refreshed PATH from PowerShell');
+      }
+    } else {
+      // On Unix-like systems, try to get PATH from shell
+      const shell = process.env.SHELL || '/bin/bash';
+      const result = await bunExec(shell, ['-c', 'echo $PATH'], { stdio: 'ignore' });
+      if (result.success && result.stdout) {
+        process.env.PATH = result.stdout.trim();
+        logger.debug(`[autoInstallBun] Refreshed PATH from ${shell}`);
+      }
+    }
+  } catch (error) {
+    logger.debug(`[autoInstallBun] Could not refresh PATH from shell: ${error}`);
+    // Fall back to manual PATH update
+    updateProcessPath();
+  }
+}
 
 /**
  * Checks if Bun is already installed
@@ -38,6 +114,10 @@ export async function autoInstallBun(): Promise<boolean> {
     }
 
     logger.info('Bun installation script executed successfully.');
+
+    // Update the current process's PATH to include the newly installed Bun
+    logger.debug('[autoInstallBun] Updating process PATH after installation...');
+    await refreshPathFromShell();
 
     // Verify installation
     // Sleep briefly to allow the installation to complete
