@@ -1,0 +1,56 @@
+{
+  "name": "@elizaos/plugin-e2b",
+  "version": "0.1.0",
+  "description": "E2B Code Interpreter plugin for secure code execution in isolated sandboxes",
+  "type": "module",
+  "private": true,
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "packageType": "plugin",
+  "platform": "node",
+  "license": "MIT",
+  "author": "ElizaOS",
+  "keywords": [
+    "plugin",
+    "elizaos",
+    "e2b",
+    "code-execution",
+    "sandbox"
+  ],
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "scripts": {
+    "build": "bun run build.ts",
+    "dev": "bun run build.ts --watch",
+    "clean": "rm -rf dist && rm -rf .turbo",
+    "lint": "eslint src --fix && prettier --write ./src",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test && elizaos test"
+  },
+  "dependencies": {
+    "@bufbuild/protobuf": "^2.5.2",
+    "@e2b/code-interpreter": "^1.5.1",
+    "@elizaos/core": "workspace:*",
+    "@elizaos/plugin-discord": "1.0.10",
+    "@elizaos/plugin-telegram": "1.0.4",
+    "@octokit/rest": "^20.0.0",
+    "dotenv": "^16.5.0",
+    "openapi-fetch": "^0.14.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "eslint": "^8.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0"
+  }
+}
