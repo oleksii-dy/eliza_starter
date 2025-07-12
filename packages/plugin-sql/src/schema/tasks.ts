@@ -11,10 +11,10 @@ export const taskTable = pgTable('tasks', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
   description: text('description'),
-  roomId: uuid('roomId'),
-  worldId: uuid('worldId'),
-  entityId: uuid('entityId'),
-  agentId: uuid('agent_id')
+  room_id: uuid('room_id'),
+  world_id: uuid('world_id'),
+  entity_id: uuid('entity_id'),
+  agent_id: uuid('agent_id')
     .notNull()
     .references(() => agentTable.id, { onDelete: 'cascade' }),
   tags: text('tags')

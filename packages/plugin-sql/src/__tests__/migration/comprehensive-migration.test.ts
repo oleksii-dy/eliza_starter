@@ -27,11 +27,11 @@ const testBaseTable = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     name: text('name').notNull(),
     created_at: timestamp('created_at', { withTimezone: true })
-      .default(sql`now()`)
-      .notNull(),
+      .notNull()
+      .$defaultFn(() => new Date()),
     updated_at: timestamp('updated_at', { withTimezone: true })
-      .default(sql`now()`)
-      .notNull(),
+      .notNull()
+      .$defaultFn(() => new Date()),
     active: boolean('active').default(true).notNull(),
     metadata: jsonb('metadata').default({}).notNull(),
   },
@@ -70,8 +70,8 @@ const testVectorTable = pgTable(
     dim_512: vector('dim_512', { dimensions: 512 }),
     dim_1024: vector('dim_1024', { dimensions: 1024 }),
     created_at: timestamp('created_at', { withTimezone: true })
-      .default(sql`now()`)
-      .notNull(),
+      .notNull()
+      .$defaultFn(() => new Date()),
   },
   (table) => [
     index('idx_vector_embeddings_entity').on(table.entity_id),
@@ -229,28 +229,57 @@ describe('Comprehensive Dynamic Migration Tests', () => {
   });
 
   describe('Migration Execution', () => {
-    // Clean up any existing schemas before migration tests
+    // Clean up any existing tables before migration tests
     beforeAll(async () => {
       try {
-        await db.execute(sql`DROP SCHEMA IF EXISTS test_plugin CASCADE`);
-        await db.execute(sql`DROP SCHEMA IF EXISTS empty_plugin CASCADE`);
-        await db.execute(sql`DROP SCHEMA IF EXISTS mixed_plugin CASCADE`);
-        console.log('[TEST CLEANUP] Dropped existing schemas to force table recreation');
-      } catch (error) {
-        console.log(
-          "[TEST CLEANUP] Schema cleanup failed (expected if schemas don't exist):",
-          error
+        // Get all table names in public schema
+        const tables = await db.execute(
+          sql`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'`
         );
+
+        // Drop all tables in reverse dependency order
+        for (const row of tables.rows) {
+          const tableName = (row as any).table_name;
+          try {
+            await db.execute(sql.raw(`DROP TABLE IF EXISTS ${tableName} CASCADE`));
+            console.log(`[TEST CLEANUP] Dropped table: ${tableName}`);
+          } catch (err) {
+            // Ignore errors, CASCADE should handle dependencies
+          }
+        }
+
+        console.log('[TEST CLEANUP] Dropped all existing tables to ensure clean state');
+      } catch (error) {
+        console.log("[TEST CLEANUP] Table cleanup failed (expected if tables don't exist):", error);
       }
     });
 
     it('should create all tables in correct dependency order', async () => {
+      // Clean up just in case there's leftover state
+      try {
+        await db.execute(sql`DROP TABLE IF EXISTS complex_relations CASCADE`);
+        await db.execute(sql`DROP TABLE IF EXISTS vector_embeddings CASCADE`);
+        await db.execute(sql`DROP TABLE IF EXISTS dependent_entities CASCADE`);
+        await db.execute(sql`DROP TABLE IF EXISTS base_entities CASCADE`);
+      } catch (error) {
+        console.log('[TEST] Could not clean up tables, proceeding anyway');
+      }
+
       // Run the migration
       await runPluginMigrations(db, 'test-plugin', testSchema);
 
+      // Debug: Check all tables in public schema
+      const allTables = await db.execute(
+        sql`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name`
+      );
+      console.log(
+        '[TEST] All tables in public schema:',
+        allTables.rows.map((r: any) => r.table_name)
+      );
+
       // Verify all tables were created
       const result = await db.execute(
-        sql`SELECT table_name FROM information_schema.tables WHERE table_schema = 'test_plugin' ORDER BY table_name`
+        sql`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('base_entities', 'dependent_entities', 'vector_embeddings', 'complex_relations') ORDER BY table_name`
       );
 
       const tableNames = result.rows.map((row: any) => row.table_name);
@@ -265,7 +294,7 @@ describe('Comprehensive Dynamic Migration Tests', () => {
       const result = await db.execute(
         sql`SELECT column_name, data_type 
             FROM information_schema.columns 
-            WHERE table_schema = 'test_plugin' 
+            WHERE table_schema = 'public' 
             AND table_name = 'vector_embeddings' 
             AND column_name LIKE 'dim_%'
             ORDER BY column_name`
@@ -290,11 +319,14 @@ describe('Comprehensive Dynamic Migration Tests', () => {
             JOIN information_schema.constraint_column_usage AS ccu
               ON ccu.constraint_name = tc.constraint_name
             WHERE tc.constraint_type = 'FOREIGN KEY' 
-            AND tc.table_schema = 'test_plugin'
+            AND tc.table_schema = 'public'
+            AND tc.table_name IN ('base_entities', 'dependent_entities', 'vector_embeddings', 'complex_relations')
             ORDER BY tc.table_name, tc.constraint_name`
       );
 
       const foreignKeys = result.rows as any[];
+      console.log('[TEST] Foreign keys found:', foreignKeys.length);
+      console.log('[TEST] Foreign keys:', JSON.stringify(foreignKeys, null, 2));
       expect(foreignKeys.length).toBeGreaterThan(0);
 
       // Check specific foreign keys
@@ -311,11 +343,14 @@ describe('Comprehensive Dynamic Migration Tests', () => {
         sql`SELECT tc.constraint_name, tc.table_name
             FROM information_schema.table_constraints AS tc
             WHERE tc.constraint_type = 'UNIQUE' 
-            AND tc.table_schema = 'test_plugin'
+            AND tc.table_schema = 'public'
+            AND tc.table_name IN ('base_entities', 'dependent_entities', 'vector_embeddings', 'complex_relations')
             ORDER BY tc.table_name, tc.constraint_name`
       );
 
       const uniqueConstraints = result.rows as any[];
+      console.log('[TEST] Unique constraints found:', uniqueConstraints.length);
+      console.log('[TEST] Unique constraints:', JSON.stringify(uniqueConstraints, null, 2));
       expect(uniqueConstraints.length).toBeGreaterThan(0);
 
       // Check specific unique constraints
@@ -324,6 +359,20 @@ describe('Comprehensive Dynamic Migration Tests', () => {
           uc.table_name === 'base_entities' && uc.constraint_name === 'base_entities_name_unique'
       );
       expect(baseNameUnique).toBeDefined();
+
+      const dependentUnique = uniqueConstraints.find(
+        (uc) =>
+          uc.table_name === 'dependent_entities' &&
+          uc.constraint_name === 'dependent_entities_base_type_unique'
+      );
+      expect(dependentUnique).toBeDefined();
+
+      const complexUnique = uniqueConstraints.find(
+        (uc) =>
+          uc.table_name === 'complex_relations' &&
+          uc.constraint_name === 'complex_relations_base_dependent_unique'
+      );
+      expect(complexUnique).toBeDefined();
     });
 
     it('should create check constraints properly', async () => {
@@ -332,11 +381,14 @@ describe('Comprehensive Dynamic Migration Tests', () => {
         sql`SELECT tc.constraint_name, tc.table_name
             FROM information_schema.table_constraints AS tc
             WHERE tc.constraint_type = 'CHECK' 
-            AND tc.table_schema = 'test_plugin'
+            AND tc.table_schema = 'public'
+            AND tc.table_name IN ('base_entities', 'dependent_entities', 'vector_embeddings', 'complex_relations')
             ORDER BY tc.table_name, tc.constraint_name`
       );
 
       const checkConstraints = result.rows as any[];
+      console.log('[TEST] Check constraints found:', checkConstraints.length);
+      console.log('[TEST] Check constraints:', JSON.stringify(checkConstraints, null, 2));
       expect(checkConstraints.length).toBeGreaterThan(0);
 
       // Check specific check constraints
@@ -349,8 +401,8 @@ describe('Comprehensive Dynamic Migration Tests', () => {
     it('should support vector similarity operations', async () => {
       // Insert test data with vector embeddings
       await db.execute(
-        sql`INSERT INTO test_plugin.base_entities (id, name) VALUES 
-            ('550e8400-e29b-41d4-a716-446655440000', 'test-entity')`
+        sql`INSERT INTO base_entities (id, name, created_at, updated_at, active, metadata) VALUES 
+            ('550e8400-e29b-41d4-a716-446655440000', 'test-entity', NOW(), NOW(), true, '{}'::jsonb)`
       );
 
       // Insert vector embedding
@@ -359,14 +411,14 @@ describe('Comprehensive Dynamic Migration Tests', () => {
         .map(() => Math.random())
         .join(',');
       await db.execute(
-        sql`INSERT INTO test_plugin.vector_embeddings (entity_id, dim_384) VALUES 
-            ('550e8400-e29b-41d4-a716-446655440000', '[${sql.raw(testVector)}]')`
+        sql`INSERT INTO vector_embeddings (entity_id, dim_384, created_at) VALUES 
+            ('550e8400-e29b-41d4-a716-446655440000', '[${sql.raw(testVector)}]', NOW())`
       );
 
       // Test vector similarity query
       const result = await db.execute(
         sql`SELECT entity_id, dim_384 <=> '[${sql.raw(testVector)}]' as distance 
-            FROM test_plugin.vector_embeddings 
+            FROM vector_embeddings 
             WHERE dim_384 IS NOT NULL 
             ORDER BY distance 
             LIMIT 1`
@@ -385,8 +437,8 @@ describe('Comprehensive Dynamic Migration Tests', () => {
       let errorThrown = false;
       try {
         await db.execute(
-          sql`INSERT INTO test_plugin.dependent_entities (base_id, type) VALUES 
-              ('99999999-9999-9999-9999-999999999999', 'test')`
+          sql`INSERT INTO dependent_entities (base_id, type, settings) VALUES 
+              ('99999999-9999-9999-9999-999999999999', 'test', '{}'::jsonb)`
         );
       } catch (error) {
         errorThrown = true;
@@ -397,16 +449,16 @@ describe('Comprehensive Dynamic Migration Tests', () => {
     it('should enforce unique constraints', async () => {
       // Insert a base entity
       await db.execute(
-        sql`INSERT INTO test_plugin.base_entities (id, name) VALUES 
-            ('550e8400-e29b-41d4-a716-446655440001', 'unique-test')`
+        sql`INSERT INTO base_entities (id, name, created_at, updated_at, active, metadata) VALUES 
+            ('550e8400-e29b-41d4-a716-446655440001', 'unique-test', NOW(), NOW(), true, '{}'::jsonb)`
       );
 
       // Try to insert another with the same name
       let errorThrown = false;
       try {
         await db.execute(
-          sql`INSERT INTO test_plugin.base_entities (id, name) VALUES 
-              ('550e8400-e29b-41d4-a716-446655440002', 'unique-test')`
+          sql`INSERT INTO base_entities (id, name, created_at, updated_at, active, metadata) VALUES 
+              ('550e8400-e29b-41d4-a716-446655440002', 'unique-test', NOW(), NOW(), true, '{}'::jsonb)`
         );
       } catch (error) {
         errorThrown = true;
@@ -417,16 +469,16 @@ describe('Comprehensive Dynamic Migration Tests', () => {
     it('should enforce check constraints', async () => {
       // Insert base entity first
       await db.execute(
-        sql`INSERT INTO test_plugin.base_entities (id, name) VALUES 
-            ('550e8400-e29b-41d4-a716-446655440003', 'check-test')`
+        sql`INSERT INTO base_entities (id, name, created_at, updated_at, active, metadata) VALUES 
+            ('550e8400-e29b-41d4-a716-446655440003', 'check-test', NOW(), NOW(), true, '{}'::jsonb)`
       );
 
       // Try to insert dependent with negative value (should fail)
       let errorThrown = false;
       try {
         await db.execute(
-          sql`INSERT INTO test_plugin.dependent_entities (base_id, type, value) VALUES 
-              ('550e8400-e29b-41d4-a716-446655440003', 'test', -1)`
+          sql`INSERT INTO dependent_entities (base_id, type, value, settings) VALUES 
+              ('550e8400-e29b-41d4-a716-446655440003', 'test', -1, '{}'::jsonb)`
         );
       } catch (error) {
         errorThrown = true;
@@ -448,7 +500,7 @@ describe('Comprehensive Dynamic Migration Tests', () => {
 
       // Tables should still exist
       const result = await db.execute(
-        sql`SELECT table_name FROM information_schema.tables WHERE table_schema = 'test_plugin'`
+        sql`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name IN ('base_entities', 'dependent_entities', 'vector_embeddings', 'complex_relations')`
       );
       expect(result.rows.length).toBeGreaterThanOrEqual(4);
     });
@@ -481,7 +533,7 @@ describe('Comprehensive Dynamic Migration Tests', () => {
 
       // Should only create the actual table
       const result = await db.execute(
-        sql`SELECT table_name FROM information_schema.tables WHERE table_schema = 'mixed_plugin'`
+        sql`SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'base_entities'`
       );
       expect(result.rows).toHaveLength(1);
       expect((result.rows[0] as any).table_name).toBe('base_entities');

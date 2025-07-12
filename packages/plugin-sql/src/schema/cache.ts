@@ -11,16 +11,16 @@ export const cacheTable = pgTable(
   'cache',
   {
     key: text('key').notNull(),
-    agentId: uuid('agent_id')
+    agent_id: uuid('agent_id')
       .notNull()
       .references(() => agentTable.id, { onDelete: 'cascade' }),
     value: jsonb('value').notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true })
-      .default(sql`now()`)
-      .notNull(),
-    expiresAt: timestamp('expires_at', { withTimezone: true }),
+    created_at: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .$defaultFn(() => new Date()),
+    expires_at: timestamp('expires_at', { withTimezone: true }),
   },
   (table) => ({
-    pk: primaryKey({ columns: [table.key, table.agentId] }),
+    pk: primaryKey({ columns: [table.key, table.agent_id] }),
   })
 );

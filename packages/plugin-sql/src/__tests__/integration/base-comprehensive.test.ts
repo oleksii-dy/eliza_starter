@@ -440,30 +440,40 @@ describe('Base Adapter Comprehensive Tests', () => {
       const content = 'Test content for embedding';
       const embedding = new Float32Array(384).fill(0.7);
 
-      // Store embedding in cache - log requires specific format
-      await adapter.log({
-        body: {
-          content: content,
+      // Store embedding in memory with content that can be searched
+      const memoryId = uuidv4() as UUID;
+      await adapter.createMemory(
+        {
+          id: memoryId,
+          agentId: testAgentId,
+          entityId: testEntityId,
+          roomId: testRoomId,
+          content: {
+            text: content,
+            embedding_text: content, // Store in sub-field for searching
+          } as Content,
           embedding: Array.from(embedding),
+          createdAt: Date.now(),
+          metadata: { type: 'embedding' },
         },
-        entityId: testEntityId,
-        roomId: testRoomId,
-        type: 'embedding',
-      });
+        'embedding_cache' // Table name becomes the 'type' field
+      );
 
       // Retrieve cached embedding
       const cached = await adapter.getCachedEmbeddings({
-        query_table_name: 'logs',
-        query_threshold: 5,
+        query_table_name: 'embedding_cache', // Searches memories with type='embedding_cache'
+        query_threshold: 50, // Levenshtein distance threshold
         query_input: content,
-        query_field_name: 'body',
-        query_field_sub_name: 'content',
+        query_field_name: 'content',
+        query_field_sub_name: 'embedding_text',
         query_match_count: 10,
       });
 
-      // Note: This might return empty if the cache implementation
-      // doesn't match the expected behavior
+      // Should find the embedding we just stored
       expect(cached).toBeDefined();
+      expect(cached.length).toBeGreaterThan(0);
+      expect(cached[0].embedding).toBeDefined();
+      expect(cached[0].levenshtein_score).toBeLessThanOrEqual(50);
     });
   });
 

@@ -17,3 +17,7 @@ export { channelTable } from './channel';
 export { messageTable } from './message';
 export { channelParticipantsTable } from './channelParticipant';
 export { serverAgentsTable } from './serverAgent';
+
+// Export factory functions
+export { setDatabaseType, getSchemaFactory, SchemaFactory } from './factory';
+export type { DatabaseType } from './factory';

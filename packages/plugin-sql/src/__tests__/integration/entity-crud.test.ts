@@ -211,6 +211,11 @@ describe('Entity CRUD Operations', () => {
       const firstResult = await adapter.createEntities([entity]);
       expect(firstResult).toBe(true);
 
+      // Verify the entity was actually created
+      const retrievedEntities = await adapter.getEntityByIds([entity.id!]);
+      expect(retrievedEntities).toHaveLength(1);
+      expect(retrievedEntities![0].id).toBe(entity.id);
+
       // Second creation should fail
       const secondResult = await adapter.createEntities([entity]);
       expect(secondResult).toBe(false);

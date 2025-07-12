@@ -44,11 +44,17 @@ describe('Utils', () => {
 
   describe('resolvePgliteDir', () => {
     let originalEnv: string | undefined;
+    let originalDotenvConfig: any;
 
     beforeEach(() => {
       originalEnv = process.env.PGLITE_DATA_DIR;
       delete process.env.PGLITE_DATA_DIR;
-      // No need to clear all mocks in bun:test
+
+      // Mock dotenv.config to prevent it from loading the .env file
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const dotenv = require('dotenv');
+      originalDotenvConfig = dotenv.config;
+      dotenv.config = () => ({ parsed: {} });
     });
 
     afterEach(() => {
@@ -57,6 +63,11 @@ describe('Utils', () => {
       } else {
         process.env.PGLITE_DATA_DIR = originalEnv;
       }
+
+      // Restore dotenv
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const dotenv = require('dotenv');
+      dotenv.config = originalDotenvConfig;
     });
 
     it('should prioritize dir argument', () => {
@@ -73,15 +84,13 @@ describe('Utils', () => {
     it('should use default .eliza/.elizadb dir if no dir or env var', () => {
       delete process.env.PGLITE_DATA_DIR;
       const result = resolvePgliteDir();
-      const projectRoot = path.resolve(process.cwd(), '..', '..');
-      expect(result).toBe(path.join(projectRoot, '.elizadb'));
+      expect(result).toBe(path.join(process.cwd(), '.eliza', '.elizadb'));
     });
 
     it('should use default path if no arguments or env var', () => {
       delete process.env.PGLITE_DATA_DIR;
       const result = resolvePgliteDir();
-      const projectRoot = path.resolve(process.cwd(), '..', '..');
-      expect(result).toBe(path.join(projectRoot, '.elizadb'));
+      expect(result).toBe(path.join(process.cwd(), '.eliza', '.elizadb'));
     });
 
     it('should expand tilde paths', () => {

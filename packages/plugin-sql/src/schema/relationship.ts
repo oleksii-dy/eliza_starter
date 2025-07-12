@@ -24,31 +24,35 @@ export const relationshipTable = pgTable(
       .primaryKey()
       .default(sql`gen_random_uuid()`),
     createdAt: timestamp('created_at', { withTimezone: true })
-      .default(sql`now()`)
-      .notNull(),
-    sourceEntityId: uuid('sourceEntityId')
+      .notNull()
+      .$defaultFn(() => new Date()),
+    source_entity_id: uuid('source_entity_id')
       .notNull()
       .references(() => entityTable.id, { onDelete: 'cascade' }),
-    targetEntityId: uuid('targetEntityId')
+    target_entity_id: uuid('target_entity_id')
       .notNull()
       .references(() => entityTable.id, { onDelete: 'cascade' }),
-    agentId: uuid('agentId')
+    agent_id: uuid('agent_id')
       .notNull()
       .references(() => agentTable.id, { onDelete: 'cascade' }),
     tags: text('tags').array(),
     metadata: jsonb('metadata'),
   },
   (table) => [
-    index('idx_relationships_users').on(table.sourceEntityId, table.targetEntityId),
-    unique('unique_relationship').on(table.sourceEntityId, table.targetEntityId, table.agentId),
+    index('idx_relationships_users').on(table.source_entity_id, table.target_entity_id),
+    unique('unique_relationship').on(
+      table.source_entity_id,
+      table.target_entity_id,
+      table.agent_id
+    ),
     foreignKey({
       name: 'fk_user_a',
-      columns: [table.sourceEntityId],
+      columns: [table.source_entity_id],
       foreignColumns: [entityTable.id],
     }).onDelete('cascade'),
     foreignKey({
       name: 'fk_user_b',
-      columns: [table.targetEntityId],
+      columns: [table.target_entity_id],
       foreignColumns: [entityTable.id],
     }).onDelete('cascade'),
   ]

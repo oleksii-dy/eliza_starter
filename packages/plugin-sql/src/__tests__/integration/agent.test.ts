@@ -1,6 +1,7 @@
 import { type Agent, stringToUuid, type UUID } from '@elizaos/core';
 import { v4 as uuidv4 } from 'uuid';
 import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'bun:test';
+import { sql } from 'drizzle-orm';
 import { PgDatabaseAdapter } from '../../pg/adapter';
 import { PgliteDatabaseAdapter } from '../../pglite/adapter';
 import { agentTable } from '../../schema';
@@ -68,7 +69,6 @@ describe('Agent Integration Tests', () => {
           messageExamples: [],
           postExamples: [],
           topics: [],
-          adjectives: [],
           knowledge: [],
           plugins: [],
           settings: {},
@@ -97,7 +97,6 @@ describe('Agent Integration Tests', () => {
           messageExamples: [],
           postExamples: [],
           topics: [],
-          adjectives: [],
           knowledge: [],
           plugins: [],
           settings: {},
@@ -118,7 +117,6 @@ describe('Agent Integration Tests', () => {
           messageExamples: [],
           postExamples: [],
           topics: [],
-          adjectives: [],
           knowledge: [],
           plugins: [],
           settings: {},
@@ -702,9 +700,9 @@ describe('Agent Integration Tests', () => {
 
       it('should cascade delete all related data when deleting an agent', async () => {
         // Create a separate test instance for cascade delete test
-        const setup = await createIsolatedTestDatabase('agent-cascade-delete');
+        const agentId = uuidv4() as UUID;
+        const setup = await createTestDatabase(agentId);
         const cascadeAdapter = setup.adapter;
-        const agentId = setup.testAgentId;
 
         try {
           // The agent was already created by the test helper
@@ -845,6 +843,38 @@ describe('Agent Integration Tests', () => {
           expect(await cascadeAdapter.getTask(taskId)).not.toBeNull();
           expect(await cascadeAdapter.getCache('test_cache_key')).toBeDefined();
 
+          // Verify foreign key constraints exist (for debugging)
+          if (
+            process.env.POSTGRES_URL ||
+            !adapter.getDatabase().execute.toString().includes('sqlite')
+          ) {
+            // For PostgreSQL/PGLite, check if foreign key constraints exist
+            const fkResult = await cascadeAdapter.getDatabase().execute(
+              sql`SELECT 
+                    tc.constraint_name, 
+                    tc.table_name, 
+                    kcu.column_name,
+                    ccu.table_name AS foreign_table_name,
+                    ccu.column_name AS foreign_column_name,
+                    rc.delete_rule
+                  FROM information_schema.table_constraints AS tc 
+                  JOIN information_schema.key_column_usage AS kcu
+                    ON tc.constraint_name = kcu.constraint_name
+                    AND tc.table_schema = kcu.table_schema
+                  JOIN information_schema.constraint_column_usage AS ccu
+                    ON ccu.constraint_name = tc.constraint_name
+                    AND ccu.table_schema = tc.table_schema
+                  JOIN information_schema.referential_constraints AS rc
+                    ON rc.constraint_name = tc.constraint_name
+                    AND rc.constraint_schema = tc.table_schema
+                  WHERE tc.constraint_type = 'FOREIGN KEY' 
+                  AND tc.table_schema = 'public'
+                  AND tc.table_name = 'rooms'
+                  AND kcu.column_name = 'agent_id'`
+            );
+            console.log('[TEST] Foreign key constraints for rooms.agent_id:', fkResult.rows);
+          }
+
           // Now delete the agent - this should cascade delete everything
           const deleteResult = await cascadeAdapter.deleteAgent(agentId);
           expect(deleteResult).toBe(true);
@@ -924,7 +954,6 @@ describe('Agent Integration Tests', () => {
           ],
           postExamples: ['Example post'],
           topics: ['topic1', 'topic2'],
-          adjectives: ['smart', 'helpful'],
         };
 
         await adapter.createAgent(complexAgent);

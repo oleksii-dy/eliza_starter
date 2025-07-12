@@ -179,3 +179,5 @@ dist
 debug-cache-db
 ./cursor
 coverage/
+.cursor/rules/elizaos
+.cursorignore

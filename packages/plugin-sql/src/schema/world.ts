@@ -13,13 +13,16 @@ export const worldTable = pgTable('worlds', {
     .notNull()
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  agentId: uuid('agentId')
+  agent_id: uuid('agent_id')
     .notNull()
     .references(() => agentTable.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   metadata: jsonb('metadata'),
-  serverId: text('serverId').notNull().default('local'),
-  createdAt: timestamp('createdAt')
-    .default(sql`now()`)
-    .notNull(),
+  server_id: text('server_id').notNull().default('local'),
+  created_at: timestamp('created_at')
+    .notNull()
+    .$defaultFn(() => new Date()),
+  updated_at: timestamp('updated_at')
+    .notNull()
+    .$defaultFn(() => new Date()),
 });

@@ -1,8 +1,9 @@
-import { type UUID, logger } from '@elizaos/core';
+import { type UUID, logger, Entity, World } from '@elizaos/core';
 import { drizzle } from 'drizzle-orm/pglite';
 import { BaseDrizzleAdapter } from '../base';
 import { DIMENSION_MAP, type EmbeddingDimensionColumn } from '../schema/embedding';
 import type { PGliteClientManager } from './manager';
+import * as schema from '../schema/index';
 
 /**
  * PgliteDatabaseAdapter class represents an adapter for interacting with a PgliteDatabase.
@@ -23,6 +24,7 @@ import type { PGliteClientManager } from './manager';
  * @return {void} - A Promise that resolves when the database is closed.
  */
 export class PgliteDatabaseAdapter extends BaseDrizzleAdapter {
+  declare public db: any;
   private manager: PGliteClientManager;
   protected embeddingDimension: EmbeddingDimensionColumn = DIMENSION_MAP[384];
 
@@ -34,7 +36,7 @@ export class PgliteDatabaseAdapter extends BaseDrizzleAdapter {
   constructor(agentId: UUID, manager: PGliteClientManager) {
     super(agentId);
     this.manager = manager;
-    this.db = drizzle(this.manager.getConnection() as any);
+    this.db = drizzle(this.manager.getConnection() as any, { schema });
   }
 
   /**
@@ -68,7 +70,7 @@ export class PgliteDatabaseAdapter extends BaseDrizzleAdapter {
    * @returns {Promise<void>} A Promise that resolves when the database initialization is complete.
    */
   async init(): Promise<void> {
-    logger.debug('PGliteDatabaseAdapter initialized, skipping automatic migrations.');
+    logger.debug('PGLiteDatabaseAdapter initialized, skipping automatic migrations.');
   }
 
   /**
@@ -94,5 +96,22 @@ export class PgliteDatabaseAdapter extends BaseDrizzleAdapter {
    */
   async getConnection() {
     return this.manager.getConnection();
+  }
+
+  /**
+   * Get entities by IDs (alias for getEntityByIds to match interface)
+   * @param entityIds Array of entity UUIDs to retrieve
+   * @returns Promise resolving to array of entities
+   */
+  getEntitiesByIds(entityIds: UUID[]): Promise<Entity[]> {
+    return super.getEntityByIds(entityIds).then((result) => result || []);
+  }
+
+  /**
+   * Get all worlds
+   * @returns Promise resolving to array of worlds
+   */
+  getWorlds(): Promise<World[]> {
+    return super.getAllWorlds();
   }
 }

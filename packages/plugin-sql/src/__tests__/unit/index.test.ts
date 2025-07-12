@@ -4,15 +4,37 @@ import { plugin, createDatabaseAdapter } from '../../index';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
+import { existsSync, mkdirSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
+
+// Create temp directory for tests
+const tempDir = join(process.cwd(), 'temp');
+if (!existsSync(tempDir)) {
+  mkdirSync(tempDir, { recursive: true });
+}
+
+// Clean up function
+const cleanupTempDir = () => {
+  try {
+    if (existsSync(tempDir)) {
+      rmSync(tempDir, { recursive: true, force: true });
+    }
+  } catch (error) {
+    // Ignore cleanup errors
+  }
+};
+
+// Register cleanup on process exit
+process.on('exit', cleanupTempDir);
+process.on('SIGINT', () => {
+  cleanupTempDir();
+  process.exit();
+});
 
 describe('SQL Plugin', () => {
   let mockRuntime: IAgentRuntime;
-  let tempDir: string;
 
   beforeEach(() => {
-    // Create a temporary directory for tests
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'eliza-plugin-sql-test-'));
-
     // Reset environment variables
     delete process.env.POSTGRES_URL;
     delete process.env.POSTGRES_USER;
@@ -30,11 +52,6 @@ describe('SQL Plugin', () => {
   });
 
   afterEach(() => {
-    // Clean up temporary directory
-    if (tempDir && fs.existsSync(tempDir)) {
-      fs.rmSync(tempDir, { recursive: true, force: true });
-    }
-
     // Clear global singletons to prevent contamination between tests
     const GLOBAL_SINGLETONS = Symbol.for('@elizaos/plugin-sql/global-singletons');
     const globalSymbols = global as unknown as Record<symbol, any>;
@@ -110,8 +127,8 @@ describe('SQL Plugin', () => {
 
     it('should prioritize PGLITE_PATH over DATABASE_PATH', async () => {
       mockRuntime.getSetting = mock((key) => {
-        if (key === 'PGLITE_PATH') return '/custom/pglite';
-        if (key === 'DATABASE_PATH') return '/custom/database';
+        if (key === 'PGLITE_PATH') return './temp/test-pglite';
+        if (key === 'DATABASE_PATH') return './temp/test-database';
         return null;
       });
 
@@ -122,7 +139,7 @@ describe('SQL Plugin', () => {
 
     it('should use DATABASE_PATH if PGLITE_PATH is not set', async () => {
       mockRuntime.getSetting = mock((key) => {
-        if (key === 'DATABASE_PATH') return '/custom/database';
+        if (key === 'DATABASE_PATH') return './temp/test-database';
         return null;
       });
 

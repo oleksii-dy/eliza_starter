@@ -86,7 +86,7 @@ describe('PostgreSQL Adapter Direct Integration Tests', () => {
 
         try {
           // Test transaction
-          await db.transaction(async (tx) => {
+          await db.transaction(async (tx: any) => {
             await tx.execute(sql`INSERT INTO pg_adapter_test (value) VALUES (100)`);
             await tx.execute(sql`INSERT INTO pg_adapter_test (value) VALUES (200)`);
           });

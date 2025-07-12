@@ -9,30 +9,28 @@ import { worldTable } from './world';
  * Represents a component table in the database.
  */
 export const componentTable = pgTable('components', {
-  id: uuid('id')
-    .primaryKey()
-    .default(sql`gen_random_uuid()`)
-    .notNull(),
+  id: uuid('id').primaryKey().defaultRandom(),
 
   // Foreign keys
-  entityId: uuid('entityId')
+  entity_id: uuid('entity_id')
     .references(() => entityTable.id, { onDelete: 'cascade' })
     .notNull(),
-  agentId: uuid('agentId')
+  agent_id: uuid('agent_id')
     .references(() => agentTable.id, { onDelete: 'cascade' })
     .notNull(),
-  roomId: uuid('roomId')
+  room_id: uuid('room_id')
     .references(() => roomTable.id, { onDelete: 'cascade' })
     .notNull(),
-  worldId: uuid('worldId').references(() => worldTable.id, { onDelete: 'cascade' }),
-  sourceEntityId: uuid('sourceEntityId').references(() => entityTable.id, { onDelete: 'cascade' }),
+  world_id: uuid('world_id').references(() => worldTable.id, { onDelete: 'cascade' }),
+  source_entity_id: uuid('source_entity_id').references(() => entityTable.id, {
+    onDelete: 'cascade',
+  }),
 
   // Data
   type: text('type').notNull(),
-  data: jsonb('data').default(sql`'{}'::jsonb`),
+  data: jsonb('data').notNull(),
 
   // Timestamps
-  createdAt: timestamp('createdAt')
-    .default(sql`now()`)
-    .notNull(),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+  updated_at: timestamp('updated_at').defaultNow().notNull(),
 });
