@@ -604,9 +604,18 @@ const messageReceivedHandler = async ({
           }
 
           // Create a separate state for provider composition to avoid interfering with action callbacks
+          // Only compose provider state if evaluators exist and providers are present
           let providerState = state;
-          if (responseContent?.providers?.length && responseContent?.providers?.length > 0) {
+          if (responseContent?.providers?.length && responseContent?.providers?.length > 0 && runtime.evaluators.length > 0) {
+            logger.debug('[Bootstrap] Creating separate provider state', {
+              providers: responseContent.providers,
+              hasEvaluators: runtime.evaluators.length > 0,
+              stateKeys: Object.keys(state.values || {}),
+            });
             providerState = await runtime.composeState(message, responseContent?.providers || []);
+            logger.debug('[Bootstrap] Provider state composed', {
+              providerStateKeys: Object.keys(providerState.values || {}),
+            });
           }
 
           if (responseContent && responseContent.simple && responseContent.text) {
