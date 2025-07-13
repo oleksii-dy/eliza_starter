@@ -16,7 +16,6 @@ export function resolvePluginDependencies(
 
   function visit(pluginName: string) {
     if (!availablePlugins.has(pluginName)) {
-      logger.warn(`Plugin dependency "${pluginName}" not found and will be skipped.`);
       missingDeps.add(pluginName);
       return;
     }

@@ -125,19 +125,8 @@ export async function startAgent(
     options.isTestMode
   );
 
-  // Load all requested plugins and their dependencies
-  const allAvailablePlugins = new Map<string, Plugin>();
-  for (const p of loadedPlugins.values()) {
-    allAvailablePlugins.set(p.name, p);
-  }
-  for (const name of allDependencies) {
-    if (!allAvailablePlugins.has(name)) {
-      const loaded = await loadAndPreparePlugin(name);
-      if (loaded) {
-        allAvailablePlugins.set(loaded.name, loaded);
-      }
-    }
-  }
+  // Use the plugins already loaded during dependency collection
+  const allAvailablePlugins = new Map<string, Plugin>(loadedPlugins);
 
   // Resolve dependencies and get final plugin list
   const finalPlugins = resolvePluginDependencies(allAvailablePlugins, options.isTestMode);
@@ -157,24 +146,6 @@ export async function startAgent(
   await initWrapper(runtime);
 
   await runtime.initialize();
-
-  // Discover and run plugin schema migrations
-  try {
-    const migrationService = runtime.getService('database_migration');
-    if (migrationService) {
-      logger.info('Discovering plugin schemas for dynamic migration...');
-      (migrationService as any).discoverAndRegisterPluginSchemas(finalPlugins);
-
-      logger.info('Running all plugin migrations...');
-      await (migrationService as any).runAllPluginMigrations();
-      logger.info('All plugin migrations completed successfully');
-    } else {
-      logger.warn('DatabaseMigrationService not found - plugin schema migrations skipped');
-    }
-  } catch (error) {
-    logger.error('Failed to run plugin migrations:', error);
-    throw error;
-  }
 
   server.registerAgent(runtime);
   logger.log(`Started ${runtime.character.name} as ${runtime.agentId}`);
