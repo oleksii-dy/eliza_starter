@@ -40,16 +40,26 @@ export function createHealthRouter(
   // Comprehensive health check
   router.get('/health', (_req, res) => {
     logger.log({ apiRoute: '/health' }, 'Health check route hit');
+    const migrationStatus = serverInstance.getMigrationStatus();
+    const isMigrationReady =
+      migrationStatus.status === 'completed' || migrationStatus.status === 'not_initialized';
+    const agentsHealthy = agents.size > 0 ? 'healthy' : 'no_agents';
+
     const healthcheck = {
-      status: 'OK',
+      status: isMigrationReady ? 'OK' : 'MIGRATION_IN_PROGRESS',
       version: process.env.APP_VERSION || 'unknown',
       timestamp: new Date().toISOString(),
       dependencies: {
-        agents: agents.size > 0 ? 'healthy' : 'no_agents',
+        agents: agentsHealthy,
+        migrations: {
+          status: migrationStatus.status,
+          error: migrationStatus.error,
+        },
       },
     };
 
-    const statusCode = healthcheck.dependencies.agents === 'healthy' ? 200 : 503;
+    // Return 503 if migrations are running/failed or if agents are not healthy
+    const statusCode = isMigrationReady && agentsHealthy === 'healthy' ? 200 : 503;
     res.status(statusCode).json(healthcheck);
   });
 

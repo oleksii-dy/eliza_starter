@@ -152,6 +152,7 @@ export class AgentServer {
   private clientPath?: string; // Optional path to client dist files
 
   public database!: DatabaseAdapter;
+  private migrationService?: DatabaseMigrationService;
 
   public startAgent!: (character: Character) => Promise<IAgentRuntime>;
   public stopAgent!: (runtime: IAgentRuntime) => void;
@@ -210,17 +211,17 @@ export class AgentServer {
       // Run migrations for the SQL plugin schema
       logger.info('[INIT] Running database migrations for messaging tables...');
       try {
-        const migrationService = new DatabaseMigrationService();
+        this.migrationService = new DatabaseMigrationService();
 
         // Get the underlying database instance
         const db = (this.database as any).getDatabase();
-        await migrationService.initializeWithDatabase(db);
+        await this.migrationService.initializeWithDatabase(db);
 
         // Register the SQL plugin schema
-        migrationService.discoverAndRegisterPluginSchemas([sqlPlugin]);
+        this.migrationService.discoverAndRegisterPluginSchemas([sqlPlugin]);
 
         // Run the migrations
-        await migrationService.runAllPluginMigrations();
+        await this.migrationService.runAllPluginMigrations();
 
         logger.success('[INIT] Database migrations completed successfully');
       } catch (migrationError) {
@@ -998,6 +999,14 @@ export class AgentServer {
    */
   public registerMiddleware(middleware: ServerMiddleware) {
     this.app.use(middleware);
+  }
+
+  /**
+   * Get the migration service status
+   * @returns {object} Migration status information
+   */
+  public getMigrationStatus(): { status: string; error?: string } {
+    return this.migrationService?.getMigrationStatus() || { status: 'not_initialized' };
   }
 
   /**
