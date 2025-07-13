@@ -25,7 +25,6 @@ describe('Voice Models Configuration', () => {
                     provider: 'local',
                     gender: expected.gender,
                     language: 'en',
-                    features: ['natural', 'local'],
                 });
             });
         });

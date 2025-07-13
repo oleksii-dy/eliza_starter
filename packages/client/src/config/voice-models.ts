@@ -28,7 +28,6 @@ export const localVoiceModels: VoiceModel[] = [
     provider: 'local',
     gender: 'female',
     language: 'en',
-    features: ['natural', 'local'],
   },
   {
     value: 'female_2',
@@ -36,7 +35,6 @@ export const localVoiceModels: VoiceModel[] = [
     provider: 'local',
     gender: 'female',
     language: 'en',
-    features: ['natural', 'local'],
   },
   {
     value: 'male_1',
@@ -44,7 +42,6 @@ export const localVoiceModels: VoiceModel[] = [
     provider: 'local',
     gender: 'male',
     language: 'en',
-    features: ['natural', 'local'],
   },
   {
     value: 'male_2',
@@ -52,7 +49,6 @@ export const localVoiceModels: VoiceModel[] = [
     provider: 'local',
     gender: 'male',
     language: 'en',
-    features: ['natural', 'local'],
   },
 ];
 
