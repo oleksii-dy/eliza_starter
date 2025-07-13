@@ -603,8 +603,10 @@ const messageReceivedHandler = async ({
             latestResponseIds.delete(runtime.agentId);
           }
 
+          // Create a separate state for provider composition to avoid interfering with action callbacks
+          let providerState = state;
           if (responseContent?.providers?.length && responseContent?.providers?.length > 0) {
-            state = await runtime.composeState(message, responseContent?.providers || []);
+            providerState = await runtime.composeState(message, responseContent?.providers || []);
           }
 
           if (responseContent && responseContent.simple && responseContent.text) {
@@ -616,9 +618,10 @@ const messageReceivedHandler = async ({
             // without actions there can't be more than one message
             await callback(responseContent);
           } else {
+            // Use the original state for actions, not the provider-modified state
             await runtime.processActions(message, responseMessages, state, callback);
           }
-          await runtime.evaluate(message, state, shouldRespond, callback, responseMessages);
+          await runtime.evaluate(message, providerState, shouldRespond, callback, responseMessages);
         } else {
           // Handle the case where the agent decided not to respond
           logger.debug('[Bootstrap] Agent decided not to respond (shouldRespond is false).');
