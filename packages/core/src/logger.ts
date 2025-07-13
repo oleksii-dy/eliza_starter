@@ -1,5 +1,6 @@
 import pino, { type DestinationStream, type LogFn } from 'pino';
 import { Sentry } from './sentry/instrument';
+import type { LoggerConfig } from './types/logger';
 
 // Local utility function to avoid circular dependency
 function parseBooleanFromText(value: string | undefined | null): boolean {
@@ -304,6 +305,123 @@ const createLogger = (bindings: any | boolean = false) => {
   const logger = pino(opts);
   return logger;
 };
+
+// Logger configuration state
+let loggerConfig: LoggerConfig | null = null;
+let isLoggerInitialized = false;
+
+/**
+ * Initialize logger with custom configuration
+ * @param config Logger configuration
+ */
+export function initializeLogger(config: LoggerConfig): void {
+  if (isLoggerInitialized) {
+    logger.warn('Logger has already been initialized, skipping re-initialization');
+    return;
+  }
+
+  loggerConfig = config;
+
+  // Merge configuration with defaults
+  const mergedOptions = {
+    ...options,
+    level: config.level || options.level,
+    customLevels: config.levels?.levels || customLevels,
+    ...(config.pinoOptions || {}),
+  };
+
+  // Handle custom formatter configuration
+  if (config.formatter) {
+    const formatter = config.formatter;
+    // Override environment-based settings with config
+    if (formatter.json !== undefined) {
+      (global as any).__LOGGER_JSON_FORMAT = formatter.json;
+    }
+    if (formatter.timestamps !== undefined) {
+      (global as any).__LOGGER_TIMESTAMPS = formatter.timestamps;
+    }
+  }
+
+  // Handle Sentry configuration
+  if (config.sentry !== undefined) {
+    process.env.SENTRY_LOGGING = config.sentry ? 'true' : 'false';
+  }
+
+  // Create custom destination if configured
+  let destination: DestinationStream | null = null;
+  
+  if (config.destination) {
+    destination = config.destination;
+  } else if (config.transports && config.transports.length > 0) {
+    // Create multiple transport destination
+    destination = createMultiTransportDestination(config.transports);
+  }
+
+  if (destination) {
+    const memoryDestination = new InMemoryDestination(destination);
+    logger = pino(mergedOptions, memoryDestination) as any;
+    (logger as unknown)[Symbol.for('pino-destination')] = memoryDestination;
+  } else {
+    // Use default initialization logic
+    logger = pino(mergedOptions) as any;
+  }
+
+  // Add clear method to logger
+  (logger as unknown as LoggerWithClear).clear = () => {
+    const dest = (logger as unknown)[Symbol.for('pino-destination')];
+    if (dest instanceof InMemoryDestination) {
+      dest.clear();
+    }
+  };
+
+  isLoggerInitialized = true;
+  logger.info('Logger initialized with custom configuration');
+}
+
+/**
+ * Create a destination that multiplexes to multiple transports
+ */
+function createMultiTransportDestination(transports: LoggerConfig['transports']): DestinationStream | null {
+  if (!transports || transports.length === 0) {
+    return null;
+  }
+
+  // For now, we'll use the first transport as the primary destination
+  // In a full implementation, this would create a multiplexer
+  const primaryTransport = transports[0];
+  
+  if (primaryTransport.target === 'pino-pretty') {
+    try {
+      const pretty = require('pino-pretty');
+      return pretty.default ? pretty.default({
+        ...createPrettyConfig(),
+        ...primaryTransport.options
+      }) : null;
+    } catch (e) {
+      logger.warn(`Failed to load pino-pretty transport: ${e}`);
+      return null;
+    }
+  }
+  
+  // For other transports, we would need to dynamically load them
+  // This is a placeholder for the full implementation
+  logger.warn(`Transport ${primaryTransport.target} not yet implemented in multi-transport mode`);
+  return null;
+}
+
+/**
+ * Check if logger has been initialized with custom configuration
+ */
+export function isLoggerCustomInitialized(): boolean {
+  return isLoggerInitialized;
+}
+
+/**
+ * Get current logger configuration
+ */
+export function getLoggerConfig(): LoggerConfig | null {
+  return loggerConfig;
+}
 
 // Create basic logger initially
 let logger = pino(options);

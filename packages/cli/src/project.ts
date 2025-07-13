@@ -30,6 +30,7 @@ export interface Project {
   dir: string;
   isPlugin?: boolean;
   pluginModule?: Plugin;
+  logger?: import('@elizaos/core').ProjectLoggerConfig;
 }
 
 export interface LoadedProject {
@@ -282,6 +283,7 @@ export async function loadProject(dir: string): Promise<Project> {
 
     // Extract agents from the project module
     const agents: ProjectAgent[] = [];
+    let loggerConfig: import('@elizaos/core').ProjectLoggerConfig | undefined;
 
     // First check if the default export has an agents array
     if (
@@ -292,6 +294,12 @@ export async function loadProject(dir: string): Promise<Project> {
       // Use the agents from the default export
       agents.push(...(projectModule.default.agents as ProjectAgent[]));
       logger.debug(`Found ${agents.length} agents in default export's agents array`);
+
+      // Check for logger configuration in default export
+      if (projectModule.default.logger) {
+        loggerConfig = projectModule.default.logger;
+        logger.debug('Found logger configuration in default export');
+      }
     }
     // Only if we didn't find agents in the default export, look for other exports
     else {
@@ -304,6 +312,10 @@ export async function loadProject(dir: string): Promise<Project> {
             agents.push(value as ProjectAgent);
             logger.debug(`Found agent in default export (single agent)`);
           }
+        } else if (key === 'logger' && value && typeof value === 'object') {
+          // If it's a named export of logger config
+          loggerConfig = value as import('@elizaos/core').ProjectLoggerConfig;
+          logger.debug('Found logger configuration in named export');
         } else if (
           value &&
           typeof value === 'object' &&
@@ -325,6 +337,7 @@ export async function loadProject(dir: string): Promise<Project> {
     const project: Project = {
       agents,
       dir,
+      logger: loggerConfig,
     };
 
     return project;

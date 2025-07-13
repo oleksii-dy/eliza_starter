@@ -2,7 +2,7 @@ import { displayBanner, handleError } from '@/src/utils';
 import { validatePort } from '@/src/utils/port-validation';
 import { loadCharacterTryPath } from '@elizaos/server';
 import { loadProject } from '@/src/project';
-import { logger, type Character, type ProjectAgent } from '@elizaos/core';
+import { logger, type Character, type ProjectAgent, initializeLogger } from '@elizaos/core';
 import { Command } from 'commander';
 import { startAgents } from './actions/server-start';
 import { StartOptions } from './types';
@@ -10,6 +10,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { loadEnvConfig } from './utils/config-utils';
 import { detectDirectoryType } from '@/src/utils/directory-detection';
+import { loadProjectLoggerConfig } from '@/src/utils/logger-config';
 
 export const start = new Command()
   .name('start')
@@ -63,8 +64,21 @@ export const start = new Command()
           // Check if we're in a directory that might contain agents - allow any directory with package.json
           // except those explicitly detected as non-ElizaOS (covers projects, plugins, monorepos, etc.)
           if (dirInfo.hasPackageJson && dirInfo.type !== 'non-elizaos-dir') {
+            // First, try to load logger configuration from dedicated files
+            const loggerConfig = await loadProjectLoggerConfig(cwd);
+            if (loggerConfig) {
+              logger.info('Applying project logger configuration from dedicated file...');
+              initializeLogger(loggerConfig);
+            }
+
             logger.info('No character files specified, attempting to load project agents...');
             const project = await loadProject(cwd);
+
+            // Apply logger configuration from project if present and not already loaded
+            if (project.logger?.logger && !loggerConfig) {
+              logger.info('Applying project logger configuration from project module...');
+              initializeLogger(project.logger.logger);
+            }
 
             if (project.agents && project.agents.length > 0) {
               logger.info(`Found ${project.agents.length} agent(s) in project configuration`);

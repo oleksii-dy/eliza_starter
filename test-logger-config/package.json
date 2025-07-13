@@ -1,0 +1,27 @@
+{
+  "name": "test-logger-config",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/index.ts",
+  "elizaos": {
+    "logger": {
+      "name": "test-agent",
+      "level": "debug",
+      "formatter": {
+        "json": false,
+        "timestamps": true,
+        "colorize": true
+      },
+      "transports": [
+        {
+          "name": "console",
+          "target": "pino-pretty",
+          "options": {
+            "colorize": true,
+            "translateTime": "yyyy-mm-dd HH:MM:ss"
+          }
+        }
+      ]
+    }
+  }
+}

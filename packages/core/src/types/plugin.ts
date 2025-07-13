@@ -75,4 +75,5 @@ export interface ProjectAgent {
 
 export interface Project {
   agents: ProjectAgent[];
+  logger?: import('./logger').ProjectLoggerConfig;
 }
