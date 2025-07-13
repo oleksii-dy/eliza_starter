@@ -12,6 +12,7 @@ export interface VoiceModel {
 // that leverages plugin category metadata once implemented
 
 export const providerPluginMap: Record<string, string> = {
+  local: '@elizaos/plugin-node',
   elevenlabs: '@elizaos/plugin-elevenlabs',
   openai: '@elizaos/plugin-openai',
   none: '', // No plugin needed for "No Voice" option
@@ -20,7 +21,40 @@ export const providerPluginMap: Record<string, string> = {
 // No voice option for agents that don't need speech capabilities
 export const noVoiceModel: VoiceModel[] = [{ value: 'none', label: 'No Voice', provider: 'none' }];
 
-export const localVoiceModels: VoiceModel[] = [];
+export const localVoiceModels: VoiceModel[] = [
+  {
+    value: 'female_1',
+    label: 'Local Voice - Female 1',
+    provider: 'local',
+    gender: 'female',
+    language: 'en',
+    features: ['natural', 'local'],
+  },
+  {
+    value: 'female_2',
+    label: 'Local Voice - Female 2',
+    provider: 'local',
+    gender: 'female',
+    language: 'en',
+    features: ['natural', 'local'],
+  },
+  {
+    value: 'male_1',
+    label: 'Local Voice - Male 1',
+    provider: 'local',
+    gender: 'male',
+    language: 'en',
+    features: ['natural', 'local'],
+  },
+  {
+    value: 'male_2',
+    label: 'Local Voice - Male 2',
+    provider: 'local',
+    gender: 'male',
+    language: 'en',
+    features: ['natural', 'local'],
+  },
+];
 
 export const elevenLabsVoiceModels: VoiceModel[] = [
   {
