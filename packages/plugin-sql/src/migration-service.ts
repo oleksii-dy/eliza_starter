@@ -82,7 +82,7 @@ export class DatabaseMigrationService {
         const result = await this.db.execute(
           `SELECT pg_try_advisory_lock(${MIGRATION_LOCK_ID}) AS acquired`
         );
-        return result[0]?.acquired === true;
+        return result.rows[0]?.acquired === true;
       }
     } catch (error) {
       logger.debug('Advisory lock not supported or failed, proceeding without lock:', error);
