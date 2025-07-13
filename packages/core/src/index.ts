@@ -20,3 +20,6 @@ export * from './services';
 export * from './specs';
 
 export * from './sentry/instrument';
+
+// Export plugins
+export * from './elizanet-fallback-plugin';
