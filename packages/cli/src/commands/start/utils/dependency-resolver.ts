@@ -12,10 +12,12 @@ export function resolvePluginDependencies(
   const resolutionOrder: string[] = [];
   const visited = new Set<string>();
   const visiting = new Set<string>();
+  const missingDeps = new Set<string>();
 
   function visit(pluginName: string) {
     if (!availablePlugins.has(pluginName)) {
       logger.warn(`Plugin dependency "${pluginName}" not found and will be skipped.`);
+      missingDeps.add(pluginName);
       return;
     }
     if (visited.has(pluginName)) return;
@@ -27,9 +29,10 @@ export function resolvePluginDependencies(
     visiting.add(pluginName);
     const plugin = availablePlugins.get(pluginName);
     if (plugin) {
-      const deps = [...(plugin.dependencies || [])];
+      // Use Set for deduplication of dependencies
+      const deps = new Set([...(plugin.dependencies || [])]);
       if (isTestMode) {
-        deps.push(...(plugin.testDependencies || []));
+        (plugin.testDependencies || []).forEach((dep) => deps.add(dep));
       }
       for (const dep of deps) {
         visit(dep);
@@ -49,6 +52,11 @@ export function resolvePluginDependencies(
   const finalPlugins = resolutionOrder
     .map((name) => availablePlugins.get(name))
     .filter((p) => p) as Plugin[];
+
+  // Log missing dependencies for debugging
+  if (missingDeps.size > 0) {
+    logger.warn(`Missing dependencies: ${Array.from(missingDeps).join(', ')}`);
+  }
 
   logger.info(`Final plugins being loaded: ${finalPlugins.map((p) => p.name).join(', ')}`);
 
