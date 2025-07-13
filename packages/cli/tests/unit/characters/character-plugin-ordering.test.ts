@@ -179,8 +179,8 @@ describe('Character Plugin Ordering', () => {
       const expectedOrder = [
         '@elizaos/plugin-sql',
         '@elizaos/plugin-openrouter',
-        '@elizaos/plugin-bootstrap',
         '@elizaos/plugin-ollama',
+        '@elizaos/plugin-bootstrap',
       ];
 
       expect(character.plugins).toEqual(expectedOrder);
