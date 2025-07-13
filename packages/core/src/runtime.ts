@@ -1689,6 +1689,309 @@ export class AgentRuntime implements IAgentRuntime {
 
       return response as R;
     } catch (error: any) {
+      // Check if this is a rate limiting error and fallback is enabled
+      const shouldFallback = this.shouldFallbackToElizaNet(error);
+      if (shouldFallback && this.getSetting('ELIZANET_FALLBACK_ENABLED') !== false) {
+        this.logger.warn(
+          `[useModel] Primary model failed with ${error.message}. Attempting fallback to ElizaNet LiteLLM...`
+        );
+
+        try {
+          const fallbackResponse = await this.fallbackToElizaNet(modelKey, paramsWithRuntime);
+          const elapsedTime = performance.now() - startTime;
+
+          // Log fallback usage
+          this.logger.info(
+            `[useModel] Successfully fell back to ElizaNet LiteLLM for ${modelKey} (took ${Number(elapsedTime.toFixed(2)).toLocaleString()}ms)`
+          );
+
+          // Log fallback usage
+          this.adapter.log({
+            entityId: this.agentId,
+            roomId: this.agentId,
+            body: {
+              modelType,
+              modelKey,
+              params: {
+                ...(typeof params === 'object' && !Array.isArray(params) && params ? params : {}),
+                prompt: promptContent,
+              },
+              prompt: promptContent,
+              runId: this.getCurrentRunId(),
+              timestamp: Date.now(),
+              executionTime: elapsedTime,
+              provider: 'elizanet-fallback',
+              fallbackReason: error.message,
+              actionContext: this.currentActionContext
+                ? {
+                    actionName: this.currentActionContext.actionName,
+                    actionId: this.currentActionContext.actionId,
+                  }
+                : undefined,
+              response:
+                Array.isArray(fallbackResponse) &&
+                fallbackResponse.every((x) => typeof x === 'number')
+                  ? '[array]'
+                  : fallbackResponse,
+            },
+            type: `useModel:${modelKey}:fallback`,
+          });
+
+          return fallbackResponse as R;
+        } catch (fallbackError: any) {
+          this.logger.error(`[useModel] ElizaNet fallback also failed: ${fallbackError.message}`);
+          // If fallback fails, throw the original error
+          throw error;
+        }
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * Determines if the error indicates we should fallback to ElizaNet LiteLLM
+   */
+  private shouldFallbackToElizaNet(error: any): boolean {
+    if (!error) return false;
+
+    const errorMessage = error.message?.toLowerCase() || '';
+    const errorCode = error.code?.toLowerCase() || '';
+
+    // Check for rate limiting errors
+    if (
+      errorMessage.includes('rate limit') ||
+      errorMessage.includes('quota exceeded') ||
+      errorMessage.includes('too many requests') ||
+      errorCode.includes('rate_limit') ||
+      error.status === 429
+    ) {
+      return true;
+    }
+
+    // Check for other API errors that suggest fallback might help
+    if (
+      errorMessage.includes('service unavailable') ||
+      errorMessage.includes('timeout') ||
+      errorMessage.includes('connection refused') ||
+      errorMessage.includes('network error') ||
+      error.status === 503 ||
+      error.status === 502 ||
+      error.status === 504
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Fallback to ElizaNet LiteLLM instance
+   */
+  private async fallbackToElizaNet(modelKey: string, params: any): Promise<any> {
+    const baseUrl = this.getSetting('ELIZANET_BASE_URL') || 'http://elizanet.up.railway.app';
+    const apiKey = this.getSetting('ELIZANET_API_KEY');
+    const timeout = parseInt(this.getSetting('ELIZANET_TIMEOUT') || '30000', 10);
+
+    this.logger.debug(`[ElizaNet] Fallback request for ${modelKey}`, {
+      baseUrl,
+      hasApiKey: !!apiKey,
+      timeout,
+    });
+
+    // Handle different model types
+    if (modelKey === ModelType.TEXT_EMBEDDING || modelKey === 'text_embedding') {
+      return await this.elizaNetEmbedding(baseUrl, apiKey, params, timeout);
+    } else if (
+      modelKey === ModelType.TEXT_SMALL ||
+      modelKey === ModelType.TEXT_LARGE ||
+      modelKey === 'text_small' ||
+      modelKey === 'text_large'
+    ) {
+      return await this.elizaNetTextGeneration(baseUrl, apiKey, params, timeout);
+    } else if (modelKey === ModelType.IMAGE || modelKey === 'image') {
+      return await this.elizaNetImageGeneration(baseUrl, apiKey, params, timeout);
+    } else {
+      throw new Error(`ElizaNet fallback not supported for model type: ${modelKey}`);
+    }
+  }
+
+  /**
+   * ElizaNet text generation fallback
+   */
+  private async elizaNetTextGeneration(
+    baseUrl: string,
+    apiKey: string | null,
+    params: any,
+    timeout: number
+  ): Promise<string> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    try {
+      const messages = params.messages || [
+        { role: 'user', content: params.prompt || params.input || '' },
+      ];
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      if (apiKey) {
+        headers['Authorization'] = `Bearer ${apiKey}`;
+      }
+
+      const response = await fetch(`${baseUrl}/v1/chat/completions`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          model: params.model || 'gpt-3.5-turbo',
+          messages,
+          max_tokens: params.maxTokens || params.max_tokens || 1000,
+          temperature: params.temperature || 0.7,
+          top_p: params.topP || params.top_p || 1,
+          frequency_penalty: params.frequencyPenalty || params.frequency_penalty || 0,
+          presence_penalty: params.presencePenalty || params.presence_penalty || 0,
+          stop: params.stop || null,
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`ElizaNet API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = (await response.json()) as any;
+
+      if (
+        !data?.choices ||
+        !Array.isArray(data.choices) ||
+        !data.choices[0] ||
+        !data.choices[0].message
+      ) {
+        throw new Error('Invalid response from ElizaNet API');
+      }
+
+      return data.choices[0].message.content || '';
+    } catch (error: any) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        throw new Error(`ElizaNet API timeout after ${timeout}ms`);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * ElizaNet embedding fallback
+   */
+  private async elizaNetEmbedding(
+    baseUrl: string,
+    apiKey: string | null,
+    params: any,
+    timeout: number
+  ): Promise<number[]> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    try {
+      const text = params.text || params.input || '';
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      if (apiKey) {
+        headers['Authorization'] = `Bearer ${apiKey}`;
+      }
+
+      const response = await fetch(`${baseUrl}/v1/embeddings`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          model: params.model || 'text-embedding-ada-002',
+          input: text,
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`ElizaNet Embedding API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = (await response.json()) as any;
+
+      if (!data?.data || !Array.isArray(data.data) || !data.data[0] || !data.data[0].embedding) {
+        throw new Error('Invalid embedding response from ElizaNet API');
+      }
+
+      return data.data[0].embedding;
+    } catch (error: any) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        throw new Error(`ElizaNet Embedding API timeout after ${timeout}ms`);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * ElizaNet image generation fallback
+   */
+  private async elizaNetImageGeneration(
+    baseUrl: string,
+    apiKey: string | null,
+    params: any,
+    timeout: number
+  ): Promise<{ url: string }[]> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    try {
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+
+      if (apiKey) {
+        headers['Authorization'] = `Bearer ${apiKey}`;
+      }
+
+      const response = await fetch(`${baseUrl}/v1/images/generations`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          model: params.model || 'dall-e-3',
+          prompt: params.prompt || params.input || '',
+          n: params.n || 1,
+          size: params.size || '1024x1024',
+          quality: params.quality || 'standard',
+          style: params.style || 'vivid',
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`ElizaNet Image API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = (await response.json()) as any;
+
+      if (!data?.data || !Array.isArray(data.data) || !data.data[0] || !data.data[0].url) {
+        throw new Error('Invalid image response from ElizaNet API');
+      }
+
+      return data.data.map((item: any) => ({ url: item.url }));
+    } catch (error: any) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        throw new Error(`ElizaNet Image API timeout after ${timeout}ms`);
+      }
       throw error;
     }
   }
