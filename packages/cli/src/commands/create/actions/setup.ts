@@ -173,21 +173,67 @@ export async function setupAIModelConfig(
 
 /**
  * Checks if an environment variable has a real value (not a placeholder) in the content
+ * @param content The .env file content to check
+ * @param keyName The environment variable name to check
+ * @returns True if the variable exists and has a non-placeholder value
  */
 function hasValidApiKey(content: string, keyName: string): boolean {
-  const regex = new RegExp(`^${keyName}=(.+)$`, 'm');
+  // Use a more robust regex that handles comments, spacing, and different line formats
+  const regex = new RegExp(`^\\s*${keyName}\\s*=\\s*(.+?)\\s*(?:#.*)?$`, 'm');
   const match = content.match(regex);
   if (!match) return false;
 
   const value = match[1].trim();
-  // Check if it's not empty and not a placeholder
-  return (
-    value !== '' &&
-    !value.includes('your_') &&
-    !value.includes('_here') &&
-    !value.includes('PLACEHOLDER') &&
-    !value.includes('placeholder')
-  );
+
+  // Check if it's not empty
+  if (value === '') return false;
+
+  // Check for common placeholder patterns, but be more specific to avoid false positives
+  const placeholderPatterns = [
+    /^your_.*_here$/,           // your_openai_api_key_here
+    /^your_.*_key$/,            // your_api_key
+    /^PLACEHOLDER.*$/,          // PLACEHOLDER_*
+    /^placeholder.*$/,          // placeholder_*
+    /^<.*>$/,                   // <placeholder>
+    /^\[.*\]$/,                 // [placeholder]
+    /^\{.*\}$/,                 // {placeholder}
+    /^example.*$/,              // example_*
+    /^demo.*$/,                 // demo_*
+    /^test.*$/,                 // test_*
+    /^temp.*$/,                 // temp_*
+    /^tmp.*$/,                  // tmp_*
+  ];
+
+  // Check if the value matches any placeholder pattern
+  for (const pattern of placeholderPatterns) {
+    if (pattern.test(value)) {
+      return false;
+    }
+  }
+
+  // For Ollama endpoints, do additional validation
+  if (keyName === 'OLLAMA_API_ENDPOINT') {
+    // Check if it's a valid URL format
+    try {
+      const url = new URL(value);
+      // Must be http or https
+      if (!['http:', 'https:'].includes(url.protocol)) {
+        return false;
+      }
+      // Must have a hostname
+      if (!url.hostname) {
+        return false;
+      }
+      // Common valid Ollama endpoints should not be flagged as placeholders
+      // even if they contain "localhost" or other common terms
+      return true;
+    } catch {
+      // Not a valid URL
+      return false;
+    }
+  }
+
+  return true;
 }
 
 /**
@@ -221,7 +267,10 @@ export async function setupEmbeddingModelConfig(
         if (!hasValidApiKey(content, 'OPENAI_API_KEY')) {
           if (isNonInteractive) {
             // In non-interactive mode, add/update placeholder
-            if (!content.includes('OPENAI_API_KEY=')) {
+            // Use robust checking to avoid duplicates
+            const hasOpenAIKey = hasValidApiKey(content, 'OPENAI_API_KEY') ||
+              /^[^#]*OPENAI_API_KEY\s*=/.test(content);
+            if (!hasOpenAIKey) {
               content += '\n# Embedding Model Configuration (Fallback)\n';
               content += '# OpenAI Embeddings Configuration\n';
               content += 'OPENAI_API_KEY=your_openai_api_key_here\n';
@@ -241,7 +290,10 @@ export async function setupEmbeddingModelConfig(
         if (!hasValidApiKey(content, 'OLLAMA_API_ENDPOINT')) {
           if (isNonInteractive) {
             // In non-interactive mode, add/update placeholder
-            if (!content.includes('OLLAMA_API_ENDPOINT=')) {
+            // Use the same robust checking to avoid duplicates
+            const hasOllamaEndpoint = hasValidApiKey(content, 'OLLAMA_API_ENDPOINT') ||
+              /^[^#]*OLLAMA_API_ENDPOINT\s*=/.test(content);
+            if (!hasOllamaEndpoint) {
               content += '\n# Embedding Model Configuration (Fallback)\n';
               content += '# Ollama Embeddings Configuration\n';
               content += 'OLLAMA_API_ENDPOINT=http://localhost:11434\n';
@@ -258,10 +310,14 @@ export async function setupEmbeddingModelConfig(
           // Ollama endpoint exists, but we need to prompt for embedding model specifically
           if (isNonInteractive) {
             // In non-interactive mode, just add embedding model if not present
-            if (!content.includes('OLLAMA_EMBEDDING_MODEL')) {
+            // Use robust checking for existing configuration
+            const hasEmbeddingModel = /^[^#]*OLLAMA_EMBEDDING_MODEL\s*=/.test(content);
+            const hasUseEmbeddings = /^[^#]*USE_OLLAMA_EMBEDDINGS\s*=/.test(content);
+
+            if (!hasEmbeddingModel) {
               content += 'OLLAMA_EMBEDDING_MODEL=nomic-embed-text\n';
             }
-            if (!content.includes('USE_OLLAMA_EMBEDDINGS')) {
+            if (!hasUseEmbeddings) {
               content += 'USE_OLLAMA_EMBEDDINGS=true\n';
             }
             await fs.writeFile(envFilePath, content, 'utf8');
@@ -278,7 +334,10 @@ export async function setupEmbeddingModelConfig(
         if (!hasValidApiKey(content, 'GOOGLE_GENERATIVE_AI_API_KEY')) {
           if (isNonInteractive) {
             // In non-interactive mode, add/update placeholder
-            if (!content.includes('GOOGLE_GENERATIVE_AI_API_KEY=')) {
+            // Use robust checking to avoid duplicates
+            const hasGoogleKey = hasValidApiKey(content, 'GOOGLE_GENERATIVE_AI_API_KEY') ||
+              /^[^#]*GOOGLE_GENERATIVE_AI_API_KEY\s*=/.test(content);
+            if (!hasGoogleKey) {
               content += '\n# Embedding Model Configuration (Fallback)\n';
               content += '# Google Generative AI Embeddings Configuration\n';
               content += 'GOOGLE_GENERATIVE_AI_API_KEY=your_google_api_key_here\n';
