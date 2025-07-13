@@ -1,0 +1,105 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS",
+    "buildCommand": "npm install -g bun@1.2.17 && bun install --no-cache && bun run build",
+    "watchPatterns": [
+      "packages/**/*.ts",
+      "packages/**/*.js",
+      "packages/**/*.json",
+      "*.json"
+    ]
+  },
+  "deploy": {
+    "startCommand": "bun run start",
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 3,
+    "numReplicas": 1,
+    "healthcheckPath": "/health",
+    "healthcheckTimeout": 30,
+    "healthcheckInterval": 60
+  },
+  "environments": {
+    "production": {
+      "variables": {
+        "NODE_ENV": "production",
+        "SERVER_PORT": "${{PORT}}",
+        "SERVER_HOST": "0.0.0.0",
+        "ELIZA_UI_ENABLE": "true",
+        "EXPRESS_MAX_PAYLOAD": "2mb"
+      }
+    }
+  },
+  "regions": [
+    "us-west1"
+  ],
+  "runtime": {
+    "nodeVersion": "23.3.0"
+  },
+  "resources": {
+    "memoryLimit": "1Gi",
+    "cpuLimit": "1000m"
+  },
+  "networking": {
+    "serviceDomain": {
+      "subdomain": "eliza-agent"
+    }
+  },
+  "envVars": {
+    "NODE_ENV": {
+      "default": "production"
+    },
+    "SERVER_PORT": {
+      "default": "3000"
+    },
+    "SERVER_HOST": {
+      "default": "0.0.0.0"
+    },
+    "ELIZA_UI_ENABLE": {
+      "default": "true"
+    },
+    "EXPRESS_MAX_PAYLOAD": {
+      "default": "2mb"
+    },
+    "OPENAI_API_KEY": {
+      "required": false,
+      "description": "OpenAI API Key for GPT models"
+    },
+    "ANTHROPIC_API_KEY": {
+      "required": false,
+      "description": "Anthropic Claude API Key"
+    },
+    "GOOGLE_GENERATIVE_AI_API_KEY": {
+      "required": false,
+      "description": "Google Generative AI API Key"
+    },
+    "OPENROUTER_API_KEY": {
+      "required": false,
+      "description": "OpenRouter API Key"
+    },
+    "OLLAMA_API_ENDPOINT": {
+      "required": false,
+      "description": "Ollama API Endpoint for local LLM hosting"
+    },
+    "POSTGRES_URL": {
+      "required": false,
+      "description": "PostgreSQL connection URL (optional, uses PGLite if not provided)"
+    },
+    "PGLITE_DATA_DIR": {
+      "required": false,
+      "description": "PGLite database directory"
+    },
+    "ELIZA_SERVER_AUTH_TOKEN": {
+      "required": false,
+      "description": "Server authentication token for API access"
+    },
+    "REMOTE_CHARACTER_URLS": {
+      "required": false,
+      "description": "Remote character URLs (comma-separated)"
+    },
+    "ELIZA_NONINTERACTIVE": {
+      "required": false,
+      "description": "Non-interactive CLI mode (true/false)"
+    }
+  }
+}

@@ -1,0 +1,94 @@
+services:
+  - type: web
+    name: eliza-agent
+    runtime: node
+    plan: starter
+    region: oregon
+    branch: develop
+    rootDir: ./
+    buildCommand: |
+      npm install -g bun@1.2.17
+      bun install --no-cache
+      bun run build
+    startCommand: bun run start
+    healthCheckPath: /health
+    numInstances: 1
+    preDeployCommand: echo "Starting Eliza Agent deployment"
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SERVER_PORT
+        fromService:
+          type: web
+          name: eliza-agent
+          property: port
+      - key: SERVER_HOST
+        value: 0.0.0.0
+      - key: ELIZA_UI_ENABLE
+        value: "true"
+      - key: EXPRESS_MAX_PAYLOAD
+        value: 2mb
+      - key: OPENAI_API_KEY
+        sync: false
+        description: "OpenAI API Key for GPT models"
+      - key: ANTHROPIC_API_KEY
+        sync: false
+        description: "Anthropic Claude API Key"
+      - key: GOOGLE_GENERATIVE_AI_API_KEY
+        sync: false
+        description: "Google Generative AI API Key"
+      - key: OPENROUTER_API_KEY
+        sync: false
+        description: "OpenRouter API Key"
+      - key: OLLAMA_API_ENDPOINT
+        sync: false
+        description: "Ollama API Endpoint for local LLM hosting"
+      - key: POSTGRES_URL
+        sync: false
+        description: "PostgreSQL connection URL (optional, uses PGLite if not provided)"
+      - key: PGLITE_DATA_DIR
+        sync: false
+        description: "PGLite database directory"
+      - key: ELIZA_SERVER_AUTH_TOKEN
+        sync: false
+        description: "Server authentication token for API access"
+      - key: REMOTE_CHARACTER_URLS
+        sync: false
+        description: "Remote character URLs (comma-separated)"
+      - key: ELIZA_NONINTERACTIVE
+        sync: false
+        description: "Non-interactive CLI mode (true/false)"
+
+  # Optional PostgreSQL database service
+  # Remove this section if using PGLite or external database
+  - type: pserv
+    name: eliza-postgres
+    plan: starter
+    region: oregon
+    ipAllowList: [] # Only allow connections from your web service
+    databaseName: eliza
+    databaseUser: eliza
+    envVars:
+      - key: POSTGRES_DB
+        value: eliza
+      - key: POSTGRES_USER
+        value: eliza
+      - key: POSTGRES_PASSWORD
+        generateValue: true
+
+# Optional: Database connection for the web service
+# Uncomment if using the PostgreSQL service above
+# databases:
+#   - name: eliza-postgres
+#     databaseName: eliza
+#     user: eliza
+
+# Deployment configuration
+deploy:
+  - service: eliza-agent
+    branch: develop
+    buildCommand: |
+      npm install -g bun@1.2.17
+      bun install --no-cache
+      bun run build
+    startCommand: bun run start
