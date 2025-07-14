@@ -11,6 +11,11 @@ export interface PluginEnvironmentValidation {
 }
 
 /**
+ * Default value type based on parameter type
+ */
+export type AgentConfigDefaultValue = string | number | boolean;
+
+/**
  * Agent configuration parameter from package.json
  */
 export interface AgentConfigParameter {
@@ -18,7 +23,7 @@ export interface AgentConfigParameter {
   description: string;
   required: boolean;
   sensitive?: boolean;
-  default?: any;
+  default?: AgentConfigDefaultValue;
 }
 
 /**
@@ -31,7 +36,7 @@ export interface ScenarioCharacter {
   bio?: string;
   system?: string;
   plugins: string[]; // Plugin names that this character requires
-  settings?: Record<string, any>;
+  settings?: Record<string, string | number | boolean | null>;
   messageExamples?: Array<Array<{ user: string; content: { text: string; actions?: string[] } }>>;
 }
 
@@ -45,11 +50,14 @@ export interface ScenarioStep {
   content?: string; // Message content
   duration?: number; // For wait steps
   actionName?: string; // For action steps
-  actionParams?: Record<string, any>; // Action parameters
+  actionParams?: Record<
+    string,
+    string | number | boolean | null | unknown[] | Record<string, unknown>
+  >; // Action parameters
   expected_actions?: string[]; // Expected actions to be triggered
   assertion?: {
     type: 'contains' | 'regex' | 'count' | 'custom';
-    value: any;
+    value: string | number | RegExp | ((result: unknown) => boolean);
     description: string;
   };
   condition?: string; // For condition steps
@@ -82,7 +90,7 @@ export interface ScenarioVerificationRule {
     successCriteria: string;
     priority?: 'high' | 'medium' | 'low';
     category?: 'functionality' | 'performance' | 'integration' | 'collaboration';
-    context?: Record<string, any>;
+    context?: Record<string, string | number | boolean | null>;
     weight?: number; // Impact on overall score (default: 1.0)
   };
 }
@@ -97,7 +105,7 @@ export interface ScenarioVerification {
     outcome: string;
   }>;
   groundTruth?: {
-    correctAnswer?: any;
+    correctAnswer?: string | number | boolean | null | unknown[];
     expectedBehavior?: string;
     successCriteria?: string[];
   };
@@ -109,7 +117,7 @@ export interface ScenarioVerification {
 export interface ScenarioSetup {
   timeout?: number; // Max execution time in milliseconds
   maxSteps?: number; // Max number of steps to execute
-  environment?: Record<string, any>; // Additional environment setup
+  environment?: Record<string, string | number | boolean>; // Additional environment setup
   roomType?: 'group' | 'dm' | 'public';
   roomName?: string;
   context?: string; // Additional context for the scenario
@@ -184,14 +192,14 @@ export interface ScenarioExecutionResult {
     passed: boolean;
     score: number;
     reason?: string;
-    details?: any;
+    details?: Record<string, unknown>;
   }>;
 
   // Execution transcript
   transcript: Array<{
     timestamp: number;
     step: ScenarioStep;
-    result?: any;
+    result?: unknown;
     error?: string;
   }>;
 
@@ -272,14 +280,14 @@ export interface ApiStep extends ExtendedScenarioStepBase {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   url: string;
   headers?: Record<string, string>;
-  body?: any;
+  body?: string | Record<string, unknown> | unknown[];
   expectedStatus: number;
-  expectedResponse?: any;
+  expectedResponse?: string | Record<string, unknown> | unknown[];
   timeout?: number;
   retries?: number;
   mock?: {
     enabled: boolean;
-    response: any;
+    response: string | Record<string, unknown> | unknown[];
     delay?: number;
   };
 }
@@ -321,8 +329,8 @@ export interface ValidationCheck {
   name: string;
   type: 'file_exists' | 'file_content' | 'git_status' | 'package_json' | 'custom';
   target?: string;
-  expected?: any;
-  validator?: (actual: any) => boolean | Promise<boolean>;
+  expected?: string | boolean | Record<string, unknown>;
+  validator?: (actual: unknown) => boolean | Promise<boolean>;
 }
 
 // Extended scenario configuration
