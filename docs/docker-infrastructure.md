@@ -138,8 +138,6 @@ elizaos deploy push harbor.company.com/elizaos:latest
 
 ### Future
 
-Everything above, including:
-
 1. Cloud provider integrations
 2. Advanced orchestration of k3d clusters (to facilitate resource efficient swarms)
 3. Registry management
@@ -159,15 +157,13 @@ elizaos start
 **Enhanced Quickstart**:
 ```bash
 bun i -g @elizaos/cli
-elizaos create my-agent
-cd my-agent
-elizaos deploy  # Just works, no Docker knowledge needed
+elizaos deploy demo
 ```
 
 Then at [elizaos.how/quickstart](https://eliza.how/quickstart):
 - Replace Docker complexity with one command
 - Add troubleshooting for common deployment issues  
-- Link to advanced deployment guides
+- Link to advanced, vendor specific, deployment guides
 
 ## Reference
 
