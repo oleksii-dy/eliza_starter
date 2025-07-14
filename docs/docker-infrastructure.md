@@ -171,5 +171,5 @@ Then at [elizaos.how/quickstart](https://eliza.how/quickstart):
 
 ## Reference
 
-- [Elizify](http;//github.com/bealers/elizify)
-- [eliza-remote](http;//github.com/bealers/eliza-remote)
+- [Elizify](http://github.com/bealers/elizify)
+- [eliza-remote](http://github.com/bealers/eliza-remote) (needs updating for v1.x)
