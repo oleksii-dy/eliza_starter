@@ -1,11 +1,16 @@
 import { getElizaCharacter } from '@/src/characters/eliza';
-import { copyTemplate as copyTemplateUtil } from '@/src/utils';
+import { copyTemplate as copyTemplateUtil, promptAndStorePostgresUrl } from '@/src/utils';
 import { join } from 'path';
 import fs from 'node:fs/promises';
 import * as clack from '@clack/prompts';
 import colors from 'yoctocolors';
 import { processPluginName, validateTargetDirectory } from '../utils';
-import { setupProjectEnvironment } from './setup';
+import {
+  setupProjectEnvironment,
+  setupAIModelConfig,
+  setupEmbeddingModelConfig,
+  hasValidApiKey,
+} from './setup';
 import {
   installDependenciesWithSpinner,
   buildProjectWithSpinner,
@@ -14,6 +19,40 @@ import {
 } from '@/src/utils/spinner-utils';
 import { existsSync, rmSync } from 'node:fs';
 import { getDisplayDirectory } from '@/src/utils/helpers';
+
+/**
+ * Handles interactive configuration setup for projects
+ * This includes database configuration, AI model setup, and Ollama fallback configuration
+ */
+async function handleInteractiveConfiguration(
+  targetDir: string,
+  database: string,
+  aiModel: string,
+  embeddingModel?: string
+): Promise<void> {
+  const envFilePath = `${targetDir}/.env`;
+
+  // Handle PostgreSQL configuration
+  if (database === 'postgres') {
+    await promptAndStorePostgresUrl(envFilePath);
+  }
+
+  // Handle AI model configuration
+  if (aiModel !== 'local' || embeddingModel) {
+    if (aiModel !== 'local') {
+      await setupAIModelConfig(aiModel, envFilePath, false);
+    }
+    if (embeddingModel) {
+      await setupEmbeddingModelConfig(embeddingModel, envFilePath, false);
+    }
+  }
+
+  // Always set up Ollama as universal fallback (if not already configured)
+  const envContent = existsSync(envFilePath) ? await fs.readFile(envFilePath, 'utf8') : '';
+  if (!hasValidApiKey(envContent, 'OLLAMA_API_ENDPOINT')) {
+    await setupEmbeddingModelConfig('ollama', envFilePath, false);
+  }
+}
 
 /**
  * wraps the creation process with cleanup handlers that remove the directory
@@ -102,6 +141,14 @@ export async function createPlugin(
   const pluginDirName = processedName.startsWith('plugin-')
     ? processedName
     : `plugin-${processedName}`;
+
+  // Show warning if the final name differs from what the user entered
+  if (pluginDirName !== pluginName) {
+    console.warn(
+      `\nWarning: changing "${pluginName}" to "${pluginDirName}" to conform to plugin naming conventions\n`
+    );
+  }
+
   const pluginTargetDir = join(targetDir, pluginDirName);
 
   // Validate target directory
@@ -131,8 +178,10 @@ export async function createPlugin(
     console.info(`\n${colors.green('✓')} Plugin "${pluginDirName}" created successfully!`);
     console.info(`\nNext steps:`);
     console.info(`  cd ${pluginDirName}`);
-    console.info(`  bun run build`);
-    console.info(`  elizaos dev or bun run dev\n`);
+    console.info(`  bun run build   # Build the plugin`);
+    console.info(`\n  Common commands:`);
+    console.info(`  elizaos dev    # Start development mode with hot reloading`);
+    console.info(`  elizaos start  # Start in production mode\n`);
   });
 }
 
@@ -186,7 +235,10 @@ export async function createAgent(
   console.info(`\n${colors.green('✓')} Agent "${agentName}" created successfully!`);
   console.info(`Agent character created successfully at: ${agentFilePath}`);
   console.info(`\nTo use this agent:`);
-  console.info(`  elizaos agent start --path ${agentFilePath}\n`);
+  console.info(`  1. Start ElizaOS server with this character:`);
+  console.info(`     elizaos start --character ${agentFilePath}`);
+  console.info(`\n  OR if a server is already running:`);
+  console.info(`     elizaos agent start --path ${agentFilePath}`);
 }
 
 /**
@@ -226,24 +278,7 @@ export async function createTEEProject(
 
     // Handle interactive configuration before spinner tasks
     if (!isNonInteractive) {
-      const { setupAIModelConfig, setupEmbeddingModelConfig } = await import('./setup');
-      const { promptAndStorePostgresUrl } = await import('@/src/utils');
-      const envFilePath = `${teeTargetDir}/.env`;
-
-      // Handle PostgreSQL configuration
-      if (database === 'postgres') {
-        await promptAndStorePostgresUrl(envFilePath);
-      }
-
-      // Handle AI model configuration
-      if (aiModel !== 'local' || embeddingModel) {
-        if (aiModel !== 'local') {
-          await setupAIModelConfig(aiModel, envFilePath, false);
-        }
-        if (embeddingModel) {
-          await setupEmbeddingModelConfig(embeddingModel, envFilePath, false);
-        }
-      }
+      await handleInteractiveConfiguration(teeTargetDir, database, aiModel, embeddingModel);
     }
 
     await runTasks([
@@ -260,7 +295,9 @@ export async function createTEEProject(
     console.info(`\n${colors.green('✓')} TEE project "${projectName}" created successfully!`);
     console.info(`\nNext steps:`);
     console.info(`  cd ${projectName}`);
-    console.info(`  elizaos dev or bun run dev\n`);
+    console.info(`\n  Common commands:`);
+    console.info(`  elizaos dev    # Start development mode with hot reloading`);
+    console.info(`  elizaos start  # Start in production mode\n`);
   });
 }
 
@@ -306,24 +343,7 @@ export async function createProject(
 
     // Handle interactive configuration before spinner tasks
     if (!isNonInteractive) {
-      const { setupAIModelConfig, setupEmbeddingModelConfig } = await import('./setup');
-      const { promptAndStorePostgresUrl } = await import('@/src/utils');
-      const envFilePath = `${projectTargetDir}/.env`;
-
-      // Handle PostgreSQL configuration
-      if (database === 'postgres') {
-        await promptAndStorePostgresUrl(envFilePath);
-      }
-
-      // Handle AI model configuration
-      if (aiModel !== 'local' || embeddingModel) {
-        if (aiModel !== 'local') {
-          await setupAIModelConfig(aiModel, envFilePath, false);
-        }
-        if (embeddingModel) {
-          await setupEmbeddingModelConfig(embeddingModel, envFilePath, false);
-        }
-      }
+      await handleInteractiveConfiguration(projectTargetDir, database, aiModel, embeddingModel);
     }
 
     await runTasks([
@@ -340,8 +360,12 @@ export async function createProject(
     const displayName = projectName === '.' ? 'Project' : `Project "${projectName}"`;
     console.info(`\n${colors.green('✓')} ${displayName} initialized successfully!`);
     console.info(`\nNext steps:`);
-    console.info(`  cd ${projectName}`);
-    console.info(`  elizaos dev or bun run dev\n`);
+    if (projectName !== '.') {
+      console.info(`  cd ${projectName}`);
+    }
+    console.info(`\n  Common commands:`);
+    console.info(`  elizaos dev    # Start development mode with hot reloading`);
+    console.info(`  elizaos start  # Start in production mode\n`);
   };
 
   if (projectName === '.') {

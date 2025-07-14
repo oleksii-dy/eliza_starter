@@ -421,9 +421,21 @@ export default function Chat({
           const isEmpty = (latestMessages?.messages?.length ?? 0) === 0;
 
           if (hasAutoName && isEmpty) {
-            clientLogger.info(
-              '[Chat] Latest DM channel is empty with auto-generated name or has no messages, reusing instead of creating.'
-            );
+            const isAlreadyInLatest = chatState.currentDmChannelId === latestChannel.id;
+
+            if (isAlreadyInLatest) {
+              toast({
+                title: `Already in a fresh chat`,
+                description: `You're already in a new chat with ${targetAgentData?.name || 'the agent'}.`,
+              });
+            } else {
+              updateChatState({ currentDmChannelId: latestChannel.id });
+              toast({
+                title: `Chat opened`,
+                description: `You can now start chatting with ${targetAgentData?.name || 'the agent'}.`,
+              });
+            }
+
             updateChatState({ currentDmChannelId: latestChannel.id });
             return;
           } else {
@@ -457,6 +469,10 @@ export default function Chat({
         updateChatState({ currentDmChannelId: null, input: '' });
       } finally {
         updateChatState({ isCreatingDM: false });
+        toast({
+          title: `Chat opened`,
+          description: `You can now start chatting with ${targetAgentData?.name || 'the agent'}.`,
+        });
       }
     },
     [chatType, createDmChannelMutation, updateChatState, safeScrollToBottom, latestChannel]
@@ -1169,13 +1185,7 @@ export default function Chat({
                           {agentDmChannels.find((c) => c.id === chatState.currentDmChannelId)
                             ?.name || 'Select Chat'}
                         </span>
-                        <Button
-                          variant="ghost"
-                          size={'icon'}
-                          className="hidden md:inline-flex text-xs text-muted-foreground"
-                        >
-                          <ChevronDown />
-                        </Button>
+                        <ChevronDown className="hidden md:inline-flex size-4 text-muted-foreground" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-[280px] sm:w-[320px]">
