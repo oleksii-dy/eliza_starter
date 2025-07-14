@@ -48,7 +48,6 @@ describe('Plugin Naming Utilities', () => {
     it('should prioritize @elizaos scope over @elizaos scope', () => {
       const dependencies = {
         '@elizaos/plugin-test': '^1.0.0',
-        '@elizaos/plugin-test': '^1.0.0',
       };
 
       const result = findPluginPackageName('test', dependencies);
@@ -77,12 +76,16 @@ describe('Plugin Naming Utilities', () => {
 
     it('should handle packages from GitHub URLs', () => {
       const dependencies = {
-        '@elizaos-plugins/plugin-video-understanding': 'github:elizaos-plugins/plugin-video-understanding',
+        '@elizaos-plugins/plugin-video-understanding':
+          'github:elizaos-plugins/plugin-video-understanding',
         '@elizaos/plugin-openai': '^1.0.0',
       };
 
       // Should find by exact match
-      const result1 = findPluginPackageName('@elizaos-plugins/plugin-video-understanding', dependencies);
+      const result1 = findPluginPackageName(
+        '@elizaos-plugins/plugin-video-understanding',
+        dependencies
+      );
       expect(result1).toBe('@elizaos-plugins/plugin-video-understanding');
 
       // The current implementation doesn't search all packages by owner/repo name pattern
