@@ -1,4 +1,4 @@
-import type { Character } from '@elizaos/core';
+import type { Character } from '../../../types';
 
 /**
  * Mock character object representing a character in the system.

@@ -3,6 +3,7 @@ import { Content } from './messaging';
 import { IAgentRuntime } from './runtime';
 import { State } from './state';
 import type { UUID } from './uuid';
+import type { HandlerCallback } from './components';
 
 /**
  * Represents the state of a plan execution
@@ -16,13 +17,27 @@ export interface PlanState {
 }
 
 /**
+ * Value types for different constraint types
+ */
+export type ConstraintValue =
+  | number // for time constraints (milliseconds)
+  | { cpu?: number; memory?: number; storage?: number } // for resource constraints
+  | string[] // for dependency constraints (list of dependencies)
+  | Record<string, unknown>; // for custom constraints
+
+/**
  * Represents a constraint on plan execution
  */
 export interface Constraint {
   type: 'time' | 'resource' | 'dependency' | 'custom';
-  value: any;
+  value: ConstraintValue;
   description?: string;
 }
+
+/**
+ * Value types for different condition types
+ */
+export type ConditionValue = string | number | boolean | Date | RegExp | unknown[];
 
 /**
  * Represents a condition for action execution
@@ -30,8 +45,15 @@ export interface Constraint {
 export interface Condition {
   type: 'state' | 'result' | 'time' | 'custom';
   operator: 'eq' | 'ne' | 'gt' | 'lt' | 'gte' | 'lte' | 'contains' | 'matches';
-  value: any;
+  value: ConditionValue;
   target: string;
+}
+
+/**
+ * Data structure for outcome results
+ */
+export interface OutcomeData {
+  [key: string]: string | number | boolean | null | OutcomeData | OutcomeData[];
 }
 
 /**
@@ -39,7 +61,7 @@ export interface Condition {
  */
 export interface Outcome {
   success: boolean;
-  data?: Record<string, any>;
+  data?: OutcomeData;
   stateChanges?: string[];
 }
 
@@ -54,12 +76,24 @@ export interface RetryPolicy {
 }
 
 /**
+ * Parameter types for action steps
+ */
+export type ActionParameter =
+  | string
+  | number
+  | boolean
+  | null
+  | Date
+  | ActionParameter[]
+  | { [key: string]: ActionParameter };
+
+/**
  * Represents a single step in an action plan
  */
 export interface ActionStep {
   id: UUID;
   actionName: string;
-  parameters?: Record<string, any>;
+  parameters?: Record<string, ActionParameter>;
   dependencies?: UUID[]; // Other step IDs
   conditions?: Condition[];
   expectedOutcome?: Outcome;
@@ -87,32 +121,58 @@ export interface ActionPlan {
 }
 
 /**
- * Result of executing an action
+ * Result value types
  */
-export interface ActionResult {
-  values?: {
-    [key: string]: any;
-  };
-  data?: {
-    [key: string]: any;
-  };
+export interface ResultValueObject {
+  [key: string]: ResultValue;
+}
+export type ResultValue =
+  | string
+  | number
+  | boolean
+  | null
+  | Date
+  | ResultValue[]
+  | ResultValueObject;
+
+/**
+ * Result of executing a planned action
+ */
+export interface PlanActionResult {
+  values?: Record<string, ResultValue>;
+  data?: Record<string, ResultValue>;
   text?: string;
 }
 
 /**
- * Context provided to actions during execution
+ * Memory value type
  */
-export interface ActionContext {
+export interface MemoryValueObject {
+  [key: string]: MemoryValue;
+}
+export type MemoryValue =
+  | string
+  | number
+  | boolean
+  | null
+  | Date
+  | MemoryValue[]
+  | MemoryValueObject;
+
+/**
+ * Context provided to planned actions during execution
+ */
+export interface PlanActionContext {
   planId?: UUID;
   stepId?: UUID;
   workingMemory?: WorkingMemory;
-  previousResults?: ActionResult[];
+  previousResults?: PlanActionResult[];
   abortSignal?: AbortSignal;
 
   // Methods will be added by implementation
-  updateMemory?: (key: string, value: any) => void;
-  getMemory?: (key: string) => any;
-  getPreviousResult?: (stepId: UUID) => ActionResult | undefined;
+  updateMemory?: (key: string, value: MemoryValue) => void;
+  getMemory?: (key: string) => MemoryValue | undefined;
+  getPreviousResult?: (stepId: UUID) => PlanActionResult | undefined;
   requestReplanning?: () => Promise<ActionPlan>;
 }
 
@@ -120,13 +180,13 @@ export interface ActionContext {
  * Working memory interface for maintaining state across actions
  */
 export interface WorkingMemory {
-  set(key: string, value: any): void;
-  get(key: string): any;
+  set(key: string, value: MemoryValue): void;
+  get(key: string): MemoryValue | undefined;
   has(key: string): boolean;
   delete(key: string): boolean;
   clear(): void;
-  entries(): IterableIterator<[string, any]>;
-  serialize(): Record<string, any>;
+  entries(): IterableIterator<[string, MemoryValue]>;
+  serialize(): Record<string, MemoryValue>;
 }
 
 /**
@@ -137,7 +197,7 @@ export interface PlanExecutionResult {
   success: boolean;
   completedSteps: number;
   totalSteps: number;
-  results: ActionResult[];
+  results: PlanActionResult[];
   errors?: Error[];
   duration: number;
   adaptations?: string[];
@@ -189,27 +249,27 @@ export interface IPlanningService {
    * Used for complex planning scenarios
    */
   createComprehensivePlan(
-    runtime: import('./runtime').IAgentRuntime,
+    runtime: IAgentRuntime,
     context: PlanningContext,
-    message?: import('./memory').Memory,
-    state?: import('./state').State
+    message?: Memory,
+    state?: State
   ): Promise<ActionPlan>;
 
   /**
    * Executes a plan with full runtime integration
    */
   executePlan(
-    runtime: import('./runtime').IAgentRuntime,
+    runtime: IAgentRuntime,
     plan: ActionPlan,
-    message: import('./memory').Memory,
-    callback?: import('./components').HandlerCallback
+    message: Memory,
+    callback?: HandlerCallback
   ): Promise<PlanExecutionResult>;
 
   /**
    * Validates a plan before execution
    */
   validatePlan(
-    runtime: import('./runtime').IAgentRuntime,
+    runtime: IAgentRuntime,
     plan: ActionPlan
   ): Promise<{ valid: boolean; issues?: string[] }>;
 
@@ -217,10 +277,10 @@ export interface IPlanningService {
    * Adapts a plan during execution based on results
    */
   adaptPlan(
-    runtime: import('./runtime').IAgentRuntime,
+    runtime: IAgentRuntime,
     plan: ActionPlan,
     currentStepIndex: number,
-    results: ActionResult[],
+    results: PlanActionResult[],
     error?: Error
   ): Promise<ActionPlan>;
 
