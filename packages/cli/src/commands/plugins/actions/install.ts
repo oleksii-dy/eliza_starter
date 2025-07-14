@@ -54,14 +54,12 @@ export async function installPluginFromGitHub(
   if (success) {
     logger.info(`Successfully installed plugin from ${githubSpecifier}.`);
 
-    // --- FIX: START ---
-    // After installation, we need to find the *actual* package name that was installed,
+    // After installation, we need to find the actual package name that was installed,
     // not guess it from the URL. We do this by re-reading the dependencies.
     const updatedDependencies = getDependenciesFromDirectory(cwd);
     const packageName =
       findPluginPackageName(repo, updatedDependencies || {}) ||
-      findPluginPackageName(owner, updatedDependencies || {}) ||
-      repo; // Fallback to repo name if lookup fails
+      findPluginPackageName(owner, updatedDependencies || {});
 
     if (!packageName) {
       logger.error(
@@ -69,7 +67,6 @@ export async function installPluginFromGitHub(
       );
       process.exit(1);
     }
-    // --- FIX: END ---
 
     // Prompt for environment variables if not skipped
     if (!opts.skipEnvPrompt) {
