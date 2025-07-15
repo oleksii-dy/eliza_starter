@@ -368,3 +368,105 @@ export async function withTempDir<T>(callback: (tmpDir: string) => T | Promise<T
     }
   }
 }
+
+/**
+ * Test bunx/npx detection by creating a wrapper script that properly sets process.argv and environment
+ * This fixes the issue where modifying process.argv in the test process doesn't affect the subprocess
+ * 
+ * @param command - The CLI command to execute
+ * @param options - Execution options including bunx/npx simulation settings
+ * @returns Command output
+ */
+export function testBunxNpxDetection(
+  command: string,
+  options: BunExecSyncOptions & {
+    /** Simulate bunx execution by setting script path and environment */
+    simulateBunx?: boolean;
+    /** Simulate npx execution by setting script path and environment */
+    simulateNpx?: boolean;
+    /** Custom script path to use for simulation */
+    scriptPath?: string;
+    /** Custom environment variables to set */
+    customEnv?: Record<string, string>;
+  } = {}
+): string {
+  const {
+    simulateBunx = false,
+    simulateNpx = false,
+    scriptPath,
+    customEnv = {},
+    ...execOptions
+  } = options;
+
+  // Create a wrapper script that sets the appropriate environment
+  const wrapperScript = `
+const { spawnSync } = require('child_process');
+const path = require('path');
+
+// Set up the environment for bunx/npx simulation
+${simulateBunx ? `
+// Simulate bunx execution
+process.argv = [
+  '${process.execPath}',
+  '${scriptPath || '/Users/user/.bun/install/cache/@elizaos/cli@1.2.5/dist/index.js'}',
+  ...process.argv.slice(2)
+];
+process.env.BUN_INSTALL_CACHE_DIR = '${customEnv.BUN_INSTALL_CACHE_DIR || '/Users/user/.bun/install/cache'}';
+` : ''}
+${simulateNpx ? `
+// Simulate npx execution
+process.argv = [
+  '${process.execPath}',
+  '${scriptPath || '/Users/user/.npm/_npx/12345/@elizaos/cli/dist/index.js'}',
+  ...process.argv.slice(2)
+];
+process.env.npm_execpath = '${customEnv.npm_execpath || '/usr/local/lib/node_modules/npm/bin/npx-cli.js'}';
+` : ''}
+
+// Set any additional custom environment variables
+${Object.entries(customEnv).map(([key, value]) => `process.env.${key} = '${value}';`).join('\n')}
+
+// Parse the command
+const commandParts = '${command}'.split(' ');
+const cmd = commandParts[0];
+const args = commandParts.slice(1);
+
+// Execute the command
+const result = spawnSync(cmd, args, {
+  stdio: 'pipe',
+  env: process.env,
+  cwd: '${execOptions.cwd || process.cwd()}',
+  shell: false
+});
+
+// Output the result
+process.stdout.write(result.stdout);
+process.stderr.write(result.stderr);
+process.exit(result.status);
+`;
+
+  // Write the wrapper script to a temporary file
+  const tmpDir = require('os').tmpdir();
+  const wrapperPath = require('path').join(tmpDir, `bunx-npx-test-${Date.now()}.js`);
+  require('fs').writeFileSync(wrapperPath, wrapperScript);
+
+  try {
+    // Execute the wrapper script
+    const result = bunExecSync(`node "${wrapperPath}"`, {
+      ...execOptions,
+      env: {
+        ...execOptions.env,
+        ...customEnv,
+      },
+    });
+
+    return result as string;
+  } finally {
+    // Clean up the temporary file
+    try {
+      require('fs').unlinkSync(wrapperPath);
+    } catch (e) {
+      // Ignore cleanup errors
+    }
+  }
+}
