@@ -47,6 +47,10 @@ import {
   IAgentRuntime,
   type ActionResult,
   type ActionContext,
+  type Workflow,
+  type WorkflowExecution,
+  type WorkflowExecutionStatus,
+  type WorkflowStatus,
 } from './types';
 
 import { BM25 } from './search';
@@ -488,7 +492,9 @@ export class AgentRuntime implements IAgentRuntime {
     const decryptedValue = decryptSecret(value, getSalt());
     if (decryptedValue === 'true') return true;
     if (decryptedValue === 'false') return false;
-    return decryptedValue || null;
+    // Return the decrypted value directly, don't use || null
+    // This ensures we don't convert valid values to null
+    return decryptedValue !== undefined ? decryptedValue : null;
   }
 
   getConversationLength() {
@@ -2263,5 +2269,42 @@ export class AgentRuntime implements IAgentRuntime {
       throw new Error('Database adapter not registered');
     }
     return await this.adapter.isReady();
+  }
+
+  // Workflow methods - delegate to adapter
+  async createWorkflow(workflow: Omit<Workflow, 'id'>): Promise<UUID> {
+    return await this.adapter.createWorkflow(workflow);
+  }
+  async getWorkflows(params: { agentId: UUID; status?: WorkflowStatus }): Promise<Workflow[]> {
+    return await this.adapter.getWorkflows(params);
+  }
+  async getWorkflow(id: UUID): Promise<Workflow | null> {
+    return await this.adapter.getWorkflow(id);
+  }
+  async getWorkflowsByName(name: string, agentId: UUID): Promise<Workflow[]> {
+    return await this.adapter.getWorkflowsByName(name, agentId);
+  }
+  async updateWorkflow(id: UUID, workflow: Partial<Workflow>): Promise<void> {
+    await this.adapter.updateWorkflow(id, workflow);
+  }
+  async deleteWorkflow(id: UUID): Promise<void> {
+    await this.adapter.deleteWorkflow(id);
+  }
+
+  // Workflow execution methods - delegate to adapter
+  async createWorkflowExecution(execution: Omit<WorkflowExecution, 'id'>): Promise<UUID> {
+    return await this.adapter.createWorkflowExecution(execution);
+  }
+  async getWorkflowExecutions(params: { workflowId?: UUID; agentId?: UUID; status?: WorkflowExecutionStatus }): Promise<WorkflowExecution[]> {
+    return await this.adapter.getWorkflowExecutions(params);
+  }
+  async getWorkflowExecution(id: UUID): Promise<WorkflowExecution | null> {
+    return await this.adapter.getWorkflowExecution(id);
+  }
+  async updateWorkflowExecution(id: UUID, execution: Partial<WorkflowExecution>): Promise<void> {
+    await this.adapter.updateWorkflowExecution(id, execution);
+  }
+  async deleteWorkflowExecution(id: UUID): Promise<void> {
+    await this.adapter.deleteWorkflowExecution(id);
   }
 }

@@ -16,6 +16,13 @@ import {
   TaskMetadata,
   type UUID,
   type World,
+  type Workflow,
+  type WorkflowExecution,
+  type WorkflowExecutionHistoryItem,
+  type WorkflowExecutionStatus,
+  type WorkflowStatus,
+  type WorkflowStep,
+  type WorkflowTrigger,
 } from '@elizaos/core';
 import {
   and,
@@ -51,6 +58,8 @@ import {
   serverAgentsTable,
   taskTable,
   worldTable,
+  workflowTable,
+  workflowExecutionTable,
 } from './schema/index';
 
 // Define the metadata type inline since we can't import it
@@ -3332,6 +3341,343 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
         },
         ids
       );
+    });
+  }
+
+  /**
+   * Creates a new workflow in the database.
+   * @param workflow The workflow object to create (without id)
+   * @returns Promise resolving to the UUID of the created workflow
+   */
+  async createWorkflow(workflow: Omit<Workflow, 'id'>): Promise<UUID> {
+    return this.withRetry(async () => {
+      return this.withDatabase(async () => {
+        const now = new Date();
+        const id = v4() as UUID;
+
+        const values = {
+          id,
+          name: workflow.name,
+          description: workflow.description,
+          agentId: workflow.agentId,
+          status: workflow.status,
+          version: workflow.version,
+          triggers: workflow.triggers,
+          steps: workflow.steps,
+          configuration: workflow.configuration || {},
+          metadata: workflow.metadata || {},
+          createdAt: now,
+          updatedAt: now,
+        };
+
+        const result = await this.db.insert(workflowTable).values(values).returning();
+        return result[0].id as UUID;
+      });
+    });
+  }
+
+  /**
+   * Retrieves workflows based on specified parameters.
+   * @param params Object containing agentId and optional status to filter workflows
+   * @returns Promise resolving to an array of Workflow objects
+   */
+  async getWorkflows(params: { agentId: UUID; status?: WorkflowStatus }): Promise<Workflow[]> {
+    return this.withRetry(async () => {
+      return this.withDatabase(async () => {
+        const conditions = [eq(workflowTable.agentId, params.agentId)];
+        if (params.status) {
+          conditions.push(eq(workflowTable.status, params.status));
+        }
+
+        const result = await this.db
+          .select()
+          .from(workflowTable)
+          .where(and(...conditions));
+
+        return result.map((row) => ({
+          id: row.id as UUID,
+          name: row.name,
+          description: row.description,
+          agentId: row.agentId as UUID,
+          status: row.status as WorkflowStatus,
+          version: row.version,
+          triggers: row.triggers as WorkflowTrigger[],
+          steps: row.steps as WorkflowStep[],
+          configuration: row.configuration as Record<string, any>,
+          metadata: row.metadata as Record<string, any>,
+          createdAt: row.createdAt.getTime(),
+          updatedAt: row.updatedAt.getTime(),
+        }));
+      });
+    });
+  }
+
+  /**
+   * Retrieves a specific workflow by its ID.
+   * @param id The UUID of the workflow to retrieve
+   * @returns Promise resolving to the Workflow object if found, null otherwise
+   */
+  async getWorkflow(id: UUID): Promise<Workflow | null> {
+    return this.withRetry(async () => {
+      return this.withDatabase(async () => {
+        const result = await this.db
+          .select()
+          .from(workflowTable)
+          .where(eq(workflowTable.id, id))
+          .limit(1);
+
+        if (result.length === 0) {
+          return null;
+        }
+
+        const row = result[0];
+        return {
+          id: row.id as UUID,
+          name: row.name,
+          description: row.description,
+          agentId: row.agentId as UUID,
+          status: row.status as WorkflowStatus,
+          version: row.version,
+          triggers: row.triggers as WorkflowTrigger[],
+          steps: row.steps as WorkflowStep[],
+          configuration: row.configuration as Record<string, any>,
+          metadata: row.metadata as Record<string, any>,
+          createdAt: row.createdAt.getTime(),
+          updatedAt: row.updatedAt.getTime(),
+        };
+      });
+    });
+  }
+
+  /**
+   * Retrieves workflows by name for a specific agent.
+   * @param name The name of the workflow to retrieve
+   * @param agentId The agent ID to filter by
+   * @returns Promise resolving to an array of Workflow objects
+   */
+  async getWorkflowsByName(name: string, agentId: UUID): Promise<Workflow[]> {
+    return this.withRetry(async () => {
+      return this.withDatabase(async () => {
+        const result = await this.db
+          .select()
+          .from(workflowTable)
+          .where(and(eq(workflowTable.name, name), eq(workflowTable.agentId, agentId)));
+
+        return result.map((row) => ({
+          id: row.id as UUID,
+          name: row.name,
+          description: row.description,
+          agentId: row.agentId as UUID,
+          status: row.status as WorkflowStatus,
+          version: row.version,
+          triggers: row.triggers as WorkflowTrigger[],
+          steps: row.steps as WorkflowStep[],
+          configuration: row.configuration as Record<string, any>,
+          metadata: row.metadata as Record<string, any>,
+          createdAt: row.createdAt.getTime(),
+          updatedAt: row.updatedAt.getTime(),
+        }));
+      });
+    });
+  }
+
+  /**
+   * Updates an existing workflow in the database.
+   * @param id The UUID of the workflow to update
+   * @param workflow Partial Workflow object containing the fields to update
+   * @returns Promise resolving when the update is complete
+   */
+  async updateWorkflow(id: UUID, workflow: Partial<Workflow>): Promise<void> {
+    await this.withRetry(async () => {
+      await this.withDatabase(async () => {
+        const updateValues: any = {
+          updatedAt: new Date(),
+        };
+
+        // Add fields to update if they exist in the partial workflow object
+        if (workflow.name !== undefined) updateValues.name = workflow.name;
+        if (workflow.description !== undefined) updateValues.description = workflow.description;
+        if (workflow.status !== undefined) updateValues.status = workflow.status;
+        if (workflow.version !== undefined) updateValues.version = workflow.version;
+        if (workflow.triggers !== undefined) updateValues.triggers = workflow.triggers;
+        if (workflow.steps !== undefined) updateValues.steps = workflow.steps;
+        if (workflow.configuration !== undefined) updateValues.configuration = workflow.configuration;
+        if (workflow.metadata !== undefined) updateValues.metadata = workflow.metadata;
+
+        await this.db
+          .update(workflowTable)
+          .set(updateValues)
+          .where(eq(workflowTable.id, id));
+      });
+    });
+  }
+
+  /**
+   * Deletes a workflow from the database.
+   * @param id The UUID of the workflow to delete
+   * @returns Promise resolving when the deletion is complete
+   */
+  async deleteWorkflow(id: UUID): Promise<void> {
+    return this.withDatabase(async () => {
+      await this.db.delete(workflowTable).where(eq(workflowTable.id, id));
+    });
+  }
+
+  /**
+   * Creates a new workflow execution in the database.
+   * @param execution The workflow execution object to create (without id)
+   * @returns Promise resolving to the UUID of the created execution
+   */
+  async createWorkflowExecution(execution: Omit<WorkflowExecution, 'id'>): Promise<UUID> {
+    return this.withRetry(async () => {
+      return this.withDatabase(async () => {
+        const now = new Date();
+        const id = v4() as UUID;
+
+        const values = {
+          id,
+          workflowId: execution.workflowId,
+          agentId: execution.agentId,
+          status: execution.status,
+          triggerData: execution.triggerData || {},
+          context: execution.context || {},
+          currentStepIndex: execution.currentStepIndex || 0,
+          history: execution.history || [],
+          result: execution.result,
+          error: execution.error,
+          startTime: execution.startTime ? new Date(execution.startTime) : now,
+          endTime: execution.endTime ? new Date(execution.endTime) : null,
+          createdAt: now,
+          updatedAt: now,
+        };
+
+        const result = await this.db.insert(workflowExecutionTable).values(values).returning();
+        return result[0].id as UUID;
+      });
+    });
+  }
+
+  /**
+   * Retrieves workflow executions based on specified parameters.
+   * @param params Object containing optional workflowId, agentId, and status to filter executions
+   * @returns Promise resolving to an array of WorkflowExecution objects
+   */
+  async getWorkflowExecutions(params: {
+    workflowId?: UUID;
+    agentId?: UUID;
+    status?: WorkflowExecutionStatus;
+  }): Promise<WorkflowExecution[]> {
+    return this.withRetry(async () => {
+      return this.withDatabase(async () => {
+        const conditions = [];
+        if (params.workflowId) conditions.push(eq(workflowExecutionTable.workflowId, params.workflowId));
+        if (params.agentId) conditions.push(eq(workflowExecutionTable.agentId, params.agentId));
+        if (params.status) conditions.push(eq(workflowExecutionTable.status, params.status));
+
+        const result = await this.db
+          .select()
+          .from(workflowExecutionTable)
+          .where(conditions.length > 0 ? and(...conditions) : undefined)
+          .orderBy(desc(workflowExecutionTable.createdAt));
+
+        return result.map((row) => ({
+          id: row.id as UUID,
+          workflowId: row.workflowId as UUID,
+          agentId: row.agentId as UUID,
+          status: row.status as WorkflowExecutionStatus,
+          triggerData: row.triggerData as any,
+          context: row.context as Record<string, any>,
+          currentStepIndex: row.currentStepIndex,
+          history: row.history as WorkflowExecutionHistory[],
+          result: row.result as any,
+          error: row.error,
+          startTime: row.startTime.getTime(),
+          endTime: row.endTime ? row.endTime.getTime() : undefined,
+          createdAt: row.createdAt.getTime(),
+          updatedAt: row.updatedAt.getTime(),
+        }));
+      });
+    });
+  }
+
+  /**
+   * Retrieves a specific workflow execution by its ID.
+   * @param id The UUID of the execution to retrieve
+   * @returns Promise resolving to the WorkflowExecution object if found, null otherwise
+   */
+  async getWorkflowExecution(id: UUID): Promise<WorkflowExecution | null> {
+    return this.withRetry(async () => {
+      return this.withDatabase(async () => {
+        const result = await this.db
+          .select()
+          .from(workflowExecutionTable)
+          .where(eq(workflowExecutionTable.id, id))
+          .limit(1);
+
+        if (result.length === 0) {
+          return null;
+        }
+
+        const row = result[0];
+        return {
+          id: row.id as UUID,
+          workflowId: row.workflowId as UUID,
+          agentId: row.agentId as UUID,
+          status: row.status as WorkflowExecutionStatus,
+          triggerData: row.triggerData as any,
+          context: row.context as Record<string, any>,
+          currentStepIndex: row.currentStepIndex,
+          history: row.history as WorkflowExecutionHistory[],
+          result: row.result as any,
+          error: row.error,
+          startTime: row.startTime.getTime(),
+          endTime: row.endTime ? row.endTime.getTime() : undefined,
+          createdAt: row.createdAt.getTime(),
+          updatedAt: row.updatedAt.getTime(),
+        };
+      });
+    });
+  }
+
+  /**
+   * Updates an existing workflow execution in the database.
+   * @param id The UUID of the execution to update
+   * @param execution Partial WorkflowExecution object containing the fields to update
+   * @returns Promise resolving when the update is complete
+   */
+  async updateWorkflowExecution(id: UUID, execution: Partial<WorkflowExecution>): Promise<void> {
+    await this.withRetry(async () => {
+      await this.withDatabase(async () => {
+        const updateValues: any = {
+          updatedAt: new Date(),
+        };
+
+        // Add fields to update if they exist in the partial execution object
+        if (execution.status !== undefined) updateValues.status = execution.status;
+        if (execution.triggerData !== undefined) updateValues.triggerData = execution.triggerData;
+        if (execution.context !== undefined) updateValues.context = execution.context;
+        if (execution.currentStepIndex !== undefined) updateValues.currentStepIndex = execution.currentStepIndex;
+        if (execution.history !== undefined) updateValues.history = execution.history;
+        if (execution.result !== undefined) updateValues.result = execution.result;
+        if (execution.error !== undefined) updateValues.error = execution.error;
+        if (execution.endTime !== undefined) updateValues.endTime = new Date(execution.endTime);
+
+        await this.db
+          .update(workflowExecutionTable)
+          .set(updateValues)
+          .where(eq(workflowExecutionTable.id, id));
+      });
+    });
+  }
+
+  /**
+   * Deletes a workflow execution from the database.
+   * @param id The UUID of the execution to delete
+   * @returns Promise resolving when the deletion is complete
+   */
+  async deleteWorkflowExecution(id: UUID): Promise<void> {
+    return this.withDatabase(async () => {
+      await this.db.delete(workflowExecutionTable).where(eq(workflowExecutionTable.id, id));
     });
   }
 }

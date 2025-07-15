@@ -16,6 +16,7 @@ import { audioRouter } from './audio';
 import { runtimeRouter } from './runtime';
 import { teeRouter } from './tee';
 import { systemRouter } from './system';
+import { workflowRouter } from './workflow';
 // NOTE: world router has been removed - functionality moved to messaging/spaces
 import { SocketIORouter } from '../socketio';
 import {
@@ -437,6 +438,39 @@ export function createApiRouter(
 
   // Mount system router at /system - handles system configuration, health checks, and environment
   router.use('/system', systemRouter());
+
+  // Mount workflow router at /agents - handles workflow management and execution
+  router.use('/agents', workflowRouter(agents));
+
+  // Mount actions router at root level - returns all available actions across agents
+  // Since actions are registered per agent, we'll need to aggregate them
+  router.get('/actions', (req, res) => {
+    try {
+      const allActions = new Map<string, any>();
+      
+      // Collect unique actions from all agents
+      for (const [agentId, runtime] of agents) {
+        if (runtime.actions) {
+          for (const action of runtime.actions) {
+            if (!allActions.has(action.name)) {
+              allActions.set(action.name, {
+                name: action.name,
+                description: action.description || '',
+                examples: action.examples || []
+              });
+            }
+          }
+        }
+      }
+      
+      // Convert to array
+      const actionList = Array.from(allActions.values());
+      res.json(actionList);
+    } catch (error) {
+      console.error('Error fetching actions:', error);
+      res.status(500).json({ error: 'Failed to fetch actions' });
+    }
+  });
 
   // NOTE: /world routes have been removed - functionality moved to messaging/spaces
 

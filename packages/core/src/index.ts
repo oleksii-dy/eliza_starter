@@ -18,5 +18,6 @@ export * from './runtime';
 export * from './settings';
 export * from './services';
 export * from './specs';
+export * from './workflow';
 
 export * from './sentry/instrument';

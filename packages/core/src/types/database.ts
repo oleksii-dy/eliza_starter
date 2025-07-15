@@ -3,6 +3,7 @@ import type { Component, Entity, Participant, Relationship, Room, World } from '
 import type { Memory, MemoryMetadata } from './memory';
 import type { Metadata, UUID } from './primitives';
 import type { Task } from './task';
+import type { Workflow, WorkflowExecution, WorkflowStatus, WorkflowExecutionStatus } from './workflow';
 
 /**
  * Represents a log entry
@@ -264,6 +265,21 @@ export interface IDatabaseAdapter {
     count?: number;
     tableName?: string;
   }): Promise<Memory[]>;
+
+  // Workflow methods
+  createWorkflow(workflow: Omit<Workflow, 'id'>): Promise<UUID>;
+  getWorkflows(params: { agentId: UUID; status?: WorkflowStatus }): Promise<Workflow[]>;
+  getWorkflow(id: UUID): Promise<Workflow | null>;
+  getWorkflowsByName(name: string, agentId: UUID): Promise<Workflow[]>;
+  updateWorkflow(id: UUID, workflow: Partial<Workflow>): Promise<void>;
+  deleteWorkflow(id: UUID): Promise<void>;
+
+  // Workflow execution methods
+  createWorkflowExecution(execution: Omit<WorkflowExecution, 'id'>): Promise<UUID>;
+  getWorkflowExecutions(params: { workflowId?: UUID; agentId?: UUID; status?: WorkflowExecutionStatus }): Promise<WorkflowExecution[]>;
+  getWorkflowExecution(id: UUID): Promise<WorkflowExecution | null>;
+  updateWorkflowExecution(id: UUID, execution: Partial<WorkflowExecution>): Promise<void>;
+  deleteWorkflowExecution(id: UUID): Promise<void>;
 }
 
 /**

@@ -13,7 +13,16 @@ export async function loadEnvConfig(): Promise<RuntimeSettings> {
   if (envInfo.paths.envFilePath) {
     dotenv.config({ path: envInfo.paths.envFilePath });
   }
-  return process.env as RuntimeSettings;
+  
+  // Convert process.env to a plain object to ensure proper access
+  const settings: RuntimeSettings = {};
+  for (const [key, value] of Object.entries(process.env)) {
+    if (value !== undefined) {
+      settings[key] = value;
+    }
+  }
+  
+  return settings;
 }
 
 /**

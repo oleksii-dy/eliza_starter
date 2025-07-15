@@ -10,6 +10,7 @@ export { relationshipTable } from './relationship';
 export { roomTable } from './room';
 export { worldTable } from './world';
 export { taskTable } from './tasks';
+export { workflowTable, workflowExecutionTable } from './workflow';
 
 // Central database tables
 export { messageServerTable } from './messageServer';

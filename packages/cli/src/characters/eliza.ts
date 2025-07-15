@@ -219,6 +219,7 @@ export function getElizaCharacter(): Character {
 
     // Always include Ollama as ultimate fallback for local AI
     '@elizaos/plugin-ollama',
+    '@elizaos/plugin-workflow',
   ];
 
   return {

@@ -7,7 +7,7 @@ import {
   checkVersionNeedsUpdate,
   fetchLatestVersion,
   ELIZAOS_ORG,
-  isWorkspaceVersion,
+  isLocalVersion,
   isMajorUpdate,
 } from './version-utils';
 
@@ -20,7 +20,7 @@ export async function checkForUpdates(
   const updates: Record<string, PackageUpdate> = {};
   const elizaPackages = Object.entries(dependencies)
     .filter(([pkg]) => pkg.startsWith(ELIZAOS_ORG))
-    .filter(([, version]) => !isWorkspaceVersion(version));
+    .filter(([, version]) => !isLocalVersion(version));
 
   for (const [pkg, currentVersion] of elizaPackages) {
     const latestVersion = await fetchLatestVersion(pkg);
@@ -61,13 +61,20 @@ export async function updatePackageJson(
 
   let modified = false;
   for (const [pkg, { latest }] of Object.entries(updates)) {
+    // Safety check: skip local dependencies (file: or workspace:)
     if (packageJson.dependencies?.[pkg]) {
-      packageJson.dependencies[pkg] = `^${latest}`;
-      modified = true;
+      const currentVersion = packageJson.dependencies[pkg];
+      if (!isLocalVersion(currentVersion)) {
+        packageJson.dependencies[pkg] = `^${latest}`;
+        modified = true;
+      }
     }
     if (packageJson.devDependencies?.[pkg]) {
-      packageJson.devDependencies[pkg] = `^${latest}`;
-      modified = true;
+      const currentVersion = packageJson.devDependencies[pkg];
+      if (!isLocalVersion(currentVersion)) {
+        packageJson.devDependencies[pkg] = `^${latest}`;
+        modified = true;
+      }
     }
   }
 

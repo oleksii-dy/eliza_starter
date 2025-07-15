@@ -12,6 +12,10 @@ import type {
   Task,
   UUID,
   World,
+  Workflow,
+  WorkflowExecution,
+  WorkflowExecutionStatus,
+  WorkflowStatus,
 } from './types';
 
 /**
@@ -576,4 +580,19 @@ export abstract class DatabaseAdapter<DB = unknown> implements IDatabaseAdapter 
   }): Promise<Memory[]>;
 
   abstract deleteRoomsByWorldId(worldId: UUID): Promise<void>;
+
+  // Workflow methods
+  abstract createWorkflow(workflow: Omit<Workflow, 'id'>): Promise<UUID>;
+  abstract getWorkflows(params: { agentId: UUID; status?: WorkflowStatus }): Promise<Workflow[]>;
+  abstract getWorkflow(id: UUID): Promise<Workflow | null>;
+  abstract getWorkflowsByName(name: string, agentId: UUID): Promise<Workflow[]>;
+  abstract updateWorkflow(id: UUID, workflow: Partial<Workflow>): Promise<void>;
+  abstract deleteWorkflow(id: UUID): Promise<void>;
+
+  // Workflow execution methods
+  abstract createWorkflowExecution(execution: Omit<WorkflowExecution, 'id'>): Promise<UUID>;
+  abstract getWorkflowExecutions(params: { workflowId?: UUID; agentId?: UUID; status?: WorkflowExecutionStatus }): Promise<WorkflowExecution[]>;
+  abstract getWorkflowExecution(id: UUID): Promise<WorkflowExecution | null>;
+  abstract updateWorkflowExecution(id: UUID, execution: Partial<WorkflowExecution>): Promise<void>;
+  abstract deleteWorkflowExecution(id: UUID): Promise<void>;
 }

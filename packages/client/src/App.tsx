@@ -26,6 +26,7 @@ import { Sheet, SheetContent, SheetTrigger } from './components/ui/sheet';
 import { Button } from './components/ui/button';
 import CreateGroupPage from './routes/group-new';
 import AgentSettingsRoute from './routes/agent-settings';
+import Workflows from './routes/workflows';
 import clientLogger from '@/lib/logger';
 
 // Create a query client with optimized settings
@@ -164,6 +165,14 @@ function AppContent() {
                       </div>
                       <AgentLogViewer />
                     </div>
+                  </div>
+                }
+              />
+              <Route
+                path="/workflows"
+                element={
+                  <div className="flex-1 min-h-0 overflow-hidden">
+                    <Workflows />
                   </div>
                 }
               />

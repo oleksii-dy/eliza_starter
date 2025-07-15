@@ -66,6 +66,19 @@ async function gracefulShutdown(signal: string) {
     logger.debug('Full error details:', error);
   }
   
+  // Clean up turbo cache to prevent cache miss issues on next run
+  try {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const turboDir = path.join(process.cwd(), '.turbo');
+    if (fs.existsSync(turboDir)) {
+      logger.info('Cleaning up turbo cache...');
+      fs.rmSync(turboDir, { recursive: true, force: true });
+    }
+  } catch (cleanupError) {
+    logger.debug(`Failed to clean turbo cache: ${cleanupError}`);
+  }
+  
   // Use appropriate exit codes for different signals
   const exitCode = signal === 'SIGINT' ? 130 : signal === 'SIGTERM' ? 143 : 0;
   process.exit(exitCode);

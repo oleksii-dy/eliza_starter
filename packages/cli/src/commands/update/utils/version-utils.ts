@@ -29,6 +29,18 @@ export const isWorkspaceVersion = (version: string): boolean =>
   version === 'workspace:*' || version === 'workspace' || version.startsWith('workspace:');
 
 /**
+ * Check if version is a file dependency
+ */
+export const isFileVersion = (version: string): boolean =>
+  version.startsWith('file:');
+
+/**
+ * Check if version is a local dependency (workspace or file)
+ */
+export const isLocalVersion = (version: string): boolean =>
+  isWorkspaceVersion(version) || isFileVersion(version);
+
+/**
  * Check if version is a special tag
  */
 export const isSpecialVersionTag = (version: string): boolean =>

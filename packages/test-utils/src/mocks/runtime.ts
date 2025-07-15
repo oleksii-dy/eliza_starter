@@ -235,6 +235,21 @@ export function createMockRuntime(overrides: MockRuntimeOverrides = {}): IAgentR
     updateTask: mock().mockResolvedValue(undefined),
     deleteTask: mock().mockResolvedValue(undefined),
 
+    // Workflow methods
+    createWorkflow: mock().mockResolvedValue('test-workflow-id' as UUID),
+    getWorkflows: mock().mockResolvedValue([]),
+    getWorkflow: mock().mockResolvedValue(null),
+    getWorkflowsByName: mock().mockResolvedValue([]),
+    updateWorkflow: mock().mockResolvedValue(undefined),
+    deleteWorkflow: mock().mockResolvedValue(undefined),
+
+    // Workflow execution methods
+    createWorkflowExecution: mock().mockResolvedValue('test-execution-id' as UUID),
+    getWorkflowExecutions: mock().mockResolvedValue([]),
+    getWorkflowExecution: mock().mockResolvedValue(null),
+    updateWorkflowExecution: mock().mockResolvedValue(undefined),
+    deleteWorkflowExecution: mock().mockResolvedValue(undefined),
+
     // Apply overrides
     ...overrides,
   };

@@ -1,0 +1,64 @@
+{
+  "id": "smart-assistant-workflow",
+  "name": "Smart Assistant Workflow",
+  "description": "An intelligent assistant that processes messages and responds appropriately",
+  "status": "active",
+  "triggers": [
+    {
+      "type": "EVENT",
+      "eventName": "MESSAGE_RECEIVED"
+    }
+  ],
+  "steps": [
+    {
+      "id": "check-command",
+      "type": "condition",
+      "name": "Check if Command",
+      "condition": {
+        "expression": "message.content.startsWith('/')"
+      }
+    },
+    {
+      "id": "process-command",
+      "type": "action",
+      "name": "Process Command",
+      "action": "processCommand",
+      "input": {
+        "command": "{{message.content}}"
+      },
+      "dependsOn": ["check-command"],
+      "onlyIfPrevious": true
+    },
+    {
+      "id": "generate-response",
+      "type": "action", 
+      "name": "Generate AI Response",
+      "action": "generateResponse",
+      "input": {
+        "context": "{{message}}",
+        "prompt": "Respond helpfully to the user's message"
+      },
+      "dependsOn": ["check-command"],
+      "onlyIfPrevious": false
+    },
+    {
+      "id": "wait-before-reply",
+      "type": "wait",
+      "name": "Natural Delay",
+      "waitConfig": {
+        "duration": 1000
+      },
+      "dependsOn": ["process-command", "generate-response"]
+    },
+    {
+      "id": "send-response",
+      "type": "action",
+      "name": "Send Response",
+      "action": "sendMessage",
+      "input": {
+        "response": "{{previousStep.output}}"
+      },
+      "dependsOn": ["wait-before-reply"]
+    }
+  ]
+} 
