@@ -29,7 +29,7 @@ export type Handler = (
   options?: { [key: string]: unknown },
   callback?: HandlerCallback,
   responses?: Memory[]
-) => Promise<ActionResult | void>;
+) => Promise<ActionResult | void | undefined>;
 
 /**
  * Validator function type for actions/evaluators
