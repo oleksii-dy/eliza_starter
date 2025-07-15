@@ -42,7 +42,11 @@ async function execShellCommand(
     await proc.exited;
 
     if (proc.exitCode !== 0 && !options.stdio) {
-      const error: any = new Error(`Command failed: ${command}\nstderr: ${stderr}`);
+      const error = new Error(`Command failed: ${command}\nstderr: ${stderr}`) as Error & {
+        status: number | null;
+        stdout: string;
+        stderr: string;
+      };
       error.status = proc.exitCode;
       error.stdout = stdout;
       error.stderr = stderr;
@@ -132,9 +136,6 @@ export async function createTestProject(projectName: string): Promise<void> {
     throw error;
   }
 }
-
-
-
 
 /**
  * Helper to validate that help output contains expected strings
@@ -449,7 +450,6 @@ export async function killProcessOnPort(port: number): Promise<void> {
     );
   }
 }
-
 
 /**
  * Cross-platform file operations utility
