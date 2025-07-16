@@ -32,8 +32,6 @@ import {
 import { DataExtractor } from '../utils/data-extractor.js';
 import { DatasetProcessor } from '../utils/dataset-processor.js';
 import { HuggingFaceClient } from '../utils/huggingface-client.js';
-// Removed broken imports - AtroposBridge and CloudDeployment
-// These can be added back when the corresponding utility files are implemented
 
 export class TrainingService extends Service implements TrainingServiceInterface {
   static serviceType = 'training';
@@ -42,9 +40,6 @@ export class TrainingService extends Service implements TrainingServiceInterface
   private dataExtractor: DataExtractor;
   private datasetProcessor: DatasetProcessor;
   private huggingFaceClient: HuggingFaceClient;
-  // Temporarily removed until AtroposBridge and CloudDeployment are implemented
-  // private atroposBridge: AtroposBridge;
-  // private cloudDeployment: CloudDeployment;
   private activeJobs: Map<string, TrainingJob> = new Map();
 
   constructor(runtime: IAgentRuntime) {
@@ -52,9 +47,6 @@ export class TrainingService extends Service implements TrainingServiceInterface
     this.dataExtractor = new DataExtractor(runtime);
     this.datasetProcessor = new DatasetProcessor(runtime);
     this.huggingFaceClient = new HuggingFaceClient(runtime);
-    // Temporarily removed until AtroposBridge and CloudDeployment are implemented
-    // this.atroposBridge = new AtroposBridge(runtime);
-    // this.cloudDeployment = new CloudDeployment(runtime);
   }
 
   static async start(runtime: IAgentRuntime): Promise<TrainingService> {
@@ -73,10 +65,35 @@ export class TrainingService extends Service implements TrainingServiceInterface
     await this.dataExtractor.initialize();
     await this.datasetProcessor.initialize();
     await this.huggingFaceClient.initialize();
-    // await this.atroposBridge.initialize(); // Temporarily removed until implemented
-    // await this.cloudDeployment.initialize(); // Temporarily removed until implemented
 
     elizaLogger.info('Training Service initialized successfully');
+  }
+
+  /**
+   * Safely access memory metadata without type assertions
+   */
+  private safeGetMemoryMetadata(memory: Memory, key: string): unknown {
+    if (memory && typeof memory === 'object' && 'metadata' in memory) {
+      const metadata = memory.metadata;
+      if (metadata && typeof metadata === 'object' && key in metadata) {
+        return metadata[key as keyof typeof metadata];
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Safely set memory metadata
+   */
+  private safeSetMemoryMetadata(memory: Memory, key: string, value: unknown): void {
+    if (memory && typeof memory === 'object') {
+      if (!memory.metadata) {
+        memory.metadata = {};
+      }
+      if (memory.metadata && typeof memory.metadata === 'object') {
+        (memory.metadata as Record<string, unknown>)[key] = value;
+      }
+    }
   }
 
   private async validateConfiguration(): Promise<void> {

@@ -1,6 +1,7 @@
 import { type Command } from 'commander';
 import { elizaLogger } from '@elizaos/core';
 import { TogetherAIClient } from '../../lib/together-client.js';
+import { bunExec } from '@elizaos/cli/src/utils/bun-exec.js';
 
 export function trainModelCommand(program: Command) {
   program
@@ -24,12 +25,41 @@ export function trainModelCommand(program: Command) {
           process.exit(1);
         }
 
+        // Validate model name
+        if (!options.model || typeof options.model !== 'string' || options.model.length === 0) {
+          elizaLogger.error('❌ Error: Model name is required and must be a non-empty string');
+          process.exit(1);
+        }
+
+        // Validate file path
+        if (!options.file || typeof options.file !== 'string' || options.file.length === 0) {
+          elizaLogger.error('❌ Error: Dataset file path is required and must be a non-empty string');
+          process.exit(1);
+        }
+
+        // Validate numeric parameters
         const epochs = parseInt(options.epochs, 10);
         const learningRate = parseFloat(options.learningRate);
         const batchSize = parseInt(options.batchSize, 10);
 
-        if (isNaN(epochs) || epochs < 1) {
-          elizaLogger.error('❌ Error: Epochs must be a positive integer');
+        if (isNaN(epochs) || epochs < 1 || epochs > 100) {
+          elizaLogger.error('❌ Error: Epochs must be a positive integer between 1 and 100');
+          process.exit(1);
+        }
+
+        if (isNaN(learningRate) || learningRate <= 0 || learningRate > 1) {
+          elizaLogger.error('❌ Error: Learning rate must be a positive number between 0 and 1');
+          process.exit(1);
+        }
+
+        if (isNaN(batchSize) || batchSize < 1 || batchSize > 128) {
+          elizaLogger.error('❌ Error: Batch size must be a positive integer between 1 and 128');
+          process.exit(1);
+        }
+
+        // Validate suffix if provided
+        if (options.suffix && (typeof options.suffix !== 'string' || options.suffix.length > 40)) {
+          elizaLogger.error('❌ Error: Suffix must be a string with maximum 40 characters');
           process.exit(1);
         }
 
@@ -37,16 +67,21 @@ export function trainModelCommand(program: Command) {
 
         elizaLogger.info('📤 Uploading dataset to Together.ai...');
 
-        // Use Together.ai CLI for file upload since it works reliably
-        const { execSync } = await import('child_process');
-
         try {
-          const uploadResult = execSync(
-            `TOGETHER_API_KEY="${apiKey}" together files upload "${options.file}" --purpose fine-tune`,
-            { encoding: 'utf8' }
+          const uploadResult = await bunExec(
+            'together',
+            ['files', 'upload', options.file, '--purpose', 'fine-tune'],
+            { 
+              env: { TOGETHER_API_KEY: apiKey },
+              timeout: 120000 // 2 minutes for upload
+            }
           );
 
-          const uploadData = JSON.parse(uploadResult);
+          if (!uploadResult.success) {
+            throw new Error(`Upload failed: ${uploadResult.stderr}`);
+          }
+
+          const uploadData = JSON.parse(uploadResult.stdout);
           const fileId = uploadData.id;
           elizaLogger.info(`✅ Dataset uploaded: ${fileId}`);
 
@@ -54,13 +89,30 @@ export function trainModelCommand(program: Command) {
 
           // Use Together.ai CLI for fine-tuning since it works reliably
           const suffix = options.suffix || `eliza-${Date.now()}`;
-          const fineTuneResult = execSync(
-            `TOGETHER_API_KEY="${apiKey}" together fine-tuning create --training-file "${fileId}" --model "${options.model}" --suffix "${suffix}" --n-epochs ${epochs} --learning-rate ${learningRate} --batch-size ${batchSize} --confirm`,
-            { encoding: 'utf8' }
+          const fineTuneResult = await bunExec(
+            'together',
+            [
+              'fine-tuning', 'create',
+              '--training-file', fileId,
+              '--model', options.model,
+              '--suffix', suffix,
+              '--n-epochs', epochs.toString(),
+              '--learning-rate', learningRate.toString(),
+              '--batch-size', batchSize.toString(),
+              '--confirm'
+            ],
+            { 
+              env: { TOGETHER_API_KEY: apiKey },
+              timeout: 60000 // 1 minute for job creation
+            }
           );
 
+          if (!fineTuneResult.success) {
+            throw new Error(`Fine-tuning job creation failed: ${fineTuneResult.stderr}`);
+          }
+
           // Extract job ID from the output
-          const jobIdMatch = fineTuneResult.match(/job (\S+) at/);
+          const jobIdMatch = fineTuneResult.stdout.match(/job (\S+) at/);
           if (!jobIdMatch) {
             throw new Error('Could not extract job ID from Together.ai response');
           }
@@ -97,16 +149,23 @@ export function trainModelCommand(program: Command) {
 
 async function monitorJobCLI(apiKey: string, jobId: string): Promise<void> {
   let lastStatus = '';
-  const { execSync } = await import('child_process');
 
   while (true) {
     try {
-      const statusResult = execSync(
-        `TOGETHER_API_KEY="${apiKey}" together fine-tuning retrieve ${jobId}`,
-        { encoding: 'utf8' }
+      const statusResult = await bunExec(
+        'together',
+        ['fine-tuning', 'retrieve', jobId],
+        { 
+          env: { TOGETHER_API_KEY: apiKey },
+          timeout: 30000 // 30 seconds timeout
+        }
       );
 
-      const jobData = JSON.parse(statusResult);
+      if (!statusResult.success) {
+        throw new Error(`Status check failed: ${statusResult.stderr}`);
+      }
+
+      const jobData = JSON.parse(statusResult.stdout);
 
       if (jobData.status !== lastStatus) {
         elizaLogger.info(`📊 Status: ${jobData.status}`);

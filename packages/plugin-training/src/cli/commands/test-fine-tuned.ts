@@ -1,10 +1,7 @@
 import { type Command } from 'commander';
 import { elizaLogger } from '@elizaos/core';
 import { promises as fs } from 'fs';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execAsync = promisify(exec);
+import { bunExec } from '@elizaos/cli/src/utils/bun-exec.js';
 
 export function testFineTunedCommand(program: Command) {
   program
@@ -160,11 +157,19 @@ export function testFineTunedCommand(program: Command) {
 
 async function testModelInference(apiKey: string, model: string, prompt: string): Promise<string> {
   try {
-    // Use Together.ai CLI completions command - prompt is the last argument
-    const result = await execAsync(
-      `TOGETHER_API_KEY="${apiKey}" together completions --model "${model}" --max-tokens 800 --temperature 0.1 "${prompt.replace(/"/g, '\\"')}"`,
-      { timeout: 60000 }
+    // Use Together.ai CLI completions command with proper argument escaping
+    const result = await bunExec(
+      'together',
+      ['completions', '--model', model, '--max-tokens', '800', '--temperature', '0.1', prompt],
+      { 
+        timeout: 60000,
+        env: { TOGETHER_API_KEY: apiKey }
+      }
     );
+
+    if (!result.success) {
+      throw new Error(`Command failed with exit code ${result.exitCode}: ${result.stderr}`);
+    }
 
     return result.stdout.trim();
   } catch (error) {

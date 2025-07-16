@@ -1,4 +1,5 @@
 import { promises as fs } from 'fs';
+import { resolve, relative, join } from 'path';
 import { elizaLogger } from '@elizaos/core';
 // Removed broken import - simple-types
 // import { type TrainingExample, type JSONLEntry, type DatasetStats } from '../simple-types.js';
@@ -40,7 +41,24 @@ export class DatasetBuilder {
   private dataDir: string;
 
   constructor(dataDir = './training-data') {
-    this.dataDir = dataDir;
+    this.dataDir = resolve(dataDir);
+  }
+
+  /**
+   * Validates file path to prevent directory traversal attacks
+   */
+  private validatePath(filePath: string): string {
+    const resolvedPath = resolve(filePath);
+    const resolvedDataDir = resolve(this.dataDir);
+    
+    // Check if the resolved path is within the data directory
+    const relativePath = relative(resolvedDataDir, resolvedPath);
+    
+    if (relativePath.startsWith('..') || resolve(resolvedDataDir, relativePath) !== resolvedPath) {
+      throw new Error(`Path traversal attempt detected: ${filePath}`);
+    }
+    
+    return resolvedPath;
   }
 
   /**
@@ -65,7 +83,7 @@ export class DatasetBuilder {
   async loadExamples(): Promise<void> {
     try {
       await fs.mkdir(this.dataDir, { recursive: true });
-      const filePath = `${this.dataDir}/examples.json`;
+      const filePath = this.validatePath(join(this.dataDir, 'examples.json'));
 
       try {
         const content = await fs.readFile(filePath, 'utf-8');
@@ -91,7 +109,7 @@ export class DatasetBuilder {
   async saveExamples(): Promise<void> {
     try {
       await fs.mkdir(this.dataDir, { recursive: true });
-      const filePath = `${this.dataDir}/examples.json`;
+      const filePath = this.validatePath(join(this.dataDir, 'examples.json'));
       await fs.writeFile(filePath, JSON.stringify(this.examples, null, 2));
     } catch (error) {
       throw new Error(
@@ -115,10 +133,13 @@ export class DatasetBuilder {
       includeThinking = true,
       minQuality = 0.5,
       maxTokens = 4000,
-      outputPath = `${this.dataDir}/dataset.jsonl`,
+      outputPath = join(this.dataDir, 'dataset.jsonl'),
     } = options;
 
     try {
+      // Validate output path to prevent directory traversal
+      const validatedOutputPath = this.validatePath(outputPath);
+
       // Filter examples by quality
       const filteredExamples = this.examples.filter((ex) => ex.quality >= minQuality);
 
@@ -173,12 +194,12 @@ export class DatasetBuilder {
       }
 
       // Write JSONL file
-      await fs.writeFile(outputPath, jsonlEntries.join('\n'));
+      await fs.writeFile(validatedOutputPath, jsonlEntries.join('\n'));
       elizaLogger.info(
-        `Generated JSONL dataset with ${jsonlEntries.length} examples: ${outputPath}`
+        `Generated JSONL dataset with ${jsonlEntries.length} examples: ${validatedOutputPath}`
       );
 
-      return outputPath;
+      return validatedOutputPath;
     } catch (error) {
       throw new Error(
         `Failed to generate JSONL: ${error instanceof Error ? error.message : String(error)}`
@@ -239,7 +260,10 @@ export class DatasetBuilder {
     const errors: string[] = [];
 
     try {
-      const content = await fs.readFile(filePath, 'utf-8');
+      // Validate file path to prevent directory traversal
+      const validatedFilePath = this.validatePath(filePath);
+
+      const content = await fs.readFile(validatedFilePath, 'utf-8');
       const lines = content.trim().split('\n');
 
       for (let i = 0; i < lines.length; i++) {

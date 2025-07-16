@@ -557,12 +557,17 @@ export class TogetherReasoningService extends Service implements CustomReasoning
 
   async collectTrainingData(trainingData: TrainingDataPoint): Promise<void> {
     // Store in database for future training
-    await (this.runtime as any).adapter?.log({
-      entityId: this.runtime.agentId,
-      roomId: this.runtime.agentId,
-      body: trainingData,
-      type: `training-data:${trainingData.modelType}`,
-    });
+    const adapter = this.runtime.adapter;
+    if (adapter && 'log' in adapter) {
+      await adapter.log({
+        entityId: this.runtime.agentId,
+        roomId: this.runtime.agentId,
+        body: trainingData,
+        type: `training-data:${trainingData.modelType}`,
+      });
+    } else {
+      elizaLogger.warn('Database adapter not available for training data collection');
+    }
   }
 
   async exportTrainingData(options: ExportOptions): Promise<TrainingDataset> {
@@ -680,18 +685,23 @@ export class TogetherReasoningService extends Service implements CustomReasoning
     this.trackUsage(model.name, cost);
 
     // Log usage for cost tracking
-    await (this.runtime as any).adapter?.log({
-      entityId: this.runtime.agentId,
-      roomId: this.runtime.agentId,
-      body: {
-        modelType,
-        modelName: model.name,
-        tokensUsed: usage.total_tokens,
-        responseTimeMs,
-        timestamp: Date.now(),
-      },
-      type: `model-usage:${modelType}`,
-    });
+    const adapter = this.runtime.adapter;
+    if (adapter && 'log' in adapter) {
+      await adapter.log({
+        entityId: this.runtime.agentId,
+        roomId: this.runtime.agentId,
+        body: {
+          modelType,
+          modelName: model.name,
+          tokensUsed: usage.total_tokens,
+          responseTimeMs,
+          timestamp: Date.now(),
+        },
+        type: `model-usage:${modelType}`,
+      });
+    } else {
+      elizaLogger.warn('Database adapter not available for usage tracking');
+    }
   }
 
   private scheduleAutoShutdown(modelName: string, idleMinutes: number): void {
