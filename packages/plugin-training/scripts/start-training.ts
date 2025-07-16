@@ -347,7 +347,7 @@ async function monitorTraining(trainingService: TrainingService, jobId: string) 
       }
 
       // Clear previous line and print status
-      process.stdout.write('\\r\\x1b[K'); // Clear line
+      process.stdout.write('\r\x1b[K'); // Clear line
 
       const status = job.status;
       const progress = job.progress;
@@ -365,22 +365,22 @@ async function monitorTraining(trainingService: TrainingService, jobId: string) 
       }
 
       if (status === 'completed') {
-        console.log('\\n🎉 Training completed successfully!');
+        console.log('\n🎉 Training completed successfully!');
         break;
       } else if (status === 'failed') {
-        console.log('\\n❌ Training failed');
+        console.log('\n❌ Training failed');
         if (job.error) {
           console.log(`Error: ${job.error}`);
         }
         break;
       } else if (status === 'cancelled') {
-        console.log('\\n🛑 Training was cancelled');
+        console.log('\n🛑 Training was cancelled');
         break;
       }
 
       await new Promise((resolve) => setTimeout(resolve, updateInterval));
     } catch (error) {
-      console.log('\\n❌ Error monitoring training:', error.message);
+      console.log('\n❌ Error monitoring training:', error.message);
       break;
     }
   }

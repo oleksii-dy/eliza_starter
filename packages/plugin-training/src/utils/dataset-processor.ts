@@ -102,7 +102,7 @@ export class DatasetProcessor {
 
     for (const conversation of conversations) {
       // Create hash of conversation content
-      const content = conversation.messages.map((m) => m.content).join('\\n');
+      const content = conversation.messages.map((m) => m.content).join('\n');
       const hash = crypto.createHash('sha256').update(content).digest('hex');
 
       if (!seen.has(hash)) {

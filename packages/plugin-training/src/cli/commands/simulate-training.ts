@@ -32,7 +32,7 @@ export function simulateTrainingCommand(program: Command) {
         }
 
         elizaLogger.info('🚀 Starting Complete Training Simulation');
-        elizaLogger.info('=====================================\\n');
+        elizaLogger.info('=====================================\n');
 
         // Step 1: Validate dataset
         elizaLogger.info('📊 Step 1: Validating Dataset');

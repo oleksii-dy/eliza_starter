@@ -377,7 +377,7 @@ Return only valid JSON with this structure:
       typeof response === 'string' ? response : (response as any).content || String(response);
 
     // Extract JSON from response
-    const jsonMatch = configText.match(/\\{[\\s\\S]*\\}/);
+    const jsonMatch = configText.match(/{[\s\S]*}/);
     if (!jsonMatch) {
       throw new Error('Could not parse configuration from response');
     }
