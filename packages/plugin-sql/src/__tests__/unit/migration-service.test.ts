@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, mock } from 'bun:test';
-import { DatabaseMigrationService } from '../../migration-service';
+import { createDatabaseMigrationService, type DatabaseMigrationService } from '../../migration-service';
 import { type Plugin } from '@elizaos/core';
 
 // Mock the logger to avoid console output during tests
@@ -43,7 +43,7 @@ describe('DatabaseMigrationService', () => {
       },
     };
 
-    migrationService = new DatabaseMigrationService();
+    migrationService = createDatabaseMigrationService();
   });
 
   describe('constructor', () => {

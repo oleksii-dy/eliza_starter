@@ -42,7 +42,9 @@ export function createHealthRouter(
     logger.log({ apiRoute: '/health' }, 'Health check route hit');
     const migrationStatus = serverInstance.getMigrationStatus();
     const isMigrationReady =
-      migrationStatus.status === 'completed' || migrationStatus.status === 'not_initialized';
+      migrationStatus.status === 'completed' || 
+      migrationStatus.status === 'not_initialized' ||
+      migrationStatus.status === 'idle';
     const agentsHealthy = agents.size > 0 ? 'healthy' : 'no_agents';
 
     const healthcheck = {

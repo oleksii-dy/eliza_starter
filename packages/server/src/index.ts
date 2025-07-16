@@ -22,7 +22,7 @@ import { loadCharacterTryPath, jsonToCharacter } from './loader.js';
 
 import {
   createDatabaseAdapter,
-  DatabaseMigrationService,
+  createDatabaseMigrationService,
   plugin as sqlPlugin,
 } from '@elizaos/plugin-sql';
 import internalMessageBus from './bus.js';
@@ -211,7 +211,7 @@ export class AgentServer {
       // Run migrations for the SQL plugin schema
       logger.info('[INIT] Running database migrations for messaging tables...');
       try {
-        this.migrationService = new DatabaseMigrationService();
+        this.migrationService = createDatabaseMigrationService();
 
         // Get the underlying database instance
         const db = (this.database as any).getDatabase();
