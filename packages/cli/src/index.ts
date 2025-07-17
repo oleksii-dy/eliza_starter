@@ -19,6 +19,8 @@ import { logger } from '@elizaos/core';
 import { Command } from 'commander';
 import { configureEmojis } from '@/src/utils/emoji-handler';
 import { stopServer } from '@/src/commands/dev/utils/server-manager';
+import { UserEnvironment } from '@/src/utils/user-environment';
+import colors from 'yoctocolors';
 
 /**
  * Shutdown state management to prevent race conditions
@@ -88,6 +90,21 @@ async function main() {
   // Check for --no-auto-install flag early (before command parsing)
   if (process.argv.includes('--no-auto-install')) {
     process.env.ELIZA_NO_AUTO_INSTALL = 'true';
+  }
+
+  // Check if running from monorepo and show light warning
+  const userEnv = UserEnvironment.getInstance();
+  const monorepoRoot = userEnv.findMonorepoRoot(process.cwd());
+  
+  if (monorepoRoot && process.argv.length > 2) {
+    // Only show warning for actual commands, not just running elizaos with no args
+    const commandName = process.argv[2];
+    // Skip warning for certain commands that might be run intentionally from monorepo
+    const skipWarningCommands = ['--version', '-v', '--help', '-h'];
+    
+    if (!skipWarningCommands.includes(commandName)) {
+      console.log(colors.dim(`Note: CLI is intended for use outside the monorepo`));
+    }
   }
 
   // Get version - will return 'monorepo' if in monorepo context
