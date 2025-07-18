@@ -351,13 +351,6 @@ export default function CharacterForm({
             getData: (char) => char.topics || [],
             tooltip: 'Subject domains the agent can discuss with confidence.',
           },
-          {
-            title: 'Adjectives',
-            description: 'Descriptive personality traits',
-            path: 'adjectives',
-            getData: (char) => char.adjectives || [],
-            tooltip: "Key personality attributes that define the agent's character.",
-          },
         ] as ArrayField[],
       },
       {
@@ -609,7 +602,7 @@ export default function CharacterForm({
         {field.title}
         {field.name in FIELD_REQUIREMENTS &&
           (FIELD_REQUIREMENTS as Record<string, FIELD_REQUIREMENT_TYPE>)[field.name] ===
-            FIELD_REQUIREMENT_TYPE.REQUIRED && <span className="text-destructive ml-1">*</span>}
+          FIELD_REQUIREMENT_TYPE.REQUIRED && <span className="text-destructive ml-1">*</span>}
       </Label>
 
       {field.fieldType === 'textarea' ? (
@@ -723,7 +716,7 @@ export default function CharacterForm({
         {field.title}
         {field.path in FIELD_REQUIREMENTS &&
           (FIELD_REQUIREMENTS as Record<string, FIELD_REQUIREMENT_TYPE>)[field.path] ===
-            FIELD_REQUIREMENT_TYPE.REQUIRED && <span className="text-destructive ml-1">*</span>}
+          FIELD_REQUIREMENT_TYPE.REQUIRED && <span className="text-destructive ml-1">*</span>}
       </Label>
 
       <ArrayInput

@@ -348,6 +348,7 @@ export class AgentRuntime implements IAgentRuntime {
         'Database adapter not initialized. The SQL plugin (@elizaos/plugin-sql) is required for agent initialization. Please ensure it is included in your character configuration.'
       );
     }
+
     try {
       await this.adapter.init();
 
@@ -356,9 +357,16 @@ export class AgentRuntime implements IAgentRuntime {
       await this.runPluginMigrations();
       this.logger.info('Plugin migrations completed.');
 
+      this.logger.debug(`About to ensure agent exists for character: ${this.character.name}`);
       const existingAgent = await this.ensureAgentExists(this.character as Partial<Agent>);
+      this.logger.debug(
+        `ensureAgentExists returned:`,
+        existingAgent ? { id: existingAgent.id, name: existingAgent.name } : 'null/undefined'
+      );
+
       if (!existingAgent) {
         const errorMsg = `Agent ${this.character.name} does not exist in database after ensureAgentExists call`;
+        this.logger.error(`Agent creation failed: ${errorMsg}`);
         throw new Error(errorMsg);
       }
 
@@ -1105,7 +1113,7 @@ export class AgentRuntime implements IAgentRuntime {
 
     // Step 2: Create all entities
     const entityIds = entities.map((e) => e.id);
-    const entityExistsCheck = await this.adapter.getEntityByIds(entityIds);
+    const entityExistsCheck = await this.adapter.getEntitiesByIds(entityIds);
     const entitiesToUpdate = entityExistsCheck.map((e) => e.id);
     const entitiesToCreate = entities.filter((e) => !entitiesToUpdate.includes(e.id));
 
@@ -1156,7 +1164,7 @@ export class AgentRuntime implements IAgentRuntime {
         firstRoom.id
       );
       // pglite handle this at over 10k records fine though
-      await this.addParticipantsRoom(missingIdsInRoom, firstRoom.id);
+      await this.addParticipantsToRoom(missingIdsInRoom, firstRoom.id);
     }
 
     this.logger.success(`Success: Successfully connected world`);
@@ -1328,11 +1336,11 @@ export class AgentRuntime implements IAgentRuntime {
   }
 
   async addParticipant(entityId: UUID, roomId: UUID): Promise<boolean> {
-    return await this.adapter.addParticipantsRoom([entityId], roomId);
+    return await this.adapter.addParticipantsToRoom([entityId], roomId);
   }
 
-  async addParticipantsRoom(entityIds: UUID[], roomId: UUID): Promise<boolean> {
-    return await this.adapter.addParticipantsRoom(entityIds, roomId);
+  async addParticipantsToRoom(entityIds: UUID[], roomId: UUID): Promise<boolean> {
+    return await this.adapter.addParticipantsToRoom(entityIds, roomId);
   }
 
   /**
@@ -1800,50 +1808,122 @@ export class AgentRuntime implements IAgentRuntime {
       throw new Error('Agent name is required');
     }
 
-    const agents = await this.adapter.getAgents();
-    const existingAgentId = agents.find((a) => a.name === agent.name)?.id;
+    this.logger.debug(`Ensuring agent exists: "${agent.name}"`);
 
-    if (existingAgentId) {
-      // Update the agent on restart with the latest character configuration
-      const updatedAgent = {
-        ...agent,
-        id: existingAgentId,
-        updatedAt: Date.now(),
-      };
+    try {
+      // First attempt: Check for existing agents
+      const agents = await this.adapter.getAgents();
+      this.logger.debug(
+        `Found ${agents.length} existing agents:`,
+        agents.map((a) => ({ id: a.id, name: a.name }))
+      );
 
-      await this.adapter.updateAgent(existingAgentId, updatedAgent);
-      const existingAgent = await this.adapter.getAgent(existingAgentId);
+      const existingAgentId = agents.find((a) => a.name === agent.name)?.id;
 
-      if (!existingAgent) {
-        throw new Error(`Failed to retrieve agent after update: ${existingAgentId}`);
+      if (existingAgentId) {
+        // Update the agent on restart with the latest character configuration
+        const updatedAgent = {
+          ...agent,
+          id: existingAgentId,
+          updatedAt: Date.now(),
+        };
+
+        await this.adapter.updateAgent(existingAgentId, updatedAgent);
+        const existingAgent = await this.adapter.getAgent(existingAgentId);
+
+        if (!existingAgent) {
+          throw new Error(`Failed to retrieve agent after update: ${existingAgentId}`);
+        }
+
+        this.logger.debug(`Updated existing agent ${agent.name} on restart`);
+        return existingAgent;
       }
 
-      this.logger.debug(`Updated existing agent ${agent.name} on restart`);
-      return existingAgent;
+      // Create new agent if it doesn't exist
+      const newAgent: Agent = {
+        ...agent,
+        id: stringToUuid(agent.name),
+      } as Agent;
+
+      this.logger.debug(`Attempting to create new agent: ${agent.name} with ID: ${newAgent.id}`);
+      this.logger.debug(`Agent data being passed to createAgent:`, {
+        id: newAgent.id,
+        name: newAgent.name,
+        hasSettings: !!newAgent.settings,
+        hasSecrets: !!newAgent.secrets,
+        agentKeys: Object.keys(newAgent),
+      });
+
+      let created = false;
+      try {
+        this.logger.debug(`Calling adapter.createAgent...`);
+        created = await this.adapter.createAgent(newAgent);
+        this.logger.debug(`adapter.createAgent returned:`, created);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        this.logger.debug(`Agent creation failed with error: ${errorMessage}`);
+        this.logger.debug(`Error stack:`, error instanceof Error ? error.stack : 'No stack');
+
+        // Check if this is a unique constraint violation
+        if (
+          errorMessage.includes('UNIQUE constraint failed') ||
+          errorMessage.includes('UNIQUE') ||
+          errorMessage.includes('already exists')
+        ) {
+          this.logger.debug(
+            `Agent creation failed due to unique constraint - agent ${agent.name} already exists`
+          );
+          created = false; // Set created to false to trigger the existing agent lookup
+        } else {
+          // If it's not a unique constraint error, re-throw it
+          this.logger.error(`Non-constraint error during agent creation:`, error);
+          throw error;
+        }
+      }
+
+      if (!created) {
+        // If creation failed, it might be due to a race condition where the agent was created
+        // by another process. Try to find it again.
+        this.logger.debug(`Agent creation failed, checking if agent exists now: ${agent.name}`);
+
+        const agentsAfterFailure = await this.adapter.getAgents();
+        const existingAfterFailure = agentsAfterFailure.find((a) => a.name === agent.name);
+
+        if (existingAfterFailure) {
+          this.logger.debug(
+            `Found agent after creation failure, returning existing: ${existingAfterFailure.id}`
+          );
+          const existingAgent = await this.adapter.getAgent(existingAfterFailure.id!);
+          if (existingAgent) {
+            return existingAgent;
+          }
+        }
+
+        throw new Error(`Failed to create agent: ${agent.name}`);
+      }
+
+      this.logger.debug(`Created new agent ${agent.name}`);
+      return newAgent;
+    } catch (error) {
+      this.logger.error(`Error in ensureAgentExists for agent "${agent.name}":`, error);
+      throw error;
     }
-
-    // Create new agent if it doesn't exist
-    const newAgent: Agent = {
-      ...agent,
-      id: stringToUuid(agent.name),
-    } as Agent;
-
-    const created = await this.adapter.createAgent(newAgent);
-    if (!created) {
-      throw new Error(`Failed to create agent: ${agent.name}`);
-    }
-
-    this.logger.debug(`Created new agent ${agent.name}`);
-    return newAgent;
   }
   async getEntityById(entityId: UUID): Promise<Entity | null> {
-    const entities = await this.adapter.getEntityByIds([entityId]);
+    if (!this.adapter) {
+      throw new Error('Database adapter not initialized');
+    }
+
+    const entities = await this.adapter.getEntitiesByIds([entityId]);
     if (!entities?.length) return null;
     return entities[0];
   }
 
-  async getEntityByIds(entityIds: UUID[]): Promise<Entity[] | null> {
-    return await this.adapter.getEntityByIds(entityIds);
+  async getEntitiesByIds(entityIds: UUID[]): Promise<Entity[] | null> {
+    if (!this.adapter) {
+      throw new Error('Database adapter not initialized');
+    }
+    return await this.adapter.getEntitiesByIds(entityIds);
   }
   async getEntitiesForRoom(roomId: UUID, includeComponents?: boolean): Promise<Entity[]> {
     return await this.adapter.getEntitiesForRoom(roomId, includeComponents);

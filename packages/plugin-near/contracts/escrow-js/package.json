@@ -1,0 +1,18 @@
+{
+  "name": "escrow-js",
+  "version": "1.0.0",
+  "description": "NEAR Escrow Smart Contract in JavaScript",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "npx near-sdk-js build src/index.js build/escrow.wasm",
+    "test": "npm run build && ava"
+  },
+  "dependencies": {
+    "near-sdk-js": "^2.0.0"
+  },
+  "devDependencies": {
+    "ava": "^5.3.1",
+    "near-workspaces": "^5.0.0"
+  }
+}

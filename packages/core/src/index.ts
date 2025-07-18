@@ -6,6 +6,7 @@ export * from './utils';
 
 // Export schemas
 export * from './schemas/character';
+export * from './schema';
 
 // Then all other exports
 export * from './actions';

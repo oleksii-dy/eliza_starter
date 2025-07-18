@@ -1,32 +1,34 @@
 import { sql } from 'drizzle-orm';
-import { index, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { jsonb, pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
 import { agentTable } from './agent';
 
 /**
- * Definition of the entities table in the database.
- * Entities represent various actors or objects that can interact within the system.
- * They can be users, AI agents, or other types of entities with metadata.
+ * Represents an entity table in the database.
+ * Includes columns for id, agentId, createdAt, names, and metadata.
  */
 export const entityTable = pgTable(
   'entities',
   {
-    id: uuid('id').primaryKey().notNull(),
-    agent_id: uuid('agent_id')
-      .references(() => agentTable.id, { onDelete: 'cascade' })
+    id: uuid('id').notNull().primaryKey(),
+    agentId: uuid('agent_id')
+      .notNull()
+      .references(() => agentTable.id, {
+        onDelete: 'cascade',
+      }),
+    createdAt: timestamp('created_at')
+      .default(sql`now()`)
       .notNull(),
-    names: jsonb('names').$type<string[]>().notNull().default([]),
-    metadata: jsonb('metadata').default({}),
-    created_at: timestamp('created_at')
-      .notNull()
-      .$defaultFn(() => new Date()),
-    updated_at: timestamp('updated_at')
-      .notNull()
-      .$defaultFn(() => new Date()),
+    names: text('names')
+      .array()
+      .default(sql`'{}'::text[]`)
+      .notNull(),
+    metadata: jsonb('metadata')
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
   },
-  (table) => [
-    index('idx_entities_agent_id').on(table.agent_id),
-    index('idx_entities_names').on(table.names),
-  ]
+  (table) => {
+    return {
+      idAgentIdUnique: unique('id_agent_id_unique').on(table.id, table.agentId),
+    };
+  }
 );
-
-export default entityTable;

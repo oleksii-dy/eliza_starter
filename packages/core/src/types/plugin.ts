@@ -5,6 +5,7 @@ import type { EventHandler, EventPayloadMap } from './events';
 import type { IAgentRuntime } from './runtime';
 import type { Service } from './service';
 import type { TestSuite } from './testing';
+import type { ISchemaProvider } from '../schema';
 
 export type Route = {
   type: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'STATIC';
@@ -64,6 +65,9 @@ export interface Plugin {
   priority?: number;
 
   schema?: any;
+  
+  // Schema provider for database migrations
+  schemaProvider?: ISchemaProvider;
 }
 
 export interface ProjectAgent {

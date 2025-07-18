@@ -91,7 +91,7 @@ All database adapters extend the `BaseDrizzleAdapter` abstract class, which prov
 | Method                   | Description                           |
 | ------------------------ | ------------------------------------- |
 | `createEntities()`       | Create new entities                   |
-| `getEntityByIds()`       | Retrieve entities by IDs              |
+| `getEntitiesByIds()`     | Retrieve entities by IDs              |
 | `getEntitiesForRoom()`   | Get all entities in a room            |
 | `updateEntity()`         | Update entity attributes              |
 | `deleteEntity()`         | Delete an entity                      |
@@ -132,7 +132,7 @@ All database adapters extend the `BaseDrizzleAdapter` abstract class, which prov
 | `deleteRoom()`               | Remove a room                   |
 | `deleteRoomsByWorldId()`     | Remove all rooms in a world     |
 | `addParticipant()`           | Add entity to room              |
-| `addParticipantsRoom()`      | Add multiple entities to room   |
+| `addParticipantsToRoom()`    | Add multiple entities to room   |
 | `removeParticipant()`        | Remove entity from room         |
 | `getParticipantsForEntity()` | Get all rooms an entity is in   |
 | `getParticipantsForRoom()`   | List entities in a room         |

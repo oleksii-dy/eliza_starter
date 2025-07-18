@@ -17589,7 +17589,6 @@ Define your agent's personality and communication style:
   "messageExamples": [], // Example conversations
   "postExamples": [], // Example social posts
   "topics": [], // Areas of expertise
-  "adjectives": [] // Character traits
 }
 ```
 

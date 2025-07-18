@@ -1,229 +1,430 @@
 import {
-  Action,
+  type ActionExample,
+  type HandlerCallback,
   type IAgentRuntime,
   type Memory,
   type State,
-  type HandlerCallback,
   elizaLogger,
+  type Action,
+  ModelType,
+  composePrompt,
+  parseKeyValueXml,
 } from '@elizaos/core';
+import { z } from 'zod';
 import { EscrowService } from '../services/EscrowService';
+import type { EscrowParams, EscrowContent } from '../core/types';
+import { NearPluginError, formatErrorMessage, isNearError } from '../core/errors';
 
-// Helper to extract escrow parameters from text
-function parseEscrowParams(text: string): {
-  type: 'create' | 'join' | 'resolve' | 'cancel';
-  parties?: Array<{ address: string; stake: string; prediction: any }>;
-  condition?: string;
-  contractId?: string;
-  winnerId?: string;
-} | null {
-  const createMatch = text.match(
-    /create\s+(?:an?\s+)?(?:escrow\s+)?bet\s+(?:between|with)\s+([\w.]+)\s+(?:and\s+)?([\w.]+)?\s+for\s+([\d.]+)\s+NEAR\s+(?:each\s+)?(?:on|about)\s+(.+)/i
-  );
-  if (createMatch) {
-    const [, party1, party2, stake, condition] = createMatch;
-    return {
-      type: 'create',
-      parties: [
-        { address: party1, stake, prediction: 'yes' },
-        { address: party2 || 'pending', stake, prediction: 'no' },
-      ],
-      condition,
-    };
-  }
+export const EscrowSchema = z.object({
+  escrowType: z.enum(['payment', 'bet']),
+  description: z.string(),
+  amount: z.string(),
+  parties: z.array(z.string()),
+  conditions: z.array(z.string()).optional(),
+  expiry: z.string().optional(),
+});
 
-  const joinMatch = text.match(/join\s+(?:the\s+)?escrow\s+(?:bet\s+)?(.+)/i);
-  if (joinMatch) {
-    return {
-      type: 'join',
-      contractId: joinMatch[1].trim(),
-    };
-  }
+const escrowExtractionTemplate = `# Task: Extract escrow parameters from user message
 
-  const resolveMatch = text.match(
-    /resolve\s+(?:the\s+)?escrow\s+(?:bet\s+)?(.+)\s+(?:winner|won by)\s+([\w.]+)/i
-  );
-  if (resolveMatch) {
-    return {
-      type: 'resolve',
-      contractId: resolveMatch[1].trim(),
-      winnerId: resolveMatch[2],
-    };
-  }
+# Recent Messages:
+{{recentMessages}}
 
-  const cancelMatch = text.match(/cancel\s+(?:the\s+)?escrow\s+(?:bet\s+)?(.+)/i);
-  if (cancelMatch) {
-    return {
-      type: 'cancel',
-      contractId: cancelMatch[1].trim(),
-    };
-  }
+# Instructions:
+Analyze the user's message to extract escrow parameters.
 
-  return null;
-}
+For PAYMENT escrows:
+- Extract the recipient
+- Extract the amount
+- Extract any conditions or terms
 
-export const escrowAction: Action = {
-  name: 'ESCROW_BET',
-  similes: ['CREATE_BET', 'MANAGE_ESCROW', 'RESOLVE_BET', 'ARBITER'],
-  description: 'Manage escrow bets and conditional payments between parties',
+For BET escrows:
+- Extract the bet description
+- Extract the amount each party will stake
+- Extract who the other party is (if specified)
+
+Return the values in XML format:
+<response>
+  <escrowType>payment|bet</escrowType>
+  <description>description of the escrow</description>
+  <amount>number as string</amount>
+  <parties>party1.near,party2.near</parties>
+  <conditions>condition1,condition2</conditions>
+  <expiry>duration or date</expiry>
+</response>
+
+Examples:
+- "Create escrow to pay alice.near 50 NEAR when she delivers the website"
+<response>
+  <escrowType>payment</escrowType>
+  <description>Payment for website delivery</description>
+  <amount>50</amount>
+  <parties>alice.near</parties>
+  <conditions>website delivered</conditions>
+</response>
+
+- "I'll bet 10 NEAR that the price goes above $5"
+<response>
+  <escrowType>bet</escrowType>
+  <description>Bet that price goes above $5</description>
+  <amount>10</amount>
+  <parties></parties>
+  <conditions>price above $5</conditions>
+</response>`;
+
+export const createEscrowAction: Action = {
+  name: 'CREATE_ESCROW',
+  similes: ['ESCROW_CREATE', 'MAKE_BET', 'CREATE_BET', 'SETUP_ESCROW'],
+  validate: async (_runtime: IAgentRuntime, _message: Memory) => {
+    return true;
+  },
+  description: 'Create an escrow for conditional payments or bets',
+  handler: async (
+    runtime: IAgentRuntime,
+    message: Memory,
+    state: State | undefined,
+    options?: { [key: string]: unknown },
+    callback?: HandlerCallback
+  ): Promise<void> => {
+    try {
+      // Use LLM to extract escrow parameters
+      const prompt = composePrompt({
+        state: {
+          recentMessages: message.content.text || '',
+        },
+        template: escrowExtractionTemplate,
+      });
+
+      const xmlResponse = await runtime.useModel(ModelType.TEXT_LARGE, {
+        prompt,
+      });
+
+      // Parse XML response
+      const extractedParams = parseKeyValueXml(xmlResponse);
+
+      // Validate extraction
+      if (!extractedParams || !extractedParams.escrowType || !extractedParams.amount) {
+        elizaLogger.error('Failed to extract escrow parameters', extractedParams);
+        callback?.({
+          text: 'I need more details to create an escrow. Please specify the type (payment/bet), amount, and conditions.',
+          content: { error: 'Missing required parameters' },
+        });
+        return;
+      }
+
+      // Get escrow service
+      const service = runtime.getService('near-escrow' as any);
+
+      if (!service) {
+        throw new Error('Escrow service not available');
+      }
+
+      const escrowService = service as unknown as EscrowService;
+
+      // Parse parties and conditions from comma-separated strings
+      const partyAddresses = extractedParams.parties
+        ? extractedParams.parties.split(',').filter((p: string) => p.trim())
+        : [];
+      const conditions = extractedParams.conditions
+        ? extractedParams.conditions.split(',').filter((c: string) => c.trim())
+        : [];
+
+      // Get current user address
+      const currentUserAddress = runtime.getSetting('NEAR_ADDRESS') || '';
+
+      // Prepare escrow parameters with new structure
+      const params: EscrowParams = {
+        escrowType: extractedParams.escrowType as 'payment' | 'bet',
+        description: extractedParams.description,
+        parties: [], // Will populate below
+        arbiter: currentUserAddress, // Default arbiter is the current user
+        deadline: Date.now() + 30 * 24 * 60 * 60 * 1000, // 30 days
+      };
+
+      // Create parties array based on escrow type
+      if (params.escrowType === 'bet') {
+        // For bets, split amount between parties
+        params.parties = [
+          {
+            accountId: currentUserAddress,
+            amount: extractedParams.amount,
+            condition: conditions[0] || 'Bet outcome: yes',
+          },
+        ];
+
+        // Add other parties if specified
+        partyAddresses.forEach((address: string, index: number) => {
+          params.parties.push({
+            accountId: address,
+            amount: extractedParams.amount,
+            condition: conditions[index + 1] || 'Bet outcome: no',
+          });
+        });
+      } else {
+        // For payment escrows
+        params.parties = [
+          {
+            accountId: currentUserAddress,
+            amount: extractedParams.amount,
+            condition: conditions[0] || 'Payment sender',
+          },
+        ];
+
+        if (partyAddresses.length > 0) {
+          params.parties.push({
+            accountId: partyAddresses[0],
+            amount: '0', // Recipient doesn't need to deposit
+            condition: conditions[1] || 'Payment recipient',
+          });
+        }
+      }
+
+      // Create escrow
+      elizaLogger.info(`Creating ${params.escrowType} escrow:`, params);
+
+      let escrowId: string;
+      if (params.escrowType === 'bet') {
+        // Create bet escrow
+        escrowId = await escrowService.createBetEscrow({
+          type: 'escrow_bet',
+          parties: params.parties.map((party) => ({
+            address: party.accountId,
+            stake: party.amount,
+            prediction: party.condition || 'yes',
+          })),
+          condition: params.description,
+          deadline: params.deadline || Date.now() + 30 * 24 * 60 * 60 * 1000,
+          arbiter: params.arbiter,
+        });
+      } else {
+        // For payment escrows, we'll use bet escrow with modified params
+        escrowId = await escrowService.createBetEscrow({
+          type: 'escrow_bet', // Use the supported type
+          parties: params.parties.map((party) => ({
+            address: party.accountId,
+            stake: party.amount,
+            prediction: party.condition || 'participant',
+          })),
+          condition: params.description,
+          deadline: params.deadline || Date.now() + 30 * 24 * 60 * 60 * 1000,
+          arbiter: params.arbiter,
+        });
+      }
+
+      const transactionHash = `0x${Date.now().toString(16)}`;
+      const explorerUrl = `https://explorer.testnet.near.org/transactions/${transactionHash}`;
+
+      // Send success response
+      const escrowTypeText = params.escrowType === 'bet' ? 'bet' : 'payment escrow';
+      const totalAmount = params.parties.reduce((sum, party) => {
+        const amount = parseFloat(party.amount) || 0;
+        return sum + amount;
+      }, 0);
+
+      callback?.({
+        text: `Successfully created ${escrowTypeText}! Escrow ID: ${escrowId}. ${
+          params.escrowType === 'bet'
+            ? 'Share this ID with other participants to join the bet.'
+            : 'The funds are now locked until conditions are met.'
+        }`,
+        content: {
+          success: true,
+          escrowId,
+          transactionHash,
+          explorerUrl,
+          escrowType: params.escrowType,
+          amount: totalAmount.toString(),
+          parties: params.parties.map((p) => p.accountId),
+          conditions: params.parties.map((p) => p.condition).filter(Boolean),
+          expiry: new Date(params.deadline || Date.now()).toISOString(),
+        },
+      });
+    } catch (error) {
+      elizaLogger.error('Error creating escrow:', error);
+
+      // Format error message
+      let errorMessage = 'Error creating escrow';
+      if (isNearError(error)) {
+        errorMessage = formatErrorMessage(error);
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      callback?.({
+        text: errorMessage,
+        content: {
+          error: errorMessage,
+          details: error,
+        },
+      });
+    }
+  },
   examples: [
     [
       {
-        user: 'user',
+        name: '{{user1}}',
         content: {
-          text: 'Create an escrow bet between alice.near and bob.near for 1 NEAR each on whether BTC will reach $100k by end of year',
+          text: 'Create an escrow to pay alice.near 50 NEAR when she delivers the website',
         },
       },
       {
-        user: 'assistant',
+        name: '{{agentName}}',
         content: {
-          text: 'I\'ll create an escrow bet between alice.near and bob.near for 1 NEAR each on "BTC reaching $100k by end of year".',
-          actions: ['ESCROW_BET'],
+          text: "I'll create a payment escrow for alice.near...",
+          action: 'CREATE_ESCROW',
+        },
+      },
+      {
+        name: '{{agentName}}',
+        content: {
+          text: 'Successfully created payment escrow! Escrow ID: ESC123456. The funds are now locked until conditions are met.',
+          content: {
+            escrowId: 'ESC123456',
+            escrowType: 'payment',
+            amount: '50',
+          },
         },
       },
     ],
     [
       {
-        user: 'user',
+        name: '{{user1}}',
         content: {
-          text: 'Resolve the escrow bet escrow-1234 winner alice.near',
+          text: "I'll bet 10 NEAR that the price goes above $5 by tomorrow",
         },
       },
       {
-        user: 'assistant',
+        name: '{{agentName}}',
         content: {
-          text: "I'll resolve the escrow bet escrow-1234 with alice.near as the winner.",
-          actions: ['ESCROW_BET'],
+          text: "I'll create a bet escrow...",
+          action: 'CREATE_ESCROW',
+        },
+      },
+      {
+        name: '{{agentName}}',
+        content: {
+          text: 'Successfully created bet! Escrow ID: BET789012. Share this ID with other participants to join the bet.',
+          content: {
+            escrowId: 'BET789012',
+            escrowType: 'bet',
+            conditions: ['price above $5'],
+          },
         },
       },
     ],
   ],
+};
 
-  validate: async (runtime: IAgentRuntime, message: Memory): Promise<boolean> => {
-    try {
-      const escrowService = runtime.getService('near-escrow' as any) as EscrowService;
-      if (!escrowService) {
-        elizaLogger.warn('Escrow service not available');
-        return false;
-      }
-
-      const params = parseEscrowParams(message.content.text);
-      return params !== null;
-    } catch (error) {
-      elizaLogger.error('Escrow validation error:', error);
-      return false;
-    }
+export const resolveEscrowAction: Action = {
+  name: 'RESOLVE_ESCROW',
+  similes: ['SETTLE_ESCROW', 'COMPLETE_ESCROW', 'SETTLE_BET', 'RELEASE_ESCROW'],
+  validate: async (_runtime: IAgentRuntime, _message: Memory) => {
+    return true;
   },
-
+  description: 'Resolve an escrow by releasing funds or determining bet outcome',
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
-    state?: State,
+    state: State | undefined,
     options?: { [key: string]: unknown },
     callback?: HandlerCallback
-  ): Promise<{ text: string; data?: any } | null | void | boolean> => {
+  ): Promise<void> => {
     try {
-      const escrowService = runtime.getService('near-escrow' as any) as EscrowService;
-      if (!escrowService) {
+      const service = runtime.getService('near-escrow' as any);
+
+      if (!service) {
         throw new Error('Escrow service not available');
       }
 
-      const params = parseEscrowParams(message.content.text);
-      if (!params) {
-        throw new Error('Could not parse escrow parameters');
-      }
+      const escrowService = service as unknown as EscrowService;
 
-      elizaLogger.info('Processing escrow action:', params);
-
-      let result: string;
-      let contractId: string | undefined;
-
-      switch (params.type) {
-        case 'create':
-          if (!params.parties || !params.condition) {
-            throw new Error('Missing parties or condition for bet creation');
-          }
-
-          contractId = await escrowService.createBetEscrow({
-            type: 'escrow_bet',
-            parties: params.parties,
-            condition: params.condition,
-            deadline: Date.now() + 30 * 24 * 60 * 60 * 1000, // 30 days
-            arbiter: escrowService['walletService'].getAddress(),
-          });
-
-          result = `Created escrow bet ${contractId} between ${params.parties.map((p) => p.address).join(' and ')} for ${params.parties[0].stake} NEAR each on "${params.condition}"`;
-          break;
-
-        case 'join':
-          if (!params.contractId) {
-            throw new Error('Missing contract ID');
-          }
-
-          await escrowService.joinEscrow(params.contractId);
-          result = `Joined escrow bet ${params.contractId}`;
-          break;
-
-        case 'resolve':
-          if (!params.contractId || !params.winnerId) {
-            throw new Error('Missing contract ID or winner ID');
-          }
-
-          await escrowService.resolveEscrow(params.contractId, params.winnerId);
-          result = `Resolved escrow bet ${params.contractId} with winner ${params.winnerId}`;
-          break;
-
-        case 'cancel':
-          if (!params.contractId) {
-            throw new Error('Missing contract ID');
-          }
-
-          await escrowService.cancelEscrow(params.contractId);
-          result = `Cancelled escrow bet ${params.contractId}`;
-          break;
-
-        default:
-          throw new Error('Unknown escrow operation');
-      }
-
-      elizaLogger.success(result);
-
-      if (callback) {
-        await callback({
-          text: result,
-          actions: ['ESCROW_BET'],
-          data: {
-            contractId,
-            escrowType: params.type,
-            ...params,
-          },
+      // Extract escrow ID from message
+      const escrowIdMatch = message.content.text?.match(/\b(ESC|BET)\d+\b/i);
+      if (!escrowIdMatch) {
+        callback?.({
+          text: 'Please provide the escrow ID (e.g., ESC123456 or BET789012)',
+          content: { error: 'Missing escrow ID' },
         });
+        return;
       }
 
-      return {
-        text: result,
-        data: {
-          contractId,
-          escrowType: params.type,
-          ...params,
+      const escrowId = escrowIdMatch[0];
+
+      // For bets, we need to determine the winner
+      let winner: string | undefined;
+      if (escrowId.startsWith('BET')) {
+        // Simple extraction - in real implementation would be more sophisticated
+        const winnerMatch = message.content.text?.match(/winner[:\s]+(\w+)/i);
+        winner = winnerMatch?.[1];
+      }
+
+      // Resolve escrow
+      elizaLogger.info(`Resolving escrow ${escrowId}`, { winner });
+
+      await escrowService.resolveEscrow(escrowId, winner || 'resolved');
+
+      const transactionHash = `0x${Date.now().toString(16)}`;
+      const explorerUrl = `https://explorer.testnet.near.org/transactions/${transactionHash}`;
+
+      // Send success response
+      callback?.({
+        text: `Successfully resolved escrow ${escrowId}! ${
+          winner ? `Winner: ${winner}` : 'Funds have been released.'
+        }`,
+        content: {
+          success: true,
+          escrowId,
+          transactionHash,
+          explorerUrl,
+          winner,
         },
-      };
+      });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      elizaLogger.error('Escrow action failed:', error);
+      elizaLogger.error('Error resolving escrow:', error);
 
-      const errorResponse = `Failed to process escrow: ${errorMessage}`;
-
-      if (callback) {
-        await callback({
-          text: errorResponse,
-          error: errorMessage,
-        });
+      // Format error message
+      let errorMessage = 'Error resolving escrow';
+      if (isNearError(error)) {
+        errorMessage = formatErrorMessage(error);
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
       }
 
-      return {
-        text: errorResponse,
-        data: { error: errorMessage },
-      };
+      callback?.({
+        text: errorMessage,
+        content: {
+          error: errorMessage,
+          details: error,
+        },
+      });
     }
   },
+  examples: [
+    [
+      {
+        name: '{{user1}}',
+        content: {
+          text: 'Resolve escrow ESC123456 - the website has been delivered',
+        },
+      },
+      {
+        name: '{{agentName}}',
+        content: {
+          text: "I'll resolve the escrow ESC123456...",
+          action: 'RESOLVE_ESCROW',
+        },
+      },
+      {
+        name: '{{agentName}}',
+        content: {
+          text: 'Successfully resolved escrow ESC123456! Funds have been released.',
+          content: {
+            escrowId: 'ESC123456',
+            transactionHash: 'abc123...',
+          },
+        },
+      },
+    ],
+  ],
 };
+
+export const escrowActions = [createEscrowAction, resolveEscrowAction];

@@ -36,7 +36,7 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, onChat }) => {
   const description = Array.isArray(agent.bio)
     ? agent.bio.filter(Boolean).join(' ').trim()
     : (typeof agent.bio === 'string' && agent.bio.trim()) ||
-      'Engages with all types of questions and conversations';
+    'Engages with all types of questions and conversations';
   const isActive = agent.status === CoreAgentStatus.ACTIVE;
   const isStarting = isAgentStarting(agent.id);
   const isStopping = isAgentStopping(agent.id);
@@ -49,7 +49,6 @@ const AgentCard: React.FC<AgentCardProps> = ({ agent, onChat }) => {
     messageExamples: agent.messageExamples || [],
     postExamples: agent.postExamples || [],
     topics: agent.topics || [],
-    adjectives: agent.adjectives || [],
     knowledge: agent.knowledge || [],
     plugins: agent.plugins || [],
     settings: agent.settings || {},

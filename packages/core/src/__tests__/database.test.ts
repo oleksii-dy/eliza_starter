@@ -369,7 +369,7 @@ class MockDatabaseAdapter extends DatabaseAdapter {
     throw new Error('Method not implemented.');
   }
 
-  getEntityByIds(_entityIds: UUID[]): Promise<Entity[]> {
+  getEntitiesByIds(_entityIds: UUID[]): Promise<Entity[]> {
     throw new Error('Method not implemented.');
   }
 
@@ -661,23 +661,6 @@ class MockDatabaseAdapter extends DatabaseAdapter {
       },
     ] as unknown as Memory[];
   }
-
-  /**
-   * Asynchronously retrieves a list of entities based on the provided roomId.
-   * @param {Object} _params - The parameters object.
-   * @param {UUID} _params.roomId - The roomId to filter entities by.
-   * @returns {Promise<Entity[]>} - A promise that resolves to an array of Entity objects.
-   */
-  async getEntities(_params: { roomId: UUID }): Promise<Entity[]> {
-    return [
-      {
-        id: 'actor-id' as UUID,
-        name: 'Test Entity',
-        username: 'testactor',
-        roomId: 'room-id' as UUID, // Ensure roomId is provided
-      },
-    ] as unknown as Entity[];
-  }
 }
 
 describe('DatabaseAdapter Tests', () => {
@@ -724,7 +707,7 @@ describe('DatabaseAdapter Tests', () => {
   });
 
   it('should get an account by user ID', async () => {
-    const account = await adapter.getEntityById('test-user-id' as UUID);
+    const account = (await adapter.getEntitiesByIds(['test-user-id' as UUID]))[0];
     expect(account).not.toBeNull();
     expect(account?.metadata?.username).toBe('testuser');
   });
@@ -744,7 +727,7 @@ describe('DatabaseAdapter Tests', () => {
   });
 
   it('should return entities by room ID', async () => {
-    const entities = await adapter.getEntities({ roomId });
+    const entities = await adapter.getEntitiesForRoom(roomId);
     expect(entities).toHaveLength(1);
   });
 });

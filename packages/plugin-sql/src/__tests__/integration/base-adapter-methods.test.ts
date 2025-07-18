@@ -36,27 +36,6 @@ describe('Base Adapter Methods Integration Tests', () => {
   });
 
   describe('CRUD Operations', () => {
-    beforeEach(async () => {
-      // Clean up any existing entities from previous tests
-      // This ensures test isolation
-      const existingEntities = await adapter.searchEntitiesByName({
-        query: '',
-        agentId: testAgentId,
-        limit: 1000,
-      });
-
-      // Delete all entities except the main test entity
-      for (const entity of existingEntities) {
-        if (entity.id && entity.id !== testEntityId) {
-          try {
-            await adapter.deleteEntity(entity.id);
-          } catch (error) {
-            // Ignore errors during cleanup
-          }
-        }
-      }
-    });
-
     it('should handle getMemories with various filters', async () => {
       const agentId = testAgentId;
       const roomId = uuidv4() as UUID;
@@ -400,7 +379,7 @@ describe('Base Adapter Methods Integration Tests', () => {
       const entity: Entity = {
         id: uuidv4() as UUID,
         agentId: testAgentId,
-        names: ['Delete Test Entity'],
+        names: ['Test Entity'],
         metadata: { type: 'test' },
       };
 
@@ -480,7 +459,7 @@ describe('Base Adapter Methods Integration Tests', () => {
       const entity: Entity = {
         id: uuidv4() as UUID,
         agentId: testAgentId,
-        names: ['Metadata Test Entity'],
+        names: ['Test Entity'],
         metadata: {
           category: 'person',
           age: 25,

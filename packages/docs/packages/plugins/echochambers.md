@@ -46,8 +46,6 @@ export const character: Character = {
   lore: [...],
   messageExamples: [...],
   postExamples: [...],
-  adjectives: ["funny", "intelligent", "academic", "insightful"],
-  people: [],
   topics: [...],
   style: {...},
 };

@@ -40,6 +40,7 @@ export async function startAgent(
   const loadedPlugins = new Map<string, Plugin>();
   // Type-cast to ensure compatibility with local types
   loadedPlugins.set(sqlPlugin.name, sqlPlugin as unknown as Plugin); // Always include sqlPlugin
+  logger.info('[agent-start] SQL plugin registered:', sqlPlugin.name);
 
   const pluginsToLoad = new Set<string>(character.plugins || []);
   for (const p of plugins) {
@@ -47,6 +48,7 @@ export async function startAgent(
       pluginsToLoad.add(p);
     } else if (isValidPluginShape(p) && !loadedPlugins.has(p.name)) {
       loadedPlugins.set(p.name, p);
+      logger.info('[agent-start] Plugin registered:', p.name);
       (p.dependencies || []).forEach((dep) => pluginsToLoad.add(dep));
       if (options.isTestMode) {
         (p.testDependencies || []).forEach((dep) => pluginsToLoad.add(dep));
@@ -64,12 +66,18 @@ export async function startAgent(
       const loaded = await loadAndPreparePlugin(name);
       if (loaded) {
         allAvailablePlugins.set(loaded.name, loaded);
+        logger.info('[agent-start] Loaded plugin:', loaded.name);
       }
     }
   }
 
   // Resolve dependencies and get final plugin list
   const finalPlugins = resolvePluginDependencies(allAvailablePlugins, options.isTestMode);
+
+  logger.info(
+    '[agent-start] Creating runtime with plugins:',
+    finalPlugins.map((p) => p.name).join(', ')
+  );
 
   const runtime = new AgentRuntime({
     character: encryptedCharacter(character),
@@ -85,7 +93,9 @@ export async function startAgent(
 
   await initWrapper(runtime);
 
+  logger.info('[agent-start] Initializing runtime...');
   await runtime.initialize();
+  logger.info('[agent-start] Runtime initialized successfully');
 
   // Discover and run plugin schema migrations
   try {

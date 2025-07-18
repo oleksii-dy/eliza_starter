@@ -1,11 +1,12 @@
-import { Service, type IAgentRuntime, elizaLogger } from '@elizaos/core';
+import { Service, type IAgentRuntime, elizaLogger, type Metadata } from '@elizaos/core';
 import { NearPluginError, NearErrorCode } from '../../core/errors';
 import type { ServiceStatus, NearPluginConfig } from '../../core/types';
 import { DEFAULTS } from '../../core/constants';
 import { validateNearConfig } from '../../environment';
 
 export abstract class BaseNearService extends Service {
-  protected config: NearPluginConfig = {} as NearPluginConfig;
+  public config?: Metadata;
+  protected nearConfig: NearPluginConfig = {} as NearPluginConfig;
   declare protected runtime: IAgentRuntime; // Initialized in initialize()
   protected lastHealthCheck: number = 0;
   protected isHealthy: boolean = true;
@@ -17,7 +18,8 @@ export abstract class BaseNearService extends Service {
 
   async initialize(runtime: IAgentRuntime): Promise<void> {
     this.runtime = runtime;
-    this.config = await validateNearConfig(runtime);
+    this.nearConfig = await validateNearConfig(runtime);
+    this.config = this.nearConfig as unknown as Metadata; // For compatibility with Service base class
     elizaLogger.info(`Initializing ${this.constructor.name}`);
 
     try {

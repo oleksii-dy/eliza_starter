@@ -1,7 +1,6 @@
 [test]
-# Test timeout in milliseconds - increased for comprehensive E2E database tests
-# This applies to individual test timeouts, not just the overall test suite
-timeout = 30000
+# Test timeout in milliseconds
+timeout = 180000
 
 # Coverage configuration
 coverage = true

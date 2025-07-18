@@ -3,12 +3,9 @@ import {
   type HandlerCallback,
   type IAgentRuntime,
   type Memory,
-  ModelClass,
   type State,
   elizaLogger,
   type Action,
-  composeContext,
-  generateObject,
 } from '@elizaos/core';
 import { z } from 'zod';
 import { StorageService } from '../services/StorageService';
@@ -28,20 +25,20 @@ export const StorageGetSchema = z.object({
 const storageExamples: ActionExample[][] = [
   [
     {
-      user: '{{user1}}',
+      name: '{{user1}}',
       content: {
         text: 'Remember that the user prefers dark mode',
       },
     },
     {
-      user: '{{agentName}}',
+      name: '{{agentName}}',
       content: {
         text: "I'll save your dark mode preference on-chain for future reference.",
         action: 'SAVE_MEMORY',
       },
     },
     {
-      user: '{{agentName}}',
+      name: '{{agentName}}',
       content: {
         text: 'I\'ve saved that information on-chain under the key "user_preferences". This memory will persist across sessions and restarts.',
       },
@@ -49,13 +46,13 @@ const storageExamples: ActionExample[][] = [
   ],
   [
     {
-      user: '{{user1}}',
+      name: '{{user1}}',
       content: {
         text: 'Save the analysis results for project X',
       },
     },
     {
-      user: '{{agentName}}',
+      name: '{{agentName}}',
       content: {
         text: "I'll store the project X analysis results on-chain.",
         action: 'SAVE_MEMORY',
@@ -72,14 +69,14 @@ const saveMemoryAction: Action = {
   examples: [
     [
       {
-        user: 'alice',
+        name: 'alice',
         content: {
           text: 'Remember that the user prefers dark mode interfaces',
           source: 'discord',
         },
       },
       {
-        user: 'agent',
+        name: 'agent',
         content: {
           text: "I've saved that preference to my persistent memory. I'll remember that the user prefers dark mode interfaces.",
           source: 'discord',
@@ -89,14 +86,14 @@ const saveMemoryAction: Action = {
     ],
     [
       {
-        user: 'bob',
+        name: 'bob',
         content: {
           text: 'Store the API endpoint as https://api.example.com/v2',
           source: 'telegram',
         },
       },
       {
-        user: 'agent',
+        name: 'agent',
         content: {
           text: "I've stored the API endpoint (https://api.example.com/v2) in my persistent storage.",
           source: 'telegram',
@@ -130,7 +127,7 @@ const saveMemoryAction: Action = {
     state?: State,
     options?: { [key: string]: unknown },
     callback?: HandlerCallback
-  ): Promise<boolean> => {
+  ): Promise<void> => {
     try {
       const storageService = runtime.getService<StorageService>('near-storage' as any);
       if (!storageService) {
@@ -184,8 +181,6 @@ const saveMemoryAction: Action = {
           },
         });
       }
-
-      return true;
     } catch (error) {
       elizaLogger.error('Failed to save memory:', error);
 
@@ -195,8 +190,6 @@ const saveMemoryAction: Action = {
           source: message.content.source,
         });
       }
-
-      return false;
     }
   },
 };
@@ -209,14 +202,14 @@ const retrieveMemoryAction: Action = {
   examples: [
     [
       {
-        user: 'alice',
+        name: 'alice',
         content: {
           text: 'What did I tell you to remember about my preferences?',
           source: 'discord',
         },
       },
       {
-        user: 'agent',
+        name: 'agent',
         content: {
           text: 'Let me check my memories... I remember that you prefer dark mode interfaces.',
           source: 'discord',
@@ -226,14 +219,14 @@ const retrieveMemoryAction: Action = {
     ],
     [
       {
-        user: 'bob',
+        name: 'bob',
         content: {
           text: 'Recall the API endpoint I gave you',
           source: 'telegram',
         },
       },
       {
-        user: 'agent',
+        name: 'agent',
         content: {
           text: 'I found the stored API endpoint: https://api.example.com/v2',
           source: 'telegram',
@@ -266,7 +259,7 @@ const retrieveMemoryAction: Action = {
     state?: State,
     options?: { [key: string]: unknown },
     callback?: HandlerCallback
-  ): Promise<boolean> => {
+  ): Promise<void> => {
     try {
       const storageService = runtime.getService<StorageService>('near-storage' as any);
       if (!storageService) {
@@ -348,8 +341,6 @@ const retrieveMemoryAction: Action = {
           },
         });
       }
-
-      return true;
     } catch (error) {
       elizaLogger.error('Failed to retrieve memory:', error);
 
@@ -359,8 +350,6 @@ const retrieveMemoryAction: Action = {
           source: message.content.source,
         });
       }
-
-      return false;
     }
   },
 };

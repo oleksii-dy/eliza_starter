@@ -8,10 +8,12 @@ import { NEAR_NETWORKS, MIN_ACCOUNT_BALANCE } from '../core/constants';
 import { validateNearConfig } from '../environment';
 
 export class WalletService extends BaseNearService {
+  static serviceType = 'near-wallet';
   capabilityDescription = 'Manages NEAR wallet operations';
 
   private near!: Near;
-  private keyStore!: keyStores.InMemoryKeyStore;
+  private keyStore!: typeof keyStores.InMemoryKeyStore.prototype;
+  private keyPair!: KeyPair;
   private account!: Account;
 
   async onInitialize(): Promise<void> {
@@ -33,11 +35,29 @@ export class WalletService extends BaseNearService {
 
   private async setupWallet(): Promise<void> {
     try {
-      const keyPair = utils.KeyPair.fromString(this.config.NEAR_WALLET_SECRET_KEY as KeyPairString);
+      this.keyPair = utils.KeyPair.fromString(
+        this.nearConfig.NEAR_WALLET_SECRET_KEY as KeyPairString
+      );
 
-      await this.keyStore.setKey(this.config.networkId, this.config.NEAR_ADDRESS, keyPair);
+      // IMPORTANT: Set key for both possible network ID formats
+      // Some NEAR operations use "testnet" while others might use the full network ID
+      await this.keyStore.setKey(
+        this.nearConfig.networkId,
+        this.nearConfig.NEAR_ADDRESS,
+        this.keyPair
+      );
 
-      elizaLogger.info(`Wallet configured for ${this.config.NEAR_ADDRESS}`);
+      // Also set for the simple network name to handle both cases
+      await this.keyStore.setKey(
+        this.nearConfig.NEAR_NETWORK,
+        this.nearConfig.NEAR_ADDRESS,
+        this.keyPair
+      );
+
+      elizaLogger.info(`Wallet configured for ${this.nearConfig.NEAR_ADDRESS}`);
+      elizaLogger.debug(
+        `Keys set for network IDs: ${this.nearConfig.networkId}, ${this.nearConfig.NEAR_NETWORK}`
+      );
     } catch (error) {
       throw new NearPluginError(NearErrorCode.INVALID_CONFIG, 'Failed to setup wallet', error);
     }
@@ -45,19 +65,19 @@ export class WalletService extends BaseNearService {
 
   private async connectToNear(): Promise<void> {
     try {
-      const networkConfig = NEAR_NETWORKS[this.config.NEAR_NETWORK];
+      const networkConfig = NEAR_NETWORKS[this.nearConfig.NEAR_NETWORK];
 
+      // @ts-ignore - NEAR SDK v6 deprecated keyStore but it still works
       this.near = await connect({
-        networkId: this.config.networkId,
+        networkId: this.nearConfig.networkId,
         keyStore: this.keyStore,
-        nodeUrl: this.config.nodeUrl || networkConfig.nodeUrl,
+        nodeUrl: this.nearConfig.nodeUrl || networkConfig.nodeUrl,
         walletUrl: networkConfig.walletUrl,
         helperUrl: networkConfig.helperUrl,
       });
+      this.account = await this.near.account(this.nearConfig.NEAR_ADDRESS);
 
-      this.account = await this.near.account(this.config.NEAR_ADDRESS);
-
-      elizaLogger.info(`Connected to NEAR ${this.config.networkId}`);
+      elizaLogger.info(`Connected to NEAR ${this.nearConfig.networkId}`);
     } catch (error) {
       throw new NearPluginError(
         NearErrorCode.NETWORK_UNAVAILABLE,
@@ -70,14 +90,14 @@ export class WalletService extends BaseNearService {
   private async verifyAccount(): Promise<void> {
     try {
       const state = await this.account.state();
-      elizaLogger.info(`Account verified: ${this.config.NEAR_ADDRESS}`, {
-        balance: utils.format.formatNearAmount(state.amount),
+      elizaLogger.info(`Account verified: ${this.nearConfig.NEAR_ADDRESS}`, {
+        balance: utils.format.formatNearAmount(state.amount.toString()),
       });
     } catch (error: any) {
       if (error.message?.includes('does not exist')) {
         throw new NearPluginError(
           NearErrorCode.ACCOUNT_NOT_FOUND,
-          `Account ${this.config.NEAR_ADDRESS} does not exist`,
+          `Account ${this.nearConfig.NEAR_ADDRESS} does not exist`,
           error
         );
       }
@@ -116,8 +136,8 @@ export class WalletService extends BaseNearService {
       // For now, just return NEAR balance
       // Token balances will be handled by TokenService
       const info: WalletInfo = {
-        address: this.config.NEAR_ADDRESS,
-        publicKey: this.config.NEAR_WALLET_PUBLIC_KEY,
+        address: this.nearConfig.NEAR_ADDRESS,
+        publicKey: this.nearConfig.NEAR_WALLET_PUBLIC_KEY,
         balance,
         tokens: [
           {
@@ -128,7 +148,7 @@ export class WalletService extends BaseNearService {
               decimals: 24,
             },
             amount: balance,
-            humanAmount: utils.format.formatNearAmount(balance),
+            humanAmount: utils.format.formatNearAmount(balance.toString()),
           },
         ],
         totalValueUsd: 0, // Will be calculated by PriceService
@@ -176,19 +196,27 @@ export class WalletService extends BaseNearService {
 
   // Getters for configuration
   getNetwork(): 'mainnet' | 'testnet' {
-    return this.config.NEAR_NETWORK;
+    return this.nearConfig.NEAR_NETWORK;
   }
 
   getAddress(): string {
-    return this.config.NEAR_ADDRESS;
+    return this.nearConfig.NEAR_ADDRESS;
+  }
+
+  getKeyStore(): typeof keyStores.InMemoryKeyStore.prototype {
+    return this.keyStore;
+  }
+
+  getNearConnection(): Near {
+    return this.near;
   }
 
   getExplorerUrl(txHash?: string): string {
-    const baseUrl = NEAR_NETWORKS[this.config.NEAR_NETWORK].explorerUrl;
+    const baseUrl = NEAR_NETWORKS[this.nearConfig.NEAR_NETWORK].explorerUrl;
     if (txHash) {
       return `${baseUrl}/transactions/${txHash}`;
     }
-    return `${baseUrl}/accounts/${this.config.NEAR_ADDRESS}`;
+    return `${baseUrl}/accounts/${this.nearConfig.NEAR_ADDRESS}`;
   }
 
   static async start(runtime: IAgentRuntime): Promise<WalletService> {

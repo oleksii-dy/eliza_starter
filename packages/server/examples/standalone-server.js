@@ -40,7 +40,6 @@ const exampleCharacter = {
     ],
   ],
   postExamples: [],
-  people: [],
   topics: ['general assistance', 'questions', 'help'],
   style: {
     all: [
@@ -50,8 +49,7 @@ const exampleCharacter = {
     ],
     chat: ['be conversational and friendly', 'use a warm, approachable tone'],
     post: ['be informative and engaging'],
-  },
-  adjectives: ['helpful', 'knowledgeable', 'friendly', 'reliable'],
+  }
 };
 
 async function main() {

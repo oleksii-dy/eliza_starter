@@ -320,7 +320,6 @@ export interface Character {
   messageExamples?: MessageExample[][];
   postExamples?: string[];
   topics?: string[];
-  adjectives?: string[];
   knowledge?: (string | { path: string; shared?: boolean })[];
   plugins?: string[];
   settings?: {

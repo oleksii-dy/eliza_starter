@@ -3,14 +3,14 @@ import { runPluginMigrations } from './custom-migrator';
 import type { DrizzleDatabase } from './types';
 
 export class DatabaseMigrationService {
-  private db: any | null = null;
+  private db: DrizzleDatabase | null = null;
   private registeredSchemas = new Map<string, any>();
 
   constructor() {
     // No longer extending Service, so no need to call super
   }
 
-  async initializeWithDatabase(db: any): Promise<void> {
+  async initializeWithDatabase(db: DrizzleDatabase): Promise<void> {
     this.db = db;
     logger.info('DatabaseMigrationService initialized with database');
   }
@@ -20,12 +20,6 @@ export class DatabaseMigrationService {
       if (plugin.schema) {
         this.registeredSchemas.set(plugin.name, plugin.schema);
         logger.info(`Registered schema for plugin: ${plugin.name}`);
-
-        // Debug log for test plugin
-        if (plugin.name.includes('test-comprehensive-migration')) {
-          console.log(`[MIGRATION SERVICE] Test plugin schema keys:`, Object.keys(plugin.schema));
-          console.log(`[MIGRATION SERVICE] Test plugin schema users table:`, !!plugin.schema.users);
-        }
       }
     }
     logger.info(

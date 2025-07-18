@@ -1,16 +1,15 @@
+import { getElizaCharacter } from '@/src/characters/eliza';
+import { startAgent } from '@/src/commands/start';
 import { loadProject } from '@/src/project';
-import { AgentServer, jsonToCharacter, loadCharacterTryPath } from '@elizaos/server';
 import { buildProject, findNextAvailablePort, TestRunner, UserEnvironment } from '@/src/utils';
 import { type DirectoryInfo } from '@/src/utils/directory-detection';
-import { logger, type IAgentRuntime, type ProjectAgent, Project } from '@elizaos/core';
+import { logger, Project, type IAgentRuntime, type ProjectAgent } from '@elizaos/core';
+import { AgentServer, jsonToCharacter, loadCharacterTryPath } from '@elizaos/server';
 import * as dotenv from 'dotenv';
 import * as fs from 'node:fs';
 import path from 'node:path';
-import { getElizaCharacter } from '@/src/characters/eliza';
-import { startAgent } from '@/src/commands/start';
 import { E2ETestOptions, TestResult } from '../types';
 import { processFilterName } from '../utils/project-utils';
-import { cwd } from 'node:process';
 
 /**
  * Function that runs the end-to-end tests.
@@ -180,6 +179,8 @@ export async function runE2eTests(
             }
             const defaultElizaCharacter = getElizaCharacter();
 
+            logger.info(`Using default Eliza character for testing: ${defaultElizaCharacter.name}`);
+
             // The startAgent function now handles all dependency resolution,
             // including testDependencies when isTestMode is true.
             const runtime = await startAgent(
@@ -299,6 +300,17 @@ export async function runE2eTests(
         }
         return { failed: true };
       } finally {
+        // Stop server and agents first to ensure clean shutdown
+        if (server) {
+          try {
+            logger.info('Stopping server and agents...');
+            await server.stop();
+            logger.info('Server stopped successfully');
+          } catch (serverStopError) {
+            logger.warn(`Failed to stop server: ${serverStopError}`);
+          }
+        }
+
         // Clean up the ELIZA_TESTING_PLUGIN environment variable
         if (process.env.ELIZA_TESTING_PLUGIN) {
           delete process.env.ELIZA_TESTING_PLUGIN;

@@ -4,11 +4,11 @@ import {
   elizaLogger,
   type IAgentRuntime,
   type Memory,
-  ModelClass,
   type State,
   type Action,
-  composeContext,
-  generateObject,
+  ModelType,
+  composePrompt,
+  parseKeyValueXml,
 } from '@elizaos/core';
 import { z } from 'zod';
 import { walletProvider } from '../providers/wallet';
@@ -22,29 +22,46 @@ export const SwapSchema = z.object({
   amount: z.string(),
 });
 
-const swapTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
+const swapExtractionTemplate = `# Task: Extract token swap parameters from user message
 
-Example response:
-\`\`\`json
-{
-    "inputTokenId": "wrap.testnet",
-    "outputTokenId": "ref.fakes.testnet",
-    "amount": "1.5"
-}
-\`\`\`
-
+# Recent Messages:
 {{recentMessages}}
 
-Given the recent messages and wallet information below:
+# Instructions:
+Analyze the user's message to extract:
+1. The input token (what they want to swap FROM)
+2. The output token (what they want to swap TO)
+3. The amount of input token to swap
 
-{{walletInfo}}
+Common token mappings:
+- NEAR → wrap.testnet (on testnet) or wrap.near (on mainnet)
+- USDC → usdc.fakes.testnet (on testnet)
+- USDT → usdt.fakes.testnet (on testnet)
+- DAI → dai.fakes.testnet (on testnet)
+- REF → ref.fakes.testnet (on testnet)
+- AURORA → aurora.fakes.testnet (on testnet)
 
-Extract the following information about the requested token swap:
-- Input token ID (the token being sold)
-- Output token ID (the token being bought)
-- Amount to swap
+Return the values in XML format:
+<response>
+  <inputTokenId>token-contract.near</inputTokenId>
+  <outputTokenId>token-contract.near</outputTokenId>
+  <amount>number as string</amount>
+</response>
 
-Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.`;
+Examples:
+- "Swap 10 NEAR for USDC"
+<response>
+  <inputTokenId>wrap.testnet</inputTokenId>
+  <outputTokenId>usdc.fakes.testnet</outputTokenId>
+  <amount>10</amount>
+</response>
+
+- "Exchange 100 USDC for REF"
+<response>
+  <inputTokenId>usdc.fakes.testnet</inputTokenId>
+  <outputTokenId>ref.fakes.testnet</outputTokenId>
+  <amount>100</amount>
+</response>`;
 
 export const executeSwap: Action = {
   name: 'EXECUTE_SWAP_NEAR',
@@ -59,45 +76,36 @@ export const executeSwap: Action = {
     state: State | undefined,
     options?: { [key: string]: unknown },
     callback?: HandlerCallback
-  ): Promise<boolean> => {
+  ): Promise<void> => {
     try {
-      // Initialize or update state
-      let currentState: State;
-
-      if (!state) {
-        currentState = (await runtime.composeState(message)) as State;
-      } else {
-        currentState = await runtime.updateRecentMessageState(state);
-      }
-
-      // Get wallet info for context
-      const walletInfo = await walletProvider.get(runtime, message, currentState);
-      currentState.walletInfo = walletInfo;
-
-      // Compose swap context
-      const swapContext = composeContext({
-        state: currentState,
-        template: swapTemplate,
+      // Use LLM to extract swap parameters
+      const prompt = composePrompt({
+        state: {
+          recentMessages: message.content.text || '',
+        },
+        template: swapExtractionTemplate,
       });
 
-      // Generate swap parameters
-      const generatedResult = await generateObject({
-        runtime,
-        context: swapContext,
-        modelClass: ModelClass.LARGE,
-        schema: SwapSchema,
+      const xmlResponse = await runtime.useModel(ModelType.TEXT_LARGE, {
+        prompt,
       });
 
-      const content = generatedResult.object as z.infer<typeof SwapSchema>;
+      // Parse XML response
+      const extractedParams = parseKeyValueXml(xmlResponse);
 
-      // Validate content
-      if (!content || !content.inputTokenId || !content.outputTokenId || !content.amount) {
-        elizaLogger.error('Missing required swap parameters');
+      // Validate extraction
+      if (
+        !extractedParams ||
+        !extractedParams.inputTokenId ||
+        !extractedParams.outputTokenId ||
+        !extractedParams.amount
+      ) {
+        elizaLogger.error('Failed to extract swap parameters', extractedParams);
         callback?.({
-          text: 'I need to know which tokens to swap and the amount.',
+          text: 'I need to know which tokens to swap and the amount. For example: "Swap 10 NEAR for USDC"',
           content: { error: 'Missing required parameters' },
         });
-        return false;
+        return;
       }
 
       // Get swap service
@@ -109,13 +117,13 @@ export const executeSwap: Action = {
 
       // Get quote first
       elizaLogger.info(
-        `Getting quote for swap: ${content.amount} ${content.inputTokenId} → ${content.outputTokenId}`
+        `Getting quote for swap: ${extractedParams.amount} ${extractedParams.inputTokenId} → ${extractedParams.outputTokenId}`
       );
 
       const params: SwapParams = {
-        inputTokenId: content.inputTokenId,
-        outputTokenId: content.outputTokenId,
-        amount: content.amount,
+        inputTokenId: extractedParams.inputTokenId,
+        outputTokenId: extractedParams.outputTokenId,
+        amount: extractedParams.amount,
       };
 
       const quote = await swapService.getQuote(params);
@@ -133,26 +141,26 @@ Would you like to proceed?`,
           },
         });
         // In a real implementation, we'd wait for user confirmation
-        return false;
+        return;
       }
 
       // Execute swap
       elizaLogger.info(
-        `Executing swap: ${content.amount} ${content.inputTokenId} → ${content.outputTokenId}`
+        `Executing swap: ${extractedParams.amount} ${extractedParams.inputTokenId} → ${extractedParams.outputTokenId}`
       );
 
       const result = await swapService.executeSwap(params);
 
       // Send success response
       callback?.({
-        text: `Successfully swapped ${content.amount} ${quote.route.inputToken.symbol} for ${quote.route.outputAmount} ${quote.route.outputToken.symbol}`,
+        text: `Successfully swapped ${extractedParams.amount} ${quote.route.inputToken.symbol} for ${quote.route.outputAmount} ${quote.route.outputToken.symbol}`,
         content: {
           success: true,
           transactionHash: result.transactionHash,
           explorerUrl: result.explorerUrl,
           input: {
             token: quote.route.inputToken.symbol,
-            amount: content.amount,
+            amount: extractedParams.amount,
           },
           output: {
             token: quote.route.outputToken.symbol,
@@ -162,8 +170,6 @@ Would you like to proceed?`,
           route: quote.route.route,
         },
       });
-
-      return true;
     } catch (error) {
       elizaLogger.error('Error during token swap:', error);
 
@@ -182,27 +188,25 @@ Would you like to proceed?`,
           details: error,
         },
       });
-
-      return false;
     }
   },
   examples: [
     [
       {
-        user: '{{user1}}',
+        name: '{{user1}}',
         content: {
           text: 'Swap 10 NEAR for USDC',
         },
       },
       {
-        user: '{{agentName}}',
+        name: '{{agentName}}',
         content: {
           text: "I'll swap 10 NEAR for USDC...",
           action: 'EXECUTE_SWAP_NEAR',
         },
       },
       {
-        user: '{{agentName}}',
+        name: '{{agentName}}',
         content: {
           text: 'Successfully swapped 10 NEAR for 245.67 USDC',
           content: {
@@ -214,20 +218,20 @@ Would you like to proceed?`,
     ],
     [
       {
-        user: '{{user1}}',
+        name: '{{user1}}',
         content: {
           text: 'Exchange 100 USDC for REF tokens',
         },
       },
       {
-        user: '{{agentName}}',
+        name: '{{agentName}}',
         content: {
           text: "I'll exchange 100 USDC for REF tokens...",
           action: 'EXECUTE_SWAP_NEAR',
         },
       },
       {
-        user: '{{agentName}}',
+        name: '{{agentName}}',
         content: {
           text: 'Successfully swapped 100 USDC for 1,234.56 REF',
           content: {
@@ -236,5 +240,5 @@ Would you like to proceed?`,
         },
       },
     ],
-  ] as ActionExample[][],
+  ],
 };

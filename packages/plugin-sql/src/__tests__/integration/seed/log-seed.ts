@@ -20,6 +20,7 @@ export const logTestAgentSettings = {
   messageExamples: [],
   postExamples: [],
   topics: [],
+  adjectives: [],
   knowledge: [],
   plugins: [],
   settings: {

@@ -356,7 +356,7 @@ Test individual components:
 // src/__tests__/actions.test.ts
 import { describe, it, expect, vi } from 'vitest';
 import { myAction } from '../actions/myAction';
-import { createMockRuntime } from '@elizaos/core/test-utils';
+import { createMockRuntime } from '@elizaos/test-utils';
 
 describe('myAction', () => {
   it('should validate messages containing trigger phrase', async () => {

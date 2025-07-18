@@ -9,7 +9,8 @@ import type { TransactionResult, TransferParams } from '../core/types';
 import { GAS_LIMITS, ONE_YOCTO, PATTERNS, ERROR_MESSAGES } from '../core/constants';
 
 export class TransactionService extends BaseNearService {
-  capabilityDescription = 'Handles NEAR transaction building and execution';
+  static serviceType = 'near-transaction';
+  capabilityDescription = 'Handles NEAR Protocol transaction construction and execution';
 
   private walletService!: WalletService;
 

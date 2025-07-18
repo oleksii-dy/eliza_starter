@@ -79,7 +79,6 @@ describe('helpers', () => {
     it('should display all array sections', () => {
       const agent: Partial<Agent> = {
         name: 'Test Agent',
-        adjectives: ['smart', 'funny'],
         topics: ['AI', 'Tech'],
         plugins: ['plugin1', 'plugin2'],
         postExamples: ['Example 1', 'Example 2'],
@@ -87,7 +86,6 @@ describe('helpers', () => {
 
       displayAgent(agent);
 
-      // expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('Adjectives:')); // TODO: Fix for bun test
       // expect(consoleSpy).toHaveBeenCalledWith('  smart'); // TODO: Fix for bun test
       // expect(consoleSpy).toHaveBeenCalledWith('  funny'); // TODO: Fix for bun test
 
@@ -148,7 +146,6 @@ describe('helpers', () => {
         name: 'Test Agent',
         bio: [],
         topics: undefined,
-        adjectives: [],
       };
 
       displayAgent(agent);
@@ -156,7 +153,6 @@ describe('helpers', () => {
       // Should not display empty sections
       // expect(consoleSpy).not.toHaveBeenCalledWith(expect.stringContaining('Bio:')); // TODO: Fix for bun test
       // expect(consoleSpy).not.toHaveBeenCalledWith(expect.stringContaining('Topics:')); // TODO: Fix for bun test
-      // expect(consoleSpy).not.toHaveBeenCalledWith(expect.stringContaining('Adjectives:')); // TODO: Fix for bun test
     });
   });
 

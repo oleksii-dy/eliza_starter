@@ -175,6 +175,26 @@ export interface StakeContent extends Content {
   amount?: string | number;
 }
 
+export interface EscrowParams {
+  escrowType: 'payment' | 'bet';
+  description: string;
+  parties: Array<{
+    accountId: string;
+    amount: string;
+    condition?: string;
+  }>;
+  arbiter: string;
+  deadline?: number;
+}
+
+export interface EscrowContent {
+  escrowId: string;
+  escrowType: string;
+  amount: string;
+  parties: string[];
+  conditions?: string[];
+}
+
 // Service status types
 export interface ServiceStatus {
   name: string;
@@ -232,4 +252,11 @@ export interface PortfolioAnalytics {
   }>;
   transactions24h: number;
   gasSpent24h: string;
+}
+
+export interface CrossChainParams {
+  targetChain: string;
+  recipientAddress: string;
+  amount: string;
+  tokenId?: string;
 }

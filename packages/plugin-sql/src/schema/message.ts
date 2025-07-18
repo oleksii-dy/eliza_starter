@@ -1,4 +1,4 @@
-import { pgTable, text, jsonb, timestamp, type AnyPgColumn } from 'drizzle-orm/pg-core';
+import { pgTable, text, jsonb, timestamp } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { channelTable } from './channel';
 
@@ -10,12 +10,9 @@ export const messageTable = pgTable('central_messages', {
   authorId: text('author_id').notNull(),
   content: text('content').notNull(),
   rawMessage: jsonb('raw_message'),
-  inReplyToRootMessageId: text('in_reply_to_root_message_id').references(
-    (): AnyPgColumn => messageTable.id,
-    {
-      onDelete: 'set null',
-    }
-  ),
+  inReplyToRootMessageId: text('in_reply_to_root_message_id').references(() => messageTable.id, {
+    onDelete: 'set null',
+  }),
   sourceType: text('source_type'),
   sourceId: text('source_id'),
   metadata: jsonb('metadata'),

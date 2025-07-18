@@ -821,9 +821,6 @@ export type Character = {
   /** Known topics */
   topics: string[];
 
-  /** Character traits */
-  adjectives: string[];
-
   /** Optional knowledge base */
   knowledge?: (
     | string

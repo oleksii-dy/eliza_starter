@@ -1,20 +1,31 @@
 import type { Plugin } from '@elizaos/core';
-import { walletProvider } from './providers/wallet';
-import { executeSwap } from './actions/swap';
+
+// Services
+import {
+  WalletService,
+  TransactionService,
+  SwapService,
+  StorageService,
+  RainbowBridgeService,
+  MarketplaceService,
+  GameService,
+  SmartContractEscrowService,
+  OnChainMessagingService,
+} from './services';
+
+// Actions
 import { executeTransfer } from './actions/transfer';
+import { executeSwap } from './actions/swap';
 import { storageActions } from './actions/storage';
 import { crossChainActions } from './actions/crosschain';
-import { escrowAction } from './actions/escrow';
-import { WalletService } from './services/WalletService';
-import { TransactionService } from './services/TransactionService';
-import { SwapService } from './services/SwapService';
-import { StorageService } from './services/StorageService';
-import { CrossChainService } from './services/CrossChainService';
-import { MarketplaceService } from './services/MarketplaceService';
-import { GameService } from './services/GameService';
-import { EscrowService } from './services/EscrowService';
-import nearPluginTestSuite from './__tests__/e2e/near-plugin.test';
-import storageServiceTestSuite from './__tests__/services/StorageService.test';
+import { escrowActions } from './actions/escrow';
+
+// Providers
+import { walletProvider } from './providers/wallet';
+
+// Tests
+import testSuites from './__tests__/e2e';
+export const tests = testSuites;
 
 /**
  * NEAR Protocol plugin for ElizaOS
@@ -22,66 +33,52 @@ import storageServiceTestSuite from './__tests__/services/StorageService.test';
  * This plugin provides:
  * - NEAR wallet management and transactions
  * - Token swaps on Ref Finance
- * - Cross-chain operations via NEAR Chain Signatures
+ * - Cross-chain operations via Rainbow Bridge (real implementation)
  * - On-chain storage for agent memory
  * - Agent marketplace for services
  * - Multi-agent games
+ * - Smart contract escrow (real on-chain implementation)
+ * - On-chain messaging for decentralized agent communication
  */
 export const nearPlugin: Plugin = {
   name: 'near',
-  description: 'NEAR Protocol blockchain integration plugin for ElizaOS',
+  description: 'NEAR Protocol blockchain integration plugin for ElizaOS with real smart contracts',
 
   providers: [walletProvider],
-  actions: [executeTransfer, executeSwap, ...storageActions, ...crossChainActions, escrowAction],
+  actions: [
+    executeTransfer,
+    executeSwap,
+    ...storageActions,
+    ...crossChainActions,
+    ...escrowActions,
+  ],
   services: [
     WalletService as any,
     TransactionService as any,
     SwapService as any,
     StorageService as any,
-    CrossChainService as any,
+    RainbowBridgeService as any, // Real Rainbow Bridge implementation
     MarketplaceService as any,
     GameService as any,
-    EscrowService as any,
+    SmartContractEscrowService as any, // Real escrow smart contract
+    OnChainMessagingService as any, // On-chain messaging contract
   ],
+  // Include the test suites
+  tests: testSuites,
 };
 
-// Export all services for direct usage
-export {
-  WalletService,
-  TransactionService,
-  SwapService,
-  StorageService,
-  CrossChainService,
-  MarketplaceService,
-  GameService,
-  EscrowService,
-};
+// Re-export core types and utilities
+export * from './core/types';
+export * from './core/errors';
+export * from './core/constants';
 
-// Export all actions
-export { executeTransfer, executeSwap, storageActions, crossChainActions, escrowAction };
+// Re-export services for direct usage
+export * from './services';
 
-// Export providers
+// Re-export actions
+export { executeTransfer, executeSwap, storageActions, crossChainActions, escrowActions };
+
+// Re-export providers
 export { walletProvider };
-
-// Re-export types
-export type {
-  NearPluginConfig,
-  NearToken,
-  TokenBalance,
-  TransferParams,
-  SwapParams,
-  TransactionResult,
-  WalletInfo,
-  SwapQuote,
-  SwapRoute,
-} from './core/types';
-
-export {
-  NearPluginError,
-  NearErrorCode,
-  isNearError,
-  handleNearError,
-  formatErrorMessage,
-} from './core/errors';
 
 export default nearPlugin;

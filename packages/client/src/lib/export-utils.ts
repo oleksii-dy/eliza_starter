@@ -36,7 +36,6 @@ export function agentToCharacterData(agent: Agent): Record<string, any> {
     messageExamples: agent.messageExamples,
     postExamples: agent.postExamples,
     topics: agent.topics,
-    adjectives: agent.adjectives,
     knowledge: agent.knowledge,
     plugins: agent.plugins,
     settings: agent.settings ? { ...agent.settings } : undefined,

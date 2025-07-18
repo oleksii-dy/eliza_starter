@@ -4,12 +4,12 @@ import { VECTOR_DIMS } from '@elizaos/core';
 import { memoryTable } from './memory';
 
 export const DIMENSION_MAP = {
-  [VECTOR_DIMS.SMALL]: 'dim_384',
-  [VECTOR_DIMS.MEDIUM]: 'dim_512',
-  [VECTOR_DIMS.LARGE]: 'dim_768',
-  [VECTOR_DIMS.XL]: 'dim_1024',
-  [VECTOR_DIMS.XXL]: 'dim_1536',
-  [VECTOR_DIMS.XXXL]: 'dim_3072',
+  [VECTOR_DIMS.SMALL]: 'dim384',
+  [VECTOR_DIMS.MEDIUM]: 'dim512',
+  [VECTOR_DIMS.LARGE]: 'dim768',
+  [VECTOR_DIMS.XL]: 'dim1024',
+  [VECTOR_DIMS.XXL]: 'dim1536',
+  [VECTOR_DIMS.XXXL]: 'dim3072',
 } as const;
 
 /**
@@ -20,23 +20,23 @@ export const embeddingTable = pgTable(
   'embeddings',
   {
     id: uuid('id').primaryKey().defaultRandom().notNull(),
-    memory_id: uuid('memory_id').references(() => memoryTable.id, { onDelete: 'cascade' }),
-    created_at: timestamp('created_at')
-      .notNull()
-      .$defaultFn(() => new Date()),
-    dim_384: vector('dim_384', { dimensions: VECTOR_DIMS.SMALL }),
-    dim_512: vector('dim_512', { dimensions: VECTOR_DIMS.MEDIUM }),
-    dim_768: vector('dim_768', { dimensions: VECTOR_DIMS.LARGE }),
-    dim_1024: vector('dim_1024', { dimensions: VECTOR_DIMS.XL }),
-    dim_1536: vector('dim_1536', { dimensions: VECTOR_DIMS.XXL }),
-    dim_3072: vector('dim_3072', { dimensions: VECTOR_DIMS.XXXL }),
+    memoryId: uuid('memory_id').references(() => memoryTable.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at')
+      .default(sql`now()`)
+      .notNull(),
+    dim384: vector('dim_384', { dimensions: VECTOR_DIMS.SMALL }),
+    dim512: vector('dim_512', { dimensions: VECTOR_DIMS.MEDIUM }),
+    dim768: vector('dim_768', { dimensions: VECTOR_DIMS.LARGE }),
+    dim1024: vector('dim_1024', { dimensions: VECTOR_DIMS.XL }),
+    dim1536: vector('dim_1536', { dimensions: VECTOR_DIMS.XXL }),
+    dim3072: vector('dim_3072', { dimensions: VECTOR_DIMS.XXXL }),
   },
   (table) => [
     check('embedding_source_check', sql`"memory_id" IS NOT NULL`),
-    index('idx_embedding_memory').on(table.memory_id),
+    index('idx_embedding_memory').on(table.memoryId),
     foreignKey({
       name: 'fk_embedding_memory',
-      columns: [table.memory_id],
+      columns: [table.memoryId],
       foreignColumns: [memoryTable.id],
     }).onDelete('cascade'),
   ]
@@ -44,15 +44,15 @@ export const embeddingTable = pgTable(
 
 /**
  * Defines the possible values for the Embedding Dimension Column.
- * It can be "dim_384", "dim_512", "dim_768", "dim_1024", "dim_1536", or "dim_3072".
+ * It can be "dim384", "dim512", "dim768", "dim1024", "dim1536", or "dim3072".
  */
 export type EmbeddingDimensionColumn =
-  | 'dim_384'
-  | 'dim_512'
-  | 'dim_768'
-  | 'dim_1024'
-  | 'dim_1536'
-  | 'dim_3072';
+  | 'dim384'
+  | 'dim512'
+  | 'dim768'
+  | 'dim1024'
+  | 'dim1536'
+  | 'dim3072';
 
 /**
  * Retrieve the type of a specific column in the EmbeddingTable based on the EmbeddingDimensionColumn key.

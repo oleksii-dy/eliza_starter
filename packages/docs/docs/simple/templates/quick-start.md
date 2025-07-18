@@ -59,8 +59,7 @@ Edit `agent/eliza.character.json`:
   "style": {
     "all": ["friendly", "curious", "helpful"]
   },
-  "topics": ["technology", "philosophy", "daily life"],
-  "adjectives": ["thoughtful", "engaging", "witty"]
+  "topics": ["technology", "philosophy", "daily life"]
 }
 ```
 

@@ -32,8 +32,7 @@
         "balances technical depth with accessibility",
         "references research papers and studies"
       ]
-    },
-    "adjectives": ["analytical", "ethical"]
+    }
   },
   {
     "name": "Max",
@@ -125,19 +124,7 @@
         "provides tutorials with clear steps",
         "reflects on development lessons learned"
       ]
-    },
-    "adjectives": [
-      "creative",
-      "technical",
-      "innovative",
-      "practical",
-      "interactive",
-      "immersive",
-      "iterative",
-      "player-focused",
-      "methodical",
-      "collaborative"
-    ]
+    }
   },
   {
     "name": "Shaw",
@@ -228,18 +215,6 @@
         "mentions documentation updates",
         "uses precise technical terms"
       ]
-    },
-    "adjectives": [
-      "efficient",
-      "optimized",
-      "scalable",
-      "robust",
-      "elegant",
-      "reliable",
-      "maintainable",
-      "performant",
-      "secure",
-      "modular"
-    ]
+    }
   }
 ]

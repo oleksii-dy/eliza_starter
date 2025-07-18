@@ -20,8 +20,6 @@ describe('Character File Size Limits - Issue #5268 Regression Test', () => {
         chat: [],
         post: [],
       },
-      adjectives: [],
-      people: [],
       clients: [],
     };
 

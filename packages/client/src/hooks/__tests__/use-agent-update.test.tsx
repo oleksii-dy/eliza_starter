@@ -63,7 +63,6 @@ type MockAgent = {
   system: string;
   bio: string[];
   topics: string[];
-  adjectives: string[];
   plugins: string[];
   style: {
     all: string[];
@@ -101,7 +100,6 @@ describe('useAgentUpdate hook', () => {
       system: 'Initial system prompt',
       bio: ['Initial bio'],
       topics: ['Initial topic'],
-      adjectives: ['Initial adjective'],
       plugins: ['initial-plugin'],
       style: {
         all: ['Initial style all'],
@@ -125,7 +123,6 @@ describe('useAgentUpdate hook', () => {
       system: 'Template system prompt',
       bio: ['Template bio 1', 'Template bio 2'],
       topics: ['Template topic 1', 'Template topic 2'],
-      adjectives: ['Template adjective 1', 'Template adjective 2'],
       plugins: ['template-plugin-1', 'template-plugin-2'],
       style: {
         all: ['Template style all 1', 'Template style all 2'],
@@ -164,7 +161,6 @@ describe('useAgentUpdate hook', () => {
     // Check array fields
     expect(updateField).toHaveBeenCalledWith('bio', templateAgent.bio);
     expect(updateField).toHaveBeenCalledWith('topics', templateAgent.topics);
-    expect(updateField).toHaveBeenCalledWith('adjectives', templateAgent.adjectives);
     expect(updateField).toHaveBeenCalledWith('plugins', templateAgent.plugins);
 
     // Check style fields
@@ -194,7 +190,6 @@ describe('useAgentUpdate hook', () => {
       system: 'Initial',
       bio: [],
       topics: [],
-      adjectives: [],
       plugins: [],
       style: { all: [], chat: [], post: [] },
       settings: {
@@ -212,7 +207,6 @@ describe('useAgentUpdate hook', () => {
       system: 'Template',
       bio: [],
       topics: [],
-      adjectives: [],
       plugins: [],
       style: { all: [], chat: [], post: [] },
       settings: {

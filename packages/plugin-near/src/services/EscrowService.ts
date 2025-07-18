@@ -45,7 +45,9 @@ export interface BetIntent {
 }
 
 export class EscrowService extends BaseNearService {
-  capabilityDescription = 'Manages escrow contracts for bets, trades, and conditional payments';
+  static serviceType = 'near-escrow';
+  capabilityDescription =
+    'Manages escrow services for conditional payments and bets between agents';
 
   private walletService!: WalletService;
   private storageService!: StorageService;

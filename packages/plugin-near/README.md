@@ -1,16 +1,68 @@
-# @elizaos/plugin-near
+# NEAR Protocol Plugin for ElizaOS
 
-A comprehensive NEAR Protocol plugin for ElizaOS that enables token transfers, swaps via Ref Finance, and full wallet management.
+This plugin provides NEAR Protocol blockchain integration for ElizaOS agents, enabling them to interact with the NEAR ecosystem.
+
+## Quick Answers
+
+### 💰 Contract Deployment Costs
+
+- **JavaScript contracts**: ~2-3 NEAR required (500KB contracts)
+- **Rust contracts**: ~1-2 NEAR required (smaller size)
+- **Testnet NEAR**: FREE from faucets (not purchased)
+- **Local development**: $0 - completely free!
+
+### 🆓 Getting Free Testnet NEAR
+
+1. **NEAR Faucet**: https://near-faucet.io/
+2. **MyNearWallet**: https://testnet.mynearwallet.com/ (gives initial NEAR)
+3. **Discord Bot**: Join NEAR Discord and use `/faucet` command
+
+### 🏠 Local Development (Zero Cost)
+
+```bash
+# Option 1: NEAR Workspaces (recommended)
+npm install --save-dev near-workspaces
+
+# Option 2: NEAR Sandbox
+npm install -g near-sandbox
+near-sandbox --home ~/.near-sandbox init
+near-sandbox --home ~/.near-sandbox run
+```
+
+See [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md) for detailed local setup guide.
 
 ## Features
 
-- 🚀 **Native NEAR transfers** - Send NEAR tokens to any account
-- 💱 **Token swaps** - Swap any NEP-141 tokens using Ref Finance
-- 👛 **Wallet management** - Check balances and manage multiple tokens
-- 🔄 **Automatic retries** - Built-in retry logic for failed transactions
-- 🛡️ **Type-safe** - Full TypeScript support with comprehensive types
-- 🧪 **Well-tested** - Extensive test coverage for all functionality
-- 📊 **Service architecture** - Modular services for easy extension
+### 🔧 Core Services
+
+- **Wallet Management**: Create and manage NEAR wallets
+- **Token Transfers**: Send and receive NEAR tokens
+- **Token Swaps**: Exchange tokens via Ref Finance
+- **Staking**: Stake NEAR tokens with validators
+- **Cross-chain Bridge**: Bridge assets to/from Ethereum via Rainbow Bridge
+- **NFT Marketplace**: Buy, sell, and mint NFTs
+- **Storage**: Decentralized storage integration
+- **Smart Contracts**: Deploy and interact with smart contracts
+- **On-chain Messaging**: Decentralized messaging between agents
+- **Escrow Service**: Multi-party escrow with arbiter support
+
+### 🎯 Actions
+
+- `SEND_NEAR`: Transfer NEAR tokens
+- `EXECUTE_SWAP_NEAR`: Swap tokens on Ref Finance
+- `STAKE_NEAR`: Stake NEAR with validators
+- `CREATE_ESCROW`: Create multi-party escrow contracts
+- `RESOLVE_ESCROW`: Resolve escrow disputes
+- `SEND_MESSAGE_NEAR`: Send on-chain messages
+- `CREATE_ROOM_NEAR`: Create messaging rooms
+- `BRIDGE_TO_ETHEREUM`: Bridge assets to Ethereum
+- `LIST_NFT`: List NFTs for sale
+- `MINT_NFT`: Create new NFTs
+- `PLAY_GAME`: Gaming integrations
+
+### 📊 Providers
+
+- `near-wallet`: Provides wallet balance and portfolio information
 
 ## Installation
 
@@ -20,193 +72,71 @@ npm install @elizaos/plugin-near
 
 ## Configuration
 
-The plugin requires the following environment variables:
+Set the following environment variables:
 
-```bash
+```env
 # Required
-NEAR_WALLET_SECRET_KEY=ed25519:your-secret-key
+NEAR_WALLET_SECRET_KEY=ed25519:your-private-key
 NEAR_WALLET_PUBLIC_KEY=ed25519:your-public-key
 NEAR_ADDRESS=your-account.near
 
 # Optional (defaults shown)
-NEAR_NETWORK=testnet           # or 'mainnet'
+NEAR_NETWORK=testnet
 NEAR_RPC_URL=https://neart.lava.build
-NEAR_SLIPPAGE=1               # 1% default slippage for swaps
+NEAR_SLIPPAGE=1
+
+# Smart Contract Addresses (optional - throws errors if not set and contracts are used)
+NEAR_ESCROW_CONTRACT=escrow.your-account.near
+NEAR_MESSAGING_CONTRACT=messaging.your-account.near
 ```
 
 ## Usage
 
-### Basic Setup
-
 ```typescript
 import { nearPlugin } from '@elizaos/plugin-near';
-import { createAgent } from '@elizaos/core';
 
-const agent = createAgent({
-  plugins: [nearPlugin],
-  // ... other configuration
-});
+// Register the plugin
+elizaAgent.use(nearPlugin);
+
+// The agent can now respond to NEAR-related commands
 ```
 
-### Available Actions
+## Smart Contracts
 
-#### Transfer NEAR
+### Escrow Contract
 
-```typescript
-// Natural language
-'Send 10 NEAR to alice.near';
-'Transfer 5.5 NEAR to bob.near';
+Multi-party escrow with arbiter support:
 
-// With tokens
-'Send 100 USDC to charlie.near';
-'Transfer 50 REF tokens to dave.near';
-```
+- Create escrows for payments or bets
+- 2% arbiter fee (configurable)
+- Automatic refunds on cancellation
+- State tracking (Pending → Active → Resolved/Cancelled)
 
-#### Swap Tokens
+### Messaging Contract
 
-```typescript
-// Simple swaps
-'Swap 10 NEAR for USDC';
-'Exchange 100 USDC for REF tokens';
-'Trade 50 REF for NEAR';
+On-chain messaging for agents:
 
-// The agent will:
-// 1. Get a quote with price impact
-// 2. Warn if slippage is high
-// 3. Execute the swap via Ref Finance
-```
+- Room-based group messaging
+- Direct messages between users
+- Message editing and deletion
+- User blocking functionality
 
-### Services
+## SDK Compatibility Issue
 
-The plugin provides three main services:
+**Current Status**: The smart contracts are built with NEAR SDK 5.x which has a known incompatibility with the current NEAR runtime. This causes a "PrepareError(Deserialization)" error when trying to interact with the contracts.
 
-#### WalletService
+**Impact**: When smart contracts are not available or fail to initialize, the plugin will throw clear error messages instead of falling back to mock implementations. This ensures developers are aware of deployment issues.
 
-Manages NEAR wallet connections and basic operations:
+**Solutions**:
 
-```typescript
-const walletService = runtime.getService('near-wallet');
+1. Wait for NEAR runtime updates to support SDK 5.x
+2. Use NEAR SDK 4.x or 3.x for contract deployment
+3. Deploy contracts with alternative tools that support SDK 5.x
 
-// Get wallet info
-const info = await walletService.getWalletInfo();
-console.log(info.balance); // NEAR balance in yocto
-console.log(info.tokens); // Array of token balances
-
-// Check if account has enough balance
-const hasBalance = await walletService.hasEnoughBalance(amount, includeGas);
-```
-
-#### TransactionService
-
-Handles all transaction building and execution:
-
-```typescript
-const txService = runtime.getService('near-transaction');
-
-// Send NEAR
-const result = await txService.sendNear({
-  recipient: 'alice.near',
-  amount: '10', // in NEAR
-});
-
-// Send tokens
-const tokenResult = await txService.sendToken({
-  recipient: 'bob.near',
-  amount: '100',
-  tokenId: 'usdc.fakes.testnet',
-});
-```
-
-#### SwapService
-
-Manages token swaps via Ref Finance:
-
-```typescript
-const swapService = runtime.getService('near-swap');
-
-// Get swap quote
-const quote = await swapService.getQuote({
-  inputTokenId: 'wrap.near',
-  outputTokenId: 'usdc.fakes.testnet',
-  amount: '1000000000000000000000000', // 1 NEAR in yocto
-});
-
-// Execute swap
-const swapResult = await swapService.executeSwap({
-  inputTokenId: 'wrap.near',
-  outputTokenId: 'usdc.fakes.testnet',
-  amount: '1000000000000000000000000',
-});
-```
-
-## Error Handling
-
-The plugin includes comprehensive error handling with specific error codes:
-
-```typescript
-import { NearPluginError, NearErrorCode } from '@elizaos/plugin-near';
-
-try {
-  await txService.sendNear(params);
-} catch (error) {
-  if (error instanceof NearPluginError) {
-    switch (error.code) {
-      case NearErrorCode.INSUFFICIENT_BALANCE:
-        console.log('Not enough balance');
-        break;
-      case NearErrorCode.ACCOUNT_NOT_FOUND:
-        console.log('Account does not exist');
-        break;
-      case NearErrorCode.SLIPPAGE_EXCEEDED:
-        console.log('Price changed too much');
-        break;
-      // ... handle other errors
-    }
-  }
-}
-```
-
-## Advanced Features
-
-### Custom Slippage
-
-Set custom slippage tolerance for swaps:
-
-```typescript
-const swapResult = await swapService.executeSwap({
-  inputTokenId: 'wrap.near',
-  outputTokenId: 'usdc.fakes.testnet',
-  amount: '1000000000000000000000000',
-  slippageTolerance: 0.05, // 5% slippage
-});
-```
-
-### Storage Deposits
-
-The plugin automatically handles storage deposits for NEP-141 tokens. When sending tokens to an account for the first time, it will:
-
-1. Check if the recipient has storage deposit
-2. Add storage deposit transaction if needed
-3. Execute the transfer
-
-### Price Impact Protection
-
-Swaps automatically check price impact and warn users when it exceeds 5%:
+**Error Handling**: The plugin now throws explicit errors when contracts fail, making it easier to identify and fix issues:
 
 ```
-Warning: This swap has high price impact (8.5%).
-You'll receive approximately 92 USDC.
-Would you like to proceed?
-```
-
-### Explorer Integration
-
-All transactions include explorer URLs for easy verification:
-
-```typescript
-const result = await txService.sendNear(params);
-console.log(`View transaction: ${result.explorerUrl}`);
-// https://explorer.testnet.near.org/transactions/4jK3x...
+❌ Failed to initialize escrow service - NEAR_RPC_ERROR: Failed to connect to escrow contract...
 ```
 
 ## Development
@@ -214,101 +144,67 @@ console.log(`View transaction: ${result.explorerUrl}`);
 ### Building
 
 ```bash
-# Install dependencies
-npm install
-
-# Build the plugin
-npm run build
-
-# Run tests
-npm test
-
-# Run tests with coverage
-npm run test:coverage
+bun install
+bun run build
 ```
 
 ### Testing
 
-The plugin includes comprehensive tests for all services and actions:
-
 ```bash
-# Run all tests
-npm test
+# Run all tests with bun
+bun test
 
 # Run specific test file
-npm test src/__tests__/plugin.test.ts
+bun test src/__tests__/plugin-functionality.test.ts
 
-# Run with watch mode
-npm test -- --watch
+# Note: We use bun test, not vitest
 ```
 
-## Network Support
+### Contract Development
 
-The plugin supports both mainnet and testnet:
+```bash
+cd contracts/escrow
+cargo build --target wasm32-unknown-unknown --release
 
-### Testnet (default)
+# Deploy (when SDK compatibility is resolved)
+near deploy escrow.your-account.near target/wasm32-unknown-unknown/release/elizaos_escrow.wasm
+```
 
-- RPC: https://neart.lava.build
-- Explorer: https://explorer.testnet.near.org
-- Ref Finance: ref-finance-101.testnet
+## Examples
 
-### Mainnet
+### Send NEAR
 
-- RPC: https://near.lava.build
-- Explorer: https://explorer.near.org
-- Ref Finance: v2.ref-finance.near
+```typescript
+// User: "Send 5 NEAR to alice.near"
+// Agent: Executes transfer and confirms transaction
+```
 
-## Common Token Addresses
+### Create Escrow
 
-### Mainnet
+```typescript
+// User: "Create an escrow to pay bob.near 10 NEAR when he delivers the website"
+// Agent: Creates escrow contract and provides escrow ID
+```
 
-- wNEAR: `wrap.near`
-- USDT: `dac17f958d2ee523a2206206994597c13d831ec7.factory.bridge.near`
-- USDC: `a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48.factory.bridge.near`
-- DAI: `6b175474e89094c44da98b954eedeac495271d0f.factory.bridge.near`
-- REF: `token.v2.ref-finance.near`
+### Swap Tokens
 
-### Testnet
+```typescript
+// User: "Swap 100 NEAR for USDC"
+// Agent: Executes swap on Ref Finance
+```
 
-- wNEAR: `wrap.testnet`
-- USDT: `usdt.fakes.testnet`
-- USDC: `usdc.fakes.testnet`
-- DAI: `dai.fakes.testnet`
-- REF: `ref.fakes.testnet`
+## Architecture
 
-## Troubleshooting
+The plugin follows a service-oriented architecture:
 
-### "Account not found" error
-
-- Ensure the NEAR account exists on the network you're using
-- Check that you're on the correct network (mainnet vs testnet)
-
-### "Insufficient balance" error
-
-- The plugin reserves 0.1 NEAR for storage and gas
-- Ensure you have enough balance including gas fees
-
-### "No swap route found" error
-
-- The token pair might not have liquidity on Ref Finance
-- Try swapping through wNEAR as an intermediate token
-
-### Transaction failures
-
-- Check the explorer URL for detailed error messages
-- Ensure your account has valid access keys
-- Verify the recipient account exists
+- **Services**: Long-running stateful components (WalletService, TransactionService, etc.)
+- **Actions**: User-triggered operations that use services
+- **Providers**: Supply contextual information to the agent
 
 ## Contributing
 
-Contributions are welcome! Please ensure:
-
-1. All tests pass
-2. Coverage remains above 80%
-3. Code follows the existing style
-4. New features include tests
-5. Documentation is updated
+Contributions are welcome! Please see the main ElizaOS contributing guidelines.
 
 ## License
 
-MIT
+MIT License - see LICENSE file for details

@@ -99,7 +99,6 @@ interface Character {
   bio: string | string[];
   lore: string | string[];
   topics: string | string[];
-  adjectives: string | string[];
 
   // Behavior
   style: {
@@ -593,7 +592,7 @@ interface IDatabaseAdapter {
   getRoomsByWorld(worldId: UUID): Promise<Room[]>;
 
   // Participant Management
-  addParticipantsRoom(entityIds: UUID[], roomId: UUID): Promise<boolean>;
+  addParticipantsToRoom(entityIds: UUID[], roomId: UUID): Promise<boolean>;
   removeParticipant(entityId: UUID, roomId: UUID): Promise<boolean>;
   getParticipantsForEntity(entityId: UUID): Promise<Participant[]>;
   getParticipantsForRoom(roomId: UUID): Promise<UUID[]>;

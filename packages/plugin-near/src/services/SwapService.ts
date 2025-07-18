@@ -21,7 +21,8 @@ import {
 } from '../core/constants';
 
 export class SwapService extends BaseNearService {
-  capabilityDescription = 'Handles token swaps on Ref Finance';
+  static serviceType = 'near-swap';
+  capabilityDescription = 'Manages token swaps on Ref Finance DEX';
 
   private walletService!: WalletService;
   private transactionService!: TransactionService;

@@ -37,7 +37,7 @@ const mockDatabaseAdapter: IDatabaseAdapter = {
   init: mock(async () => undefined),
   close: mock(async () => undefined),
   getConnection: mock(async () => ({})),
-  getEntityByIds: mock(async () => []),
+  getEntitiesByIds: mock(async () => []),
   createEntities: mock(async () => true),
   getMemories: mock(async () => []),
   getMemoryById: mock(async () => null),
@@ -55,7 +55,7 @@ const mockDatabaseAdapter: IDatabaseAdapter = {
   deleteRoom: mock(async () => undefined),
   getRoomsForParticipant: mock(async () => []),
   getRoomsForParticipants: mock(async () => []),
-  addParticipantsRoom: mock(async () => true),
+  addParticipantsToRoom: mock(async () => true),
   removeParticipant: mock(async () => true),
   getParticipantsForEntity: mock(async () => []),
   getParticipantsForRoom: mock(async () => []),
@@ -154,7 +154,6 @@ const mockCharacter: Character = {
   messageExamples: [], // Ensure required fields are present
   postExamples: [],
   topics: [],
-  adjectives: [],
   style: {
     all: [],
     chat: [],
@@ -259,7 +258,7 @@ describe('AgentRuntime (Non-Instrumented Baseline)', () => {
         enabled: true,
       }));
       (mockDatabaseAdapter.updateAgent as any).mockImplementation(async () => true);
-      (mockDatabaseAdapter.getEntityByIds as any).mockImplementation(async () => [
+      (mockDatabaseAdapter.getEntitiesByIds as any).mockImplementation(async () => [
         {
           id: agentId,
           agentId: agentId,

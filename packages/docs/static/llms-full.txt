@@ -7568,7 +7568,6 @@ Define your agent's personality and communication style:
   "messageExamples": [], // Example conversations
   "postExamples": [], // Example social posts
   "topics": [], // Areas of expertise
-  "adjectives": [] // Character traits
 }
 ```
 
@@ -8195,7 +8194,7 @@ abstract runMigrations(migrationsPaths?: string[]): Promise<void>;
 abstract isReady(): Promise<boolean>;
 abstract close(): Promise<void>;
 abstract getConnection(): Promise<unknown>;
-abstract getEntityByIds(entityIds: UUID[]): Promise<Entity[] | null>;
+abstract getEntitiesByIds(entityIds: UUID[]): Promise<Entity[] | null>;
 abstract getEntitiesForRoom(roomId: UUID, includeComponents?: boolean): Promise<Entity[]>;
 abstract createEntities(entities: Entity[]): Promise<boolean>;
 abstract updateEntity(entity: Entity): Promise<void>;
@@ -8277,7 +8276,7 @@ abstract updateRoom(room: Room): Promise<void>;
 abstract deleteRoom(roomId: UUID): Promise<void>;
 abstract getRoomsForParticipant(entityId: UUID): Promise<UUID[]>;
 abstract getRoomsForParticipants(userIds: UUID[]): Promise<UUID[]>;
-abstract addParticipantsRoom(entityIds: UUID[], roomId: UUID): Promise<boolean>;
+abstract addParticipantsToRoom(entityIds: UUID[], roomId: UUID): Promise<boolean>;
 abstract removeParticipant(entityId: UUID, roomId: UUID): Promise<boolean>;
 abstract getParticipantsForEntity(entityId: UUID): Promise<Participant[]>;
 abstract getParticipantsForRoom(roomId: UUID): Promise<UUID[]>;
@@ -8464,7 +8463,7 @@ async removeParticipant(entityId: UUID, roomId: UUID): Promise<boolean>
 async getParticipantsForEntity(entityId: UUID): Promise<Participant[]>
 async getParticipantsForRoom(roomId: UUID): Promise<UUID[]>
 async addParticipant(entityId: UUID, roomId: UUID): Promise<boolean>
-async addParticipantsRoom(entityIds: UUID[], roomId: UUID): Promise<boolean>
+async addParticipantsToRoom(entityIds: UUID[], roomId: UUID): Promise<boolean>
 async ensureWorldExists(
 async ensureRoomExists(
 async composeState(
@@ -8509,7 +8508,7 @@ async updateAgent(agentId: UUID, agent: Partial<Agent>): Promise<boolean>
 async deleteAgent(agentId: UUID): Promise<boolean>
 async ensureAgentExists(agent: Partial<Agent>): Promise<Agent>
 async getEntityById(entityId: UUID): Promise<Entity | null>
-async getEntityByIds(entityIds: UUID[]): Promise<Entity[] | null>
+async getEntitiesByIds(entityIds: UUID[]): Promise<Entity[] | null>
 async getEntitiesForRoom(roomId: UUID, includeComponents?: boolean): Promise<Entity[]>
 async createEntity(entity: Entity): Promise<boolean>
 async createEntities(entities: Entity[]): Promise<boolean>

@@ -132,7 +132,6 @@ Show how your agent should respond:
     "all": ["enthusiastic", "competitive", "fun", "knowledgeable", "supportive"]
   },
   "topics": ["gaming", "esports", "game strategies", "gaming news", "retro games"],
-  "adjectives": ["epic", "legendary", "awesome", "clutch", "pro"],
   "messageExamples": [
     ["user", "What games do you play?"],
     [
@@ -163,7 +162,6 @@ Show how your agent should respond:
     "all": ["creative", "thoughtful", "poetic", "inspiring", "imaginative"]
   },
   "topics": ["writing", "storytelling", "poetry", "creativity", "imagination", "literature"],
-  "adjectives": ["enchanting", "whimsical", "profound", "delightful", "mysterious"],
   "messageExamples": [
     ["user", "I want to write a story"],
     [

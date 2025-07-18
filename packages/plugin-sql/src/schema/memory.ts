@@ -28,22 +28,22 @@ export const memoryTable = pgTable(
   {
     id: uuid('id').primaryKey().notNull(),
     type: text('type').notNull(),
-    created_at: timestamp('created_at')
-      .notNull()
-      .$defaultFn(() => new Date()),
+    createdAt: timestamp('createdAt')
+      .default(sql`now()`)
+      .notNull(),
     content: jsonb('content').notNull(),
-    entity_id: uuid('entity_id').references(() => entityTable.id, {
+    entityId: uuid('entityId').references(() => entityTable.id, {
       onDelete: 'cascade',
     }),
-    agent_id: uuid('agent_id')
+    agentId: uuid('agentId')
       .references(() => agentTable.id, {
         onDelete: 'cascade',
       })
       .notNull(),
-    room_id: uuid('room_id').references(() => roomTable.id, {
+    roomId: uuid('roomId').references(() => roomTable.id, {
       onDelete: 'cascade',
     }),
-    world_id: uuid('world_id'),
+    worldId: uuid('worldId'),
     // .references(() => worldTable.id, {
     //   onDelete: 'set null',
     // }),
@@ -51,21 +51,21 @@ export const memoryTable = pgTable(
     metadata: jsonb('metadata').default({}).notNull(),
   },
   (table) => [
-    index('idx_memories_type_room').on(table.type, table.room_id),
-    index('idx_memories_world_id').on(table.world_id),
+    index('idx_memories_type_room').on(table.type, table.roomId),
+    index('idx_memories_world_id').on(table.worldId),
     foreignKey({
       name: 'fk_room',
-      columns: [table.room_id],
+      columns: [table.roomId],
       foreignColumns: [roomTable.id],
     }).onDelete('cascade'),
     foreignKey({
       name: 'fk_user',
-      columns: [table.entity_id],
+      columns: [table.entityId],
       foreignColumns: [entityTable.id],
     }).onDelete('cascade'),
     foreignKey({
       name: 'fk_agent',
-      columns: [table.agent_id],
+      columns: [table.agentId],
       foreignColumns: [agentTable.id],
     }).onDelete('cascade'),
     // foreignKey({

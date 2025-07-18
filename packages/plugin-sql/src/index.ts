@@ -35,28 +35,22 @@ const globalSingletons = globalSymbols[GLOBAL_SINGLETONS];
 /**
  * Creates a database adapter based on the provided configuration.
  * If a postgresUrl is provided in the config, a PgDatabaseAdapter is initialized using the PostgresConnectionManager.
- * Otherwise, a BunSqliteAdapter is used as the default unless forcePglite is true.
- * Falls back to PGLite if BunSqlite fails to load.
+ * If no postgresUrl is provided, a PgliteDatabaseAdapter is initialized using PGliteClientManager with the dataDir from the config.
  *
  * @param {object} config - The configuration object.
  * @param {string} [config.dataDir] - The directory where data is stored. Defaults to "./.eliza/.elizadb".
  * @param {string} [config.postgresUrl] - The URL for the PostgreSQL database.
- * @param {boolean} [config.forcePglite] - Force the use of PGLite instead of BunSqlite.
  * @param {UUID} agentId - The unique identifier for the agent.
  * @returns {IDatabaseAdapter} The created database adapter.
  */
-export async function createDatabaseAdapter(
+export function createDatabaseAdapter(
   config: {
     dataDir?: string;
     postgresUrl?: string;
-    forcePglite?: boolean;
-    forceBunSqlite?: boolean;
   },
   agentId: UUID
-): Promise<IDatabaseAdapter> {
-  // 1. PostgreSQL has highest priority when URL is provided
+): IDatabaseAdapter {
   if (config.postgresUrl) {
-    logger.info('[plugin-sql] Using PostgreSQL adapter (URL provided)');
     if (!globalSingletons.postgresConnectionManager) {
       globalSingletons.postgresConnectionManager = new PostgresConnectionManager(
         config.postgresUrl
@@ -65,93 +59,14 @@ export async function createDatabaseAdapter(
     return new PgDatabaseAdapter(agentId, globalSingletons.postgresConnectionManager);
   }
 
-  // 2. Explicit force flags take precedence
-  if (config.forceBunSqlite) {
-    logger.info('[plugin-sql] forceBunSqlite is true, using BunSqlite adapter');
+  // Only resolve PGLite directory when we're actually using PGLite
+  const dataDir = resolvePgliteDir(config.dataDir);
 
-    try {
-      // Check if we're running in Bun
-      const isBun = typeof Bun !== 'undefined';
-
-      if (!isBun) {
-        throw new Error('Not running in Bun environment for BunSqlite');
-      }
-
-      const { BunSqliteAdapter } = await import('./bun-sqlite/adapter');
-      const bunConfig = {
-        filename: config.dataDir ? `${config.dataDir}/bun-${agentId}.db` : undefined,
-        inMemory: false,
-      };
-
-      logger.info('[plugin-sql] Using BunSqlite adapter (forced)');
-      return new BunSqliteAdapter(agentId, bunConfig);
-    } catch (error) {
-      logger.error('[plugin-sql] Failed to load BunSqliteAdapter despite force flag:', error);
-      throw new Error(
-        `Failed to create BunSqlite adapter: ${error instanceof Error ? error.message : String(error)}`
-      );
-    }
+  if (!globalSingletons.pgLiteClientManager) {
+    globalSingletons.pgLiteClientManager = new PGliteClientManager({ dataDir });
   }
 
-  if (config.forcePglite) {
-    logger.info('[plugin-sql] forcePglite is true, using PGLite adapter');
-    const dataDir = resolvePgliteDir(config.dataDir);
-
-    if (!globalSingletons.pgLiteClientManager) {
-      globalSingletons.pgLiteClientManager = new PGliteClientManager({ dataDir });
-    }
-
-    return new PgliteDatabaseAdapter(agentId, globalSingletons.pgLiteClientManager);
-  }
-
-  // 3. Default behavior: try PGLite first for better compatibility, fallback to BunSqlite
-  // This provides better isomorphic support across different environments
-  try {
-    logger.info('[plugin-sql] Attempting PGLite adapter (default choice for compatibility)');
-    const dataDir = resolvePgliteDir(config.dataDir);
-
-    if (!globalSingletons.pgLiteClientManager) {
-      globalSingletons.pgLiteClientManager = new PGliteClientManager({ dataDir });
-    }
-
-    const adapter = new PgliteDatabaseAdapter(agentId, globalSingletons.pgLiteClientManager);
-    logger.info('[plugin-sql] Using PGLite adapter as default');
-    return adapter;
-  } catch (pgliteError) {
-    logger.warn(
-      '[plugin-sql] PGLite initialization failed, trying BunSqlite fallback:',
-      pgliteError
-    );
-
-    // Fallback to BunSqlite if PGLite fails
-    try {
-      // Check if we're running in Bun
-      const isBun = typeof Bun !== 'undefined';
-
-      if (!isBun) {
-        throw new Error('Not running in Bun environment for BunSqlite fallback');
-      }
-
-      const { BunSqliteAdapter } = await import('./bun-sqlite/adapter');
-      const bunConfig = {
-        filename: config.dataDir ? `${config.dataDir}/bun-${agentId}.db` : undefined,
-        inMemory: false,
-      };
-
-      logger.info('[plugin-sql] Using BunSqlite adapter as fallback');
-      return new BunSqliteAdapter(agentId, bunConfig);
-    } catch (bunError) {
-      logger.error('[plugin-sql] Both PGLite and BunSqlite failed to initialize:', {
-        pgliteError: pgliteError instanceof Error ? pgliteError.message : String(pgliteError),
-        bunError: bunError instanceof Error ? bunError.message : String(bunError),
-      });
-
-      // Re-throw the original PGLite error as it's more likely to succeed in production
-      throw new Error(
-        `Failed to create database adapter. PGLite error: ${pgliteError instanceof Error ? pgliteError.message : String(pgliteError)}`
-      );
-    }
-  }
+  return new PgliteDatabaseAdapter(agentId, globalSingletons.pgLiteClientManager);
 }
 
 /**
@@ -164,15 +79,11 @@ export async function createDatabaseAdapter(
  * @param {any} _ - Input parameter
  * @param {IAgentRuntime} runtime - The runtime environment for the agent
  */
-// Import test suites
-import { testSuites as e2eTestSuites } from './__tests__/e2e';
-
 export const plugin: Plugin = {
   name: '@elizaos/plugin-sql',
   description: 'A plugin for SQL database access with dynamic schema migrations',
   priority: 0,
   schema,
-  tests: e2eTestSuites,
   init: async (_, runtime: IAgentRuntime) => {
     logger.info('plugin-sql init starting...');
 
@@ -194,24 +105,17 @@ export const plugin: Plugin = {
       runtime.getSetting('PGLITE_PATH') ||
       runtime.getSetting('DATABASE_PATH') ||
       './.eliza/.elizadb';
-    const forcePglite = runtime.getSetting('FORCE_PGLITE') === 'true';
-    const forceBunSqlite = runtime.getSetting('FORCE_BUNSQLITE') === 'true';
 
-    const dbAdapter = await createDatabaseAdapter(
+    const dbAdapter = createDatabaseAdapter(
       {
         dataDir,
         postgresUrl,
-        forcePglite,
-        forceBunSqlite,
       },
       runtime.agentId
     );
 
-    // Initialize the adapter before registering it
-    await dbAdapter.init();
-
     runtime.registerDatabaseAdapter(dbAdapter);
-    logger.info('Database adapter created, initialized, and registered');
+    logger.info('Database adapter created and registered');
 
     // Note: DatabaseMigrationService is not registered as a runtime service
     // because migrations are handled at the server level before agents are loaded
@@ -222,11 +126,4 @@ export default plugin;
 
 // Export additional utilities that may be needed by consumers
 export { DatabaseMigrationService } from './migration-service';
-export { runPluginMigrations } from './custom-migrator';
 export { schema };
-
-// Export alias for backward compatibility
-export const createAdaptiveDatabaseAdapterV2 = createDatabaseAdapter;
-
-// Export schema factory functions for setting database type
-export { setDatabaseType, getSchemaFactory } from './schema';

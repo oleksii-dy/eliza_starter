@@ -14,7 +14,7 @@ import {
   type PgTableFn,
 } from 'drizzle-orm/pg-core';
 
-export type DatabaseType = 'postgres' | 'pglite' | 'sqlite' | 'bun-sqlite';
+export type DatabaseType = 'postgres' | 'pglite';
 
 // Type helpers for cross-database compatibility
 // Since Pglite uses PostgreSQL dialect, we use the same types for both
@@ -67,7 +67,7 @@ export class SchemaFactory {
   vector(name: string, dimensions: number) {
     // Pglite may not support pgvector extension yet
     // For compatibility, we'll store as JSONB for pglite
-    if (this.dbType === 'pglite' || this.dbType === 'sqlite' || this.dbType === 'bun-sqlite') {
+    if (this.dbType === 'pglite') {
       return pgJsonb(name);
     }
     return pgVector(name, { dimensions });
@@ -93,10 +93,6 @@ export class SchemaFactory {
 
   // Helper for timestamp defaults
   defaultTimestamp() {
-    // SQLite uses different syntax for current timestamp
-    if (this.dbType === 'sqlite' || this.dbType === 'bun-sqlite') {
-      return sql`(datetime('now'))`;
-    }
     // Both postgres and pglite support NOW()
     return sql`NOW()`;
   }
@@ -104,7 +100,7 @@ export class SchemaFactory {
   // Helper for random UUID generation
   defaultRandomUuid() {
     // Pglite may not have gen_random_uuid() extension
-    if (this.dbType === 'pglite' || this.dbType === 'sqlite' || this.dbType === 'bun-sqlite') {
+    if (this.dbType === 'pglite') {
       // Will use application-level UUID generation
       return undefined;
     }

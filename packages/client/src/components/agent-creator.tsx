@@ -18,7 +18,6 @@ const defaultCharacter: Partial<Agent> = getTemplateById('none')?.template || {
   system: '',
   bio: [] as string[],
   topics: [] as string[],
-  adjectives: [] as string[],
   plugins: ['@elizaos/plugin-sql', '@elizaos/plugin-openai', '@elizaos/plugin-bootstrap'],
   settings: { secrets: {} },
 };
@@ -43,7 +42,6 @@ export default function AgentCreator() {
       messageExamples: character.messageExamples ?? [],
       postExamples: character.postExamples ?? [],
       topics: character.topics ?? [],
-      adjectives: character.adjectives ?? [],
       plugins: character.plugins ?? [],
       style: {
         all: character.style?.all ?? [],

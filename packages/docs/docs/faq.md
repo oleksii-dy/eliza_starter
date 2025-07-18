@@ -854,7 +854,6 @@ Your character JSON file should follow this structure:
     "Excited to share some tips about effective communication!"
   ],
   "topics": ["technology", "productivity", "communication"],
-  "adjectives": ["helpful", "knowledgeable", "friendly", "professional"],
   "knowledge": ["./knowledge/base-knowledge.txt"],
   "style": {
     "all": ["Be concise and clear", "Use examples when helpful"],
@@ -875,8 +874,7 @@ Your character JSON file should follow this structure:
 {
   "name": "SimpleBot",
   "bio": "I am a helpful AI assistant.",
-  "topics": ["general"],
-  "adjectives": ["helpful"]
+  "topics": ["general"]
 }
 ```
 

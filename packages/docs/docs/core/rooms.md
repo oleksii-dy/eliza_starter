@@ -174,7 +174,7 @@ Rooms can have multiple participants (entities) that can exchange messages.
 await runtime.addParticipant(entityId, roomId);
 
 // Add multiple participants at once (more efficient)
-await runtime.addParticipantsRoom([entityId1, entityId2, entityId3], roomId);
+await runtime.addParticipantsToRoom([entityId1, entityId2, entityId3], roomId);
 
 // Remove a participant from a room
 await runtime.removeParticipant(entityId, roomId);
@@ -353,7 +353,7 @@ const dmRoom = await runtime.createRoom({
 });
 
 // Add both participants
-await runtime.addParticipantsRoom([runtime.agentId, userId], dmRoom);
+await runtime.addParticipantsToRoom([runtime.agentId, userId], dmRoom);
 ```
 
 ### Platform Integration Example

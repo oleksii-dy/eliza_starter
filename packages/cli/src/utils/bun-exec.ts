@@ -1,8 +1,15 @@
-import { type Subprocess } from 'bun';
 import { logger } from '@elizaos/core';
+import { spawn, type SpawnOptions } from 'node:child_process';
+import { promisify } from 'node:util';
+
+// Only import Bun types when in Bun runtime
+type Subprocess<T = any> = any; // Fallback type when not in Bun
 
 // Constants
 const COMMAND_EXISTS_TIMEOUT_MS = 5000; // 5 seconds timeout for command existence checks
+
+// Check if we're running in Bun runtime
+const isBunRuntime = typeof globalThis.Bun !== 'undefined';
 
 export interface ExecResult {
   stdout: string;
@@ -130,6 +137,11 @@ export async function bunExec(
   args: string[] = [],
   options: BunExecOptions = {}
 ): Promise<ExecResult> {
+  // If Bun is not available, use Node.js child_process
+  if (!isBunRuntime) {
+    return nodeExec(command, args, options);
+  }
+
   let proc: Subprocess<"pipe" | "inherit" | "ignore"> | null = null;
   let timeoutId: Timer | null = null;
   
@@ -240,6 +252,116 @@ export async function bunExec(
       }
     }
   }
+}
+
+/**
+ * Execute a command using Node.js child_process when Bun is not available
+ */
+async function nodeExec(
+  command: string,
+  args: string[] = [],
+  options: BunExecOptions = {}
+): Promise<ExecResult> {
+  return new Promise((resolve, reject) => {
+    let stdout = '';
+    let stderr = '';
+    let timeoutId: NodeJS.Timeout | null = null;
+    
+    const escapedArgs = args.map(escapeShellArg);
+    const fullCommand = [command, ...escapedArgs].join(' ');
+    logger.debug(`[nodeExec] Executing: ${fullCommand}`);
+
+    const spawnOptions: SpawnOptions = {
+      cwd: options.cwd,
+      env: { ...process.env, ...options.env },
+      stdio: options.stdio === 'inherit' ? 'inherit' : 'pipe',
+    };
+
+    const child = spawn(command, args, spawnOptions);
+    
+    // Handle timeout
+    if (options.timeout && options.timeout > 0) {
+      timeoutId = setTimeout(() => {
+        if (!child.killed) {
+          child.kill();
+          reject(new ProcessTimeoutError(
+            `Command timed out after ${options.timeout}ms`,
+            fullCommand,
+            options.timeout!
+          ));
+        }
+      }, options.timeout);
+    }
+
+    // Handle abort signal
+    if (options.signal) {
+      options.signal.addEventListener('abort', () => {
+        if (!child.killed) {
+          child.kill();
+        }
+      });
+    }
+
+    // Collect output if not inheriting stdio
+    if (options.stdio !== 'inherit') {
+      if (child.stdout) {
+        child.stdout.on('data', (data) => {
+          stdout += data.toString();
+        });
+      }
+
+      if (child.stderr) {
+        child.stderr.on('data', (data) => {
+          stderr += data.toString();
+        });
+      }
+    }
+
+    child.on('close', (exitCode) => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+
+      const success = exitCode === 0;
+
+      if (!success && options.stdio !== 'ignore') {
+        logger.debug(`[nodeExec] Command failed with exit code ${exitCode}`);
+        if (stderr) {
+          logger.debug(`[nodeExec] stderr: ${stderr}`);
+        }
+      }
+
+      resolve({
+        stdout: stdout.trim(),
+        stderr: stderr.trim(),
+        exitCode,
+        success,
+      });
+    });
+
+    child.on('error', (error) => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      
+      // Handle command not found error
+      if ((error as any).code === 'ENOENT') {
+        reject(new ProcessExecutionError(
+          `Command not found: ${command}`,
+          null,
+          '',
+          command
+        ));
+      } else {
+        reject(new ProcessExecutionError(
+          `Command execution failed: ${error.message}`,
+          null,
+          '',
+          command
+        ));
+      }
+    });
+  });
 }
 
 /**

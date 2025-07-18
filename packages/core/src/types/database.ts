@@ -65,7 +65,7 @@ export interface IDatabaseAdapter {
   ensureEmbeddingDimension(dimension: number): Promise<void>;
 
   /** Get entity by IDs */
-  getEntityByIds(entityIds: UUID[]): Promise<Entity[] | null>;
+  getEntitiesByIds(entityIds: UUID[]): Promise<Entity[] | null>;
 
   /** Get entities for room */
   getEntitiesForRoom(roomId: UUID, includeComponents?: boolean): Promise<Entity[]>;
@@ -201,7 +201,7 @@ export interface IDatabaseAdapter {
 
   getParticipantsForRoom(roomId: UUID): Promise<UUID[]>;
 
-  addParticipantsRoom(entityIds: UUID[], roomId: UUID): Promise<boolean>;
+  addParticipantsToRoom(entityIds: UUID[], roomId: UUID): Promise<boolean>;
 
   getParticipantUserState(roomId: UUID, entityId: UUID): Promise<'FOLLOWED' | 'MUTED' | null>;
 

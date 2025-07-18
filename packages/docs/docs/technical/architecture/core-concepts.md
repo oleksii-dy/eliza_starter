@@ -43,7 +43,6 @@ interface Character {
 
   // Behavior
   topics: string[];
-  adjectives: string[];
 
   // Examples
   messageExamples: [string, string][];

@@ -48,7 +48,7 @@ describe('PgliteDatabaseAdapter', () => {
     });
 
     it('should set embeddingDimension to default 384', () => {
-      expect((adapter as any).embeddingDimension).toBe('dim_384');
+      expect((adapter as any).embeddingDimension).toBe('dim384');
     });
   });
 
@@ -66,7 +66,7 @@ describe('PgliteDatabaseAdapter', () => {
     it('should complete initialization', async () => {
       await adapter.init();
       expect(logger.debug).toHaveBeenCalledWith(
-        'PGLiteDatabaseAdapter initialized, skipping automatic migrations.'
+        'PGliteDatabaseAdapter initialized, skipping automatic migrations.'
       );
     });
   });

@@ -87,17 +87,5 @@
       "mentions documentation updates",
       "uses precise technical terms"
     ]
-  },
-  "adjectives": [
-    "efficient",
-    "optimized",
-    "scalable",
-    "robust",
-    "elegant",
-    "reliable",
-    "maintainable",
-    "performant",
-    "secure",
-    "modular"
-  ]
+  }
 }

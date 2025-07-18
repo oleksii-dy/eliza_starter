@@ -103,7 +103,7 @@ export function createMockAgentRuntime(overrides?: Partial<IAgentRuntime>): IAge
     updateAgent: jest.fn(() => Promise.resolve(true)),
     deleteAgent: jest.fn(() => Promise.resolve(true)),
     ensureEmbeddingDimension: jest.fn(() => Promise.resolve()),
-    getEntityByIds: jest.fn(() => Promise.resolve(null)),
+    getEntitiesByIds: jest.fn(() => Promise.resolve(null)),
     getEntitiesForRoom: jest.fn(() => Promise.resolve([])),
     createEntities: jest.fn(() => Promise.resolve(true)),
     updateEntity: jest.fn(() => Promise.resolve()),
@@ -145,7 +145,7 @@ export function createMockAgentRuntime(overrides?: Partial<IAgentRuntime>): IAge
     removeParticipant: jest.fn(() => Promise.resolve(true)),
     getParticipantsForEntity: jest.fn(() => Promise.resolve([])),
     getParticipantsForRoom: jest.fn(() => Promise.resolve([])),
-    addParticipantsRoom: jest.fn(() => Promise.resolve(true)),
+    addParticipantsToRoom: jest.fn(() => Promise.resolve(true)),
     getParticipantUserState: jest.fn(() => Promise.resolve(null)),
     setParticipantUserState: jest.fn(() => Promise.resolve()),
     createRelationship: jest.fn(() => Promise.resolve(true)),
@@ -191,7 +191,7 @@ export function createMockDatabaseAdapter(overrides?: any): DatabaseAdapter & an
     deleteAgent: jest.fn(() => Promise.resolve(true)),
 
     // Entity methods
-    getEntityByIds: jest.fn(() => Promise.resolve(null)),
+    getEntitiesByIds: jest.fn(() => Promise.resolve(null)),
     getEntitiesForRoom: jest.fn(() => Promise.resolve([])),
     createEntities: jest.fn(() => Promise.resolve(true)),
     updateEntity: jest.fn(() => Promise.resolve()),
@@ -245,7 +245,7 @@ export function createMockDatabaseAdapter(overrides?: any): DatabaseAdapter & an
     removeParticipant: jest.fn(() => Promise.resolve(true)),
     getParticipantsForEntity: jest.fn(() => Promise.resolve([])),
     getParticipantsForRoom: jest.fn(() => Promise.resolve([])),
-    addParticipantsRoom: jest.fn(() => Promise.resolve(true)),
+    addParticipantsToRoom: jest.fn(() => Promise.resolve(true)),
     getParticipantUserState: jest.fn(() => Promise.resolve(null)),
     setParticipantUserState: jest.fn(() => Promise.resolve()),
 

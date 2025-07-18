@@ -77,7 +77,6 @@ export const characterSchema = z
     messageExamples: z.array(z.array(messageExampleSchema)).optional(),
     postExamples: z.array(z.string()).optional(),
     topics: z.array(z.string()).optional(),
-    adjectives: z.array(z.string()).optional(),
     knowledge: z.array(knowledgeItemSchema).optional(),
     plugins: z.array(z.string()).optional(),
     settings: settingsSchema,

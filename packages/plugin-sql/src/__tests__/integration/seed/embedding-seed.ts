@@ -28,6 +28,7 @@ export const embeddingTestAgent = {
   messageExamples: [],
   postExamples: [],
   topics: [],
+  adjectives: [],
   knowledge: [],
   plugins: [],
   settings: {

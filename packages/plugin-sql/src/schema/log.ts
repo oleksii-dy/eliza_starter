@@ -1,37 +1,40 @@
 import { sql } from 'drizzle-orm';
-import { foreignKey, index, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
-import { agentTable } from './agent';
+import { foreignKey, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { entityTable } from './entity';
 import { roomTable } from './room';
 
 /**
- * Definition of the logs table in the database.
- * Logs store event information and debugging data for system operations.
+ * Represents a PostgreSQL table for storing logs.
+ *
+ * @type {Table}
  */
+
 export const logTable = pgTable(
   'logs',
   {
-    id: uuid('id').primaryKey().defaultRandom(),
-    entity_id: uuid('entity_id')
-      .references(() => entityTable.id, { onDelete: 'cascade' })
+    id: uuid('id').defaultRandom().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .default(sql`now()`)
       .notNull(),
-    room_id: uuid('room_id').references(() => roomTable.id, { onDelete: 'cascade' }),
-    agent_id: uuid('agent_id')
-      .references(() => agentTable.id, { onDelete: 'cascade' })
-      .notNull(),
-    body: jsonb('body').notNull().default({}),
+    entityId: uuid('entityId')
+      .notNull()
+      .references(() => entityTable.id, { onDelete: 'cascade' }),
+    body: jsonb('body').notNull(),
     type: text('type').notNull(),
-    created_at: timestamp('created_at')
+    roomId: uuid('roomId')
       .notNull()
-      .$defaultFn(() => new Date()),
-    updated_at: timestamp('updated_at')
-      .notNull()
-      .$defaultFn(() => new Date()),
+      .references(() => roomTable.id, { onDelete: 'cascade' }),
   },
   (table) => [
-    index('idx_logs_entity_id').on(table.entity_id),
-    index('idx_logs_room_id').on(table.room_id),
-    index('idx_logs_agent_id').on(table.agent_id),
-    index('idx_logs_type').on(table.type),
+    foreignKey({
+      name: 'fk_room',
+      columns: [table.roomId],
+      foreignColumns: [roomTable.id],
+    }).onDelete('cascade'),
+    foreignKey({
+      name: 'fk_user',
+      columns: [table.entityId],
+      foreignColumns: [entityTable.id],
+    }).onDelete('cascade'),
   ]
 );

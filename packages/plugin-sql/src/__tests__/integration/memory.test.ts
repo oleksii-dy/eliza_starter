@@ -14,7 +14,7 @@ import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from
 import { PgDatabaseAdapter } from '../../pg/adapter';
 import { PgliteDatabaseAdapter } from '../../pglite/adapter';
 import { embeddingTable, memoryTable } from '../../schema';
-import { createTestDatabase } from '../test-helpers';
+import { createIsolatedTestDatabase } from '../test-helpers';
 import {
   documentMemoryId,
   memoryTestAgentId,
@@ -35,15 +35,15 @@ describe('Memory Integration Tests', () => {
 
   beforeAll(async () => {
     try {
+      const setup = await createIsolatedTestDatabase('memory_tests');
+      adapter = setup.adapter;
+      cleanup = setup.cleanup;
+      testAgentId = setup.testAgentId;
+
       // Use random UUIDs to avoid conflicts
-      testAgentId = v4() as UUID;
       testRoomId = v4() as UUID;
       testEntityId = v4() as UUID;
       testWorldId = v4() as UUID;
-
-      ({ adapter, cleanup } = await createTestDatabase(testAgentId));
-
-      console.log('ADAPTER IS', adapter);
 
       await adapter.createWorld({
         id: testWorldId,
@@ -435,7 +435,6 @@ describe('Memory Integration Tests', () => {
       await adapter.createMemory(testDocument, 'documents');
 
       // Create fragments that reference the document with correct test IDs
-      const fragmentIds: UUID[] = [];
       for (const fragment of memoryTestFragments) {
         const testFragment = {
           ...fragment,
@@ -443,16 +442,10 @@ describe('Memory Integration Tests', () => {
           entityId: testEntityId,
           roomId: testRoomId,
         };
-        const fragmentId = await adapter.createMemory(testFragment, 'fragments');
-        fragmentIds.push(fragmentId);
+        await adapter.createMemory(testFragment, 'fragments');
       }
 
-      // First delete the fragments manually (since there's no cascade)
-      for (const fragmentId of fragmentIds) {
-        await adapter.deleteMemory(fragmentId);
-      }
-
-      // Then delete the document
+      // Delete the document (should cascade to fragments)
       await adapter.deleteMemory(documentMemoryId);
 
       // Verify document is deleted

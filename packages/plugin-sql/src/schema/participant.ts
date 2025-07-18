@@ -1,18 +1,13 @@
 import { sql } from 'drizzle-orm';
-import { foreignKey, index, pgTable, text, timestamp, unique, uuid } from 'drizzle-orm/pg-core';
+import { foreignKey, index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { agentTable } from './agent';
 import { entityTable } from './entity';
 import { roomTable } from './room';
 
 /**
- * Represents a participant in a room/conversation
+ * Defines the schema for the "participants" table in the database.
  *
- * Links entities (users, agents, etc.) to specific rooms, allowing tracking of:
- * - Who is participating in which conversations
- * - When they joined/participated
- * - Their current state in the room
- *
- * This enables multi-entity conversations and proper message routing
+ * @type {import('knex').TableBuilder}
  */
 export const participantTable = pgTable(
   'participants',
@@ -21,32 +16,32 @@ export const participantTable = pgTable(
       .notNull()
       .primaryKey()
       .default(sql`gen_random_uuid()`),
-    created_at: timestamp('created_at', { withTimezone: true })
-      .notNull()
-      .$defaultFn(() => new Date()),
-    entity_id: uuid('entity_id').references(() => entityTable.id, {
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .default(sql`now()`)
+      .notNull(),
+    entityId: uuid('entityId').references(() => entityTable.id, {
       onDelete: 'cascade',
     }),
-    room_id: uuid('room_id').references(() => roomTable.id, {
+    roomId: uuid('roomId').references(() => roomTable.id, {
       onDelete: 'cascade',
     }),
-    agent_id: uuid('agent_id').references(() => agentTable.id, {
+    agentId: uuid('agentId').references(() => agentTable.id, {
       onDelete: 'cascade',
     }),
-    room_state: text('room_state'),
+    roomState: text('roomState'),
   },
   (table) => [
-    unique('participants_user_room_unique').on(table.entity_id, table.room_id),
-    index('idx_participants_user').on(table.entity_id),
-    index('idx_participants_room').on(table.room_id),
+    // unique("participants_user_room_agent_unique").on(table.entityId, table.roomId, table.agentId),
+    index('idx_participants_user').on(table.entityId),
+    index('idx_participants_room').on(table.roomId),
     foreignKey({
       name: 'fk_room',
-      columns: [table.room_id],
+      columns: [table.roomId],
       foreignColumns: [roomTable.id],
     }).onDelete('cascade'),
     foreignKey({
       name: 'fk_user',
-      columns: [table.entity_id],
+      columns: [table.entityId],
       foreignColumns: [entityTable.id],
     }).onDelete('cascade'),
   ]

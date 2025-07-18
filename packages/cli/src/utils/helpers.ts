@@ -41,7 +41,6 @@ export function displayAgent(data: Partial<Agent>, title = 'Agent Review'): void
 
   // Display sections
   displaySection('Bio', Array.isArray(data.bio) ? data.bio : data.bio ? [data.bio] : undefined);
-  displaySection('Adjectives', data.adjectives);
   displaySection('Topics', data.topics);
   displaySection('Plugins', data.plugins);
 

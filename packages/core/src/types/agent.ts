@@ -27,7 +27,7 @@ export type TemplateType =
  * - `templates`: A map of prompt templates for various situations (e.g., message generation, summarization).
  * - `bio`: A textual biography or description of the character.
  * - `messageExamples`, `postExamples`: Examples of how the character communicates.
- * - `topics`, `adjectives`: Keywords describing the character's knowledge areas and traits.
+ * - `topics`: Keywords describing the character's knowledge areas and traits.
  * - `knowledge`: Paths to knowledge files or directories to be loaded into the agent's memory.
  * - `plugins`: A list of plugin names to be loaded for this character.
  * - `settings`, `secrets`: Configuration key-value pairs, with secrets being handled more securely.
@@ -62,9 +62,6 @@ export interface Character {
 
   /** Known topics */
   topics?: string[];
-
-  /** Character traits */
-  adjectives?: string[];
 
   /** Optional knowledge base */
   knowledge?: (string | { path: string; shared?: boolean } | DirectoryItem)[];

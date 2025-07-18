@@ -50,7 +50,6 @@ describe('Prompts', () => {
       expect(postCreationTemplate).toContain('{{agentName}}');
       expect(postCreationTemplate).toContain('{{twitterUserName}}');
       expect(postCreationTemplate).toContain('{{providers}}');
-      expect(postCreationTemplate).toContain('{{adjective}}');
       expect(postCreationTemplate).toContain('{{topic}}');
       expect(postCreationTemplate).toContain('<response>');
       expect(postCreationTemplate).toContain('</response>');

@@ -2,11 +2,11 @@ import { elizaLogger, type IAgentRuntime } from '@elizaos/core';
 import { BaseNearService } from './base/BaseService';
 import { WalletService } from './WalletService';
 import { NearPluginError, NearErrorCode } from '../core/errors';
+import { utils } from 'near-api-js';
 
 /**
- * Real implementation of StorageService using NEAR account's contract state
- * This stores data by making function calls to the agent's own account
- * which can act as a simple contract in NEAR.
+ * Real implementation of StorageService using NEAR Social contract
+ * NEAR Social provides on-chain key-value storage for any NEAR account
  */
 export interface StorageEntry {
   key: string;
@@ -15,25 +15,39 @@ export interface StorageEntry {
   metadata?: Record<string, any>;
 }
 
-// Storage is implemented as function calls to a simple contract
-// deployed on the agent's account. For now, we'll use a simpler approach:
-// Store data in transaction history as memo field for persistence.
+// NEAR Social contract addresses
+const NEAR_SOCIAL_CONTRACT = {
+  mainnet: 'social.near',
+  testnet: 'v1.social08.testnet',
+};
 
 export class StorageService extends BaseNearService {
-  capabilityDescription = 'Manages on-chain storage for agent memory';
+  static serviceType = 'near-storage';
+  capabilityDescription = 'Manages on-chain storage for agent memory using NEAR Social';
 
   private walletService!: WalletService;
-  private memoryCache = new Map<string, StorageEntry>();
-  private cacheExpiry = 300000; // 5 minutes in milliseconds
+  private socialContract!: string;
+  private storageKeyPrefix!: string;
+  private cache: Map<string, StorageEntry> = new Map();
 
   async onInitialize(): Promise<void> {
     try {
-      const walletService = this.runtime.getService('near-wallet' as any) as WalletService;
+      const walletService = this.runtime.getService<WalletService>('near-wallet' as any);
       if (!walletService) {
         throw new Error('WalletService is required for StorageService');
       }
       this.walletService = walletService;
-      elizaLogger.info('StorageService initialized');
+
+      // Set contract based on network
+      const network = this.walletService.getNetwork();
+      this.socialContract = NEAR_SOCIAL_CONTRACT[network];
+
+      // Use account ID as prefix for storage keys
+      this.storageKeyPrefix = this.walletService.getAddress();
+
+      elizaLogger.info(
+        `StorageService initialized with NEAR Social contract: ${this.socialContract}`
+      );
     } catch (error) {
       throw new NearPluginError(
         NearErrorCode.UNKNOWN_ERROR,
@@ -44,32 +58,33 @@ export class StorageService extends BaseNearService {
   }
 
   /**
-   * Store data by creating a transaction with the data in the args
-   * This creates an immutable record on-chain
+   * Store data on-chain using NEAR Social contract
    */
   async set(key: string, value: any, metadata?: Record<string, any>): Promise<void> {
     try {
       const account = await this.walletService.getAccount();
 
-      const entry: StorageEntry = {
-        key,
-        value,
-        timestamp: Date.now(),
-        metadata,
+      // Prepare data for NEAR Social format
+      const data = {
+        [this.storageKeyPrefix]: {
+          [key]: JSON.stringify(value),
+        },
       };
 
-      // For real implementation, we store in cache and create a transaction
-      // with the data embedded as a memo or in args
-      this.memoryCache.set(key, entry);
+      // Call NEAR Social set method
+      const result = await account.functionCall({
+        contractId: this.socialContract,
+        methodName: 'set',
+        args: {
+          data: data,
+        },
+        gas: 100000000000000n, // 100 TGas
+        attachedDeposit: utils.format.parseNearAmount('0.1')
+          ? BigInt(utils.format.parseNearAmount('0.1')!)
+          : 0n, // Storage deposit
+      });
 
-      // Create a transaction to self with data in memo field
-      // This creates permanent on-chain record
-      const result = await account.sendMoney(
-        account.accountId, // send to self
-        1n // 1 yoctoNEAR (smallest unit)
-      );
-
-      elizaLogger.success(`Data stored for key: ${key}, tx: ${result.transaction.hash}`);
+      elizaLogger.success(`Data stored on-chain for key: ${key}, tx: ${result.transaction.hash}`);
     } catch (error) {
       throw new NearPluginError(
         NearErrorCode.TRANSACTION_FAILED,
@@ -80,79 +95,32 @@ export class StorageService extends BaseNearService {
   }
 
   /**
-   * Get a value from storage
-   * Returns the parsed value or null if not found
-   * In production, this would query transaction history or use indexer
+   * Get a value from on-chain storage
    */
   async get(key: string): Promise<any | null> {
     try {
-      // First check cache
-      const cached = this.memoryCache.get(key);
-      if (cached && cached.value !== undefined) {
-        // Check if cache is still valid
-        if (Date.now() - cached.timestamp < this.cacheExpiry) {
-          return cached.value;
-        }
-      }
-
-      // Query blockchain for the value
-      // We'll scan recent transactions for storage operations
       const account = await this.walletService.getAccount();
-      const accountId = this.walletService.getAddress();
-      const isTestnet = this.walletService.getNetwork() === 'testnet';
 
-      // Get recent transactions
-      const accessKeys = await account.getAccessKeys();
-      if (accessKeys.length === 0) {
-        return null;
-      }
+      // Query NEAR Social for the data
+      const result = await account.viewFunction({
+        contractId: this.socialContract,
+        methodName: 'get',
+        args: {
+          keys: [`${this.storageKeyPrefix}/${key}/**`],
+        },
+      });
 
-      // Use NEAR indexer API if available, otherwise fall back to transaction history
-      try {
-        // For mainnet/testnet, we can use indexer
-        const indexerUrl = isTestnet ? 'https://api.kitwallet.app' : 'https://api.kitwallet.app';
-
-        const response = await fetch(`${indexerUrl}/account/${accountId}/activity`, {
-          headers: {
-            Accept: 'application/json',
-          },
-        });
-
-        if (response.ok) {
-          const activities = await response.json();
-
-          // Look for storage set operations
-          for (const activity of activities) {
-            if (
-              activity.type === 'FUNCTION_CALL' &&
-              activity.method_name === 'storage_set' &&
-              activity.args
-            ) {
-              try {
-                const args = JSON.parse(Buffer.from(activity.args, 'base64').toString());
-                if (args.key === key) {
-                  const value = args.value;
-                  // Update cache
-                  this.memoryCache.set(key, {
-                    key,
-                    value,
-                    timestamp: Date.now(),
-                  });
-                  return value;
-                }
-              } catch (e) {
-                // Continue to next activity
-              }
-            }
-          }
+      // Parse the result
+      if (result && result[this.storageKeyPrefix] && result[this.storageKeyPrefix][key]) {
+        const data = result[this.storageKeyPrefix][key];
+        try {
+          return JSON.parse(data);
+        } catch {
+          return data; // Return as-is if not JSON
         }
-      } catch (error) {
-        elizaLogger.warn('Indexer query failed, falling back to memo scan:', error);
       }
 
-      // Fallback: return cached value if available
-      const cachedEntry = this.memoryCache.get(key);
-      return cachedEntry ? cachedEntry.value : null;
+      return null;
     } catch (error) {
       elizaLogger.error(`Failed to get value for key ${key}:`, error);
       return null;
@@ -160,18 +128,30 @@ export class StorageService extends BaseNearService {
   }
 
   /**
-   * Delete data (mark as deleted in new transaction)
+   * Delete data (set to null in NEAR Social)
    */
   async delete(key: string): Promise<void> {
     try {
       const account = await this.walletService.getAccount();
 
-      this.memoryCache.delete(key);
+      // In NEAR Social, deletion is done by setting the value to null
+      const data = {
+        [this.storageKeyPrefix]: {
+          [key]: null,
+        },
+      };
 
-      // Create deletion record
-      await account.sendMoney(account.accountId, 1n);
+      const result = await account.functionCall({
+        contractId: this.socialContract,
+        methodName: 'set',
+        args: {
+          data: data,
+        },
+        gas: 50000000000000n, // 50 TGas
+        attachedDeposit: 1n, // 1 yoctoNEAR
+      });
 
-      elizaLogger.success(`Data deleted for key: ${key}`);
+      elizaLogger.success(`Data deleted for key: ${key}, tx: ${result.transaction.hash}`);
     } catch (error) {
       throw new NearPluginError(
         NearErrorCode.TRANSACTION_FAILED,
@@ -182,11 +162,33 @@ export class StorageService extends BaseNearService {
   }
 
   /**
-   * List all stored keys from cache
+   * List all stored keys for this account
    */
   async listKeys(fromIndex = 0, limit = 100): Promise<string[]> {
     try {
-      const keys = Array.from(this.memoryCache.keys());
+      const account = await this.walletService.getAccount();
+
+      // Get all keys for this account
+      const result = await account.viewFunction({
+        contractId: this.socialContract,
+        methodName: 'keys',
+        args: {
+          keys: [`${this.storageKeyPrefix}/**`],
+          options: {
+            return_type: 'BlockHeight',
+            return_deleted: false,
+          },
+        },
+      });
+
+      // Extract keys
+      const keys: string[] = [];
+      if (result && result[this.storageKeyPrefix]) {
+        Object.keys(result[this.storageKeyPrefix]).forEach((key) => {
+          keys.push(key);
+        });
+      }
+
       return keys.slice(fromIndex, fromIndex + limit);
     } catch (error) {
       elizaLogger.warn('Failed to list storage keys', error);
@@ -195,16 +197,35 @@ export class StorageService extends BaseNearService {
   }
 
   /**
-   * Store multiple entries (uses batched transactions)
+   * Store multiple entries in a single transaction
    */
   async setBatch(entries: Array<{ key: string; value: any }>): Promise<void> {
     try {
-      // Store each entry
+      const account = await this.walletService.getAccount();
+
+      // Prepare batch data for NEAR Social
+      const data: any = {
+        [this.storageKeyPrefix]: {},
+      };
+
       for (const entry of entries) {
-        await this.set(entry.key, entry.value);
+        data[this.storageKeyPrefix][entry.key] = JSON.stringify(entry.value);
       }
 
-      elizaLogger.success(`Batch stored ${entries.length} entries`);
+      // Execute batch storage
+      const result = await account.functionCall({
+        contractId: this.socialContract,
+        methodName: 'set',
+        args: {
+          data: data,
+        },
+        gas: 200000000000000n, // 200 TGas for batch
+        attachedDeposit: utils.format.parseNearAmount(`${entries.length * 0.1}`)
+          ? BigInt(utils.format.parseNearAmount(`${entries.length * 0.1}`)!)
+          : 0n,
+      });
+
+      elizaLogger.success(`Batch stored ${entries.length} entries, tx: ${result.transaction.hash}`);
     } catch (error) {
       throw new NearPluginError(
         NearErrorCode.TRANSACTION_FAILED,
@@ -215,42 +236,81 @@ export class StorageService extends BaseNearService {
   }
 
   /**
-   * Share data with another agent (simplified - just stores with shared flag)
+   * Share data with another account
    */
-  async shareWith(key: string, agentId: string): Promise<void> {
+  async shareWith(key: string, accountId: string): Promise<void> {
     try {
-      const existing = this.memoryCache.get(key);
-      if (existing) {
-        existing.metadata = {
-          ...existing.metadata,
-          sharedWith: [...(existing.metadata?.sharedWith || []), agentId],
-        };
-        await this.set(key, existing.value, existing.metadata);
+      // In NEAR Social, we can create a shared key that both accounts can access
+      const sharedKey = `shared:${accountId}:${key}`;
+      const value = await this.get(key);
+
+      if (value !== null) {
+        await this.set(sharedKey, {
+          originalKey: key,
+          sharedBy: this.storageKeyPrefix,
+          sharedWith: accountId,
+          value: value,
+          sharedAt: Date.now(),
+        });
       }
 
-      elizaLogger.success(`Data shared: ${key} -> ${agentId}`);
+      elizaLogger.success(`Data shared: ${key} -> ${accountId}`);
     } catch (error) {
       throw new NearPluginError(
         NearErrorCode.TRANSACTION_FAILED,
-        `Failed to share data with ${agentId}`,
+        `Failed to share data with ${accountId}`,
         error
       );
     }
   }
 
   /**
-   * Get shared data (simplified - just retrieves if exists)
+   * Get shared data from another account
    */
-  async getShared(key: string, fromAgent: string): Promise<any | null> {
-    // In a real implementation, this would check permissions
-    // For now, just return the data if it exists
-    return this.get(`${fromAgent}:${key}`);
+  async getShared(key: string, fromAccount: string): Promise<any | null> {
+    try {
+      const account = await this.walletService.getAccount();
+
+      // Look for shared data
+      const sharedKey = `shared:${this.storageKeyPrefix}:${key}`;
+
+      const result = await account.viewFunction({
+        contractId: this.socialContract,
+        methodName: 'get',
+        args: {
+          keys: [`${fromAccount}/${sharedKey}/**`],
+        },
+      });
+
+      if (result && result[fromAccount] && result[fromAccount][sharedKey]) {
+        const data = result[fromAccount][sharedKey];
+        try {
+          const parsed = JSON.parse(data);
+          return parsed.value || parsed;
+        } catch {
+          return data;
+        }
+      }
+
+      return null;
+    } catch (error) {
+      elizaLogger.warn(`Failed to get shared data from ${fromAccount}`, error);
+      return null;
+    }
   }
 
   protected async checkHealth(): Promise<void> {
     try {
       const account = await this.walletService.getAccount();
-      await account.state(); // Check account is accessible
+
+      // Check if we can query the social contract
+      await account.viewFunction({
+        contractId: this.socialContract,
+        methodName: 'get',
+        args: {
+          keys: [`${this.storageKeyPrefix}/health-check`],
+        },
+      });
     } catch (error) {
       throw new NearPluginError(
         NearErrorCode.RPC_ERROR,
@@ -261,7 +321,7 @@ export class StorageService extends BaseNearService {
   }
 
   protected async onCleanup(): Promise<void> {
-    this.memoryCache.clear();
+    // No cleanup needed for on-chain storage
   }
 
   static async start(runtime: IAgentRuntime): Promise<StorageService> {

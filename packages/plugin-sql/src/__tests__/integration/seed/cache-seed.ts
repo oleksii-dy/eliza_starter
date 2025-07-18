@@ -20,6 +20,7 @@ export const cacheTestAgentSettings = {
   messageExamples: [],
   postExamples: [],
   topics: [],
+  adjectives: [],
   knowledge: [],
   plugins: [],
   settings: {

@@ -1,0 +1,9 @@
+[install.lockfile]
+print = "yarn"
+
+[test]
+# Exclude contract test files from bun test
+preload = ["./test-setup.ts"]
+root = "./src"
+coverage = true
+coverageSkipTestFiles = true 

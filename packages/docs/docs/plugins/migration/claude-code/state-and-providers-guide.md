@@ -87,7 +87,6 @@ Here are the primary state keys you can filter:
 - `agentName` - Agent's display name
 - `bio` - Agent biography (string or selected from array)
 - `lore` - Random selection of lore bits
-- `adjective` - Random adjective from character
 - `topic` / `topics` - Agent's interests
 
 #### Conversation Context

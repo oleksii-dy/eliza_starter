@@ -18,7 +18,7 @@ export default defineConfig({
   dts: true,
   sourcemap: false,
   // Externalize problematic fs-related dependencies
-  external: ['fs-extra', '@elizaos/server'],
+  external: ['fs-extra', '@elizaos/server', '@elizaos/core', '@elizaos/plugin-sql'],
   platform: 'node',
   minify: false,
   target: 'esnext',

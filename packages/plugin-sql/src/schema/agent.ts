@@ -12,14 +12,13 @@ export const agentTable = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     enabled: boolean('enabled').default(true).notNull(),
-    status: text('status').default('active'),
-    created_at: timestamp('created_at', { withTimezone: true })
-      .notNull()
-      .$defaultFn(() => new Date()),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .default(sql`now()`)
+      .notNull(),
 
-    updated_at: timestamp('updated_at', { withTimezone: true })
-      .notNull()
-      .$defaultFn(() => new Date()),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .default(sql`now()`)
+      .notNull(),
 
     // Character
     name: text('name').notNull(),
@@ -28,15 +27,19 @@ export const agentTable = pgTable(
     bio: jsonb('bio')
       .$type<string | string[]>()
       .default(sql`'[]'::jsonb`),
-    message_examples: jsonb('message_examples')
+    messageExamples: jsonb('message_examples')
       .$type<MessageExample[][]>()
       .default(sql`'[]'::jsonb`)
       .notNull(),
-    post_examples: jsonb('post_examples')
+    postExamples: jsonb('post_examples')
       .$type<string[]>()
       .default(sql`'[]'::jsonb`)
       .notNull(),
     topics: jsonb('topics')
+      .$type<string[]>()
+      .default(sql`'[]'::jsonb`)
+      .notNull(),
+    adjectives: jsonb('adjectives')
       .$type<string[]>()
       .default(sql`'[]'::jsonb`)
       .notNull(),

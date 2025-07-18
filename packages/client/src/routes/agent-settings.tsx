@@ -33,7 +33,6 @@ export default function AgentSettingsRoute() {
     createdAt: agentData.data.createdAt ?? Date.now(),
     bio: agentData.data.bio ?? [],
     topics: agentData.data.topics ?? [],
-    adjectives: agentData.data.adjectives ?? [],
     style: agentData.data.style ?? { all: [], chat: [], post: [] },
     settings: agentData.data.settings ?? { secrets: {} },
   } as Agent;
@@ -44,7 +43,7 @@ export default function AgentSettingsRoute() {
         <AgentSettings
           agent={agent}
           agentId={agentId as UUID}
-          onSaveComplete={() => {}}
+          onSaveComplete={() => { }}
         />
       </div>
     </div>

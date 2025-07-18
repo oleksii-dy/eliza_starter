@@ -24,9 +24,7 @@ VECTOR_DIMS = {
 };
 ```
 
-Important Note: Once an agent is initialized with a specific embedding
-dimension, it cannot be changed. Attempting to change the dimension will result
-in an error: "Cannot change embedding dimension for agent"
+Important Note: Once an agent is initialized with a specific embedding dimension, it cannot be changed. Attempting to change the dimension will result in an error: "Cannot change embedding dimension for agent"
 
 ## Features
 
@@ -58,9 +56,7 @@ The plugin uses a structured schema with the following main tables:
 - **Cache**: Provides a caching mechanism for frequently accessed data
 - **World**: Manages world settings and configurations
 
-Each table is defined using Drizzle ORM schema definitions in the `src/schema`
-directory. The schema is designed to support the ElizaOS ecosystem's
-requirements for agent-based systems.
+Each table is defined using Drizzle ORM schema definitions in the `src/schema` directory. The schema is designed to support the ElizaOS ecosystem's requirements for agent-based systems.
 
 ## Usage
 
@@ -75,9 +71,7 @@ async function findDatabaseAdapter(runtime: IAgentRuntime) {
     const drizzleAdapterPluginDefault = drizzleAdapterPlugin.default;
     adapter = drizzleAdapterPluginDefault.adapter;
     if (!adapter) {
-      throw new Error(
-        'Internal error: No database adapter found for default plugin-sql'
-      );
+      throw new Error('Internal error: No database adapter found for default plugin-sql');
     }
   } else if (!adapter) {
     throw new Error(
@@ -116,11 +110,9 @@ The adapter implements the following error handling configurations:
 
 The plugin uses the following environment variables:
 
-- `POSTGRES_URL`: Connection string for PostgreSQL database (e.g.,
-  `postgresql://user:password@localhost:5432/dbname`)
+- `POSTGRES_URL`: Connection string for PostgreSQL database (e.g., `postgresql://user:password@localhost:5432/dbname`)
   - If not provided, the plugin will use PGlite as a fallback
-- `PGLITE_DATA_DIR`: (Optional) Directory for PGlite data storage (default:
-  `./pglite`)
+- `PGLITE_DATA_DIR`: (Optional) Directory for PGlite data storage (default: `./pglite`)
 
 These variables should be defined in a `.env` file at the root of your project.
 
@@ -216,9 +208,7 @@ d. Using drizzle-kit migrate command:
 npx drizzle-kit migrate
 ```
 
-This command will read the configuration from `drizzle.config.ts` and pull the
-PostgreSQL URI from the `.env` file. Make sure your `.env` file contains the
-`POSTGRES_URL` variable with the correct connection string.
+This command will read the configuration from `drizzle.config.ts` and pull the PostgreSQL URI from the `.env` file. Make sure your `.env` file contains the `POSTGRES_URL` variable with the correct connection string.
 
 ### Migration Configuration
 
@@ -248,13 +238,11 @@ The plugin supports two database backends:
 1. **PostgreSQL**: Used when `POSTGRES_URL` environment variable is provided
 2. **PGlite**: Used as a fallback when no PostgreSQL URL is provided
 
-Both backends use the same migration files, ensuring consistent schema across
-environments.
+Both backends use the same migration files, ensuring consistent schema across environments.
 
 ### Note on Vector Support
 
-Make sure the PostgreSQL vector extension is installed before running
-migrations. The adapter will validate vector setup during initialization.
+Make sure the PostgreSQL vector extension is installed before running migrations. The adapter will validate vector setup during initialization.
 
 ## Clean Shutdown
 
@@ -264,33 +252,23 @@ The adapter implements cleanup handlers for:
 - SIGTERM
 - beforeExit
 
-These ensure proper closing of database connections when the application shuts
-down.
+These ensure proper closing of database connections when the application shuts down.
 
 ## Implementation Details
 
 ### Connection Management
 
-The plugin uses a global singleton pattern to manage database connections. This
-approach ensures that:
+The plugin uses a global singleton pattern to manage database connections. This approach ensures that:
 
-1. **Single Connection Per Process**: Only one connection manager instance
-   exists per Node.js process, regardless of how many times the package is
-   imported or initialized.
+1. **Single Connection Per Process**: Only one connection manager instance exists per Node.js process, regardless of how many times the package is imported or initialized.
 
-2. **Resource Efficiency**: Prevents multiple connection pools to the same
-   database, which could lead to resource exhaustion.
+2. **Resource Efficiency**: Prevents multiple connection pools to the same database, which could lead to resource exhaustion.
 
-3. **Consistent State**: Ensures all parts of the application share the same
-   database connection state.
+3. **Consistent State**: Ensures all parts of the application share the same database connection state.
 
-4. **Proper Cleanup**: Facilitates proper cleanup of database connections during
-   application shutdown, preventing connection leaks.
+4. **Proper Cleanup**: Facilitates proper cleanup of database connections during application shutdown, preventing connection leaks.
 
-This pattern is particularly important in monorepo setups or when the package is
-used by multiple modules within the same process. The implementation uses
-JavaScript Symbols to create a global registry that persists across module
-boundaries.
+This pattern is particularly important in monorepo setups or when the package is used by multiple modules within the same process. The implementation uses JavaScript Symbols to create a global registry that persists across module boundaries.
 
 ```typescript
 // Example of the singleton pattern implementation
@@ -303,11 +281,8 @@ if (!globalSymbols[GLOBAL_SINGLETONS]) {
 
 // Reuse existing managers or create new ones when needed
 if (!globalSingletons.postgresConnectionManager) {
-  globalSingletons.postgresConnectionManager = new PostgresConnectionManager(
-    config.postgresUrl
-  );
+  globalSingletons.postgresConnectionManager = new PostgresConnectionManager(config.postgresUrl);
 }
 ```
 
-This approach is especially critical for PGlite connections, which require
-careful management to ensure proper shutdown and prevent resource leaks.
+This approach is especially critical for PGlite connections, which require careful management to ensure proper shutdown and prevent resource leaks.

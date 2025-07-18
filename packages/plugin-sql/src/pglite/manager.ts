@@ -14,7 +14,7 @@ export class PGliteClientManager implements IDatabaseClientManager<PGlite> {
   /**
    * Constructor for creating a new instance of PGlite with the provided options.
    * Initializes the PGlite client with additional extensions.
-   * @param {PGliteOptions & { forceExtensions?: boolean }} options - The options to configure the PGlite client.
+   * @param {PGliteOptions} options - The options to configure the PGlite client.
    */
   constructor(options: PGliteOptions) {
     this.client = new PGlite({
@@ -40,19 +40,7 @@ export class PGliteClientManager implements IDatabaseClientManager<PGlite> {
   }
 
   public async close(): Promise<void> {
-    if (this.shuttingDown) {
-      return; // Already shutting down or closed
-    }
     this.shuttingDown = true;
-    try {
-      await this.client.close();
-    } catch (error) {
-      // Ignore errors if already closed
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      if (!errorMessage.includes('PGlite is closed')) {
-        throw error;
-      }
-    }
   }
 
   private setupShutdownHandlers() {

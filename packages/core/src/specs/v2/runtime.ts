@@ -320,8 +320,8 @@ export class AgentRuntime implements IAgentRuntime {
   async addParticipant(entityId: UUID, roomId: UUID): Promise<boolean> {
     return this._runtime.addParticipant(entityId, roomId);
   }
-  async addParticipantsRoom(entityIds: UUID[], roomId: UUID): Promise<boolean> {
-    return this._runtime.addParticipantsRoom(entityIds, roomId);
+  async addParticipantsToRoom(entityIds: UUID[], roomId: UUID): Promise<boolean> {
+    return this._runtime.addParticipantsToRoom(entityIds, roomId);
   }
 
   /**
@@ -485,8 +485,8 @@ export class AgentRuntime implements IAgentRuntime {
     return this._runtime.getEntityById(entityId);
   }
 
-  async getEntityByIds(entityIds: UUID[]): Promise<Entity[] | null> {
-    return this._runtime.getEntityByIds(entityIds);
+  async getEntitiesByIds(entityIds: UUID[]): Promise<Entity[] | null> {
+    return this._runtime.getEntitiesByIds(entityIds);
   }
 
   async getEntitiesForRoom(roomId: UUID, includeComponents?: boolean): Promise<Entity[]> {

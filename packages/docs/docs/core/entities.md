@@ -106,7 +106,7 @@ const success = await runtime.createEntities([
 const entity = await runtime.getEntityById(entityId);
 
 // Get multiple entities by IDs
-const entities = await runtime.getEntityByIds([entityId1, entityId2]);
+const entities = await runtime.getEntitiesByIds([entityId1, entityId2]);
 
 // Get all entities in a room
 const entitiesInRoom = await runtime.getEntitiesForRoom(roomId, true); // true to include components
@@ -265,7 +265,7 @@ Entities participate in rooms through the participant system:
 const success = await runtime.addParticipant(entityId, roomId);
 
 // Add multiple entities to a room at once
-const success = await runtime.addParticipantsRoom([entityId1, entityId2], roomId);
+const success = await runtime.addParticipantsToRoom([entityId1, entityId2], roomId);
 
 // Remove an entity from a room
 const success = await runtime.removeParticipant(entityId, roomId);
@@ -315,6 +315,6 @@ This ensures consistent entity IDs across sessions for the same user-agent combi
 3. **Metadata Organization**: Structure metadata by source platform (e.g., `discord`, `telegram`) for clarity
 4. **Component Types**: Use consistent component type names across your application for easier querying
 5. **Relationship Tracking**: Update relationship metadata to reflect interaction patterns and frequency
-6. **Bulk Operations**: Use `createEntities` and `addParticipantsRoom` for better performance when handling multiple entities
+6. **Bulk Operations**: Use `createEntities` and `addParticipantsToRoom` for better performance when handling multiple entities
 7. **Room Participation**: Always ensure entities are properly added as participants before they interact in rooms
 8. **Component Lifecycle**: Clean up components when they're no longer needed to maintain database efficiency

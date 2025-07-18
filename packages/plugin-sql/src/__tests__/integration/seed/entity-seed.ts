@@ -20,6 +20,7 @@ export const entityTestAgentSettings = {
   messageExamples: [],
   postExamples: [],
   topics: [],
+  adjectives: [],
   knowledge: [],
   plugins: [],
   settings: {

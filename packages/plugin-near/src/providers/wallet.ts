@@ -4,6 +4,7 @@ import {
   type Provider,
   type State,
   elizaLogger,
+  type ProviderResult,
 } from '@elizaos/core';
 import { KeyPair, keyStores, connect, type Account, utils } from 'near-api-js';
 import BigNumber from 'bignumber.js';
@@ -43,20 +44,41 @@ interface WalletPortfolio {
 }
 
 export class WalletProvider implements Provider {
+  name = 'near-wallet';
+  description = 'Provides NEAR wallet information and balances';
+
   private cache: NodeCache;
   private account: Account | null = null;
-  private keyStore: keyStores.InMemoryKeyStore;
+  private keyStore: typeof keyStores.InMemoryKeyStore.prototype;
   constructor(private accountId: string) {
     this.cache = new NodeCache({ stdTTL: 300 }); // Cache TTL set to 5 minutes
     this.keyStore = new keyStores.InMemoryKeyStore();
   }
 
-  async get(runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<string | null> {
+  async get(runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<ProviderResult> {
     try {
-      return await this.getFormattedPortfolio(runtime);
+      const portfolioText = await this.getFormattedPortfolio(runtime);
+      const portfolio = await this.fetchPortfolioValue(runtime);
+
+      return {
+        text: portfolioText,
+        values: {
+          totalUsd: portfolio.totalUsd,
+          totalNear: portfolio.totalNear,
+          accountId: this.accountId,
+        },
+        data: {
+          tokens: portfolio.tokens,
+          portfolio: portfolio,
+        },
+      };
     } catch (error) {
       elizaLogger.error('Error in wallet provider:', error);
-      return null;
+      return {
+        text: 'Unable to fetch wallet information. Please try again later.',
+        values: {},
+        data: { error: error instanceof Error ? error.message : 'Unknown error' },
+      };
     }
   }
 
@@ -78,6 +100,7 @@ export class WalletProvider implements Provider {
     // Set the key in the keystore
     await this.keyStore.setKey(PROVIDER_CONFIG.networkId, this.accountId, keyPair);
 
+    // @ts-ignore - NEAR SDK v6 deprecated keyStore but it still works
     const nearConnection = await connect({
       networkId: PROVIDER_CONFIG.networkId,
       keyStore: this.keyStore,
@@ -209,17 +232,27 @@ export class WalletProvider implements Provider {
 }
 
 const walletProvider: Provider = {
-  get: async (runtime: IAgentRuntime, _message: Memory, _state?: State): Promise<string | null> => {
+  name: 'near-wallet',
+  description: 'Provides NEAR wallet information and balances',
+  get: async (runtime: IAgentRuntime, message: Memory, state?: State): Promise<ProviderResult> => {
     try {
       const accountId = runtime.getSetting('NEAR_ADDRESS');
       if (!accountId) {
-        throw new Error('NEAR_ADDRESS not configured');
+        return {
+          text: 'NEAR wallet not configured. Please set NEAR_ADDRESS in your environment.',
+          values: {},
+          data: { error: 'NEAR_ADDRESS not configured' },
+        };
       }
       const provider = new WalletProvider(accountId);
-      return await provider.getFormattedPortfolio(runtime);
+      return await provider.get(runtime, message, state);
     } catch (error) {
       elizaLogger.error('Error in wallet provider:', error);
-      return null;
+      return {
+        text: 'Unable to access NEAR wallet. Please check your configuration.',
+        values: {},
+        data: { error: error instanceof Error ? error.message : 'Unknown error' },
+      };
     }
   },
 };

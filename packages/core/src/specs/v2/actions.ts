@@ -78,5 +78,5 @@ export function formatActionNames(actions: Action[]): string {
  * @returns A detailed string of actions, including names and descriptions.
  */
 export function formatActions(actions: Action[]): string {
-  return actions.map((action) => `${action.name}: ${action.description}`).join(',\n');
+  return actions.map((action) => `- **${action.name}**: ${action.description}`).join('\n');
 }

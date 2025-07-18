@@ -3,12 +3,12 @@ import {
   type HandlerCallback,
   type IAgentRuntime,
   type Memory,
-  ModelClass,
   type State,
   elizaLogger,
   type Action,
-  composeContext,
-  generateObject,
+  ModelType,
+  composePrompt,
+  parseKeyValueXml,
 } from '@elizaos/core';
 import { z } from 'zod';
 import { TransactionService } from '../services/TransactionService';
@@ -21,29 +21,41 @@ export const TransferSchema = z.object({
   tokenAddress: z.string().optional().nullable(),
 });
 
-const transferTemplate = `Respond with a JSON markdown block containing only the extracted values. Use null for any values that cannot be determined.
+const transferExtractionTemplate = `# Task: Extract NEAR transfer parameters from user message
 
-Example response:
-\`\`\`json
-{
-    "recipient": "bob.near",
-    "amount": "1.5",
-    "tokenAddress": null
-}
-\`\`\`
-
+# Recent Messages:
 {{recentMessages}}
 
-Given the recent messages and wallet information below:
+# Instructions:
+Analyze the user's message to extract:
+1. The recipient address (NEAR account like alice.near or alice.testnet)
+2. The amount to transfer
+3. The token (NEAR if not specified, or token contract like usdc.fakes.testnet)
 
-{{walletInfo}}
+Return the values in XML format:
+<response>
+  <recipient>account.near</recipient>
+  <amount>number as string</amount>
+  <tokenAddress>token-contract.near or empty for NEAR</tokenAddress>
+</response>
 
-Extract the following information about the requested token transfer:
-- Recipient address (NEAR account)
-- Amount to transfer
-- Token contract address (null for native NEAR transfers)
+Examples:
+- "Send 5 NEAR to alice.near"
+<response>
+  <recipient>alice.near</recipient>
+  <amount>5</amount>
+  <tokenAddress></tokenAddress>
+</response>
 
-Respond with a JSON markdown block containing only the extracted values.`;
+- "Transfer 100 USDC to bob.testnet"
+<response>
+  <recipient>bob.testnet</recipient>
+  <amount>100</amount>
+  <tokenAddress>usdc.fakes.testnet</tokenAddress>
+</response>
+
+Note: If no domain is specified for recipient, assume .near for mainnet or .testnet for testnet.
+For common tokens: USDC, USDT, DAI, REF - use the .fakes.testnet suffix on testnet.`;
 
 export const executeTransfer: Action = {
   name: 'SEND_NEAR',
@@ -51,48 +63,38 @@ export const executeTransfer: Action = {
   validate: async (_runtime: IAgentRuntime, _message: Memory) => {
     return true;
   },
-  description: 'Transfer NEAR tokens or NEP-141 tokens to another account',
+  description: 'Send NEAR tokens or NEP-141 tokens to another account',
   handler: async (
     runtime: IAgentRuntime,
     message: Memory,
     state: State | undefined,
     options?: { [key: string]: unknown },
     callback?: HandlerCallback
-  ): Promise<boolean> => {
+  ): Promise<void> => {
     try {
-      // Initialize or update state
-      let currentState: State;
-
-      if (!state) {
-        currentState = (await runtime.composeState(message)) as State;
-      } else {
-        currentState = await runtime.updateRecentMessageState(state);
-      }
-
-      // Compose transfer context
-      const transferContext = composeContext({
-        state: currentState,
-        template: transferTemplate,
+      // Use LLM to extract transfer parameters
+      const prompt = composePrompt({
+        state: {
+          recentMessages: message.content.text || '',
+        },
+        template: transferExtractionTemplate,
       });
 
-      // Generate transfer content
-      const generatedResult = await generateObject({
-        runtime,
-        context: transferContext,
-        modelClass: ModelClass.SMALL,
-        schema: TransferSchema,
+      const xmlResponse = await runtime.useModel(ModelType.TEXT_LARGE, {
+        prompt,
       });
 
-      const content = generatedResult.object as z.infer<typeof TransferSchema>;
+      // Parse XML response
+      const extractedParams = parseKeyValueXml(xmlResponse);
 
-      // Validate content
-      if (!content || !content.recipient || !content.amount) {
-        elizaLogger.error('Invalid content for SEND_NEAR action.');
+      // Validate extraction
+      if (!extractedParams || !extractedParams.recipient || !extractedParams.amount) {
+        elizaLogger.error('Failed to extract transfer parameters', extractedParams);
         callback?.({
-          text: 'I need the recipient address and amount to make a transfer.',
+          text: 'I need the recipient address and amount to make a transfer. For example: "Send 5 NEAR to alice.near"',
           content: { error: 'Missing required parameters' },
         });
-        return false;
+        return;
       }
 
       // Get transaction service
@@ -106,9 +108,9 @@ export const executeTransfer: Action = {
 
       // Prepare transfer parameters
       const params: TransferParams = {
-        recipient: content.recipient,
-        amount: content.amount,
-        tokenId: content.tokenAddress || undefined,
+        recipient: extractedParams.recipient,
+        amount: extractedParams.amount,
+        tokenId: extractedParams.tokenAddress || undefined,
       };
 
       // Execute transfer
@@ -133,8 +135,6 @@ export const executeTransfer: Action = {
           token: tokenSymbol,
         },
       });
-
-      return true;
     } catch (error) {
       elizaLogger.error('Error during NEAR transfer:', error);
 
@@ -153,28 +153,26 @@ export const executeTransfer: Action = {
           details: error,
         },
       });
-
-      return false;
     }
   },
 
   examples: [
     [
       {
-        user: '{{user1}}',
+        name: '{{user1}}',
         content: {
           text: 'Send 1.5 NEAR to alice.near',
         },
       },
       {
-        user: '{{agentName}}',
+        name: '{{agentName}}',
         content: {
           text: "I'll send 1.5 NEAR to alice.near now...",
           action: 'SEND_NEAR',
         },
       },
       {
-        user: '{{agentName}}',
+        name: '{{agentName}}',
         content: {
           text: 'Successfully transferred 1.5 NEAR to alice.near',
           content: {
@@ -186,20 +184,20 @@ export const executeTransfer: Action = {
     ],
     [
       {
-        user: '{{user1}}',
+        name: '{{user1}}',
         content: {
           text: 'Transfer 100 USDC to bob.near',
         },
       },
       {
-        user: '{{agentName}}',
+        name: '{{agentName}}',
         content: {
           text: "I'll transfer 100 USDC to bob.near...",
           action: 'SEND_NEAR',
         },
       },
       {
-        user: '{{agentName}}',
+        name: '{{agentName}}',
         content: {
           text: 'Successfully transferred 100 USDC to bob.near',
           content: {
@@ -209,5 +207,5 @@ export const executeTransfer: Action = {
         },
       },
     ],
-  ] as ActionExample[][],
+  ],
 };
