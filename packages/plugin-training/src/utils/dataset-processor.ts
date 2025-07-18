@@ -387,7 +387,7 @@ export class DatasetProcessor {
   }
 
   private async saveAsJSONL(data: TrainingTrajectory[], filepath: string): Promise<void> {
-    const lines = data.map((item) => JSON.stringify(item)).join('\\n');
+    const lines = data.map((item) => JSON.stringify(item)).join('\n');
     await fs.writeFile(filepath, lines, 'utf-8');
   }
 
@@ -405,14 +405,14 @@ export class DatasetProcessor {
       timestamp: trajectory.metadata.timestamp,
     }));
 
-    const header = `${Object.keys(csvData[0]).join(',')}\\n`;
+    const header = `${Object.keys(csvData[0]).join(',')}\n`;
     const rows = csvData
       .map((row) =>
         Object.values(row)
           .map((value) => (typeof value === 'string' ? `"${value.replace(/"/g, '""')}"` : value))
           .join(',')
       )
-      .join('\\n');
+      .join('\n');
 
     await fs.writeFile(filepath, header + rows, 'utf-8');
   }
