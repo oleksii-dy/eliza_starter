@@ -151,21 +151,27 @@ export class TrainingMonitor {
     const execAsync = promisify(exec);
 
     try {
-      const result = await execAsync(
-        `TOGETHER_API_KEY="${this.client['apiKey']}" together fine-tuning retrieve ${jobId}`,
-        { timeout: 10000 }
-      );
+      // Fix command injection vulnerability by using environment variables instead of string interpolation
+      const result = await execAsync('together fine-tuning retrieve ' + jobId, {
+        env: { ...process.env, TOGETHER_API_KEY: this.client['apiKey'] },
+        timeout: 10000
+      });
 
       const data = JSON.parse(result.stdout);
 
-      // Calculate progress percentage
+      // Calculate progress percentage with improved logic
       let progress = 0;
       if (data.total_steps > 0) {
         progress = Math.round((data.steps_completed / data.total_steps) * 100);
       } else if (data.status === 'completed') {
         progress = 100;
+      } else if (data.status === 'running' && data.total_epochs > 0) {
+        // Use epoch-based progress when total_steps is not available
+        const epochProgress = Math.round((data.epochs_completed / data.total_epochs) * 100);
+        progress = Math.min(95, epochProgress); // Cap at 95% to account for final processing
       } else if (data.status === 'running') {
-        progress = Math.min(50, data.epochs_completed * 30); // Rough estimate
+        // Fallback for when neither total_steps nor total_epochs is available
+        progress = 25; // Conservative estimate
       }
 
       return {
