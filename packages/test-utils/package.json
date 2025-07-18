@@ -1,7 +1,7 @@
 {
   "name": "@elizaos/test-utils",
   "description": "Utilities and objects for unit testing",
-  "version": "1.2.0",
+  "version": "1.2.12",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -39,7 +39,7 @@
     "tsup.config.ts"
   ],
   "dependencies": {
-    "@elizaos/core": "workspace:*",
+    "@elizaos/core": "1.2.12",
     "zod": "3.24.2"
   },
   "devDependencies": {
@@ -51,13 +51,7 @@
   "scripts": {
     "build": "tsc --noEmit && tsup",
     "lint": "prettier --write ./src",
-    "test:component": "bun run test:install && bun test",
-    "test:e2e": "bun run test:install && bun test",
-    "test:e2e:manual": "bun run test:install && node scripts/test-e2e-manual.js",
-    "test:cypress": "bun run test:install && cypress run --component",
-    "test": "bun run test:install && bun run test:component && bun run test:e2e",
-    "test:install": "node scripts/install-test-deps.js",
-    "publish": "elizaos publish",
+    "test": "bun test",
     "format": "prettier --write ./src",
     "format:check": "prettier --check ./src"
   },
@@ -71,5 +65,5 @@
     "pluginType": "elizaos:plugin:1.0.0",
     "pluginParameters": {}
   },
-  "gitHead": "d5bd5c43bfebeb7ac02f9e029f924cb6cd5c2ec7"
+  "gitHead": "991b811b95d08df421efc4f516d0cfb52c4a83b3"
 }

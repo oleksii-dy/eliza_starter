@@ -201,7 +201,6 @@ const DEFAULT_REGISTRY: Record<string, string> = {
   '@elizaos/plugin-evm': 'github:elizaos-plugins/plugin-evm',
   '@elizaos/plugin-farcaster': 'github:elizaos-plugins/plugin-farcaster',
   '@elizaos/plugin-groq': 'github:elizaos-plugins/plugin-groq',
-  '@elizaos/plugin-local-ai': 'github:elizaos-plugins/plugin-local-ai',
   '@elizaos/plugin-mcp': 'github:elizaos-plugins/plugin-mcp',
   '@elizaos/plugin-messari-ai-toolkit': 'github:messari/plugin-messari-ai-toolkit',
   '@elizaos/plugin-morpheus': 'github:bowtiedbluefin/plugin-morpheus',
@@ -601,7 +600,7 @@ export async function getPackageDetails(packageName: string): Promise<{
     // Use agent only if https_proxy is defined
     const requestOptions: RequestInit = {};
     if (process.env.https_proxy) {
-      // @ts-ignore - HttpsProxyAgent is not in the RequestInit type, but is used by node-fetch
+      // @ts-ignore - HttpsProxyAgent is not in the RequestInit type
       requestOptions.agent = new HttpsProxyAgent(process.env.https_proxy);
     }
 

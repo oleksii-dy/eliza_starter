@@ -134,6 +134,70 @@ bun run release:alpha   # Release alpha version
 - **IF A COMMAND DOESN'T WORK:** Check `package.json` in the relevant package directory for correct script names
 - Use `bun` for global installs: `bun install -g @elizaos/cli`
 
+### Process Execution
+
+- **NEVER USE `execa` OR OTHER PROCESS EXECUTION LIBRARIES**
+- **NEVER USE NODE.JS APIS LIKE `execSync`, `spawnSync`, `exec`, `spawn` FROM `child_process`**
+- **ALWAYS USE `Bun.spawn()` FOR SPAWNING PROCESSES**
+- **USE THE EXISTING `bun-exec` UTILITY:** Located at `packages/cli/src/utils/bun-exec.ts` which provides:
+  - `bunExec()` - Main execution function with full control
+  - `bunExecSimple()` - For simple command execution
+  - `bunExecInherit()` - For interactive commands
+  - `commandExists()` - To check if commands exist
+- **Example usage:**
+
+  ```typescript
+  import { bunExec, bunExecSimple } from '@/utils/bun-exec';
+
+  // Simple command
+  const output = await bunExecSimple('git status');
+
+  // Full control
+  const result = await bunExec('bun', ['test'], { cwd: '/path/to/dir' });
+  ```
+
+  **IMPORTANT:** Even in test files, avoid using Node.js `execSync` or other child_process APIs. Use the bun-exec utilities or Bun.spawn directly.
+
+### Event Handling
+
+- **NEVER USE `EventEmitter` FROM NODE.JS**
+- **EventEmitter has compatibility issues with Bun and should be avoided**
+- **ALWAYS USE BUN'S NATIVE `EventTarget` API INSTEAD**
+- **When migrating from EventEmitter:**
+  - Extend `EventTarget` instead of `EventEmitter`
+  - Use `dispatchEvent(new CustomEvent(name, { detail: data }))` instead of `emit(name, data)`
+  - Wrap handlers to extract data from `CustomEvent.detail`
+  - Maintain backward-compatible API when possible
+- **Example migration:**
+
+  ```typescript
+  // ❌ WRONG - Don't use EventEmitter
+  import { EventEmitter } from 'events';
+  class MyClass extends EventEmitter {
+    doSomething() {
+      this.emit('event', { data: 'value' });
+    }
+  }
+
+  // ✅ CORRECT - Use EventTarget
+  class MyClass extends EventTarget {
+    private handlers = new Map<string, Map<Function, EventListener>>();
+
+    emit(event: string, data: any) {
+      this.dispatchEvent(new CustomEvent(event, { detail: data }));
+    }
+
+    on(event: string, handler: (data: any) => void) {
+      const wrappedHandler = ((e: CustomEvent) => handler(e.detail)) as EventListener;
+      if (!this.handlers.has(event)) {
+        this.handlers.set(event, new Map());
+      }
+      this.handlers.get(event)!.set(handler, wrappedHandler);
+      this.addEventListener(event, wrappedHandler);
+    }
+  }
+  ```
+
 ### Git & GitHub
 
 - **ALWAYS USE `gh` CLI FOR GIT AND GITHUB OPERATIONS**
