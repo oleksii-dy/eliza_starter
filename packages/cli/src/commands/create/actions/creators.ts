@@ -211,7 +211,8 @@ export async function createTEEProject(
   database: string,
   aiModel: string,
   embeddingModel?: string,
-  isNonInteractive = false
+  isNonInteractive = false,
+  skipApiKeys = false
 ): Promise<void> {
   const teeTargetDir = join(targetDir, projectName);
 
@@ -248,8 +249,8 @@ export async function createTEEProject(
         await promptAndStorePostgresUrl(envFilePath);
       }
 
-      // Handle AI model configuration
-      if (aiModel !== 'local' || embeddingModel) {
+      // Handle AI model configuration (skip if skipApiKeys is enabled)
+      if (!skipApiKeys && (aiModel !== 'local' || embeddingModel)) {
         if (aiModel !== 'local') {
           await setupAIModelConfig(aiModel, envFilePath, false);
         }
@@ -264,7 +265,7 @@ export async function createTEEProject(
         copyTemplateUtil('project-tee-starter', teeTargetDir)
       ),
       createTask('Setting up project environment', () =>
-        setupProjectEnvironment(teeTargetDir, database, aiModel, embeddingModel, true)
+        setupProjectEnvironment(teeTargetDir, database, aiModel, embeddingModel, true, skipApiKeys)
       ),
       createTask('Installing dependencies', () => installDependenciesWithSpinner(teeTargetDir)),
       createTask('Building project', () => buildProjectWithSpinner(teeTargetDir, false)),
@@ -288,7 +289,8 @@ export async function createProject(
   database: string,
   aiModel: string,
   embeddingModel?: string,
-  isNonInteractive = false
+  isNonInteractive = false,
+  skipApiKeys = false
 ): Promise<void> {
   // Handle current directory case
   const projectTargetDir = projectName === '.' ? targetDir : join(targetDir, projectName);
@@ -330,8 +332,8 @@ export async function createProject(
         await promptAndStorePostgresUrl(envFilePath);
       }
 
-      // Handle AI model configuration
-      if (aiModel !== 'local' || embeddingModel) {
+      // Handle AI model configuration (skip if skipApiKeys is enabled)
+      if (!skipApiKeys && (aiModel !== 'local' || embeddingModel)) {
         if (aiModel !== 'local') {
           await setupAIModelConfig(aiModel, envFilePath, false);
         }
@@ -346,7 +348,7 @@ export async function createProject(
         copyTemplateUtil('project-starter', projectTargetDir)
       ),
       createTask('Setting up project environment', () =>
-        setupProjectEnvironment(projectTargetDir, database, aiModel, embeddingModel, true)
+        setupProjectEnvironment(projectTargetDir, database, aiModel, embeddingModel, true, skipApiKeys)
       ),
       createTask('Installing dependencies', () => installDependenciesWithSpinner(projectTargetDir)),
       createTask('Building project', () => buildProjectWithSpinner(projectTargetDir, false)),

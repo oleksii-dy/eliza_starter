@@ -345,7 +345,8 @@ export async function setupProjectEnvironment(
   database: string,
   aiModel: string,
   embeddingModel?: string,
-  isNonInteractive = false
+  isNonInteractive = false,
+  skipApiKeys = false
 ): Promise<void> {
   // Create project directories first
   await createProjectDirectories(targetDir);
@@ -362,8 +363,9 @@ export async function setupProjectEnvironment(
     await setupPgLite(undefined, `${targetDir}/.env`, targetDir);
   }
 
-  // Set up AI model configuration (skip if non-interactive, handled before spinner tasks)
-  if (!isNonInteractive) {
+  // Set up AI model configuration (skip if non-interactive or skipApiKeys is true)
+  // In non-interactive mode, API setup is handled before spinner tasks
+  if (!isNonInteractive && !skipApiKeys) {
     await setupAIModelConfig(aiModel, envFilePath, isNonInteractive);
 
     // Set up embedding model configuration if needed

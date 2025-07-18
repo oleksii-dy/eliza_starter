@@ -21,6 +21,7 @@ export const create = new Command('create')
   .argument('[name]', 'name of the project/plugin/agent to create')
   .option('--yes, -y', 'skip prompts and use defaults')
   .option('--type <type>', 'type of project to create (project, plugin, agent, tee)', 'project')
+  .option('--skip-api-keys', 'skip API key setup during project creation')
   .action(async (name?: string, opts?: any) => {
     let projectType: string | undefined; // Declare outside try block for catch access
 
@@ -169,7 +170,8 @@ export const create = new Command('create')
             database,
             aiModel,
             embeddingModel,
-            isNonInteractive
+            isNonInteractive,
+            options.skipApiKeys
           );
           break;
         }
@@ -197,7 +199,8 @@ export const create = new Command('create')
             database,
             aiModel,
             embeddingModel,
-            isNonInteractive
+            isNonInteractive,
+            options.skipApiKeys
           );
           break;
         }

@@ -6,6 +6,7 @@ import { z } from 'zod';
 export const initOptionsSchema = z.object({
   yes: z.boolean().default(false),
   type: z.enum(['project', 'plugin', 'agent', 'tee']).default('project'),
+  skipApiKeys: z.boolean().default(false),
 });
 
 export type CreateOptions = z.infer<typeof initOptionsSchema>;
