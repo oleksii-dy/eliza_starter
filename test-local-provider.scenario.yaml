@@ -1,0 +1,16 @@
+name: "Test Local Provider"
+description: "A scenario to test the LocalEnvironmentProvider implementation."
+environment:
+  type: "local"
+setup:
+  virtual_fs:
+    "src/index.js": "console.log('Hello from virtual file system!');"
+    "data/config.json": "{ \"version\": \"1.0\" }"
+run:
+  - name: "Dummy run step"
+    input: "This is a test."
+    evaluations:
+      - type: "string_contains"
+        value: "test"
+judgment:
+  strategy: "all_pass" 
