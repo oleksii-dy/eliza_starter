@@ -9,6 +9,12 @@ const StringContainsEvaluationSchema = BaseEvaluationSchema.extend({
   value: z.string(),
   case_sensitive: z.boolean().optional(),
 });
+
+const StdoutContainsEvaluationSchema = BaseEvaluationSchema.extend({
+  type: z.literal('stdout_contains'),
+  value: z.string(),
+});
+
 const RegexMatchEvaluationSchema = BaseEvaluationSchema.extend({
   type: z.literal('regex_match'),
   pattern: z.string(),
@@ -25,26 +31,27 @@ const LLMJudgeEvaluationSchema = BaseEvaluationSchema.extend({
 // A discriminated union allows Zod to figure out the correct schema based on the 'type' field
 const EvaluationSchema = z.discriminatedUnion('type', [
   StringContainsEvaluationSchema,
+  StdoutContainsEvaluationSchema,
   RegexMatchEvaluationSchema,
   TrajectoryContainsActionSchema,
   LLMJudgeEvaluationSchema,
   // Future evaluators (like file_exists) will be added here
 ]);
-const MockSchema = z.object({
+export const MockSchema = z.object({
   service: z.string(),
   method: z.string(),
-  when: z.record(z.any()).optional(), // Simple object for now
+  args: z.array(z.any()).optional(),
   response: z.any(),
 });
+export type Mock = z.infer<typeof MockSchema>;
 const SetupSchema = z.object({
   mocks: z.array(MockSchema).optional(),
   virtual_fs: z.record(z.string()).optional(), // map of path -> content
   // db_seed will be added later
 });
-const RunStepSchema = z.object({
-  name: z.string().optional(),
+export const RunStepSchema = z.object({
   input: z.string(),
-  evaluations: z.array(EvaluationSchema),
+  evaluations: z.array(EvaluationSchema).optional(),
 });
 const JudgmentSchema = z.object({
   strategy: z.enum(['all_pass', 'any_pass']),
@@ -59,7 +66,7 @@ export const ScenarioSchema = z.object({
   }),
   setup: SetupSchema.optional(),
   run: z.array(RunStepSchema),
-  judgment: JudgmentSchema,
+  evaluations: z.array(EvaluationSchema).optional(),
 });
 // Infer the TypeScript type from the Zod schema
 export type Scenario = z.infer<typeof ScenarioSchema>; 
