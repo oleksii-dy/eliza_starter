@@ -1,4 +1,5 @@
 import { Scenario } from '../scenarios/schema';
+import { Service } from '@elizaos/core';
 /**
  * The result of executing the 'run' block in a scenario.
  */
@@ -27,4 +28,15 @@ export interface EnvironmentProvider {
    * Cleans up any resources created during the setup and run phases.
    */
   teardown(): Promise<void>;
+}
+
+/**
+ * Defines the shape of the E2B service we expect from the runtime.
+ * Based on the @elizaos/plugin-e2b documentation.
+ */
+export interface E2BService extends Service {
+  createSandbox(config: { template?: string; timeoutMs?: number }): Promise<string>; // Returns sandboxId
+  executeCode(code: string, language?: string): Promise<{ stdout: string; stderr: string; exitCode: number }>;
+  writeFileToSandbox(sandboxId: string, path: string, content: string): Promise<void>;
+  killSandbox(sandboxId: string): Promise<void>;
 } 
