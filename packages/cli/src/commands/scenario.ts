@@ -3,6 +3,7 @@ import yaml from 'js-yaml';
 import fs from 'fs';
 import path from 'path';
 import { logger } from '@elizaos/core';
+import { ScenarioSchema, type Scenario } from '../scenarios/schema'; // Import our new schema
 
 export const scenario = new Command()
     .name('scenario')
@@ -27,12 +28,24 @@ function handleRunScenario(args: {filePath: string, live: boolean}) {
       process.exit(1);
     }
     const fileContents = fs.readFileSync(fullPath, 'utf8');
-    const scenario = yaml.load(fileContents);
-    console.log('--- Parsed Scenario Content ---');
-    console.log(JSON.stringify(scenario, null, 2));
-    console.log('-----------------------------');
+    const rawScenario = yaml.load(fileContents);
+
+    const validationResult = ScenarioSchema.safeParse(rawScenario);
+
+    if (!validationResult.success) {
+      logger.error('Scenario file validation failed:');
+      console.error(JSON.stringify(validationResult.error.format(), null, 2));
+      process.exit(1);
+    }
     
-    logger.info('Scenario file parsed successfully.');
+    // The data is now guaranteed to be of type 'Scenario'
+    const scenario: Scenario = validationResult.data;
+
+    console.log('--- Validated Scenario Object ---');
+    console.log(JSON.stringify(scenario, null, 2));
+    console.log('-------------------------------');
+    
+    logger.info('Scenario file parsed and validated successfully.');
   } catch (error) {
     logger.error('An error occurred during scenario execution:', error);
     process.exit(1);

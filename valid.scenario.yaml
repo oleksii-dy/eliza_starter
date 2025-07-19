@@ -1,0 +1,27 @@
+name: "Valid Test Scenario"
+description: "A comprehensive, valid scenario for testing the schema."
+plugins:
+  - "@elizaos/plugin-some-plugin"
+environment:
+  type: "local"
+setup:
+  virtual_fs:
+    /app/code/index.js: "console.log('Hello, World!');"
+  mocks:
+    - service: "someService"
+      method: "getData"
+      response: { "data": "mocked_data" }
+run:
+  - name: "Step 1: Check for a string"
+    input: "This is a test string."
+    evaluations:
+      - type: "string_contains"
+        value: "test"
+        case_sensitive: true
+  - name: "Step 2: Regex match"
+    input: "user_12345"
+    evaluations:
+      - type: "regex_match"
+        pattern: "^user_\\d+$"
+judgment:
+  strategy: "all_pass" 

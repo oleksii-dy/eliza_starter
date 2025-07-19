@@ -1,0 +1,10 @@
+description: "This scenario is invalid because it is missing the name field."
+environment:
+  type: "local"
+run:
+  - input: "This will fail validation."
+    evaluations:
+      - type: "string_contains"
+        value: "fail"
+judgment:
+  strategy: "all_pass" 

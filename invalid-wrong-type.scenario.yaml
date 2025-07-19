@@ -1,0 +1,11 @@
+name: 12345
+description: "This scenario is invalid because name is a number, not a string."
+environment:
+  type: "local"
+run:
+  - input: "This will also fail validation."
+    evaluations:
+      - type: "string_contains"
+        value: "fail"
+judgment:
+  strategy: "all_pass" 
