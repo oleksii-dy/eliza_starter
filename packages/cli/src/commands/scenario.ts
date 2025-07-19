@@ -12,6 +12,7 @@ import { AgentServer } from '@elizaos/server';
 import { startAgent } from './start/actions/agent-start';
 import { configureDatabaseSettings } from '../utils/get-config';
 import { resolvePgliteDir } from '../utils/resolve-utils';
+import { MockEngine } from '../scenarios/mock-engine';
 
 export const scenario = new Command()
     .name('scenario')
@@ -54,19 +55,26 @@ scenario.command('run <filePath> [projectPath]')
     .description('Execute a scenario from a YAML file against a project.')
     .option('-l, --live', 'Run scenario in live mode, ignoring mocks.', false)
     .action(async (filePath, projectPath, options) => {
+        let mockEngine: MockEngine | undefined;
         try {
             const targetProjectDir = path.resolve(projectPath || process.cwd());
             const runtime = await initializeScenarioRuntime(targetProjectDir);
-            await handleRunScenario({ filePath, ...options }, runtime);
+            
+            mockEngine = new MockEngine(runtime);
+
+            await handleRunScenario({ filePath, ...options }, runtime, mockEngine);
+            
             process.exit(0);
         } catch (error) {
             logger.error('An unexpected error occurred during scenario execution:');
             logger.error(error);
             process.exit(1);
+        } finally {
+            mockEngine?.restoreMocks();
         }
     });
 
-async function handleRunScenario(args: {filePath: string, live: boolean}, runtime: IAgentRuntime) {
+async function handleRunScenario(args: {filePath: string, live: boolean}, runtime: IAgentRuntime, mockEngine: MockEngine) {
   logger.info(`Starting scenario run with args: ${JSON.stringify(args)}`);
   
   let provider: EnvironmentProvider;
@@ -92,6 +100,10 @@ async function handleRunScenario(args: {filePath: string, live: boolean}, runtim
     
     const validatedScenario = validationResult.data;
 
+    if (validatedScenario.setup?.mocks && !args.live) {
+        mockEngine.applyMocks(validatedScenario.setup.mocks);
+    }
+
     if (validatedScenario.environment.type === 'e2b') {
         provider = new E2BEnvironmentProvider(runtime);
     } else {
@@ -99,14 +111,30 @@ async function handleRunScenario(args: {filePath: string, live: boolean}, runtim
     }
 
     await provider.setup(validatedScenario);
-    const result = await provider.run(validatedScenario);
 
-    logger.info('Scenario run finished.');
-    logger.info(`Exit Code: ${result.exitCode}`);
-    logger.info(`STDOUT: \n${result.stdout}`);
-    if (result.stderr) {
-        logger.error(`STDERR: \n${result.stderr}`);
+    let combinedStdout = '';
+    for (const step of validatedScenario.run) {
+        const result = await provider.run({ ...validatedScenario, run: [step] });
+        combinedStdout += result.stdout;
+
+        if (result.stderr) {
+            logger.error(`STDERR: \n${result.stderr}`);
+        }
+
+        if (step.evaluations) {
+            for (const evaluation of step.evaluations) {
+                if (evaluation.type === 'stdout_contains') {
+                    if (!result.stdout.includes(evaluation.value)) {
+                        logger.error(`Evaluation failed: stdout does not contain "${evaluation.value}"`);
+                        process.exit(1);
+                    }
+                }
+            }
+        }
     }
+
+    logger.info('All scenario evaluations passed.');
+
     await provider.teardown();
   } catch (error) {
     logger.error('An unexpected error occurred during scenario execution:');

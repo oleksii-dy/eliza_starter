@@ -1,0 +1,28 @@
+name: Test E2B Mocks
+description: Tests both generic and conditional mocks for the e2b service.
+environment:
+  type: e2b
+setup:
+  mocks:
+    - service: e2b
+      method: executeCode
+      args: ["echo 'conditional'"]
+      response:
+        stdout: "conditional mock response"
+        stderr: ""
+        exitCode: 0
+    - service: e2b
+      method: executeCode
+      response:
+        stdout: "generic mock response"
+        stderr: ""
+        exitCode: 0
+run:
+  - input: "echo 'conditional'"
+    evaluations:
+      - type: stdout_contains
+        value: "conditional mock response"
+  - input: "echo 'something else'"
+    evaluations:
+      - type: stdout_contains
+        value: "generic mock response" 

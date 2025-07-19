@@ -4,9 +4,7 @@
     "": {
       "name": "eliza",
       "dependencies": {
-        "@elizaos/plugin-bootstrap": "workspace:*",
-        "@elizaos/plugin-e2b": "workspace:*",
-        "@elizaos/plugin-sql": "workspace:*",
+        "helmet": "^8.1.0",
       },
       "devDependencies": {
         "@types/bun": "latest",
@@ -96,6 +94,7 @@
         "@elizaos/core": "1.2.9",
         "@elizaos/plugin-sql": "1.2.9",
         "@elizaos/server": "1.2.9",
+        "@types/lodash": "^4.17.20",
         "bun": "^1.2.17",
         "chalk": "^5.3.0",
         "chokidar": "^4.0.3",
@@ -104,6 +103,7 @@
         "fs-extra": "^11.1.0",
         "globby": "^14.0.2",
         "https-proxy-agent": "^7.0.6",
+        "lodash": "^4.17.21",
         "ora": "^8.1.1",
         "rimraf": "6.0.1",
         "semver": "^7.7.2",
@@ -1989,6 +1989,8 @@
     "@types/json5": ["@types/json5@0.0.29", "", {}, "sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ=="],
 
     "@types/jsonfile": ["@types/jsonfile@6.1.4", "", { "dependencies": { "@types/node": "*" } }, "sha512-D5qGUYwjvnNNextdU59/+fI+spnwtTFmyQP0h+PfIOSkNfpU6AOICUOkm4i0OnSk+NyjdPJrxCDro0sJsWlRpQ=="],
+
+    "@types/lodash": ["@types/lodash@4.17.20", "", {}, "sha512-H3MHACvFUEiujabxhaI/ImO6gUrd8oOurg7LQtS7mbwIXA/cUqWrvBsaeJ23aZEPk1TAYkurjfMbSELfoCXlGA=="],
 
     "@types/mdast": ["@types/mdast@4.0.4", "", { "dependencies": { "@types/unist": "*" } }, "sha512-kGaNbPh1k7AFzgpud/gMdvIm5xuECykRR+JnWKQno9TAXVa6WIVCGTPvYGekIDL4uwCZQSYbUxNBSb1aUo79oA=="],
 
