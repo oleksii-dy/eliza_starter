@@ -3,55 +3,64 @@ import { Mock } from './schema';
 import { isEqual } from 'lodash';
 
 export class MockEngine {
-    private originalServices = new Map<string, Service>();
+    private originalGetService: IAgentRuntime['getService'];
 
-    constructor(private runtime: IAgentRuntime) {}
+    constructor(private runtime: IAgentRuntime) {
+        this.originalGetService = this.runtime.getService.bind(this.runtime);
+    }
 
     applyMocks(mocks: Mock[]) {
-        const servicesToMock = new Set(mocks.map(m => m.service));
-
-        for (const serviceName of servicesToMock) {
-            const service = this.runtime.getService(serviceName);
-            if (service) {
-                this.originalServices.set(serviceName, service);
-                const mockHandler = this.createMockHandler(serviceName, mocks);
-                const mockedService = new Proxy(service, mockHandler);
-                (this.runtime.services as Map<string, Service[]>).set(serviceName, [mockedService]);
+        if (mocks.length === 0) return;
+        
+        const mockRegistry = new Map<string, Mock[]>();
+        for (const mock of mocks) {
+            const key = `${mock.service}.${mock.method}`;
+            if (!mockRegistry.has(key)) {
+                mockRegistry.set(key, []);
             }
+            mockRegistry.get(key)!.push(mock);
         }
-    }
+        
+        this.runtime.getService = <T extends Service>(name: string): T | null => {
+            const originalService = this.originalGetService<T>(name);
 
-    restoreMocks() {
-        for (const [serviceName, originalService] of this.originalServices.entries()) {
-            (this.runtime.services as Map<string, Service[]>).set(serviceName, [originalService]);
-        }
-        this.originalServices.clear();
-    }
-
-    private createMockHandler(serviceName: string, mocks: Mock[]): ProxyHandler<Service> {
-        return {
-            get: (target, prop, receiver) => {
-                const serviceMocks = mocks.filter(m => m.service === serviceName && m.method === prop);
-
-                if (serviceMocks.length > 0) {
+            if (!originalService) {
+                return null;
+            }
+            
+            return new Proxy(originalService as any, {
+                get: (target, prop: string, receiver) => {
+                    const key = `${name}.${prop}`;
+                    
+                    if (!mockRegistry.has(key)) {
+                        return Reflect.get(target, prop, receiver);
+                    }
+                    
                     return (...args: any[]) => {
-                        const conditionalMock = serviceMocks.find(m => m.args && isEqual(args, m.args));
+                        const potentialMocks = mockRegistry.get(key)!;
+                        
+                        const conditionalMock = potentialMocks.find(m => 
+                            m.when && m.when.args && isEqual(args, m.when.args)
+                        );
+                        
                         if (conditionalMock) {
                             return Promise.resolve(conditionalMock.response);
                         }
-
-                        const genericMock = serviceMocks.find(m => !m.args);
+                        
+                        const genericMock = potentialMocks.find(m => !m.when);
+                        
                         if (genericMock) {
                             return Promise.resolve(genericMock.response);
                         }
-
-                        // If no mock matches, call the original method
-                        return Reflect.get(target, prop, receiver).apply(target, args);
+                        
+                        return Reflect.get(target, prop, receiver)(...args);
                     };
-                }
-
-                return Reflect.get(target, prop, receiver);
-            },
+                },
+            }) as T;
         };
+    }
+
+    restoreMocks() {
+        this.runtime.getService = this.originalGetService;
     }
 } 

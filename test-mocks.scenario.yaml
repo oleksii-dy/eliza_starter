@@ -6,7 +6,8 @@ setup:
   mocks:
     - service: e2b
       method: executeCode
-      args: ["echo 'conditional'"]
+      when:
+        args: ["echo 'conditional'"]
       response:
         stdout: "conditional mock response"
         stderr: ""
