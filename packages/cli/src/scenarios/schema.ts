@@ -40,7 +40,9 @@ const EvaluationSchema = z.discriminatedUnion('type', [
 export const MockSchema = z.object({
   service: z.string(),
   method: z.string(),
-  args: z.array(z.any()).optional(),
+  when: z.object({
+    args: z.array(z.any()),
+  }).optional(),
   response: z.any(),
 });
 export type Mock = z.infer<typeof MockSchema>;
@@ -67,6 +69,7 @@ export const ScenarioSchema = z.object({
   setup: SetupSchema.optional(),
   run: z.array(RunStepSchema),
   evaluations: z.array(EvaluationSchema).optional(),
+  judgment: JudgmentSchema.optional(),
 });
 // Infer the TypeScript type from the Zod schema
 export type Scenario = z.infer<typeof ScenarioSchema>; 
