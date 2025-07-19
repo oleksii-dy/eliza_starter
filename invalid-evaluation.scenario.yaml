@@ -1,0 +1,12 @@
+name: "Invalid Evaluation Scenario"
+description: "This scenario is invalid because an evaluation is missing a required field."
+environment:
+  type: "local"
+run:
+  - input: "This step has a bad evaluation."
+    evaluations:
+      - type: "string_contains"
+        # The 'value' field is missing here, which should cause an error.
+        case_sensitive: false
+judgment:
+  strategy: "all_pass" 
