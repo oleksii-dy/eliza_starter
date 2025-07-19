@@ -14,6 +14,7 @@ import { start } from '@/src/commands/start';
 import { teeCommand as tee } from '@/src/commands/tee';
 import { test } from '@/src/commands/test';
 import { update } from '@/src/commands/update';
+import { scenario } from '@/src/commands/scenario';
 import { displayBanner, getVersion, checkAndShowUpdateNotification } from '@/src/utils';
 import { tryDelegateToLocalCli } from '@/src/utils/local-cli-delegation';
 import { logger } from '@elizaos/core';
@@ -137,7 +138,8 @@ async function main() {
     .addCommand(test)
     .addCommand(env)
     .addCommand(dev)
-    .addCommand(publish);
+    .addCommand(publish)
+    .addCommand(scenario);
 
   // if no args are passed, display the banner (it will handle its own update check)
   if (process.argv.length === 2) {
