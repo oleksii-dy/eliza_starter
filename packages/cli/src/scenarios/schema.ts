@@ -15,34 +15,27 @@ const StdoutContainsEvaluationSchema = BaseEvaluationSchema.extend({
   value: z.string(),
 });
 
-const FileExistsEvaluationSchema = z.object({
-    type: z.literal('file_exists'),
-    path: z.string(),
+const RegexMatchEvaluationSchema = BaseEvaluationSchema.extend({
+  type: z.literal('regex_match'),
+  pattern: z.string(),
 });
-
-const TrajectoryContainsActionEvaluationSchema = z.object({
-    type: z.literal('trajectory_contains_action'),
-    action: z.string(),
+const TrajectoryContainsActionSchema = BaseEvaluationSchema.extend({
+  type: z.literal('trajectory_contains_action'),
+  action: z.string(),
 });
-
-const LLMJudgeEvaluationSchema = z.object({
-    type: z.literal('llm_judge'),
-    prompt: z.string(),
-    expected: z.string(),
+const LLMJudgeEvaluationSchema = BaseEvaluationSchema.extend({
+  type: z.literal('llm_judge'),
+  prompt: z.string(),
+  expected: z.string(),
 });
-
-const RegexMatchEvaluationSchema = z.object({
-    type: z.literal('regex_match'),
-    pattern: z.string(),
-    output: z.enum(['stdout', 'stderr']),
-});
-
-export const EvaluationSchema = z.union([
-    StdoutContainsEvaluationSchema,
-    FileExistsEvaluationSchema,
-    TrajectoryContainsActionEvaluationSchema,
-    LLMJudgeEvaluationSchema,
-    RegexMatchEvaluationSchema,
+// A discriminated union allows Zod to figure out the correct schema based on the 'type' field
+const EvaluationSchema = z.discriminatedUnion('type', [
+  StringContainsEvaluationSchema,
+  StdoutContainsEvaluationSchema,
+  RegexMatchEvaluationSchema,
+  TrajectoryContainsActionSchema,
+  LLMJudgeEvaluationSchema,
+  // Future evaluators (like file_exists) will be added here
 ]);
 export const MockSchema = z.object({
   service: z.string(),
@@ -55,7 +48,6 @@ export const MockSchema = z.object({
 export type Mock = z.infer<typeof MockSchema>;
 const SetupSchema = z.object({
   mocks: z.array(MockSchema).optional(),
-  commands: z.array(z.string()).optional(),
   virtual_fs: z.record(z.string()).optional(), // map of path -> content
   // db_seed will be added later
 });
