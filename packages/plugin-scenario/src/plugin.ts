@@ -12,7 +12,6 @@ import type {
 } from '@elizaos/core';
 import { ModelType, Service, logger } from '@elizaos/core';
 import { z } from 'zod';
-import { runScenarioAction } from './actions';
 
 const configSchema = z.object({});
 
@@ -61,7 +60,7 @@ export const scenarioPlugin: Plugin = {
     }
   },
   services: [ScenarioService],
-  actions: [runScenarioAction],
+  actions: [],
   providers: [],
   tests: [],
 };
