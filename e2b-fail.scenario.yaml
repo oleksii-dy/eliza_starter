@@ -1,0 +1,11 @@
+name: "Test E2B Failing Command"
+description: "Verifies the E2BEnvironmentProvider handles non-zero exit codes."
+environment:
+  type: 'e2b'
+setup:
+  virtual_fs: {}
+run:
+  - input: "not-a-real-command"
+    evaluations: []
+judgment:
+  strategy: all_pass 
