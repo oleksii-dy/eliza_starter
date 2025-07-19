@@ -29,28 +29,38 @@ export class MockEngine {
             }
             
             return new Proxy(originalService as any, {
-                get: (target, prop) => {
-                    const key = `${name}.${String(prop)}`;
-                    if (mockRegistry.has(key)) {
-                        return (...args: any[]) => {
-                            const mocks = mockRegistry.get(key)!;
-                            const conditionalMock = mocks.find(m => m.when && isEqual(m.when.args, args));
-                            if (conditionalMock) {
-                                return conditionalMock.response;
-                            }
-                            const genericMock = mocks.find(m => !m.when);
-                            if (genericMock) {
-                                return genericMock.response;
-                            }
-                        };
+                get: (target, prop: string, receiver) => {
+                    const key = `${name}.${prop}`;
+                    
+                    if (!mockRegistry.has(key)) {
+                        return Reflect.get(target, prop, receiver);
                     }
-                    return Reflect.get(target, prop);
+                    
+                    return (...args: any[]) => {
+                        const potentialMocks = mockRegistry.get(key)!;
+                        
+                        const conditionalMock = potentialMocks.find(m => 
+                            m.when && m.when.args && isEqual(args, m.when.args)
+                        );
+                        
+                        if (conditionalMock) {
+                            return Promise.resolve(conditionalMock.response);
+                        }
+                        
+                        const genericMock = potentialMocks.find(m => !m.when);
+                        
+                        if (genericMock) {
+                            return Promise.resolve(genericMock.response);
+                        }
+                        
+                        return Reflect.get(target, prop, receiver)(...args);
+                    };
                 },
-            });
+            }) as T;
         };
     }
 
-    restore() {
+    restoreMocks() {
         this.runtime.getService = this.originalGetService;
     }
 } 
