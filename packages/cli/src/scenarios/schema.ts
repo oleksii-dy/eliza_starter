@@ -28,6 +28,12 @@ const LLMJudgeEvaluationSchema = BaseEvaluationSchema.extend({
   prompt: z.string(),
   expected: z.string(),
 });
+
+const FileExistsEvaluationSchema = BaseEvaluationSchema.extend({
+    type: z.literal('file_exists'),
+    path: z.string(),
+});
+
 // A discriminated union allows Zod to figure out the correct schema based on the 'type' field
 const EvaluationSchema = z.discriminatedUnion('type', [
   StringContainsEvaluationSchema,
@@ -35,7 +41,7 @@ const EvaluationSchema = z.discriminatedUnion('type', [
   RegexMatchEvaluationSchema,
   TrajectoryContainsActionSchema,
   LLMJudgeEvaluationSchema,
-  // Future evaluators (like file_exists) will be added here
+  FileExistsEvaluationSchema,
 ]);
 export const MockSchema = z.object({
   service: z.string(),
@@ -43,7 +49,7 @@ export const MockSchema = z.object({
   when: z.object({
     args: z.array(z.any()),
   }).optional(),
-  response: z.any(),
+  response: z.any().optional(),
 });
 export type Mock = z.infer<typeof MockSchema>;
 const SetupSchema = z.object({
@@ -61,12 +67,15 @@ const JudgmentSchema = z.object({
 // The master schema for the entire scenario file
 export const ScenarioSchema = z.object({
   name: z.string(),
-  description: z.string(),
+  description: z.string().optional(),
   plugins: z.array(z.string()).optional(),
   environment: z.object({
-    type: z.enum(['e2b', 'local']),
+    type: z.enum(['local', 'e2b']),
   }),
-  setup: SetupSchema.optional(),
+  setup: z.object({
+    mocks: z.array(MockSchema).optional(),
+    commands: z.array(z.string()).optional(),
+  }).optional(),
   run: z.array(RunStepSchema),
   evaluations: z.array(EvaluationSchema).optional(),
   judgment: JudgmentSchema.optional(),

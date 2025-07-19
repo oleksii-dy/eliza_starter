@@ -3,64 +3,37 @@ import { Mock } from './schema';
 import { isEqual } from 'lodash';
 
 export class MockEngine {
-    private originalGetService: IAgentRuntime['getService'];
+    private originalGetService: (serviceName: string) => any;
 
     constructor(private runtime: IAgentRuntime) {
         this.originalGetService = this.runtime.getService.bind(this.runtime);
     }
 
-    applyMocks(mocks: Mock[]) {
-        if (mocks.length === 0) return;
-        
-        const mockRegistry = new Map<string, Mock[]>();
+    applyMocks(mocks: any[]) {
+        const mockMap = new Map<string, any>();
         for (const mock of mocks) {
-            const key = `${mock.service}.${mock.method}`;
-            if (!mockRegistry.has(key)) {
-                mockRegistry.set(key, []);
+            if (!mockMap.has(mock.service)) {
+                mockMap.set(mock.service, {});
             }
-            mockRegistry.get(key)!.push(mock);
+            mockMap.get(mock.service)[mock.method] = mock.response;
         }
-        
-        this.runtime.getService = <T extends Service>(name: string): T | null => {
-            const originalService = this.originalGetService<T>(name);
 
-            if (!originalService) {
-                return null;
+        this.runtime.getService = (serviceName: string) => {
+            if (mockMap.has(serviceName)) {
+                const serviceMocks = mockMap.get(serviceName);
+                const originalService = this.originalGetService(serviceName);
+                const mockedService = { ...originalService };
+
+                for (const methodName in serviceMocks) {
+                    mockedService[methodName] = () => serviceMocks[methodName];
+                }
+                return mockedService;
             }
-            
-            return new Proxy(originalService as any, {
-                get: (target, prop: string, receiver) => {
-                    const key = `${name}.${prop}`;
-                    
-                    if (!mockRegistry.has(key)) {
-                        return Reflect.get(target, prop, receiver);
-                    }
-                    
-                    return (...args: any[]) => {
-                        const potentialMocks = mockRegistry.get(key)!;
-                        
-                        const conditionalMock = potentialMocks.find(m => 
-                            m.when && m.when.args && isEqual(args, m.when.args)
-                        );
-                        
-                        if (conditionalMock) {
-                            return Promise.resolve(conditionalMock.response);
-                        }
-                        
-                        const genericMock = potentialMocks.find(m => !m.when);
-                        
-                        if (genericMock) {
-                            return Promise.resolve(genericMock.response);
-                        }
-                        
-                        return Reflect.get(target, prop, receiver)(...args);
-                    };
-                },
-            }) as T;
+            return this.originalGetService(serviceName);
         };
     }
 
-    restoreMocks() {
+    restore() {
         this.runtime.getService = this.originalGetService;
     }
 } 
