@@ -1,0 +1,27 @@
+name: Test Scenario Evaluators
+description: Tests the various evaluators for the scenario runner.
+environment:
+  type: local
+run:
+  - input: "echo 'hello' > test.txt && ls"
+    evaluations:
+      - type: stdout_contains
+        value: "test.txt"
+  - input: "echo 'hello' > test.txt && cat test.txt"
+    evaluations:
+      - type: regex_match
+        pattern: "h.llo"
+        output: "stdout"
+  - input: "echo 'hello' > test.txt && ls"
+    evaluations:
+      - type: file_exists
+        path: "test.txt"
+  - input: "not_a_real_command"
+    evaluations:
+      - type: trajectory_contains_action
+        action: "executeCode"
+  - input: "echo 'The capital of France is Paris.'"
+    evaluations:
+      - type: llm_judge
+        prompt: "The user asked for the capital of France. The model should respond with Paris."
+        expected: "yes" 
