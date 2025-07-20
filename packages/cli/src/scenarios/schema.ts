@@ -76,9 +76,22 @@ export const ScenarioSchema = z.object({
     mocks: z.array(MockSchema).optional(),
     commands: z.array(z.string()).optional(),
   }).optional(),
-  run: z.array(RunStepSchema),
-  evaluations: z.array(EvaluationSchema).optional(),
-  judgment: JudgmentSchema.optional(),
+  run: z.array(
+    z.object({
+      input: z.string(),
+      evaluations: z.array(EvaluationSchema).optional(),
+    })
+  ),
+  judgment: z.object({
+    pass: z.object({
+        all: z.boolean().optional(),
+        any: z.boolean().optional(),
+    }).optional(),
+    fail: z.object({
+        all: z.boolean().optional(),
+        any: z.boolean().optional(),
+    }).optional(),
+  }).optional(),
 });
 // Infer the TypeScript type from the Zod schema
 export type Scenario = z.infer<typeof ScenarioSchema>; 

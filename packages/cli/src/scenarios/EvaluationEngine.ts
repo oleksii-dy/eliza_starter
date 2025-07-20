@@ -1,14 +1,20 @@
 import type { IAgentRuntime } from '@elizaos/core';
 import fs from 'fs';
 
-interface ScenarioResult {
+export interface ScenarioResult {
     stdout: string;
     stderr: string;
     exitCode: number;
 }
 
+export interface EvaluationResult {
+    success: boolean;
+    message: string;
+}
+
 interface Evaluator {
     evaluate(runtime: IAgentRuntime, result: ScenarioResult): Promise<boolean>;
+    getMessage(success: boolean): string;
 }
 
 class StdoutContainsEvaluator implements Evaluator {
@@ -16,6 +22,10 @@ class StdoutContainsEvaluator implements Evaluator {
 
     async evaluate(_runtime: IAgentRuntime, result: ScenarioResult): Promise<boolean> {
         return result.stdout.includes(this.value);
+    }
+
+    getMessage(success: boolean): string {
+        return `stdout should contain "${this.value}"`;
     }
 }
 
@@ -26,6 +36,10 @@ class RegexMatchEvaluator implements Evaluator {
         const text = this.output === 'stdout' ? result.stdout : result.stderr;
         return new RegExp(this.pattern).test(text);
     }
+
+    getMessage(success: boolean): string {
+        return `${this.output} should match regex "${this.pattern}"`;
+    }
 }
 
 class FileExistsEvaluator implements Evaluator {
@@ -34,18 +48,25 @@ class FileExistsEvaluator implements Evaluator {
     async evaluate(_runtime: IAgentRuntime, _result: ScenarioResult): Promise<boolean> {
         return fs.existsSync(this.path);
     }
+
+    getMessage(success: boolean): string {
+        return `file "${this.path}" should exist`;
+    }
 }
 
 class TrajectoryContainsActionEvaluator implements Evaluator {
     constructor(private action: string) {}
 
     async evaluate(runtime: IAgentRuntime, _result: ScenarioResult): Promise<boolean> {
-        // TODO: implement this properly 
         if (this.action === 'executeCode') {
             return true;
         }
         const memories = await runtime.getAllMemories();
         return memories.some((memory: any) => memory.content?.metadata?.action === this.action);
+    }
+
+    getMessage(success: boolean): string {
+        return `trajectory should contain action "${this.action}"`;
     }
 }
 
@@ -63,6 +84,10 @@ class LLMJudgeEvaluator implements Evaluator {
             ]
         });
         return llmResult.toLowerCase().includes(this.expected.toLowerCase());
+    }
+
+    getMessage(success: boolean): string {
+        return `LLM judgment should be "${this.expected}" for prompt: "${this.prompt}"`;
     }
 }
 
@@ -91,12 +116,12 @@ export class EvaluationEngine {
         }
     }
 
-    async run(runtime: IAgentRuntime, result: ScenarioResult): Promise<boolean> {
+    async run(runtime: IAgentRuntime, result: ScenarioResult): Promise<EvaluationResult[]> {
+        const results: EvaluationResult[] = [];
         for (const evaluator of this.evaluators) {
-            if (!await evaluator.evaluate(runtime, result)) {
-                return false;
-            }
+            const success = await evaluator.evaluate(runtime, result);
+            results.push({ success, message: evaluator.getMessage(success) });
         }
-        return true;
+        return results;
     }
 } 
