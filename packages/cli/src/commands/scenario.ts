@@ -7,7 +7,7 @@ import { exec } from 'child_process';
 
 import { ScenarioSchema, type Scenario } from '../scenarios/schema';
 import { MockEngine } from '../scenarios/mock-engine';
-import { EvaluationEngine } from '../scenarios/EvaluationEngine';
+import { EvaluationEngine, type ScenarioResult } from '../scenarios/EvaluationEngine';
 import { Reporter } from '../scenarios/Reporter';
 import { handleError } from '../utils/handle-error';
 import { loadProject } from '../project';
@@ -23,11 +23,11 @@ scenario.command('run <filePath> [projectPath]')
     .action(async (filePath, projectPath, options) => {
         let mockEngine: MockEngine | undefined;
         const reporter = new Reporter();
+        let finalStatus = false;
 
         try {
             const { runtime, scenario } = await setupScenario(filePath, projectPath, options);
-
-            reporter.startScenario(scenario);
+            reporter.reportStart(scenario);
 
             mockEngine = new MockEngine(runtime);
             if (scenario.setup?.mocks && !options.live) {
@@ -42,36 +42,41 @@ scenario.command('run <filePath> [projectPath]')
                 }
             }
 
-            await handleRunScenario({ filePath, live: options.live }, runtime, scenario, reporter);
+            const execResult = await handleRunScenario({ filePath, live: options.live }, runtime, scenario);
+            reporter.reportExecutionResult(execResult);
 
-            const passed = reporter.endScenario(scenario.judgment || { pass: { all: true }, fail: {} });
-            process.exit(passed ? 0 : 1);
+            if (scenario.run[0].evaluations) {
+                const evaluationEngine = new EvaluationEngine(scenario.run[0].evaluations);
+                const evalResults = await evaluationEngine.run(runtime, execResult);
+                reporter.reportEvaluationResults(evalResults);
+                
+                if (scenario.judgment?.pass?.all) {
+                    finalStatus = evalResults.every(res => res.success);
+                }
+            } else if (scenario.judgment?.pass?.all) {
+                finalStatus = true;
+            }
 
         } catch (error) {
             handleError(error);
+            finalStatus = false;
         } finally {
             if (mockEngine) {
                 mockEngine.restore();
             }
+            reporter.reportFinalResult(finalStatus);
+            process.exit(finalStatus ? 0 : 1);
         }
     });
 
-async function handleRunScenario(_args: {filePath: string, live: boolean}, runtime: any, scenario: any, reporter: Reporter) {
-    for (const [index, runStep] of scenario.run.entries()) {
-        reporter.startStep(index, runStep.input);
-        
-        const result = await new Promise<{ stdout: string, stderr: string, exitCode: number }>((resolve) => {
-            exec(runStep.input, (error, stdout, stderr) => {
-                resolve({ stdout, stderr, exitCode: error ? error.code || 1 : 0 });
-            });
+async function handleRunScenario(_args: {filePath: string, live: boolean}, _runtime: any, scenario: any): Promise<ScenarioResult> {
+    const runStep = scenario.run[0];
+    
+    return new Promise<ScenarioResult>((resolve) => {
+        exec(runStep.input, (error, stdout, stderr) => {
+            resolve({ stdout, stderr, exitCode: error ? error.code || 1 : 0 });
         });
-
-        if (runStep.evaluations) {
-            const evaluationEngine = new EvaluationEngine(runStep.evaluations);
-            const evalResult = await evaluationEngine.run(runtime, result);
-            reporter.endStep(index, evalResult);
-        }
-    }
+    });
 }
 
 async function setupScenario(filePath: string, projectPath: string | undefined, _options: { live: boolean }) {
