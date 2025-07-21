@@ -181,7 +181,7 @@ const createPrettyConfig = () => ({
   },
   customPrettifiers: {
     level: (inputData: any) => {
-      let level: unknown;
+      let level: number | string | null | undefined;
       if (typeof inputData === 'object' && inputData !== null) {
         level = inputData.level || inputData.value;
       } else {
