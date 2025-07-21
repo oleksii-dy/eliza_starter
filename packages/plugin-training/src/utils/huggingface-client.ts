@@ -1,5 +1,6 @@
 import { type IAgentRuntime, elizaLogger } from '@elizaos/core';
 import { type TrainingConfig } from '../types.js';
+import { getTrainingConfig } from '../config/training-config.js';
 import {
   whoAmI,
   createRepo,
@@ -623,9 +624,13 @@ For questions or issues with this dataset, please contact the ElizaOS team.
   }
 
   private generateModelCard(config: TrainingConfig): string {
+    // Get model training configuration from TrainingConfigurationManager
+    const trainingConfigManager = getTrainingConfig();
+    const modelTrainingConfig = trainingConfigManager.getModelTrainingConfig();
+    
     return `---
 license: apache-2.0
-base_model: ${(config as any).getModelTrainingConfig?.().defaultBaseModel || 'unknown'}
+base_model: ${modelTrainingConfig.defaultBaseModel}
 tags:
 - eliza
 - conversational-ai
@@ -646,9 +651,9 @@ This model has been fine-tuned for ElizaOS agent conversations using RLAIF (Rein
 
 ## Training Configuration
 
-- **Base Model**: ${(config as any).getModelTrainingConfig?.().defaultBaseModel || 'Not specified'}
-- **Learning Rate**: ${(config as any).getModelTrainingConfig?.().defaultLearningRate || 'Not specified'}
-- **Batch Size**: ${(config as any).getModelTrainingConfig?.().defaultBatchSize || 'Not specified'}
+- **Base Model**: ${modelTrainingConfig.defaultBaseModel}
+- **Learning Rate**: ${modelTrainingConfig.defaultLearningRate}
+- **Batch Size**: ${modelTrainingConfig.defaultBatchSize}
 - **Training Steps**: Not specified
 
 ## Intended Use
