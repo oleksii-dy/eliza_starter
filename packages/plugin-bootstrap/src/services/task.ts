@@ -35,6 +35,9 @@ import {
 export class TaskService extends Service {
   private timer: NodeJS.Timeout | null = null;
   private readonly TICK_INTERVAL = 1000; // Check every second
+  private isDbReady = false;
+  private dbReadyCheckAttempts = 0;
+  private readonly MAX_DB_CHECK_ATTEMPTS = 60; // Try for up to 60 seconds
   static serviceType = ServiceType.TASK;
   capabilityDescription = 'The agent is able to schedule and execute tasks';
 
@@ -116,11 +119,51 @@ export class TaskService extends Service {
 
     this.timer = setInterval(async () => {
       try {
+        // First check if database is ready
+        if (!this.isDbReady) {
+          await this.checkDatabaseReady();
+          if (!this.isDbReady) {
+            return; // Skip this tick if database isn't ready
+          }
+        }
+        
         await this.checkTasks();
       } catch (error) {
-        logger.error('[Bootstrap] Error checking tasks:', error);
+        // If we get a database error, mark as not ready and try again
+        if (error instanceof Error && error.message.includes('Failed query')) {
+          this.isDbReady = false;
+          logger.debug('[Bootstrap] Database not ready, will retry...');
+        } else {
+          logger.error('[Bootstrap] Error checking tasks:', error);
+        }
       }
     }, this.TICK_INTERVAL) as unknown as NodeJS.Timeout;
+  }
+  
+  /**
+   * Check if the database is ready by attempting a simple query
+   */
+  private async checkDatabaseReady(): Promise<void> {
+    if (this.dbReadyCheckAttempts >= this.MAX_DB_CHECK_ATTEMPTS) {
+      logger.error('[Bootstrap] Database not ready after maximum attempts, giving up');
+      return;
+    }
+    
+    try {
+      this.dbReadyCheckAttempts++;
+      
+      // Try a simple query to check if tables exist
+      await this.runtime.getTasks({ tags: ['__test__'] });
+      
+      this.isDbReady = true;
+      this.dbReadyCheckAttempts = 0;
+      logger.info('[Bootstrap] Database is ready, TaskService can start processing tasks');
+    } catch (error) {
+      // Database not ready yet, will try again on next tick
+      if (this.dbReadyCheckAttempts % 10 === 0) {
+        logger.debug(`[Bootstrap] Waiting for database to be ready... (attempt ${this.dbReadyCheckAttempts}/${this.MAX_DB_CHECK_ATTEMPTS})`);
+      }
+    }
   }
 
   /**

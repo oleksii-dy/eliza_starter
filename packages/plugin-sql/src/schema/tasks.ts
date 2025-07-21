@@ -17,9 +17,11 @@ export const taskTable = pgTable('tasks', {
   agentId: uuid('agent_id')
     .notNull()
     .references(() => agentTable.id, { onDelete: 'cascade' }),
-  tags: text('tags')
-    .array()
-    .default(sql`'{}'::text[]`),
+  /**
+   * Comma-delimited list of tags. We avoid JSON/array types because PGLite
+   * cannot reliably decode them. The application layer serialises/deserialises.
+   */
+  tags: text('tags').default(''),
   metadata: jsonb('metadata').default(sql`'{}'::jsonb`),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),

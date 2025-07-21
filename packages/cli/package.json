@@ -75,6 +75,8 @@
     "@anthropic-ai/sdk": "^0.54.0",
     "@clack/prompts": "^0.11.0",
     "@elizaos/core": "1.2.12",
+    "@elizaos/plugin-discord": "1.2.5",
+    "@elizaos/plugin-openai": "1.0.7",
     "@elizaos/plugin-sql": "1.2.12",
     "@elizaos/server": "1.2.12",
     "bun": "^1.2.17",

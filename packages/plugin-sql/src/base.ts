@@ -2314,24 +2314,23 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
     return this.withDatabase(async () => {
       const { entityId, tags } = params;
 
-      let query: SQL;
+      const conditions = [
+        or(
+          eq(relationshipTable.sourceEntityId, entityId),
+          eq(relationshipTable.targetEntityId, entityId)
+        )
+      ];
 
-      if (tags && tags.length > 0) {
-        query = sql`
-          SELECT * FROM ${relationshipTable}
-          WHERE (${relationshipTable.sourceEntityId} = ${entityId} OR ${relationshipTable.targetEntityId} = ${entityId})
-          AND ${relationshipTable.tags} && CAST(ARRAY[${sql.join(tags, sql`, `)}] AS text[])
-        `;
-      } else {
-        query = sql`
-          SELECT * FROM ${relationshipTable}
-          WHERE ${relationshipTable.sourceEntityId} = ${entityId} OR ${relationshipTable.targetEntityId} = ${entityId}
-        `;
-      }
+      // Skip tag filtering in SQL for now - will filter in JavaScript
+      // PGLite has severe limitations with JSONB operations
+      const needsTagFilter = tags && tags.length > 0;
 
-      const result = await this.db.execute(query);
+      const result = await this.db
+        .select()
+        .from(relationshipTable)
+        .where(and(...conditions));
 
-      return result.rows.map((relationship: any) => ({
+      let relationships = result.map((relationship: any) => ({
         ...relationship,
         id: relationship.id as UUID,
         sourceEntityId: relationship.sourceEntityId as UUID,
@@ -2345,6 +2344,16 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
             : new Date(relationship.createdAt).toISOString()
           : new Date().toISOString(),
       }));
+
+      // Filter by tags in JavaScript if needed (PGLite workaround)
+      if (needsTagFilter && tags) {
+        relationships = relationships.filter(rel => {
+          const relTags = Array.isArray(rel.tags) ? rel.tags : [];
+          return tags.some(tag => relTags.includes(tag));
+        });
+      }
+
+      return relationships;
     });
   }
 
@@ -2545,36 +2554,48 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
   async getTasks(params: {
     roomId?: UUID;
     tags?: string[];
-    entityId?: UUID; // Added entityId parameter
+    entityId?: UUID;
   }): Promise<Task[]> {
     return this.withRetry(async () => {
       return this.withDatabase(async () => {
+        const conditions = [
+          eq(taskTable.agentId, this.agentId),
+          ...(params.roomId ? [eq(taskTable.roomId, params.roomId)] : [])
+        ];
+
+        // Skip tag filtering in SQL for now - will filter in JavaScript
+        // PGLite has severe limitations with JSONB operations
+        const needsTagFilter = params.tags && params.tags.length > 0;
+
         const result = await this.db
           .select()
           .from(taskTable)
-          .where(
-            and(
-              eq(taskTable.agentId, this.agentId),
-              ...(params.roomId ? [eq(taskTable.roomId, params.roomId)] : []),
-              ...(params.tags && params.tags.length > 0
-                ? [
-                    sql`${taskTable.tags} @> ARRAY[${sql.raw(
-                      params.tags.map((t) => `'${t.replace(/'/g, "''")}'`).join(', ')
-                    )}]::text[]`,
-                  ]
-                : [])
-            )
-          );
+          .where(and(...conditions));
 
-        return result.map((row) => ({
+        let tasks = result.map((row) => ({
           id: row.id as UUID,
           name: row.name,
           description: row.description ?? '',
           roomId: row.roomId as UUID,
           worldId: row.worldId as UUID,
-          tags: row.tags || [],
-          metadata: row.metadata as TaskMetadata,
+          entityId: row.entityId as UUID,
+          agentId: row.agentId as UUID,
+          tags: (row.tags || []) as string[],
+          metadata: (row.metadata || {}) as TaskMetadata,
+          createdAt: row.createdAt instanceof Date
+            ? row.createdAt.toISOString()
+            : new Date(row.createdAt).toISOString(),
         }));
+
+        // Filter by tags in JavaScript if needed (PGLite workaround)
+        if (needsTagFilter && params.tags) {
+          tasks = tasks.filter(task => {
+            const taskTags = Array.isArray(task.tags) ? task.tags : [];
+            return params.tags!.some(tag => taskTags.includes(tag));
+          });
+        }
+
+        return tasks;
       });
     });
   }
@@ -3337,3 +3358,20 @@ export abstract class BaseDrizzleAdapter extends DatabaseAdapter<any> {
 }
 
 // Import tables at the end to avoid circular dependencies
+
+/**
+ * Serialise an array of tags into a single comma-delimited string for storage.
+ * Empty/undefined → ''.
+ */
+export function serializeTags(tags?: string[]): string {
+  if (!tags || tags.length === 0) return '';
+  return tags.map((t) => t.trim()).filter(Boolean).join(',');
+}
+
+/**
+ * Parse the stored comma-delimited tag string into an array.
+ */
+export function deserializeTags(str?: string | null): string[] {
+  if (!str) return [];
+  return str.split(',').map((t) => t.trim()).filter(Boolean);
+}

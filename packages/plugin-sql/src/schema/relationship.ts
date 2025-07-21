@@ -2,9 +2,8 @@ import { sql } from 'drizzle-orm';
 import {
   foreignKey,
   index,
-  jsonb,
-  pgTable,
   text,
+  pgTable,
   timestamp,
   unique,
   uuid,
@@ -35,8 +34,11 @@ export const relationshipTable = pgTable(
     agentId: uuid('agentId')
       .notNull()
       .references(() => agentTable.id, { onDelete: 'cascade' }),
-    tags: text('tags').array(),
-    metadata: jsonb('metadata'),
+    /**
+     * Comma-delimited list of tags (see tasks.tags rationale).
+     */
+    tags: text('tags').default(''),
+    metadata: text('metadata'),
   },
   (table) => [
     index('idx_relationships_users').on(table.sourceEntityId, table.targetEntityId),
