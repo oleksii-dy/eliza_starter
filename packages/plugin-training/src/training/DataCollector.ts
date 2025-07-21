@@ -334,8 +334,8 @@ Plan your response:`;
       let deletedCount = 0;
       for (const log of oldLogs) {
         try {
-          // TODO: Implement log deletion in adapter
-          // await (this.runtime as any).adapter.deleteLog(log.id);
+          // Delete the log using the runtime's deleteLog method
+          await this.runtime.deleteLog(log.id);
           deletedCount++;
         } catch (error) {
           elizaLogger.warn('Failed to delete old log:', error);
