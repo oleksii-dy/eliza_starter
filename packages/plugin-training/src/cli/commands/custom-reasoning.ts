@@ -49,7 +49,7 @@ export function customReasoningCommands(program: Command) {
         elizaLogger.info('Add this to your agent configuration:');
         elizaLogger.info('');
         elizaLogger.info(
-          `REASONING_SERVICE_${modelType.toUpperCase().replace('-', '_')}_ENABLED=true`
+          `REASONING_SERVICE_${modelType.toUpperCase().replace(/-/g, '_')}_ENABLED=true`
         );
       } catch (error) {
         elizaLogger.error('❌ Error enabling model:', error);
@@ -69,7 +69,7 @@ export function customReasoningCommands(program: Command) {
         elizaLogger.info('Set this in your agent configuration:');
         elizaLogger.info('');
         elizaLogger.info(
-          `REASONING_SERVICE_${modelType.toUpperCase().replace('-', '_')}_ENABLED=false`
+          `REASONING_SERVICE_${modelType.toUpperCase().replace(/-/g, '_')}_ENABLED=false`
         );
       } catch (error) {
         elizaLogger.error('❌ Error disabling model:', error);
