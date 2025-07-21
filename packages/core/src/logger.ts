@@ -154,8 +154,7 @@ const customLevels: Record<string, number> = {
 let raw = parseBooleanFromText(process?.env?.LOG_JSON_FORMAT) || false;
 
 // Set default log level to info to allow regular logs, but still filter service logs
-const logLevel = (process?.env?.LOG_LEVEL || '').toLowerCase();
-const effectiveLogLevel = logLevel || process?.env?.DEFAULT_LOG_LEVEL || 'info';
+const effectiveLogLevel = (process?.env?.LOG_LEVEL || '').toLowerCase() || process?.env?.DEFAULT_LOG_LEVEL || 'info';
 
 // Check if user wants timestamps in logs (default: true)
 const showTimestamps =
