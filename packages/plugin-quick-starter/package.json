@@ -60,9 +60,6 @@
   "publishConfig": {
     "access": "public"
   },
-  "resolutions": {
-    "zod": "^3.25.32"
-  },
   "agentConfig": {
     "pluginType": "elizaos:plugin:1.0.0",
     "pluginParameters": {
