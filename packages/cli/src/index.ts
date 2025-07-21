@@ -3,6 +3,11 @@ process.env.NODE_OPTIONS = '--no-deprecation';
 process.env.NODE_NO_WARNINGS = '1';
 process.env.QUIET_MODE = process.env.QUIET_MODE || 'true';
 
+// Early detection of --log-json flag to set LOG_JSON_FORMAT before logger initialization
+if (process.argv.includes('--log-json')) {
+  process.env.LOG_JSON_FORMAT = 'true';
+}
+
 import { agent } from '@/src/commands/agent';
 import { create } from '@/src/commands/create';
 import { dev } from '@/src/commands/dev';

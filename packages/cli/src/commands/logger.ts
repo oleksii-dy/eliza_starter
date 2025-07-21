@@ -2,7 +2,6 @@ import { Command } from 'commander';
 import prompts from 'prompts';
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
-import { logger } from '@elizaos/core';
 import { getElizaDirectories } from '@/src/utils/get-config';
 
 interface LoggerConfig {
@@ -36,7 +35,7 @@ async function loadConfig(): Promise<LoggerConfig> {
       return { ...DEFAULT_CONFIG, ...config };
     }
   } catch (error) {
-    logger.warn('Failed to load logger config, using defaults:', error);
+    console.warn('Failed to load logger config, using defaults:', error);
   }
   return { ...DEFAULT_CONFIG };
 }
@@ -46,14 +45,14 @@ async function saveConfig(config: LoggerConfig): Promise<void> {
     const configDir = await ensureConfigDir();
     const configFile = path.join(configDir, 'logger.config.json');
     writeFileSync(configFile, JSON.stringify(config, null, 2));
-    logger.success('Logger configuration saved!');
+    console.log('✓ Logger configuration saved!');
   } catch (error) {
-    logger.error('Failed to save logger config:', error);
+    console.error('Failed to save logger config:', error);
   }
 }
 
 function displayConfig(config: LoggerConfig): void {
-  console.log('\n📋 Current Logger Configuration:');
+  console.log('\n📋 Saved Logger Configuration:');
   console.log('================================');
   console.log(`Log Level: ${config.level}`);
   console.log(`Transport: ${config.transport}`);
@@ -62,11 +61,16 @@ function displayConfig(config: LoggerConfig): void {
   if (config.file) {
     console.log(`File Path: ${config.file}`);
   }
-  console.log('================================\n');
+  console.log('================================');
+  console.log('\n⚠️  Note: Configuration will be applied on next ElizaOS start.');
+  console.log('   Use "elizaos start" to run with these settings.\n');
 }
 
 async function interactiveConfiguration(): Promise<void> {
   const currentConfig = await loadConfig();
+  
+  // Wait a bit for any pending logs to finish
+  await new Promise(resolve => setTimeout(resolve, 100));
   
   const response = await prompts({
     type: 'select',
@@ -87,14 +91,22 @@ async function interactiveConfiguration(): Promise<void> {
   switch (response.action) {
     case 'basic':
       await configureBasicSettings(currentConfig);
+      // Exit after configuration
+      process.exit(0);
       break;
     case 'show':
       displayConfig(currentConfig);
+      // Wait a bit before exiting to ensure output is displayed
+      await new Promise(resolve => setTimeout(resolve, 500));
+      process.exit(0);
       break;
     case 'reset':
       await saveConfig(DEFAULT_CONFIG);
-      logger.success('Configuration reset to defaults');
+      console.log('✓ Configuration reset to defaults');
       displayConfig(DEFAULT_CONFIG);
+      // Wait a bit before exiting to ensure output is displayed
+      await new Promise(resolve => setTimeout(resolve, 500));
+      process.exit(0);
       break;
   }
 }
@@ -187,10 +199,17 @@ Interactive Options:
 Configuration is saved to .eliza/logger.config.json in your project directory.
 `)
   .action(async () => {
+    // Handle Ctrl+C
+    process.on('SIGINT', () => {
+      console.log('\nConfiguration cancelled.');
+      process.exit(0);
+    });
+    
     try {
       await interactiveConfiguration();
+      process.exit(0);
     } catch (error) {
-      logger.error('Failed to configure logger:', error);
+      console.error('Failed to configure logger:', error);
       process.exit(1);
     }
   });

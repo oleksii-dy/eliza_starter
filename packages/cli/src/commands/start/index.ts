@@ -118,7 +118,6 @@ export const start = new Command()
   .option('--log-transport <transport>', 'Set log transport (console, file)')
   .option('--log-file <path>', 'Set log file path (for file transport)')
   .option('--log-json', 'Enable JSON format logging')
-  .option('--no-log-pretty', 'Disable pretty printing')
   .hook('preAction', async (_thisCommand: any, actionCommand: any) => {
     const options = actionCommand.opts() as StartOptions;
     await applyLoggerOptions(options);

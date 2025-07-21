@@ -151,7 +151,7 @@ const customLevels: Record<string, number> = {
   trace: 10,
 };
 
-const raw = parseBooleanFromText(process?.env?.LOG_JSON_FORMAT) || false;
+let raw = parseBooleanFromText(process?.env?.LOG_JSON_FORMAT) || false;
 
 // Set default log level to info to allow regular logs, but still filter service logs
 const logLevel = (process?.env?.LOG_LEVEL || '').toLowerCase();
@@ -182,7 +182,7 @@ const createPrettyConfig = () => ({
   },
   customPrettifiers: {
     level: (inputData: any) => {
-      let level;
+      let level: unknown;
       if (typeof inputData === 'object' && inputData !== null) {
         level = inputData.level || inputData.value;
       } else {
@@ -225,8 +225,8 @@ const createStream = async () => {
     return undefined;
   }
   // dynamically import pretty to avoid importing it in the browser
-  const pretty = await import('pino-pretty');
-  return pretty.default(createPrettyConfig());
+  const pretty = await import('pino-pretty') as any;
+  return (pretty.default || pretty)(createPrettyConfig());
 };
 
 // Create options with appropriate level
@@ -301,25 +301,28 @@ const createLogger = (bindings: any | boolean = false) => {
   
   if (transportType === 'file' && logFile) {
     // Multi-transport configuration for file + console
-    opts.transport = {
-      targets: [
-        {
-          target: 'pino/file',
-          options: { destination: logFile }
-        },
-        {
-          target: 'pino-pretty',
-          options: {
-            colorize: true,
-            translateTime: showTimestamps ? 'SYS:standard' : false,
-            ignore: showTimestamps ? 'pid,hostname' : 'pid,hostname,time',
-            destination: 1 // stdout
-          }
+    const targets = [
+      {
+        target: 'pino/file',
+        options: { destination: logFile }
+      }
+    ];
+    
+    // Only add pretty console output if not in raw/JSON mode
+    if (!raw) {
+      targets.push({
+        target: 'pino-pretty',
+        options: {
+          colorize: true,
+          translateTime: showTimestamps ? 'SYS:standard' : false,
+          ignore: showTimestamps ? 'pid,hostname' : 'pid,hostname,time'
         }
-      ]
-    };
-  } else if (!raw) {
-    // Console only with pretty printing
+      } as any);
+    }
+    
+    opts.transport = { targets };
+  } else if (!raw && transportType === 'console') {
+    // Console only with pretty printing (only if not in JSON format)
     opts.transport = {
       target: 'pino-pretty',
       options: {
@@ -329,6 +332,7 @@ const createLogger = (bindings: any | boolean = false) => {
       }
     };
   }
+  // If raw is true, no transport is set, so we get raw JSON output
   
   const logger = pino(opts);
   return logger;
@@ -353,7 +357,7 @@ if (typeof process !== 'undefined') {
     try {
       if (typeof require !== 'undefined' && process.versions?.node) {
         const pretty = require('pino-pretty');
-        stream = pretty.default ? pretty.default(createPrettyConfig()) : null;
+        stream = (pretty.default || pretty)(createPrettyConfig());
       }
     } catch (e) {
       // Fall back to async loading if synchronous loading fails
@@ -426,21 +430,107 @@ function reconfigureLogger(): void {
   const logLevel = (process?.env?.LOG_LEVEL || '').toLowerCase();
   const newEffectiveLogLevel = logLevel || fileConfig?.level || process?.env?.DEFAULT_LOG_LEVEL || 'info';
   
+  // Check if JSON format has changed
+  const newRaw = parseBooleanFromText(process?.env?.LOG_JSON_FORMAT) || false;
+  const formatChanged = newRaw !== raw;
+  
   // Update the logger level
   logger.level = newEffectiveLogLevel;
   
-  // If file transport is configured, we need to notify that a restart is required
-  const transportType = process.env.LOG_TRANSPORT || fileConfig?.transport || 'console';
-  const logFile = process.env.PINO_LOG_FILE || fileConfig?.file;
-  
-  if (transportType === 'file' && logFile && !logger.transport) {
-    // Note: Pino transports can only be configured at creation time
-    // Log a message to inform the user
-    logger.warn('File transport configuration changed. Restart the application to apply file logging.');
+  // If format changed, we need to reinitialize the logger
+  if (formatChanged) {
+    raw = newRaw;
+    
+    // Reinitialize the logger with the new format
+    const opts: any = { ...options };
+    opts.level = newEffectiveLogLevel;
+    
+    // Configure transports based on environment and new format
+    const transportType = process.env.LOG_TRANSPORT || fileConfig?.transport || 'console';
+    const logFile = process.env.PINO_LOG_FILE || fileConfig?.file;
+    
+    if (transportType === 'file' && logFile) {
+      // Multi-transport configuration for file + console
+      const targets = [
+        {
+          target: 'pino/file',
+          options: { destination: logFile }
+        }
+      ];
+      
+      // Only add pretty console output if not in raw/JSON mode
+      if (!raw) {
+        targets.push({
+          target: 'pino-pretty',
+          options: createPrettyConfig()
+        } as any);
+      }
+      
+      opts.transport = { targets };
+    } else if (!raw && transportType === 'console') {
+      // Console only with pretty printing (only if not in JSON format)
+      opts.transport = {
+        target: 'pino-pretty',
+        options: createPrettyConfig()
+      };
+    }
+    // If raw is true, no transport is set, so we get raw JSON output
+    
+    // Create new logger instance
+    const newLogger = pino(opts);
+    
+    // If we have in-memory destination, set it up for the new logger
+    if (typeof process !== 'undefined' && (logger as unknown)[Symbol.for('pino-destination')]) {
+      let stream = null;
+      
+      if (!raw) {
+        try {
+          if (typeof require !== 'undefined' && process.versions?.node) {
+            const pretty = require('pino-pretty');
+            stream = (pretty.default || pretty)(createPrettyConfig());
+          }
+        } catch (e) {
+          // Ignore error
+        }
+      }
+      
+      if (stream !== null || raw) {
+        const destination = new InMemoryDestination(stream);
+        logger = pino(opts, destination);
+        (logger as unknown)[Symbol.for('pino-destination')] = destination;
+        
+        // Add clear method to logger
+        (logger as unknown as LoggerWithClear).clear = () => {
+          const dest = (logger as unknown)[Symbol.for('pino-destination')];
+          if (dest instanceof InMemoryDestination) {
+            dest.clear();
+          }
+        };
+      } else {
+        logger = newLogger as any;
+      }
+    } else {
+      logger = newLogger as any;
+    }
+    
+    // Logger instance is updated above
+    
+    logger.info(`Logger format changed to ${raw ? 'JSON' : 'pretty'} format`);
+  } else {
+    // If file transport is configured, we need to notify that a restart is required
+    const transportType = process.env.LOG_TRANSPORT || fileConfig?.transport || 'console';
+    const logFile = process.env.PINO_LOG_FILE || fileConfig?.file;
+    
+    if (transportType === 'file' && logFile && !logger.transport) {
+      // Note: Pino transports can only be configured at creation time
+      // Log a message to inform the user
+      logger.warn('File transport configuration changed. Restart the application to apply file logging.');
+    }
   }
 }
 
-export { createLogger, logger, reconfigureLogger };
+// Export functions and logger
+export { createLogger, reconfigureLogger, logger };
 
 // for backward compatibility
 export const elizaLogger = logger;
