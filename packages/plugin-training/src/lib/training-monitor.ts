@@ -1,5 +1,6 @@
-import { TogetherAIClient } from './together-client.js';
 import { elizaLogger } from '@elizaos/core';
+import { type TogetherAIClient } from './together-client.js';
+import { bunExec } from '@elizaos/cli/src/utils/bun-exec.js';
 
 export interface TrainingProgress {
   jobId: string;
@@ -145,17 +146,25 @@ export class TrainingMonitor {
    * Get current job progress from Together.ai CLI
    */
   private async getJobProgress(jobId: string): Promise<TrainingProgress> {
-    // Use Together.ai CLI since it works reliably
-    const { exec } = await import('child_process');
-    const { promisify } = await import('util');
-    const execAsync = promisify(exec);
+    // Validate jobId to prevent command injection
+    if (!jobId || !/^[a-zA-Z0-9\-_]+$/.test(jobId)) {
+      throw new Error('Invalid job ID format');
+    }
 
     try {
-      // Fix command injection vulnerability by using environment variables instead of string interpolation
-      const result = await execAsync('together fine-tuning retrieve ' + jobId, {
-        env: { ...process.env, TOGETHER_API_KEY: this.client['apiKey'] },
-        timeout: 10000
-      });
+      // Use bunExec to safely pass arguments
+      const result = await bunExec(
+        'together',
+        ['fine-tuning', 'retrieve', jobId],
+        {
+          env: { TOGETHER_API_KEY: this.client['apiKey'] },
+          timeout: 10000
+        }
+      );
+
+      if (!result.success) {
+        throw new Error(`Failed to retrieve job status: ${result.stderr}`);
+      }
 
       const data = JSON.parse(result.stdout);
 

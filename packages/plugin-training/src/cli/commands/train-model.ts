@@ -31,6 +31,12 @@ export function trainModelCommand(program: Command) {
           process.exit(1);
         }
 
+        // Validate model name doesn't contain shell metacharacters
+        if (!/^[a-zA-Z0-9\-_./]+$/.test(options.model)) {
+          elizaLogger.error('❌ Error: Model name contains invalid characters. Only alphanumeric, dash, underscore, dot, and slash are allowed');
+          process.exit(1);
+        }
+
         // Validate file path
         if (!options.file || typeof options.file !== 'string' || options.file.length === 0) {
           elizaLogger.error('❌ Error: Dataset file path is required and must be a non-empty string');
@@ -58,8 +64,8 @@ export function trainModelCommand(program: Command) {
         }
 
         // Validate suffix if provided
-        if (options.suffix && (typeof options.suffix !== 'string' || options.suffix.length > 40)) {
-          elizaLogger.error('❌ Error: Suffix must be a string with maximum 40 characters');
+        if (options.suffix && !/^[a-zA-Z0-9\-_]+$/.test(options.suffix)) {
+          elizaLogger.error('❌ Error: Model suffix contains invalid characters. Only alphanumeric, dash, and underscore are allowed');
           process.exit(1);
         }
 

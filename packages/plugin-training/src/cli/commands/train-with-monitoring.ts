@@ -4,7 +4,7 @@ import { promises as fs } from 'fs';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { TrainingMonitor } from '../../lib/training-monitor.js';
-import { bunExec } from '@elizaos/cli';
+import { bunExec } from '@elizaos/cli/src/utils/bun-exec.js';
 
 const execAsync = promisify(exec);
 
