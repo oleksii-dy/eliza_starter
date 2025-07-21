@@ -61,7 +61,7 @@ async function runTests() {
     env: {
       ...process.env,
       FORCE_COLOR: '1',
-    } as any,
+    } as NodeJS.ProcessEnv,
   });
   
   testProcess.on('exit', (code) => {
