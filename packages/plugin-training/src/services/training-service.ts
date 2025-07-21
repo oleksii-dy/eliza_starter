@@ -33,6 +33,30 @@ import { DataExtractor } from '../utils/data-extractor.js';
 import { DatasetProcessor } from '../utils/dataset-processor.js';
 import { HuggingFaceClient } from '../utils/huggingface-client.js';
 
+// Type guard for metadata access
+type MetadataWithCustomProps = {
+  actionResults?: any[];
+  actionTimestamps?: Record<string, { duration?: number }>;
+  actionErrors?: Record<string, any>;
+  providerResults?: any[];
+  providerData?: Record<string, any>;
+  providerTimestamps?: Record<string, { duration?: number }>;
+  providerErrors?: Record<string, any>;
+  stateData?: { providers?: Record<string, any> };
+  evaluationResults?: any[];
+  evaluatorResults?: any[];
+  extractedFacts?: any[];
+  extractedRelationships?: any[];
+  insights?: any[];
+  evaluatorTimestamps?: Record<string, { duration?: number }>;
+  evaluatorErrors?: Record<string, any>;
+  [key: string]: unknown;
+};
+
+function getMetadata(memory: Memory): MetadataWithCustomProps {
+  return (memory.metadata || {}) as MetadataWithCustomProps;
+}
+
 export class TrainingService extends Service implements TrainingServiceInterface {
   static serviceType = 'training';
   capabilityDescription = 'Training data extraction and RLAIF training with Atropos';
@@ -378,8 +402,8 @@ export class TrainingService extends Service implements TrainingServiceInterface
           };
 
           // Check if there's action-specific metadata
-          if ((memory.metadata as any as any)?.actionResults) {
-            const storedResult = (memory.metadata as any as any).actionResults.find(
+          if (getMetadata(memory).actionResults) {
+            const storedResult = getMetadata(memory).actionResults.find(
               (r: any) => r.actionName === actionName
             );
             if (storedResult) {
@@ -388,15 +412,15 @@ export class TrainingService extends Service implements TrainingServiceInterface
           }
 
           // Extract duration from timestamps if available
-          if ((memory.metadata as any as any)?.actionTimestamps?.[actionName]) {
+          if (getMetadata(memory).actionTimestamps?.[actionName]) {
             actionResult.duration =
-              (memory.metadata as any as any).actionTimestamps[actionName].duration || 0;
+              getMetadata(memory).actionTimestamps[actionName].duration || 0;
           }
 
           // Check for errors in metadata
-          if ((memory.metadata as any as any)?.actionErrors?.[actionName]) {
+          if (getMetadata(memory).actionErrors?.[actionName]) {
             actionResult.success = false;
-            actionResult.error = (memory.metadata as any).actionErrors[actionName];
+            actionResult.error = getMetadata(memory).actionErrors[actionName];
           }
 
           results.push(actionResult);
@@ -431,8 +455,8 @@ export class TrainingService extends Service implements TrainingServiceInterface
           };
 
           // Check if there's provider-specific metadata
-          if ((memory.metadata as any as any)?.providerResults) {
-            const storedResult = (memory.metadata as any).providerResults.find(
+          if (getMetadata(memory).providerResults) {
+            const storedResult = getMetadata(memory).providerResults.find(
               (r: any) => r.providerName === providerName
             );
             if (storedResult) {
@@ -441,20 +465,20 @@ export class TrainingService extends Service implements TrainingServiceInterface
           }
 
           // Extract provider data from state if available
-          if ((memory.metadata as any as any)?.providerData?.[providerName]) {
-            providerResult.data = (memory.metadata as any).providerData[providerName];
+          if (getMetadata(memory).providerData?.[providerName]) {
+            providerResult.data = getMetadata(memory).providerData[providerName];
           }
 
           // Extract duration from timestamps if available
-          if ((memory.metadata as any as any)?.providerTimestamps?.[providerName]) {
+          if (getMetadata(memory).providerTimestamps?.[providerName]) {
             providerResult.duration =
-              (memory.metadata as any).providerTimestamps[providerName].duration || 0;
+              getMetadata(memory).providerTimestamps[providerName].duration || 0;
           }
 
           // Check for errors in metadata
-          if ((memory.metadata as any as any)?.providerErrors?.[providerName]) {
+          if (getMetadata(memory).providerErrors?.[providerName]) {
             providerResult.success = false;
-            providerResult.error = (memory.metadata as any).providerErrors[providerName];
+            providerResult.error = getMetadata(memory).providerErrors[providerName];
           }
 
           results.push(providerResult);
@@ -467,8 +491,8 @@ export class TrainingService extends Service implements TrainingServiceInterface
       }
 
       // Extract from state data if available
-      if ((memory.metadata as any as any)?.stateData?.providers) {
-        const stateProviders = (memory.metadata as any).stateData.providers;
+      if (getMetadata(memory).stateData?.providers) {
+        const stateProviders = getMetadata(memory).stateData.providers;
         for (const [providerName, data] of Object.entries(stateProviders)) {
           results.push({
             providerName,
@@ -492,10 +516,10 @@ export class TrainingService extends Service implements TrainingServiceInterface
     try {
       // Extract evaluations from memory metadata
       if (
-        (memory.metadata as any as any)?.evaluationResults &&
-        Array.isArray((memory.metadata as any).evaluationResults)
+        getMetadata(memory).evaluationResults &&
+        Array.isArray(getMetadata(memory).evaluationResults)
       ) {
-        results.push(...(memory.metadata as any).evaluationResults);
+        results.push(...getMetadata(memory).evaluationResults);
       }
 
       // Extract from evaluators field in content
@@ -513,8 +537,8 @@ export class TrainingService extends Service implements TrainingServiceInterface
           };
 
           // Check if there's evaluator-specific metadata
-          if ((memory.metadata as any as any)?.evaluatorResults) {
-            const storedResult = (memory.metadata as any).evaluatorResults.find(
+          if (getMetadata(memory).evaluatorResults) {
+            const storedResult = getMetadata(memory).evaluatorResults.find(
               (r: any) => r.evaluatorName === evaluatorName
             );
             if (storedResult) {
@@ -523,30 +547,30 @@ export class TrainingService extends Service implements TrainingServiceInterface
           }
 
           // Extract facts if stored in memory
-          if ((memory.metadata as any as any)?.extractedFacts) {
-            evaluationResult.facts = (memory.metadata as any).extractedFacts;
+          if (getMetadata(memory).extractedFacts) {
+            evaluationResult.facts = getMetadata(memory).extractedFacts;
           }
 
           // Extract relationships if stored in memory
-          if ((memory.metadata as any as any)?.extractedRelationships) {
-            evaluationResult.relationships = (memory.metadata as any).extractedRelationships;
+          if (getMetadata(memory).extractedRelationships) {
+            evaluationResult.relationships = getMetadata(memory).extractedRelationships;
           }
 
           // Extract insights if stored in memory
-          if ((memory.metadata as any as any)?.insights) {
-            evaluationResult.insights = (memory.metadata as any).insights;
+          if (getMetadata(memory).insights) {
+            evaluationResult.insights = getMetadata(memory).insights;
           }
 
           // Extract duration from timestamps if available
-          if ((memory.metadata as any as any)?.evaluatorTimestamps?.[evaluatorName]) {
+          if (getMetadata(memory).evaluatorTimestamps?.[evaluatorName]) {
             evaluationResult.duration =
-              (memory.metadata as any).evaluatorTimestamps[evaluatorName].duration || 0;
+              getMetadata(memory).evaluatorTimestamps[evaluatorName].duration || 0;
           }
 
           // Check for errors in metadata
-          if ((memory.metadata as any as any)?.evaluatorErrors?.[evaluatorName]) {
+          if (getMetadata(memory).evaluatorErrors?.[evaluatorName]) {
             evaluationResult.success = false;
-            evaluationResult.error = (memory.metadata as any).evaluatorErrors[evaluatorName];
+            evaluationResult.error = getMetadata(memory).evaluatorErrors[evaluatorName];
           }
 
           results.push(evaluationResult);
