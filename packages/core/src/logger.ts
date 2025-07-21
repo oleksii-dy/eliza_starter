@@ -292,15 +292,44 @@ const createLogger = (bindings: any | boolean = false) => {
   if (bindings) {
     //opts.level = process.env.LOG_LEVEL || 'info'
     opts.base = bindings; // shallow change
+  }
+  
+  // Configure transports based on environment
+  const logFile = process.env.PINO_LOG_FILE;
+  const logFileJson = process.env.PINO_LOG_FILE_JSON === 'true';
+  const transportType = process.env.LOG_TRANSPORT || 'console';
+  
+  if (transportType === 'file' && logFile) {
+    // Multi-transport configuration for file + console
     opts.transport = {
-      target: 'pino-pretty', // this is just a string, not a dynamic import
+      targets: [
+        {
+          target: 'pino/file',
+          options: { destination: logFile }
+        },
+        {
+          target: 'pino-pretty',
+          options: {
+            colorize: true,
+            translateTime: showTimestamps ? 'SYS:standard' : false,
+            ignore: showTimestamps ? 'pid,hostname' : 'pid,hostname,time',
+            destination: 1 // stdout
+          }
+        }
+      ]
+    };
+  } else if (!raw) {
+    // Console only with pretty printing
+    opts.transport = {
+      target: 'pino-pretty',
       options: {
         colorize: true,
         translateTime: showTimestamps ? 'SYS:standard' : false,
         ignore: showTimestamps ? 'pid,hostname' : 'pid,hostname,time',
-      },
+      }
     };
   }
+  
   const logger = pino(opts);
   return logger;
 };
@@ -368,10 +397,17 @@ function loadLoggerConfigFromFile(): any {
       const path = require('path');
       const os = require('os');
       
-      const configPath = path.join(os.homedir(), '.elizaos', 'logger.config.json');
+      // Try local project config first
+      const localConfigPath = path.join(process.cwd(), '.eliza', 'logger.config.json');
+      if (fs.existsSync(localConfigPath)) {
+        const configData = fs.readFileSync(localConfigPath, 'utf-8');
+        return JSON.parse(configData);
+      }
       
-      if (fs.existsSync(configPath)) {
-        const configData = fs.readFileSync(configPath, 'utf-8');
+      // Fall back to global config
+      const globalConfigPath = path.join(os.homedir(), '.elizaos', 'logger.config.json');
+      if (fs.existsSync(globalConfigPath)) {
+        const configData = fs.readFileSync(globalConfigPath, 'utf-8');
         return JSON.parse(configData);
       }
     }
@@ -392,6 +428,15 @@ function reconfigureLogger(): void {
   
   // Update the logger level
   logger.level = newEffectiveLogLevel;
+  
+  // If file transport is configured, we need to recreate the logger with transports
+  const transportType = process.env.LOG_TRANSPORT || fileConfig?.transport || 'console';
+  const logFile = process.env.PINO_LOG_FILE || fileConfig?.file;
+  
+  if (transportType === 'file' && logFile) {
+    // Recreate logger with file transport
+    logger = createLogger();
+  }
 }
 
 export { createLogger, logger, reconfigureLogger };

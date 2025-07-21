@@ -147,7 +147,14 @@ async function configureBasicSettings(currentConfig: LoggerConfig): Promise<void
   // Handle file transport
   if (response.transport === 'file') {
     const dirs = await getElizaDirectories();
-    const defaultLogFile = path.join(dirs.elizaDir, 'logs', 'eliza.log');
+    const logsDir = path.join(dirs.elizaDir, 'logs');
+    
+    // Ensure logs directory exists
+    if (!existsSync(logsDir)) {
+      mkdirSync(logsDir, { recursive: true });
+    }
+    
+    const defaultLogFile = path.join(logsDir, 'eliza.log');
     
     const fileResponse = await prompts({
       type: 'text',

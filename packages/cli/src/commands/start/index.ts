@@ -9,78 +9,28 @@ import { Command } from 'commander';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { startAgents } from './actions/server-start';
-import { StartOptions } from './types';
+import { type StartOptions } from './types';
 import { loadEnvConfig } from './utils/config-utils';
 import { getElizaDirectories } from '@/src/utils/get-config';
 
+// Setup file logging transport configuration
+// Note: Pino transports are configured at logger creation time, so we set environment
+// variables that the core logger can use to configure the transport
 function setupFileLogging(logFile: string, jsonFormat?: boolean): void {
   try {
+    // Ensure log directory exists
     const logDir = path.dirname(logFile);
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true });
     }
 
-    const fileStream = fs.createWriteStream(logFile, { flags: 'a' });
+    // Set environment variables for Pino transport configuration
+    // The core logger should check these and configure transports accordingly
+    process.env.PINO_LOG_FILE = logFile;
+    process.env.PINO_LOG_FILE_JSON = jsonFormat ? 'true' : 'false';
     
-    const currentDestination = (logger as any)[Symbol.for('pino-destination')];
-
-    if (currentDestination && typeof currentDestination.write === 'function') {
-      const originalWrite = currentDestination.write.bind(currentDestination);
-
-      currentDestination.write = function(chunk: any) {
-        if (jsonFormat) {
-          process.stdout.write(chunk);
-        } else {
-          originalWrite(chunk);
-        }
-
-        try {
-          if (typeof chunk === 'string') {
-            if (jsonFormat) {
-              fileStream.write(chunk);
-            } else {
-              const logEntry = JSON.parse(chunk);
-              const timestamp = new Date(logEntry.time).toISOString();
-              
-              let level = 'info';
-              if (typeof logEntry.level === 'number') {
-                const levelMap: Record<number, string> = {
-                  10: 'trace', 20: 'debug', 30: 'info', 
-                  40: 'warn', 50: 'error', 60: 'fatal'
-                };
-                level = levelMap[logEntry.level] || 'info';
-              }
-              
-              const message = logEntry.msg || '';
-              const cleanLogLine = `[${timestamp}] ${level.toUpperCase()}: ${message}\n`;
-              fileStream.write(cleanLogLine);
-            }
-          }
-        } catch (e) {
-          fileStream.write(chunk);
-        }
-      };
-
-      logger.info(`File logging enabled: ${logFile} (format: ${jsonFormat ? 'JSON' : 'readable'})`);
-
-      const cleanup = () => {
-        try {
-          fileStream.end();
-        } catch (e) {
-        }
-      };
-
-      process.on('exit', cleanup);
-      process.on('SIGINT', () => {
-        cleanup();
-        process.exit(0);
-      });
-      process.on('SIGTERM', cleanup);
-
-    } else {
-      logger.warn('Could not enhance logger with file output - destination not accessible');
-    }
-
+    logger.info(`File logging configured: ${logFile} (format: ${jsonFormat ? 'JSON' : 'readable'})`);
+    
   } catch (error) {
     logger.error('Failed to setup file logging:', error);
   }
@@ -140,12 +90,13 @@ async function applyLoggerOptions(options: StartOptions): Promise<void> {
   // Set transport type
   process.env.LOG_TRANSPORT = finalConfig.transport;
   
-  // Note: Logger reconfiguration would happen here in a complete implementation
-  
-  // Handle file transport at CLI level (after core logger is configured)
+  // Handle file transport configuration first (sets PINO_LOG_FILE env var)
   if (finalConfig.transport === 'file' && finalConfig.file) {
     setupFileLogging(finalConfig.file, finalConfig.jsonFormat);
   }
+  
+  // Reconfigure the logger with new settings (including file transport if configured)
+  reconfigureLogger();
   
   // Log final configuration with source indication
   const sources = [];
