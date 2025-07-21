@@ -429,13 +429,14 @@ function reconfigureLogger(): void {
   // Update the logger level
   logger.level = newEffectiveLogLevel;
   
-  // If file transport is configured, we need to recreate the logger with transports
+  // If file transport is configured, we need to notify that a restart is required
   const transportType = process.env.LOG_TRANSPORT || fileConfig?.transport || 'console';
   const logFile = process.env.PINO_LOG_FILE || fileConfig?.file;
   
-  if (transportType === 'file' && logFile) {
-    // Recreate logger with file transport
-    logger = createLogger();
+  if (transportType === 'file' && logFile && !logger.transport) {
+    // Note: Pino transports can only be configured at creation time
+    // Log a message to inform the user
+    logger.warn('File transport configuration changed. Restart the application to apply file logging.');
   }
 }
 
