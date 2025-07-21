@@ -452,30 +452,30 @@ function formatMetrics(metrics?: any): string {
 
   const { trainingLoss = [], validationLoss = [], accuracy = [], rewardScore = [] } = metrics;
 
-  let text = '**Metrics:**\\n';
+  let text = '**Metrics:**\n';
 
   if (trainingLoss.length > 0) {
     const latest = trainingLoss[trainingLoss.length - 1];
     const trend = getTrend(trainingLoss.slice(-5));
-    text += `- Training Loss: ${latest.toFixed(4)} ${trend}\\n`;
+    text += `- Training Loss: ${latest.toFixed(4)} ${trend}\n`;
   }
 
   if (validationLoss.length > 0) {
     const latest = validationLoss[validationLoss.length - 1];
     const trend = getTrend(validationLoss.slice(-5));
-    text += `- Validation Loss: ${latest.toFixed(4)} ${trend}\\n`;
+    text += `- Validation Loss: ${latest.toFixed(4)} ${trend}\n`;
   }
 
   if (accuracy.length > 0) {
     const latest = accuracy[accuracy.length - 1];
     const trend = getTrend(accuracy.slice(-5));
-    text += `- Accuracy: ${(latest * 100).toFixed(2)}% ${trend}\\n`;
+    text += `- Accuracy: ${(latest * 100).toFixed(2)}% ${trend}\n`;
   }
 
   if (rewardScore.length > 0) {
     const latest = rewardScore[rewardScore.length - 1];
     const trend = getTrend(rewardScore.slice(-5));
-    text += `- Reward Score: ${latest.toFixed(3)} ${trend}\\n`;
+    text += `- Reward Score: ${latest.toFixed(3)} ${trend}\n`;
   }
 
   return text;
@@ -512,22 +512,22 @@ function getTrend(values: number[]): string {
  * Format artifacts information
  */
 function formatArtifacts(artifacts: any): string {
-  let text = '**Artifacts:**\\n';
+  let text = '**Artifacts:**\n';
 
   if (artifacts.modelPath) {
-    text += `- Model: \`${artifacts.modelPath}\`\\n`;
+    text += `- Model: \`${artifacts.modelPath}\`\n`;
   }
 
   if (artifacts.datasetPath) {
-    text += `- Dataset: \`${artifacts.datasetPath}\`\\n`;
+    text += `- Dataset: \`${artifacts.datasetPath}\`\n`;
   }
 
   if (artifacts.logsPath) {
-    text += `- Logs: \`${artifacts.logsPath}\`\\n`;
+    text += `- Logs: \`${artifacts.logsPath}\`\n`;
   }
 
   if (artifacts.checkpointPaths && artifacts.checkpointPaths.length > 0) {
-    text += `- Checkpoints: ${artifacts.checkpointPaths.length} saved\\n`;
+    text += `- Checkpoints: ${artifacts.checkpointPaths.length} saved\n`;
   }
 
   return text;

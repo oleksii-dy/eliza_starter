@@ -77,12 +77,12 @@ export function extractFromDbCommand(program: Command) {
 
         // Show statistics
         const stats = builder.getStats();
-        elizaLogger.info('\\n📊 Final Dataset Statistics:');
+        elizaLogger.info('\n📊 Final Dataset Statistics:');
         elizaLogger.info(`  Total examples: ${stats.totalExamples}`);
         elizaLogger.info(`  Average quality: ${stats.averageQuality.toFixed(2)}`);
         elizaLogger.info(`  Estimated tokens: ${stats.tokenCount}`);
 
-        elizaLogger.info('\\n✅ Database extraction completed!');
+        elizaLogger.info('\n✅ Database extraction completed!');
         elizaLogger.info('💡 Next steps:');
         elizaLogger.info('  1. Review examples: eliza-training list-examples');
         elizaLogger.info('  2. Generate dataset: eliza-training create-dataset --validate');
