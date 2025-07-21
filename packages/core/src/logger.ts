@@ -456,14 +456,14 @@ function reconfigureLogger(): void {
           target: 'pino/file',
           options: { destination: logFile }
         }
-      ];
+      ] as TransportTarget[];
       
       // Only add pretty console output if not in raw/JSON mode
       if (!raw) {
         targets.push({
           target: 'pino-pretty',
           options: createPrettyConfig()
-        } as any);
+        });
       }
       
       opts.transport = { targets };
