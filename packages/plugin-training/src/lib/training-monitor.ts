@@ -166,7 +166,12 @@ export class TrainingMonitor {
         throw new Error(`Failed to retrieve job status: ${result.stderr}`);
       }
 
-      const data = JSON.parse(result.stdout);
+      let data;
+      try {
+        data = JSON.parse(result.stdout);
+      } catch (parseError) {
+        throw new Error(`Failed to parse job progress response: ${result.stdout}`);
+      }
 
       // Calculate progress percentage with improved logic
       let progress = 0;

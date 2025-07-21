@@ -80,7 +80,7 @@ export function simulateTrainingCommand(program: Command) {
             }
           }
 
-          elizaLogger.info('\\n📊 Dataset Statistics:');
+          elizaLogger.info('\n📊 Dataset Statistics:');
           elizaLogger.info(`  Total examples: ${lines.length}`);
           elizaLogger.info(`  Estimated tokens: ${totalTokens}`);
           elizaLogger.info(
@@ -94,7 +94,7 @@ export function simulateTrainingCommand(program: Command) {
         }
 
         // Step 2: API Connection Test
-        elizaLogger.info('\\n🔌 Step 2: Testing API Connection');
+        elizaLogger.info('\n🔌 Step 2: Testing API Connection');
         elizaLogger.info('──────────────────────────────────');
 
         const client = new TogetherAIClient(apiKey);
@@ -120,7 +120,7 @@ export function simulateTrainingCommand(program: Command) {
         }
 
         // Step 3: Cost Estimation
-        elizaLogger.info('\\n💰 Step 3: Cost Estimation');
+        elizaLogger.info('\n💰 Step 3: Cost Estimation');
         elizaLogger.info('──────────────────────────');
 
         const estimatedCost = calculateTrainingCost(
@@ -143,7 +143,7 @@ export function simulateTrainingCommand(program: Command) {
         }
 
         // Step 4: Simulated Training Process
-        elizaLogger.info('\\n🎯 Step 4: Simulated Training Process');
+        elizaLogger.info('\n🎯 Step 4: Simulated Training Process');
         elizaLogger.info('─────────────────────────────────────');
 
         elizaLogger.info('📤 [SIMULATED] Uploading dataset to Together.ai...');
@@ -151,13 +151,13 @@ export function simulateTrainingCommand(program: Command) {
         const mockFileId = `file-${Date.now()}-${Math.random().toString(36).substr(2, 8)}`;
         elizaLogger.info(`✅ [SIMULATED] Dataset uploaded successfully: ${mockFileId}`);
 
-        elizaLogger.info('\\n🚀 [SIMULATED] Starting fine-tuning job...');
+        elizaLogger.info('\n🚀 [SIMULATED] Starting fine-tuning job...');
         await simulateDelay(1500);
         const mockJobId = `ftjob-${Date.now()}-${Math.random().toString(36).substr(2, 8)}`;
         elizaLogger.info(`✅ [SIMULATED] Fine-tuning job started: ${mockJobId}`);
 
         const fineTunedModelName = `${options.model.split('/')[1]}-${options.suffix}`;
-        elizaLogger.info('\\n📋 Training Configuration:');
+        elizaLogger.info('\n📋 Training Configuration:');
         elizaLogger.info(`  Base model: ${options.model}`);
         elizaLogger.info(`  Fine-tuned model: ${fineTunedModelName}`);
         elizaLogger.info(`  Training epochs: ${options.epochs}`);
@@ -165,12 +165,12 @@ export function simulateTrainingCommand(program: Command) {
         elizaLogger.info(`  Batch size: ${options.batchSize}`);
 
         // Step 5: Training Progress Simulation
-        elizaLogger.info('\\n⏳ Step 5: Training Progress');
+        elizaLogger.info('\n⏳ Step 5: Training Progress');
         elizaLogger.info('─────────────────────────────');
 
         const epochs = parseInt(options.epochs, 10);
         for (let epoch = 1; epoch <= epochs; epoch++) {
-          elizaLogger.info(`\\n📚 Epoch ${epoch}/${epochs}:`);
+          elizaLogger.info(`\n📚 Epoch ${epoch}/${epochs}:`);
           await simulateDelay(1000);
           elizaLogger.info(`  Training loss: ${(Math.random() * 0.5 + 0.1).toFixed(4)}`);
           elizaLogger.info(`  Validation loss: ${(Math.random() * 0.6 + 0.15).toFixed(4)}`);
@@ -178,10 +178,10 @@ export function simulateTrainingCommand(program: Command) {
           elizaLogger.info(`  Progress: ${Math.round((epoch / epochs) * 100)}%`);
         }
 
-        elizaLogger.info('\\n✅ [SIMULATED] Training completed successfully!');
+        elizaLogger.info('\n✅ [SIMULATED] Training completed successfully!');
 
         // Step 6: Model Testing
-        elizaLogger.info('\\n🧪 Step 6: Model Testing');
+        elizaLogger.info('\n🧪 Step 6: Model Testing');
         elizaLogger.info('─────────────────────────');
 
         elizaLogger.info('🔍 Testing fine-tuned model inference...');
@@ -193,7 +193,7 @@ export function simulateTrainingCommand(program: Command) {
         ];
 
         for (const prompt of testPrompts) {
-          elizaLogger.info(`\\n🤖 Testing prompt: "${prompt}"`);
+          elizaLogger.info(`\n🤖 Testing prompt: "${prompt}"`);
           await simulateDelay(1500);
 
           // Simulate improved response
@@ -211,7 +211,7 @@ export function simulateTrainingCommand(program: Command) {
         }
 
         // Step 7: Deployment Instructions
-        elizaLogger.info('\\n🚀 Step 7: Deployment Options');
+        elizaLogger.info('\n🚀 Step 7: Deployment Options');
         elizaLogger.info('─────────────────────────────');
 
         if (options.model.includes('1.5B')) {
@@ -229,7 +229,7 @@ export function simulateTrainingCommand(program: Command) {
         }
 
         // Summary
-        elizaLogger.info('\\n🎉 Training Simulation Complete!');
+        elizaLogger.info('\n🎉 Training Simulation Complete!');
         elizaLogger.info('═════════════════════════════════');
         elizaLogger.info(`✅ Dataset validated: 6 examples, ${totalTokens} tokens`);
         elizaLogger.info('✅ API connection confirmed');
@@ -237,7 +237,7 @@ export function simulateTrainingCommand(program: Command) {
         elizaLogger.info('✅ Model testing completed');
         elizaLogger.info('📈 Estimated improvement: 15-25% better responses for ElizaOS tasks');
 
-        elizaLogger.info('\\n💡 Next Steps (when Together.ai upload is available):');
+        elizaLogger.info('\n💡 Next Steps (when Together.ai upload is available):');
         elizaLogger.info('  1. Resolve file upload issue (billing/account setup)');
         elizaLogger.info(
           '  2. Run: bun run cli -- train-model --model "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"'

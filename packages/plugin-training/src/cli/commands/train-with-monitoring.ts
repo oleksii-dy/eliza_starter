@@ -1,12 +1,8 @@
 import { type Command } from 'commander';
 import { elizaLogger } from '@elizaos/core';
 import { promises as fs } from 'fs';
-import { exec } from 'child_process';
-import { promisify } from 'util';
 import { TrainingMonitor } from '../../lib/training-monitor.js';
 import { bunExec } from '@elizaos/cli/src/utils/bun-exec.js';
-
-const execAsync = promisify(exec);
 
 export function trainWithMonitoringCommand(program: Command) {
   program
@@ -61,7 +57,12 @@ export function trainWithMonitoringCommand(program: Command) {
           throw new Error(`Upload failed: ${uploadResult.stderr}`);
         }
 
-        const uploadData = JSON.parse(uploadResult.stdout);
+        let uploadData;
+        try {
+          uploadData = JSON.parse(uploadResult.stdout);
+        } catch (parseError) {
+          throw new Error(`Failed to parse upload response: ${uploadResult.stdout}`);
+        }
         const fileId = uploadData.id;
 
         elizaLogger.info(`✅ Upload successful: ${fileId}`);

@@ -87,7 +87,12 @@ export function trainModelCommand(program: Command) {
             throw new Error(`Upload failed: ${uploadResult.stderr}`);
           }
 
-          const uploadData = JSON.parse(uploadResult.stdout);
+          let uploadData;
+          try {
+            uploadData = JSON.parse(uploadResult.stdout);
+          } catch (parseError) {
+            throw new Error(`Failed to parse upload response: ${uploadResult.stdout}`);
+          }
           const fileId = uploadData.id;
           elizaLogger.info(`✅ Dataset uploaded: ${fileId}`);
 
@@ -171,7 +176,12 @@ async function monitorJobCLI(apiKey: string, jobId: string): Promise<void> {
         throw new Error(`Status check failed: ${statusResult.stderr}`);
       }
 
-      const jobData = JSON.parse(statusResult.stdout);
+      let jobData;
+      try {
+        jobData = JSON.parse(statusResult.stdout);
+      } catch (parseError) {
+        throw new Error(`Failed to parse job status response: ${statusResult.stdout}`);
+      }
 
       if (jobData.status !== lastStatus) {
         elizaLogger.info(`📊 Status: ${jobData.status}`);

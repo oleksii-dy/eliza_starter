@@ -369,7 +369,7 @@ For questions or issues with this dataset, please contact the ElizaOS team.
     return Object.entries(distribution)
       .sort(([, a], [, b]) => b - a)
       .map(([key, value]) => `- **${key}**: ${value}`)
-      .join('\\n');
+      .join('\n');
   }
 
   private async createAndUploadDatasetCard(
