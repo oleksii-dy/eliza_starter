@@ -454,7 +454,7 @@ describe('AgentServer Integration Tests', () => {
 
       const channelData = {
         name: 'Test Channel',
-        type: 'group' as any, // Using any to avoid type issues in test
+        type: 'group' as ChannelType, // Using ChannelType enum for type safety
         messageServerId: 'server-id' as UUID,
       };
 
