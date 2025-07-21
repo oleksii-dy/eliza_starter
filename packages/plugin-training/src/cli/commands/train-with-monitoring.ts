@@ -4,6 +4,7 @@ import { promises as fs } from 'fs';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { TrainingMonitor } from '../../lib/training-monitor.js';
+import { bunExec } from '@elizaos/cli';
 
 const execAsync = promisify(exec);
 
@@ -47,10 +48,18 @@ export function trainWithMonitoringCommand(program: Command) {
         elizaLogger.info('\n📤 Step 2: Uploading Dataset');
         elizaLogger.info('─'.repeat(30));
 
-        const uploadResult = await execAsync(
-          `TOGETHER_API_KEY="${apiKey}" together files upload "${filePath}"`,
-          { timeout: 60000 }
+        const uploadResult = await bunExec(
+          'together',
+          ['files', 'upload', filePath],
+          { 
+            env: { TOGETHER_API_KEY: apiKey },
+            timeout: 60000 
+          }
         );
+
+        if (!uploadResult.success) {
+          throw new Error(`Upload failed: ${uploadResult.stderr}`);
+        }
 
         const uploadData = JSON.parse(uploadResult.stdout);
         const fileId = uploadData.id;
@@ -62,12 +71,32 @@ export function trainWithMonitoringCommand(program: Command) {
         elizaLogger.info('\n🎯 Step 3: Starting Training Job');
         elizaLogger.info('─'.repeat(30));
 
-        const confirmFlag = confirm ? '--confirm' : '';
-        const trainCommand = `TOGETHER_API_KEY="${apiKey}" together fine-tuning create --training-file ${fileId} --model "${model}" --suffix "${suffix}" --n-epochs ${epochs} ${confirmFlag}`;
+        const trainArgs = [
+          'fine-tuning', 'create',
+          '--training-file', fileId,
+          '--model', model,
+          '--suffix', suffix,
+          '--n-epochs', epochs
+        ];
+        
+        if (confirm) {
+          trainArgs.push('--confirm');
+        }
 
-        elizaLogger.info(`🔄 Command: ${trainCommand.replace(apiKey, 'xxx...')}`);
+        elizaLogger.info(`🔄 Starting fine-tuning with model: ${model}`);
 
-        const trainResult = await execAsync(trainCommand, { timeout: 60000 });
+        const trainResult = await bunExec(
+          'together',
+          trainArgs,
+          { 
+            env: { TOGETHER_API_KEY: apiKey },
+            timeout: 60000 
+          }
+        );
+
+        if (!trainResult.success) {
+          throw new Error(`Training failed: ${trainResult.stderr}`);
+        }
 
         // Extract job ID from output
         const jobIdMatch = trainResult.stdout.match(/job ([a-zA-Z0-9-]+)/);
@@ -189,9 +218,18 @@ export function listJobsCommand(program: Command) {
       try {
         const { apiKey, json } = options;
 
-        const result = await execAsync(`TOGETHER_API_KEY="${apiKey}" together fine-tuning list`, {
-          timeout: 30000,
-        });
+        const result = await bunExec(
+          'together',
+          ['fine-tuning', 'list'],
+          {
+            env: { TOGETHER_API_KEY: apiKey },
+            timeout: 30000,
+          }
+        );
+
+        if (!result.success) {
+          throw new Error(`Failed to list jobs: ${result.stderr}`);
+        }
 
         if (json) {
           // Parse and output as JSON
