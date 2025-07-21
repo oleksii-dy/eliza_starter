@@ -114,8 +114,8 @@ mock.module('socket.io', () => ({
   })),
 }));
 
-// Mock global process with required methods
-(global as any).process = {
+// Create a local mock process object with required methods
+const mockProcess = {
   ...process,
   env: { ...process.env, NODE_ENV: 'test' },
   on: jest.fn(),
