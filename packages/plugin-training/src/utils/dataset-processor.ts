@@ -392,6 +392,14 @@ export class DatasetProcessor {
   }
 
   private async saveAsCSV(data: TrainingTrajectory[], filepath: string): Promise<void> {
+    // Handle empty dataset
+    if (data.length === 0) {
+      // Write empty file or file with just headers
+      const headers = 'id,prompt,responses,scores,domain,difficulty,taskType,quality,timestamp\n';
+      await fs.writeFile(filepath, headers, 'utf-8');
+      return;
+    }
+
     // Convert to flat structure for CSV
     const csvData = data.map((trajectory) => ({
       id: trajectory.id,
