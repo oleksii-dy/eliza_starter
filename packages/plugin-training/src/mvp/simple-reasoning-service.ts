@@ -32,6 +32,10 @@ export class SimpleReasoningService {
 
   constructor(runtime: IAgentRuntime) {
     this.runtime = runtime;
+    // Validate that runtime.useModel exists before storing it
+    if (!runtime.useModel || typeof runtime.useModel !== 'function') {
+      throw new Error('Runtime does not have a valid useModel method');
+    }
     this.originalUseModel = runtime.useModel.bind(runtime);
   }
 
@@ -96,6 +100,10 @@ export class SimpleReasoningService {
     }
 
     try {
+      // Validate originalUseModel exists before restoring it
+      if (!this.originalUseModel || typeof this.originalUseModel !== 'function') {
+        throw new Error('Original useModel method is not available');
+      }
       // Restore original useModel method - IMPORTANT: bind to runtime for correct context
       this.runtime.useModel = this.originalUseModel;
       this.enabled = false;
