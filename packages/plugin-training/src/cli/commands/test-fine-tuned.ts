@@ -3,6 +3,44 @@ import { elizaLogger } from '@elizaos/core';
 import { promises as fs } from 'fs';
 import { bunExec } from '@elizaos/cli/src/utils/bun-exec.js';
 
+/**
+ * Validates model name to prevent command injection
+ * @param modelName The model name to validate
+ * @returns The validated model name
+ * @throws Error if the model name contains invalid characters
+ */
+function validateModelName(modelName: string): string {
+  // Model names should only contain alphanumeric characters, hyphens, underscores, dots, and forward slashes
+  // This pattern allows for org/model format like "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B"
+  const validModelPattern = /^[a-zA-Z0-9\-_./]+$/;
+  
+  if (!modelName || typeof modelName !== 'string') {
+    throw new Error('Model name must be a non-empty string');
+  }
+  
+  if (!validModelPattern.test(modelName)) {
+    throw new Error(
+      `Invalid model name: "${modelName}". Model names can only contain alphanumeric characters, hyphens, underscores, dots, and forward slashes.`
+    );
+  }
+  
+  // Additional checks for suspicious patterns
+  if (modelName.includes('..') || modelName.includes('//')) {
+    throw new Error(
+      `Invalid model name: "${modelName}". Model names cannot contain ".." or "//" sequences.`
+    );
+  }
+  
+  // Ensure the model name doesn't start or end with special characters
+  if (/^[/.-]|[/.-]$/.test(modelName)) {
+    throw new Error(
+      `Invalid model name: "${modelName}". Model names cannot start or end with "/", ".", or "-".`
+    );
+  }
+  
+  return modelName;
+}
+
 export function testFineTunedCommand(program: Command) {
   program
     .command('test-fine-tuned')
@@ -17,7 +55,11 @@ export function testFineTunedCommand(program: Command) {
     .option('-o, --output <file>', 'Save comparison results to file', 'test-results.json')
     .action(async (options) => {
       try {
-        const { apiKey, model, baseModel, output } = options;
+        const { apiKey, output } = options;
+        
+        // Validate model names to prevent command injection
+        const model = validateModelName(options.model);
+        const baseModel = validateModelName(options.baseModel);
 
         elizaLogger.info('🧪 Fine-tuned Model Testing Suite');
         elizaLogger.info('═'.repeat(60));
@@ -157,10 +199,13 @@ export function testFineTunedCommand(program: Command) {
 
 async function testModelInference(apiKey: string, model: string, prompt: string): Promise<string> {
   try {
-    // Use Together.ai CLI completions command - bunExec handles argument escaping automatically
+    // Validate model name as an additional safety layer
+    const validatedModel = validateModelName(model);
+    
+    // Use Together.ai CLI completions command
     const result = await bunExec(
       'together',
-      ['completions', '--model', model, '--max-tokens', '800', '--temperature', '0.1', prompt],
+      ['completions', '--model', validatedModel, '--max-tokens', '800', '--temperature', '0.1', prompt],
       { 
         timeout: 60000,
         env: { TOGETHER_API_KEY: apiKey }
