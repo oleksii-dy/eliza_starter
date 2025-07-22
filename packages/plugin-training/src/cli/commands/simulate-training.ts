@@ -148,12 +148,12 @@ export function simulateTrainingCommand(program: Command) {
 
         elizaLogger.info('📤 [SIMULATED] Uploading dataset to Together.ai...');
         await simulateDelay(2000);
-        const mockFileId = `file-${Date.now()}-${Math.random().toString(36).substr(2, 8)}`;
+        const mockFileId = `file-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
         elizaLogger.info(`✅ [SIMULATED] Dataset uploaded successfully: ${mockFileId}`);
 
         elizaLogger.info('\n🚀 [SIMULATED] Starting fine-tuning job...');
         await simulateDelay(1500);
-        const mockJobId = `ftjob-${Date.now()}-${Math.random().toString(36).substr(2, 8)}`;
+        const mockJobId = `ftjob-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
         elizaLogger.info(`✅ [SIMULATED] Fine-tuning job started: ${mockJobId}`);
 
         const fineTunedModelName = `${options.model.split('/')[1]}-${options.suffix}`;

@@ -310,7 +310,7 @@ export class DatabaseExtractor {
       const thinking = this.generateThinkingBlock(requestText, responseText);
 
       const example: TrainingExample = {
-        id: `extracted-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `extracted-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
         input: requestText,
         output: responseText,
         request: requestText,

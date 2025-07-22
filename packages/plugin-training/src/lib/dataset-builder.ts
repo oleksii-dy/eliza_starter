@@ -65,7 +65,7 @@ export class DatasetBuilder {
    * Add a training example
    */
   async addExample(example: Omit<TrainingExample, 'id' | 'createdAt'>): Promise<string> {
-    const id = `example-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const id = `example-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
     const fullExample: TrainingExample = {
       ...example,
       id,

@@ -86,7 +86,7 @@ describe('Real Runtime Enhanced Custom Reasoning Integration Tests', () => {
     elizaLogger.info('🧪 Setting up Enhanced Custom Reasoning real runtime test environment...');
 
     // Create unique test paths to avoid conflicts
-    const testId = `enhanced-reasoning-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const testId = `enhanced-reasoning-test-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
     testDatabasePath = path.join(process.cwd(), '.test-data', testId, 'enhanced.db');
     testDataPath = path.join(process.cwd(), '.test-data', testId, 'enhanced-data');
     testSessionDir = path.join(process.cwd(), '.test-data', testId, 'training_recording');

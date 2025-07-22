@@ -328,9 +328,9 @@ function extractJobId(message: Memory, state?: State): string | null {
 
   // Look for job ID patterns in message
   const jobIdPatterns = [
-    /training[\\-\\s]+(training-[\\w\\-]+)/i,
-    /job[\\-\\s]+([\\w\\-]+)/i,
-    /(training-\\d{10,}-[\\w]+)/i,
+    /training[\-\s]+(training-[\w\-]+)/i,
+    /job[\-\s]+([\w\-]+)/i,
+    /(training-\d{10,}-[\w]+)/i,
   ];
 
   for (const pattern of jobIdPatterns) {

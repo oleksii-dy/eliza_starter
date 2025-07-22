@@ -75,7 +75,7 @@ describe('Real Runtime HuggingFace Client Integration Tests', () => {
     elizaLogger.info('🧪 Setting up HuggingFace Client real runtime test environment...');
 
     // Create unique test paths to avoid conflicts
-    const testId = `hf-test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const testId = `hf-test-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
     testDatabasePath = path.join(process.cwd(), '.test-data', testId, 'hf.db');
     testDataPath = path.join(process.cwd(), '.test-data', testId, 'hf-data');
 

@@ -54,7 +54,7 @@ export class SimpleReasoningService {
         try {
           // For now, just log and store training data, then use original
           const record: TrainingDataRecord = {
-            id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            id: `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
             timestamp: Date.now(),
             agentId: this.agentId,
             roomId: params.roomId,
