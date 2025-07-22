@@ -10,7 +10,7 @@
 import { elizaLogger } from '@elizaos/core';
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { execSync } from 'child_process';
+import { bunExec } from '@elizaos/cli/src/utils/bun-exec.js';
 
 // Test configuration
 const TEST_CONFIG = {
@@ -148,10 +148,14 @@ async function testBuildAndCompilation(): Promise<void> {
   elizaLogger.info('Building plugin-training...');
 
   try {
-    execSync('bun run build', {
+    const result = await bunExec('bun', ['run', 'build'], {
       cwd: process.cwd(),
-      stdio: TEST_CONFIG.verbose ? 'inherit' : 'pipe',
+      timeout: 120000, // 2 minutes for build
     });
+    
+    if (!result.success) {
+      throw new Error(`Build failed with exit code ${result.exitCode}: ${result.stderr}`);
+    }
   } catch (error) {
     throw new Error(`Build failed: ${error}`);
   }

@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 
 /**
  * CLI script to start RLAIF training with Atropos
@@ -10,6 +10,7 @@ import { type TrainingConfig } from '../src/types.js';
 import { createMockRuntime } from '../src/__tests__/test-utils.js';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { bunExec } from '@elizaos/cli/src/utils/bun-exec.js';
 
 const program = new Command();
 
@@ -298,11 +299,8 @@ async function checkPrerequisites(config: TrainingConfig) {
       name: 'Python environment',
       check: async () => {
         try {
-          const { spawn } = await import('child_process');
-          return new Promise((resolve) => {
-            const process = spawn('python3', ['--version']);
-            process.on('close', (code) => resolve(code === 0));
-          });
+          const result = await bunExec('python3', ['--version'], { timeout: 5000 });
+          return result.success;
         } catch {
           return false;
         }

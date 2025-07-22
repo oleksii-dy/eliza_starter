@@ -808,8 +808,8 @@ export class TrainingService extends Service implements TrainingServiceInterface
         elizaLogger.info('Starting RLAIF training', { config });
 
         // Validate configuration before starting
-        if (!(config as any).trainingConfig) {
-          throw new ConfigurationError('Training configuration is required', 'trainingConfig');
+        if (!config || !config.extractionConfig || !config.datasetConfig || !config.rlaifConfig) {
+          throw new ConfigurationError('Complete training configuration is required', 'config');
         }
 
         const jobId = `training-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
