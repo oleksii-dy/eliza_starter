@@ -157,13 +157,10 @@ export function testFineTunedCommand(program: Command) {
 
 async function testModelInference(apiKey: string, model: string, prompt: string): Promise<string> {
   try {
-    // Escape the prompt to prevent command injection
-    const escapedPrompt = prompt.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-    
-    // Use Together.ai CLI completions command with proper argument escaping
+    // Use Together.ai CLI completions command - bunExec handles argument escaping automatically
     const result = await bunExec(
       'together',
-      ['completions', '--model', model, '--max-tokens', '800', '--temperature', '0.1', escapedPrompt],
+      ['completions', '--model', model, '--max-tokens', '800', '--temperature', '0.1', prompt],
       { 
         timeout: 60000,
         env: { TOGETHER_API_KEY: apiKey }
