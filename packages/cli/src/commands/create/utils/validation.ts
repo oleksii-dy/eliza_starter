@@ -50,7 +50,7 @@ export function validateCreateOptions(options: any): CreateOptions {
     return initOptionsSchema.parse(options);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const typeError = error.errors.find(
+      const typeError = error.issues.find(
         (e) => e.path.includes('type') && e.code === 'invalid_enum_value'
       );
       if (typeError && 'received' in typeError) {
@@ -79,7 +79,7 @@ export function validateProjectName(name: string): { isValid: boolean; error?: s
     return { isValid: true };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { isValid: false, error: error.errors[0].message };
+      return { isValid: false, error: error.issues[0].message };
     }
     return { isValid: false, error: 'Invalid project name' };
   }
@@ -111,7 +111,7 @@ export function processPluginName(name: string): {
     return { isValid: true, processedName };
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return { isValid: false, error: error.errors[0].message };
+      return { isValid: false, error: error.issues[0].message };
     }
     return { isValid: false, error: 'Invalid plugin name' };
   }
