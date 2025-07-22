@@ -1,7 +1,7 @@
 {
   "name": "@elizaos/config",
   "description": "Shared configuration for ElizaOS projects and plugins",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -34,7 +34,8 @@
     "./typescript/tsconfig.test.json": "./src/typescript/tsconfig.test.json"
   },
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
   "devDependencies": {
     "prettier": "^3.5.3",
@@ -49,5 +50,5 @@
   "publishConfig": {
     "access": "public"
   },
-  "gitHead": "227798477b53ad38b01f147ac1a649a5d1c810a3"
+  "gitHead": "64bdc6d3b24236d214f743e3c966993c6f5268f7"
 }

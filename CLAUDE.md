@@ -137,6 +137,7 @@ bun run release:alpha   # Release alpha version
 ### Process Execution
 
 - **NEVER USE `execa` OR OTHER PROCESS EXECUTION LIBRARIES**
+- **NEVER USE NODE.JS APIS LIKE `execSync`, `spawnSync`, `exec`, `spawn` FROM `child_process`**
 - **ALWAYS USE `Bun.spawn()` FOR SPAWNING PROCESSES**
 - **USE THE EXISTING `bun-exec` UTILITY:** Located at `packages/cli/src/utils/bun-exec.ts` which provides:
   - `bunExec()` - Main execution function with full control
@@ -153,6 +154,48 @@ bun run release:alpha   # Release alpha version
 
   // Full control
   const result = await bunExec('bun', ['test'], { cwd: '/path/to/dir' });
+  ```
+
+  **IMPORTANT:** Even in test files, avoid using Node.js `execSync` or other child_process APIs. Use the bun-exec utilities or Bun.spawn directly.
+
+### Event Handling
+
+- **NEVER USE `EventEmitter` FROM NODE.JS**
+- **EventEmitter has compatibility issues with Bun and should be avoided**
+- **ALWAYS USE BUN'S NATIVE `EventTarget` API INSTEAD**
+- **When migrating from EventEmitter:**
+  - Extend `EventTarget` instead of `EventEmitter`
+  - Use `dispatchEvent(new CustomEvent(name, { detail: data }))` instead of `emit(name, data)`
+  - Wrap handlers to extract data from `CustomEvent.detail`
+  - Maintain backward-compatible API when possible
+- **Example migration:**
+
+  ```typescript
+  // ❌ WRONG - Don't use EventEmitter
+  import { EventEmitter } from 'events';
+  class MyClass extends EventEmitter {
+    doSomething() {
+      this.emit('event', { data: 'value' });
+    }
+  }
+
+  // ✅ CORRECT - Use EventTarget
+  class MyClass extends EventTarget {
+    private handlers = new Map<string, Map<Function, EventListener>>();
+
+    emit(event: string, data: any) {
+      this.dispatchEvent(new CustomEvent(event, { detail: data }));
+    }
+
+    on(event: string, handler: (data: any) => void) {
+      const wrappedHandler = ((e: CustomEvent) => handler(e.detail)) as EventListener;
+      if (!this.handlers.has(event)) {
+        this.handlers.set(event, new Map());
+      }
+      this.handlers.get(event)!.set(handler, wrappedHandler);
+      this.addEventListener(event, wrappedHandler);
+    }
+  }
   ```
 
 ### Git & GitHub
@@ -227,6 +270,107 @@ elizaos test --skip-build    # Skip building before tests
 - **Services:** Enable AI agents to interact with external platforms
 - **Plugins:** Modular extensions for enhanced capabilities
 
+### CRITICAL: ElizaOS Component Clarifications
+
+**NEVER CONFUSE THESE CONCEPTS:**
+
+#### Services vs Providers
+
+- **Services** (`extends Service`):
+
+  - Manage state and external integrations
+  - Handle API connections, SDKs, databases
+  - Perform business logic and transactions
+  - Examples: `WalletService`, `DatabaseService`, `TwitterService`
+  - Accessed via: `runtime.getService('serviceName')`
+
+- **Providers** (`extends Provider`):
+  - Supply READ-ONLY contextual information
+  - Format data for agent prompts
+  - Never modify state or call external APIs
+  - Examples: `TimeProvider`, `FactProvider`, `BoredomProvider`
+  - Return formatted strings via `get()` method
+
+#### Actions vs Evaluators
+
+- **Actions** (`extends Action`):
+
+  - Handle user commands and requests
+  - Parse user input and validate parameters
+  - Execute operations (via Services)
+  - Return responses to users
+  - **MUST return `Promise<ActionResult>`** for proper action chaining
+  - Use `callback()` to send messages to users
+  - Return `ActionResult` to pass data to next action in chain
+
+- **Evaluators** (`extends Evaluator`):
+  - Process AFTER interactions complete
+  - Enable agent learning and reflection
+  - Analyze interaction outcomes
+  - Update agent memory/knowledge
+  - NOT for parsing input or monitoring
+
+#### Correct Architecture Pattern
+
+```
+User Input → Action → Service → External API/SDK
+                ↓
+            Provider → Context for prompts
+                ↓
+        Post-interaction → Evaluator → Learning
+```
+
+#### Plugin Structure
+
+```typescript
+interface Plugin {
+  name: string;
+  description: string;
+  actions: Action[]; // User interactions
+  services: Service[]; // Stateful integrations (REQUIRED for external APIs)
+  providers: Provider[]; // Context suppliers (read-only)
+  evaluators?: Evaluator[]; // Post-interaction processors (optional)
+}
+```
+
+#### Action Handler Example
+
+```typescript
+handler: async (runtime, message, state, options, callback): Promise<ActionResult> => {
+  try {
+    // 1. Get service and process
+    const service = runtime.getService<MyService>('myService');
+    const result = await service.process(message.content);
+
+    // 2. Send message to user via callback
+    await callback({
+      text: `Processed successfully: ${result}`,
+      action: 'MY_ACTION',
+    });
+
+    // 3. Return ActionResult for action chaining
+    return {
+      success: true,
+      text: 'Operation completed',
+      values: { processedData: result },
+      data: { actionName: 'MY_ACTION', result },
+    };
+  } catch (error) {
+    await callback({ text: 'Error occurred', error: true });
+    return { success: false, error };
+  }
+};
+```
+
+**Common Mistakes to Avoid:**
+
+- Using Providers to execute transactions → Use Services
+- Using Evaluators to parse user input → Use Actions
+- Direct Action → External API calls → Always go through Services
+- Providers with state-changing methods → Providers are read-only
+- Forgetting to return ActionResult → Breaks action chaining
+- Confusing callback vs return → Callback for chat, return for chaining
+
 ### Database Architecture
 
 - **ORM:** Drizzle ORM with IDatabaseAdapter interface
@@ -243,6 +387,7 @@ elizaos test --skip-build    # Skip building before tests
 2. **Research all affected files and components**
 3. **Create detailed implementation plan**
 4. **Identify all possible risks and negative outcomes**
+5. **ALWAYS evaluate if parallel claude code agents can be used** - Run multiple Task agents concurrently whenever possible for maximum performance
 
 ### Implementation Process
 

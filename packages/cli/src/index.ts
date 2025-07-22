@@ -15,6 +15,7 @@ import { teeCommand as tee } from '@/src/commands/tee';
 import { test } from '@/src/commands/test';
 import { update } from '@/src/commands/update';
 import { displayBanner, getVersion, checkAndShowUpdateNotification } from '@/src/utils';
+import { tryDelegateToLocalCli } from '@/src/utils/local-cli-delegation';
 import { logger } from '@elizaos/core';
 import { Command } from 'commander';
 import { configureEmojis } from '@/src/utils/emoji-handler';
@@ -26,7 +27,7 @@ import { stopServer } from '@/src/commands/dev/utils/server-manager';
  */
 const shutdownState = {
   isShuttingDown: false,
-  
+
   /**
    * Atomically check and set the shutdown flag
    * @returns true if shutdown was initiated, false if already in progress
@@ -37,7 +38,7 @@ const shutdownState = {
     }
     this.isShuttingDown = true;
     return true;
-  }
+  },
 };
 
 /**
@@ -52,7 +53,7 @@ async function gracefulShutdown(signal: string) {
     return;
   }
   logger.info(`Received ${signal}, shutting down gracefully...`);
-  
+
   try {
     // Stop the dev server if it's running
     const serverWasStopped = await stopServer();
@@ -65,7 +66,7 @@ async function gracefulShutdown(signal: string) {
     logger.error(`Error stopping server: ${errorMessage}`);
     logger.debug('Full error details:', error);
   }
-  
+
   // Use appropriate exit codes for different signals
   const exitCode = signal === 'SIGINT' ? 130 : signal === 'SIGTERM' ? 143 : 0;
   process.exit(exitCode);
@@ -80,6 +81,15 @@ process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
  * @returns {Promise<void>}
  */
 async function main() {
+  // Try to delegate to local CLI if available - this must be first
+  // to ensure all commands use local installation when available
+  const delegated = await tryDelegateToLocalCli();
+  if (delegated) {
+    // If we delegated to local CLI, this process should exit
+    // The local CLI will handle the rest
+    return;
+  }
+
   // Check for --no-emoji flag early (before command parsing)
   if (process.argv.includes('--no-emoji')) {
     configureEmojis({ forceDisable: true });
