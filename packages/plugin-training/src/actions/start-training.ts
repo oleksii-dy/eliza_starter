@@ -84,7 +84,7 @@ export const startTrainingAction: Action = {
       });
 
       // Check if we need to extract data first
-      const datasetPath = state?.values?.datasetPath;
+      let datasetPath = state?.values?.datasetPath;
       if (!datasetPath) {
         elizaLogger.info('No existing dataset found, extracting training data first');
 
@@ -98,6 +98,9 @@ export const startTrainingAction: Action = {
         const newDatasetPath = await trainingService.prepareDataset(conversations, config);
 
         elizaLogger.info(`Dataset prepared at: ${newDatasetPath}`);
+        
+        // Update datasetPath with the newly prepared dataset path
+        datasetPath = newDatasetPath;
       }
 
       // Upload to Hugging Face if configured
