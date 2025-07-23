@@ -2,6 +2,7 @@ import { handleError } from '@/src/utils';
 
 import { Command, Option } from 'commander';
 import { startDevMode } from './actions/dev-server';
+import { startDevWithDocker } from './actions/docker-dev';
 import { DevOptions } from './types';
 
 /**
@@ -15,6 +16,7 @@ export const dev = new Command()
   .option('-c, --configure', 'Reconfigure services and AI models (skips using saved configuration)')
   .option('--character [paths...]', 'Character file(s) to use - accepts paths or URLs')
   .option('-b, --build', 'Build the project before starting')
+  .option('--docker', 'Run in Docker container with live reload')
   .addOption(
     new Option('-p, --port <port>', 'Port to listen on (default: 3000)').argParser((value) => {
       const port = Number.parseInt(value, 10);
@@ -26,6 +28,12 @@ export const dev = new Command()
   )
   .action(async (options: DevOptions) => {
     try {
+      // Handle Docker mode
+      if (options.docker) {
+        await startDevWithDocker(options);
+        return;
+      }
+      
       await startDevMode(options);
     } catch (error) {
       handleError(error);

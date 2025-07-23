@@ -1,0 +1,54 @@
+services:
+  eliza-dev:
+    build:
+      context: ../../..
+      dockerfile: docker/targets/dev/Dockerfile
+    image: elizaos:development
+    container_name: elizaos-dev
+    env_file:
+      - ../../.env.local  # Load docker/.env.local if it exists
+    ports:
+      - "3000:3000"     # Main app
+      - "3001:3001"     # Client dev server
+      - "5173:5173"     # Vite dev server
+      - "9229:9229"     # Node debugger
+    
+    volumes:
+      # Mount all of the source code
+      - ../../..:/app
+      
+      # Persist caches and data for performance
+      - eliza_bun_cache:/root/.bun/install/cache
+      - eliza_dev_data:/home/eliza/agent/data
+    
+    environment:
+      # Development defaults
+      - NODE_ENV=development
+      - LOG_LEVEL=debug
+      - DEV_MODE=true
+      - WATCH_MODE=true
+      - DEBUG=eliza:*
+    
+    # Full (slow) development environment startup, gives you everything to dev & build in the container.
+    # TODO: add a quicker option that doesn't build everything first
+    command: >
+      sh -c "
+        echo '🚀 Starting ElizaOS full development environment...' &&
+        echo '📂 Workspace mounted: Full development capabilities enabled' &&
+        cd /app &&
+        echo '📦 Installing workspace dependencies...' &&
+        bun install &&
+        echo '🔨 Building workspace packages...' &&
+        bun run build &&
+        echo '🎯 Starting dev server with hot reload...' &&
+        echo '✅ Ready for development: add deps, modify configs, clean builds!' &&
+        exec bun run dev
+      "
+    
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+volumes:
+  eliza_bun_cache:
+  eliza_dev_data:

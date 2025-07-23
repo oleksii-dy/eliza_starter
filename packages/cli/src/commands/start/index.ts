@@ -9,6 +9,7 @@ import { Command } from 'commander';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { startAgents } from './actions/server-start';
+import { startWithDocker } from './actions/docker-start';
 import { StartOptions } from './types';
 import { loadEnvConfig } from './utils/config-utils';
 
@@ -18,6 +19,8 @@ export const start = new Command()
   .option('-c, --configure', 'Reconfigure services and AI models')
   .option('-p, --port <port>', 'Port to listen on', validatePort)
   .option('--character <paths...>', 'Character file(s) to use')
+  .option('--docker', 'Run in Docker container')
+  .option('--build', 'Force Docker rebuild (only works with --docker)')
   .hook('preAction', async () => {
     await displayBanner();
   })
@@ -25,6 +28,17 @@ export const start = new Command()
     try {
       // Load env config first before any character loading
       await loadEnvConfig();
+
+      // Handle Docker mode
+      if (options.docker) {
+        await startWithDocker(options);
+        return;
+      }
+
+      // Build flag only works with Docker mode
+      if (options.build && !options.docker) {
+        logger.warn('--build flag only works with --docker flag. Ignoring --build.');
+      }
 
       // Setup proper module resolution environment variables
       // This ensures consistent plugin loading between dev and start commands

@@ -1,0 +1,53 @@
+services:
+  eliza-dev:
+    build:
+      context: ../../..
+      dockerfile: docker/targets/dev/Dockerfile
+    image: elizaos:development
+    container_name: elizaos-dev
+    ports:
+      - "3000:3000"     # Main app
+      - "3001:3001"     # Client dev server
+      - "5173:5173"     # Vite dev server
+      - "9229:9229"     # Node debugger
+    
+    volumes:
+      # Mount source code for hot reload (read-write)
+      - ../../..:/app
+      
+      # Persist node_modules for faster installs
+      - eliza_dev_node_modules:/app/node_modules
+      
+      # Persist bun cache
+      - eliza_bun_cache:/root/.bun/install/cache
+      
+      # Persist agent data
+      - eliza_dev_data:/home/eliza/agent/data
+    
+    environment:
+      # Development defaults
+      - NODE_ENV=development
+      - LOG_LEVEL=debug
+      - DEV_MODE=true
+      - WATCH_MODE=true
+      - DEBUG=eliza:*
+    
+    # Simple startup - we already have a proper .env file
+    command: >
+      sh -c "
+        echo '🚀 Starting ElizaOS development server...' &&
+        echo '📦 Installing dependencies...' &&
+        cd /app &&
+        bun install &&
+        echo '🎯 Starting dev mode...' &&
+        exec bun run dev
+      "
+    
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+volumes:
+  eliza_dev_node_modules:
+  eliza_bun_cache:
+  eliza_dev_data:

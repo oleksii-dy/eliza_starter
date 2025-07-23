@@ -11,6 +11,8 @@ import { type AgentServer } from '@elizaos/server';
 export interface StartOptions {
   port?: number;
   configDir?: string;
+  docker?: boolean;  // New flag for Docker mode
+  build?: boolean;   // Flag to force Docker rebuild (only works with --docker)
 }
 
 /**

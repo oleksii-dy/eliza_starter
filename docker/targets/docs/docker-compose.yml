@@ -1,0 +1,9 @@
+services:
+  docs:
+    image: nginx:alpine
+    container_name: elizaos-docs
+    ports:
+      - "3001:80"
+    volumes:
+      - ../../../packages/docs/build:/usr/share/nginx/html:ro
+    restart: unless-stopped
