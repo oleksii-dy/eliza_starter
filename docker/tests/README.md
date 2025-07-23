@@ -5,14 +5,18 @@ A comprehensive Docker testing framework for ElizaOS that validates Docker confi
 ## Quick Start
 
 ```bash
-# Run all Docker tests
+# Run all Docker tests (34 tests with plugin caching)
 bun test eliza/docker/tests/
 
 # Run specific test suite
 bun test eliza/docker/tests/health-checks.test.ts
+bun test eliza/docker/tests/e2e.test.ts
 
 # Run tests with verbose output
 TEST_VERBOSE=true bun test eliza/docker/tests/
+
+# Force clean test (rebuild test projects)
+TEST_CLEAN=true bun test eliza/docker/tests/
 
 # Run tests with coverage
 bun test --coverage eliza/docker/tests/
@@ -58,9 +62,11 @@ EOF
 
 ### Core Test Suites
 
-- **`health-checks.test.ts`** - Docker infrastructure validation
-- **`cli-integration.test.ts`** - CLI --docker flag testing
-- **`agent-functionality.test.ts`** - Agent LLM testing with environment handling
+- **`health-checks.test.ts`** - Docker infrastructure validation (Docker availability, dev/prod targets)
+- **`cli-integration.test.ts`** - CLI --docker flag testing and validation
+- **`agent-functionality.test.ts`** - Agent LLM provider testing with environment handling
+- **`multi-context-validation.test.ts`** - Multi-context testing (monorepo vs starter project)
+- **`e2e.test.ts`** - End-to-end testing with real project creation and plugin caching
 - **`utils/docker-test-utils.ts`** - Docker operations utilities
 - **`utils/test-env-utils.ts`** - Environment variable management
 
@@ -69,7 +75,7 @@ EOF
 #### 🏗️ **Infrastructure Tests**
 - Docker availability detection
 - Docker Compose validation
-- Target configuration checking
+- Dev/prod target configuration checking
 - Container health monitoring
 
 #### 🔧 **CLI Integration Tests**
@@ -83,6 +89,33 @@ EOF
 - Mock runtime creation
 - Response generation testing
 - Environment-based test skipping
+
+#### 🚀 **End-to-End Tests**
+- Real project creation using `elizaos create`
+- Docker functionality validation with actual containers
+- Plugin caching for 10x speed improvement (24s → 0.3s)
+- Smart test project reuse and cleanup
+
+### Plugin Caching System
+
+The e2e tests implement intelligent plugin caching for faster repeated testing:
+
+```bash
+# First run: Creates project and installs plugins (~3-24 seconds)
+bun test docker/tests/e2e.test.ts
+
+# Subsequent runs: Reuses cached project with plugins (~0.3 seconds)
+# Shows: "⚡ Reusing existing test project with cached plugins for faster testing"
+
+# Force clean rebuild:
+TEST_CLEAN=true bun test docker/tests/e2e.test.ts
+```
+
+**Caching Logic:**
+- Detects existing test project with installed `node_modules/`
+- Reuses project for faster testing when plugins are already installed
+- Automatically rebuilds if project exists but plugins are missing
+- Keeps test projects for caching unless `TEST_CLEAN=true`
 
 ## Environment Variable Patterns
 

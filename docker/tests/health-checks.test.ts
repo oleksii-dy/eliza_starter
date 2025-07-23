@@ -106,18 +106,11 @@ describe('Docker Infrastructure Health Checks', () => {
       }
     });
 
-    it('should have docs target', async () => {
-      const exists = await targetExists('docs');
-      expect(exists).toBe(true);
-      
-      if (config.verbose) {
-        console.log('✅ Docs target exists');
-      }
-    });
+    // Docs target removed from project-starter template
   });
 
   describe('Docker Target Validation', () => {
-    const expectedTargets = ['dev', 'prod', 'docs'];
+    const expectedTargets = ['dev', 'prod']; // Removed 'docs' since deleted from starter project
 
     expectedTargets.forEach(target => {
       it(`should validate ${target} target structure`, async () => {

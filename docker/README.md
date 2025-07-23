@@ -112,16 +112,21 @@ bun test docker/tests/health-checks.test.ts
 bun test docker/tests/cli-integration.test.ts
 bun test docker/tests/agent-functionality.test.ts
 bun test docker/tests/multi-context-validation.test.ts
+bun test docker/tests/e2e.test.ts
 
 # Run with verbose output
 TEST_VERBOSE=true bun test docker/tests/
+
+# Force clean test (rebuild test projects)
+TEST_CLEAN=true bun test docker/tests/
 ```
 
 The framework validates:
-- **Infrastructure**: Docker availability, target configuration validation
+- **Infrastructure**: Docker availability, dev/prod target configuration validation
 - **CLI Integration**: `--docker` flag functionality, command execution
 - **Agent Functionality**: LLM provider integration with environment handling
 - **Multi-Context**: Monorepo prod + starter project dev/prod targets
+- **End-to-End**: Real project creation and Docker functionality with plugin caching
 
 For detailed testing documentation, environment setup, and advanced testing patterns, see [docker/tests/README.md](tests/README.md).
 
@@ -141,17 +146,6 @@ curl http://localhost:3000/health
 docker-compose down
 ```
 
-## Documentation Server
-
-```bash
-# Build and serve documentation
-docker-compose -f docker/targets/docs/docker-compose.yml up
-
-# Access at http://localhost:3000
-```
-
-The documentation container uses nginx for static serving with minimal footprint (~30MB).
-
 ## Directory Structure
 
 ```
@@ -160,24 +154,20 @@ docker/
 ├── scripts/                     # Build and utility scripts
 │   ├── build.ts                 # Container build utilities
 │   └── docker-version.ts        # Version management
-├── tests/                       # Comprehensive testing framework
-│   ├── health-checks.test.ts    # Infrastructure validation
+├── tests/                       # Comprehensive testing framework (34 tests)
+│   ├── health-checks.test.ts    # Infrastructure validation (Docker availability, targets)
 │   ├── cli-integration.test.ts  # CLI --docker flag testing
-│   ├── agent-functionality.test.ts # Agent LLM testing
+│   ├── agent-functionality.test.ts # Agent LLM provider testing
 │   ├── multi-context-validation.test.ts # Multi-context testing
-│   └── utils/                   # Testing utilities
+│   ├── e2e.test.ts              # End-to-end testing with plugin caching
+│   └── utils/                   # Testing utilities and helpers
 └── targets/
     ├── dev/                     # Development configuration
     │   ├── docker-compose.yml   # Dev service definitions
     │   └── Dockerfile           # Dev container image
-    ├── prod/                    # Production configuration
-    │   ├── docker-compose.yml   # Prod service definitions
-    │   └── Dockerfile           # Prod container image
-    └── docs/                    # Documentation server
-        ├── docker-compose.yml   # Standard docs configuration
-        ├── docker-compose-quick.yml # Quick startup variant
-        ├── docker-compose-small.yml # Minimal footprint variant
-        └── Dockerfile           # Docs container image
+    └── prod/                    # Production configuration
+        ├── docker-compose.yml   # Prod service definitions
+        └── Dockerfile           # Prod container image
 ```
 
 

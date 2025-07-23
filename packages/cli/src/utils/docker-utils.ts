@@ -10,7 +10,7 @@ export interface ContainerOptions {
   port: number;
   configDir?: string;
   characterFiles?: string[];
-  target: 'dev' | 'test' | 'prod' | 'demo';
+  target: 'dev' | 'prod';
   envVars?: Record<string, string>;
   build?: boolean;
 }
@@ -72,7 +72,7 @@ export class DockerUtilities {
   /**
    * Build the elizaOS Docker image for a specific target
    */
-  async buildImage(target: 'dev' | 'test' | 'prod' | 'demo' = 'prod'): Promise<void> {
+  async buildImage(target: 'dev' | 'prod' = 'prod'): Promise<void> {
     const buildScript = path.join(this.projectRoot, 'docker', 'scripts', 'build.ts');
     
     if (!fs.existsSync(buildScript)) {
@@ -100,7 +100,7 @@ export class DockerUtilities {
   /**
    * Ensure the Docker image exists, building it if necessary
    */
-  async ensureImageExists(target: 'dev' | 'test' | 'prod' | 'demo' = 'prod'): Promise<void> {
+  async ensureImageExists(target: 'dev' | 'prod' = 'prod'): Promise<void> {
     const imageName = `elizaos:${target}-latest`;
     const imageExists = await this.checkImageExists(imageName);
     

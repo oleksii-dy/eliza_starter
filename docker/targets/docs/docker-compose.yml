@@ -1,15 +1,9 @@
 services:
   docs:
-    build:
-      context: ../../..
-      dockerfile: docker/targets/docs/Dockerfile
-    image: elizaos:docs
+    image: nginx:alpine
     container_name: elizaos-docs
     ports:
-      - "3000:3000"
+      - "3001:80"
+    volumes:
+      - ../../../packages/docs/build:/usr/share/nginx/html:ro
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
