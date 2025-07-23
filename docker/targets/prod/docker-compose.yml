@@ -25,6 +25,8 @@ services:
       dockerfile: docker/targets/prod/Dockerfile
     image: elizaos:production
     container_name: elizaos-agent
+    env_file:
+      - ../../.env.local  # Load docker/.env.local if it exists
     depends_on:
       elizaos-postgres:
         condition: service_healthy

@@ -5,6 +5,8 @@ services:
       dockerfile: docker/targets/dev/Dockerfile
     image: elizaos:development
     container_name: elizaos-dev
+    env_file:
+      - ../../.env.local  # Load docker/.env.local if it exists
     ports:
       - "3000:3000"     # Main app
       - "3001:3001"     # Client dev server
@@ -12,16 +14,11 @@ services:
       - "9229:9229"     # Node debugger
     
     volumes:
-      # Mount source code for hot reload (read-write)
+      # Mount all of the source code
       - ../../..:/app
       
-      # Persist node_modules for faster installs
-      - eliza_dev_node_modules:/app/node_modules
-      
-      # Persist bun cache
+      # Persist caches and data for performance
       - eliza_bun_cache:/root/.bun/install/cache
-      
-      # Persist agent data
       - eliza_dev_data:/home/eliza/agent/data
     
     environment:
@@ -32,14 +29,19 @@ services:
       - WATCH_MODE=true
       - DEBUG=eliza:*
     
-    # Simple startup - we already have a proper .env file
+    # Full (slow) development environment startup, gives you everything to dev & build in the container.
+    # TODO: add a quicker option that doesn't build everything first
     command: >
       sh -c "
-        echo '🚀 Starting ElizaOS development server...' &&
-        echo '📦 Installing dependencies...' &&
+        echo '🚀 Starting ElizaOS full development environment...' &&
+        echo '📂 Workspace mounted: Full development capabilities enabled' &&
         cd /app &&
+        echo '📦 Installing workspace dependencies...' &&
         bun install &&
-        echo '🎯 Starting dev mode...' &&
+        echo '🔨 Building workspace packages...' &&
+        bun run build &&
+        echo '🎯 Starting dev server with hot reload...' &&
+        echo '✅ Ready for development: add deps, modify configs, clean builds!' &&
         exec bun run dev
       "
     
@@ -48,6 +50,5 @@ services:
     tty: true
 
 volumes:
-  eliza_dev_node_modules:
   eliza_bun_cache:
   eliza_dev_data:
