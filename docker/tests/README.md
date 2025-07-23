@@ -216,28 +216,6 @@ The framework provides intelligent environment detection:
 - **LLM Tests**: Require at least one LLM provider
 - **Integration Tests**: Full agent testing with real containers
 
-## Best Practices
-
-### 1. Environment Configuration
-
-- **Never commit `.env.test`** with real API keys
-- **Use `.env.test.example`** to document required variables
-- **Add your keys to local `.env.test`** for development
-- **Use mock runtime** for tests without API keys
-
-### 2. Test Design
-
-- **Graceful degradation**: Tests pass with helpful messages when requirements missing
-- **Environment isolation**: Save/restore environment variables
-- **Clear documentation**: Tests explain what's needed and why
-- **Mock when needed**: Use mock runtime for testing without external services
-
-### 3. CI/CD Integration
-
-- **GitHub Secrets**: Store API keys in repository secrets
-- **Dynamic env creation**: Create test environment files in CI
-- **Matrix testing**: Test with different provider combinations
-
 ## Adding New Tests
 
 ### 1. Basic Docker Test
@@ -284,25 +262,6 @@ describe('Agent LLM Test', () => {
 });
 ```
 
-## Troubleshooting
-
-### Common Issues
-
-**"No LLM providers configured"**
-- Add API keys to `.env.test` or `.env`
-- Check environment variable names match exactly
-- Verify API keys are valid and active
-
-**"Docker not available"**
-- Install Docker and Docker Compose
-- Ensure Docker daemon is running
-- Check Docker permissions
-
-**"Tests skipped"**
-- This is expected behavior when requirements aren't met
-- Add missing environment variables for full testing
-- Use verbose mode to see detailed environment status
-
 ### Debug Mode
 
 ```bash
@@ -323,6 +282,4 @@ The framework is designed for **incremental expansion**:
 - ✅ **Agent Mocking** - Test patterns without API requirements
 - 🔮 **Container Lifecycle** - Future: Full container testing
 - 🔮 **Multi-Agent Testing** - Future: Agent communication testing
-- 🔮 **Performance Testing** - Future: Load and stress testing
-
-The minimal approach allows the framework to grow based on actual needs while maintaining a solid foundation. 
+- 🔮 **Performance Testing** - Future: Load and stress testing 
