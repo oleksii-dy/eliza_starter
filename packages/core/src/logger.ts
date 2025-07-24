@@ -1,4 +1,4 @@
-import pino, { type DestinationStream, type LogFn } from 'pino';
+import adze, { Adze } from 'adze';
 import { Sentry } from './sentry/instrument';
 
 // Local utility function to avoid circular dependency
@@ -22,54 +22,32 @@ function parseBooleanFromText(value: string | undefined | null): boolean {
  */
 interface LogEntry {
   time?: number;
+  level?: number;
+  msg?: string;
   [key: string]: unknown;
 }
 
 // Custom destination that maintains recent logs in memory
 /**
- * Class representing an in-memory destination stream for logging.
- * Implements DestinationStream interface.
+ * Class representing an in-memory destination for logging with adze.
+ * Maintains a buffer of recent logs and handles filtering.
  */
-class InMemoryDestination implements DestinationStream {
+class InMemoryDestination {
   private logs: LogEntry[] = [];
   private maxLogs = 1000; // Keep last 1000 logs
-  private stream: DestinationStream | null;
 
   /**
    * Constructor for creating a new instance of the class.
-   * @param {DestinationStream|null} stream - The stream to assign to the instance. Can be null.
    */
-  constructor(stream: DestinationStream | null) {
-    this.stream = stream;
-  }
+  constructor() {}
 
   /**
-   * Writes a log entry to the memory buffer and forwards it to the pretty print stream if available.
+   * Writes a log entry to the memory buffer.
    *
-   * @param {string | LogEntry} data - The data to be written, which can be either a string or a LogEntry object.
+   * @param {LogEntry} logEntry - The log entry to be written.
    * @returns {void}
    */
-  write(data: string | LogEntry): void {
-    // Parse the log entry if it's a string
-    let logEntry: LogEntry;
-    let stringData: string;
-
-    if (typeof data === 'string') {
-      stringData = data;
-      try {
-        logEntry = JSON.parse(data);
-      } catch (e) {
-        // If it's not valid JSON, just pass it through
-        if (this.stream) {
-          this.stream.write(data);
-        }
-        return;
-      }
-    } else {
-      logEntry = data;
-      stringData = JSON.stringify(data);
-    }
-
+  write(logEntry: LogEntry): void {
     // Add timestamp if not present
     if (!logEntry.time) {
       logEntry.time = Date.now();
@@ -98,7 +76,7 @@ class InMemoryDestination implements DestinationStream {
             msg.includes('Started'))
         ) {
           if (isLoggingDiagnostic) {
-            console.error('Filtered log:', stringData);
+            console.error('Filtered log:', JSON.stringify(logEntry));
           }
           // This is a service registration/agent log, skip it
           return;
@@ -112,11 +90,6 @@ class InMemoryDestination implements DestinationStream {
     // Maintain buffer size
     if (this.logs.length > this.maxLogs) {
       this.logs.shift();
-    }
-
-    // Forward to pretty print stream if available
-    if (this.stream) {
-      this.stream.write(stringData);
     }
   }
 
@@ -139,6 +112,7 @@ class InMemoryDestination implements DestinationStream {
   }
 }
 
+// Map pino levels to adze-compatible levels
 const customLevels: Record<string, number> = {
   fatal: 60,
   error: 50,
@@ -149,6 +123,32 @@ const customLevels: Record<string, number> = {
   success: 27,
   debug: 20,
   trace: 10,
+};
+
+// Level name mapping for display
+const levelNames: Record<number, string> = {
+  10: 'TRACE',
+  20: 'DEBUG',
+  27: 'SUCCESS',
+  28: 'PROGRESS',
+  29: 'LOG',
+  30: 'INFO',
+  40: 'WARN',
+  50: 'ERROR',
+  60: 'FATAL',
+};
+
+// Color mapping for different levels
+const levelColors: Record<number, string> = {
+  60: '\x1b[31m', // red - fatal
+  50: '\x1b[31m', // red - error
+  40: '\x1b[33m', // yellow - warn
+  30: '\x1b[34m', // blue - info
+  29: '\x1b[32m', // green - log
+  28: '\x1b[36m', // cyan - progress
+  27: '\x1b[92m', // bright green - success
+  20: '\x1b[35m', // magenta - debug
+  10: '\x1b[90m', // grey - trace
 };
 
 const raw = parseBooleanFromText(process?.env?.LOG_JSON_FORMAT) || false;
@@ -163,200 +163,215 @@ const showTimestamps =
     ? parseBooleanFromText(process?.env?.LOG_TIMESTAMPS)
     : true;
 
-// Create a function to generate the pretty configuration
-const createPrettyConfig = () => ({
-  colorize: true,
-  translateTime: showTimestamps ? 'yyyy-mm-dd HH:MM:ss' : false,
-  ignore: showTimestamps ? 'pid,hostname' : 'pid,hostname,time',
-  levelColors: {
-    60: 'red', // fatal
-    50: 'red', // error
-    40: 'yellow', // warn
-    30: 'blue', // info
-    29: 'green', // log
-    28: 'cyan', // progress
-    27: 'greenBright', // success
-    20: 'magenta', // debug
-    10: 'grey', // trace
-    '*': 'white', // default for any unspecified level
-  },
-  customPrettifiers: {
-    level: (inputData: any) => {
-      let level;
-      if (typeof inputData === 'object' && inputData !== null) {
-        level = inputData.level || inputData.value;
-      } else {
-        level = inputData;
-      }
+// Create the in-memory destination
+const memoryDestination = new InMemoryDestination();
 
-      const levelNames: Record<number, string> = {
-        10: 'TRACE',
-        20: 'DEBUG',
-        27: 'SUCCESS',
-        28: 'PROGRESS',
-        29: 'LOG',
-        30: 'INFO',
-        40: 'WARN',
-        50: 'ERROR',
-        60: 'FATAL',
-      };
+/**
+ * ElizaLogger class that wraps adze to provide pino-compatible API
+ */
+class ElizaLogger {
+  private adzeInstance: Adze;
+  private bindings: Record<string, unknown> = {};
+  private logLevel: string;
 
-      if (typeof level === 'number') {
-        return levelNames[level] || `LEVEL${level}`;
-      }
-
-      if (level === undefined || level === null) {
-        return 'UNKNOWN';
-      }
-
-      return String(level).toUpperCase();
-    },
-    // Add a custom prettifier for error messages
-    msg: (msg: string) => {
-      // Replace "ERROR (TypeError):" pattern with just "ERROR:"
-      return msg.replace(/ERROR \([^)]+\):/g, 'ERROR:');
-    },
-  },
-  messageFormat: '{msg}',
-});
-
-const createStream = async () => {
-  if (raw) {
-    return undefined;
+  constructor(bindings: Record<string, unknown> = {}, logLevel?: string) {
+    this.bindings = bindings;
+    this.logLevel = logLevel || effectiveLogLevel;
+    
+    // Configure adze instance
+    this.adzeInstance = adze({
+      level: this.getAdzeLevel(this.logLevel),
+      format: raw ? 'json' : 'standard',
+      useEmoji: false,
+      silent: false,
+    });
   }
-  // dynamically import pretty to avoid importing it in the browser
-  const pretty = await import('pino-pretty');
-  return pretty.default(createPrettyConfig());
-};
 
-// Create options with appropriate level
-const options = {
-  level: effectiveLogLevel, // Use more restrictive level unless in debug mode
-  customLevels,
-  hooks: {
-    logMethod(inputArgs: [string | Record<string, unknown>, ...unknown[]], method: LogFn): void {
-      const [arg1, ...rest] = inputArgs;
-      if (process.env.SENTRY_LOGGING !== 'false') {
-        if (arg1 instanceof Error) {
-          Sentry.captureException(arg1);
-        } else {
-          for (const item of rest) {
-            if (item instanceof Error) {
-              Sentry.captureException(item);
-            }
-          }
-        }
-      }
+  private getAdzeLevel(level: string): number {
+    return customLevels[level] || 30;
+  }
 
-      const formatError = (err: Error) => ({
-        message: `(${err.name}) ${err.message}`,
-        stack: err.stack?.split('\n').map((line) => line.trim()),
-      });
-
-      if (typeof arg1 === 'object') {
-        if (arg1 instanceof Error) {
-          method.apply(this, [
-            {
-              error: formatError(arg1),
-            },
-          ]);
-        } else {
-          const messageParts = rest.map((arg) =>
-            typeof arg === 'string' ? arg : JSON.stringify(arg)
-          );
-          const message = messageParts.join(' ');
-          method.apply(this, [arg1, message]);
-        }
-      } else {
-        const context = {};
-        const messageParts = [arg1, ...rest].map((arg) => {
-          if (arg instanceof Error) {
-            return formatError(arg);
-          }
-          return typeof arg === 'string' ? arg : arg;
-        });
-        const message = messageParts.filter((part) => typeof part === 'string').join(' ');
-        const jsonParts = messageParts.filter((part) => typeof part === 'object');
-
-        Object.assign(context, ...jsonParts);
-
-        method.apply(this, [context, message]);
-      }
-    },
-  },
-};
-
-// allow runtime logger to inherent options set here
-const createLogger = (bindings: any | boolean = false) => {
-  const opts: any = { ...options }; // shallow copy
-  if (bindings) {
-    //opts.level = process.env.LOG_LEVEL || 'info'
-    opts.base = bindings; // shallow change
-    opts.transport = {
-      target: 'pino-pretty', // this is just a string, not a dynamic import
-      options: {
-        colorize: true,
-        translateTime: showTimestamps ? 'SYS:standard' : false,
-        ignore: showTimestamps ? 'pid,hostname' : 'pid,hostname,time',
-      },
+  private formatMessage(level: number, message: string, ...args: unknown[]): void {
+    const entry: LogEntry = {
+      time: Date.now(),
+      level,
+      msg: message,
+      ...this.bindings,
     };
+
+    // Handle additional arguments
+    if (args.length > 0) {
+      for (const arg of args) {
+        if (typeof arg === 'object' && arg !== null && !Array.isArray(arg)) {
+          Object.assign(entry, arg);
+        }
+      }
+    }
+
+    // Write to in-memory destination
+    memoryDestination.write(entry);
+
+    // Handle Sentry integration
+    if (process.env.SENTRY_LOGGING !== 'false') {
+      for (const arg of [message, ...args]) {
+        if (arg instanceof Error) {
+          Sentry.captureException(arg);
+        }
+      }
+    }
+
+    // Format and output the log
+    this.outputLog(level, message, args);
   }
-  const logger = pino(opts);
-  return logger;
-};
 
-// Create basic logger initially
-let logger = pino(options);
-// Add type for logger with clear method
-interface LoggerWithClear extends pino.Logger {
-  clear: () => void;
-}
+  private outputLog(level: number, message: string, args: unknown[]): void {
+    if (raw) {
+      // JSON format
+      const entry: LogEntry = {
+        time: Date.now(),
+        level,
+        msg: message,
+        ...this.bindings,
+      };
+      console.log(JSON.stringify(entry));
+      return;
+    }
 
-// Enhance logger with custom destination in Node.js environment
-if (typeof process !== 'undefined') {
-  // Create the destination with in-memory logging
-  // Instead of async initialization, initialize synchronously to avoid race conditions
-  let stream = null;
+    // Pretty format
+    const levelName = levelNames[level] || `LEVEL${level}`;
+    const color = levelColors[level] || '\x1b[0m';
+    const reset = '\x1b[0m';
+    
+    let output = '';
+    
+    if (showTimestamps) {
+      const timestamp = new Date().toISOString().replace('T', ' ').replace('Z', '');
+      output += `${timestamp} `;
+    }
+    
+    output += `${color}${levelName}${reset}: ${message}`;
+    
+    // Add bindings if any
+    if (Object.keys(this.bindings).length > 0) {
+      const bindingsStr = Object.entries(this.bindings)
+        .map(([k, v]) => `${k}=${v}`)
+        .join(' ');
+      output += ` (${bindingsStr})`;
+    }
+    
+    // Add additional arguments
+    if (args.length > 0) {
+      const argsStr = args.map(arg => 
+        typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+      ).join(' ');
+      output += ` ${argsStr}`;
+    }
 
-  if (!raw) {
-    // If we're in a Node.js environment where require is available, use require for pino-pretty
-    // This will ensure synchronous loading
-    try {
-      const pretty = require('pino-pretty');
-      stream = pretty.default ? pretty.default(createPrettyConfig()) : null;
-    } catch (e) {
-      // Fall back to async loading if synchronous loading fails
-      createStream().then((prettyStream) => {
-        const destination = new InMemoryDestination(prettyStream);
-        logger = pino(options, destination);
-        (logger as unknown)[Symbol.for('pino-destination')] = destination;
+    console.log(output);
+  }
 
-        // Add clear method to logger
-        (logger as unknown as LoggerWithClear).clear = () => {
-          const destination = (logger as unknown)[Symbol.for('pino-destination')];
-          if (destination instanceof InMemoryDestination) {
-            destination.clear();
-          }
-        };
-      });
+  // Pino-compatible log methods
+  fatal(message: string | object, ...args: unknown[]): void {
+    if (typeof message === 'object') {
+      this.formatMessage(60, '', message, ...args);
+    } else {
+      this.formatMessage(60, message, ...args);
     }
   }
 
-  // If stream was created synchronously, use it now
-  if (stream !== null || raw) {
-    const destination = new InMemoryDestination(stream);
-    logger = pino(options, destination);
-    (logger as unknown)[Symbol.for('pino-destination')] = destination;
+  error(message: string | object, ...args: unknown[]): void {
+    if (typeof message === 'object') {
+      this.formatMessage(50, '', message, ...args);
+    } else {
+      this.formatMessage(50, message, ...args);
+    }
+  }
 
-    // Add clear method to logger
-    (logger as unknown as LoggerWithClear).clear = () => {
-      const destination = (logger as unknown)[Symbol.for('pino-destination')];
-      if (destination instanceof InMemoryDestination) {
-        destination.clear();
-      }
-    };
+  warn(message: string | object, ...args: unknown[]): void {  
+    if (typeof message === 'object') {
+      this.formatMessage(40, '', message, ...args);
+    } else {
+      this.formatMessage(40, message, ...args);
+    }
+  }
+
+  info(message: string | object, ...args: unknown[]): void {
+    if (typeof message === 'object') {
+      this.formatMessage(30, '', message, ...args);
+    } else {
+      this.formatMessage(30, message, ...args);
+    }
+  }
+
+  log(message: string | object, ...args: unknown[]): void {
+    if (typeof message === 'object') {
+      this.formatMessage(29, '', message, ...args);
+    } else {
+      this.formatMessage(29, message, ...args);
+    }
+  }
+
+  progress(message: string | object, ...args: unknown[]): void {
+    if (typeof message === 'object') {
+      this.formatMessage(28, '', message, ...args);
+    } else {
+      this.formatMessage(28, message, ...args);
+    }
+  }
+
+  success(message: string | object, ...args: unknown[]): void {
+    if (typeof message === 'object') {
+      this.formatMessage(27, '', message, ...args);
+    } else {
+      this.formatMessage(27, message, ...args);
+    }
+  }
+
+  debug(message: string | object, ...args: unknown[]): void {
+    if (typeof message === 'object') {
+      this.formatMessage(20, '', message, ...args);
+    } else {
+      this.formatMessage(20, message, ...args);
+    }
+  }
+
+  trace(message: string | object, ...args: unknown[]): void {
+    if (typeof message === 'object') {
+      this.formatMessage(10, '', message, ...args);
+    } else {
+      this.formatMessage(10, message, ...args);
+    }
+  }
+
+  // Pino-compatible child method
+  child(bindings: Record<string, unknown>): ElizaLogger {
+    return new ElizaLogger({ ...this.bindings, ...bindings }, this.logLevel);
+  }
+
+  // Clear method for API compatibility
+  clear(): void {
+    memoryDestination.clear();
   }
 }
+
+// Create logger factory function to match pino API
+const createLogger = (bindings: any | boolean = false) => {
+  if (bindings === false) {
+    return new ElizaLogger();
+  }
+  
+  const logLevel = bindings && typeof bindings === 'object' && bindings.logLevel 
+    ? bindings.logLevel 
+    : process.env.LOG_LEVEL || 'info';
+    
+  return new ElizaLogger(bindings || {}, logLevel);
+};
+
+// Create basic logger instance
+const logger = new ElizaLogger();
+
+// Attach memory destination for API access (matching pino symbol pattern)
+(logger as any)[Symbol.for('pino-destination')] = memoryDestination;
 
 export { createLogger, logger };
 
