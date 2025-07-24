@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 /**
- * This script copies the built CLI files into the create-eliza package
- * It should be run as part of the CLI build process
+ * This script copies template packages from the monorepo into the CLI templates directory
+ * It runs before the CLI build to prepare templates that will be included in the distribution
  */
 
 import path from 'node:path';
@@ -20,7 +20,7 @@ const TEMPLATES_DIR = path.resolve(ROOT_DIR, 'packages/cli/templates');
 /**
  * Updates package.json with the CLI version and replaces workspace references
  */
-async function updatePackageJson(packagePath, cliVersion, isPluginStarter = false) {
+async function updatePackageJson(packagePath: string, cliVersion: string) {
   const packageJsonContent = await fs.readFile(packagePath, 'utf-8');
   const packageData = JSON.parse(packageJsonContent);
 
@@ -40,7 +40,6 @@ async function updatePackageJson(packagePath, cliVersion, isPluginStarter = fals
 
   // Set repository URL for templates
   if (packageData.repository) {
-    console.log('Setting repository URL for template');
     packageData.repository.url = '';
   }
 
@@ -49,10 +48,8 @@ async function updatePackageJson(packagePath, cliVersion, isPluginStarter = fals
 
 async function main() {
   try {
-    if (!fs.existsSync(CLI_DIST_DIR)) {
-      console.error('CLI build not found! Build the CLI first.');
-      process.exit(1);
-    }
+    // This script prepares templates in the source directory before the CLI is built
+    // It copies from monorepo packages to packages/cli/templates/
 
     // Prepare templates directory
     if (!fs.existsSync(TEMPLATES_DIR)) {
@@ -75,19 +72,38 @@ async function main() {
         dest: path.resolve(TEMPLATES_DIR, 'project-starter'),
       },
       {
+        name: 'project-tee-starter',
+        src: path.resolve(ROOT_DIR, 'packages/project-tee-starter'),
+        dest: path.resolve(TEMPLATES_DIR, 'project-tee-starter'),
+      },
+      {
         name: 'plugin-starter',
         src: path.resolve(ROOT_DIR, 'packages/plugin-starter'),
         dest: path.resolve(TEMPLATES_DIR, 'plugin-starter'),
+      },
+      {
+        name: 'plugin-quick-starter',
+        src: path.resolve(ROOT_DIR, 'packages/plugin-quick-starter'),
+        dest: path.resolve(TEMPLATES_DIR, 'plugin-quick-starter'),
       },
     ];
 
     // Copy each template and update its package.json
     for (const template of templates) {
-      await fs.copy(template.src, template.dest);
+      await fs.copy(template.src, template.dest, {
+        filter: (srcPath) => {
+          const baseName = path.basename(srcPath);
+          if (baseName === 'node_modules' || baseName === '.git') {
+            // console.log(`Filtering out: ${srcPath}`); // Log which paths are being filtered
+            return false;
+          }
+          return true;
+        },
+      });
 
       // Update package.json with correct version
       const packageJsonPath = path.resolve(template.dest, 'package.json');
-      await updatePackageJson(packageJsonPath, cliVersion, template.name === 'plugin-starter');
+      await updatePackageJson(packageJsonPath, cliVersion);
     }
 
     console.log('Templates have been copied and updated successfully.');

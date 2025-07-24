@@ -1,6 +1,6 @@
 {
   "name": "create-eliza",
-  "version": "1.0.0-beta.75",
+  "version": "1.3.1",
   "description": "Initialize an Eliza project",
   "type": "module",
   "private": true,
@@ -11,7 +11,8 @@
     "create-eliza": "index.mjs"
   },
   "scripts": {
-    "create-eliza": "bun run index.mjs"
+    "create-eliza": "bun run index.mjs",
+    "test": "echo \"No tests configured for create-eliza\""
   },
   "license": "MIT",
   "author": {
@@ -19,7 +20,7 @@
     "url": "https://twitter.com/eliza_OS"
   },
   "dependencies": {
-    "@elizaos/cli": "^1.0.0-beta"
+    "@elizaos/cli": "1.2.10"
   },
   "repository": {
     "type": "git",
@@ -39,7 +40,7 @@
     "create"
   ],
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=23.3.0"
   },
   "gitHead": "d5bd5c43bfebeb7ac02f9e029f924cb6cd5c2ec7",
   "devDependencies": {

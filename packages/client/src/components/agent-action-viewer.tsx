@@ -28,6 +28,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
+import { useConfirmation } from '@/hooks/use-confirmation';
+import ConfirmationDialog from './confirmation-dialog';
 
 // Constants
 const ITEMS_PER_PAGE = 15;
@@ -36,7 +39,6 @@ const ITEMS_PER_PAGE = 15;
 enum ActionType {
   all = 'all',
   llm = 'llm',
-  embedding = 'embedding',
   transcription = 'transcription',
   image = 'image',
   other = 'other',
@@ -53,6 +55,8 @@ type AgentLog = {
   body?: {
     modelType?: string;
     modelKey?: string;
+    action?: string;
+    actionId?: string;
     params?: any;
     response?: any;
     usage?: {
@@ -60,6 +64,12 @@ type AgentLog = {
       completion_tokens?: number;
       total_tokens?: number;
     };
+    prompts?: {
+      modelType?: string;
+      prompt: string;
+      timestamp?: number;
+    }[];
+    promptCount?: number;
   };
   createdAt?: number;
   [key: string]: any;
@@ -128,6 +138,7 @@ function formatDate(timestamp: number | undefined) {
 }
 
 function getModelIcon(modelType = '') {
+  if (modelType === 'ACTION') return Zap;
   if (modelType.includes('TEXT_EMBEDDING')) return Brain;
   if (modelType.includes('TRANSCRIPTION')) return FileText;
   if (modelType.includes('TEXT') || modelType.includes('OBJECT')) return Bot;
@@ -182,13 +193,17 @@ function ActionCard({ action, onDelete }: ActionCardProps) {
 
   const modelType = action.body?.modelType || '';
   const modelKey = action.body?.modelKey || '';
-  const IconComponent = getModelIcon(modelType);
-  const usageType = getModelUsageType(modelType);
+  const isActionLog = action.type === 'action';
+  const actionName = action.body?.action || '';
+  const IconComponent = getModelIcon(isActionLog ? 'ACTION' : modelType);
+  const usageType = isActionLog ? 'Action' : getModelUsageType(modelType);
   const tokenUsage = formatTokenUsage(action.body?.response?.usage || action.body?.usage);
+  const actionPrompts = action.body?.prompts;
 
   const renderParams = () => {
     const params = action.body?.params;
-    if (!params) return null;
+
+    if (!params && !actionPrompts) return null;
 
     if (modelType.includes('TRANSCRIPTION') && Array.isArray(params)) {
       return (
@@ -199,39 +214,111 @@ function ActionCard({ action, onDelete }: ActionCardProps) {
       );
     }
 
-    const paramsText =
-      typeof params === 'object' ? JSON.stringify(params, null, 2) : String(params);
-    const isLong = paramsText.length > 200;
+    // Extract prompt from params if present (for backward compatibility)
+    const { prompt, ...otherParams } = params || {};
 
     return (
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-muted-foreground">Parameters</span>
-          {isLong && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowFullParams(!showFullParams)}
-              className="h-6 px-2 text-xs"
-            >
-              {showFullParams ? 'Show less' : 'Show more'}
-            </Button>
-          )}
-        </div>
-        <div className="bg-muted/30 rounded-md p-3 relative group">
-          <pre className="text-xs font-mono whitespace-pre-wrap overflow-x-auto">
-            {showFullParams || !isLong ? paramsText : truncateText(paramsText, 200)}
-          </pre>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => copyToClipboard(paramsText)}
-            className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-            title="Copy parameters"
-          >
-            <Copy className="h-3 w-3" />
-          </Button>
-        </div>
+      <div className="space-y-4">
+        {/* Display multiple prompts if this is an action with prompts */}
+        {actionPrompts && Array.isArray(actionPrompts) && actionPrompts.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-muted-foreground">
+                Prompts ({actionPrompts.length})
+              </span>
+            </div>
+            <div className="space-y-3">
+              {actionPrompts.map((promptData, index) => (
+                <div key={index} className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">
+                      {promptData.modelType || 'Prompt'} #{index + 1}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(promptData.prompt)}
+                      className="h-5 px-1 text-xs"
+                      title="Copy prompt"
+                    >
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <div className="bg-muted/30 rounded-md p-2">
+                    <pre className="text-xs font-mono whitespace-pre-wrap overflow-x-auto">
+                      {promptData.prompt}
+                    </pre>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Display single prompt from params (backward compatibility) */}
+        {!actionPrompts && prompt && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-muted-foreground">Prompt</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => copyToClipboard(prompt)}
+                className="h-6 px-2 text-xs"
+                title="Copy prompt"
+              >
+                <Copy className="h-3 w-3 mr-1" />
+                Copy
+              </Button>
+            </div>
+            <div className="bg-muted/30 rounded-md p-3 relative">
+              <pre className="text-xs font-mono whitespace-pre-wrap overflow-x-auto">
+                {typeof prompt === 'string' ? prompt : JSON.stringify(prompt, null, 2)}
+              </pre>
+            </div>
+          </div>
+        )}
+
+        {/* Display other parameters if any */}
+        {Object.keys(otherParams).length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-muted-foreground">Other Parameters</span>
+              {(() => {
+                const paramsText = JSON.stringify(otherParams, null, 2);
+                const isLong = paramsText.length > 200;
+                return isLong ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowFullParams(!showFullParams)}
+                    className="h-6 px-2 text-xs"
+                  >
+                    {showFullParams ? 'Show less' : 'Show more'}
+                  </Button>
+                ) : null;
+              })()}
+            </div>
+            <div className="bg-muted/30 rounded-md p-3 relative group">
+              <pre className="text-xs font-mono whitespace-pre-wrap overflow-x-auto">
+                {(() => {
+                  const paramsText = JSON.stringify(otherParams, null, 2);
+                  const isLong = paramsText.length > 200;
+                  return showFullParams || !isLong ? paramsText : truncateText(paramsText, 200);
+                })()}
+              </pre>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => copyToClipboard(JSON.stringify(otherParams, null, 2))}
+                className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                title="Copy parameters"
+              >
+                <Copy className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -300,18 +387,27 @@ function ActionCard({ action, onDelete }: ActionCardProps) {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <h4 className="font-semibold text-sm">{usageType}</h4>
+                <h4 className="font-semibold text-sm">{isActionLog ? actionName : usageType}</h4>
                 <span className="text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground">
-                  {modelType}
+                  {isActionLog ? 'Action' : modelType}
                 </span>
+                {action.body?.promptCount && action.body.promptCount > 1 && (
+                  <Badge variant="secondary" className="text-xs px-1.5">
+                    {action.body.promptCount} prompts
+                  </Badge>
+                )}
               </div>
 
               {/* Model and timing info */}
               <div className="space-y-1">
-                {modelKey && (
+                {(modelKey || isActionLog) && (
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Zap className="h-3 w-3" />
-                    <code className="font-mono">{modelKey}</code>
+                    <code className="font-mono">
+                      {isActionLog
+                        ? `Action ID: ${action.body?.actionId?.slice(-8) || 'N/A'}`
+                        : modelKey}
+                    </code>
                   </div>
                 )}
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -428,11 +524,19 @@ function ActionCard({ action, onDelete }: ActionCardProps) {
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <AlertCircle className="h-3 w-3" />
               <span>
-                {action.body?.params && action.body?.response
-                  ? 'Contains parameters and response data'
-                  : action.body?.params
-                    ? 'Contains parameter data'
-                    : 'Contains response data'}
+                {(() => {
+                  const parts = [];
+                  if (action.body?.promptCount && action.body.promptCount > 0) {
+                    parts.push(
+                      `${action.body.promptCount} prompt${action.body.promptCount > 1 ? 's' : ''}`
+                    );
+                  }
+                  if (action.body?.params) parts.push('parameters');
+                  if (action.body?.response) parts.push('response data');
+                  return parts.length > 0
+                    ? `Contains ${parts.join(' and ')}`
+                    : 'Contains additional data';
+                })()}
               </span>
               <Button
                 variant="ghost"
@@ -507,8 +611,13 @@ export function AgentActionViewer({ agentId, roomId }: AgentActionViewerProps) {
   const [loadingMore, setLoadingMore] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  const { data: actions = [], isLoading, error } = useAgentActions(agentId, roomId);
+  // Exclude embedding operations by default
+  const excludeTypes = ['embedding', 'text_embedding'];
+
+  const { data: actions = [], isLoading, error } = useAgentActions(agentId, roomId, excludeTypes);
   const { mutate: deleteLog } = useDeleteLog();
+
+  const { confirm, isOpen, onOpenChange, onConfirm, options } = useConfirmation();
 
   // Filter and search actions
   const filteredActions = actions.filter((action: AgentLog) => {
@@ -516,13 +625,12 @@ export function AgentActionViewer({ agentId, roomId }: AgentActionViewerProps) {
     if (selectedType !== ActionType.all) {
       const modelType = action.body?.modelType || '';
       const usageType = getModelUsageType(modelType);
+      const isActionLog = action.type === 'action';
 
       switch (selectedType) {
         case ActionType.llm:
-          if (usageType !== 'LLM') return false;
-          break;
-        case ActionType.embedding:
-          if (usageType !== 'Embedding') return false;
+          // Include both LLM calls and actions (which often contain LLM prompts)
+          if (usageType !== 'LLM' && !isActionLog) return false;
           break;
         case ActionType.transcription:
           if (usageType !== 'Transcription') return false;
@@ -531,7 +639,7 @@ export function AgentActionViewer({ agentId, roomId }: AgentActionViewerProps) {
           if (usageType !== 'Image') return false;
           break;
         case ActionType.other:
-          if (usageType !== 'Other' && usageType !== 'Unknown') return false;
+          if (usageType !== 'Other' && usageType !== 'Unknown' && !isActionLog) return false;
           break;
       }
     }
@@ -594,9 +702,18 @@ export function AgentActionViewer({ agentId, roomId }: AgentActionViewerProps) {
   const actionGroups = groupActionsByDate(visibleActions);
 
   const handleDelete = (logId: string) => {
-    if (window.confirm('Are you sure you want to delete this log entry?')) {
-      deleteLog({ agentId, logId });
-    }
+    confirm(
+      {
+        title: 'Delete Log Entry',
+        description:
+          'Are you sure you want to permanently delete this log entry? This action cannot be undone.',
+        confirmText: 'Delete',
+        variant: 'destructive',
+      },
+      () => {
+        deleteLog({ agentId, logId });
+      }
+    );
   };
 
   const handleLoadMore = () => {
@@ -638,76 +755,91 @@ export function AgentActionViewer({ agentId, roomId }: AgentActionViewerProps) {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-100px)] min-h-[400px] w-full">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-4 px-4 pt-4 flex-none border-b pb-3">
-        <div className="flex items-center gap-2">
-          <h3 className="text-lg font-medium"> Actions</h3>
-          {!isLoading && (
-            <span className="ml-2 text-xs px-2 py-1 rounded bg-muted text-muted-foreground">
-              {filteredActions.length}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search actions..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-64"
-            />
-          </div>
-          {/* Filter */}
-          <Select
-            value={selectedType}
-            onValueChange={(value) => setSelectedType(value as ActionType)}
-          >
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Filter actions" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ActionType.all}>All Actions</SelectItem>
-              <SelectItem value={ActionType.llm}>LLM Calls</SelectItem>
-              <SelectItem value={ActionType.embedding}>Embeddings</SelectItem>
-              <SelectItem value={ActionType.transcription}>Transcriptions</SelectItem>
-              <SelectItem value={ActionType.image}>Image Operations</SelectItem>
-              <SelectItem value={ActionType.other}>Other</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4">
-        {filteredActions.length === 0 ? (
-          <EmptyState selectedType={selectedType} searchQuery={searchQuery} />
-        ) : (
-          <div className="space-y-4">
-            {Object.entries(actionGroups).map(([date, actions]) => (
-              <div key={date} className="space-y-3">
-                <div className="flex items-center gap-3 py-2">
-                  <Separator className="flex-1" />
-                  <span className="text-sm font-medium text-muted-foreground px-2">{date}</span>
-                  <Separator className="flex-1" />
-                </div>
-                <div className="space-y-3">
-                  {actions.map((action, index) => (
-                    <ActionCard key={action.id || index} action={action} onDelete={handleDelete} />
-                  ))}
-                </div>
-              </div>
-            ))}
-
-            {/* Load more */}
-            {hasMoreToLoad && (
-              <LoadingIndicator loadingMore={loadingMore} onLoadMore={handleLoadMore} />
+    <>
+      <div className="flex flex-col h-[calc(100vh-100px)] min-h-[400px] w-full">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-4 px-4 pt-4 flex-none border-b pb-3">
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-medium"> Actions</h3>
+            {!isLoading && (
+              <span className="ml-2 text-xs px-2 py-1 rounded bg-muted text-muted-foreground">
+                {filteredActions.length}
+              </span>
             )}
           </div>
-        )}
+          <div className="flex items-center gap-2">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search actions..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 w-64"
+              />
+            </div>
+            {/* Filter */}
+            <Select
+              value={selectedType}
+              onValueChange={(value) => setSelectedType(value as ActionType)}
+            >
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Filter actions" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ActionType.all}>All Actions</SelectItem>
+                <SelectItem value={ActionType.llm}>LLM Calls</SelectItem>
+                <SelectItem value={ActionType.transcription}>Transcriptions</SelectItem>
+                <SelectItem value={ActionType.image}>Image Operations</SelectItem>
+                <SelectItem value={ActionType.other}>Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4">
+          {filteredActions.length === 0 ? (
+            <EmptyState selectedType={selectedType} searchQuery={searchQuery} />
+          ) : (
+            <div className="space-y-4">
+              {Object.entries(actionGroups).map(([date, actions]) => (
+                <div key={date} className="space-y-3">
+                  <div className="flex items-center gap-3 py-2">
+                    <Separator className="flex-1" />
+                    <span className="text-sm font-medium text-muted-foreground px-2">{date}</span>
+                    <Separator className="flex-1" />
+                  </div>
+                  <div className="space-y-3">
+                    {actions.map((action, index) => (
+                      <ActionCard
+                        key={action.id || index}
+                        action={action}
+                        onDelete={handleDelete}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              {/* Load more */}
+              {hasMoreToLoad && (
+                <LoadingIndicator loadingMore={loadingMore} onLoadMore={handleLoadMore} />
+              )}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+      <ConfirmationDialog
+        open={isOpen}
+        onOpenChange={onOpenChange}
+        title={options?.title || ''}
+        description={options?.description || ''}
+        confirmText={options?.confirmText}
+        cancelText={options?.cancelText}
+        variant={options?.variant}
+        onConfirm={onConfirm}
+      />
+    </>
   );
 }

@@ -1,7 +1,13 @@
-import { promises as fs, existsSync } from 'node:fs';
+import { existsSync } from 'node:fs';
+import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { logger } from '@elizaos/core';
-import { UserEnvironment } from './user-environment';
+import { isQuietMode } from './spinner-utils';
+
+// Define __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Copy a directory recursively
@@ -16,16 +22,21 @@ import { UserEnvironment } from './user-environment';
  * @returns {Promise<void>} A Promise that resolves when the copy operation is complete.
  */
 export async function copyDir(src: string, dest: string, exclude: string[] = []) {
+  // Ensure paths are properly resolved as absolute paths
+  const resolvedSrc = path.resolve(src);
+  const resolvedDest = path.resolve(dest);
+
   // Create destination directory if it doesn't exist
-  await fs.mkdir(dest, { recursive: true });
+  await fs.mkdir(resolvedDest, { recursive: true });
 
   // Read source directory
-  const entries = await fs.readdir(src, { withFileTypes: true });
+  const entries = await fs.readdir(resolvedSrc, { withFileTypes: true });
+
+  // Separate files and directories for different processing strategies
+  const files: typeof entries = [];
+  const directories: typeof entries = [];
 
   for (const entry of entries) {
-    const srcPath = path.join(src, entry.name);
-    const destPath = path.join(dest, entry.name);
-
     // Skip excluded directories/files
     if (exclude.includes(entry.name)) {
       continue;
@@ -44,12 +55,53 @@ export async function copyDir(src: string, dest: string, exclude: string[] = [])
     }
 
     if (entry.isDirectory()) {
-      // Recursively copy directory
-      await copyDir(srcPath, destPath, exclude);
+      directories.push(entry);
     } else {
-      // Copy file
-      await fs.copyFile(srcPath, destPath);
+      files.push(entry);
     }
+  }
+
+  // Process files in parallel (up to 10 concurrent operations)
+  const MAX_CONCURRENT_FILES = 10;
+  const filePromises: Promise<void>[] = [];
+
+  for (let i = 0; i < files.length; i += MAX_CONCURRENT_FILES) {
+    const batch = files.slice(i, i + MAX_CONCURRENT_FILES);
+    const batchPromises = batch.map(async (entry) => {
+      const srcPath = path.join(resolvedSrc, entry.name);
+      const destPath = path.join(resolvedDest, entry.name);
+      await fs.copyFile(srcPath, destPath);
+    });
+    filePromises.push(...batchPromises);
+  }
+
+  // Wait for all file copies to complete
+  await Promise.all(filePromises);
+
+  // Process directories sequentially to avoid too much recursion depth
+  // but still get benefits from parallel file copying within each directory
+  for (const entry of directories) {
+    const srcPath = path.join(resolvedSrc, entry.name);
+    const destPath = path.join(resolvedDest, entry.name);
+    await copyDir(srcPath, destPath, exclude);
+  }
+}
+
+/**
+ * Map template types to actual package names
+ */
+function getPackageName(templateType: string): string {
+  switch (templateType) {
+    case 'project-tee-starter':
+      return 'project-tee-starter';
+    case 'plugin':
+      return 'plugin-starter';
+    case 'plugin-quick':
+      return 'plugin-quick-starter';
+    case 'project':
+    case 'project-starter':
+    default:
+      return 'project-starter';
   }
 }
 
@@ -57,48 +109,58 @@ export async function copyDir(src: string, dest: string, exclude: string[] = [])
  * Copy a project or plugin template to target directory
  */
 export async function copyTemplate(
-  templateType: 'project' | 'plugin',
-  targetDir: string,
-  name: string
+  templateType: 'project' | 'project-starter' | 'project-tee-starter' | 'plugin' | 'plugin-quick',
+  targetDir: string
 ) {
-  // In development mode, use the actual packages
-  let templateDir;
-  const userEnv = UserEnvironment.getInstance();
-  const pathsInfo = await userEnv.getPathInfo();
+  const packageName = getPackageName(templateType);
 
-  if (process.env.NODE_ENV === 'development' && pathsInfo.monorepoRoot) {
-    // Use monorepoRoot if in development and monorepoRoot is found
-    logger.debug(
-      `Development mode: Using monorepo root at ${pathsInfo.monorepoRoot} to find templates.`
-    );
-    templateDir = path.resolve(
-      pathsInfo.monorepoRoot,
-      'packages',
-      templateType === 'project' ? 'project-starter' : 'plugin-starter'
-    );
-  } else if (process.env.NODE_ENV === 'development') {
-    // Fallback for development if monorepoRoot is not found (e.g., running CLI from a strange location)
-    logger.warn(
-      'Development mode: monorepoRoot not found. Falling back to process.cwd() for template path. This might be unreliable.'
-    );
-    templateDir = path.resolve(
-      process.cwd(),
-      'packages',
-      templateType === 'project' ? 'project-starter' : 'plugin-starter'
-    );
-  } else {
-    // In production, use the templates directory from the CLI package
-    templateDir = path.resolve(
+  // Try multiple locations to find templates, handling different runtime environments
+  const possibleTemplatePaths = [
+    // 1. Direct path from source directory (for tests and development)
+    path.resolve(__dirname, '../../templates', packageName),
+    // 2. Production: templates bundled with the CLI dist
+    path.resolve(
+      path.dirname(require.resolve('@elizaos/cli/package.json')),
+      'dist',
+      'templates',
+      packageName
+    ),
+    // 3. Development/Test: templates in the CLI package root
+    path.resolve(
       path.dirname(require.resolve('@elizaos/cli/package.json')),
       'templates',
-      templateType === 'project' ? 'project-starter' : 'plugin-starter'
+      packageName
+    ),
+    // 4. Fallback: relative to current module (for built dist)
+    path.resolve(__dirname, '..', 'templates', packageName),
+    // 5. Additional fallback: relative to dist directory
+    path.resolve(__dirname, '..', '..', 'templates', packageName),
+  ];
+
+  let templateDir: string | null = null;
+  for (const possiblePath of possibleTemplatePaths) {
+    if (existsSync(possiblePath)) {
+      templateDir = possiblePath;
+      break;
+    }
+  }
+
+  if (!templateDir) {
+    throw new Error(
+      `Template '${packageName}' not found. Searched in:\n${possibleTemplatePaths.join('\n')}`
     );
   }
 
-  logger.info(`Copying ${templateType} template from ${templateDir} to ${targetDir}`);
+  logger.debug(`Copying ${templateType} template from ${templateDir} to ${targetDir}`);
 
   // Copy template files as-is
   await copyDir(templateDir, targetDir);
+
+  // For plugin templates, replace hardcoded "plugin-starter" strings in source files
+  if (templateType === 'plugin' || templateType === 'plugin-quick') {
+    const pluginNameFromPath = path.basename(targetDir);
+    await replacePluginNameInFiles(targetDir, pluginNameFromPath);
+  }
 
   // Update package.json with dependency versions only (leave placeholders intact)
   const packageJsonPath = path.join(targetDir, 'package.json');
@@ -118,17 +180,17 @@ export async function copyTemplate(
     // Remove private field from template package.json since templates should be usable by users
     if (packageJson.private) {
       delete packageJson.private;
-      logger.info('Removed private field from template package.json');
+      logger.debug('Removed private field from template package.json');
     }
 
     // Only update dependency versions - leave everything else unchanged
     if (packageJson.dependencies) {
       for (const depName of Object.keys(packageJson.dependencies)) {
         if (depName.startsWith('@elizaos/')) {
-          logger.info(`Setting ${depName} to use version ${cliPackageVersion}`);
-          packageJson.dependencies[depName] = cliPackageVersion.includes('beta')
-            ? 'beta'
-            : 'latest';
+          if (!isQuietMode()) {
+            logger.info(`Setting ${depName} to use version ${cliPackageVersion}`);
+          }
+          packageJson.dependencies[depName] = 'latest';
         }
       }
     }
@@ -136,63 +198,74 @@ export async function copyTemplate(
     if (packageJson.devDependencies) {
       for (const depName of Object.keys(packageJson.devDependencies)) {
         if (depName.startsWith('@elizaos/')) {
-          logger.info(`Setting dev dependency ${depName} to use version ${cliPackageVersion}`);
-          packageJson.devDependencies[depName] = cliPackageVersion.includes('beta')
-            ? 'beta'
-            : 'latest';
+          if (!isQuietMode()) {
+            logger.info(`Setting dev dependency ${depName} to use version ${cliPackageVersion}`);
+          }
+          packageJson.devDependencies[depName] = 'latest';
         }
       }
     }
 
-    // Write the updated package.json (only dependency versions changed)
+    // Update the package name to use the actual name provided by the user
+    const projectNameFromPath = path.basename(targetDir);
+
+    if (packageJson.name !== projectNameFromPath) {
+      packageJson.name = projectNameFromPath;
+      if (!isQuietMode()) {
+        logger.info(`Setting package name to ${projectNameFromPath}`);
+      }
+    }
+
+    // Write the updated package.json (dependency versions and plugin name changed)
     await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
-    logger.success('Updated package.json with latest dependency versions');
+    logger.debug('Updated package.json with latest dependency versions');
   } catch (error) {
     logger.error(`Error updating package.json: ${error}`);
   }
 
-  logger.success(`${templateType} template copied successfully`);
+  logger.debug(`${templateType} template copied successfully`);
 }
 
 /**
- * Copy client dist files to the CLI package dist directory
+ * Replace hardcoded "plugin-starter" or "plugin-quick-starter" strings in source files with the actual plugin name
  */
-export async function copyClientDist() {
-  logger.info('Copying client dist files to CLI package');
+async function replacePluginNameInFiles(targetDir: string, pluginName: string): Promise<void> {
+  const filesToProcess = [
+    'src/index.ts',
+    'src/plugin.ts',
+    'src/__tests__/plugin.test.ts',
+    '__tests__/plugin.test.ts',
+    'e2e/starter-plugin.test.ts',
+    'README.md',
+    // package.json name is handled by the publish command
+  ];
 
-  const srcClientDist = path.resolve(process.cwd(), '../client/dist');
-  const destClientDist = path.resolve(process.cwd(), './dist');
-  const indexSrc = path.join(srcClientDist, 'index.html');
-  const indexDest = path.join(destClientDist, 'index.html');
+  // Process files in parallel
+  const promises = filesToProcess.map(async (filePath) => {
+    const fullPath = path.join(targetDir, filePath);
 
-  await fs.mkdir(destClientDist, { recursive: true });
+    try {
+      if (
+        await fs
+          .access(fullPath)
+          .then(() => true)
+          .catch(() => false)
+      ) {
+        let content = await fs.readFile(fullPath, 'utf8');
 
-  // Wait specifically for index.html to appear
-  let retries = 0;
-  const maxRetries = 10;
-  const retryDelay = 1000;
-  while (retries < maxRetries) {
-    if (existsSync(indexSrc)) {
-      break;
+        // Replace both plugin-starter and plugin-quick-starter with the actual plugin name
+        content = content.replace(/plugin-starter/g, pluginName);
+        content = content.replace(/plugin-quick-starter/g, pluginName);
+
+        await fs.writeFile(fullPath, content, 'utf8');
+        logger.debug(`Updated plugin name in ${filePath}`);
+      }
+    } catch (error) {
+      logger.warn(
+        `Could not update ${filePath}: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
-    logger.info(`Waiting for client index.html (attempt ${retries + 1}/${maxRetries})…`);
-    await new Promise((r) => setTimeout(r, retryDelay));
-    retries++;
-  }
+  });
 
-  if (!existsSync(indexSrc)) {
-    logger.error(`index.html not found at ${indexSrc} after ${maxRetries} attempts`);
-    return;
-  }
-
-  // Copy everything
-  await copyDir(srcClientDist, destClientDist);
-
-  // Verify it made it into CLI dist
-  if (!existsSync(indexDest)) {
-    logger.error(`index.html missing in CLI dist at ${indexDest}`);
-    return;
-  }
-
-  logger.success('Client dist files copied successfully');
+  await Promise.all(promises);
 }

@@ -2,8 +2,6 @@
 use std::net::TcpStream;
 use std::process::{Child, Command};
 use std::sync::{Arc, Mutex};
-use std::thread;
-use std::time::{Duration, Instant};
 use tauri::Manager;
 
 // Store the server process so we can kill it when the app closes
@@ -48,8 +46,7 @@ pub fn run() {
             // Start the server if it's not already running
             if !is_server_running() {
                 println!("Starting Eliza server...");
-                match Command::new("npx")
-                    .arg("elizaos")
+                match Command::new("elizaos")
                     .arg("start")
                     .spawn() {
                         Ok(child) => {
@@ -67,7 +64,7 @@ pub fn run() {
             }
             
             // Add event listener for app exit
-            let app_handle = app.handle();
+            let _app_handle = app.handle();
             
             #[cfg(desktop)]
             {

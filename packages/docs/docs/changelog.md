@@ -4,6 +4,10 @@
 
 #### v0.25.9 Release Notes
 
+#### Breaking Changes
+
+- **Twitter/X integration undergoing maintenance**
+
 #### Features
 
 - CLI install improvements #3697
@@ -829,7 +833,7 @@ Complete changelog:
 * chore: add embedding tests by @shlokkhemani in https://github.com/elizaOS/eliza/pull/1944
 * feat: new plugin Arthera Chain by @elpiarthera in https://github.com/elizaOS/eliza/pull/1818
 * fix: fixed error in C3PO and improved error handling feedback by @JoeyKhd in https://github.com/elizaOS/eliza/pull/1951
-* feat: add pglite db adapter by @KONFeature in https://github.com/elizaOS/eliza/pull/1810
+* feat: add sqlite db adapter by @KONFeature in https://github.com/elizaOS/eliza/pull/1810
 * feat: Add fraxtal chain to evm by @kesar in https://github.com/elizaOS/eliza/pull/1954
 * feat: add coin price plugin (CoinMarketCap, CoinGecko & CoinCap) by @proteanx in https://github.com/elizaOS/eliza/pull/1808
 * fix: abstract readme by @cygaar in https://github.com/elizaOS/eliza/pull/1963
@@ -2006,7 +2010,7 @@ Complete changelog:
 * Add RedPill API Support by @HashWarlock in https://github.com/ai16z/eliza/pull/198
 * Fix Discord Voice and DMs by @lalalune in https://github.com/ai16z/eliza/pull/203
 * Shaw fix characters paths, .ts requirement and missings args by @lalalune in https://github.com/ai16z/eliza/pull/204
-* Implement grok beta by @MeDott29 in https://github.com/ai16z/eliza/pull/216
+* Implement grok by @MeDott29 in https://github.com/ai16z/eliza/pull/216
 * add the template overrides by @lalalune in https://github.com/ai16z/eliza/pull/207
 * lazy load llama by @lalalune in https://github.com/ai16z/eliza/pull/220
 * Abstracts Eliza into a Package to enble publishing onto NPM along with plugin system by @ponderingdemocritus in https://github.com/ai16z/eliza/pull/214

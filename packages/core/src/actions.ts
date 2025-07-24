@@ -74,17 +74,8 @@ const formatSelectedExamples = (examples: ActionExample[][]): string => {
       // Format the conversation
       const conversation = example
         .map((message) => {
-          // Build the base message
+          // Build the base message - only include the text, no action info
           let messageText = `${message.name}: ${message.content.text}`;
-
-          // Add action information if present
-          if (message.content.action) {
-            messageText += ` (action: ${message.content.action})`;
-          }
-
-          if (message.content.actions?.length) {
-            messageText += ` (actions: ${message.content.actions.join(', ')})`;
-          }
 
           // Replace name placeholders
           for (let i = 0; i < randomNames.length; i++) {
@@ -123,9 +114,9 @@ export function formatActionNames(actions: Action[]): string {
 export function formatActions(actions: Action[]): string {
   if (!actions?.length) return '';
 
-  // Create a shuffled copy instead of mutating the original array
+  // Create a shuffled copy without mutating the original
   return [...actions]
     .sort(() => Math.random() - 0.5)
-    .map((action) => `${action.name}: ${action.description}`)
-    .join(',\n');
+    .map((action) => `- **${action.name}**: ${action.description || 'No description available'}`)
+    .join('\n');
 }

@@ -1,21 +1,53 @@
-import { Content } from '@elizaos/core';
 import {
   type Action,
-  type ActionExample,
   composePromptFromState,
   type HandlerCallback,
   type IAgentRuntime,
   type Memory,
   ModelType,
   type State,
+  type ActionResult,
+  logger,
+  parseKeyValueXml,
+  type TemplateType,
 } from '@elizaos/core';
+
+/**
+ * Template for generating dialog and actions for a character.
+ *
+ * @type {string}
+ */
+const replyTemplate = `# Task: Generate dialog for the character {{agentName}}.
+
+{{providers}}
+
+# Instructions: Write the next message for {{agentName}}.
+"thought" should be a short description of what the agent is thinking about and planning.
+"message" should be the next message for {{agentName}} which they will send to the conversation.
+
+IMPORTANT CODE BLOCK FORMATTING RULES:
+- If {{agentName}} includes code examples, snippets, or multi-line code in the response, ALWAYS wrap the code with \`\`\` fenced code blocks (specify the language if known, e.g., \`\`\`python).
+- ONLY use fenced code blocks for actual code. Do NOT wrap non-code text, instructions, or single words in fenced code blocks.
+- If including inline code (short single words or function names), use single backticks (\`) as appropriate.
+- This ensures the user sees clearly formatted and copyable code when relevant.
+
+Do NOT include any thinking, reasoning, or <think> sections in your response. 
+Go directly to the XML response format without any preamble or explanation.
+
+Respond using XML format like this:
+<response>
+    <thought>Your thought here</thought>
+    <message>Your message here</message>
+</response>
+
+IMPORTANT: Your response must ONLY contain the <response></response> XML block above. Do not include any text, thinking, or reasoning before or after this XML block. Start your response immediately with <response> and end with </response>.`;
 
 /**
  * Template for generating therapeutic dialog for Dr. Orion.
  *
  * @type {string}
  */
-const replyTemplate = `# Task: Generate therapeutic dialog for Dr. {{agentName}}, applying clinical psychology expertise and evidence-based interventions.
+const therapeuticReplyTemplate = `# Task: Generate therapeutic dialog for Dr. {{agentName}}, applying clinical psychology expertise and evidence-based interventions.
 
 {{providers}}
 
@@ -75,38 +107,16 @@ Write Dr. {{agentName}}'s next therapeutic response, fully integrating your char
 "thought" should reflect your clinical assessment, therapeutic strategy, and how you're applying your character traits to this interaction, noting any specific wisdom from "Dr. Orion's Therapeutic Wisdom" that applies.
 "message" should be your therapeutic response - validating yet challenging, with actionable guidance rooted in psychological expertise, your character's unique perspective, and any relevant teachings from your knowledge base.
 
-Response format should be formatted in a valid JSON block like this:
-\`\`\`json
-{
-    "thought": "<clinical assessment, therapeutic strategy, and character integration approach>",
-    "message": "<therapeutic response incorporating validation, challenge, actionable guidance, and your character's unique voice>"
-}
-\`\`\`
+Do NOT include any thinking, reasoning, or <think> sections in your response. 
+Go directly to the XML response format without any preamble or explanation.
 
-Your response should include the valid JSON block and nothing else.`;
+Respond using XML format like this:
+<response>
+    <thought>Clinical assessment, therapeutic strategy, and character integration approach</thought>
+    <message>Therapeutic response incorporating validation, challenge, actionable guidance, and your character's unique voice</message>
+</response>
 
-function getFirstAvailableField(obj: Record<string, any>, fields: string[]): string | null {
-  for (const field of fields) {
-    if (typeof obj[field] === 'string' && obj[field].trim() !== '') {
-      return obj[field];
-    }
-  }
-  return null;
-}
-
-function extractReplyContent(response: Memory, replyFieldKeys: string[]): Content | null {
-  const hasReplyAction = response.content.actions?.includes('REPLY');
-  const text = getFirstAvailableField(response.content, replyFieldKeys);
-
-  if (!hasReplyAction || !text) return null;
-
-  return {
-    ...response.content,
-    thought: response.content.thought,
-    text,
-    actions: ['REPLY'],
-  };
-}
+IMPORTANT: Your response must ONLY contain the <response></response> XML block above. Do not include any text, thinking, or reasoning before or after this XML block. Start your response immediately with <response> and end with </response>.`;
 
 /**
  * Represents an action that allows the agent to reply to the current conversation with a generated message.
@@ -136,42 +146,93 @@ export const replyAction = {
     _options: any,
     callback: HandlerCallback,
     responses?: Memory[]
-  ) => {
-    const replyFieldKeys = ['message', 'text'];
+  ): Promise<ActionResult> => {
+    // Access previous action results from context if available
+    const context = _options?.context;
+    const previousResults = context?.previousResults || [];
 
-    const existingReplies =
-      responses
-        ?.map((r) => extractReplyContent(r, replyFieldKeys))
-        .filter((reply): reply is Content => reply !== null) ?? [];
+    if (previousResults.length > 0) {
+      logger.debug(`[REPLY] Found ${previousResults.length} previous action results`);
+    }
 
     // Check if any responses had providers associated with them
     const allProviders = responses?.flatMap((res) => res.content?.providers ?? []) ?? [];
 
-    if (existingReplies.length > 0 && allProviders.length === 0) {
-      for (const reply of existingReplies) {
-        await callback(reply);
-      }
-      return;
-    }
-
     // Only generate response using LLM if no suitable response was found
-    state = await runtime.composeState(message, [...(allProviders ?? []), 'RECENT_MESSAGES']);
+    state = await runtime.composeState(message, [
+      ...(allProviders ?? []),
+      'RECENT_MESSAGES',
+      'ACTION_STATE',
+    ]);
+
+    // Choose template based on character name and whether they have therapeutic template
+    let template: TemplateType = replyTemplate;
+    if (runtime.character.name === 'Orion' && runtime.character.templates?.replyTemplate) {
+      // If character has a custom reply template, use it
+      template = runtime.character.templates.replyTemplate;
+    } else if (runtime.character.name === 'Orion') {
+      // Use therapeutic template for Dr. Orion
+      template = therapeuticReplyTemplate;
+    } else if (runtime.character.templates?.replyTemplate) {
+      // Use character's custom template if available
+      template = runtime.character.templates.replyTemplate;
+    }
 
     const prompt = composePromptFromState({
       state,
-      template: replyTemplate,
+      template,
     });
 
-    const response = await runtime.useModel(ModelType.OBJECT_LARGE, {
-      prompt,
-    });
+    try {
+      const response = await runtime.useModel(ModelType.TEXT_LARGE, {
+        prompt,
+      });
 
-    const responseContent = {
-      thought: response.thought,
-      text: (response.message as string) || '',
-      actions: ['REPLY'],
-    };
+      // Parse XML response
+      const parsedXml = parseKeyValueXml(response);
 
-    await callback(responseContent);
+      const responseContent = {
+        thought: parsedXml?.thought || '',
+        text: parsedXml?.message || '',
+        actions: ['REPLY'],
+      };
+
+      await callback(responseContent);
+
+      return {
+        text: `Generated reply: ${responseContent.text}`,
+        values: {
+          success: true,
+          responded: true,
+          lastReply: responseContent.text,
+          lastReplyTime: Date.now(),
+          thoughtProcess: parsedXml?.thought,
+        },
+        data: {
+          actionName: 'REPLY',
+          response: responseContent,
+          thought: parsedXml?.thought,
+          messageGenerated: true,
+        },
+        success: true,
+      };
+    } catch (error) {
+      logger.error(`[REPLY] Error generating response: ${error}`);
+
+      return {
+        text: 'Error generating reply',
+        values: {
+          success: false,
+          responded: false,
+          error: true,
+        },
+        data: {
+          actionName: 'REPLY',
+          error: error instanceof Error ? error.message : String(error),
+        },
+        success: false,
+        error: error instanceof Error ? error : new Error(String(error)),
+      };
+    }
   },
 } as Action;

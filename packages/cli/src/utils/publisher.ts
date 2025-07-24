@@ -1,7 +1,5 @@
-import { promises as fs } from 'node:fs';
-import path from 'node:path';
+import { bunExec, bunExecInherit } from '@/src/utils/bun-exec';
 import { logger } from '@elizaos/core';
-import { execa } from 'execa';
 import {
   branchExists,
   createBranch,
@@ -15,7 +13,7 @@ import {
   createGitHubRepository,
   pushToGitHub,
 } from './github';
-import { getGitHubToken, getRegistrySettings } from './registry';
+import { getRegistrySettings } from './registry';
 
 interface PackageJson {
   name: string;
@@ -32,30 +30,6 @@ interface PackageJson {
   type?: string; // 'module' or 'commonjs' for Node.js module format
 }
 
-// This interface isn't used but we'll keep it for future reference
-interface PublishTestResult {
-  npmChecks: {
-    loggedIn: boolean;
-    canBuild: boolean;
-    hasPermissions: boolean;
-  };
-  githubChecks: {
-    hasToken: boolean;
-    hasValidToken: boolean;
-    hasForkAccess: boolean;
-    canCreateBranch: boolean;
-    canUpdateFiles: boolean;
-    canCreatePR: boolean;
-  };
-  packageChecks: {
-    hasPackageJson: boolean;
-    hasValidName: boolean;
-    hasVersion: boolean;
-    hasRepository: boolean;
-    versionNotExists: boolean;
-  };
-}
-
 /**
  * Tests whether the current environment is ready to publish an npm package from the specified directory.
  *
@@ -67,17 +41,16 @@ interface PublishTestResult {
 export async function testPublishToNpm(cwd: string): Promise<boolean> {
   try {
     // Check if logged in to npm
-    await execa('npm', ['whoami']);
+    await bunExec('npm', ['whoami']);
     logger.info('[✓] Logged in to npm');
 
     // Test build
     logger.info('Testing build...');
-    await execa('npm', ['run', 'build', '--dry-run'], { cwd });
+    await bunExec('npm', ['run', 'build', '--dry-run'], { cwd });
     logger.info('[✓] Build test successful');
 
     // Test publish access
-    const pkgJson = JSON.parse(await fs.readFile(path.join(cwd, 'package.json'), 'utf-8'));
-    await execa('npm', ['access', 'ls-packages'], { cwd });
+    await bunExec('npm', ['access', 'ls-packages'], { cwd });
     logger.info('[✓] Have publish permissions');
 
     return true;
@@ -102,7 +75,6 @@ export async function testPublishToNpm(cwd: string): Promise<boolean> {
  * @returns `true` if all required GitHub permissions and operations succeed; otherwise, `false`.
  */
 export async function testPublishToGitHub(
-  cwd: string,
   packageJson: PackageJson,
   username: string
 ): Promise<boolean> {
@@ -142,7 +114,7 @@ export async function testPublishToGitHub(
     logger.info(`Testing with registry: ${registryOwner}/${registryRepo}`);
 
     // Check fork permissions and create fork if needed
-    const hasFork = await forkExists(token, registryOwner, registryRepo, username);
+    const hasFork = await forkExists(token, registryRepo, username);
     logger.info(hasFork ? '[✓] Fork exists' : '[✓] Can create fork');
 
     if (!hasFork) {
@@ -182,8 +154,7 @@ export async function testPublishToGitHub(
     // Try to create the directory first if needed
     const dirCreated = await ensureDirectory(
       token,
-      username,
-      registryRepo,
+      `${username}/${registryRepo}`,
       'test-files',
       branchName
     );
@@ -216,15 +187,15 @@ export async function testPublishToGitHub(
 export async function publishToNpm(cwd: string): Promise<boolean> {
   try {
     // Check if logged in to npm
-    await execa('npm', ['whoami']);
+    await bunExec('npm', ['whoami']);
 
     // Build the package
     logger.info('Building package...');
-    await execa('npm', ['run', 'build'], { cwd, stdio: 'inherit' });
+    await bunExecInherit('npm', ['run', 'build'], { cwd });
 
     // Publish to npm
     logger.info('Publishing to npm...');
-    await execa('npm', ['publish'], { cwd, stdio: 'inherit' });
+    await bunExecInherit('npm', ['publish'], { cwd });
 
     return true;
   } catch (error) {
@@ -240,7 +211,6 @@ export async function publishToNpm(cwd: string): Promise<boolean> {
  *
  * @param cwd - The working directory containing the package to publish.
  * @param packageJson - The parsed package.json object for the package.
- * @param cliVersion - The CLI version to record in the registry metadata.
  * @param username - The GitHub username of the publisher.
  * @param skipRegistry - If true, skips registry updates and only publishes to GitHub.
  * @param isTest - If true, runs in test mode without making actual changes.
@@ -255,7 +225,6 @@ export async function publishToNpm(cwd: string): Promise<boolean> {
 export async function publishToGitHub(
   cwd: string,
   packageJson: PackageJson,
-  cliVersion: string,
   username: string,
   skipRegistry = false,
   isTest = false
@@ -358,7 +327,7 @@ export async function publishToGitHub(
   const [registryOwner, registryRepo] = settings.defaultRegistry.split('/');
 
   // Check for fork
-  const hasFork = await forkExists(token, registryOwner, registryRepo, username);
+  const hasFork = await forkExists(token, registryRepo, username);
   let forkFullName: string;
 
   if (!hasFork && !isTest) {
@@ -407,7 +376,7 @@ export async function publishToGitHub(
   // Update package metadata
   const packageName = packageJson.name.replace(/^@[^/]+\//, '');
 
-  // Use the actual npm package name from package.json (not @elizaos-plugins/ prefix)
+  // Use the actual npm package name from package.json (not @elizaos/ prefix)
   const registryPackageName = packageJson.name;
 
   if (!isTest) {
@@ -496,7 +465,9 @@ export async function publishToGitHub(
         return false;
       }
     } catch (error) {
-      logger.error(`Failed to update index.json: ${error.message}`);
+      logger.error(
+        `Failed to update index.json: ${error instanceof Error ? error.message : String(error)}`
+      );
       return false;
     }
 

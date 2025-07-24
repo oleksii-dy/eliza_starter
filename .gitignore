@@ -1,4 +1,5 @@
 node_modules
+bun.lock
 /out
 
 .env
@@ -12,8 +13,6 @@ node_modules
 .DS_Store
 
 dist/
-# Allow models directory but ignore model files
-db/
 
 *.gguf
 *.onnx
@@ -38,8 +37,6 @@ models/*
 tsup.config.bundled_*.mjs
 
 .turbo
-.cursorrules
-
 instructions.md
 wallet_data.txt
 
@@ -67,7 +64,6 @@ tsdoc_cache/
 tsdoc_comments/
 
 **/elizadb/**
-**/pglite/**
 *~
 \#*\#
 /.emacs.desktop
@@ -118,7 +114,6 @@ flycheck_*.el
 
 packages/autodoc/text_objects/*
 /env
-**pglite**
 **elizadb**
 **.eliza**
 
@@ -154,5 +149,35 @@ playwright-report/
 temp/
 tmp/
 
+# Added by Task Master AI
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dev-debug.log
+# Dependency directories
+node_modules/
+# Environment variables
+# Editor directories and files
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# OS specific
+# Task files
+tasks.json
+tasks/
 
-*.cursor*
+# Development database and tool directories
+**/data/
+**/.roo/
+**/.roomodes/
+**/.taskmaster/
+**/.windsurfrules/
+.roomodes
+bun.lock
+/.kiro

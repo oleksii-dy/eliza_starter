@@ -2,8 +2,9 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { logger } from '@elizaos/core';
 import { existsSync } from 'node:fs';
-import { execa } from 'execa';
+import { bunExecSimple, bunExec } from './bun-exec.js';
 import { UserEnvironment } from './user-environment';
+import * as clack from '@clack/prompts';
 
 const GITHUB_API_URL = 'https://api.github.com';
 
@@ -56,7 +57,9 @@ export async function validateGitHubToken(token: string): Promise<boolean> {
 
     return false;
   } catch (error) {
-    logger.error(`Failed to validate GitHub token: ${error.message}`);
+    logger.error(
+      `Failed to validate GitHub token: ${error instanceof Error ? error.message : String(error)}`
+    );
     return false;
   }
 }
@@ -64,12 +67,7 @@ export async function validateGitHubToken(token: string): Promise<boolean> {
 /**
  * Check if a fork exists for a given repository
  */
-export async function forkExists(
-  token: string,
-  owner: string,
-  repo: string,
-  username: string
-): Promise<boolean> {
+export async function forkExists(token: string, repo: string, username: string): Promise<boolean> {
   try {
     const response = await fetch(`${GITHUB_API_URL}/repos/${username}/${repo}`, {
       headers: {
@@ -110,7 +108,9 @@ export async function forkRepository(
     logger.error(`Failed to fork repository: ${response.statusText}`);
     return null;
   } catch (error) {
-    logger.error(`Failed to fork repository: ${error.message}`);
+    logger.error(
+      `Failed to fork repository: ${error instanceof Error ? error.message : String(error)}`
+    );
     return null;
   }
 }
@@ -333,7 +333,9 @@ export async function createBranch(
     logger.error(`Failed to create branch: ${response.statusText}`);
     return false;
   } catch (error) {
-    logger.error(`Failed to create branch: ${error.message}`);
+    logger.error(
+      `Failed to create branch: ${error instanceof Error ? error.message : String(error)}`
+    );
     return false;
   }
 }
@@ -463,7 +465,7 @@ export async function updateFile(
 
     return false;
   } catch (error) {
-    logger.error(`Error updating file: ${error.message}`);
+    logger.error(`Error updating file: ${error instanceof Error ? error.message : String(error)}`);
     return false;
   }
 }
@@ -505,7 +507,9 @@ export async function createPullRequest(
     logger.error(`Failed to create pull request: ${response.statusText}`);
     return null;
   } catch (error) {
-    logger.error(`Failed to create pull request: ${error.message}`);
+    logger.error(
+      `Failed to create pull request: ${error instanceof Error ? error.message : String(error)}`
+    );
     return null;
   }
 }
@@ -584,47 +588,42 @@ export async function getGitHubCredentials(): Promise<{
   }
 
   // No valid credentials found, prompt the user
-  const prompt = await import('prompts');
+  clack.intro('🔐 GitHub Authentication Required');
 
-  // First display the instructions separately
-  console.log('\n====== GitHub Authentication Required ======');
-  console.log('To create a GitHub Personal Access Token (Classic):');
-  console.log('1. Go to https://github.com/settings/tokens/new');
-  console.log('2. Give your token a descriptive name (e.g., "ElizaOS CLI")');
-  console.log('3. Select "No expiration" or any expiration date');
-  console.log('4. Select the following scopes (all are required):');
-  console.log('   - repo (Full control of private repositories)');
-  console.log('   - read:org (Read org and team membership, read org projects)');
-  console.log('   - workflow (Update GitHub Action workflows)');
-  console.log('5. Click "Generate token" at the bottom of the page');
-  console.log("6. Copy the displayed token (you won't be able to see it again!)");
-  console.log('');
-  console.log('\u001b[33mNOTE: You must use a Classic token, not a Fine-grained token\u001b[0m');
-  console.log('======================================\n');
+  clack.note(
+    `To create a GitHub Personal Access Token (Classic):
+1. Go to https://github.com/settings/tokens/new
+2. Give your token a descriptive name (e.g., "ElizaOS CLI")
+3. Select "No expiration" or any expiration date
+4. Select the following scopes (all are required):
+   - repo (Full control of private repositories)
+   - read:org (Read org and team membership, read org projects)
+   - workflow (Update GitHub Action workflows)
+5. Click "Generate token" at the bottom of the page
+6. Copy the displayed token (you won't be able to see it again!)
 
-  // Wait a moment to ensure output is flushed
-  await new Promise((resolve) => setTimeout(resolve, 100));
+NOTE: You must use a Classic token, not a Fine-grained token`,
+    'Setup Instructions'
+  );
 
   // Then prompt for the username with a simple message
-  const { promptedUsername } = await prompt.default({
-    type: 'text',
-    name: 'promptedUsername',
+  const promptedUsername = await clack.text({
     message: 'Enter your GitHub username:',
-    validate: (value) => (value ? true : 'Username is required'),
+    validate: (value) => (value ? undefined : 'Username is required'),
   });
 
-  if (!promptedUsername) {
+  if (clack.isCancel(promptedUsername)) {
+    clack.cancel('Operation cancelled.');
     return null;
   }
 
-  const { promptedToken } = await prompt.default({
-    type: 'password',
-    name: 'promptedToken',
+  const promptedToken = await clack.password({
     message: 'Enter your GitHub Personal Access Token (with repo, read:org, and workflow scopes):',
-    validate: (value) => (value ? true : 'Token is required'),
+    validate: (value) => (value ? undefined : 'Token is required'),
   });
 
-  if (!promptedToken) {
+  if (clack.isCancel(promptedToken)) {
+    clack.cancel('Operation cancelled.');
     return null;
   }
 
@@ -700,16 +699,15 @@ export async function saveGitHubCredentials(username: string, token: string): Pr
  */
 export async function ensureDirectory(
   token: string,
-  owner: string,
   repo: string,
-  directoryPath: string,
-  branch = 'main'
+  path: string,
+  branch: string
 ): Promise<boolean> {
   try {
     // First check if the directory already exists
     try {
       const response = await fetch(
-        `${GITHUB_API_URL}/repos/${owner}/${repo}/contents/${directoryPath}?ref=${branch}`,
+        `${GITHUB_API_URL}/repos/${repo}/contents/${path}?ref=${branch}`,
         {
           headers: {
             Authorization: `token ${token}`,
@@ -720,36 +718,37 @@ export async function ensureDirectory(
 
       // Directory exists
       if (response.status === 200) {
-        logger.info(`Directory ${directoryPath} already exists`);
+        logger.info(`Directory ${path} already exists`);
         return true;
       }
     } catch (error) {
       // Directory doesn't exist, we'll create it
-      logger.info(`Directory ${directoryPath} doesn't exist, creating it`);
+      logger.info(`Directory ${path} doesn't exist, creating it`);
     }
 
     // Create a placeholder file in the directory
     // (GitHub doesn't have a concept of empty directories)
-    const placeholderPath = `${directoryPath}/.gitkeep`;
+    const placeholderPath = `${path}/.gitkeep`;
     const result = await updateFile(
       token,
-      owner,
       repo,
       placeholderPath,
       '', // Empty content for placeholder
-      `Create directory: ${directoryPath}`,
+      `Create directory: ${path}`,
       branch
     );
 
     if (result) {
-      logger.success(`Created directory: ${directoryPath}`);
+      logger.success(`Created directory: ${path}`);
       return true;
     }
 
-    logger.error(`Failed to create directory: ${directoryPath}`);
+    logger.error(`Failed to create directory: ${path}`);
     return false;
   } catch (error) {
-    logger.error(`Error creating directory: ${error.message}`);
+    logger.error(
+      `Error creating directory: ${error instanceof Error ? error.message : String(error)}`
+    );
     return false;
   }
 }
@@ -856,7 +855,10 @@ export async function createGitHubRepository(
       message: `Failed to create repository: ${response.status} ${response.statusText} - ${errorData.message || 'Unknown error'}`,
     };
   } catch (error) {
-    return { success: false, message: `Error creating repository: ${error.message}` };
+    return {
+      success: false,
+      message: `Error creating repository: ${error instanceof Error ? error.message : String(error)}`,
+    };
   }
 }
 
@@ -876,7 +878,9 @@ export async function pushToGitHub(
     let hasCorrectRemote = false;
     if (gitDirExists) {
       try {
-        const { stdout: remoteUrl } = await execa('git', ['remote', 'get-url', 'origin'], { cwd });
+        const { stdout: remoteUrl } = await bunExecSimple('git', ['remote', 'get-url', 'origin'], {
+          cwd,
+        });
         // Check if the remote URL matches our target (ignoring the token part)
         const sanitizedRepoUrl = repoUrl.replace(/https:\/\/.*?@/, 'https://');
         const sanitizedRemoteUrl = remoteUrl.replace(/https:\/\/.*?@/, 'https://');
@@ -893,45 +897,45 @@ export async function pushToGitHub(
     if (!gitDirExists || !hasCorrectRemote) {
       if (gitDirExists) {
         logger.info('Existing git repository has incorrect remote, reinitializing...');
-        await execa('rm', ['-rf', '.git'], { cwd });
+        await bunExec('rm', ['-rf', '.git'], { cwd });
       }
 
-      await execa('git', ['init'], { cwd });
+      await bunExec('git', ['init'], { cwd });
       // Explicitly create and switch to main branch
-      await execa('git', ['checkout', '-b', 'main'], { cwd });
+      await bunExec('git', ['checkout', '-b', 'main'], { cwd });
       logger.info('Git repository initialized with main branch');
 
       // Add remote
-      await execa('git', ['remote', 'add', 'origin', repoUrl], { cwd });
+      await bunExec('git', ['remote', 'add', 'origin', repoUrl], { cwd });
       logger.info(`Added remote: ${repoUrl.replace(/\/\/.*?@/, '//***@')}`);
     } else {
       // Make sure we're on the main branch
       try {
-        await execa('git', ['rev-parse', '--verify', branch], { cwd });
-        await execa('git', ['checkout', branch], { cwd });
+        await bunExec('git', ['rev-parse', '--verify', branch], { cwd });
+        await bunExec('git', ['checkout', branch], { cwd });
       } catch (error) {
         // Branch doesn't exist, create it
-        await execa('git', ['checkout', '-b', branch], { cwd });
+        await bunExec('git', ['checkout', '-b', branch], { cwd });
         logger.info(`Created and switched to ${branch} branch`);
       }
     }
 
     // Add all files
-    await execa('git', ['add', '.'], { cwd });
+    await bunExec('git', ['add', '.'], { cwd });
     logger.info('Added files to git');
 
     // Set git user info if not already set
     try {
-      await execa('git', ['config', 'user.email'], { cwd });
+      await bunExec('git', ['config', 'user.email'], { cwd });
     } catch (error) {
-      await execa('git', ['config', 'user.email', 'plugindev@elizaos.com'], { cwd });
-      await execa('git', ['config', 'user.name', 'ElizaOS Plugin Dev'], { cwd });
+      await bunExec('git', ['config', 'user.email', 'plugindev@elizaos.com'], { cwd });
+      await bunExec('git', ['config', 'user.name', 'ElizaOS Plugin Dev'], { cwd });
       logger.info('Set git user info for commit');
     }
 
     // Commit if there are changes
     try {
-      await execa('git', ['commit', '-m', 'Initial commit from ElizaOS CLI'], { cwd });
+      await bunExec('git', ['commit', '-m', 'Initial commit from ElizaOS CLI'], { cwd });
       logger.info('Committed changes');
     } catch (error) {
       // If no changes to commit, that's okay
@@ -940,28 +944,34 @@ export async function pushToGitHub(
 
     // Push to GitHub
     try {
-      await execa('git', ['push', '-u', 'origin', branch], { cwd });
+      await bunExec('git', ['push', '-u', 'origin', branch], { cwd });
       logger.success(`Pushed to GitHub repository: ${repoUrl}`);
       return true;
     } catch (error) {
-      logger.error(`Failed to push to GitHub: ${error.message}`);
+      logger.error(
+        `Failed to push to GitHub: ${error instanceof Error ? error.message : String(error)}`
+      );
 
       // Try force pushing if normal push fails
       try {
         logger.info('Attempting force push...');
         // Use force-with-lease as a slightly safer option than force
-        await execa('git', ['push', '-u', 'origin', 'main', '--force-with-lease'], {
+        await bunExec('git', ['push', '-u', 'origin', 'main', '--force-with-lease'], {
           cwd,
-          stdio: 'pipe',
         });
         return true;
       } catch (forcePushError) {
-        logger.error('Force push also failed:', forcePushError.message);
+        logger.error(
+          'Force push also failed:',
+          forcePushError instanceof Error ? forcePushError.message : String(forcePushError)
+        );
         return false;
       }
     }
   } catch (error) {
-    logger.error(`Error in git operations: ${error.message}`);
+    logger.error(
+      `Error in git operations: ${error instanceof Error ? error.message : String(error)}`
+    );
     return false;
   }
 }

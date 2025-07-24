@@ -62,11 +62,23 @@ async function copyTemplates() {
   await copyDir(projectStarterSrc, projectStarterDest);
   console.log('✅ Copied project-starter template');
 
+  // Copy project-tee-starter template
+  const projectTeeStarterSrc = path.join(rootDir, 'packages/project-tee-starter');
+  const projectTeeStarterDest = path.join(templatesDir, 'project-tee-starter');
+  await copyDir(projectTeeStarterSrc, projectTeeStarterDest);
+  console.log('✅ Copied project-tee-starter template');
+
   // Copy plugin-starter template
   const pluginStarterSrc = path.join(rootDir, 'packages/plugin-starter');
   const pluginStarterDest = path.join(templatesDir, 'plugin-starter');
   await copyDir(pluginStarterSrc, pluginStarterDest);
   console.log('✅ Copied plugin-starter template');
+
+  // Copy plugin-quick-starter template
+  const pluginQuickStarterSrc = path.join(rootDir, 'packages/plugin-quick-starter');
+  const pluginQuickStarterDest = path.join(templatesDir, 'plugin-quick-starter');
+  await copyDir(pluginQuickStarterSrc, pluginQuickStarterDest);
+  console.log('✅ Copied plugin-quick-starter template');
 
   console.log('✅ All templates copied successfully!');
 }

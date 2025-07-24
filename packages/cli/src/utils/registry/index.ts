@@ -1,16 +1,12 @@
-import {
-  getGitHubCredentials,
-  getLocalPackages,
-  isMonorepoContext,
-  resolveEnvFile,
-} from '@/src/utils';
+import { getGitHubCredentials, getLocalPackages, resolveEnvFile } from '@/src/utils';
+import { detectDirectoryType } from '@/src/utils/directory-detection';
 import { logger } from '@elizaos/core';
 import dotenv from 'dotenv';
-import { execa } from 'execa';
+import { bunExecSimple } from '../bun-exec.js';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { existsSync, promises as fs } from 'node:fs';
 import path from 'node:path';
-import { REGISTRY_URL, REGISTRY_REPO, RAW_REGISTRY_URL } from './constants';
+import { REGISTRY_ORG, REGISTRY_REPO, REGISTRY_URL, RAW_REGISTRY_URL } from './constants';
 
 const ELIZA_DIR = path.join(process.cwd(), '.eliza');
 const REGISTRY_SETTINGS_FILE = path.join(ELIZA_DIR, 'registrysettings.json');
@@ -120,7 +116,9 @@ export async function getGitHubToken(): Promise<string | undefined> {
       return env.GITHUB_TOKEN;
     }
   } catch (error) {
-    logger.debug(`Error reading GitHub token: ${error.message}`);
+    logger.debug(
+      `Error reading GitHub token: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
   return undefined;
 }
@@ -160,11 +158,25 @@ export async function setGitHubToken(token: string) {
 
     logger.debug('GitHub token saved successfully');
   } catch (error) {
-    logger.error(`Failed to save GitHub token: ${error.message}`);
+    logger.error(
+      `Failed to save GitHub token: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 }
 
-const agent = process.env.https_proxy ? new HttpsProxyAgent(process.env.https_proxy) : undefined;
+/**
+ * Normalizes a package name by removing scope prefixes
+ * @param packageName The package name to normalize
+ * @returns The normalized package name without scope prefix
+ */
+function normalizePackageName(packageName: string): string {
+  if (packageName.startsWith(`@${REGISTRY_ORG}/`)) {
+    return packageName.replace(`@${REGISTRY_ORG}/`, '');
+  } else if (packageName.startsWith('@elizaos/')) {
+    return packageName.replace(/^@elizaos\//, '');
+  }
+  return packageName;
+}
 
 interface PluginMetadata {
   name: string;
@@ -181,17 +193,30 @@ interface PluginMetadata {
 
 // Default registry data for offline use or when GitHub is unavailable
 const DEFAULT_REGISTRY: Record<string, string> = {
-  '@elizaos/plugin-anthropic': 'elizaos/plugin-anthropic',
-  '@elizaos/plugin-discord': 'elizaos/plugin-discord',
-  '@elizaos/plugin-elevenlabs': 'elizaos/plugin-elevenlabs',
-  '@elizaos/plugin-local-ai': 'elizaos/plugin-local-ai',
-  '@elizaos/plugin-openai': 'elizaos/plugin-openai',
-  '@elizaos/plugin-solana': 'elizaos/plugin-solana',
-  '@elizaos/plugin-sql': 'elizaos/plugin-sql',
-  '@elizaos/plugin-starter': 'elizaos/plugin-starter',
-  '@elizaos/plugin-tee': 'elizaos/plugin-tee',
-  '@elizaos/plugin-telegram': 'elizaos/plugin-telegram',
-  '@elizaos/plugin-twitter': 'elizaos/plugin-twitter',
+  '@elizaos/plugin-anthropic': 'github:elizaos-plugins/plugin-anthropic',
+  '@elizaos/plugin-bootstrap': 'github:elizaos-plugins/plugin-bootstrap',
+  '@elizaos/plugin-browser': 'github:elizaos-plugins/plugin-browser',
+  '@elizaos/plugin-discord': 'github:elizaos-plugins/plugin-discord',
+  '@elizaos/plugin-elevenlabs': 'github:elizaos-plugins/plugin-elevenlabs',
+  '@elizaos/plugin-evm': 'github:elizaos-plugins/plugin-evm',
+  '@elizaos/plugin-farcaster': 'github:elizaos-plugins/plugin-farcaster',
+  '@elizaos/plugin-groq': 'github:elizaos-plugins/plugin-groq',
+  '@elizaos/plugin-mcp': 'github:elizaos-plugins/plugin-mcp',
+  '@elizaos/plugin-messari-ai-toolkit': 'github:messari/plugin-messari-ai-toolkit',
+  '@elizaos/plugin-morpheus': 'github:bowtiedbluefin/plugin-morpheus',
+  '@elizaos/plugin-node': 'github:elizaos-plugins/plugin-node',
+  '@elizaos/plugin-ollama': 'github:elizaos-plugins/plugin-ollama',
+  '@elizaos/plugin-openai': 'github:elizaos-plugins/plugin-openai',
+  '@elizaos/plugin-pdf': 'github:elizaos-plugins/plugin-pdf',
+  '@elizaos/plugin-redpill': 'github:elizaos-plugins/plugin-redpill',
+  '@elizaos/plugin-solana': 'github:elizaos-plugins/plugin-solana',
+  '@elizaos/plugin-sql': 'github:elizaos-plugins/plugin-sql',
+  '@elizaos/plugin-storage-s3': 'github:elizaos-plugins/plugin-storage-s3',
+  '@elizaos/plugin-tee': 'github:elizaos-plugins/plugin-tee',
+  '@elizaos/plugin-telegram': 'github:elizaos-plugins/plugin-telegram',
+  '@elizaos/plugin-twitter': 'github:elizaos-plugins/plugin-twitter',
+  '@elizaos/plugin-venice': 'github:elizaos-plugins/plugin-venice',
+  '@elizaos/plugin-video-understanding': 'github:elizaos-plugins/plugin-video-understanding',
 };
 
 /**
@@ -203,7 +228,9 @@ export async function saveRegistryCache(registry: Record<string, string>): Promi
     await fs.writeFile(REGISTRY_CACHE_FILE, JSON.stringify(registry, null, 2));
     logger.debug('Registry cache saved successfully');
   } catch (error) {
-    logger.debug(`Failed to save registry cache: ${error.message}`);
+    logger.debug(
+      `Failed to save registry cache: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 }
 
@@ -240,7 +267,9 @@ export async function getLocalRegistryIndex(): Promise<Record<string, string>> {
       }
     }
   } catch (error) {
-    logger.debug(`Failed to fetch registry from public URL: ${error.message}`);
+    logger.debug(
+      `Failed to fetch registry from public URL: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 
   // If fetching fails, try to read from cache
@@ -252,11 +281,14 @@ export async function getLocalRegistryIndex(): Promise<Record<string, string>> {
       return cachedRegistry;
     }
   } catch (error) {
-    logger.debug(`Failed to read registry cache: ${error.message}`);
+    logger.debug(
+      `Failed to read registry cache: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 
   // If we're in a monorepo context, try to discover local plugins
-  if (await isMonorepoContext()) {
+  const directoryInfo = detectDirectoryType(process.cwd());
+  if (directoryInfo.monorepoRoot) {
     try {
       const localPackages = await getLocalPackages();
       const localRegistry: Record<string, string> = {};
@@ -266,15 +298,17 @@ export async function getLocalRegistryIndex(): Promise<Record<string, string>> {
         if (pkgName.includes('plugin-')) {
           // Use the package name as both key and value
           // Format as expected by the registry: orgrepo/packagename
-          const repoName = pkgName.replace('@elizaos/', '');
-          localRegistry[pkgName] = `elizaos/${repoName}`;
+          const repoName = normalizePackageName(pkgName);
+          localRegistry[pkgName] = `${REGISTRY_ORG}/${repoName}`;
         }
       }
 
       // Merge with default registry, prioritizing local packages
       return { ...DEFAULT_REGISTRY, ...localRegistry };
     } catch (error) {
-      logger.debug(`Failed to discover local plugins: ${error.message}`);
+      logger.debug(
+        `Failed to discover local plugins: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 
@@ -352,15 +386,13 @@ export function normalizePluginName(pluginName: string): string[] {
   // Remove any existing prefixes
   baseName = baseName.replace(/^plugin-/, '');
 
-  // Generate all possible formats to try
+  // Generate all possible formats to try (removed duplicates and incorrect namespace)
   return [
     pluginName, // Original input
     baseName, // Just the base name
     `plugin-${baseName}`, // With plugin- prefix
     `@elizaos/${baseName}`, // Scoped with elizaos
     `@elizaos/plugin-${baseName}`, // Scoped with elizaos and plugin prefix
-    `@elizaos-plugins/${baseName}`, // Scoped with elizaos-plugins
-    `@elizaos-plugins/plugin-${baseName}`, // Scoped with elizaos-plugins and plugin prefix
   ];
 }
 
@@ -395,12 +427,14 @@ export async function getPluginRepository(pluginName: string): Promise<string | 
     // Direct GitHub shorthand (github:org/repo) - NO AUTH REQUIRED
     if (!pluginName.includes(':') && !pluginName.startsWith('@')) {
       const baseName = pluginName.replace(/^plugin-/, '');
-      return `@elizaos/plugin-${baseName}`;
+      return `@${REGISTRY_ORG}/plugin-${baseName}`;
     }
 
     return null;
   } catch (error) {
-    logger.debug(`Error getting plugin repository: ${error.message}`);
+    logger.debug(
+      `Error getting plugin repository: ${error instanceof Error ? error.message : String(error)}`
+    );
     return null;
   }
 }
@@ -417,10 +451,12 @@ export async function getPluginRepository(pluginName: string): Promise<string | 
  */
 export async function repoHasBranch(repoUrl: string, branchName: string): Promise<boolean> {
   try {
-    const { stdout } = await execa('git', ['ls-remote', '--heads', repoUrl, branchName]);
+    const { stdout } = await bunExecSimple('git', ['ls-remote', '--heads', repoUrl, branchName]);
     return stdout.includes(branchName);
   } catch (error) {
-    logger.warn(`Failed to check for branch ${branchName} in ${repoUrl}: ${error.message}`);
+    logger.warn(
+      `Failed to check for branch ${branchName} in ${repoUrl}: ${error instanceof Error ? error.message : String(error)}`
+    );
     return false;
   }
 }
@@ -454,7 +490,7 @@ export async function getPluginMetadata(pluginName: string): Promise<PluginMetad
   }
 
   const [owner, repo] = settings.defaultRegistry.split('/');
-  const normalizedName = pluginName.replace(/^@elizaos\//, '');
+  const normalizedName = normalizePackageName(pluginName);
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/packages/${normalizedName}.json`;
 
   try {
@@ -515,7 +551,9 @@ export async function getPluginVersion(
       return packageDetails.latestVersion;
     }
   } catch (error) {
-    logger.debug(`Error getting package details: ${error.message}`);
+    logger.debug(
+      `Error getting package details: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 
   // Fallback to a reasonable default version
@@ -553,8 +591,8 @@ export async function getPackageDetails(packageName: string): Promise<{
   maintainer: string;
 } | null> {
   try {
-    // Normalize the package name (remove @elizaos/ prefix if present)
-    const normalizedName = packageName.replace(/^@elizaos\//, '');
+    // Normalize the package name (remove prefix if present)
+    const normalizedName = normalizePackageName(packageName);
 
     // Get package details from registry
     const packageUrl = `${REGISTRY_URL.replace('index.json', '')}packages/${normalizedName}.json`;
@@ -562,7 +600,7 @@ export async function getPackageDetails(packageName: string): Promise<{
     // Use agent only if https_proxy is defined
     const requestOptions: RequestInit = {};
     if (process.env.https_proxy) {
-      // @ts-ignore - HttpsProxyAgent is not in the RequestInit type, but is used by node-fetch
+      // @ts-ignore - HttpsProxyAgent is not in the RequestInit type
       requestOptions.agent = new HttpsProxyAgent(process.env.https_proxy);
     }
 
@@ -580,7 +618,9 @@ export async function getPackageDetails(packageName: string): Promise<{
       return null;
     }
   } catch (error) {
-    logger.warn(`Failed to fetch package details from registry: ${error.message}`);
+    logger.warn(
+      `Failed to fetch package details from registry: ${error instanceof Error ? error.message : String(error)}`
+    );
     return null;
   }
 }
@@ -603,10 +643,8 @@ export async function getBestPluginVersion(
   }
 
   // Parse the runtime version for semver matching
-  const [runtimeMajor, runtimeMinor, runtimePatch] = runtimeVersion.split('.').map(Number);
-  const [packageMajor, packageMinor, packagePatch] = packageDetails.runtimeVersion
-    .split('.')
-    .map(Number);
+  const [runtimeMajor, runtimeMinor] = runtimeVersion.split('.').map(Number);
+  const [packageMajor, packageMinor] = packageDetails.runtimeVersion.split('.').map(Number);
 
   // If major version is different, warn but still return the latest
   if (runtimeMajor !== packageMajor) {

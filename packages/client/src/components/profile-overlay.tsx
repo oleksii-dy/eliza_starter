@@ -1,8 +1,10 @@
 import { useAgentManagement } from '@/hooks/use-agent-management';
+import { useToast } from '@/hooks/use-toast';
+import { exportCharacterAsJson } from '@/lib/export-utils';
 import { formatAgentName, moment } from '@/lib/utils';
 import type { Agent, UUID } from '@elizaos/core';
 import { AgentStatus } from '@elizaos/core';
-import { Brain, Cog, Loader2, Play, X } from 'lucide-react';
+import { Brain, Cog, Loader2, Play, X, Download, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useAgent } from '../hooks/use-query-hooks';
 import StopAgentButton from './stop-agent-button';
@@ -31,7 +33,7 @@ export default function ProfileOverlay({ isOpen, onClose, agentId }: ProfileOver
   if (!isOpen) return null;
 
   const { startAgent, isAgentStarting, isAgentStopping } = useAgentManagement();
-
+  const { toast } = useToast();
   const navigate = useNavigate();
 
   const { data: agentData } = useAgent(agentId);
@@ -60,9 +62,18 @@ export default function ProfileOverlay({ isOpen, onClose, agentId }: ProfileOver
     startAgent(agent!);
   };
 
-  // Navigate to settings
-  const navigateToSettings = () => {
-    navigate(`/settings/${agentId}`);
+  // Handle character export
+  const handleExportCharacter = () => {
+    if (!agentData?.data) return;
+
+    // Ensure agent has required properties for export
+    const agent = {
+      ...agentData.data,
+      createdAt: agentData.data.createdAt || Date.now(),
+      updatedAt: agentData.data.updatedAt || Date.now(),
+    } as Agent;
+
+    exportCharacterAsJson(agent, toast);
   };
 
   return (
@@ -103,7 +114,7 @@ export default function ProfileOverlay({ isOpen, onClose, agentId }: ProfileOver
                   </div>
                   <div
                     className={`absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-background ${
-                      isActive ? 'bg-green-500' : 'bg-muted-foreground'
+                      isActive ? 'bg-emerald-500' : 'bg-muted-foreground'
                     }`}
                   />
                 </div>
@@ -144,7 +155,7 @@ export default function ProfileOverlay({ isOpen, onClose, agentId }: ProfileOver
         </CardHeader>
 
         <CardContent className="p-6 overflow-auto">
-          <div className="rounded-md bg-muted p-4 mb-6 h-60 overflow-y-auto">
+          <div className="rounded-md bg-muted p-4 mb-6 max-h-60 overflow-y-auto">
             <p className="font-medium text-sm mb-2">About Me</p>
             <p className="font-light text-sm text-gray-500">{agentData?.data?.system}</p>
           </div>
@@ -176,20 +187,6 @@ export default function ProfileOverlay({ isOpen, onClose, agentId }: ProfileOver
             </div>
 
             <div>
-              <p className="font-medium text-sm mb-2">Capabilities</p>
-              <div className="flex flex-wrap gap-2">
-                {agent?.settings?.capabilities?.map((capability: string, index: number) => (
-                  <span
-                    key={index}
-                    className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary-foreground"
-                  >
-                    {capability}
-                  </span>
-                )) || <span className="text-sm text-gray-500">No special capabilities</span>}
-              </div>
-            </div>
-
-            <div>
               <p className="font-medium text-sm mb-2">Plugins</p>
               <div className="flex flex-wrap gap-2">
                 {agent?.plugins && agent.plugins.length > 0 ? (
@@ -217,15 +214,6 @@ export default function ProfileOverlay({ isOpen, onClose, agentId }: ProfileOver
 
         <CardFooter className="flex justify-between items-center p-4 border-t">
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-9 w-9 flex items-center justify-center"
-              onClick={navigateToSettings}
-            >
-              <Cog className="w-4 h-4" />
-            </Button>
-
             {isActive ? (
               <StopAgentButton agent={agent} showIcon={true} size="default" className="h-9" />
             ) : (
@@ -239,6 +227,42 @@ export default function ProfileOverlay({ isOpen, onClose, agentId }: ProfileOver
                 <span className="ml-2">{startButtonConfig.label}</span>
               </Button>
             )}
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  onClick={handleExportCharacter}
+                  disabled={!agent}
+                  className="h-9"
+                  size="sm"
+                >
+                  Export
+                  <Download size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p>Export character as JSON</p>
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate(`/settings/${agentId}`)}
+                  disabled={!agent}
+                  className="h-9"
+                  size="sm"
+                >
+                  <Settings size={16} className="mr-1" />
+                  Settings
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p>Configure agent settings</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
 
           {isActive && (

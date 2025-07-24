@@ -13,8 +13,6 @@ import type {
   UUID,
   World,
 } from './types';
-import { type Pool as PgPool } from 'pg';
-import { PGlite } from '@electric-sql/pglite';
 
 /**
  * An abstract class representing a database adapter for managing various entities
@@ -37,7 +35,26 @@ export abstract class DatabaseAdapter<DB = unknown> implements IDatabaseAdapter 
    * Initialize the database adapter.
    * @returns A Promise that resolves when initialization is complete.
    */
+  abstract initialize(config?: any): Promise<void>;
+
+  /**
+   * Initialize the database adapter.
+   * @returns A Promise that resolves when initialization is complete.
+   */
   abstract init(): Promise<void>;
+
+  /**
+   * Run database migrations
+   * @param migrationsPaths Optional array of paths to migration folders
+   * @returns A Promise that resolves when migrations are complete.
+   */
+  abstract runMigrations(migrationsPaths?: string[]): Promise<void>;
+
+  /**
+   * Check if the database connection is ready.
+   * @returns A Promise that resolves to true if the database is ready, false otherwise.
+   */
+  abstract isReady(): Promise<boolean>;
 
   /**
    * Optional close method for the database adapter.
@@ -49,14 +66,14 @@ export abstract class DatabaseAdapter<DB = unknown> implements IDatabaseAdapter 
    * Retrieves a connection to the database.
    * @returns A Promise that resolves to the database connection.
    */
-  abstract getConnection(): Promise<PGlite | PgPool>;
+  abstract getConnection(): Promise<unknown>;
 
   /**
    * Retrieves an account by its ID.
    * @param entityIds The UUIDs of the user account to retrieve.
    * @returns A Promise that resolves to the Entity object or null if not found.
    */
-  abstract getEntityByIds(entityIds: UUID[]): Promise<Entity[] | null>;
+  abstract getEntitiesByIds(entityIds: UUID[]): Promise<Entity[] | null>;
 
   abstract getEntitiesForRoom(roomId: UUID, includeComponents?: boolean): Promise<Entity[]>;
 
@@ -257,6 +274,13 @@ export abstract class DatabaseAdapter<DB = unknown> implements IDatabaseAdapter 
   abstract deleteMemory(memoryId: UUID): Promise<void>;
 
   /**
+   * Removes multiple memories from the database in a single batch operation.
+   * @param memoryIds An array of UUIDs of the memories to remove.
+   * @returns A Promise that resolves when all memories have been removed.
+   */
+  abstract deleteManyMemories(memoryIds: UUID[]): Promise<void>;
+
+  /**
    * Removes all memories associated with a specific room.
    * @param roomId The UUID of the room whose memories should be removed.
    * @param tableName The table from which the memories should be removed.
@@ -309,7 +333,7 @@ export abstract class DatabaseAdapter<DB = unknown> implements IDatabaseAdapter 
 
   /**
    * Retrieves the room ID for a given room, if it exists.
-   * @param roomId The UUID of the room to retrieve.
+   * @param roomIds The UUIDs of the rooms to retrieve.
    * @returns A Promise that resolves to the room ID or null if not found.
    */
   abstract getRoomsByIds(roomIds: UUID[]): Promise<Room[] | null>;
@@ -322,9 +346,9 @@ export abstract class DatabaseAdapter<DB = unknown> implements IDatabaseAdapter 
   abstract getRoomsByWorld(worldId: UUID): Promise<Room[]>;
 
   /**
-   * Creates a new rooms with an optional specified ID.
-   * @param roomId Optional UUID to assign to the new room.
-   * @returns A Promise that resolves to the UUID of the created rooms.
+   * Creates new rooms in the database.
+   * @param rooms Array of Room objects to create.
+   * @returns A Promise that resolves to the UUIDs of the created rooms.
    */
   abstract createRooms(rooms: Room[]): Promise<UUID[]>;
 
@@ -474,13 +498,6 @@ export abstract class DatabaseAdapter<DB = unknown> implements IDatabaseAdapter 
   abstract deleteAgent(agentId: UUID): Promise<boolean>;
 
   /**
-   * Ensures an agent exists in the database.
-   * @param agent The agent object to ensure exists.
-   * @returns A Promise that resolves when the agent has been ensured to exist.
-   */
-  abstract ensureAgentExists(agent: Partial<Agent>): Promise<Agent>;
-
-  /**
    * Ensures an embedding dimension exists in the database.
    * @param dimension The dimension to ensure exists.
    * @returns A Promise that resolves when the embedding dimension has been ensured to exist.
@@ -496,9 +513,8 @@ export abstract class DatabaseAdapter<DB = unknown> implements IDatabaseAdapter 
 
   /**
    * Sets a value in the cache with the given key.
-   * @param params Object containing the cache key and value
    * @param key The key to store the value under
-   * @param value The string value to cache
+   * @param value The value to cache
    * @returns Promise resolving to true if the cache was set successfully
    */
   abstract setCache<T>(key: string, value: T): Promise<boolean>;

@@ -59,6 +59,11 @@ const ESSENTIAL_PLUGINS: Record<string, EssentialPluginInfo> = {
     description:
       'Provides language model access. If removed, replace with another LLM plugin or your agent may fail to function properly.',
   },
+  '@elizaos/plugin-bootstrap': {
+    title: 'Essential Plugin: Bootstrap',
+    description:
+      'Provides default message processing, event handling, and attachment workflows for your agent. If removed, ensure you have a custom plugin handling these responsibilities, or your agent may not process events or respond to messages as expected.',
+  },
 };
 
 export default function PluginsPanel({
@@ -81,20 +86,26 @@ export default function PluginsPanel({
 
   // Get plugin names from available plugins
   const pluginNames = useMemo(() => {
-    const defaultPlugins = ['@elizaos/plugin-sql', '@elizaos/plugin-local-ai'];
+    const defaultPlugins = ['@elizaos/plugin-sql'];
     if (!plugins) return defaultPlugins;
     return [
       ...defaultPlugins,
-      ...(Array.isArray(plugins) ? plugins : Object.keys(plugins))
-        .map((name) => name.replace(/^@elizaos-plugins\//, '@elizaos/'))
-        .filter((name) => !defaultPlugins.includes(name)),
+      ...(Array.isArray(plugins) ? plugins : Object.keys(plugins)).filter(
+        (name) => !defaultPlugins.includes(name)
+      ),
     ];
   }, [plugins]);
 
   // Check if the selected voice model requires specific plugins
   const voiceModelPluginInfo = useMemo(() => {
-    const voiceModelValue = characterValue?.settings?.voice?.model;
-    if (!voiceModelValue) return null;
+    const settings = characterValue?.settings;
+    if (!settings || typeof settings !== 'object' || Array.isArray(settings)) return null;
+
+    const voice = settings.voice;
+    if (!voice || typeof voice !== 'object' || Array.isArray(voice)) return null;
+
+    const voiceModelValue = voice.model;
+    if (!voiceModelValue || typeof voiceModelValue !== 'string') return null;
 
     const voiceModel = getVoiceModelByValue(voiceModelValue);
     if (!voiceModel) return null;
@@ -108,7 +119,7 @@ export default function PluginsPanel({
       requiredPlugin,
       isPluginEnabled,
     };
-  }, [characterValue?.settings?.voice?.model, safeCharacterPlugins]);
+  }, [characterValue?.settings, safeCharacterPlugins]);
 
   // Get all voice-related plugins that are currently enabled
   // const enabledVoicePlugins = useMemo(() => {
@@ -225,8 +236,6 @@ export default function PluginsPanel({
                           return 'ElevenLabs plugin is required for the selected voice model.';
                         case 'openai':
                           return 'OpenAI plugin is required for the selected voice model.';
-                        case 'local':
-                          return 'Local AI plugin is required for the selected voice model.';
                         case 'none':
                           return 'No voice plugin required for "No Voice" option.';
                         default:
@@ -273,25 +282,12 @@ export default function PluginsPanel({
                                 ? 'bg-blue-800 text-blue-700 hover:bg-blue-600'
                                 : 'bg-primary/10 text-primary hover:bg-primary/20'
                             } px-2.5 py-0.5 text-xs font-medium h-auto`}
-                            onClick={() => {
-                              // Don't allow removing if it's required by the voice model
-                              if (isRequiredByVoice) {
-                                toast({
-                                  title: "Can't Remove Plugin",
-                                  description:
-                                    'This plugin is required by the selected voice model.',
-                                  variant: 'destructive',
-                                });
-                                return;
-                              }
-                              handlePluginRemove(plugin);
-                            }}
                             title={
                               isRequiredByVoice
                                 ? 'Required by voice model'
                                 : isEssential
-                                  ? 'Essential plugin for agent functionality (click to remove)'
-                                  : 'Click to remove'
+                                  ? 'Essential plugin for agent functionality'
+                                  : ''
                             }
                           >
                             {isEssential && (
@@ -303,6 +299,19 @@ export default function PluginsPanel({
                                 'ml-1 opacity-70 hover:opacity-100',
                                 isEssential && 'text-white'
                               )}
+                              onClick={() => {
+                                // Don't allow removing if it's required by the voice model
+                                if (isRequiredByVoice) {
+                                  toast({
+                                    title: "Can't Remove Plugin",
+                                    description:
+                                      'This plugin is required by the selected voice model.',
+                                    variant: 'destructive',
+                                  });
+                                  return;
+                                }
+                                handlePluginRemove(plugin);
+                              }}
                             >
                               ×
                             </span>

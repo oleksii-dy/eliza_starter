@@ -1,6 +1,6 @@
 {
   "name": "@elizaos/app",
-  "version": "1.0.0-beta.57",
+  "version": "1.3.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,6 +9,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
+    "test": "bun test src/__tests__",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
     "typecheck": "tsc --noEmit",
@@ -17,21 +18,22 @@
     "lint": "prettier --write ./src"
   },
   "dependencies": {
-    "@elizaos/cli": "^1.0.0-beta",
-    "@tauri-apps/api": "^2.3.0",
-    "@tauri-apps/plugin-opener": "^2",
-    "@tauri-apps/plugin-shell": "^2",
+    "@elizaos/api-client": "workspace:*",
+    "@elizaos/cli": "workspace:*",
+    "@tauri-apps/api": "^2.6.0",
+    "@tauri-apps/plugin-opener": "^2.4.0",
+    "@tauri-apps/plugin-shell": "^2.3.0",
     "react": "^19.1.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.1.0"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "@vitejs/plugin-react": "^4.3.4",
-    "typescript": "~5.8.2",
-    "vite": "^6.0.3",
-    "prettier": "3.5.3"
+    "@tauri-apps/cli": "^2.6.2",
+    "@types/react": "^19.1.5",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.6.0",
+    "prettier": "3.5.3",
+    "typescript": "5.8.2",
+    "vite": "^6.3.5"
   },
   "gitHead": "b165ad83e5f7a21bc1edbd83374ca087e3cd6b33"
 }

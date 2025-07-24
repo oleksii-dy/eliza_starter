@@ -40,24 +40,22 @@ The ElizaOS plugin system maintains the same basic concept as previous versions,
 
 The new CLI tool introduces a streamlined workflow for plugin development without ever needing to touch the ElizaOS monorepo directly:
 
-1. **Create**: `npm create eliza` - Initialize a new plugin project with proper structure
+1. **Create**: `bun create eliza` - Initialize a new plugin project with proper structure
 2. **Develop**: Edit the plugin code in the generated project structure
 3. **Test**: `elizaos test` - Test the plugin functionality
 4. **Run**: `elizaos start` - Run the plugin with a default agent
 5. **Publish**: `elizaos publish` - Share your plugin with others
-
-> Note: at time of publishing, use `npm create eliza@beta` until main version is uploaded
 
 ### Creating a New Plugin
 
 You can create a new ElizaOS plugin using the CLI:
 
 ```bash
-# Using npm
-npm create eliza@beta
+# Using bun (recommended)
+bun create eliza
 
-# Or using npx
-npx create-eliza
+# Or using bunx
+bunx create-eliza
 ```
 
 When prompted, select "Plugin" as the type to create. The CLI will guide you through the setup process, creating a plugin with the proper structure and dependencies.
@@ -74,7 +72,7 @@ There are several ways to add plugins to your ElizaOS project:
     {
       "dependencies": {
         "@elizaos/plugin-solana": "github:elizaos-plugins/plugin-solana",
-        "@elizaos/plugin-twitter": "github:elizaos-plugins/plugin-twitter"
+        "@elizaos/plugin-farcaster": "github:elizaos-plugins/plugin-farcaster"
       }
     }
     ```
@@ -84,7 +82,7 @@ There are several ways to add plugins to your ElizaOS project:
     // In src/index.ts
     export const character: Character = {
       name: 'MyAgent',
-      plugins: ['@elizaos/plugin-twitter', '@elizaos/plugin-example'],
+      plugins: ['@elizaos/plugin-farcaster', '@elizaos/plugin-example'],
       // ...
     };
     ```
@@ -92,10 +90,10 @@ There are several ways to add plugins to your ElizaOS project:
   <TabItem value="cli" label="Via CLI Commands">
     ```bash
     # Add a plugin
-    elizaos plugins add @elizaos/plugin-twitter
+    elizaos plugins add @elizaos/plugin-farcaster
 
     # Remove a plugin
-    elizaos plugins remove @elizaos/plugin-twitter
+    elizaos plugins remove @elizaos/plugin-farcaster
 
     # List available plugins
     elizaos plugins list
@@ -117,7 +115,6 @@ Configure plugin settings in your character definition:
   "settings": {
     "example": {
       "enableFeatureX": true
-      // Plugin-specific configuration
     }
   }
 }
@@ -155,7 +152,7 @@ First, make sure your plugin is built and ready for distribution:
 cd my-eliza-plugin
 
 # Build your plugin
-npm run build
+bun run build
 ```
 
 <Tabs>
@@ -189,7 +186,7 @@ npm run build
     This allows users to install your plugin using standard npm commands:
 
     ```bash
-    npm install @your-scope/plugin-name
+    bun add @your-scope/plugin-name
     ```
 
     npm publishing is useful when you want to:
@@ -263,7 +260,7 @@ Each plugin can provide one or more of the following components:
 
 | Component          | Purpose                                                                         |
 | ------------------ | ------------------------------------------------------------------------------- |
-| **Services**       | Platform integrations (Discord, Twitter, etc.) or specialized capabilities      |
+| **Services**       | Platform integrations (Discord, Telegram, etc.) or specialized capabilities     |
 | **Actions**        | Executable functions triggered by the agent (reply, generate content, etc.)     |
 | **Providers**      | Context providers that supply info to the agent during decision making          |
 | **Evaluators**     | Analyze conversations to extract insights and improve future interactions       |
@@ -278,6 +275,17 @@ Each plugin can provide one or more of the following components:
 All plugins implement the core Plugin interface:
 
 ```typescript
+import {
+  IAgentRuntime,
+  Service,
+  Action,
+  Provider,
+  Evaluator,
+  Adapter,
+  Route,
+  TestSuite,
+} from '@elizaos/core';
+
 interface Plugin {
   name: string;
   description: string;
@@ -447,7 +455,16 @@ const debugMode = runtime.getSetting('EXAMPLE_DEBUG_MODE'); // Returns boolean f
 
 ## Bootstrap Plugin
 
-The Bootstrap Plugin is a foundational component of ElizaOS that initializes the core functionality required for agents to operate. It's automatically loaded as part of the initialization process, establishing the minimum viable capabilities that all agents need.
+The Bootstrap Plugin is a foundational component of ElizaOS that **provides essential communication capabilities and is mandatory for basic agent functionality**. It's automatically loaded as part of the initialization process, establishing the minimum viable capabilities that all agents need.
+
+**Without the Bootstrap Plugin, your agent will be unable to:**
+
+- Process incoming messages from Discord, Telegram, or other platforms
+- Respond to user interactions
+- Handle communication events
+- Generate responses to conversations
+
+**The Bootstrap Plugin is required unless you're building a completely custom event handling system from scratch.**
 
 ```typescript
 export const bootstrapPlugin: Plugin = {
@@ -560,13 +577,16 @@ While the Bootstrap Plugin provides core functionality, it's designed to be exte
 4. **Handle additional events** - React to more system events
 5. **Initialize custom services** - Provide new functionality
 
-When working with plugins in relation to the Bootstrap Plugin:
+**Important: The Bootstrap Plugin is mandatory for communication.** When working with plugins in relation to the Bootstrap Plugin:
 
-1. **Don't modify bootstrap directly** - Instead, create custom plugins to extend functionality
-2. **Understand provider contribution** - Know how each provider contributes to the agent's context
-3. **Learn the core actions** - Become familiar with the actions that all agents can perform
-4. **Leverage event handlers** - Use the event system for reactive behavior
-5. **Extend, don't replace** - Build on top of bootstrap functionality rather than replacing it
+1. **Always include bootstrap** - Unless building a custom event system, include `@elizaos/plugin-bootstrap` in your plugins array
+2. **Don't modify bootstrap directly** - Instead, create custom plugins to extend functionality
+3. **Understand provider contribution** - Know how each provider contributes to the agent's context
+4. **Learn the core actions** - Become familiar with the actions that all agents can perform
+5. **Leverage event handlers** - Use the event system for reactive behavior
+6. **Extend, don't replace** - Build on top of bootstrap functionality rather than replacing it
+
+**For testing purposes only**, you can disable the Bootstrap Plugin with `IGNORE_BOOTSTRAP=true`, but this will break standard agent communication functionality.
 
 ---
 
@@ -621,7 +641,7 @@ Create a plugin when you need custom functionality not available in existing plu
 
 ### How do I manage plugin dependencies?
 
-Plugin dependencies are managed through your project's `package.json`. You can add plugins directly using npm or the ElizaOS CLI, and they will be automatically loaded when your project starts.
+Plugin dependencies are managed through your project's `package.json`. You can add plugins directly using bun or the ElizaOS CLI, and they will be automatically loaded when your project starts.
 
 ### Can I use a plugin in development before publishing?
 
@@ -633,7 +653,7 @@ elizaos start --plugins=./path/to/plugin
 
 ### What's the difference between Actions and Services?
 
-Actions handle specific agent responses or behaviors, while Services provide platform integrations (like Discord or Twitter) or ongoing background functionality that multiple actions might use.
+Actions handle specific agent responses or behaviors, while Services provide platform integrations (like Discord or Telegram) or ongoing background functionality that multiple actions might use.
 
 ### How do I handle rate limits with external APIs?
 

@@ -12,12 +12,13 @@ env:
 
 on:
   push:
-    branches: [main, develop, v2-develop]
+    branches: [main, develop]
     paths:
       - 'packages/app/**'
       - '.github/workflows/**'
 
 jobs:
+  # Platform-specific builds run in parallel
   test-build:
     strategy:
       fail-fast: false
@@ -40,17 +41,21 @@ jobs:
 
       - name: Install Bun
         uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Verify Bun installation
+        run: |
+          bun --version
+          which bun
+          file $(which bun) || true
+        shell: bash
 
       - name: Setup Rust
         run: |
           rustup update stable
           rustup default stable
         shell: bash
-
-      - name: Rust cache
-        uses: swatinem/rust-cache@v2
-        with:
-          workspaces: './packages/app/src-tauri -> target'
 
       - name: Install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-latest'
@@ -70,7 +75,7 @@ jobs:
           # echo "Chocolatey and VS Build tools setup might be needed if not available"
         shell: pwsh
 
-      - name: Install dependencies
+      - name: Install dependencies (platform-specific)
         run: bun install
         env:
           NPM_CONFIG_IGNORE_SCRIPTS: true
@@ -81,7 +86,10 @@ jobs:
       - name: Run TypeScript check
         run: |
           cd packages/app
+          # Verify bun is working before running typecheck
+          bun --version
           bun run typecheck
+        shell: bash
 
       - name: Install Tauri CLI
         run: |
@@ -91,4 +99,8 @@ jobs:
       - name: Test build (verify it compiles)
         run: |
           cd packages/app
+          # Ensure bun is in PATH and working
+          export PATH="$HOME/.bun/bin:$PATH"
+          bun --version
           bun run tauri build --debug
+        shell: bash

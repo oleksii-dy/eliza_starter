@@ -1,38 +1,18 @@
-# Eliza 🤖
+# Eliza
 
-<div align="center">
-  <img src="./docs/static/img/eliza_banner.jpg" alt="Eliza Banner" width="100%" />
-</div>
-
-<div align="center">
-
-📑 [Technical Report](https://arxiv.org/pdf/2501.06781) | 📖 [Documentation](https://elizaos.github.io/eliza/) | 🎯 [Examples](https://github.com/thejoven/awesome-eliza)
-
-</div>
-
-## 🌍 README Translations
-
-[中文说明](packages/docs/i18n/readme/README_CN.md) | [日本語の説明](packages/docs/i18n/readme/README_JA.md) | [한국어 설명](packages/docs/i18n/readme/README_KOR.md) | [Persian](packages/docs/i18n/readme/README_FA.md) | [Français](packages/docs/i18n/readme/README_FR.md) | [Português](packages/docs/i18n/readme/README_PTBR.md) | [Türkçe](packages/docs/i18n/readme/README_TR.md) | [Русский](packages/docs/i18n/readme/README_RU.md) | [Español](packages/docs/i18n/readme/README_ES.md) | [Italiano](packages/docs/i18n/readme/README_IT.md) | [ไทย](packages/docs/i18n/readme/README_TH.md) | [Deutsch](packages/docs/i18n/readme/README_DE.md) | [Tiếng Việt](packages/docs/i18n/readme/README_VI.md) | [עִברִית](packages/docs/i18n/readme/README_HE.md) | [Tagalog](packages/docs/i18n/readme/README_TG.md) | [Polski](packages/docs/i18n/readme/README_PL.md) | [Arabic](packages/docs/i18n/readme/README_AR.md) | [Hungarian](packages/docs/i18n/readme/README_HU.md) | [Srpski](packages/docs/i18n/readme/README_RS.md) | [Română](packages/docs/i18n/readme/README_RO.md) | [Nederlands](packages/docs/i18n/readme/README_NL.md) | [Ελληνικά](packages/docs/i18n/readme/README_GR.md)
-
-## 🚩 Overview
-
-<div align="center">
-  <img src="./docs/static/img/eliza_diagram.jpg" alt="Eliza Diagram" width="100%" />
-</div>
+A framework for multi-agent development and deployment
 
 ## ✨ Features
 
-- 🛠️ Full-featured Discord, X (Twitter) and Telegram connectors
+- 🛠️ Full-featured Discord, Telegram, and Farcaster connectors (and many more!)
 - 🔗 Support for every model (Llama, Grok, OpenAI, Anthropic, Gemini, etc.)
-- 👥 Multi-agent and room support
-- 📚 Easily ingest and interact with your documents
-- 💾 Retrievable memory and document store
-- 🚀 Highly extensible - create your own actions and clients
+- 🎨 Modern and professional UI with a redesigned dashboard for managing agents and groups.
+- 💬 Robust real-time communication with enhanced channel and message handling.
+- 👥 Multi-agent and group support with intuitive management.
+- 📚 Easily ingest and interact with your documents.
+- 💾 Retrievable memory and document store.
+- 🚀 Highly extensible - create your own actions and clients.
 - 📦 Just works!
-
-## Video Tutorials
-
-[AI Agent Dev School](https://www.youtube.com/watch?v=ArptLpQiKfI&list=PLx5pnFXdPTRzWla0RaOxALTSTnVq53fKL)
 
 ## 🎯 Use Cases
 
@@ -46,19 +26,167 @@
 
 ### Prerequisites
 
-- [Python 2.7+](https://www.python.org/downloads/)
-- [Node.js 23+](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
+- [Node.js](https://nodejs.org/) (v23 or higher recommended)
 - [bun](https://bun.sh/docs/installation)
 
 > **Note for Windows Users:** [WSL 2](https://learn.microsoft.com/en-us/windows/wsl/install-manual) is required.
 
-### Use the Starter (Recommended)
+### Use the CLI (Recommended)
+
+The ElizaOS CLI provides the fastest and most reliable way to create, configure, and run agents. It handles all the complex setup automatically.
+
+#### 1. Install the CLI
 
 ```bash
-git clone https://github.com/elizaos/eliza-starter.git
-cd eliza-starter
-cp .env.example .env
-bun i && bun run build && bun start
+# Install the ElizaOS CLI globally
+bun install -g @elizaos/cli
+
+# Verify installation
+elizaos --version
+
+# Get help with available commands
+elizaos --help
+```
+
+#### 2. Create Your First Project
+
+```bash
+# Create a new project with interactive setup
+elizaos create my-agent
+
+# Or create with specific options (skips prompts)
+elizaos create my-agent --yes --type project
+```
+
+**Recommended Options for Beginners:**
+
+- **Database**: `pglite` (lightweight, no setup required)
+- **Model Provider**: `openai` (most reliable and well-tested)
+- **Project Type**: `project` (full ElizaOS application with runtime and agents)
+
+#### 3. Configure Your Agent
+
+```bash
+cd my-agent
+
+# Edit your local env file
+elizaos env edit-local
+
+# Or manually edit the .env file with your preferred editor
+nano .env
+```
+
+**Essential Environment Variables:**
+
+```bash
+# Required: Your model API key
+OPENAI_API_KEY=your_api_key_here
+
+# Optional: Logging level (info, debug, error)
+LOG_LEVEL=info
+
+# Optional: Discord bot token (if using Discord)
+DISCORD_APPLICATION_ID=your_discord_app_id
+DISCORD_API_TOKEN=your_discord_bot_token
+```
+
+#### 4. Start Your Agent
+
+```bash
+# Build and start your agent
+elizaos start
+
+# Or start with debug logging for development
+LOG_LEVEL=debug elizaos start
+```
+
+After starting, your agent will be available at:
+
+- **Web Interface**: http://localhost:3000
+- **API Endpoint**: http://localhost:3000/api
+
+#### 5. Development Workflow
+
+```bash
+# Make changes to your agent code
+# Then rebuild and restart
+bun run build
+elizaos start
+
+# Run tests to verify your changes
+elizaos test
+```
+
+#### Advanced CLI Commands
+
+```bash
+# Create specific components
+elizaos create my-plugin --type plugin    # Create a new plugin
+elizaos create my-agent --type agent      # Create a new agent character
+elizaos create my-tee --type tee          # Create a TEE project
+
+# Environment management
+elizaos env list            # Show all environment variables
+elizaos env reset           # Reset to default .env.example
+
+# Testing options
+elizaos test --name "my-test"    # Run specific tests
+elizaos test e2e                 # Run end-to-end tests only
+elizaos test component           # Run component tests only
+
+# Agent management
+elizaos agent list                      # List all available agents
+elizaos agent start --name "Agent"     # Start a specific agent by name
+elizaos agent stop --name "Agent"      # Stop a running agent
+elizaos agent get --name "Agent"       # Get agent details
+elizaos agent set --name "Agent" --file config.json  # Update agent configuration
+```
+
+#### Debugging and Logging
+
+ElizaOS uses comprehensive logging to help you understand what your agent is doing:
+
+```bash
+# Different log levels
+LOG_LEVEL=error elizaos start    # Only errors
+LOG_LEVEL=info elizaos start     # General information (default)
+LOG_LEVEL=debug elizaos start    # Detailed debugging info
+LOG_LEVEL=verbose elizaos start  # Everything (very detailed)
+
+# Advanced debugging (combine with LOG_LEVEL=debug)
+ELIZA_DEBUG=true elizaos start          # Enable ElizaOS debug output
+NODE_ENV=development elizaos start      # Development mode with extra logging
+```
+
+**Pro Tips:**
+
+- Use `elizaos --help` to see all available commands and global options
+- Use `elizaos <command> --help` for detailed help on any specific command
+- Use `LOG_LEVEL=debug` during development to see detailed execution flow
+- Check the web interface at http://localhost:3000 for real-time agent status
+- Use `elizaos test` frequently to catch issues early
+- Keep your `.env` file secure and never commit it to version control
+
+#### Available Commands Reference
+
+**All CLI Commands:**
+
+```bash
+elizaos create     # Create new projects, plugins, agents, or TEE projects
+elizaos start      # Start the agent server with character profiles
+elizaos agent      # Manage agents (list, start, stop, get, set)
+elizaos test       # Run tests (component, e2e, or all)
+elizaos env        # Manage environment variables and configuration
+elizaos dev        # Start in development mode with auto-rebuild
+elizaos update     # Update CLI and project dependencies
+# To stop agents, use Ctrl+C in the terminal where elizaos start is running
+elizaos publish    # Publish plugins to registry
+elizaos plugins    # Manage and discover plugins
+elizaos monorepo   # Monorepo development utilities
+elizaos tee        # Trusted Execution Environment commands
+
+# Get help for any specific command
+elizaos <command> --help    # e.g., elizaos create --help, elizaos agent --help
 ```
 
 ### Manually Start Eliza (Only recommended if you know what you are doing)
@@ -67,20 +195,7 @@ bun i && bun run build && bun start
 
 - **Node.js** (v18+ recommended)
 - **bun** (for CLI and dependencies)
-- **bats** (shell test runner, install globally via npm or bun)
 - **git** (for project/plugin tests)
-
-#### Install Bats (Test Runner)
-
-You need the [bats-core](https://github.com/bats-core/bats-core) test runner for shell tests.
-
-To install globally:
-
-```bash
-npm install -g bats
-# or, if you use bun:
-bun add -g bats
-```
 
 #### Checkout the latest release
 
@@ -111,60 +226,21 @@ https://bun.sh/docs/installation
 
 ```bash
 bun install
-bun run build # npm will work too
-bun start # npm will work too
+bun run build
+bun start
 ```
 
 ### Interact via Browser
 
-Once the agent is running, you can visit http://localhost:3000 to interact with your agent through a web interface. The interface provides:
+Once Eliza is running, access the modern web interface at http://localhost:3000. It has been professionally redesigned and features:
 
-- Real-time chat with your agent
-- Character configuration options
-- Plugin management
-- Memory and conversation history
-
-### OpenTelemetry Instrumentation (Optional)
-
-Eliza supports OpenTelemetry for tracing and monitoring agent behavior. This allows you to gain insights into the performance and execution flow of your agents.
-
-**Enabling Instrumentation:**
-
-Set the following environment variable:
-
-```bash
-INSTRUMENTATION_ENABLED=true
-```
-
-When enabled, Eliza will:
-
-- Initialize an OpenTelemetry tracer.
-- Automatically trace key operations within the core `AgentRuntime` and supported plugins (e.g., the `plugin-openai`).
-
-**Service Name:**
-
-The default service name for traces will be `agent-<character_name>-<agent_id>`.
-
-**PostgreSQL Exporter Setup (Example):**
-
-If you plan to export traces to a PostgreSQL database (e.g., using a compatible OpenTelemetry exporter), you can start a local instance using Docker:
-
-```bash
-docker run -d --name postgres-tracing -p 5432:5432 -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=eliza_tracing postgres:15
-```
-
-You will also need to configure the connection URL via the following environment variable, adjusting it based on your database setup:
-
-```bash
-INSTRUMENTATION_ENABLED=true
-POSTGRES_URL_INSTRUMENTATION="postgresql://postgres:postgres@localhost:5432/eliza_tracing"
-```
-
----
-
-### Automatically Start Eliza
-
-The start script provides an automated way to set up and run Eliza:
+- A welcoming dashboard with a gradient hero section and clear calls-to-action for creating agents and groups.
+- Visually enhanced cards for managing agents and groups, including status indicators and member counts.
+- Real-time chat capabilities with your agents.
+- Character configuration options.
+- Plugin management.
+- Comprehensive memory and conversation history.
+- Responsive design for an optimal experience on various screen sizes.
 
 ## Citation
 
@@ -201,6 +277,57 @@ To run the pre-commit hook manually:
 bun run pre-commit
 ```
 
+## 📂 Repository Structure
+
+Eliza is organized as a monorepo using Bun, Lerna, and Turbo for efficient package management and build orchestration. Here's a detailed overview of the project structure:
+
+- **`/` (Root)**:
+
+  - `.github/`: GitHub Actions workflows for CI/CD pipelines and issue templates
+  - `.husky/`: Git hooks configuration, including pre-commit formatting
+  - `.devcontainer/`: Development container configurations for consistent environments
+  - `packages/`: Core packages and modules (detailed below)
+  - `scripts/`: Build, development, and utility scripts
+  - `data/`: Application and user data storage
+  - `AGENTS.md`: Comprehensive agent documentation and specifications
+  - `CHANGELOG.md`: Detailed version history and changes
+  - `Dockerfile`, `docker-compose.yaml`: Container configurations for deployment
+  - `lerna.json`, `package.json`, `turbo.json`: Monorepo configuration and workspace definitions
+
+- **`/packages/`**: Core components of the Eliza framework:
+  - `core/`: The foundational package (@elizaos/core) implementing:
+    - LangChain integration for AI model interactions
+    - PDF processing capabilities
+    - Logging and error handling infrastructure
+  - `app/`: Tauri-based cross-platform application (@elizaos/app)
+    - React-based UI implementation
+    - Tauri plugins for system integration
+    - Desktop and mobile builds support
+  - `autodoc/`: Documentation automation tool (@elizaos/autodoc)
+    - LangChain-powered documentation generation
+    - TypeScript parsing and analysis
+    - GitHub integration via Octokit
+  - `cli/`: Command-line interface for Eliza management
+  - `client/`: Client libraries for web interfaces
+  - `create-eliza/`: Project scaffolding tool
+  - `docs/`: Official documentation source files
+  - `plugin-bootstrap/`: **Essential communication core** (@elizaos/plugin-bootstrap)
+    - **Required for basic agent functionality** - handles all message processing
+    - Provides critical event handlers (MESSAGE_RECEIVED, VOICE_MESSAGE_RECEIVED, etc.)
+    - Implements fundamental agent actions (reply, follow/unfollow, mute/unmute)
+    - Contains core evaluators and providers for agent cognition
+    - Manages message processing pipeline and response generation
+    - **Mandatory unless building custom event handling system**
+  - `plugin-sql/`: Database integration (@elizaos/plugin-sql)
+    - PostgreSQL integration with PGLite support
+    - Drizzle ORM for type-safe queries
+    - Migration management tools
+    - Integration testing support
+  - `plugin-starter/`: Template for creating new plugins
+  - `project-starter/`, `project-tee-starter/`: Project templates
+
+This architecture enables modular development, clear separation of concerns, and scalable feature implementation across the Eliza ecosystem.
+
 ## Tauri Application CI/CD and Signing
 
 The Eliza application, built with Tauri and located in `packages/app`, is configured for cross-platform continuous integration and deployment. This setup automates the building and releasing of the application for various operating systems.
@@ -218,7 +345,7 @@ Two main GitHub Actions workflows handle the CI/CD process for the Tauri applica
 
 - **`tauri-ci.yml`**:
 
-  - Triggered on pushes to `main`, `develop`, and `v2-develop` branches.
+  - Triggered on pushes to `main` and `develop` branches.
   - Performs debug builds of the desktop application (Linux, macOS, Windows) to ensure code integrity and catch build issues early.
 
 - **`tauri-release.yml`**:

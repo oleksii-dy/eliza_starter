@@ -4,11 +4,20 @@
     "build": {
       "dependsOn": ["^build"],
       "env": ["LOG_LEVEL"],
-      "outputs": ["dist/**"],
-      "cache": false
+      "outputs": ["dist/**"]
+    },
+    "@elizaos/cli#build": {
+      "dependsOn": ["@elizaos/client#build", "^build"],
+      "env": ["LOG_LEVEL"],
+      "outputs": ["dist/**"]
+    },
+    "@elizaos/server#build": {
+      "dependsOn": ["@elizaos/client#build", "^build"],
+      "env": ["LOG_LEVEL"],
+      "outputs": ["dist/**"]
     },
     "lint": {
-      "cache": false
+      "outputs": [".eslintcache"]
     },
     "format": {
       "outputs": []
@@ -19,24 +28,24 @@
     "start": {
       "dependsOn": ["@elizaos/core#build"],
       "env": ["LOG_LEVEL"],
-      "persistent": true,
-      "cache": false
+      "persistent": true
     },
     "dev": {
       "dependsOn": ["@elizaos/core#build"],
-      "persistent": true,
-      "cache": false
+      "persistent": true
     },
     "test": {
-      "dependsOn": ["@elizaos/core#build"],
-      "persistent": true,
-      "cache": false
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"],
+      "inputs": ["src/**/*.ts", "src/**/*.js", "__tests__/**/*", "*.test.*"]
     },
     "migrate": {
-      "dependsOn": ["@elizaos/core#build"]
+      "dependsOn": ["@elizaos/core#build"],
+      "cache": false
     },
     "migrate:generate": {
-      "dependsOn": ["@elizaos/core#build"]
+      "dependsOn": ["@elizaos/core#build"],
+      "cache": false
     },
     "clean": {
       "cache": false

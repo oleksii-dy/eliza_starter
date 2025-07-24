@@ -58,7 +58,7 @@ export const actionsProvider: Provider = {
     // Format action-related texts
     const actionNames = `Possible response actions: ${formatActionNames(actionsData)}`;
 
-    const actions =
+    const actionsWithDescriptions =
       actionsData.length > 0 ? addHeader('# Available Actions', formatActions(actionsData)) : '';
 
     const actionExamples =
@@ -71,13 +71,15 @@ export const actionsProvider: Provider = {
     };
 
     const values = {
-      actions,
       actionNames,
       actionExamples,
+      actionsWithDescriptions,
     };
 
-    // Combine all text sections
-    const text = [actionNames, actionExamples, actions].filter(Boolean).join('\n\n');
+    // Combine all text sections - now including actionsWithDescriptions
+    const text = [actionNames, actionsWithDescriptions, actionExamples]
+      .filter(Boolean)
+      .join('\n\n');
 
     return {
       data,

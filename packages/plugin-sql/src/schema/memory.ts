@@ -7,16 +7,13 @@ import {
   jsonb,
   pgTable,
   text,
-  unique,
+  timestamp,
   uuid,
-  vector,
 } from 'drizzle-orm/pg-core';
 import { agentTable } from './agent';
 import { embeddingTable } from './embedding';
 import { entityTable } from './entity';
 import { roomTable } from './room';
-import { worldTable } from './world';
-import { numberTimestamp } from './types';
 
 /**
  * Definition of the memory table in the database.
@@ -31,7 +28,7 @@ export const memoryTable = pgTable(
   {
     id: uuid('id').primaryKey().notNull(),
     type: text('type').notNull(),
-    createdAt: numberTimestamp('createdAt')
+    createdAt: timestamp('createdAt')
       .default(sql`now()`)
       .notNull(),
     content: jsonb('content').notNull(),

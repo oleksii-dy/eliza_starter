@@ -1,19 +1,19 @@
 import { logger } from '@elizaos/core';
-import { execa } from 'execa';
 import { UserEnvironment } from './user-environment';
+import { displayBunInstallationTipCompact } from './bun-installation-helper';
+import { runBunCommand } from './run-bun';
+import { existsSync } from 'node:fs';
+import path from 'node:path';
+import { bunExec } from './bun-exec';
 
 /**
- * Detects and returns the preferred package manager for the current environment.
+ * Always returns 'bun' as the package manager for ElizaOS CLI.
  *
- * @returns A promise that resolves to the name of the package manager to use: 'npm', 'yarn', 'pnpm', or 'bun'.
- *
- * @remark Defaults to 'bun' if the package manager cannot be determined.
+ * @returns A promise that resolves to 'bun'.
  */
 export async function getPackageManager(): Promise<string> {
-  const envInfo = await UserEnvironment.getInstanceInfo();
-
-  logger.debug('[PackageManager] Detecting package manager');
-  return envInfo.packageManager.name === 'unknown' ? 'bun' : envInfo.packageManager.name;
+  logger.debug('[PackageManager] Using bun as the package manager for ElizaOS CLI');
+  return 'bun';
 }
 
 /**
@@ -44,17 +44,48 @@ export async function isRunningViaBunx(): Promise<boolean> {
 }
 
 /**
- * Get the install command for the specified package manager
- * @param {string} packageManager - The package manager to use
+ * Get the install command for bun
  * @param {boolean} isGlobal - Whether to install globally
- * @returns {string[]} - The install command array
+ * @returns {string[]} - The bun install command array
  */
-export function getInstallCommand(packageManager: string, isGlobal: boolean): string[] {
-  if (packageManager === 'npm') {
-    return ['install', ...(isGlobal ? ['-g'] : [])];
-  } else {
-    // bun
-    return ['add', ...(isGlobal ? ['-g'] : [])];
+export function getInstallCommand(isGlobal: boolean): string[] {
+  return ['add', ...(isGlobal ? ['-g'] : [])];
+}
+
+/**
+ * Removes a package from bun.lock file to prevent circular dependency issues
+ * @param packageName - The package name to remove from lockfile
+ * @param directory - The directory containing the bun.lock file
+ */
+export async function removeFromBunLock(packageName: string, directory: string): Promise<void> {
+  const lockFilePath = path.join(directory, 'bun.lock');
+
+  if (!existsSync(lockFilePath)) {
+    logger.debug(`No bun.lock file found at ${lockFilePath}, skipping removal`);
+    return;
+  }
+
+  try {
+    // Use bun remove to cleanly remove the package from lockfile
+    const result = await bunExec('bun', ['remove', packageName], {
+      cwd: directory,
+    });
+
+    if (result.success) {
+      logger.debug(`Successfully removed ${packageName} from bun.lock`);
+    } else {
+      // Check stderr for specific error messages
+      if (result.stderr?.includes('not found') || result.stderr?.includes('No such package')) {
+        logger.debug(`Package ${packageName} not found in lockfile (expected for cleanup)`);
+      } else {
+        logger.warn(
+          `Failed to remove ${packageName} from bun.lock: ${result.stderr || 'Unknown error'}`
+        );
+      }
+    }
+  } catch (error: any) {
+    // Handle unexpected errors (e.g., bunExec itself throwing)
+    logger.warn(`Unexpected error removing ${packageName} from bun.lock: ${error.message}`);
   }
 }
 
@@ -74,22 +105,18 @@ export async function executeInstallation(
   versionOrTag = '',
   directory: string = process.cwd()
 ): Promise<{ success: boolean; installedIdentifier: string | null }> {
-  const packageManager = await getPackageManager();
-  const installCommand = getInstallCommand(packageManager, false);
-
-  logger.info(`Attempting to install package: ${packageName} using ${packageManager}`);
+  const installCommand = getInstallCommand(false);
 
   const finalSpecifier = packageName.startsWith('github:')
     ? `${packageName}${versionOrTag ? `#${versionOrTag}` : ''}`
     : versionOrTag
       ? `${packageName}@${versionOrTag}`
       : packageName;
+
   try {
-    await execa(packageManager, [...installCommand, finalSpecifier], {
-      cwd: directory,
-      stdio: 'inherit',
-    });
-    logger.info(`Successfully installed ${finalSpecifier}.`);
+    const args = [...installCommand, finalSpecifier];
+    // Run silently to suppress bun's timestamped output
+    await runBunCommand(args, directory, true);
 
     const installedIdentifier = packageName.startsWith('github:')
       ? (() => {
@@ -101,8 +128,65 @@ export async function executeInstallation(
       : packageName;
 
     return { success: true, installedIdentifier };
-  } catch (error) {
-    logger.warn(`Installation failed for ${finalSpecifier}: ${error.message}`);
+  } catch (error: any) {
+    // Check if it's a bun not found error
+    if (error.code === 'ENOENT' || error.message?.includes('bun: command not found')) {
+      logger.warn(
+        `Installation failed - bun command not found. ${displayBunInstallationTipCompact()}`
+      );
+    } else {
+      logger.warn(`Installation failed for ${finalSpecifier}: ${error.message}`);
+    }
     return { success: false, installedIdentifier: null };
   }
+}
+
+/**
+ * Builds a GitHub specifier string for package installation.
+ *
+ * @param githubSpec - The GitHub specifier (e.g., "github:owner/repo")
+ * @param versionOrTag - Optional version or tag to append
+ * @returns The complete GitHub specifier string
+ */
+export function buildGitHubSpecifier(githubSpec: string, versionOrTag?: string): string {
+  if (!versionOrTag) {
+    return githubSpec;
+  }
+
+  // If the spec already has a fragment (#), replace it
+  const baseSpec = githubSpec.split('#')[0];
+  return `${baseSpec}#${versionOrTag}`;
+}
+
+/**
+ * Enhanced installation function that supports GitHub fallback with lockfile cleanup.
+ *
+ * @param packageName - The name of the package to install
+ * @param versionOrTag - Optional version or tag to install
+ * @param directory - The directory in which to run the installation
+ * @param githubFallback - Optional GitHub repository path for fallback (e.g., "owner/repo")
+ * @returns A promise resolving to an object indicating success and installed identifier
+ */
+export async function executeInstallationWithFallback(
+  packageName: string,
+  versionOrTag = '',
+  directory: string = process.cwd(),
+  githubFallback?: string
+): Promise<{ success: boolean; installedIdentifier: string | null }> {
+  // First try normal installation
+  const result = await executeInstallation(packageName, versionOrTag, directory);
+
+  if (result.success || !githubFallback) {
+    return result;
+  }
+
+  // If npm installation failed and we have a GitHub fallback, try GitHub installation
+  logger.debug(`npm installation failed, attempting GitHub fallback: ${githubFallback}`);
+
+  // Remove package from lockfile to prevent circular dependencies
+  await removeFromBunLock(packageName, directory);
+
+  // Try GitHub installation
+  const githubSpecifier = `github:${githubFallback}${versionOrTag ? `#${versionOrTag}` : ''}`;
+  return await executeInstallation(githubSpecifier, '', directory);
 }

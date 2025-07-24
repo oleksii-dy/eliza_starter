@@ -4,12 +4,14 @@ import {
   ChannelType,
   composePromptFromState,
   type Content,
+  ContentType,
   createUniqueUuid,
-  type Entity,
   type EntityPayload,
   type EvaluatorEventPayload,
+  type EventPayload,
   EventType,
   type IAgentRuntime,
+  imageDescriptionTemplate,
   type InvokePayload,
   logger,
   type Media,
@@ -18,16 +20,17 @@ import {
   type MessagePayload,
   type MessageReceivedHandlerParams,
   ModelType,
+  parseKeyValueXml,
   type Plugin,
+  PluginEvents,
   postCreationTemplate,
+  Role,
+  type Room,
   shouldRespondTemplate,
   truncateToCompleteSentence,
-  parseKeyValueXml,
   type UUID,
   type WorldPayload,
-  PluginEvents,
-  imageDescriptionTemplate,
-  ContentType,
+  getLocalServerUrl,
 } from '@elizaos/core';
 import { v4 } from 'uuid';
 
@@ -35,7 +38,6 @@ import * as actions from './actions/index.ts';
 import * as evaluators from './evaluators/index.ts';
 import * as providers from './providers/index.ts';
 
-import { ScenarioService } from './services/scenario.ts';
 import { TaskService } from './services/task.ts';
 
 export * from './actions/index.ts';
@@ -158,14 +160,29 @@ export async function processAttachments(
       // Start with the original attachment
       const processedAttachment: Media = { ...attachment };
 
+      const isRemote = /^(http|https):\/\//.test(attachment.url);
+      const url = isRemote ? attachment.url : getLocalServerUrl(attachment.url);
       // Only process images that don't already have descriptions
       if (attachment.contentType === ContentType.IMAGE && !attachment.description) {
         logger.debug(`[Bootstrap] Generating description for image: ${attachment.url}`);
 
+        let imageUrl = url;
+
+        if (!isRemote) {
+          // Only convert local/internal media to base64
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`Failed to fetch image: ${res.statusText}`);
+
+          const arrayBuffer = await res.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          const contentType = res.headers.get('content-type') || 'application/octet-stream';
+          imageUrl = `data:${contentType};base64,${buffer.toString('base64')}`;
+        }
+
         try {
           const response = await runtime.useModel(ModelType.IMAGE_DESCRIPTION, {
             prompt: imageDescriptionTemplate,
-            imageUrl: attachment.url,
+            imageUrl,
           });
 
           if (typeof response === 'string') {
@@ -199,6 +216,26 @@ export async function processAttachments(
           logger.error(`[Bootstrap] Error generating image description:`, error);
           // Continue processing without description
         }
+      } else if (attachment.contentType === ContentType.DOCUMENT && !attachment.text) {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`Failed to fetch document: ${res.statusText}`);
+
+        const contentType = res.headers.get('content-type') || '';
+        const isPlainText = contentType.startsWith('text/plain');
+
+        if (isPlainText) {
+          logger.debug(`[Bootstrap] Processing plain text document: ${attachment.url}`);
+
+          const textContent = await res.text();
+          processedAttachment.text = textContent;
+          processedAttachment.title = processedAttachment.title || 'Text File';
+
+          logger.debug(
+            `[Bootstrap] Extracted text content (first 100 chars): ${processedAttachment.text?.substring(0, 100)}...`
+          );
+        } else {
+          logger.warn(`[Bootstrap] Skipping non-plain-text document: ${contentType}`);
+        }
       }
 
       processedAttachments.push(processedAttachment);
@@ -210,6 +247,57 @@ export async function processAttachments(
   }
 
   return processedAttachments;
+}
+
+/**
+ * Determines whether to skip the shouldRespond logic based on room type and message source.
+ * Supports both default values and runtime-configurable overrides via env settings.
+ */
+export function shouldBypassShouldRespond(
+  runtime: IAgentRuntime,
+  room?: Room,
+  source?: string
+): boolean {
+  if (!room) return false;
+
+  function normalizeEnvList(value: unknown): string[] {
+    if (!value || typeof value !== 'string') return [];
+
+    const cleaned = value.trim().replace(/^\[|\]$/g, '');
+    return cleaned
+      .split(',')
+      .map((v) => v.trim())
+      .filter(Boolean);
+  }
+
+  const defaultBypassTypes = [
+    ChannelType.DM,
+    ChannelType.VOICE_DM,
+    ChannelType.SELF,
+    ChannelType.API,
+  ];
+
+  const defaultBypassSources = ['client_chat'];
+
+  const bypassTypesSetting = normalizeEnvList(runtime.getSetting('SHOULD_RESPOND_BYPASS_TYPES'));
+  const bypassSourcesSetting = normalizeEnvList(
+    runtime.getSetting('SHOULD_RESPOND_BYPASS_SOURCES')
+  );
+
+  const bypassTypes = new Set(
+    [...defaultBypassTypes.map((t) => t.toString()), ...bypassTypesSetting].map((s: string) =>
+      s.trim().toLowerCase()
+    )
+  );
+
+  const bypassSources = [...defaultBypassSources, ...bypassSourcesSetting].map((s: string) =>
+    s.trim().toLowerCase()
+  );
+
+  const roomType = room.type?.toString().toLowerCase();
+  const sourceStr = source?.toLowerCase() || '';
+
+  return bypassTypes.has(roomType) || bypassSources.some((pattern) => sourceStr.includes(pattern));
 }
 
 /**
@@ -227,6 +315,7 @@ const messageReceivedHandler = async ({
   // Set up timeout monitoring
   const timeoutDuration = 60 * 60 * 1000; // 1 hour
   let timeoutId: NodeJS.Timeout | undefined = undefined;
+
   try {
     logger.info(`[Bootstrap] Message received from ${message.entityId} in room ${message.roomId}`);
     // Generate a new response ID
@@ -243,8 +332,8 @@ const messageReceivedHandler = async ({
     // Set this as the latest response ID for this agent+room
     agentResponses.set(message.roomId, responseId);
 
-    // Generate a unique run ID for tracking this message handler execution
-    const runId = asUUID(v4());
+    // Use runtime's run tracking for this message processing
+    const runId = runtime.startRun();
     const startTime = Date.now();
 
     // Emit run started event
@@ -318,19 +407,23 @@ const messageReceivedHandler = async ({
         // Skip shouldRespond check for DM and VOICE_DM channels
         const room = await runtime.getRoom(message.roomId);
 
-        const shouldSkipShouldRespond =
-          room?.type === ChannelType.DM ||
-          room?.type === ChannelType.VOICE_DM ||
-          room?.type === ChannelType.SELF ||
-          room?.type === ChannelType.API ||
-          message.content.source?.includes('client_chat') ||
-          message.content.source?.includes('livekit');
+        const shouldSkipShouldRespond = shouldBypassShouldRespond(
+          runtime,
+          room ?? undefined,
+          message.content.source
+        );
 
         if (message.content.attachments && message.content.attachments.length > 0) {
           message.content.attachments = await processAttachments(
             message.content.attachments,
             runtime
           );
+          if (message.id) {
+            await runtime.updateMemory({
+              id: message.id,
+              content: message.content,
+            });
+          }
         }
 
         let shouldRespond = true;
@@ -361,7 +454,12 @@ const messageReceivedHandler = async ({
           const responseObject = parseKeyValueXml(response);
           logger.debug('[Bootstrap] Parsed response:', responseObject);
 
-          shouldRespond = responseObject?.action && responseObject.action === 'RESPOND';
+          // If an action is provided, the agent intends to respond in some way
+          // Only exclude explicit non-response actions
+          const nonResponseActions = ['IGNORE', 'NONE'];
+          shouldRespond =
+            responseObject?.action &&
+            !nonResponseActions.includes(responseObject.action.toUpperCase());
         } else {
           logger.debug(
             `[Bootstrap] Skipping shouldRespond check for ${runtime.character.name} because ${room?.type} ${room?.source}`
@@ -439,16 +537,54 @@ const messageReceivedHandler = async ({
           if (responseContent && message.id) {
             responseContent.inReplyTo = createUniqueUuid(runtime, message.id);
 
+            // --- LLM IGNORE/REPLY ambiguity handling ---
+            // Sometimes the LLM outputs actions like ["REPLY", "IGNORE"], which breaks isSimple detection
+            // and triggers unnecessary large LLM calls. We clarify intent here:
+            // - If IGNORE is present with other actions:
+            //    - If text is empty, we assume the LLM intended to IGNORE and drop all other actions.
+            //    - If text is present, we assume the LLM intended to REPLY and remove IGNORE from actions.
+            // This ensures consistent, clear behavior and preserves reply speed optimizations.
+            if (responseContent.actions && responseContent.actions.length > 1) {
+              // Helper function to safely check if an action is IGNORE
+              const isIgnoreAction = (action: unknown): boolean => {
+                return typeof action === 'string' && action.toUpperCase() === 'IGNORE';
+              };
+
+              // Check if any action is IGNORE
+              const hasIgnoreAction = responseContent.actions.some(isIgnoreAction);
+
+              if (hasIgnoreAction) {
+                if (!responseContent.text || responseContent.text.trim() === '') {
+                  // No text, truly meant to IGNORE
+                  responseContent.actions = ['IGNORE'];
+                } else {
+                  // Text present, LLM intended to reply, remove IGNORE
+                  const filteredActions = responseContent.actions.filter(
+                    (action) => !isIgnoreAction(action)
+                  );
+
+                  // Ensure we don't end up with an empty actions array when text is present
+                  // If all actions were IGNORE, default to REPLY
+                  if (filteredActions.length === 0) {
+                    responseContent.actions = ['REPLY'];
+                  } else {
+                    responseContent.actions = filteredActions;
+                  }
+                }
+              }
+            }
+
             // Automatically determine if response is simple based on providers and actions
             // Simple = REPLY action with no providers used
             const isSimple =
               responseContent.actions?.length === 1 &&
+              typeof responseContent.actions[0] === 'string' &&
               responseContent.actions[0].toUpperCase() === 'REPLY' &&
               (!responseContent.providers || responseContent.providers.length === 0);
 
             responseContent.simple = isSimple;
 
-            const responseMesssage = {
+            const responseMessage = {
               id: asUUID(v4()),
               entityId: runtime.agentId,
               agentId: runtime.agentId,
@@ -457,7 +593,7 @@ const messageReceivedHandler = async ({
               createdAt: Date.now(),
             };
 
-            responseMessages = [responseMesssage];
+            responseMessages = [responseMessage];
           }
 
           // Clean up the response ID
@@ -479,42 +615,9 @@ const messageReceivedHandler = async ({
             // without actions there can't be more than one message
             await callback(responseContent);
           } else {
-            await runtime.processActions(
-              message,
-              responseMessages,
-              state,
-              async (memory: Content) => {
-                return [];
-              }
-            );
-            if (responseMessages.length) {
-              // Log provider usage for complex responses
-              for (const responseMessage of responseMessages) {
-                if (
-                  responseMessage.content.providers &&
-                  responseMessage.content.providers.length > 0
-                ) {
-                  logger.debug(
-                    '[Bootstrap] Complex response used providers',
-                    responseMessage.content.providers
-                  );
-                }
-              }
-
-              for (const memory of responseMessages) {
-                await callback(memory.content);
-              }
-            }
+            await runtime.processActions(message, responseMessages, state, callback);
           }
-          await runtime.evaluate(
-            message,
-            state,
-            shouldRespond,
-            async (memory: Content) => {
-              return [];
-            },
-            responseMessages
-          );
+          await runtime.evaluate(message, state, shouldRespond, callback, responseMessages);
         } else {
           // Handle the case where the agent decided not to respond
           logger.debug('[Bootstrap] Agent decided not to respond (shouldRespond is false).');
@@ -634,6 +737,88 @@ const reactionReceivedHandler = async ({
 };
 
 /**
+ * Handles message deletion events by removing the corresponding memory from the agent's memory store.
+ *
+ * @param {Object} params - The parameters for the function.
+ * @param {IAgentRuntime} params.runtime - The agent runtime object.
+ * @param {Memory} params.message - The message memory that was deleted.
+ * @returns {void}
+ */
+const messageDeletedHandler = async ({
+  runtime,
+  message,
+}: {
+  runtime: IAgentRuntime;
+  message: Memory;
+}) => {
+  try {
+    if (!message.id) {
+      logger.error('[Bootstrap] Cannot delete memory: message ID is missing');
+      return;
+    }
+
+    logger.info('[Bootstrap] Deleting memory for message', message.id, 'from room', message.roomId);
+    await runtime.deleteMemory(message.id);
+    logger.debug('[Bootstrap] Successfully deleted memory for message', message.id);
+  } catch (error: unknown) {
+    logger.error('[Bootstrap] Error in message deleted handler:', error);
+  }
+};
+
+/**
+ * Handles channel cleared events by removing all message memories from the specified room.
+ *
+ * @param {Object} params - The parameters for the function.
+ * @param {IAgentRuntime} params.runtime - The agent runtime object.
+ * @param {UUID} params.roomId - The room ID to clear message memories from.
+ * @param {string} params.channelId - The original channel ID.
+ * @param {number} params.memoryCount - Number of memories found.
+ * @returns {void}
+ */
+const channelClearedHandler = async ({
+  runtime,
+  roomId,
+  channelId,
+  memoryCount,
+}: {
+  runtime: IAgentRuntime;
+  roomId: UUID;
+  channelId: string;
+  memoryCount: number;
+}) => {
+  try {
+    logger.info(
+      `[Bootstrap] Clearing ${memoryCount} message memories from channel ${channelId} -> room ${roomId}`
+    );
+
+    // Get all message memories for this room
+    const memories = await runtime.getMemoriesByRoomIds({
+      tableName: 'messages',
+      roomIds: [roomId],
+    });
+
+    // Delete each message memory
+    let deletedCount = 0;
+    for (const memory of memories) {
+      if (memory.id) {
+        try {
+          await runtime.deleteMemory(memory.id);
+          deletedCount++;
+        } catch (error) {
+          logger.warn(`[Bootstrap] Failed to delete message memory ${memory.id}:`, error);
+        }
+      }
+    }
+
+    logger.info(
+      `[Bootstrap] Successfully cleared ${deletedCount}/${memories.length} message memories from channel ${channelId}`
+    );
+  } catch (error: unknown) {
+    logger.error('[Bootstrap] Error in channel cleared handler:', error);
+  }
+};
+
+/**
  * Handles the generation of a post (like a Tweet) and creates a memory for it.
  *
  * @param {Object} params - The parameters for the function.
@@ -694,8 +879,9 @@ const postGeneratedHandler = async ({
 
   // get twitterUserName
   const entity = await runtime.getEntityById(runtime.agentId);
-  if (entity?.metadata?.twitter?.userName) {
-    state.values.twitterUserName = entity?.metadata?.twitter?.userName;
+  if ((entity?.metadata?.twitter as any)?.userName || entity?.metadata?.userName) {
+    state.values.twitterUserName =
+      (entity?.metadata?.twitter as any)?.userName || entity?.metadata?.userName;
   }
 
   const prompt = composePromptFromState({
@@ -776,10 +962,7 @@ const postGeneratedHandler = async ({
     // Fix newlines
     cleanedText = cleanedText.replaceAll(/\\n/g, '\n\n');
     cleanedText = cleanedText.replace(/([^\n])\n([^\n])/g, '$1\n\n$2');
-    // Truncate to Twitter's character limit (280)
-    if (cleanedText.length > 280) {
-      cleanedText = truncateToCompleteSentence(cleanedText, 280);
-    }
+
     return cleanedText;
   }
 
@@ -913,7 +1096,7 @@ const syncSingleUser = async (
 ) => {
   try {
     const entity = await runtime.getEntityById(entityId);
-    logger.info(`[Bootstrap] Syncing user: ${entity?.metadata?.[source]?.username || entityId}`);
+    logger.info(`[Bootstrap] Syncing user: ${entity?.metadata?.username || entityId}`);
 
     // Ensure we're not using WORLD type and that we have a valid channelId
     if (!channelId) {
@@ -924,18 +1107,47 @@ const syncSingleUser = async (
     const roomId = createUniqueUuid(runtime, channelId);
     const worldId = createUniqueUuid(runtime, serverId);
 
+    // Create world with ownership metadata for DM connections (onboarding)
+    const worldMetadata =
+      type === ChannelType.DM
+        ? {
+            ownership: {
+              ownerId: entityId,
+            },
+            roles: {
+              [entityId]: Role.OWNER,
+            },
+            settings: {}, // Initialize empty settings for onboarding
+          }
+        : undefined;
+
+    logger.info(
+      `[Bootstrap] syncSingleUser - type: ${type}, isDM: ${type === ChannelType.DM}, worldMetadata: ${JSON.stringify(worldMetadata)}`
+    );
+
     await runtime.ensureConnection({
       entityId,
       roomId,
-      userName: entity?.metadata?.[source].username || entityId,
-      name:
-        entity?.metadata?.[source].name || entity?.metadata?.[source].username || `User${entityId}`,
+      name: (entity?.metadata?.name || entity?.metadata?.username || `User${entityId}`) as
+        | undefined
+        | string,
       source,
       channelId,
       serverId,
       type,
       worldId,
+      metadata: worldMetadata,
     });
+
+    // Verify the world was created with proper metadata
+    try {
+      const createdWorld = await runtime.getWorld(worldId);
+      logger.info(
+        `[Bootstrap] Created world check - ID: ${worldId}, metadata: ${JSON.stringify(createdWorld?.metadata)}`
+      );
+    } catch (error) {
+      logger.error(`[Bootstrap] Failed to verify created world: ${error}`);
+    }
 
     logger.success(`[Bootstrap] Successfully synced user: ${entity?.id}`);
   } catch (error) {
@@ -958,80 +1170,7 @@ const handleServerSync = async ({
 }: WorldPayload) => {
   logger.debug(`[Bootstrap] Handling server sync event for server: ${world.name}`);
   try {
-    // Create/ensure the world exists for this server
-    await runtime.ensureWorldExists({
-      id: world.id,
-      name: world.name,
-      agentId: runtime.agentId,
-      serverId: world.serverId,
-      metadata: {
-        ...world.metadata,
-      },
-    });
-
-    // First sync all rooms/channels
-    if (rooms && rooms.length > 0) {
-      for (const room of rooms) {
-        await runtime.ensureRoomExists({
-          id: room.id,
-          name: room.name,
-          source: source,
-          type: room.type,
-          channelId: room.channelId,
-          serverId: world.serverId,
-          worldId: world.id,
-        });
-      }
-    }
-
-    // Then sync all users
-    if (entities && entities.length > 0) {
-      // Process entities in batches to avoid overwhelming the system
-      const batchSize = 50;
-      for (let i = 0; i < entities.length; i += batchSize) {
-        const entityBatch = entities.slice(i, i + batchSize);
-
-        // check if user is in any of these rooms in rooms
-        const firstRoomUserIsIn = rooms.length > 0 ? rooms[0] : null;
-
-        if (!firstRoomUserIsIn) {
-          logger.warn(`[Bootstrap] No rooms found for syncing users`);
-          continue;
-        }
-
-        // Process each user in the batch
-        await Promise.all(
-          entityBatch.map(async (entity: Entity) => {
-            try {
-              if (!entity?.id) {
-                logger.warn(`[Bootstrap] No entity ID found for syncing users`);
-                return;
-              }
-
-              await runtime.ensureConnection({
-                entityId: entity.id,
-                roomId: firstRoomUserIsIn.id,
-                userName: entity.metadata?.[source].username,
-                name: entity.metadata?.[source].name,
-                source: source,
-                channelId: firstRoomUserIsIn.channelId,
-                serverId: world.serverId,
-                type: firstRoomUserIsIn.type,
-                worldId: world.id,
-              });
-            } catch (err) {
-              logger.warn(`[Bootstrap] Failed to sync user ${entity.metadata?.username}: ${err}`);
-            }
-          })
-        );
-
-        // Add a small delay between batches if not the last batch
-        if (i + batchSize < entities.length) {
-          await new Promise((resolve) => setTimeout(resolve, 500));
-        }
-      }
-    }
-
+    await runtime.ensureConnections(entities, rooms, source, world);
     logger.debug(`Successfully synced standardized world structure for ${world.name}`);
     onComplete?.();
   } catch (error) {
@@ -1051,7 +1190,6 @@ const handleServerSync = async ({
 const controlMessageHandler = async ({
   runtime,
   message,
-  source,
 }: {
   runtime: IAgentRuntime;
   message: {
@@ -1073,9 +1211,10 @@ const controlMessageHandler = async ({
     // This would typically be handled by a registered service with sendMessage capability
 
     // Get any registered WebSocket service
-    const serviceNames = Array.from(runtime.getAllServices().keys());
+    const serviceNames = Array.from(runtime.getAllServices().keys()) as string[];
     const websocketServiceName = serviceNames.find(
-      (name) => name.toLowerCase().includes('websocket') || name.toLowerCase().includes('socket')
+      (name: string) =>
+        name.toLowerCase().includes('websocket') || name.toLowerCase().includes('socket')
     );
 
     if (websocketServiceName) {
@@ -1157,6 +1296,26 @@ const events = {
     },
   ],
 
+  [EventType.MESSAGE_DELETED]: [
+    async (payload: MessagePayload) => {
+      await messageDeletedHandler({
+        runtime: payload.runtime,
+        message: payload.message,
+      });
+    },
+  ],
+
+  [EventType.CHANNEL_CLEARED]: [
+    async (payload: EventPayload & { roomId: UUID; channelId: string; memoryCount: number }) => {
+      await channelClearedHandler({
+        runtime: payload.runtime,
+        roomId: payload.roomId,
+        channelId: payload.channelId,
+        memoryCount: payload.memoryCount,
+      });
+    },
+  ],
+
   [EventType.WORLD_JOINED]: [
     async (payload: WorldPayload) => {
       await handleServerSync(payload);
@@ -1171,8 +1330,10 @@ const events = {
 
   [EventType.ENTITY_JOINED]: [
     async (payload: EntityPayload) => {
+      logger.debug(`[Bootstrap] ENTITY_JOINED event received for entity ${payload.entityId}`);
+
       if (!payload.worldId) {
-        logger.error('[Bootstrap] No callback provided for entity joined');
+        logger.error('[Bootstrap] No worldId provided for entity joined');
         return;
       }
       if (!payload.roomId) {
@@ -1264,6 +1425,7 @@ export const bootstrapPlugin: Plugin = {
     actions.choiceAction,
     actions.updateRoleAction,
     actions.updateSettingsAction,
+    actions.generateImageAction,
   ],
   // this is jank, these events are not valid
   events: events as any as PluginEvents,
@@ -1282,11 +1444,12 @@ export const bootstrapPlugin: Plugin = {
     providers.attachmentsProvider,
     providers.providersProvider,
     providers.actionsProvider,
+    providers.actionStateProvider,
     providers.characterProvider,
     providers.recentMessagesProvider,
     providers.worldProvider,
   ],
-  services: [TaskService, ScenarioService],
+  services: [TaskService],
 };
 
 export default bootstrapPlugin;

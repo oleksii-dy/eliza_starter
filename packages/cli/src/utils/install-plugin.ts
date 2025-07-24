@@ -1,10 +1,11 @@
 import { logger } from '@elizaos/core';
-import fs from 'node:fs';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { loadPluginModule } from './load-plugin';
-import { executeInstallation } from './package-manager';
+import { executeInstallation, executeInstallationWithFallback } from './package-manager';
 import { fetchPluginRegistry } from './plugin-discovery';
 import { normalizePluginName } from './registry';
+import { detectPluginContext } from './plugin-context';
 
 /**
  * Get the CLI's installation directory when running globally
@@ -25,7 +26,7 @@ function getCliDirectory(): string | null {
       );
 
       // Verify this is actually the CLI directory
-      if (fs.existsSync(path.join(cliDir, 'package.json'))) {
+      if (existsSync(path.join(cliDir, 'package.json'))) {
         return cliDir;
       }
     }
@@ -48,7 +49,7 @@ async function verifyPluginImport(repository: string, context: string): Promise<
   const loadedModule = await loadPluginModule(repository);
 
   if (loadedModule) {
-    logger.info(`Successfully verified plugin ${repository} ${context} after installation.`);
+    logger.debug(`Successfully verified plugin ${repository} ${context} after installation.`);
     return true;
   } else {
     // The loadPluginModule function already logs detailed errors
@@ -63,15 +64,17 @@ async function verifyPluginImport(repository: string, context: string): Promise<
  * @param {string} versionString - Version string for installation
  * @param {string} directory - Directory to install in
  * @param {string} context - Description of the installation context for logging
+ * @param {boolean} skipVerification - Whether to skip import verification
  * @returns {boolean} - Whether the installation and import verification was successful
  */
 async function attemptInstallation(
   packageName: string,
   versionString: string,
   directory: string,
-  context: string
+  context: string,
+  skipVerification = false
 ): Promise<boolean> {
-  logger.info(`Attempting to install plugin ${context}...`);
+  logger.debug(`Attempting to install plugin ${context}...`);
 
   try {
     // Use centralized installation function which now returns success status and identifier
@@ -87,19 +90,21 @@ async function attemptInstallation(
     if (packageName.startsWith('github:')) {
       return true;
     }
-    if (process.env.ELIZA_SKIP_PLUGIN_VERIFY) {
+    if (skipVerification || process.env.ELIZA_SKIP_PLUGIN_VERIFY) {
       logger.info(
         `Installation successful for ${installResult.installedIdentifier}, skipping verification`
       );
       return true;
     }
-    logger.info(
+    logger.debug(
       `Installation successful for ${installResult.installedIdentifier}, verifying import...`
     );
     return await verifyPluginImport(installResult.installedIdentifier, context);
   } catch (installError) {
     // Catch any unexpected errors during the process
-    logger.warn(`Error during installation attempt ${context}: ${installError.message}`);
+    logger.warn(
+      `Error during installation attempt ${context}: ${installError instanceof Error ? installError.message : String(installError)}`
+    );
     return false;
   }
 }
@@ -110,21 +115,32 @@ async function attemptInstallation(
  * @param {string} packageName - The repository URL of the plugin to install.
  * @param {string} cwd - The current working directory where the plugin will be installed.
  * @param {string} versionSpecifier - The specific version of the plugin to install.
- * @param {string} monorepoBranch - The specific branch to use for monorepo installation.
+ * @param {boolean} skipVerification - Whether to skip import verification.
  * @returns {Promise<boolean>} - A Promise that resolves to true if the plugin is successfully installed, or false otherwise.
  */
 export async function installPlugin(
   packageName: string,
   cwd: string,
-  versionSpecifier?: string
+  versionSpecifier?: string,
+  skipVerification = false
 ): Promise<boolean> {
-  logger.info(`Installing plugin: ${packageName}`);
+  logger.debug(`Installing plugin: ${packageName}`);
+
+  // Check if we're trying to install a plugin into its own directory
+  const context = detectPluginContext(packageName);
+  if (context.isLocalDevelopment) {
+    logger.warn(`Prevented self-installation of plugin ${packageName}`);
+    logger.info(
+      `You're developing this plugin locally. Use 'bun run build' to build it instead of installing.`
+    );
+    return false;
+  }
 
   const cliDir = getCliDirectory();
 
   // Direct GitHub installation
   if (packageName.startsWith('github:')) {
-    return await attemptInstallation(packageName, '', cwd, ':');
+    return await attemptInstallation(packageName, '', cwd, '', skipVerification);
   }
 
   // Handle full GitHub URLs as well
@@ -134,7 +150,7 @@ export async function installPlugin(
   if (httpsMatch) {
     const [, owner, repo, ref] = httpsMatch;
     const spec = `github:${owner}/${repo}${ref ? `#${ref}` : ''}`;
-    return await attemptInstallation(spec, '', cwd, ':');
+    return await attemptInstallation(spec, '', cwd, '', skipVerification);
   }
 
   const cache = await fetchPluginRegistry();
@@ -172,33 +188,61 @@ export async function installPlugin(
     logger.warn(
       `Plugin ${packageName} not found in registry cache, attempting direct installation`
     );
-    return await attemptInstallation(packageName, versionSpecifier || '', cwd, '');
+    return await attemptInstallation(
+      packageName,
+      versionSpecifier || '',
+      cwd,
+      '',
+      skipVerification
+    );
   }
 
   const info = cache!.registry[key];
-  // Prefer npm installation if repository is available
+
+  // Extract GitHub fallback information if available
+  const githubFallback = info.git?.repo;
+  const githubVersion = info.git?.v1?.branch || info.git?.v1?.version || '';
+
+  // Prefer npm installation with GitHub fallback if repository is available
   if (info.npm?.repo) {
     const ver = versionSpecifier || info.npm.v1 || '';
-    if (await attemptInstallation(info.npm.repo, ver, cwd, '')) {
+    const result = await executeInstallationWithFallback(info.npm.repo, ver, cwd, githubFallback);
+
+    if (result.success) {
+      // Verify import if not a GitHub install
+      if (
+        !info.npm.repo.startsWith('github:') &&
+        !skipVerification &&
+        !process.env.ELIZA_SKIP_PLUGIN_VERIFY
+      ) {
+        const importSuccess = await verifyPluginImport(
+          result.installedIdentifier || info.npm.repo,
+          'from npm with potential GitHub fallback'
+        );
+        return importSuccess;
+      }
       return true;
     }
   } else if (info.npm?.v1) {
-    if (await attemptInstallation(key, info.npm.v1, cwd, '')) {
+    const result = await executeInstallationWithFallback(key, info.npm.v1, cwd, githubFallback);
+
+    if (result.success) {
+      // Verify import if not a GitHub install
+      if (!skipVerification && !process.env.ELIZA_SKIP_PLUGIN_VERIFY) {
+        const importSuccess = await verifyPluginImport(
+          result.installedIdentifier || key,
+          'from npm registry with potential GitHub fallback'
+        );
+        return importSuccess;
+      }
       return true;
     }
   }
 
-  if (info.git?.repo) {
-    const branchOrTag = info.git.v1?.version || info.git.v1?.branch || '';
-    const spec = `github:${info.git.repo}${branchOrTag ? `#${branchOrTag}` : ''}`;
-
-    if (await attemptInstallation(spec, '', cwd, '')) {
-      return true;
-    }
-
-    if (cliDir) {
-      return await attemptInstallation(spec, '', cliDir, 'in CLI directory');
-    }
+  // If both npm approaches failed, try direct GitHub installation as final fallback
+  if (info.git?.repo && cliDir) {
+    const spec = `github:${info.git.repo}${githubVersion ? `#${githubVersion}` : ''}`;
+    return await attemptInstallation(spec, '', cliDir, 'in CLI directory', skipVerification);
   }
 
   logger.error(`Failed to install plugin ${packageName}`);

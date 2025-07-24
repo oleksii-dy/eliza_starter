@@ -1,6 +1,12 @@
 // Export everything from types
 export * from './types';
 
+// Export utils first to avoid circular dependency issues
+export * from './utils';
+
+// Export schemas
+export * from './schemas/character';
+
 // Then all other exports
 export * from './actions';
 export * from './database';
@@ -9,12 +15,8 @@ export * from './logger';
 export * from './prompts';
 export * from './roles';
 export * from './runtime';
-// search doesn't need to be exported
 export * from './settings';
-export * from './utils';
 export * from './services';
+export * from './specs';
 
-// Export instrumentation types and service
-export * from './instrumentation/types';
-export * from './instrumentation/service';
 export * from './sentry/instrument';

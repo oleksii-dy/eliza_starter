@@ -1,19 +1,7 @@
 import type { Memory, UUID } from '@elizaos/core';
-import {
-  Database,
-  LoaderIcon,
-  Pencil,
-  Search,
-  Brain,
-  User,
-  Bot,
-  Clock,
-  Copy,
-  BarChart3,
-  List,
-} from 'lucide-react';
+import { Database, LoaderIcon, Pencil, Search, Brain, User, Bot, Clock, Copy } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useAgentMemories } from '@/hooks/use-query-hooks';
+import { useAgentMemories, useAgents } from '@/hooks/use-query-hooks';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -25,7 +13,6 @@ import {
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import MemoryEditOverlay from './agent-memory-edit-overlay';
-import MemoryGraph from './memory-graph';
 
 // Number of items to load per batch
 const ITEMS_PER_PAGE = 15;
@@ -55,43 +42,64 @@ interface ChatMemoryContent extends MemoryContent {
 
 enum MemoryType {
   all = 'all',
+  currentChat = 'currentChat',
   messagesReceived = 'messagesReceived',
   messagesSent = 'messagesSent',
-  thoughts = 'thoughts',
   facts = 'facts',
 }
 
 interface AgentMemoryViewerProps {
   agentId: UUID;
   agentName: string;
+  channelId?: UUID; // Renamed from roomId to channelId for clarity
 }
 
-export function AgentMemoryViewer({ agentId, agentName }: AgentMemoryViewerProps) {
+export function AgentMemoryViewer({ agentId, agentName, channelId }: AgentMemoryViewerProps) {
   const [selectedType, setSelectedType] = useState<MemoryType>(MemoryType.all);
   const [searchQuery, setSearchQuery] = useState('');
   const [editingMemory, setEditingMemory] = useState<Memory | null>(null);
   const [visibleItems, setVisibleItems] = useState(ITEMS_PER_PAGE);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [viewMode, setViewMode] = useState<'list' | 'graph'>('list');
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Determine table name based on selected type
-  const tableName =
-    selectedType === MemoryType.facts
-      ? 'facts'
-      : selectedType === MemoryType.messagesSent || selectedType === MemoryType.messagesReceived
-        ? 'messages'
-        : undefined;
+  // Get all agents to look up names by ID
+  const { data: agentsData } = useAgents();
 
-  const { data: memories = [], isLoading, error } = useAgentMemories(agentId, tableName);
+  // Fetch from appropriate table(s) based on selected type
+  const messagesTableName = selectedType === MemoryType.facts ? undefined : 'messages';
+  const factsTableName =
+    selectedType === MemoryType.facts || selectedType === MemoryType.all ? 'facts' : undefined;
+
+  // Only pass channelId when "Current Chat" is selected
+  const channelIdToUse =
+    selectedType === MemoryType.currentChat && channelId ? channelId : undefined;
+
+  const {
+    data: messagesData = [],
+    isLoading: isLoadingMessages,
+    error: messagesError,
+  } = useAgentMemories(agentId, messagesTableName, channelIdToUse);
+  const {
+    data: factsData = [],
+    isLoading: isLoadingFacts,
+    error: factsError,
+  } = useAgentMemories(agentId, factsTableName, channelIdToUse);
+
+  // Combine memories from both sources
+  const memories = [...messagesData, ...factsData];
+  const isLoading = isLoadingMessages || isLoadingFacts;
+  const error = messagesError || factsError;
 
   // Filter and search memories
   const filteredMemories = memories.filter((memory: Memory) => {
     // Type filter
-    if (selectedType !== MemoryType.all) {
-      const content = memory.content as ChatMemoryContent;
+    if (selectedType !== MemoryType.all && selectedType !== MemoryType.currentChat) {
+      // Facts are handled by table selection, so if we're on facts table, show all
+      if (selectedType === MemoryType.facts) {
+        return true; // Already filtered by table
+      }
 
-      if (selectedType === MemoryType.thoughts && !content?.thought) return false;
+      // For messages table, filter by type
       if (selectedType === MemoryType.messagesSent && memory.entityId !== memory.agentId)
         return false;
       if (selectedType === MemoryType.messagesReceived && memory.entityId === memory.agentId)
@@ -259,9 +267,20 @@ export function AgentMemoryViewer({ agentId, agentName }: AgentMemoryViewerProps
     const content = memory.content as ChatMemoryContent;
     const IconComponent = getMemoryIcon(memory, content);
     const isAgent = memory.entityId === memory.agentId;
-    const entityName = isAgent
-      ? memory.metadata?.source || agentName
-      : memory.metadata?.source || 'User';
+
+    // Look up entity name from agents data or fallback to metadata
+    const getEntityName = () => {
+      if (isAgent) {
+        // For agents, try to find the agent name by ID
+        const agent = agentsData?.data?.agents?.find((a) => a.id === memory.entityId);
+        return agent?.name || agentName;
+      } else {
+        // For users, use raw metadata or fallback
+        return (memory.metadata as any)?.raw?.senderName || memory.metadata?.source || 'User';
+      }
+    };
+
+    const entityName = getEntityName();
 
     return (
       <div className="border rounded-lg p-4 bg-card hover:bg-accent/5 transition-colors group">
@@ -398,25 +417,6 @@ export function AgentMemoryViewer({ agentId, agentName }: AgentMemoryViewerProps
           )}
         </div>
         <div className="flex items-center gap-2">
-          {/* View Mode Toggle */}
-          <Button
-            variant={viewMode === 'graph' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setViewMode(viewMode === 'list' ? 'graph' : 'list')}
-            className="h-8 px-3"
-          >
-            {viewMode === 'graph' ? (
-              <>
-                <List className="h-4 w-4 mr-1" />
-                List View
-              </>
-            ) : (
-              <>
-                <BarChart3 className="h-4 w-4 mr-1" />
-                Graph View
-              </>
-            )}
-          </Button>
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -424,10 +424,10 @@ export function AgentMemoryViewer({ agentId, agentName }: AgentMemoryViewerProps
               placeholder="Search memories..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-64"
+              className="pl-10 w-full min-w-0 max-w-64"
             />
           </div>
-          {/* Filter */}
+          {/* Type Filter */}
           <Select
             value={selectedType}
             onValueChange={(value) => setSelectedType(value as MemoryType)}
@@ -437,9 +437,9 @@ export function AgentMemoryViewer({ agentId, agentName }: AgentMemoryViewerProps
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={MemoryType.all}>All Messages</SelectItem>
+              {channelId && <SelectItem value={MemoryType.currentChat}>Current Chat</SelectItem>}
               <SelectItem value={MemoryType.messagesSent}>Agent Messages</SelectItem>
               <SelectItem value={MemoryType.messagesReceived}>User Messages</SelectItem>
-              <SelectItem value={MemoryType.thoughts}>With Thoughts</SelectItem>
               <SelectItem value={MemoryType.facts}>Facts</SelectItem>
             </SelectContent>
           </Select>
@@ -448,14 +448,7 @@ export function AgentMemoryViewer({ agentId, agentName }: AgentMemoryViewerProps
 
       {/* Content */}
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-4">
-        {viewMode === 'graph' ? (
-          <div className="h-full">
-            <MemoryGraph
-              memories={filteredMemories}
-              onSelect={(memory) => setEditingMemory(memory)}
-            />
-          </div>
-        ) : filteredMemories.length === 0 ? (
+        {filteredMemories.length === 0 ? (
           <EmptyState />
         ) : (
           <div className="space-y-4">

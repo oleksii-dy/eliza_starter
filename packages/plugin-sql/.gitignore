@@ -174,3 +174,8 @@ dist
 
 # Finder (MacOS) folder config
 .DS_Store
+
+:memory:
+debug-cache-db
+./cursor
+coverage/

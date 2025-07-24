@@ -12,8 +12,10 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useAgents } from '../hooks/use-query-hooks';
-import { apiClient } from '../lib/api';
+import { createElizaClient } from '../lib/api-client-config';
 import SocketIOManager, { type LogStreamData } from '../lib/socketio-manager';
+import { useConfirmation } from '@/hooks/use-confirmation';
+import ConfirmationDialog from './confirmation-dialog';
 
 // Types
 interface LogEntry {
@@ -90,17 +92,21 @@ function generateLogChart(logs: LogEntry[]) {
     hourlyData[key] = { info: 0, errors: 0 };
   }
 
-  // Count logs by hour
+  // Count logs by hour - filter logs to last 24 hours only
+  const twentyFourHoursAgo = now - 24 * 60 * 60 * 1000;
   logs.forEach((log) => {
-    const logDate = new Date(log.time);
-    logDate.setMinutes(0, 0, 0);
-    const key = logDate.toISOString();
+    // Only count logs from the last 24 hours
+    if (log.time >= twentyFourHoursAgo) {
+      const logDate = new Date(log.time);
+      logDate.setMinutes(0, 0, 0);
+      const key = logDate.toISOString();
 
-    if (hourlyData[key]) {
-      if (log.level >= 50) {
-        hourlyData[key].errors++;
-      } else {
-        hourlyData[key].info++;
+      if (hourlyData[key]) {
+        if (log.level >= 50) {
+          hourlyData[key].errors++;
+        } else {
+          hourlyData[key].info++;
+        }
       }
     }
   });
@@ -238,6 +244,8 @@ export function AgentLogViewer({ agentName, level }: AgentLogViewerProps) {
   const [useWebSocket, setUseWebSocket] = useState(false);
   const queryClient = useQueryClient();
 
+  const { confirm, isOpen, onOpenChange, onConfirm, options } = useConfirmation();
+
   // Use real hooks from the existing codebase
   const {
     data: logResponse,
@@ -246,13 +254,16 @@ export function AgentLogViewer({ agentName, level }: AgentLogViewerProps) {
     refetch,
   } = useQuery<LogResponse>({
     queryKey: ['logs', selectedLevel, selectedAgentName],
-    queryFn: () =>
-      apiClient.getLogs({
+    queryFn: async () => {
+      const elizaClient = createElizaClient();
+      return await elizaClient.system.getGlobalLogs({
         level: selectedLevel === 'all' ? '' : selectedLevel,
         agentName: selectedAgentName === 'all' ? undefined : selectedAgentName,
-      }),
-    refetchInterval: isLive && !useWebSocket ? 2000 : false,
+      });
+    },
+    refetchInterval: isLive && !useWebSocket ? 5000 : false,
     staleTime: 1000,
+    enabled: true, // Always enable the query
   });
 
   const { data: agents } = useAgents();
@@ -296,20 +307,20 @@ export function AgentLogViewer({ agentName, level }: AgentLogViewerProps) {
 
   // Toggle WebSocket usage when live mode changes
   useEffect(() => {
-    if (isLive && !useWebSocket) {
+    if (isLive) {
       // When enabling live mode, try to start WebSocket. Fallback to polling if WebSocket fails
       if (SocketIOManager.isConnected()) {
         setUseWebSocket(true);
       } else {
         // WebSocket not available, continue with API polling
-        console.log('WebSocket not available, continuing with API polling');
+        setUseWebSocket(false);
       }
-    } else if (!isLive && useWebSocket) {
+    } else {
       // When disabling live mode, stop WebSocket and clear WebSocket logs
       setUseWebSocket(false);
       setWsLogs([]);
     }
-  }, [isLive, useWebSocket]);
+  }, [isLive]);
 
   // Update WebSocket filters when selectedAgentName or selectedLevel changes
   useEffect(() => {
@@ -326,8 +337,20 @@ export function AgentLogViewer({ agentName, level }: AgentLogViewerProps) {
 
   // Combine API logs and WebSocket logs
   const apiLogs = logResponse?.logs || [];
-  const combinedLogs = useWebSocket && isLive ? wsLogs : apiLogs;
-  const logs = combinedLogs;
+
+  // Smart fallback: If WebSocket has significantly fewer logs than API, use API logs
+  // This handles cases where WebSocket streaming isn't working properly
+  let combinedLogs;
+  if (useWebSocket && isLive && wsLogs.length > 0) {
+    // If WebSocket has logs, use them
+    combinedLogs = wsLogs;
+  } else {
+    // Use API logs (either not using WebSocket, or WebSocket has no logs)
+    combinedLogs = apiLogs;
+  }
+
+  // Sort logs by timestamp in descending order (newest first)
+  const logs = combinedLogs.sort((a, b) => b.time - a.time);
   const levels = logResponse?.levels || [];
   const agentNames = agents?.data?.agents?.map((agent) => agent.name) || [];
 
@@ -355,27 +378,33 @@ export function AgentLogViewer({ agentName, level }: AgentLogViewerProps) {
 
   const chartData = generateLogChart(filteredLogs);
 
-  const handleClearLogs = async () => {
-    if (
-      window.confirm(
-        'Are you sure you want to permanently delete all system logs? This action cannot be undone.'
-      )
-    ) {
-      try {
-        setIsClearing(true);
-        await apiClient.deleteLogs();
-        queryClient.invalidateQueries({ queryKey: ['logs'] });
+  const handleClearLogs = () => {
+    confirm(
+      {
+        title: 'Clear All Logs',
+        description:
+          'Are you sure you want to permanently delete all system logs? This action cannot be undone.',
+        confirmText: 'Delete',
+        variant: 'destructive',
+      },
+      async () => {
+        try {
+          setIsClearing(true);
+          const elizaClient = createElizaClient();
+          await elizaClient.system.deleteGlobalLogs();
+          queryClient.invalidateQueries({ queryKey: ['logs'] });
 
-        // Also clear WebSocket logs if in WebSocket mode
-        if (useWebSocket) {
-          setWsLogs([]);
+          // Also clear WebSocket logs if in WebSocket mode
+          if (useWebSocket) {
+            setWsLogs([]);
+          }
+        } catch (error) {
+          console.error('Failed to clear logs:', error);
+        } finally {
+          setIsClearing(false);
         }
-      } catch (error) {
-        console.error('Failed to clear logs:', error);
-      } finally {
-        setIsClearing(false);
       }
-    }
+    );
   };
 
   const handleRefresh = () => {
@@ -399,15 +428,29 @@ export function AgentLogViewer({ agentName, level }: AgentLogViewerProps) {
 
   // Error state
   if (error) {
+    const isEndpointNotFound =
+      error.message?.includes('404') ||
+      error.message?.includes('endpoint not found') ||
+      error.message?.includes('Not Found');
     return (
       <div className="flex flex-col h-[calc(100vh-100px)] min-h-[400px] w-full">
         <div className="flex items-center justify-center flex-1">
-          <div className="text-center">
+          <div className="text-center max-w-md">
             <Database className="h-12 w-12 text-destructive mx-auto mb-4" />
-            <h3 className="font-medium">Failed to Load Logs</h3>
-            <p className="text-sm text-muted-foreground">
-              There was an error loading the system logs.
+            <h3 className="font-medium mb-2">
+              {isEndpointNotFound ? 'Global Logs API Not Available' : 'Failed to Load Logs'}
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              {isEndpointNotFound
+                ? 'The server does not have the global logs API endpoint configured. You can still view individual agent logs from the agent details pages.'
+                : `There was an error loading the system logs: ${error.message}`}
             </p>
+            {!isEndpointNotFound && (
+              <Button variant="outline" size="sm" onClick={() => refetch?.()}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Try Again
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -415,175 +458,188 @@ export function AgentLogViewer({ agentName, level }: AgentLogViewerProps) {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-100px)] min-h-[400px] w-full">
-      {/* Header Controls */}
-      <div className="flex items-center gap-3 mb-6 px-4 pt-4 flex-none">
-        {/* Filter dropdown */}
-        <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-          <SelectTrigger className="w-32 h-9">
-            <Filter className="h-4 w-4 mr-2" />
-            <SelectValue placeholder="Filter" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">ALL</SelectItem>
-            {levels.map((level) => (
-              <SelectItem key={level} value={level}>
-                {level.toUpperCase()}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {/* Search */}
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Full-text log search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-9"
-          />
-        </div>
-
-        {/* Agent filter */}
-        {agentNames && agentNames.length > 0 && !agentName && (
-          <Select value={selectedAgentName} onValueChange={setSelectedAgentName}>
-            <SelectTrigger className="w-40 h-9">
-              <SelectValue placeholder="Agent" />
+    <>
+      <div className="flex flex-col h-[calc(100vh-100px)] min-h-[400px] w-full">
+        {/* Header Controls */}
+        <div className="flex items-center gap-3 mb-6 px-4 pt-4 flex-none">
+          {/* Filter dropdown */}
+          <Select value={selectedLevel} onValueChange={setSelectedLevel}>
+            <SelectTrigger className="w-32 h-9">
+              <Filter className="h-4 w-4 mr-2" />
+              <SelectValue placeholder="Filter" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">ALL AGENTS</SelectItem>
-              {agentNames?.map((name) => (
-                <SelectItem key={name} value={name!}>
-                  {name}
+              <SelectItem value="all">ALL</SelectItem>
+              {levels.map((level) => (
+                <SelectItem key={level} value={level}>
+                  {level.toUpperCase()}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-        )}
 
-        {/* Time range */}
-        <Select value={timeRange} onValueChange={setTimeRange}>
-          <SelectTrigger className="w-32 h-9">
-            <Clock className="h-4 w-4 mr-2" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="1 hour">1 hour</SelectItem>
-            <SelectItem value="6 hours">6 hours</SelectItem>
-            <SelectItem value="24 hours">24 hours</SelectItem>
-            <SelectItem value="7 days">7 days</SelectItem>
-            <SelectItem value="30 days">30 days</SelectItem>
-          </SelectContent>
-        </Select>
+          {/* Search */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Full-text log search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 h-9"
+            />
+          </div>
 
-        {/* Refresh */}
-        <Button variant="outline" size="sm" onClick={handleRefresh} className="h-9 w-9 p-0">
-          <RefreshCw className="h-4 w-4" />
-        </Button>
+          {/* Agent filter */}
+          {agentNames && agentNames.length > 0 && !agentName && (
+            <Select value={selectedAgentName} onValueChange={setSelectedAgentName}>
+              <SelectTrigger className="w-40 h-9">
+                <SelectValue placeholder="Agent" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">ALL AGENTS</SelectItem>
+                {agentNames?.map((name) => (
+                  <SelectItem key={name} value={name!}>
+                    {name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
 
-        {/* Live toggle */}
-        <Button
-          variant={isLive ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => setIsLive(!isLive)}
-          className="h-9 px-3"
-          title={
-            isLive
-              ? useWebSocket
-                ? 'Live mode (WebSocket)'
-                : 'Live mode (Polling)'
-              : 'Live mode disabled'
-          }
-        >
-          <div
-            className={`w-2 h-2 rounded-full mr-2 ${isLive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`}
-          />
-          Live
-        </Button>
-      </div>
+          {/* Time range */}
+          <Select value={timeRange} onValueChange={setTimeRange}>
+            <SelectTrigger className="w-32 h-9">
+              <Clock className="h-4 w-4 mr-2" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1 hour">1 hour</SelectItem>
+              <SelectItem value="6 hours">6 hours</SelectItem>
+              <SelectItem value="24 hours">24 hours</SelectItem>
+              <SelectItem value="7 days">7 days</SelectItem>
+              <SelectItem value="30 days">30 days</SelectItem>
+            </SelectContent>
+          </Select>
 
-      {/* Content */}
-      <div className="flex-1 overflow-hidden px-4 pb-4">
-        {filteredLogs.length === 0 ? (
-          <EmptyState selectedLevel={selectedLevel} searchQuery={searchQuery} />
-        ) : (
-          <div className="space-y-6">
-            {/* Analytics Chart */}
-            <LogChart data={chartData} />
+          {/* Refresh */}
+          <Button variant="outline" size="sm" onClick={handleRefresh} className="h-9 w-9 p-0">
+            <RefreshCw className="h-4 w-4" />
+          </Button>
 
-            {/* Log Table */}
-            <div className="border rounded-lg overflow-hidden">
-              {/* Table Header */}
-              <div className="bg-muted/50 border-b px-4 py-3">
-                <div className="grid grid-cols-[200px_1fr] gap-4">
-                  <div className="text-sm font-medium text-muted-foreground">Timestamp</div>
-                  <div className="text-sm font-medium text-muted-foreground">Message</div>
+          {/* Live toggle */}
+          <Button
+            variant={isLive ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setIsLive(!isLive)}
+            className="h-9 px-3"
+            title={
+              isLive
+                ? useWebSocket
+                  ? 'Live mode (WebSocket)'
+                  : 'Live mode (Polling)'
+                : 'Live mode disabled'
+            }
+          >
+            <div
+              className={`w-2 h-2 rounded-full mr-2 ${isLive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`}
+            />
+            Live
+          </Button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-hidden px-4 pb-4">
+          {filteredLogs.length === 0 ? (
+            <EmptyState selectedLevel={selectedLevel} searchQuery={searchQuery} />
+          ) : (
+            <div className="space-y-6">
+              {/* Analytics Chart */}
+              <LogChart data={chartData} />
+
+              {/* Log Table */}
+              <div className="border rounded-lg overflow-hidden">
+                {/* Table Header */}
+                <div className="bg-muted/50 border-b px-4 py-3">
+                  <div className="grid grid-cols-[200px_1fr] gap-4">
+                    <div className="text-sm font-medium text-muted-foreground">Timestamp</div>
+                    <div className="text-sm font-medium text-muted-foreground">Message</div>
+                  </div>
                 </div>
-              </div>
 
-              {/* Table Body */}
-              <div className="divide-y max-h-[400px] overflow-y-auto">
-                {filteredLogs.slice(0, 100).map((log, index) => (
-                  <div
-                    key={`${log.time}-${log.msg}-${index}`}
-                    className="grid grid-cols-[200px_1fr] gap-4 px-4 py-3 hover:bg-muted/30 transition-colors"
-                  >
-                    {/* Timestamp with level indicator */}
-                    <div className="flex items-center gap-3">
-                      <div className={`w-1 h-6 rounded-full ${getLevelColor(log.level)}`} />
-                      <div className="text-sm font-mono text-muted-foreground">
-                        {formatTimestamp(log.time)}
+                {/* Table Body */}
+                <div className="divide-y max-h-[400px] overflow-y-auto">
+                  {filteredLogs.slice(0, 100).map((log, index) => (
+                    <div
+                      key={`${log.time}-${log.msg}-${index}`}
+                      className="grid grid-cols-[200px_1fr] gap-4 px-4 py-3 hover:bg-muted/30 transition-colors"
+                    >
+                      {/* Timestamp with level indicator */}
+                      <div className="flex items-center gap-3">
+                        <div className={`w-1 h-6 rounded-full ${getLevelColor(log.level)}`} />
+                        <div className="text-sm font-mono text-muted-foreground">
+                          {formatTimestamp(log.time)}
+                        </div>
+                      </div>
+
+                      {/* Message */}
+                      <div className="flex items-start gap-2 min-w-0">
+                        <div className="font-mono text-sm leading-relaxed break-all">{log.msg}</div>
+                        {log.agentName && (
+                          <Badge variant="secondary" className="text-xs flex-shrink-0">
+                            {log.agentName}
+                          </Badge>
+                        )}
                       </div>
                     </div>
-
-                    {/* Message */}
-                    <div className="flex items-start gap-2 min-w-0">
-                      <div className="font-mono text-sm leading-relaxed break-all">{log.msg}</div>
-                      {log.agentName && (
-                        <Badge variant="secondary" className="text-xs flex-shrink-0">
-                          {log.agentName}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Show more indicator */}
-              {filteredLogs.length > 100 && (
-                <div className="border-t bg-muted/30 px-4 py-3 text-center">
-                  <span className="text-sm text-muted-foreground">
-                    Showing first 100 of {filteredLogs.length.toLocaleString()} logs
-                  </span>
+                  ))}
                 </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
 
-      {/* Actions Bar */}
-      <div className="border-t bg-muted/30 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          {isLive && (
-            <>
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Live updates enabled {useWebSocket ? '(streaming)' : '(polling)'}</span>
-            </>
+                {/* Show more indicator */}
+                {filteredLogs.length > 100 && (
+                  <div className="border-t bg-muted/30 px-4 py-3 text-center">
+                    <span className="text-sm text-muted-foreground">
+                      Showing first 100 of {filteredLogs.length.toLocaleString()} logs
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
         </div>
-        <Button
-          variant="destructive"
-          size="sm"
-          onClick={handleClearLogs}
-          disabled={isClearing}
-          className="h-8 px-3 text-xs"
-        >
-          <Trash2 className="h-3 w-3 mr-1" />
-          {isClearing ? 'Clearing...' : 'Clear All Logs'}
-        </Button>
+
+        {/* Actions Bar */}
+        <div className="border-t bg-muted/30 px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            {isLive && (
+              <>
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Live updates enabled {useWebSocket ? '(streaming)' : '(polling)'}</span>
+              </>
+            )}
+          </div>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleClearLogs}
+            disabled={isClearing}
+            className="h-8 px-3 text-xs"
+          >
+            <Trash2 className="h-3 w-3 mr-1" />
+            {isClearing ? 'Clearing...' : 'Clear All Logs'}
+          </Button>
+        </div>
       </div>
-    </div>
+
+      <ConfirmationDialog
+        open={isOpen}
+        onOpenChange={onOpenChange}
+        title={options?.title || ''}
+        description={options?.description || ''}
+        confirmText={options?.confirmText}
+        cancelText={options?.cancelText}
+        variant={options?.variant}
+        onConfirm={onConfirm}
+      />
+    </>
   );
 }

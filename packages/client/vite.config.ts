@@ -2,17 +2,14 @@ import react from '@vitejs/plugin-react-swc';
 import path from 'node:path';
 import { type Plugin, type UserConfig, defineConfig, loadEnv } from 'vite';
 import viteCompression from 'vite-plugin-compression';
+import tailwindcss from '@tailwindcss/vite';
 // @ts-ignore:next-line
-// @ts-ignore:next-line
-import type { ViteUserConfig } from 'vitest/config'; // Import Vitest config type for test property
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 // https://vite.dev/config/
 
-// Combine Vite's UserConfig with Vitest's config for the 'test' property
-interface CustomUserConfig extends UserConfig {
-  test?: ViteUserConfig['test'];
-}
+// Define custom config interface
+interface CustomUserConfig extends UserConfig {}
 
 export default defineConfig(({ mode }): CustomUserConfig => {
   const envDir = path.resolve(__dirname, '../..');
@@ -34,10 +31,49 @@ export default defineConfig(({ mode }): CustomUserConfig => {
     },
   };
 
+  // Custom plugin to inject CommonJS shims
+  const injectCommonJSShims: Plugin = {
+    name: 'inject-commonjs-shims',
+    transformIndexHtml(html) {
+      return {
+        html,
+        tags: [
+          {
+            tag: 'script',
+            attrs: { type: 'module' },
+            children: `
+              // CommonJS shims for browser compatibility
+              if (typeof window !== 'undefined') {
+                window.global = window.global || window;
+                window.exports = window.exports || {};
+                window.module = window.module || { exports: {} };
+              }
+            `,
+            injectTo: 'head-prepend',
+          },
+        ],
+      };
+    },
+  };
+
   return {
     plugins: [
+      injectCommonJSShims,
+      tailwindcss(),
       react() as unknown as Plugin,
-      nodePolyfills() as unknown as Plugin,
+      nodePolyfills({
+        // Configure polyfills to work properly in browser
+        protocolImports: false,
+        globals: {
+          Buffer: true,
+          global: true,
+          process: true,
+        },
+        overrides: {
+          // Make sure crypto uses the browser version
+          crypto: 'crypto-browserify',
+        },
+      }) as unknown as Plugin,
       viteCompression({
         algorithm: 'brotliCompress',
         ext: '.br',
@@ -47,10 +83,58 @@ export default defineConfig(({ mode }): CustomUserConfig => {
     ],
     clearScreen: false,
     envDir,
+    server: {
+      port: 5173,
+      host: '0.0.0.0',
+      strictPort: true,
+      hmr: {
+        port: 5174,
+        host: '0.0.0.0',
+      },
+      watch: {
+        usePolling: false,
+        interval: 100,
+      },
+      cors: true,
+      proxy: {
+        // Proxy all API calls to backend server
+        '/api': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+          secure: false,
+        },
+        // Proxy WebSocket connections for real-time features
+        '/socket.io': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+          ws: true,
+        },
+        // Proxy any other backend endpoints that might exist
+        '/v1': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+          secure: false,
+        },
+        // Proxy health check and ping endpoints
+        '/ping': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+          secure: false,
+        },
+        // Proxy any direct server endpoints
+        '/server': {
+          target: 'http://localhost:3000',
+          changeOrigin: true,
+          secure: false,
+        },
+      },
+    },
     define: {
       'import.meta.env.VITE_SERVER_PORT': JSON.stringify(env.SERVER_PORT || '3000'),
-      // Add empty shims for Node.js globals
+      // Add shims for Node.js globals
       global: 'globalThis',
+      'process.env': JSON.stringify({}),
+      'process.browser': true,
     },
     optimizeDeps: {
       esbuildOptions: {
@@ -58,6 +142,7 @@ export default defineConfig(({ mode }): CustomUserConfig => {
           global: 'globalThis',
         },
       },
+      include: ['buffer', 'process', 'crypto-browserify', 'stream-browserify', 'util'],
     },
     build: {
       target: 'esnext',
@@ -82,6 +167,7 @@ export default defineConfig(({ mode }): CustomUserConfig => {
             (typeof warning.message === 'string' &&
               (warning.message.includes('has been externalized for browser compatibility') ||
                 warning.message.includes("The 'this' keyword is equivalent to 'undefined'") ||
+                warning.message.includes('unenv') ||
                 /node:|fs|path|crypto|stream|tty|worker_threads|assert/.test(warning.message)))
           ) {
             return;
@@ -93,25 +179,15 @@ export default defineConfig(({ mode }): CustomUserConfig => {
     resolve: {
       alias: {
         '@': '/src',
-        '@elizaos/core': path.resolve(__dirname, '../core/src/index.ts'),
+        '@elizaos/core': path.resolve(__dirname, '../core/dist/index.js'),
+        // Add explicit aliases for problematic modules
+        crypto: 'crypto-browserify',
+        stream: 'stream-browserify',
+        buffer: 'buffer',
+        process: 'process/browser',
+        util: 'util',
       },
     },
-    logLevel: 'error', // Only show errors, not warnings
-    // Add Vitest configuration
-    test: {
-      globals: true, // Or false, depending on your preference
-      environment: 'jsdom', // Or 'happy-dom', 'node'
-      include: ['src/**/*.{test,spec}.{js,ts,jsx,tsx}'],
-      exclude: [
-        'src/tests/**/*.{test,spec}.{js,ts,jsx,tsx}', // Exclude Playwright tests
-        'node_modules/**',
-        'dist/**',
-        'cypress/**',
-        '**/*.d.ts',
-        '{playwright,vite,vitest}.config.{js,ts,jsx,tsx}',
-      ],
-      // You might have other Vitest specific configurations here
-      // setupFiles: './src/setupTests.ts', // if you have a setup file
-    },
+    logLevel: mode === 'development' ? 'info' : 'error',
   };
 });

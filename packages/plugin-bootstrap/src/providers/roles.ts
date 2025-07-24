@@ -85,6 +85,7 @@ export const roleProvider: Provider = {
         values: {
           roles: 'No role information available for this server.',
         },
+        text: 'No role information available for this server.',
       };
     }
 
@@ -102,9 +103,9 @@ export const roleProvider: Provider = {
       // get the user from the database
       const user = await runtime.getEntityById(entityId);
 
-      const name = user?.metadata?.[room.source]?.name;
-      const username = user?.metadata?.[room.source]?.username;
-      const names = user?.names;
+      const name = user?.metadata?.name as string;
+      const username = user?.metadata?.username as string;
+      const names = user?.names as string[];
 
       // Skip duplicates (we store both UUID and original ID)
       if (

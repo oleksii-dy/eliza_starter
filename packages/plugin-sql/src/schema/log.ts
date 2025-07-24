@@ -1,8 +1,7 @@
 import { sql } from 'drizzle-orm';
-import { foreignKey, jsonb, pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import { foreignKey, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { entityTable } from './entity';
 import { roomTable } from './room';
-import { numberTimestamp } from './types';
 
 /**
  * Represents a PostgreSQL table for storing logs.
@@ -14,12 +13,12 @@ export const logTable = pgTable(
   'logs',
   {
     id: uuid('id').defaultRandom().notNull(),
-    createdAt: numberTimestamp('createdAt')
+    createdAt: timestamp('created_at', { withTimezone: true })
       .default(sql`now()`)
       .notNull(),
     entityId: uuid('entityId')
       .notNull()
-      .references(() => entityTable.id),
+      .references(() => entityTable.id, { onDelete: 'cascade' }),
     body: jsonb('body').notNull(),
     type: text('type').notNull(),
     roomId: uuid('roomId')
