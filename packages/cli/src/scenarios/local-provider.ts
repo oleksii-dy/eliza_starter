@@ -32,17 +32,23 @@ export class LocalEnvironmentProvider implements EnvironmentProvider {
       throw new Error('Environment not set up. Call setup() before run().');
     }
 
-    // Since we are not yet running the agent, we will just log the run block.
-    // In a future ticket, we will execute the agent here.
-    logger.info('Executing run block (currently a placeholder):');
-    logger.info(JSON.stringify(scenario.run, null, 2));
+    const command = scenario.run[0].input;
+    logger.info(`Executing command in ${this.tempDir}: ${command}`);
 
-    // For now, return a dummy result
-    return {
-      exitCode: 0,
-      stdout: 'Run block executed (placeholder).',
-      stderr: '',
-    };
+    try {
+      const { stdout, stderr } = await execAsync(command, { cwd: this.tempDir });
+      return {
+        exitCode: 0,
+        stdout,
+        stderr,
+      };
+    } catch (error: any) {
+      return {
+        exitCode: error.code || 1,
+        stdout: error.stdout || '',
+        stderr: error.stderr || '',
+      };
+    }
   }
 
   async teardown(): Promise<void> {

@@ -1,4 +1,5 @@
-import { EnvironmentProvider, ExecutionResult, E2BService } from './providers';
+import { EnvironmentProvider, ExecutionResult } from './providers';
+import { E2BService } from '@elizaos/plugin-e2b';
 import { Scenario } from './schema';
 import { IAgentRuntime } from '@elizaos/core';
 
@@ -26,7 +27,7 @@ export class E2BEnvironmentProvider implements EnvironmentProvider {
     const virtualFs = scenario.setup?.virtual_fs;
     if (this.sandboxId && virtualFs) {
       for (const [filePath, content] of Object.entries(virtualFs)) {
-        await this.e2bService.writeFileToSandbox(this.sandboxId, filePath, content);
+        await this.e2bService.writeFileToSandbox(this.sandboxId, filePath, content as string);
       }
     }
   }
@@ -35,11 +36,20 @@ export class E2BEnvironmentProvider implements EnvironmentProvider {
     if (!this.sandboxId) {
       throw new Error('Sandbox has not been set up. Call setup() before run().');
     }
-    // For now, we'll just execute the first run step's input as a command.
-    // This will evolve as the scenario definition becomes more complex.
     const command = scenario.run[0].input;
 
-    return this.e2bService.executeCode(command);
+    const result = await this.e2bService.executeCode(command, 'bash', { sandboxId: this.sandboxId });
+
+    // The E2BService returns a complex object; we need to adapt it to the simple ExecutionResult
+    const stdout = result.logs?.stdout?.join('\n') || '';
+    const stderr = result.logs?.stderr?.join('\n') || result.error?.value || '';
+    const exitCode = result.error ? 1 : 0; // Simplistic; could be improved if e2b provides exit codes
+
+    return {
+      stdout,
+      stderr,
+      exitCode,
+    };
   }
 
   async teardown(): Promise<void> {
