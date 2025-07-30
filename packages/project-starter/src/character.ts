@@ -12,7 +12,7 @@ export const character: Character = {
     '@elizaos/plugin-sql',
     '@elizaos/plugin-openai',
     '@elizaos/plugin-bootstrap',
-    '@elizaos/plugin-e2b',
+
   ],
   settings: {
     secrets: {},
