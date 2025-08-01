@@ -14,7 +14,7 @@ import { start } from '@/src/commands/start';
 import { teeCommand as tee } from '@/src/commands/tee';
 import { test } from '@/src/commands/test';
 import { update } from '@/src/commands/update';
-import { scenario } from '@/src/commands/scenario';
+import { scenario } from '@/src/commands/scenarios/scenario';
 import { displayBanner, getVersion, checkAndShowUpdateNotification } from '@/src/utils';
 import { tryDelegateToLocalCli } from '@/src/utils/local-cli-delegation';
 import { logger } from '@elizaos/core';
