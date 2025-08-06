@@ -10,12 +10,13 @@ import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 // Ensure logger has all required methods with fallbacks
+// Bind methods to preserve pino logger context
 const safeLogger = {
-  debug: logger?.debug || console.log,
-  info: logger?.info || console.log,
-  warn: logger?.warn || console.warn,
-  error: logger?.error || console.error,
-  success: logger?.success || console.log,
+  debug: logger?.debug?.bind(logger) || console.debug,
+  info: logger?.info?.bind(logger) || console.log,
+  warn: logger?.warn?.bind(logger) || console.warn,
+  error: logger?.error?.bind(logger) || console.error,
+  success: logger?.success?.bind(logger) || console.log,
 };
 
 interface TestStats {
@@ -134,6 +135,8 @@ export class TestRunner {
 
       try {
         safeLogger.info(`  Running test: ${test.name}`);
+        
+        // Pass the runtime directly to avoid pino logger context issues
         await test.fn(this.runtime);
         this.stats.passed++;
         safeLogger.success(`  [✓] ${test.name}`);
@@ -263,10 +266,10 @@ export const myPlugin = {
     }
 
     try {
-      // Check for e2e directory
-      const e2eDir = path.join(process.cwd(), 'e2e');
+      // Check for e2e directory in the standard location only
+      const e2eDir = path.join(process.cwd(), 'src', '__tests__', 'e2e');
       if (!fs.existsSync(e2eDir)) {
-        safeLogger.debug('No e2e directory found, skipping e2e tests');
+        safeLogger.debug('No test files found in src/__tests__/e2e/, skipping e2e tests');
         return;
       }
 
@@ -279,7 +282,7 @@ export const myPlugin = {
           .flatMap((entry) =>
             entry.isDirectory()
               ? walk(path.join(dir, entry.name))
-              : entry.name.match(/\.test\.(t|j)sx?$/)
+              : entry.name.match(/\.(test|spec|e2e)\.(ts|js|tsx|jsx)$/)
                 ? [path.join(dir, entry.name)]
                 : []
           );
@@ -292,8 +295,8 @@ export const myPlugin = {
 
       safeLogger.info(`Found ${testFiles.length} e2e test files`);
 
-      // Check if we have compiled dist versions
-      const distE2eDir = path.join(process.cwd(), 'dist', 'e2e');
+      // Check if we have compiled dist versions in the standard location only
+      const distE2eDir = path.join(process.cwd(), 'dist', '__tests__', 'e2e');
       const hasDistE2e = fs.existsSync(distE2eDir);
 
       // Load and run each test file
@@ -307,8 +310,10 @@ export const myPlugin = {
           // Check if we should try to load from the dist directory instead
           let moduleImportPath = testFile;
           if (hasDistE2e) {
-            // Try to find a .js version in dist/e2e
-            const distFile = path.join(distE2eDir, `${fileNameWithoutExt}.test.js`);
+            // Calculate the relative path from e2eDir to get the correct structure in dist
+            const relativePath = path.relative(e2eDir, testFile);
+            const distFile = path.join(distE2eDir, relativePath.replace(/\.ts$/, '.js'));
+            
             if (fs.existsSync(distFile)) {
               moduleImportPath = distFile;
               safeLogger.debug(`Using compiled version from ${distFile}`);
@@ -320,7 +325,7 @@ export const myPlugin = {
             }
           } else {
             safeLogger.warn(
-              `No dist/e2e directory found. E2E tests should be compiled first. Import may fail.`
+              `No dist/__tests__/e2e directory found. E2E tests should be compiled first. Import may fail.`
             );
           }
 
